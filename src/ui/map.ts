@@ -257,7 +257,7 @@ const defaultOptions = {
  * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
  * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link #FullscreenControl}.
  * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
- * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+ * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
  * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.bearing=0] The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.pitch=0] The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-85). If `pitch` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`. Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
@@ -1334,7 +1334,7 @@ class Map extends Camera {
      * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
      * to limit query results.
      * @param {Array<string>} [options.availableImages] (optional) An array of string representing the available images
-     * @param {boolean} [options.validate=true] (optional) Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] (optional) Whether to check if the [options.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
@@ -1425,7 +1425,7 @@ class Map extends Camera {
      * to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
      * @param {Array} [parameters.filter] A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
      * to limit query results.
-     * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
@@ -2278,7 +2278,7 @@ class Map extends Camera {
      * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
      * [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
      * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      *
      * @example
@@ -2316,7 +2316,7 @@ class Map extends Camera {
      * @param {*} value The value of the paint property to set.
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
@@ -2346,7 +2346,7 @@ class Map extends Camera {
      * @param {string} name The name of the layout property to set.
      * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
@@ -2372,7 +2372,7 @@ class Map extends Camera {
      *
      * @param glyphsUrl Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
      * @param {StyleSetterOptions} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
@@ -2444,7 +2444,7 @@ class Map extends Camera {
      *
      * @param spriteUrl Sprite URL to set.
      * @param {StyleSetterOptions} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * map.setSprite('YOUR_SPRITE_URL');
@@ -2464,7 +2464,7 @@ class Map extends Camera {
      *
      * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
      * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * var layerVisibility = map.getLayoutProperty('my-layer', 'visibility');

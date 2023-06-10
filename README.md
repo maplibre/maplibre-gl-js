@@ -105,10 +105,10 @@ You can find the official status of the backing community and steering committee
 
 ### Avoid Fragmentation
 
-If you depend on a free software alternative to `mapbox-gl-js`, please consider joining our effort! Anyone with a stake in a healthy community-led fork is welcome to help us figure out our next steps. We welcome contributors and leaders! MapLibre GL already represents the combined efforts of a few early fork efforts, and we all benefit from "one project" rather than "our way". If you know of other forks, please reach out to them and direct them here.
+If you depend on a free software alternative to `mapbox-gl-js`, please consider joining our effort! Anyone with a stake in a healthy community-led fork is welcome to help us figure out our next steps. We welcome contributors and leaders! MapLibre GL JS already represents the combined efforts of a few early fork efforts, and we all benefit from "one project" rather than "our way". If you know of other forks, please reach out to them and direct them here.
  
 
-> **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
+> **MapLibre GL JS** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
 
 ### Bounties
 
@@ -187,4 +187,4 @@ Please keep in mind: Unauthorized backports are the biggest threat to the MapLib
 
 ## License
 
-**MapLibre GL** is licensed under the [3-Clause BSD license](./LICENSE.txt).
+**MapLibre GL JS** is licensed under the [3-Clause BSD license](./LICENSE.txt).

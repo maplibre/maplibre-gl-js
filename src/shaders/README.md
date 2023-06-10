@@ -1,6 +1,6 @@
-# MapLibre GL Shaders
+# MapLibre GL JS Shaders
 
-This repository contains GL shaders which are shared by [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js) and [MapLibre GL Native](https://github.com/maplibre/maplibre-gl-native).
+This repository contains the GLSL shaders
 
 ## Pragmas
 
