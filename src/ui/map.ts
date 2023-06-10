@@ -718,12 +718,8 @@ class Map extends Camera {
      * @param {number} pixelRatio The pixel ratio.
      */
     setPixelRatio(pixelRatio: number) {
-        const [width, height] = this._containerDimensions();
-
         this._pixelRatio = pixelRatio;
-
-        this._resizeCanvas(width, height, pixelRatio);
-        this.painter.resize(width, height, pixelRatio);
+        this.resize();
     }
 
     /**
