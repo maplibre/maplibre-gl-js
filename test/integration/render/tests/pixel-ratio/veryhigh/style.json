@@ -1,0 +1,46 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "allowed": 0.0005,
+      "width": 1793,
+      "height": 128,
+      "pixelRatio": 10,
+      "reportWidth": 1280,
+      "reportHeight": 1280
+    }
+  },
+  "center": [
+    -10,
+    0
+  ],
+  "zoom": 0,
+  "sources": {
+    "vector": {
+      "type": "vector",
+      "maxzoom": 14,
+      "tiles": [
+        "local://tiles/extent1024-14-8802-5374.mvt"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "vector",
+      "type": "line",
+      "source": "vector",
+      "source-layer": "road",
+      "paint": {
+        "line-color": "black",
+        "line-width": 1
+      }
+    }
+  ]
+}
