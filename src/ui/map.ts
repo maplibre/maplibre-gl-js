@@ -735,13 +735,9 @@ export class Map extends Camera {
      * Note that the pixel ratio actually applied may be lower to respect maxCanvasSize.
      * @param {number | null} pixelRatio The pixel ratio.
      */
-    setPixelRatio(pixelRatio: number | null) {
-        const [width, height] = this._containerDimensions();
-
+    setPixelRatio(pixelRatio: number) {
         this._overridePixelRatio = pixelRatio;
-        const clampedPixelRatio = this._getClampedPixelRatio(width, height);
-        this._resizeCanvas(width, height, clampedPixelRatio);
-        this.painter.resize(width, height, clampedPixelRatio);
+        this.resize();
     }
 
     /**
