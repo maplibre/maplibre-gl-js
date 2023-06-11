@@ -3,15 +3,15 @@
   "metadata": {
     "test": {
       "allowed": 0.0005,
-      "width": 1793,
-      "height": 128,
-      "pixelRatio": 10,
-      "reportWidth": 1280,
-      "reportHeight": 1280
+      "width": 1792,
+      "height": 256,
+      "pixelRatio": 5,
+      "reportWidth": 1152,
+      "reportHeight": 1152
     }
   },
   "center": [
-    -10,
+    -90,
     0
   ],
   "zoom": 0,
