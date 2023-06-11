@@ -16,7 +16,6 @@ import type SourceCache from '../source/source_cache';
 import type HeatmapStyleLayer from '../style/style_layer/heatmap_style_layer';
 import type HeatmapBucket from '../data/bucket/heatmap_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
-import {isWebGL2} from '../gl/webgl2';
 
 export default drawHeatmap;
 
