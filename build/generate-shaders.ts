@@ -12,18 +12,51 @@ console.log('Generating shaders');
  * It will also create a simple package.json file to allow importing this package in webpack
  */
 
-const files = globSync('./src/shaders/*.glsl');
-for (const file of files) {
+const vertex = globSync('./src/shaders/*.vertex.glsl');
+for (const file of vertex) {
     const code = fs.readFileSync(file, 'utf8');
-    const content = glslToTs(code);
+    const content = glslToTs(code, 'vertex');
     const fileName = path.join('.', 'src', 'shaders', `${file.split(path.sep).splice(-1)}.g.ts`);
     fs.writeFileSync(fileName, content);
 }
-console.log(`Finished converting ${files.length} glsl files`);
 
-function glslToTs(code: string): string {
+console.log(`Finished converting ${vertex.length} glsl files`);
+
+const fragment = globSync('./src/shaders/*.fragment.glsl');
+for (const file of fragment) {
+    const code = fs.readFileSync(file, 'utf8');
+    const content = glslToTs(code, 'fragment');
+    const fileName = path.join('.', 'src', 'shaders', `${file.split(path.sep).splice(-1)}.g.ts`);
+    fs.writeFileSync(fileName, content);
+}
+
+console.log(`Finished converting ${fragment.length} glsl files`);
+
+function glslToTs(code: string, type: 'fragment'|'vertex'): string {
     code = code
-        .trim() // strip whitespace at the start/end
+        .trim(); // strip whitespace at the start/end
+
+    // WebGL1 Compat -- Start
+
+    if (type === 'fragment') {
+        code = code
+            .replace(/\bin\s/g, 'varying ') // For fragment shaders, replace "in " with "varying "
+            .replace('out highp vec4 fragColor;', '');
+    }
+
+    if (type === 'vertex') {
+        code = code
+            .replace(/\bin\s/g, 'attribute ') // For vertex shaders, replace "in " with "attribute "
+            .replace(/\bout\s/g, 'varying '); // For vertex shaders, replace "out " with "varying "
+    }
+
+    code = code
+        .replace(/fragColor/g, 'gl_FragColor')
+        .replace(/texture\(/g, 'texture2D(');
+
+    // WebGL1 Compat -- End
+
+    code = code
         .replace(/\s*\/\/[^\n]*\n/g, '\n') // strip double-slash comments
         .replace(/\n+/g, '\n') // collapse multi line breaks
         .replace(/\n\s+/g, '\n') // strip indentation

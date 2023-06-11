@@ -1,10 +1,10 @@
-attribute vec3 a_pos3d;
+in vec3 a_pos3d;
 
 uniform mat4 u_matrix;
 uniform float u_ele_delta;
 
-varying vec2 v_texture_pos;
-varying float v_depth;
+out vec2 v_texture_pos;
+out float v_depth;
 
 void main() {
     float extent = 8192.0; // 8192.0 is the hardcoded vector-tiles coordinates resolution
