@@ -20,7 +20,7 @@ for (const file of vertex) {
     fs.writeFileSync(fileName, content);
 }
 
-console.log(`Finished converting ${vertex.length} glsl files`);
+console.log(`Finished converting ${vertex.length} vertex shaders`);
 
 const fragment = globSync('./src/shaders/*.fragment.glsl');
 for (const file of fragment) {
@@ -30,7 +30,7 @@ for (const file of fragment) {
     fs.writeFileSync(fileName, content);
 }
 
-console.log(`Finished converting ${fragment.length} glsl files`);
+console.log(`Finished converting ${fragment.length} fragment shaders`);
 
 function glslToTs(code: string, type: 'fragment'|'vertex'): string {
     code = code
