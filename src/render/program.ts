@@ -16,7 +16,7 @@ import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terr
 import type {TerrainData} from '../render/terrain';
 import Terrain from '../render/terrain';
 
-export type DrawMode = typeof WebGL2RenderingContext.LINES | typeof WebGL2RenderingContext.TRIANGLES | typeof WebGL2RenderingContext.LINE_STRIP;
+export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
 function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> {
     const result = [];
@@ -75,8 +75,6 @@ class Program<Us extends UniformBindings> {
             defines.push('#define TERRAIN3D;');
         }
 
-        defines.unshift('#version 300 es');
-
         const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
         const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
 
@@ -111,7 +109,6 @@ class Program<Us extends UniformBindings> {
         }
 
         gl.linkProgram(this.program);
-
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 

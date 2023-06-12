@@ -15,6 +15,7 @@ import type {
     StructArrayMember
 } from '../util/struct_array';
 import type {Color} from '@maplibre/maplibre-gl-style-spec';
+import {isWebGL2} from './webgl2';
 
 type ClearArgs = {
     color?: Color;
@@ -23,7 +24,7 @@ type ClearArgs = {
 };
 
 class Context {
-    gl: WebGL2RenderingContext;
+    gl: WebGLRenderingContext | WebGL2RenderingContext;
 
     currentNumAttributes: number;
     maxTextureSize: number;
@@ -67,7 +68,7 @@ class Context {
     RGBA16F?: GLenum;
     RGB16F?: GLenum;
 
-    constructor(gl: WebGL2RenderingContext) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext) {
         this.gl = gl;
         this.clearColor = new ClearColor(this);
         this.clearDepth = new ClearDepth(this);
@@ -101,18 +102,35 @@ class Context {
         this.pixelStoreUnpackPremultiplyAlpha = new PixelStoreUnpackPremultiplyAlpha(this);
         this.pixelStoreUnpackFlipY = new PixelStoreUnpackFlipY(this);
 
-        this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
+        this.extTextureFilterAnisotropic = (
+            gl.getExtension('EXT_texture_filter_anisotropic') ||
+            gl.getExtension('MOZ_EXT_texture_filter_anisotropic') ||
+            gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic')
+        );
+
         if (this.extTextureFilterAnisotropic) {
             this.extTextureFilterAnisotropicMax = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
         }
 
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-        this.HALF_FLOAT = gl.HALF_FLOAT;
 
-        gl.getExtension('EXT_color_buffer_half_float');
-        gl.getExtension('EXT_color_buffer_float');
-        this.RGBA16F = gl.RGBA16F;
-        this.RGB16F = gl.RGB16F;
+        const extSRGB = gl.getExtension('EXT_sRGB');
+        if (!extSRGB) {
+            console.warn('EXT_sRGB extension not supported');
+        }
+
+        if (isWebGL2(gl)) {
+            this.HALF_FLOAT = gl.HALF_FLOAT;
+            const extColorBufferHalfFloat = gl.getExtension('EXT_color_buffer_half_float');
+            this.RGBA16F = gl.RGBA16F ?? extColorBufferHalfFloat?.RGBA16F_EXT;
+            this.RGB16F = gl.RGB16F ?? extColorBufferHalfFloat?.RGB16F_EXT;
+            gl.getExtension('EXT_color_buffer_float');
+        } else {
+            gl.getExtension('EXT_color_buffer_half_float');
+            gl.getExtension('OES_texture_half_float_linear');
+            const extTextureHalfFloat = gl.getExtension('OES_texture_half_float');
+            this.HALF_FLOAT = extTextureHalfFloat?.HALF_FLOAT_OES;
+        }
     }
 
     setDefault() {
@@ -285,11 +303,15 @@ class Context {
     }
 
     createVertexArray(): WebGLVertexArrayObject | undefined {
-        return this.gl.createVertexArray();
+        if (isWebGL2(this.gl))
+            return this.gl.createVertexArray();
+        return this.gl.getExtension('OES_vertex_array_object')?.createVertexArrayOES();
     }
 
     deleteVertexArray(x: WebGLVertexArrayObject | undefined) {
-        return this.gl.deleteVertexArray(x);
+        if (isWebGL2(this.gl))
+            return this.gl.deleteVertexArray(x);
+        return this.gl.getExtension('OES_vertex_array_object')?.deleteVertexArrayOES(x);
     }
 
     unbindVAO() {

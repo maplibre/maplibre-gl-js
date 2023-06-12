@@ -11,7 +11,7 @@ export type UniformValues<Us extends {}> = $ObjMap<Us, <V>(u: Uniform<V>) => V>;
 export type UniformLocations = {[_: string]: WebGLUniformLocation};
 
 abstract class Uniform<T> {
-    gl: WebGL2RenderingContext;
+    gl: WebGLRenderingContext|WebGL2RenderingContext;
     location: WebGLUniformLocation;
     current: T;
 
