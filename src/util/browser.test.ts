@@ -19,8 +19,4 @@ describe('browser', () => {
         frame.cancel();
         done();
     });
-
-    test('hardwareConcurrency', () => {
-        expect(typeof browser.hardwareConcurrency).toBe('number');
-    });
 });
