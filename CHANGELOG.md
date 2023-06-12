@@ -9,6 +9,10 @@
 - Fix regression - Add webgl1 fallback to accomondate users without webgl2 support
 - _...Add new stuff here..._
 
+### ⚠️ Potentially breaking changes
+- Worker count statically set to 2 for Safari browser as it doesn't support by default.
+- _...Add new stuff here..._
+
 ## 3.0.1
 
 ### ✨ Features and improvements
