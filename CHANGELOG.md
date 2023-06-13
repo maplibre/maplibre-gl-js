@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - Fix regression - Add webgl1 fallback to accomondate users without webgl2 support
+- Fix the `tap then drag` zoom gesture detection to abort when the two taps are far away ([#2673](https://github.com/maplibre/maplibre-gl-js/pull/2673))
 - _...Add new stuff here..._
 
 ## 3.0.1
