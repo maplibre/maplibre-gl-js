@@ -1,20 +1,31 @@
 ## main
 
-
 ### ✨ Features and improvements
-- Expose map options.maxTileCacheZoomLevels to allow better control of tile cache ([#2581](https://github.com/maplibre/maplibre-gl-js/pull/2581))
+
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- Fix regression - Add webgl1 fallback to accomondate users without webgl2 support
+
 - _...Add new stuff here..._
+
+## 3.1.0
+
+### ✨ Features and improvements
+
+- Expose map options.maxTileCacheZoomLevels to allow better control of tile cache ([#2581](https://github.com/maplibre/maplibre-gl-js/pull/2581))
+
+### 🐞 Bug fixes
+
+- Fix regression - Add webgl1 fallback to accomondate users without webgl2 support ([#2653](https://github.com/maplibre/maplibre-gl-js/issues/2653))
 
 ## 3.0.1
 
 ### ✨ Features and improvements
+
 - Update shaders to GLSL ES 3.0 ([#2599](https://github.com/maplibre/maplibre-gl-js/pull/2599))
 
 ### 🐞 Bug fixes
+
 - Fix `RequestTransformFunction` type to return RequestParameters or undefined ([#2586](https://github.com/maplibre/maplibre-gl-js/pull/2586))
 - Load `EXT_color_buffer_float` WebGL2 extension to fix heatmap in firefox ([#2595](https://github.com/maplibre/maplibre-gl-js/pull/2595))
 
@@ -80,6 +91,7 @@ Most of these changes will not affect your code but read carefully through the l
 - ⚠️ Improve control performance by restricting worker count to a max of 1 except for Safari browser. ([#2354](https://github.com/maplibre/maplibre-gl-js/pull/2354))
 
 ## Bug fixes
+
 - Fix of incorrect dash in diagonal lines with a vector source at some zoom levels. ([#2479](https://github.com/maplibre/maplibre-gl-js/pull/2479))
 - Fix event.isSourceLoaded to reflect the state of source loading for sourcedata event ([#2543](https://github.com/maplibre/maplibre-gl-js/pull/2543))
 - Fix overlapping of 3D building parts when 3D Terrain is activated ([#2513](https://github.com/maplibre/maplibre-gl-js/issues/2513))
@@ -118,23 +130,25 @@ Most of these changes will not affect your code but read carefully through the l
 ## 3.0.0-pre.9
 
 ### 🐞 Bug fixes
-- Fixes issue with ResizeObserver firing an initial 'resize' event (since 3.0.0-pre.5) ([#2551](https://github.com/maplibre/maplibre-gl-js/issues/2551))
 
+- Fixes issue with ResizeObserver firing an initial 'resize' event (since 3.0.0-pre.5) ([#2551](https://github.com/maplibre/maplibre-gl-js/issues/2551))
 
 ## 3.0.0-pre.8
 
 ### ✨ Features and improvements
+
 - Add `transformCameraUpdate` callback to `Map` options ([#2535](https://github.com/maplibre/maplibre-gl-js/pull/2535))
 
 ### 🐞 Bug fixes
+
 - Revise previous fix ([#2445](https://github.com/maplibre/maplibre-gl-js/issues/2445)) for raster tiles being retained when raster-fade-duration is 0 ([#2501](https://github.com/maplibre/maplibre-gl-js/issues/2501))
 
 ## 3.0.0-pre.7
 
 ### ✨ Features and improvements
+
 - ⚠️ Breaking - Remove WebGL1 support. Move to WebGL2 ([#2512](https://github.com/maplibre/maplibre-gl-js/pull/2512))
 - Bump KDBush and supercluster ([#2522](https://github.com/maplibre/maplibre-gl-js/pull/2522))
-
 
 ## 3.0.0-pre.6
 
@@ -148,7 +162,6 @@ Most of these changes will not affect your code but read carefully through the l
 - Reduce rendering calls on initial load. No reason to try rendering before style is loaded. ([#2464](https://github.com/maplibre/maplibre-gl-js/pull/2464))
 - Lazy load default style properties on demand to improve loading performance and reduce memory usage. ([#2476](https://github.com/maplibre/maplibre-gl-js/pull/2476))
 - Conditional WebGL2 support ([#1891](https://github.com/maplibre/maplibre-gl-js/pull/1891)
-
 
 ### 🐞 Bug fixes
 
