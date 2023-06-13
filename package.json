@@ -126,7 +126,7 @@
     "stylelint-config-standard": "^33.0.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
-    "tslib": "^2.5.2",
+    "tslib": "^2.5.3",
     "typescript": "^5.1.3"
   },
   "overrides": {
