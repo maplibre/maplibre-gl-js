@@ -41,7 +41,7 @@ class Texture {
         x: number;
         y: number;
     }) {
-        const {width, height} = image;
+        const {width, height} = image as {width: number, height: number};
         const resize = (!this.size || this.size[0] !== width || this.size[1] !== height) && !position;
         const {context} = this;
         const {gl} = context;

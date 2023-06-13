@@ -116,7 +116,7 @@ class VectorTileWorkerSource implements WorkerSource {
             }
 
             const rawTileData = response.rawData;
-            const cacheControl = {} as {expires: any; cacheControl: any};
+            const cacheControl = {} as ExpiryData;
             if (response.expires) cacheControl.expires = response.expires;
             if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
 
