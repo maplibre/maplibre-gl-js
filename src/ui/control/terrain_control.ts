@@ -6,13 +6,12 @@ import type {IControl} from './control';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
- * An `TerrainControl` control adds a button to turn terrain on and off.
+ * A `TerrainControl` control contains a button for turning the terrain on and off.
  *
  * @implements {IControl}
- * @param {Object} [options]
- * @param {string} [options.id] The ID of the raster-dem source to use.
- * @param {Object} [options.options]
- * @param {number} [options.options.exaggeration]
+ * @param {TerrainSpecification} [options]
+ * @param {string} [options.source] The ID of the raster-dem source to use.
+ * @param {number} [options.exaggeration]
  * @example
  * var map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({

@@ -48,7 +48,7 @@ const focusQuerySelector = [
 /**
  * A popup component.
  *
- * @param {Object} [options]
+ * @param {PopupOptions} [options]
  * @param {boolean} [options.closeButton=true] If `true`, a close button will appear in the
  * top right corner of the popup.
  * @param {boolean} [options.closeOnClick=true] If `true`, the popup will closed when the
@@ -57,7 +57,7 @@ const focusQuerySelector = [
  * map moves.
  * @param {boolean} [options.focusAfterOpen=true] If `true`, the popup will try to focus the
  * first focusable element inside the popup.
- * @param {string} [options.anchor] - A string indicating the part of the Popup that should
+ * @param {PositionAnchor} [options.anchor] - A string indicating the part of the Popup that should
  * be positioned closest to the coordinate set via {@link Popup#setLngLat}.
  * Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`,
  * `'top-right'`, `'bottom-left'`, and `'bottom-right'`. If unset the anchor will be
