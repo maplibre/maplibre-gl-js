@@ -1,4 +1,4 @@
-import {TapRecognizer, MAX_TAP_INTERVAL} from './tap_recognizer';
+import {TapRecognizer, MAX_TAP_INTERVAL, MAX_DIST} from './tap_recognizer';
 import type Point from '@mapbox/point-geometry';
 
 export default class TapDragZoomHandler {
@@ -8,6 +8,7 @@ export default class TapDragZoomHandler {
     _swipePoint: Point;
     _swipeTouch: number;
     _tapTime: number;
+    _tapPoint: Point;
     _tap: TapRecognizer;
 
     constructor() {
@@ -25,23 +26,28 @@ export default class TapDragZoomHandler {
         delete this._swipePoint;
         delete this._swipeTouch;
         delete this._tapTime;
+        delete this._tapPoint;
         this._tap.reset();
     }
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         if (this._swipePoint) return;
 
-        if (this._tapTime && e.timeStamp - this._tapTime > MAX_TAP_INTERVAL) {
-            this.reset();
-        }
-
         if (!this._tapTime) {
             this._tap.touchstart(e, points, mapTouches);
-        } else if (mapTouches.length > 0) {
-            this._swipePoint = points[0];
-            this._swipeTouch = mapTouches[0].identifier;
-        }
+        } else {
+            const swipePoint = points[0];
 
+            const soonEnough = e.timeStamp - this._tapTime < MAX_TAP_INTERVAL;
+            const closeEnough =  this._tapPoint.dist(swipePoint) < MAX_DIST;
+
+            if (!soonEnough || !closeEnough) {
+                this.reset();
+            } else if (mapTouches.length > 0) {
+                this._swipePoint = swipePoint;
+                this._swipeTouch = mapTouches[0].identifier;
+            }
+        }
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
@@ -70,6 +76,7 @@ export default class TapDragZoomHandler {
             const point = this._tap.touchend(e, points, mapTouches);
             if (point) {
                 this._tapTime = e.timeStamp;
+                this._tapPoint = point;
             }
         } else if (this._swipePoint) {
             if (mapTouches.length === 0) {
