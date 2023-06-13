@@ -605,7 +605,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 skew: options.skew || [0, 0],
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
-                crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
+                crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
+                maxCanvasSize: [8192, 8192]
             });
 
             // Configure the map to never stop the render loop
