@@ -2713,8 +2713,8 @@ export class Map extends Camera {
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
         // Request the required canvas size taking the pixelratio into account.
-        this._canvas.width = pixelRatio * width;
-        this._canvas.height = pixelRatio * height;
+        this._canvas.width = Math.floor(pixelRatio * width);
+        this._canvas.height = Math.floor(pixelRatio * height);
 
         // Maintain the same canvas size, potentially downscaling it for HiDPI displays
         this._canvas.style.width = `${width}px`;

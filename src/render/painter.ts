@@ -135,8 +135,8 @@ export class Painter {
      * for a new width and height value.
      */
     resize(width: number, height: number, pixelRatio: number) {
-        this.width = width * pixelRatio;
-        this.height = height * pixelRatio;
+        this.width = Math.floor(width * pixelRatio);
+        this.height = Math.floor(height * pixelRatio);
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 

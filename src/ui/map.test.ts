@@ -865,6 +865,19 @@ describe('Map', () => {
             expect(spyB).toHaveBeenCalled();
         });
 
+        test('width and height correctly rounded', () => {
+            const map = createMap();
+            const container = map.getContainer();
+
+            Object.defineProperty(container, 'clientWidth', {value: 250.6});
+            Object.defineProperty(container, 'clientHeight', {value: 250.6});
+            map.resize();
+
+            expect(map.getCanvas().width).toBe(250);
+            expect(map.getCanvas().height).toBe(250);
+            expect(map.painter.width).toBe(250);
+            expect(map.painter.height).toBe(250);
+        });
     });
 
     describe('#getBounds', () => {
