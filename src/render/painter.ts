@@ -634,4 +634,14 @@ export class Painter {
             this.debugOverlayTexture.destroy();
         }
     }
+
+    /*
+     * Return true if drawing buffer size is != from requested size.
+     * That means that we've reached GL limits somehow.
+     * Note: drawing buffer size changes only when canvas size changes
+     */
+    overLimit() {
+        const {drawingBufferWidth, drawingBufferHeight} = this.context.gl;
+        return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
+    }
 }
