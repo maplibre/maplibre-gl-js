@@ -114,11 +114,6 @@ class Context {
 
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
 
-        const extSRGB = gl.getExtension('EXT_sRGB');
-        if (!extSRGB) {
-            console.warn('EXT_sRGB extension not supported');
-        }
-
         if (isWebGL2(gl)) {
             this.HALF_FLOAT = gl.HALF_FLOAT;
             const extColorBufferHalfFloat = gl.getExtension('EXT_color_buffer_half_float');

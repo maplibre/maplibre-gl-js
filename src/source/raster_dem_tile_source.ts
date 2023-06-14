@@ -14,6 +14,7 @@ import type Dispatcher from '../util/dispatcher';
 import type Tile from './tile';
 import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ExpiryData} from '../util/ajax';
 
 class RasterDEMTileSource extends RasterTileSource implements Source {
     encoding: 'mapbox' | 'terrarium';
@@ -42,7 +43,7 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
         tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this), this.map._refreshExpiredTiles);
 
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
-        function imageLoaded(err, img) {
+        function imageLoaded(err: Error, img: (HTMLImageElement | ImageBitmap) & ExpiryData) {
             delete tile.request;
             if (tile.aborted) {
                 tile.state = 'unloaded';
@@ -52,8 +53,8 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
                 callback(err);
             } else if (img) {
                 if (this.map._refreshExpiredTiles) tile.setExpiryData(img);
-                delete (img as any).cacheControl;
-                delete (img as any).expires;
+                delete img.cacheControl;
+                delete img.expires;
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
                 const rawImageData = transfer ? img : browser.getImageData(img, 1);
                 const params = {
