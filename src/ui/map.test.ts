@@ -2488,6 +2488,14 @@ describe('Map', () => {
         expect(map.getPixelRatio()).toBe(devicePixelRatio);
     });
 
+    test('pixel ratio by default reflects devicePixelRatio changes', () => {
+        global.devicePixelRatio = 0.25;
+        const map = createMap();
+        expect(map.getPixelRatio()).toBe(0.25);
+        global.devicePixelRatio = 1;
+        expect(map.getPixelRatio()).toBe(1);
+    });
+
     test('canvas has the expected size', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
