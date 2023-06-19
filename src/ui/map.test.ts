@@ -2748,7 +2748,9 @@ describe('Map', () => {
             expect(cameraOptions).toBeDefined();
             expect(mockedGetElevation.mock.calls).toHaveLength(0);
         });
+    });
 
+    describe('webgl errors', () => {
         test('WebGL error while creating map', () => {
             setErrorWebGlContext();
             try {
