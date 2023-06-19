@@ -117,7 +117,7 @@ export type MapOptions = {
     pitchWithRotate?: boolean;
     pixelRatio?: number;
     validateStyle?: boolean;
-    maxCanvasSize?: number[];
+    maxCanvasSize?: [number, number];
 };
 
 /**
@@ -204,7 +204,7 @@ const defaultOptions = {
     fadeDuration: 300,
     crossSourceCollisions: true,
     validateStyle: true,
-    // Because GL MAX_TEXTURE_SIZE is usually at least 4096px
+    /** Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096]
 } as CompleteMapOptions;
 
@@ -288,7 +288,7 @@ const defaultOptions = {
  * @param {boolean} [options.crossSourceCollisions=true] If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
  * @param {Object} [options.locale=null] A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
  * @param {number} [options.pixelRatio] The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
- * @param {number} [options.maxCanvasSize] The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height. You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
+ * @param {[number, number]} [options.maxCanvasSize] The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height. You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
  * @example
  * var map = new maplibregl.Map({
  *   container: 'map',
@@ -361,7 +361,7 @@ export class Map extends Camera {
     _removed: boolean;
     _clickTolerance: number;
     _overridePixelRatio: number | null;
-    _maxCanvasSize: number[];
+    _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /** image queue throttling handle. To be used later when clean up */
