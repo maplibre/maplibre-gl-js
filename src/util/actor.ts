@@ -97,13 +97,13 @@ class Actor {
     }
 
     receive = (message: {
-        data: { 
+        data: {
             id: number;
             type: string;
             data: unknown;
             targetMapId?: string | null;
-            mustQueue: boolean
-        }}) => {
+            mustQueue: boolean;
+        };}) => {
         const data = message.data;
         const id = data.id;
 
