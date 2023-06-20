@@ -11,6 +11,7 @@ import {OverscaledTileID} from './tile_id';
 import VertexBuffer from '../gl/vertex_buffer';
 import SegmentVector from '../data/segment';
 import Texture from '../render/texture';
+import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 function createSource(options) {
     options = extend({
@@ -177,7 +178,7 @@ describe('ImageSource', () => {
     test('serialize url and coordinates', () => {
         const source = createSource({url: '/image.png'});
 
-        const serialized = source.serialize();
+        const serialized = source.serialize() as ImageSourceSpecification;
         expect(serialized.type).toBe('image');
         expect(serialized.url).toBe('/image.png');
         expect(serialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
