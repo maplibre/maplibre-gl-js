@@ -16,7 +16,7 @@ import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
-    collectResourceTiming: boolean;
+    collectResourceTiming?: boolean;
 }
 
 export type GeoJsonSourceOptions = {
@@ -192,9 +192,9 @@ class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    load() {
+    load = () => {
         this._updateWorkerData();
-    }
+    };
 
     onAdd(map: Map) {
         this.map = map;
@@ -419,12 +419,12 @@ class GeoJSONSource extends Evented implements Source {
         this.actor.send('removeSource', {type: this.type, source: this.id});
     }
 
-    serialize() {
+    serialize = (): GeoJSONSourceSpecification => {
         return extend({}, this._options, {
             type: this.type,
             data: this._data
         });
-    }
+    };
 
     hasTransition() {
         return false;

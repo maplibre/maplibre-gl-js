@@ -1,4 +1,4 @@
-import {bindAll, extend, warnOnce, clamp, wrap, ease as defaultEasing, pick} from '../util/util';
+import {extend, warnOnce, clamp, wrap, defaultEasing, pick} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import browser from '../util/browser';
 import LngLat from '../geo/lng_lat';
@@ -191,8 +191,6 @@ abstract class Camera extends Evented {
         this._zooming = false;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
-
-        bindAll(['_renderFrameCallback'], this);
 
         //addAssertions(this);
         this.on('moveend', () => {
@@ -1382,7 +1380,7 @@ abstract class Camera extends Evented {
     }
 
     // Callback for map._requestRenderFrame
-    _renderFrameCallback() {
+    _renderFrameCallback = () => {
         const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
         this._onEaseFrame(this._easeOptions.easing(t));
         if (t < 1) {
@@ -1390,7 +1388,7 @@ abstract class Camera extends Evented {
         } else {
             this.stop();
         }
-    }
+    };
 
     // convert bearing so that it's numerically close to the current one so that it interpolates properly
     _normalizeBearing(bearing: number, currentBearing: number) {

@@ -1,4 +1,4 @@
-import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import browser from '../util/browser';
 import DOM from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
@@ -476,14 +476,6 @@ class Map extends Camera {
         if (options.maxBounds) {
             this.setMaxBounds(options.maxBounds);
         }
-
-        bindAll([
-            '_onWindowOnline',
-            '_onMapScroll',
-            '_cooperativeGesturesOnWheel',
-            '_contextLost',
-            '_contextRestored'
-        ], this);
 
         this._setupContainer();
         this._setupPainter();
@@ -2689,9 +2681,9 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _cooperativeGesturesOnWheel(event: WheelEvent) {
+    _cooperativeGesturesOnWheel = (event: WheelEvent) => {
         this._onCooperativeGesture(event, event[this._metaKey], 1);
-    }
+    };
 
     _setupCooperativeGestures() {
         const container = this._container;
@@ -2767,30 +2759,30 @@ class Map extends Camera {
         webpSupported.testSupport(gl);
     }
 
-    _contextLost(event: any) {
+    _contextLost = (event: any) => {
         event.preventDefault();
         if (this._frame) {
             this._frame.cancel();
             this._frame = null;
         }
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
-    }
+    };
 
-    _contextRestored(event: any) {
+    _contextRestored = (event: any) => {
         this._setupPainter();
         this.resize();
         this._update();
         this.fire(new Event('webglcontextrestored', {originalEvent: event}));
-    }
+    };
 
-    _onMapScroll(event: any) {
+    _onMapScroll = (event: any) => {
         if (event.target !== this._container) return;
 
         // Revert any scroll which would move the canvas outside of the view
         this._container.scrollTop = 0;
         this._container.scrollLeft = 0;
         return false;
-    }
+    };
 
     _onCooperativeGesture(event: any, metaPress, touches) {
         if (!metaPress && touches < 2) {
@@ -3049,9 +3041,9 @@ class Map extends Camera {
         }
     }
 
-    _onWindowOnline() {
+    _onWindowOnline = () => {
         this._update();
-    }
+    };
 
     /**
      * Gets and sets a Boolean indicating whether the map will render an outline

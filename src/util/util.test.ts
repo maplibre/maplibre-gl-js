@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, asyncAll, bezier, bindAll, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, uniqueId, wrap} from './util';
+import {arraysIntersect, asyncAll, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, uniqueId, wrap} from './util';
 
 describe('util', () => {
     expect(easeCubicInOut(0)).toBe(0);
@@ -12,19 +12,6 @@ describe('util', () => {
     expect(pick({a: 1, b: 2, c: 3}, ['a', 'c'])).toEqual({a: 1, c: 3});
     expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'])).toEqual({a: 1, c: 3});
     expect(typeof uniqueId() === 'number').toBeTruthy();
-
-    test('bindAll', done => {
-        function MyClass() {
-            bindAll(['ontimer'], this);
-            this.name = 'Tom';
-        }
-        MyClass.prototype.ontimer = function() {
-            expect(this.name).toBe('Tom');
-            done();
-        };
-        const my = new MyClass();
-        setTimeout(my.ontimer, 0);
-    });
 
     test('asyncAll - sync', done => {
         expect(asyncAll([0, 1, 2], (data, callback) => {

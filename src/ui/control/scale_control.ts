@@ -1,5 +1,5 @@
 import DOM from '../../util/dom';
-import {extend, bindAll} from '../../util/util';
+import {extend} from '../../util/util';
 
 import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
@@ -39,20 +39,15 @@ class ScaleControl implements IControl {
 
     constructor(options: ScaleOptions) {
         this.options = extend({}, defaultOptions, options);
-
-        bindAll([
-            '_onMove',
-            'setUnit'
-        ], this);
     }
 
     getDefaultPosition(): ControlPosition {
         return 'bottom-left';
     }
 
-    _onMove() {
+    _onMove = () => {
         updateScale(this._map, this._container, this.options);
-    }
+    };
 
     onAdd(map: Map) {
         this._map = map;
@@ -75,10 +70,10 @@ class ScaleControl implements IControl {
      *
      * @param unit Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
      */
-    setUnit(unit: Unit) {
+    setUnit = (unit: Unit) => {
         this.options.unit = unit;
         updateScale(this._map, this._container, this.options);
-    }
+    };
 }
 
 export default ScaleControl;

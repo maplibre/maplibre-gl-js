@@ -16,7 +16,7 @@ import TapDragZoomHandler from './handler/tap_drag_zoom';
 import DragPanHandler from './handler/shim/drag_pan';
 import DragRotateHandler from './handler/shim/drag_rotate';
 import TouchZoomRotateHandler from './handler/shim/two_fingers_touch';
-import {bindAll, extend} from '../util/util';
+import {extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
@@ -137,8 +137,6 @@ class HandlerManager {
         this._eventsInProgress = {};
 
         this._addDefaultHandlers(options);
-
-        bindAll(['handleEvent', 'handleWindowEvent'], this);
 
         const el = this._el;
 
@@ -290,9 +288,9 @@ class HandlerManager {
         return false;
     }
 
-    handleWindowEvent(e: InputEvent) {
+    handleWindowEvent = (e: InputEvent) => {
         this.handleEvent(e, `${e.type}Window`);
-    }
+    };
 
     _getMapTouches(touches: TouchList) {
         const mapTouches = [];
@@ -305,7 +303,7 @@ class HandlerManager {
         return mapTouches as any as TouchList;
     }
 
-    handleEvent(e: Event, eventName?: string) {
+    handleEvent = (e: Event, eventName?: string) => {
 
         if (e.type === 'blur') {
             this.stop(true);
@@ -377,7 +375,7 @@ class HandlerManager {
             this._changes = [];
             cameraAnimation(this._map);
         }
-    }
+    };
 
     mergeHandlerResult(mergedHandlerResult: HandlerResult,
         eventsInProgress: EventsInProgress,

@@ -1,6 +1,6 @@
 import DOM from '../../util/dom';
 
-import {ease as _ease, bindAll, bezier} from '../../util/util';
+import {defaultEasing, bezier} from '../../util/util';
 import browser from '../../util/browser';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import LngLat from '../../geo/lng_lat';
@@ -82,8 +82,6 @@ class ScrollZoomHandler {
 
         this._defaultZoomRate = defaultZoomRate;
         this._wheelZoomRate = wheelZoomRate;
-
-        bindAll(['_onTimeout'], this);
     }
 
     /**
@@ -218,13 +216,13 @@ class ScrollZoomHandler {
         e.preventDefault();
     }
 
-    _onTimeout(initialEvent: MouseEvent) {
+    _onTimeout = (initialEvent: MouseEvent) => {
         this._type = 'wheel';
         this._delta -= this._lastValue;
         if (!this._active) {
             this._start(initialEvent);
         }
-    }
+    };
 
     _start(e: MouseEvent) {
         if (!this._delta) return;
@@ -333,16 +331,16 @@ class ScrollZoomHandler {
     }
 
     _smoothOutEasing(duration: number) {
-        let easing = _ease;
+        let easing = defaultEasing;
 
         if (this._prevEase) {
-            const ease = this._prevEase,
-                t = (browser.now() - ease.start) / ease.duration,
-                speed = ease.easing(t + 0.01) - ease.easing(t),
+            const currentEase = this._prevEase;
+            const t = (browser.now() - currentEase.start) / currentEase.duration;
+            const speed = currentEase.easing(t + 0.01) - currentEase.easing(t);
 
-                // Quick hack to make new bezier that is continuous with last
-                x = 0.27 / Math.sqrt(speed * speed + 0.0001) * 0.01,
-                y = Math.sqrt(0.27 * 0.27 - x * x);
+            // Quick hack to make new bezier that is continuous with last
+            const x = 0.27 / Math.sqrt(speed * speed + 0.0001) * 0.01;
+            const y = Math.sqrt(0.27 * 0.27 - x * x);
 
             easing = bezier(x, y, 0.25, 1);
         }

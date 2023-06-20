@@ -14,6 +14,10 @@ import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 
+export type VectorTileSourceOptions = VectorSourceSpecification & {
+    collectResourceTiming?: boolean;
+}
+
 /**
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -62,9 +66,7 @@ class VectorTileSource extends Evented implements Source {
     _tileJSONRequest: Cancelable;
     _loaded: boolean;
 
-    constructor(id: string, options: VectorSourceSpecification & {
-        collectResourceTiming: boolean;
-    }, dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, options: VectorTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -90,7 +92,7 @@ class VectorTileSource extends Evented implements Source {
         this.setEventedParent(eventedParent);
     }
 
-    load() {
+    load = () => {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = loadTileJSON(this._options, this.map._requestManager, (err, tileJSON) => {
@@ -110,7 +112,7 @@ class VectorTileSource extends Evented implements Source {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
         });
-    }
+    };
 
     loaded(): boolean {
         return this._loaded;
@@ -171,9 +173,9 @@ class VectorTileSource extends Evented implements Source {
         }
     }
 
-    serialize() {
+    serialize = (): VectorSourceSpecification => {
         return extend({}, this._options);
-    }
+    };
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);

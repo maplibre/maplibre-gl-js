@@ -106,7 +106,7 @@ class ImageSource extends Evented implements Source {
         this.options = options;
     }
 
-    load(newCoordinates?: Coordinates, successCallback?: () => void) {
+    load = (newCoordinates?: Coordinates, successCallback?: () => void) => {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
 
@@ -129,7 +129,7 @@ class ImageSource extends Evented implements Source {
                 this._finishLoading();
             }
         });
-    }
+    };
 
     loaded(): boolean {
         return this._loaded;
@@ -231,7 +231,7 @@ class ImageSource extends Evented implements Source {
         return this;
     }
 
-    prepare() {
+    prepare = () => {
         if (Object.keys(this.tiles).length === 0 || !this.image) {
             return;
         }
@@ -265,7 +265,7 @@ class ImageSource extends Evented implements Source {
         if (newTilesLoaded) {
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
-    }
+    };
 
     loadTile(tile: Tile, callback: Callback<void>) {
         // We have a single tile -- whose coordinates are this.tileID -- that
@@ -284,13 +284,13 @@ class ImageSource extends Evented implements Source {
         }
     }
 
-    serialize(): any {
+    serialize = (): ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification => {
         return {
             type: 'image',
             url: this.options.url,
             coordinates: this.coordinates
         };
-    }
+    };
 
     hasTransition() {
         return false;

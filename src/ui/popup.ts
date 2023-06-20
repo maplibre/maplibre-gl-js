@@ -1,4 +1,4 @@
-import {extend, bindAll} from '../util/util';
+import {extend} from '../util/util';
 import {Event, Evented} from '../util/evented';
 import {MapMouseEvent} from '../ui/events';
 import DOM from '../util/dom';
@@ -110,7 +110,6 @@ export default class Popup extends Evented {
     constructor(options?: PopupOptions) {
         super();
         this.options = extend(Object.create(defaultOptions), options);
-        bindAll(['_update', '_onClose', 'remove', '_onMouseMove', '_onMouseUp', '_onDrag'], this);
     }
 
     /**
@@ -194,7 +193,7 @@ export default class Popup extends Evented {
      * popup.remove();
      * @returns {Popup} `this`
      */
-    remove() {
+    remove = () => {
         if (this._content) {
             DOM.remove(this._content);
         }
@@ -237,7 +236,7 @@ export default class Popup extends Evented {
         this.fire(new Event('close'));
 
         return this;
-    }
+    };
 
     /**
      * Returns the geographical location of the popup's anchor.
@@ -499,19 +498,19 @@ export default class Popup extends Evented {
         }
     }
 
-    _onMouseUp(event: MapMouseEvent) {
+    _onMouseUp = (event: MapMouseEvent) => {
         this._update(event.point);
-    }
+    };
 
-    _onMouseMove(event: MapMouseEvent) {
+    _onMouseMove = (event: MapMouseEvent) => {
         this._update(event.point);
-    }
+    };
 
-    _onDrag(event: MapMouseEvent) {
+    _onDrag = (event: MapMouseEvent) => {
         this._update(event.point);
-    }
+    };
 
-    _update(cursor?: Point) {
+    _update = (cursor?: Point) => {
         const hasPosition = this._lngLat || this._trackPointer;
 
         if (!this._map || !hasPosition || !this._content) { return; }
@@ -574,7 +573,7 @@ export default class Popup extends Evented {
         const offsetedPos = pos.add(offset[anchor]).round();
         DOM.setTransform(this._container, `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`);
         applyAnchorClass(this._container, anchor, 'popup');
-    }
+    };
 
     _focusFirstElement() {
         if (!this.options.focusAfterOpen || !this._container) return;
@@ -584,9 +583,9 @@ export default class Popup extends Evented {
         if (firstFocusable) firstFocusable.focus();
     }
 
-    _onClose() {
+    _onClose = () => {
         this.remove();
-    }
+    };
 }
 
 function normalizeOffset(offset?: Offset | null) {

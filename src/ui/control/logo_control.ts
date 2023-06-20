@@ -1,5 +1,4 @@
 import DOM from '../../util/dom';
-import {bindAll} from '../../util/util';
 
 import type Map from '../map';
 import type {ControlPosition, IControl} from './control';
@@ -24,10 +23,6 @@ class LogoControl implements IControl {
 
     constructor(options: LogoOptions = {}) {
         this.options = options;
-
-        bindAll([
-            '_updateCompact'
-        ], this);
     }
 
     getDefaultPosition(): ControlPosition {
@@ -60,7 +55,7 @@ class LogoControl implements IControl {
         this._compact = undefined;
     }
 
-    _updateCompact() {
+    _updateCompact = () => {
         const containerChildren = this._container.children;
         if (containerChildren.length) {
             const anchor = containerChildren[0];
@@ -72,7 +67,7 @@ class LogoControl implements IControl {
                 anchor.classList.remove('maplibregl-compact');
             }
         }
-    }
+    };
 
 }
 
