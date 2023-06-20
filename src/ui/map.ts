@@ -39,6 +39,7 @@ import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
 import type ScrollZoomHandler from './handler/scroll_zoom';
+import type {ScrollZoomHandlerOptions} from './handler/scroll_zoom';
 import type BoxZoomHandler from './handler/box_zoom';
 import type {TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type DragRotateHandler from './handler/shim/drag_rotate';
@@ -82,7 +83,7 @@ export type MapOptions = {
     antialias?: boolean;
     refreshExpiredTiles?: boolean;
     maxBounds?: LngLatBoundsLike;
-    scrollZoom?: boolean;
+    scrollZoom?: boolean | ScrollZoomHandlerOptions;
     minZoom?: number | null;
     maxZoom?: number | null;
     minPitch?: number | null;
@@ -247,7 +248,7 @@ const defaultOptions = {
  * @param {boolean} [options.antialias] If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
  * @param {boolean} [options.refreshExpiredTiles=true] If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
  * @param {LngLatBoundsLike} [options.maxBounds] If set, the map will be constrained to the given bounds.
- * @param {boolean|Object} [options.scrollZoom=true] If `true`, the "scroll to zoom" interaction is enabled. An `Object` value is passed as options to {@link ScrollZoomHandler#enable}.
+ * @param {boolean|ScrollZoomHandlerOptions} [options.scrollZoom=true] If `true`, the "scroll to zoom" interaction is enabled. {@link ScrollZoomHandlerOptions} are passed as options to {@link ScrollZoomHandler#enable}.
  * @param {boolean} [options.boxZoom=true] If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
  * @param {boolean} [options.dragRotate=true] If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
  * @param {boolean|Object} [options.dragPan=true] If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
