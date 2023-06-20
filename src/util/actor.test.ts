@@ -40,8 +40,8 @@ describe('Actor', () => {
 
         const worker = workerFactory();
 
-        const m1 = new Actor(worker, {}, 1);
-        const m2 = new Actor(worker, {}, 2);
+        const m1 = new Actor(worker, {}, '1');
+        const m2 = new Actor(worker, {}, '2');
 
         let callbackCount = 0;
         m1.send('test', {value: 1729}, (err, response) => {
@@ -78,14 +78,14 @@ describe('Actor', () => {
 
         new Actor(worker, {
             test () { done(); }
-        }, 1);
+        }, '1');
         new Actor(worker, {
             test () {
                 done('test failed');
             }
-        }, 2);
+        }, '2');
 
-        workerActor.send('test', {}, () => {}, 1);
+        workerActor.send('test', {}, () => {}, '1');
     });
 
     test('#remove unbinds event listener', done => {

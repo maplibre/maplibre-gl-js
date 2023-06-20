@@ -2496,13 +2496,6 @@ describe('Style#query*Features', () => {
 });
 
 describe('Style#addSourceType', () => {
-    const _types = {'existing' () {}};
-
-    jest.spyOn(Style, 'getSourceType').mockImplementation(name => _types[name]);
-    jest.spyOn(Style, 'setSourceType').mockImplementation((name, create) => {
-        _types[name] = create;
-    });
-
     test('adds factory function', done => {
         const style = new Style(getStubMap());
         const sourceType = function () {} as any as SourceClass;
@@ -2514,8 +2507,9 @@ describe('Style#addSourceType', () => {
             }
         };
 
-        style.addSourceType('foo', sourceType, () => {
-            expect(_types['foo']).toBe(sourceType);
+        style.addSourceType('foo', sourceType, (arg1, arg2) => {
+            expect(arg1).toBeNull();
+            expect(arg2).toBeNull();
             done();
         });
     });
@@ -2525,9 +2519,8 @@ describe('Style#addSourceType', () => {
         const sourceType = function () {} as any as SourceClass;
         sourceType.workerSourceURL = 'worker-source.js' as any as URL;
 
-        style.dispatcher.broadcast = function (type, params) {
+        style.dispatcher.broadcast = (type, params) => {
             if (type === 'loadWorkerSource') {
-                expect(_types['bar']).toBe(sourceType);
                 expect(params['name']).toBe('bar');
                 expect(params['url']).toBe('worker-source.js');
                 done();
@@ -2540,7 +2533,7 @@ describe('Style#addSourceType', () => {
     test('refuses to add new type over existing name', done => {
         const style = new Style(getStubMap());
         const sourceType = function () {} as any as SourceClass;
-        style.addSourceType('existing', sourceType, (err) => {
+        style.addSourceType('canvas', sourceType, (err) => {
             expect(err).toBeTruthy();
             done();
         });

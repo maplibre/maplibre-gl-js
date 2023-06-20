@@ -1,6 +1,6 @@
 import {Event, Evented} from '../../util/evented';
 import DOM from '../../util/dom';
-import {extend, bindAll, warnOnce} from '../../util/util';
+import {extend, warnOnce} from '../../util/util';
 import {checkGeolocationSupport} from '../../util/geolocation_support';
 import LngLat from '../../geo/lng_lat';
 import Marker from '../marker';
@@ -90,16 +90,6 @@ class GeolocateControl extends Evented implements IControl {
     constructor(options: GeolocateOptions) {
         super();
         this.options = extend({}, defaultOptions, options);
-
-        bindAll([
-            '_onSuccess',
-            '_onError',
-            '_onZoom',
-            '_finish',
-            '_setupUI',
-            '_updateCamera',
-            '_updateMarker'
-        ], this);
     }
 
     onAdd(map: Map) {
@@ -184,7 +174,7 @@ class GeolocateControl extends Evented implements IControl {
      * @param {Position} position the Geolocation API Position
      * @private
      */
-    _onSuccess(position: GeolocationPosition) {
+    _onSuccess = (position: GeolocationPosition) => {
         if (!this._map) {
             // control has since been removed
             return;
@@ -244,7 +234,7 @@ class GeolocateControl extends Evented implements IControl {
 
         this.fire(new Event('geolocate', position));
         this._finish();
-    }
+    };
 
     /**
      * Update the camera location to center on the current position
@@ -252,7 +242,7 @@ class GeolocateControl extends Evented implements IControl {
      * @param {Position} position the Geolocation API Position
      * @private
      */
-    _updateCamera(position: GeolocationPosition) {
+    _updateCamera = (position: GeolocationPosition) => {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
         const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
@@ -262,7 +252,7 @@ class GeolocateControl extends Evented implements IControl {
         this._map.fitBounds(newBounds, options, {
             geolocateSource: true // tag this camera change so it won't cause the control to change to background state
         });
-    }
+    };
 
     /**
      * Update the user location dot Marker to the current position
@@ -270,7 +260,7 @@ class GeolocateControl extends Evented implements IControl {
      * @param {Position} [position] the Geolocation API Position
      * @private
      */
-    _updateMarker(position?: GeolocationPosition | null) {
+    _updateMarker = (position?: GeolocationPosition | null) => {
         if (position) {
             const center = new LngLat(position.coords.longitude, position.coords.latitude);
             this._accuracyCircleMarker.setLngLat(center).addTo(this._map);
@@ -283,7 +273,7 @@ class GeolocateControl extends Evented implements IControl {
             this._userLocationDotMarker.remove();
             this._accuracyCircleMarker.remove();
         }
-    }
+    };
 
     _updateCircleRadius() {
         const bounds = this._map.getBounds();
@@ -296,13 +286,13 @@ class GeolocateControl extends Evented implements IControl {
         this._circleElement.style.height = `${circleDiameter}px`;
     }
 
-    _onZoom() {
+    _onZoom = () => {
         if (this.options.showUserLocation && this.options.showAccuracyCircle) {
             this._updateCircleRadius();
         }
-    }
+    };
 
-    _onError(error: GeolocationPositionError) {
+    _onError = (error: GeolocationPositionError) => {
         if (!this._map) {
             // control has since been removed
             return;
@@ -343,14 +333,14 @@ class GeolocateControl extends Evented implements IControl {
         this.fire(new Event('error', error));
 
         this._finish();
-    }
+    };
 
-    _finish() {
+    _finish = () => {
         if (this._timeoutId) { clearTimeout(this._timeoutId); }
         this._timeoutId = undefined;
-    }
+    };
 
-    _setupUI(supported: boolean) {
+    _setupUI = (supported: boolean) => {
         // this method is called asynchronously during onAdd
         // the control could have been removed before reaching here
         if (!this._map) {
@@ -412,7 +402,7 @@ class GeolocateControl extends Evented implements IControl {
                 }
             });
         }
-    }
+    };
 
     /**
      * Programmatically request and move the map to the user's location.

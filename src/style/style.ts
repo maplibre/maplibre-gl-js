@@ -188,9 +188,6 @@ class Style extends Evented {
     placement: Placement;
     z: number;
 
-    // exposed to allow stubbing by unit tests
-    static getSourceType: typeof getSourceType;
-    static setSourceType: typeof setSourceType;
     static registerForPluginStateChange: typeof registerForPluginStateChange;
 
     constructor(map: Map, options: StyleOptions = {}) {
@@ -1342,11 +1339,11 @@ class Style extends Evented {
     }
 
     addSourceType(name: string, SourceType: SourceClass, callback: Callback<void>) {
-        if (Style.getSourceType(name)) {
+        if (getSourceType(name)) {
             return callback(new Error(`A source type called "${name}" already exists.`));
         }
 
-        Style.setSourceType(name, SourceType);
+        setSourceType(name, SourceType);
 
         if (!SourceType.workerSourceURL) {
             return callback(null, null);
@@ -1683,8 +1680,6 @@ class Style extends Evented {
     }
 }
 
-Style.getSourceType = getSourceType;
-Style.setSourceType = setSourceType;
 Style.registerForPluginStateChange = registerForPluginStateChange;
 
 export default Style;

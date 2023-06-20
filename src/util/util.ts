@@ -45,7 +45,7 @@ export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: 
  *
  * @private
  */
-export const ease = bezier(0.25, 0.1, 0.25, 1);
+export const defaultEasing = bezier(0.25, 0.1, 0.25, 1);
 
 /**
  * constrain n to the given range via min + max
@@ -195,34 +195,6 @@ export function isPowerOfTwo(value: number): boolean {
 export function nextPowerOfTwo(value: number): number {
     if (value <= 1) return 1;
     return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
-}
-
-/**
- * Given an array of member function names as strings, replace all of them
- * with bound versions that will always refer to `context` as `this`. This
- * is useful for classes where otherwise event bindings would reassign
- * `this` to the evented object or some other value: this lets you ensure
- * the `this` value always.
- *
- * @param fns list of member function names
- * @param context the context value
- * @example
- * function MyClass() {
- *   bindAll(['ontimer'], this);
- *   this.name = 'Tom';
- * }
- * MyClass.prototype.ontimer = function() {
- *   alert(this.name);
- * };
- * var myClass = new MyClass();
- * setTimeout(myClass.ontimer, 100);
- * @private
- */
-export function bindAll(fns: Array<string>, context: any): void {
-    fns.forEach((fn) => {
-        if (!context[fn]) { return; }
-        context[fn] = context[fn].bind(context);
-    });
 }
 
 /**

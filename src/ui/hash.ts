@@ -1,4 +1,3 @@
-import {bindAll} from '../util/util';
 import throttle from '../util/throttle';
 
 import type Map from './map';
@@ -11,19 +10,10 @@ import type Map from './map';
  */
 class Hash {
     _map: Map;
-    _updateHash: () => ReturnType<typeof setTimeout>;
     _hashName: string;
 
     constructor(hashName?: string | null) {
         this._hashName = hashName && encodeURIComponent(hashName);
-        bindAll([
-            '_getCurrentHash',
-            '_onHashChange',
-            '_updateHash'
-        ], this);
-
-        // Mobile Safari doesn't allow updating the hash more than 100 times per 30 seconds.
-        this._updateHash = throttle(this._updateHashUnthrottled.bind(this), 30 * 1000 / 100);
     }
 
     /*
@@ -95,7 +85,7 @@ class Hash {
         return `#${hash}`;
     }
 
-    _getCurrentHash() {
+    _getCurrentHash = () => {
         // Get the current hash from location, stripped from its number sign
         const hash = window.location.hash.replace('#', '');
         if (this._hashName) {
@@ -111,9 +101,9 @@ class Hash {
             return (keyval ? keyval[1] || '' : '').split('/');
         }
         return hash.split('/');
-    }
+    };
 
-    _onHashChange() {
+    _onHashChange = () => {
         const loc = this._getCurrentHash();
         if (loc.length >= 3 && !loc.some(v => isNaN(v))) {
             const bearing = this._map.dragRotate.isEnabled() && this._map.touchZoomRotate.isEnabled() ? +(loc[3] || 0) : this._map.getBearing();
@@ -126,9 +116,9 @@ class Hash {
             return true;
         }
         return false;
-    }
+    };
 
-    _updateHashUnthrottled() {
+    _updateHashUnthrottled = () => {
         // Replace if already present, else append the updated hash string
         const location = window.location.href.replace(/(#.+)?$/, this.getHashString());
         try {
@@ -138,7 +128,12 @@ class Hash {
             // with iframe.contentWindow.document.write(...).
             // https://github.com/mapbox/mapbox-gl-js/issues/7410
         }
-    }
+    };
+
+    /**
+     * Mobile Safari doesn't allow updating the hash more than 100 times per 30 seconds.
+     */
+    _updateHash = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
 
 }
 

@@ -61,7 +61,7 @@ class VideoSource extends ImageSource {
         this.options = options;
     }
 
-    load() {
+    load = () => {
         this._loaded = false;
         const options = this.options;
 
@@ -91,7 +91,7 @@ class VideoSource extends ImageSource {
                 this._finishLoading();
             }
         });
-    }
+    };
 
     /**
      * Pauses the video.
@@ -153,7 +153,7 @@ class VideoSource extends ImageSource {
      */
     // setCoordinates inherited from ImageSource
 
-    prepare() {
+    prepare = () => {
         if (Object.keys(this.tiles).length === 0 || this.video.readyState < 2) {
             return; // not enough data for current position
         }
@@ -190,15 +190,15 @@ class VideoSource extends ImageSource {
         if (newTilesLoaded) {
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
-    }
+    };
 
-    serialize() {
+    serialize = (): VideoSourceSpecification => {
         return {
             type: 'video',
             urls: this.urls,
             coordinates: this.coordinates
         };
-    }
+    };
 
     hasTransition() {
         return this.video && !this.video.paused;

@@ -2,7 +2,7 @@ import DOM from '../util/dom';
 import LngLat from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import smartWrap from '../util/smart_wrap';
-import {bindAll, extend} from '../util/util';
+import {extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 import type {PositionAnchor} from './anchor';
 import {Event, Evented} from '../util/evented';
@@ -83,15 +83,6 @@ export default class Marker extends Evented {
         if (options instanceof HTMLElement || legacyOptions) {
             options = extend({element: options}, legacyOptions);
         }
-
-        bindAll([
-            '_update',
-            '_onMove',
-            '_onUp',
-            '_addDragHandler',
-            '_onMapClick',
-            '_onKeyPress'
-        ], this);
 
         this._anchor = options && options.anchor || 'center';
         this._color = options && options.color || '#3FB1CE';
@@ -385,7 +376,7 @@ export default class Marker extends Evented {
         return this;
     }
 
-    _onKeyPress(e: KeyboardEvent) {
+    _onKeyPress = (e: KeyboardEvent) => {
         const code = e.code;
         const legacyCode = e.charCode || e.keyCode;
 
@@ -395,16 +386,16 @@ export default class Marker extends Evented {
         ) {
             this.togglePopup();
         }
-    }
+    };
 
-    _onMapClick(e: MapMouseEvent) {
+    _onMapClick = (e: MapMouseEvent) => {
         const targetElement = e.originalEvent.target;
         const element = this._element;
 
         if (this._popup && (targetElement === element || element.contains(targetElement as any))) {
             this.togglePopup();
         }
-    }
+    };
 
     /**
      * Returns the {@link Popup} instance that is bound to the {@link Marker}.
@@ -441,9 +432,7 @@ export default class Marker extends Evented {
         return this;
     }
 
-    _update(e?: {
-        type: 'move' | 'moveend';
-    }) {
+    _update = (e?: { type: 'move' | 'moveend' }) => {
         if (!this._map) return;
 
         if (this._map.transform.renderWorldCopies) {
@@ -483,7 +472,7 @@ export default class Marker extends Evented {
             this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
             this._opacityTimeout = null;
         }, 100);
-    }
+    };
 
     /**
      * Get the marker's offset.
@@ -504,7 +493,7 @@ export default class Marker extends Evented {
         return this;
     }
 
-    _onMove(e: MapMouseEvent | MapTouchEvent) {
+    _onMove = (e: MapMouseEvent | MapTouchEvent) => {
         if (!this._isDragging) {
             const clickTolerance = this._clickTolerance || this._map._clickTolerance;
             this._isDragging = e.point.dist(this._pointerdownPos) >= clickTolerance;
@@ -545,9 +534,9 @@ export default class Marker extends Evented {
          * @property {Marker} marker object that is being dragged
          */
         this.fire(new Event('drag'));
-    }
+    };
 
-    _onUp() {
+    _onUp = () => {
         // revert to normal pointer event handling
         this._element.style.pointerEvents = 'auto';
         this._positionDelta = null;
@@ -571,9 +560,9 @@ export default class Marker extends Evented {
         }
 
         this._state = 'inactive';
-    }
+    };
 
-    _addDragHandler(e: MapMouseEvent | MapTouchEvent) {
+    _addDragHandler = (e: MapMouseEvent | MapTouchEvent) => {
         if (this._element.contains(e.originalEvent.target as any)) {
             e.preventDefault();
 
@@ -593,7 +582,7 @@ export default class Marker extends Evented {
             this._map.once('mouseup', this._onUp);
             this._map.once('touchend', this._onUp);
         }
-    }
+    };
 
     /**
      * Sets the `draggable` property and functionality of the marker

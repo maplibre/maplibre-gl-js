@@ -11,10 +11,10 @@ import type Dispatcher from '../util/dispatcher';
 import type {Evented} from '../util/evented';
 
 export type CanvasSourceSpecification = {
-    'type': 'canvas';
-    'coordinates': [[number, number], [number, number], [number, number], [number, number]];
-    'animate'?: boolean;
-    'canvas': string | HTMLCanvasElement;
+    type: 'canvas';
+    coordinates: [[number, number], [number, number], [number, number], [number, number]];
+    animate?: boolean;
+    canvas?: string | HTMLCanvasElement;
 };
 
 /**
@@ -107,7 +107,7 @@ class CanvasSource extends ImageSource {
      * @memberof CanvasSource
      */
 
-    load() {
+    load = () => {
         this._loaded = true;
         if (!this.canvas) {
             this.canvas = (this.options.canvas instanceof HTMLCanvasElement) ?
@@ -137,7 +137,7 @@ class CanvasSource extends ImageSource {
         };
 
         this._finishLoading();
-    }
+    };
 
     /**
      * Returns the HTML `canvas` element.
@@ -174,7 +174,7 @@ class CanvasSource extends ImageSource {
     // */
     // setCoordinates inherited from ImageSource
 
-    prepare() {
+    prepare = () => {
         let resize = false;
         if (this.canvas.width !== this.width) {
             this.width = this.canvas.width;
@@ -219,14 +219,14 @@ class CanvasSource extends ImageSource {
         if (newTilesLoaded) {
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
-    }
+    };
 
-    serialize(): any {
+    serialize = (): CanvasSourceSpecification => {
         return {
             type: 'canvas',
             coordinates: this.coordinates
         };
-    }
+    };
 
     hasTransition() {
         return this._playing;

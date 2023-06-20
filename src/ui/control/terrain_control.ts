@@ -1,5 +1,4 @@
 import DOM from '../../util/dom';
-import {bindAll} from '../../util/util';
 
 import type Map from '../map';
 import type {IControl} from './control';
@@ -26,11 +25,6 @@ export default class TerrainControl implements IControl {
 
     constructor(options: TerrainSpecification) {
         this.options = options;
-
-        bindAll([
-            '_toggleTerrain',
-            '_updateTerrainIcon',
-        ], this);
     }
 
     onAdd(map: Map) {
@@ -52,16 +46,16 @@ export default class TerrainControl implements IControl {
         this._map = undefined;
     }
 
-    _toggleTerrain() {
+    _toggleTerrain = () => {
         if (this._map.getTerrain()) {
             this._map.setTerrain(null);
         } else {
             this._map.setTerrain(this.options);
         }
         this._updateTerrainIcon();
-    }
+    };
 
-    _updateTerrainIcon() {
+    _updateTerrainIcon = () => {
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain');
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled');
         if (this._map.terrain) {
@@ -71,5 +65,5 @@ export default class TerrainControl implements IControl {
             this._terrainButton.classList.add('maplibregl-ctrl-terrain');
             this._terrainButton.title = this._map._getUIString('TerrainControl.enableTerrain');
         }
-    }
+    };
 }
