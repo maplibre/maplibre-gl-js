@@ -217,7 +217,7 @@ class HandlerManager {
         const touchPitch = map.touchPitch = new TwoFingersTouchPitchHandler(map);
         this._add('touchPitch', touchPitch);
         if (options.interactive && options.touchPitch) {
-            map.touchPitch.enable();
+            map.touchPitch.enable(options.touchPitch);
         }
 
         const mouseRotate = generateMouseRotationHandler(options);
@@ -244,13 +244,13 @@ class HandlerManager {
         this._add('touchRotate', touchRotate, ['touchPan', 'touchZoom']);
         this._add('touchZoom', touchZoom, ['touchPan', 'touchRotate']);
         if (options.interactive && options.touchZoomRotate) {
-            map.touchZoomRotate.enable();
+            map.touchZoomRotate.enable(options.touchZoomRotate);
         }
 
         const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame());
         this._add('scrollZoom', scrollZoom, ['mousePan']);
         if (options.interactive && options.scrollZoom) {
-            map.scrollZoom.enable();
+            map.scrollZoom.enable(options.scrollZoom);
         }
 
         const keyboard = map.keyboard = new KeyboardHandler(map);

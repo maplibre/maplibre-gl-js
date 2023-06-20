@@ -8,6 +8,7 @@ import TransformProvider from './transform-provider';
 
 import type Map from '../map';
 import type Point from '@mapbox/point-geometry';
+import type {AroundCenterOptions} from './two_fingers_touch';
 import {Handler} from '../handler_manager';
 
 // deltaY value for mouse scroll wheel identification
@@ -21,16 +22,6 @@ const wheelZoomRate = 1 / 450;
 // upper bound on how much we scale the map in any single render frame; this
 // is used to limit zoom rate in the case of very fast scrolling
 const maxScalePerFrame = 2;
-
-/**
- * The scroll zoom handler options object
- */
-export type ScrollZoomHandlerOptions = {
-    /**
-     * If "center" is passed, map will zoom around the center of map
-     */
-    around?: 'center';
-};
 
 /**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
@@ -131,7 +122,7 @@ export default class ScrollZoomHandler implements Handler {
     /**
      * Enables the "scroll to zoom" interaction.
      *
-     * @param {ScrollZoomHandlerOptions} [options] Options object.
+     * @param {AroundCenterOptions} [options] Options object.
      * @param {string} [options.around] If "center" is passed, map will zoom around the center of map
      *
      * @example
@@ -139,10 +130,10 @@ export default class ScrollZoomHandler implements Handler {
      * @example
      *  map.scrollZoom.enable({ around: 'center' })
      */
-    enable(options?: ScrollZoomHandlerOptions) {
+    enable(options?: AroundCenterOptions | boolean) {
         if (this.isEnabled()) return;
         this._enabled = true;
-        this._aroundCenter = options && options.around === 'center';
+        this._aroundCenter = !!options && (options as AroundCenterOptions).around === 'center';
     }
 
     /**

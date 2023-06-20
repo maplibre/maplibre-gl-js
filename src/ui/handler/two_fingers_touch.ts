@@ -3,6 +3,10 @@ import DOM from '../../util/dom';
 import type Map from '../map';
 import {Handler} from '../handler_manager';
 
+export type AroundCenterOptions = {
+    around: 'center';
+}
+
 abstract class TwoFingersTouchHandler implements Handler {
 
     _enabled: boolean;
@@ -70,11 +74,9 @@ abstract class TwoFingersTouchHandler implements Handler {
         this.reset();
     }
 
-    enable(options?: {
-        around?: 'center';
-    } | null) {
+    enable(options?: AroundCenterOptions | boolean | null) {
         this._enabled = true;
-        this._aroundCenter = !!options && options.around === 'center';
+        this._aroundCenter = !!options && (options as AroundCenterOptions).around === 'center';
     }
 
     disable() {
