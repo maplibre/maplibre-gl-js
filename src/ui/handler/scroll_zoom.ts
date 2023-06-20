@@ -7,8 +7,8 @@ import LngLat from '../../geo/lng_lat';
 import TransformProvider from './transform-provider';
 
 import type Map from '../map';
-import type HandlerManager from '../handler_manager';
 import type Point from '@mapbox/point-geometry';
+import {Handler} from '../handler_manager';
 
 // deltaY value for mouse scroll wheel identification
 const wheelZoomDelta = 4.000244140625;
@@ -35,7 +35,7 @@ export type ScrollZoomHandlerOptions = {
 /**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
  */
-class ScrollZoomHandler {
+export default class ScrollZoomHandler implements Handler {
     _map: Map;
     _tr: TransformProvider;
     _el: HTMLElement;
@@ -64,7 +64,7 @@ class ScrollZoomHandler {
     };
 
     _frameId: boolean;
-    _handler: HandlerManager;
+    _triggerRenderFrame: () => void;
 
     _defaultZoomRate: number;
     _wheelZoomRate: number;
@@ -72,11 +72,11 @@ class ScrollZoomHandler {
     /**
      * @private
      */
-    constructor(map: Map, handler: HandlerManager) {
+    constructor(map: Map, triggerRenderFrame: () => void) {
         this._map = map;
         this._tr = new TransformProvider(map);
         this._el = map.getCanvasContainer();
-        this._handler = handler;
+        this._triggerRenderFrame = triggerRenderFrame;
 
         this._delta = 0;
 
@@ -248,7 +248,7 @@ class ScrollZoomHandler {
         this._aroundPoint = tr.transform.locationPoint(this._around);
         if (!this._frameId) {
             this._frameId = true;
-            this._handler._triggerRenderFrame();
+            this._triggerRenderFrame();
         }
     }
 
@@ -315,7 +315,7 @@ class ScrollZoomHandler {
             this._active = false;
             this._finishTimeout = setTimeout(() => {
                 this._zooming = false;
-                this._handler._triggerRenderFrame();
+                this._triggerRenderFrame();
                 delete this._targetZoom;
                 delete this._finishTimeout;
             }, 200);
@@ -358,5 +358,3 @@ class ScrollZoomHandler {
         this._active = false;
     }
 }
-
-export default ScrollZoomHandler;

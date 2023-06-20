@@ -1,3 +1,4 @@
+import {Handler} from '../handler_manager';
 import type Map from '../map';
 import TransformProvider from './transform-provider';
 
@@ -21,7 +22,7 @@ const defaultOptions = {
  * - `Shift+⇡`: Increase the pitch by 10 degrees.
  * - `Shift+⇣`: Decrease the pitch by 10 degrees.
  */
-class KeyboardHandler {
+export default class KeyboardHandler implements Handler {
     _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;
@@ -201,5 +202,3 @@ class KeyboardHandler {
 function easeOut(t: number) {
     return t * (2 - t);
 }
-
-export default KeyboardHandler;

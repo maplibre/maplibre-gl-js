@@ -26,14 +26,9 @@ export interface DragPitchResult extends DragMovementResult {
 type DragMoveFunction<T extends DragMovementResult> = (lastPoint: Point, point: Point) => T;
 
 export interface DragMoveHandler<T extends DragMovementResult, E extends Event> extends Handler {
-    reset: (e?: E) => void;
     dragStart: (e: E, point: Point) => void;
     dragMove: (e: E, point: Point) => T | void;
     dragEnd: (e: E) => void;
-    enable: () => void;
-    disable: () => void;
-    isEnabled: () => boolean;
-    isActive: () => boolean;
     getClickTolerance: () => number;
 }
 

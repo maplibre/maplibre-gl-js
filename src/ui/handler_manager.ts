@@ -52,6 +52,7 @@ export interface Handler {
     readonly mousemove?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mousemoveWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly mouseup?: (e: MouseEvent, point: Point) => HandlerResult | void;
+    readonly mouseupWindow?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly dblclick?: (e: MouseEvent, point: Point) => HandlerResult | void;
     readonly contextmenu?: (e: MouseEvent) => HandlerResult | void;
     readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
@@ -197,50 +198,68 @@ class HandlerManager {
 
         const boxZoom = map.boxZoom = new BoxZoomHandler(map, options);
         this._add('boxZoom', boxZoom);
+        if (options.interactive && options.boxZoom) {
+            boxZoom.enable();
+        }
 
         const tapZoom = new TapZoomHandler(map);
         const clickZoom = new ClickZoomHandler(map);
         map.doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
         this._add('tapZoom', tapZoom);
         this._add('clickZoom', clickZoom);
+        if (options.interactive && options.doubleClickZoom) {
+            map.doubleClickZoom.enable();
+        }
 
         const tapDragZoom = new TapDragZoomHandler();
         this._add('tapDragZoom', tapDragZoom);
 
         const touchPitch = map.touchPitch = new TwoFingersTouchPitchHandler(map);
         this._add('touchPitch', touchPitch);
+        if (options.interactive && options.touchPitch) {
+            map.touchPitch.enable();
+        }
 
         const mouseRotate = generateMouseRotationHandler(options);
         const mousePitch = generateMousePitchHandler(options);
         map.dragRotate = new DragRotateHandler(options, mouseRotate, mousePitch);
         this._add('mouseRotate', mouseRotate, ['mousePitch']);
         this._add('mousePitch', mousePitch, ['mouseRotate']);
+        if (options.interactive && options.dragRotate) {
+            map.dragRotate.enable();
+        }
 
         const mousePan = generateMousePanHandler(options);
         const touchPan = new TouchPanHandler(options, map);
         map.dragPan = new DragPanHandler(el, mousePan, touchPan);
         this._add('mousePan', mousePan);
         this._add('touchPan', touchPan, ['touchZoom', 'touchRotate']);
+        if (options.interactive && options.dragPan) {
+            map.dragPan.enable(options.dragPan);
+        }
 
         const touchRotate = new TwoFingersTouchRotateHandler();
         const touchZoom = new TwoFingersTouchZoomHandler();
         map.touchZoomRotate = new TouchZoomRotateHandler(el, touchZoom, touchRotate, tapDragZoom);
         this._add('touchRotate', touchRotate, ['touchPan', 'touchZoom']);
         this._add('touchZoom', touchZoom, ['touchPan', 'touchRotate']);
+        if (options.interactive && options.touchZoomRotate) {
+            map.touchZoomRotate.enable();
+        }
 
-        const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, this);
+        const scrollZoom = map.scrollZoom = new ScrollZoomHandler(map, () => this._triggerRenderFrame());
         this._add('scrollZoom', scrollZoom, ['mousePan']);
+        if (options.interactive && options.scrollZoom) {
+            map.scrollZoom.enable();
+        }
 
         const keyboard = map.keyboard = new KeyboardHandler(map);
         this._add('keyboard', keyboard);
+        if (options.interactive && options.keyboard) {
+            map.keyboard.enable();
+        }
 
         this._add('blockableMapEvent', new BlockableMapEventHandler(map));
-
-        for (const name of ['boxZoom', 'doubleClickZoom', 'tapDragZoom', 'touchPitch', 'dragRotate', 'dragPan', 'touchZoomRotate', 'scrollZoom', 'keyboard']) {
-            if (options.interactive && options[name]) {
-                map[name].enable(options[name]);
-            }
-        }
     }
 
     _add(handlerName: string, handler: Handler, allowed?: Array<string>) {
@@ -288,7 +307,7 @@ class HandlerManager {
         return false;
     }
 
-    handleWindowEvent = (e: InputEvent) => {
+    handleWindowEvent = (e: { type: 'mousemove' | 'mouseup' | 'touchmove'}) => {
         this.handleEvent(e, `${e.type}Window`);
     };
 
@@ -303,7 +322,7 @@ class HandlerManager {
         return mapTouches as any as TouchList;
     }
 
-    handleEvent = (e: Event, eventName?: string) => {
+    handleEvent = (e: Event, eventName?: keyof Handler) => {
 
         if (e.type === 'blur') {
             this.stop(true);
@@ -335,8 +354,8 @@ class HandlerManager {
                 handler.reset();
 
             } else {
-                if ((handler as any)[eventName || e.type]) {
-                    data = (handler as any)[eventName || e.type](e, points, mapTouches);
+                if (handler[eventName || e.type]) {
+                    data = handler[eventName || e.type](e, points, mapTouches);
                     this.mergeHandlerResult(mergedHandlerResult, eventsInProgress, data, handlerName, inputEvent);
                     if (data && data.needsRenderFrame) {
                         this._triggerRenderFrame();
