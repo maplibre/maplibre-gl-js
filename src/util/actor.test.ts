@@ -85,7 +85,7 @@ describe('Actor', () => {
             }
         }, '2');
 
-        workerActor.send('test', {}, () => {}, 1);
+        workerActor.send('test', {}, () => {}, '1');
     });
 
     test('#remove unbinds event listener', done => {

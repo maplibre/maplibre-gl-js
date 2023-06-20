@@ -15,7 +15,7 @@ import type {OverscaledTileID, CanonicalTileID} from './tile_id';
 import type {Callback} from '../types/callback';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 
-const registeredSources = new global.Map<string, SourceClass>();
+const registeredSources = {} as {[key:string]: SourceClass};
 
 /**
  * The `Source` interface must be implemented by each source type, including "core" types (`vector`, `raster`,
@@ -107,9 +107,6 @@ export const create = (id: string, specification: SourceSpecification | CanvasSo
 };
 
 export const getSourceType = (name: string): SourceClass => {
-    if (registeredSources.has(name)) {
-        return registeredSources.get(name);
-    }
     switch (name) {
         case 'geojson':
             return GeoJSONSource;
@@ -126,10 +123,11 @@ export const getSourceType = (name: string): SourceClass => {
         case 'canvas':
             return CanvasSource;
     }
+    return registeredSources[name];
 };
 
 export const setSourceType = (name: string, type: SourceClass) => {
-    registeredSources.set(name, type);
+    registeredSources[name] = type;
 };
 
 export interface Actor {
