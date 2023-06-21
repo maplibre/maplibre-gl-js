@@ -127,6 +127,9 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.2",
+    "typedoc": "^0.24.8",
+    "typedoc-plugin-missing-exports": "^2.0.0",
+    "typedoc-plugin-rename-defaults": "^0.6.5",
     "typescript": "^5.1.3"
   },
   "overrides": {
@@ -143,6 +146,7 @@
     "generate-struct-arrays": "npm run tsnode build/generate-struct-arrays.ts",
     "generate-style-code": "npm run tsnode build/generate-style-code.ts",
     "generate-typings": "npm run tsnode build/generate-typings.ts",
+    "generate-docs": "typedoc",
     "build-dist": "run-p --print-label generate-typings build-dev build-prod build-csp build-csp-dev build-css",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
