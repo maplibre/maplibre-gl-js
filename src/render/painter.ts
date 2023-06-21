@@ -47,7 +47,6 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
-import { SymbolStyleLayer } from '../style/style_layer/symbol_style_layer';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -500,14 +499,14 @@ export class Painter {
                 break;
             case 'raster':
                 drawRaster(painter, sourceCache, layer as any, coords);
-                break
+                break;
             case 'background':
                 drawBackground(painter, sourceCache, layer as any, coords);
                 break;
             case 'custom':
                 drawCustom(painter, sourceCache, layer as any);
                 break;
-        };
+        }
     }
 
     /**
