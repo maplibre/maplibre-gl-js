@@ -1,4 +1,4 @@
-import type {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler} from '../two_fingers_touch';
+import type {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, AroundCenterOptions} from '../two_fingers_touch';
 import type TapDragZoomHandler from '../tap_drag_zoom';
 
 /**
@@ -40,9 +40,7 @@ export default class TwoFingersTouchZoomRotateHandler {
      * @example
      *   map.touchZoomRotate.enable({ around: 'center' });
      */
-    enable(options?: {
-        around?: 'center';
-    } | null) {
+    enable(options?: AroundCenterOptions | boolean | null) {
         this._touchZoom.enable(options);
         if (!this._rotationDisabled) this._touchRotate.enable(options);
         this._tapDragZoom.enable();

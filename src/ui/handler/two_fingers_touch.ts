@@ -1,8 +1,13 @@
 import Point from '@mapbox/point-geometry';
 import DOM from '../../util/dom';
 import type Map from '../map';
+import {Handler} from '../handler_manager';
 
-class TwoFingersTouchHandler {
+export type AroundCenterOptions = {
+    around: 'center';
+}
+
+abstract class TwoFingersTouchHandler implements Handler {
 
     _enabled: boolean;
     _active: boolean;
@@ -20,8 +25,8 @@ class TwoFingersTouchHandler {
         delete this._firstTwoTouches;
     }
 
-    _start(points: [Point, Point]) {} //eslint-disable-line
-    _move(points: [Point, Point], pinchAround: Point, e: TouchEvent) { return {}; } //eslint-disable-line
+    abstract _start(points: [Point, Point]);
+    abstract _move(points: [Point, Point], pinchAround: Point, e: TouchEvent);
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         //log('touchstart', points, e.target.innerHTML, e.targetTouches.length ? e.targetTouches[0].target.innerHTML: undefined);
@@ -69,11 +74,9 @@ class TwoFingersTouchHandler {
         this.reset();
     }
 
-    enable(options?: {
-        around?: 'center';
-    } | null) {
+    enable(options?: AroundCenterOptions | boolean | null) {
         this._enabled = true;
-        this._aroundCenter = !!options && options.around === 'center';
+        this._aroundCenter = !!options && (options as AroundCenterOptions).around === 'center';
     }
 
     disable() {

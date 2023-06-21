@@ -14,7 +14,7 @@ import Painter from '../render/painter';
 import Transform from '../geo/transform';
 import Hash from './hash';
 import HandlerManager from './handler_manager';
-import Camera, {CameraOptions, CameraUpdateTransformFunction} from './camera';
+import Camera, {CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} from './camera';
 import LngLat from '../geo/lng_lat';
 import LngLatBounds from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
@@ -39,9 +39,8 @@ import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
 import type ScrollZoomHandler from './handler/scroll_zoom';
-import type {ScrollZoomHandlerOptions} from './handler/scroll_zoom';
 import type BoxZoomHandler from './handler/box_zoom';
-import type {TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
+import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type DragRotateHandler from './handler/shim/drag_rotate';
 import DragPanHandler, {DragPanOptions} from './handler/shim/drag_pan';
 
@@ -83,18 +82,18 @@ export type MapOptions = {
     antialias?: boolean;
     refreshExpiredTiles?: boolean;
     maxBounds?: LngLatBoundsLike;
-    scrollZoom?: boolean | ScrollZoomHandlerOptions;
+    scrollZoom?: boolean | AroundCenterOptions;
     minZoom?: number | null;
     maxZoom?: number | null;
     minPitch?: number | null;
     maxPitch?: number | null;
     boxZoom?: boolean;
     dragRotate?: boolean;
-    dragPan?: DragPanOptions | boolean;
+    dragPan?: boolean | DragPanOptions;
     keyboard?: boolean;
     doubleClickZoom?: boolean;
-    touchZoomRotate?: boolean;
-    touchPitch?: boolean;
+    touchZoomRotate?: boolean | AroundCenterOptions;
+    touchPitch?: boolean | AroundCenterOptions;
     cooperativeGestures?: boolean | GestureOptions;
     trackResize?: boolean;
     center?: LngLatLike;
@@ -112,7 +111,7 @@ export type MapOptions = {
     collectResourceTiming?: boolean;
     clickTolerance?: number;
     bounds?: LngLatBoundsLike;
-    fitBoundsOptions?: Object;
+    fitBoundsOptions?: FitBoundsOptions;
     localIdeographFontFamily?: string;
     style: StyleSpecification | string;
     pitchWithRotate?: boolean;
@@ -216,13 +215,13 @@ const defaultOptions = {
  * object.
  *
  * @extends Evented
- * @param {Object} options
+ * @param {MapOptions} options
  * @param {HTMLElement|string} options.container The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
  * @param {number} [options.minZoom=0] The minimum zoom level of the map (0-24).
  * @param {number} [options.maxZoom=22] The maximum zoom level of the map (0-24).
  * @param {number} [options.minPitch=0] The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {number} [options.maxPitch=60] The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
- * @param {Object|string} [options.style] The map's MapLibre style. This must be an a JSON object conforming to
+ * @param {StyleSpecification|string} [options.style] The map's MapLibre style. This must be an a JSON object conforming to
  * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to
  * such JSON.
  *
@@ -248,14 +247,14 @@ const defaultOptions = {
  * @param {boolean} [options.antialias] If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
  * @param {boolean} [options.refreshExpiredTiles=true] If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
  * @param {LngLatBoundsLike} [options.maxBounds] If set, the map will be constrained to the given bounds.
- * @param {boolean|ScrollZoomHandlerOptions} [options.scrollZoom=true] If `true`, the "scroll to zoom" interaction is enabled. {@link ScrollZoomHandlerOptions} are passed as options to {@link ScrollZoomHandler#enable}.
+ * @param {boolean|AroundCenterOptions} [options.scrollZoom=true] If `true`, the "scroll to zoom" interaction is enabled. {@link AroundCenterOptions} are passed as options to {@link ScrollZoomHandler#enable}.
  * @param {boolean} [options.boxZoom=true] If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
  * @param {boolean} [options.dragRotate=true] If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
- * @param {boolean|Object} [options.dragPan=true] If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
+ * @param {boolean|DragPanOptions} [options.dragPan=true] If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
  * @param {boolean} [options.keyboard=true] If `true`, keyboard shortcuts are enabled (see {@link KeyboardHandler}).
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
- * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
- * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
+ * @param {boolean|AroundCenterOptions} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
+ * @param {boolean|AroundCenterOptions} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
  * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link #FullscreenControl}.
  * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
  * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
@@ -263,7 +262,7 @@ const defaultOptions = {
  * @param {number} [options.bearing=0] The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.pitch=0] The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-85). If `pitch` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`. Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {LngLatBoundsLike} [options.bounds] The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
- * @param {Object} [options.fitBoundsOptions] A {@link Map#fitBounds} options object to use _only_ when fitting the initial `bounds` provided above.
+ * @param {fitBoundsOptions} [options.fitBoundsOptions] A {@link Map#fitBounds} options object to use _only_ when fitting the initial `bounds` provided above.
  * @param {boolean} [options.renderWorldCopies=true] If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
  * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
  * container, there will be blank space beyond 180 and -180 degrees longitude.
@@ -1462,7 +1461,7 @@ class Map extends Camera {
      *
      * @param style A JSON object conforming to the schema described in the
      * [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
-     * @param {Object} [options] Options object.
+     * @param {StyleSwapOptions & StyleOptions} [options] Options object.
      * @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
      * and building the given one instead of attempting a diff-based update.
      * @param {boolean} [options.validate=true] If false, style validation will be skipped. Useful in production environment.
@@ -1620,7 +1619,7 @@ class Map extends Camera {
     /**
      * Returns the map's MapLibre style object, a JSON object which can be used to recreate the map's style.
      *
-     * @returns {Object} The map's style JSON object.
+     * @returns {StyleSpecification} The map's style JSON object.
      *
      * @example
      * var styleJson = map.getStyle();
@@ -1649,7 +1648,7 @@ class Map extends Camera {
      * Adds a source to the map's style.
      *
      * @param {string} id The ID of the source to add. Must not conflict with existing sources.
-     * @param {Object} source The source object, conforming to the
+     * @param {SourceSpecification} source The source object, conforming to the
      * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
      * {@link CanvasSourceOptions}.
      * @fires source.add
@@ -2070,7 +2069,7 @@ class Map extends Camera {
      * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#layers).
      *
      * TODO: JSDoc can't pass @param {(LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface} layer The layer to add,
-     * @param {Object} layer
+     * @param {LayerSpecification} layer
      * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-style-spec/#layers) or,
      * less commonly, the {@link CustomLayerInterface} specification.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
@@ -2270,7 +2269,7 @@ class Map extends Camera {
      * @param {string} layerId The ID of the layer to which the filter will be applied.
      * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
      * [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
-     * @param {Object} [options] Options object.
+     * @param {StyleSetterOptions} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      *
@@ -2308,7 +2307,7 @@ class Map extends Camera {
      * @param {string} name The name of the paint property to set.
      * @param {*} value The value of the paint property to set.
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
-     * @param {Object} [options] Options object.
+     * @param {StyleSetterOptions} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
@@ -2338,7 +2337,7 @@ class Map extends Camera {
      * @param {string} layerId The ID of the layer to set the layout property in.
      * @param {string} name The name of the layout property to set.
      * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
-     * @param {Object} [options] Options object.
+     * @param {StyleSetterOptions} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
@@ -2456,7 +2455,7 @@ class Map extends Camera {
      * Sets the any combination of light values.
      *
      * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
-     * @param {Object} [options] Options object.
+     * @param {StyleSetterOptions} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
@@ -2471,9 +2470,9 @@ class Map extends Camera {
     /**
      * Returns the value of the light object.
      *
-     * @returns {Object} light Light properties of the style.
+     * @returns {LightSpecification} light Light properties of the style.
      */
-    getLight() {
+    getLight(): LightSpecification {
         return this.style.getLight();
     }
 
@@ -2491,7 +2490,7 @@ class Map extends Camera {
      *
      * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
-     * @param {Object} feature Feature identifier. Feature objects returned from
+     * @param {FeatureIdentifier} feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param {string | number} feature.id Unique id of the feature.
      * @param {string} feature.source The id of the vector or GeoJSON source for the feature.
@@ -2528,7 +2527,7 @@ class Map extends Camera {
      * If `key` is also specified, it removes only that key from that feature's state.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * @param {Object} target Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
+     * @param {FeatureIdentifier} target Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
      * Feature objects returned from {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param {string | number} target.id (optional) Unique id of the feature. Optional if key is not specified.
      * @param {string} target.source The id of the vector or GeoJSON source for the feature.
@@ -2579,7 +2578,7 @@ class Map extends Camera {
      *
      * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
      *
-     * @param {Object} feature Feature identifier. Feature objects returned from
+     * @param {FeatureIdentifier} feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param {string | number} feature.id Unique id of the feature.
      * @param {string} feature.source The id of the vector or GeoJSON source for the feature.

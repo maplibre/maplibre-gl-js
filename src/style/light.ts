@@ -87,7 +87,7 @@ class Light extends Evented {
         this._transitioning = this._transitionable.untransitioned();
     }
 
-    getLight() {
+    getLight(): LightSpecification {
         return this._transitionable.serialize();
     }
 
