@@ -224,6 +224,16 @@ describe('Style#loadURL', () => {
 });
 
 describe('Style#loadJSON', () => {
+    test('serialize() returns undefined until style is loaded', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        expect(style.serialize()).toBeUndefined();
+        style.on('style.load', () => {
+            expect(style.serialize()).toEqual(createStyleJSON());
+            done();
+        });
+    });
+
     test('fires "dataloading" (synchronously)', () => {
         const style = new Style(getStubMap());
         const spy = jest.fn();

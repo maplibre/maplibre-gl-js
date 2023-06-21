@@ -600,6 +600,13 @@ describe('Map', () => {
     });
 
     describe('#getStyle', () => {
+        test('returns undefined if the style has not loaded yet', done => {
+            const style = createStyle();
+            const map = createMap({style});
+            expect(map.getStyle()).toBeUndefined();
+            done();
+        });
+
         test('returns the style', done => {
             const style = createStyle();
             const map = createMap({style});

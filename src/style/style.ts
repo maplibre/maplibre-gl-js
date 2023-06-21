@@ -1160,6 +1160,11 @@ class Style extends Evented {
     }
 
     serialize(): StyleSpecification {
+        // We return undefined before we're loaded, following the pattern of Map.getStyle() before
+        // the Style object is initialized.
+        // Internally, Style._validate() calls Style.serialize() but callers are responsible for
+        // calling Style._checkLoaded() first if their validation requires the style to be loaded.
+        if (!this._loaded) return;
 
         const sources = mapObject(this.sourceCaches, (source) => source.serialize());
         const layers = this._serializeByIds(this._order);
