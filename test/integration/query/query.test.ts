@@ -10,7 +10,7 @@ import path from 'node:path/posix';
 import fs from 'node:fs';
 import type {AddressInfo} from 'node:net';
 
-import localizeURLs from '../lib/localize-urls';
+import {localizeURLs} from '../lib/localize-urls';
 import {globSync} from 'glob';
 
 function performQueryOnFixture(fixture)  {
