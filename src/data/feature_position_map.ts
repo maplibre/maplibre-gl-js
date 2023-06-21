@@ -13,7 +13,7 @@ type FeaturePosition = {
 };
 
 // A transferable data structure that maps feature ids to their indices and buffer offsets
-export default class FeaturePositionMap {
+export class FeaturePositionMap {
     ids: Array<number>;
     positions: Array<number>;
     indexed: boolean;

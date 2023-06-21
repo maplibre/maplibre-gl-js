@@ -1,7 +1,7 @@
 import Benchmark from '../lib/benchmark';
 import createMap from '../lib/create_map';
 import {CustomLayerInterface} from '../../../src/style/style_layer/custom_style_layer';
-import Map from '../../../src/ui/map';
+import {Map} from '../../../src/ui/map';
 
 class Tent3D implements CustomLayerInterface {
     id: string;

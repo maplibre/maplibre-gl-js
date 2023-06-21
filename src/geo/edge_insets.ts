@@ -12,7 +12,7 @@ import {clamp} from '../util/util';
  * @param {number} [left=0]
  * @param {number} [right=0]
  */
-class EdgeInsets {
+export class EdgeInsets {
     top: number;
     bottom: number;
     left: number;
@@ -132,5 +132,3 @@ export type PaddingOptions = {
      */
     left: number;
 };
-
-export default EdgeInsets;

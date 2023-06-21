@@ -1,16 +1,16 @@
-import VectorTileSource from '../source/vector_tile_source';
-import RasterTileSource from '../source/raster_tile_source';
-import RasterDEMTileSource from '../source/raster_dem_tile_source';
-import GeoJSONSource from '../source/geojson_source';
-import VideoSource from '../source/video_source';
-import ImageSource from '../source/image_source';
-import CanvasSource from '../source/canvas_source';
+import {VectorTileSource} from '../source/vector_tile_source';
+import {RasterTileSource} from '../source/raster_tile_source';
+import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
+import {GeoJSONSource} from '../source/geojson_source';
+import {VideoSource} from '../source/video_source';
+import {ImageSource} from '../source/image_source';
+import {CanvasSource} from '../source/canvas_source';
 
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type Dispatcher from '../util/dispatcher';
+import type {Dispatcher} from '../util/dispatcher';
 import type {Event, Evented} from '../util/evented';
-import type Map from '../ui/map';
-import type Tile from './tile';
+import type {Map} from '../ui/map';
+import type {Tile} from './tile';
 import type {OverscaledTileID, CanonicalTileID} from './tile_id';
 import type {Callback} from '../types/callback';
 import type {CanvasSourceSpecification} from '../source/canvas_source';

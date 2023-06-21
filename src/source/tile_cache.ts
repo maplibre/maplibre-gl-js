@@ -1,5 +1,5 @@
 import {OverscaledTileID} from './tile_id';
-import type Tile from './tile';
+import type {Tile} from './tile';
 
 /**
  * A [least-recently-used cache](http://en.wikipedia.org/wiki/Cache_algorithms)
@@ -8,7 +8,7 @@ import type Tile from './tile';
  *
  * @private
  */
-class TileCache {
+export class TileCache {
     max: number;
     data: {
         [key: string]: Array<{
@@ -214,5 +214,3 @@ class TileCache {
         }
     }
 }
-
-export default TileCache;

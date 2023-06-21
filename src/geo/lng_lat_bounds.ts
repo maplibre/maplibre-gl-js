@@ -1,4 +1,4 @@
-import LngLat from './lng_lat';
+import {LngLat} from './lng_lat';
 import type {LngLatLike} from './lng_lat';
 
 /**
@@ -18,7 +18,7 @@ import type {LngLatLike} from './lng_lat';
  * var ne = new maplibregl.LngLat(-73.9397, 40.8002);
  * var llb = new maplibregl.LngLatBounds(sw, ne);
  */
-class LngLatBounds {
+export class LngLatBounds {
     _ne: LngLat;
     _sw: LngLat;
 
@@ -309,5 +309,3 @@ class LngLatBounds {
  * var v3 = [[-73.9876, 40.7661], [-73.9397, 40.8002]];
  */
 export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number, number, number, number];
-
-export default LngLatBounds;

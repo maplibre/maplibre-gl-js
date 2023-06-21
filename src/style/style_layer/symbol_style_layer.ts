@@ -1,7 +1,7 @@
-import StyleLayer from '../style_layer';
+import {StyleLayer} from '../style_layer';
 
-import SymbolBucket, {SymbolFeature} from '../../data/bucket/symbol_bucket';
-import resolveTokens from '../../util/resolve_tokens';
+import {SymbolBucket, SymbolFeature} from '../../data/bucket/symbol_bucket';
+import {resolveTokens} from '../../util/resolve_tokens';
 import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
 
 import {
@@ -26,12 +26,12 @@ import {
 
 import type {BucketParameters} from '../../data/bucket';
 import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
-import type EvaluationParameters from '../evaluation_parameters';
+import type {EvaluationParameters} from '../evaluation_parameters';
 import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../source/tile_id';
-import FormatSectionOverride from '../format_section_override';
+import {FormatSectionOverride} from '../format_section_override';
 
-class SymbolStyleLayer extends StyleLayer {
+export class SymbolStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<SymbolLayoutProps>;
     layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
 
@@ -193,5 +193,3 @@ export function getIconPadding(layout: PossiblyEvaluated<SymbolLayoutProps, Symb
         values[3] * pixelRatio,
     ];
 }
-
-export default SymbolStyleLayer;

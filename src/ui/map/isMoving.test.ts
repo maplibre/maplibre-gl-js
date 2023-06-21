@@ -1,6 +1,6 @@
-import browser from '../../util/browser';
-import Map from '../map';
-import DOM from '../../util/dom';
+import {browser} from '../../util/browser';
+import {Map} from '../map';
+import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {beforeMapTest} from '../../util/test/util';
 

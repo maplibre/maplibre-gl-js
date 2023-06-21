@@ -1,21 +1,21 @@
 import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import ImageRequest from '../util/image_request';
+import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 import {RasterBoundsArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import SegmentVector from '../data/segment';
-import Texture from '../render/texture';
-import MercatorCoordinate from '../geo/mercator_coordinate';
+import {SegmentVector} from '../data/segment';
+import {Texture} from '../render/texture';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 import type {Source} from './source';
 import type {CanvasSourceSpecification} from './canvas_source';
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
-import type VertexBuffer from '../gl/vertex_buffer';
+import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
@@ -63,7 +63,7 @@ export type Coordinates = [[number, number], [number, number], [number, number],
  *
  * map.removeSource('some id');  // remove
  */
-class ImageSource extends Evented implements Source {
+export class ImageSource extends Evented implements Source {
     type: string;
     id: string;
     minzoom: number;
@@ -327,5 +327,3 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
         Math.floor((minX + maxX) / 2 * tilesAtZoom),
         Math.floor((minY + maxY) / 2 * tilesAtZoom));
 }
-
-export default ImageSource;

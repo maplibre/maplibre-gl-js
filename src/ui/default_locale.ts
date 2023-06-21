@@ -1,4 +1,4 @@
-const defaultLocale = {
+export const defaultLocale = {
     'AttributionControl.ToggleAttribution': 'Toggle attribution',
     'AttributionControl.MapFeedback': 'Map feedback',
     'FullscreenControl.Enter': 'Enter fullscreen',
@@ -17,5 +17,3 @@ const defaultLocale = {
     'TerrainControl.enableTerrain': 'Enable terrain',
     'TerrainControl.disableTerrain': 'Disable terrain'
 };
-
-export default defaultLocale;

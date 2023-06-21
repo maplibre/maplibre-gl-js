@@ -1,4 +1,4 @@
-import Map from '../../../src/ui/map';
+import {Map} from '../../../src/ui/map';
 
 const createMap = (options: any): Promise<Map> => {
     return new Promise((resolve, reject) => {

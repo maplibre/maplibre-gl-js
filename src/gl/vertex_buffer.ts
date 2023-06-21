@@ -4,8 +4,8 @@ import type {
     StructArrayMember
 } from '../util/struct_array';
 
-import type Program from '../render/program';
-import type Context from '../gl/context';
+import type {Program} from '../render/program';
+import type {Context} from '../gl/context';
 
 /**
  * @enum {string} AttributeType
@@ -27,7 +27,7 @@ const AttributeType = {
  * Struct type is converted to a WebGL attribute.
  * @private
  */
-class VertexBuffer {
+export class VertexBuffer {
     length: number;
     attributes: ReadonlyArray<StructArrayMember>;
     itemSize: number;
@@ -112,5 +112,3 @@ class VertexBuffer {
         }
     }
 }
-
-export default VertexBuffer;

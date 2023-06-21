@@ -2,7 +2,7 @@ import type {DepthFuncType, DepthMaskType, DepthRangeType} from './types';
 
 const ALWAYS = 0x0207;
 
-class DepthMode {
+export class DepthMode {
     func: DepthFuncType;
     mask: DepthMaskType;
     range: DepthRangeType;
@@ -24,5 +24,3 @@ DepthMode.ReadOnly = false;
 DepthMode.ReadWrite = true;
 
 DepthMode.disabled = new DepthMode(ALWAYS, DepthMode.ReadOnly, [0, 1]);
-
-export default DepthMode;

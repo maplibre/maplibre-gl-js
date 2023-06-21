@@ -1,7 +1,7 @@
 import {asyncAll} from './util';
-import Actor from './actor';
+import {Actor} from './actor';
 
-import type WorkerPool from './worker_pool';
+import type {WorkerPool} from './worker_pool';
 
 /**
  * Responsible for sending messages from a {@link Source} to an associated
@@ -9,7 +9,7 @@ import type WorkerPool from './worker_pool';
  *
  * @private
  */
-class Dispatcher {
+export class Dispatcher {
     workerPool: WorkerPool;
     actors: Array<Actor>;
     currentActor: number;
@@ -63,5 +63,3 @@ class Dispatcher {
 }
 
 Dispatcher.Actor = Actor;
-
-export default Dispatcher;

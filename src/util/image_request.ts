@@ -3,8 +3,8 @@ import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolActio
 import type {Callback} from '../types/callback';
 
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker} from './util';
-import webpSupported from './webp_supported';
-import config from './config';
+import {webpSupported} from './webp_supported';
+import {config} from './config';
 
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
@@ -46,7 +46,7 @@ type HTMLImageElementWithPriority = HTMLImageElement &
  * use a lambda function to determine when the queue should be throttled (e.g. when isMoving())
  * and manually calling {@link processQueue} in the render loop.
  */
-namespace ImageRequest {
+export namespace ImageRequest {
     let imageRequestQueue : ImageRequestQueueItem[];
     let currentParallelImageRequests:number;
 
@@ -283,5 +283,3 @@ namespace ImageRequest {
 }
 
 ImageRequest.resetRequestQueue();
-
-export default ImageRequest;

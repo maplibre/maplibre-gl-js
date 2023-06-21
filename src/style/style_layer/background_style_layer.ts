@@ -1,4 +1,4 @@
-import StyleLayer from '../style_layer';
+import {StyleLayer} from '../style_layer';
 
 import properties, {BackgroundPaintPropsPossiblyEvaluated} from './background_style_layer_properties.g';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
@@ -6,7 +6,7 @@ import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import type {BackgroundPaintProps} from './background_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-class BackgroundStyleLayer extends StyleLayer {
+export class BackgroundStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<BackgroundPaintProps>;
     _transitioningPaint: Transitioning<BackgroundPaintProps>;
     paint: PossiblyEvaluated<BackgroundPaintProps, BackgroundPaintPropsPossiblyEvaluated>;
@@ -15,5 +15,3 @@ class BackgroundStyleLayer extends StyleLayer {
         super(layer, properties);
     }
 }
-
-export default BackgroundStyleLayer;

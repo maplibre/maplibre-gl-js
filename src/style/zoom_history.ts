@@ -1,4 +1,4 @@
-class ZoomHistory {
+export class ZoomHistory {
     lastZoom: number;
     lastFloorZoom: number;
     lastIntegerZoom: number;
@@ -38,5 +38,3 @@ class ZoomHistory {
         return false;
     }
 }
-
-export default ZoomHistory;

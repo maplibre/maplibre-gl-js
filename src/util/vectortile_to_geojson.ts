@@ -13,7 +13,7 @@ export type MapGeoJSONFeature = GeoJSONFeature & {
     state: { [key: string]: any };
 }
 
-class GeoJSONFeature {
+export class GeoJSONFeature {
     type: 'Feature';
     _geometry: GeoJSON.Geometry;
     properties: { [name: string]: any };
@@ -58,5 +58,3 @@ class GeoJSONFeature {
         return json;
     }
 }
-
-export default GeoJSONFeature;

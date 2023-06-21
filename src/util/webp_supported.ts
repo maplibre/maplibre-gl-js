@@ -1,9 +1,7 @@
-const exported = {
+export const webpSupported = {
     supported: false,
     testSupport
 };
-
-export default exported;
 
 let glForTesting: WebGLRenderingContext|WebGL2RenderingContext;
 let webpCheckComplete = false;
@@ -54,7 +52,7 @@ function testWebpTextureUpload(gl: WebGLRenderingContext|WebGL2RenderingContext)
         // The error does not get triggered in Edge if the context is lost
         if (gl.isContextLost()) return;
 
-        exported.supported = true;
+        webpSupported.supported = true;
     } catch (e) {
         // Catch "Unspecified Error." in Edge 18.
     }

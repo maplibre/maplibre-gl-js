@@ -1,5 +1,5 @@
 import type {MousePanHandler} from '../mouse';
-import type TouchPanHandler from './../touch_pan';
+import type {TouchPanHandler} from './../touch_pan';
 
 export type DragPanOptions = {
     linearity?: number;
@@ -12,7 +12,7 @@ export type DragPanOptions = {
  * The `DragPanHandler` allows the user to pan the map by clicking and dragging
  * the cursor.
  */
-export default class DragPanHandler {
+export class DragPanHandler {
 
     _el: HTMLElement;
     _mousePan: MousePanHandler;

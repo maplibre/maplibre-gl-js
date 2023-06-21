@@ -1,5 +1,5 @@
-import LngLat from './lng_lat';
-import MercatorCoordinate, {mercatorScale} from './mercator_coordinate';
+import {LngLat} from './lng_lat';
+import {MercatorCoordinate, mercatorScale} from './mercator_coordinate';
 
 describe('LngLat', () => {
     test('#constructor', () => {

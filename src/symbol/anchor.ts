@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 
 import {register} from '../util/web_worker_transfer';
 
-class Anchor extends Point {
+export class Anchor extends Point {
     angle: any;
     segment?: number;
 
@@ -20,5 +20,3 @@ class Anchor extends Point {
 }
 
 register('Anchor', Anchor);
-
-export default Anchor;

@@ -1,9 +1,9 @@
-import WorkerTile from '../source/worker_tile';
-import Wrapper, {Feature} from '../source/geojson_wrapper';
+import {WorkerTile} from '../source/worker_tile';
+import {GeoJSONWrapper, Feature} from '../source/geojson_wrapper';
 import {OverscaledTileID} from '../source/tile_id';
-import StyleLayerIndex from '../style/style_layer_index';
+import {StyleLayerIndex} from '../style/style_layer_index';
 import {WorkerTileParameters} from './worker_source';
-import Actor from '../util/actor';
+import {Actor} from '../util/actor';
 import {VectorTile} from '@mapbox/vector-tile';
 
 function createWorkerTile() {
@@ -19,7 +19,7 @@ function createWorkerTile() {
 }
 
 function createWrapper() {
-    return new Wrapper([{
+    return new GeoJSONWrapper([{
         type: 1,
         geometry: [0, 0],
         tags: {}

@@ -4,7 +4,7 @@ import {
     Uniform4f,
     UniformMatrix4f
 } from '../uniform_binding';
-import type Context from '../../gl/context';
+import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../../render/uniform_binding';
 import {mat4} from 'gl-matrix';
 

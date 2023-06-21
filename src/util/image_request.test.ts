@@ -1,8 +1,8 @@
-import config from './config';
-import webpSupported from './webp_supported';
+import {config} from './config';
+import {webpSupported} from './webp_supported';
 import {stubAjaxGetImage} from './test/util';
 import {fakeServer, FakeServer} from 'nise';
-import ImageRequest, {ImageRequestQueueItem} from './image_request';
+import {ImageRequest, ImageRequestQueueItem} from './image_request';
 import * as ajax from './ajax';
 
 describe('ImageRequest', () => {

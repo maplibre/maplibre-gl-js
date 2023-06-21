@@ -2,7 +2,7 @@ import {ExpiryData, getArrayBuffer} from '../util/ajax';
 
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import WorkerTile from './worker_tile';
+import {WorkerTile} from './worker_tile';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 
@@ -13,8 +13,8 @@ import type {
     TileParameters
 } from '../source/worker_source';
 
-import type Actor from '../util/actor';
-import type StyleLayerIndex from '../style/style_layer_index';
+import type {Actor} from '../util/actor';
+import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {Callback} from '../types/callback';
 import type {VectorTile} from '@mapbox/vector-tile';
 
@@ -66,7 +66,7 @@ function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCa
  *
  * @private
  */
-class VectorTileWorkerSource implements WorkerSource {
+export class VectorTileWorkerSource implements WorkerSource {
     actor: Actor;
     layerIndex: StyleLayerIndex;
     availableImages: Array<string>;
@@ -209,5 +209,3 @@ class VectorTileWorkerSource implements WorkerSource {
         callback();
     }
 }
-
-export default VectorTileWorkerSource;

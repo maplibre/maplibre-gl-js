@@ -1,8 +1,8 @@
 import {getJSON} from '../util/ajax';
-import ImageRequest from '../util/image_request';
+import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {coerceSpriteToArray} from '../util/style';
 
 import type {SpriteSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -11,7 +11,7 @@ import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
-export default function loadSprite(
+export function loadSprite(
     originalSprite: SpriteSpecification,
     requestManager: RequestManager,
     pixelRatio: number,

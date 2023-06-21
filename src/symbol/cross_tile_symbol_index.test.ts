@@ -1,6 +1,6 @@
-import CrossTileSymbolIndex, {KDBUSH_THRESHHOLD} from './cross_tile_symbol_index';
+import {CrossTileSymbolIndex, KDBUSH_THRESHHOLD} from './cross_tile_symbol_index';
 import {OverscaledTileID} from '../source/tile_id';
-import StyleLayer from '../style/style_layer';
+import {StyleLayer} from '../style/style_layer';
 
 const styleLayer = {
     id: 'test'

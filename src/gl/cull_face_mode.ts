@@ -3,7 +3,7 @@ import type {CullFaceModeType, FrontFaceType} from './types';
 const BACK = 0x0405;
 const CCW = 0x0901;
 
-class CullFaceMode {
+export class CullFaceMode {
     enable: boolean;
     mode: CullFaceModeType;
     frontFace: FrontFaceType;
@@ -20,5 +20,3 @@ class CullFaceMode {
 
 CullFaceMode.disabled = new CullFaceMode(false, BACK, CCW);
 CullFaceMode.backCCW = new CullFaceMode(true, BACK, CCW);
-
-export default CullFaceMode;

@@ -1,6 +1,6 @@
-import webWorkerFactory from './web_worker';
+import {workerFactory} from './web_worker';
 import type {WorkerInterface} from './web_worker';
-import browser from './browser';
+import {browser} from './browser';
 import {isSafari} from './util';
 
 export const PRELOAD_POOL_ID = 'mapboxgl_preloaded_worker_pool';
@@ -9,7 +9,7 @@ export const PRELOAD_POOL_ID = 'mapboxgl_preloaded_worker_pool';
  * Constructs a worker pool.
  * @private
  */
-export default class WorkerPool {
+export class WorkerPool {
     static workerCount: number;
 
     active: {
@@ -27,7 +27,7 @@ export default class WorkerPool {
             // client code has had a chance to set it.
             this.workers = [];
             while (this.workers.length < WorkerPool.workerCount) {
-                this.workers.push(webWorkerFactory());
+                this.workers.push(workerFactory());
             }
         }
 

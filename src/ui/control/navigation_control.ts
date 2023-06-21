@@ -1,11 +1,11 @@
 import Point from '@mapbox/point-geometry';
 
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 import {extend} from '../../util/util';
 import {generateMousePitchHandler, generateMouseRotationHandler, MousePitchHandler, MouseRotateHandler} from '../handler/mouse';
 import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandler, OneFingerTouchPitchHandler, OneFingerTouchRotateHandler} from '../handler/one_finger_touch_drag';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {IControl} from './control';
 
 type NavigationOptions = {
@@ -34,7 +34,7 @@ const defaultOptions: NavigationOptions = {
  * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js-docs/example/navigation/)
  * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
  */
-class NavigationControl implements IControl {
+export class NavigationControl implements IControl {
     _map: Map;
     options: NavigationOptions;
     _container: HTMLElement;
@@ -277,5 +277,3 @@ class MouseRotateWrapper {
         this.offTemp();
     };
 }
-
-export default NavigationControl;

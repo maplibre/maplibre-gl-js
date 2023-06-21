@@ -1,21 +1,21 @@
 import {Event} from '../util/evented';
-import DOM from '../util/dom';
-import Map, {CompleteMapOptions} from './map';
-import HandlerInertia from './handler_inertia';
+import {DOM} from '../util/dom';
+import {Map, CompleteMapOptions} from './map';
+import {HandlerInertia} from './handler_inertia';
 import {MapEventHandler, BlockableMapEventHandler} from './handler/map_event';
-import BoxZoomHandler from './handler/box_zoom';
-import TapZoomHandler from './handler/tap_zoom';
+import {BoxZoomHandler} from './handler/box_zoom';
+import {TapZoomHandler} from './handler/tap_zoom';
 import {generateMouseRotationHandler, generateMousePitchHandler, generateMousePanHandler} from './handler/mouse';
-import TouchPanHandler from './handler/touch_pan';
+import {TouchPanHandler} from './handler/touch_pan';
 import {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
-import KeyboardHandler from './handler/keyboard';
-import ScrollZoomHandler from './handler/scroll_zoom';
-import DoubleClickZoomHandler from './handler/shim/dblclick_zoom';
-import ClickZoomHandler from './handler/click_zoom';
-import TapDragZoomHandler from './handler/tap_drag_zoom';
-import DragPanHandler from './handler/shim/drag_pan';
-import DragRotateHandler from './handler/shim/drag_rotate';
-import TouchZoomRotateHandler from './handler/shim/two_fingers_touch';
+import {KeyboardHandler} from './handler/keyboard';
+import {ScrollZoomHandler} from './handler/scroll_zoom';
+import {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
+import {ClickZoomHandler} from './handler/click_zoom';
+import {TapDragZoomHandler} from './handler/tap_drag_zoom';
+import {DragPanHandler} from './handler/shim/drag_pan';
+import {DragRotateHandler} from './handler/shim/drag_rotate';
+import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 
@@ -100,7 +100,7 @@ function hasChange(result: HandlerResult) {
     return (result.panDelta && result.panDelta.mag()) || result.zoomDelta || result.bearingDelta || result.pitchDelta;
 }
 
-class HandlerManager {
+export class HandlerManager {
     _map: Map;
     _el: HTMLElement;
     _handlers: Array<{
@@ -240,7 +240,7 @@ class HandlerManager {
 
         const touchRotate = new TwoFingersTouchRotateHandler();
         const touchZoom = new TwoFingersTouchZoomHandler();
-        map.touchZoomRotate = new TouchZoomRotateHandler(el, touchZoom, touchRotate, tapDragZoom);
+        map.touchZoomRotate = new TwoFingersTouchZoomRotateHandler(el, touchZoom, touchRotate, tapDragZoom);
         this._add('touchRotate', touchRotate, ['touchPan', 'touchZoom']);
         this._add('touchZoom', touchZoom, ['touchPan', 'touchRotate']);
         if (options.interactive && options.touchZoomRotate) {
@@ -598,7 +598,4 @@ class HandlerManager {
             this._frameId = this._requestFrame();
         }
     }
-
 }
-
-export default HandlerManager;

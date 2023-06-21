@@ -23,7 +23,7 @@ export type SerializedGrid = {
     buffer: ArrayBuffer;
 };
 
-class TransferableGridIndex {
+export class TransferableGridIndex {
     cells: number[][];
     arrayBuffer: ArrayBuffer;
     d: number;
@@ -212,5 +212,3 @@ class TransferableGridIndex {
         return new TransferableGridIndex(serialized.buffer);
     }
 }
-
-export default TransferableGridIndex;

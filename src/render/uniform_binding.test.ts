@@ -1,5 +1,5 @@
 import {mat4} from 'gl-matrix';
-import Context from '../gl/context';
+import {Context} from '../gl/context';
 import {
     Uniform1i,
     Uniform1f,

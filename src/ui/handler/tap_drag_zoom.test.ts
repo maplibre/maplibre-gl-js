@@ -1,6 +1,6 @@
 import {beforeMapTest} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import Map, {MapOptions} from '../map';
+import {Map, MapOptions} from '../map';
 
 function createMap() {
     return new Map({container: window.document.createElement('div')} as any as MapOptions);

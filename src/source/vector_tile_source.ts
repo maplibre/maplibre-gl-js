@@ -1,15 +1,15 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
 import {extend, pick} from '../util/util';
-import loadTileJSON from './load_tilejson';
-import TileBounds from './tile_bounds';
+import {loadTileJson} from './load_tilejson';
+import {TileBounds} from './tile_bounds';
 import {ResourceType} from '../util/request_manager';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -44,7 +44,7 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
  * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/vector-source/)
  * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
  */
-class VectorTileSource extends Evented implements Source {
+export class VectorTileSource extends Evented implements Source {
     type: 'vector';
     id: string;
     minzoom: number;
@@ -95,7 +95,7 @@ class VectorTileSource extends Evented implements Source {
     load = () => {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
-        this._tileJSONRequest = loadTileJSON(this._options, this.map._requestManager, (err, tileJSON) => {
+        this._tileJSONRequest = loadTileJson(this._options, this.map._requestManager, (err, tileJSON) => {
             this._tileJSONRequest = null;
             this._loaded = true;
             this.map.style.sourceCaches[this.id].clearTiles();
@@ -249,5 +249,3 @@ class VectorTileSource extends Evented implements Source {
         return false;
     }
 }
-
-export default VectorTileSource;

@@ -1,4 +1,4 @@
-import TerrainControl from './terrain_control';
+import {TerrainControl} from './terrain_control';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 
 function createMap() {

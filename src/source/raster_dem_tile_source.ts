@@ -1,22 +1,22 @@
-import ImageRequest from '../util/image_request';
+import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
 import {extend, isImageBitmap} from '../util/util';
 import {Evented} from '../util/evented';
-import browser from '../util/browser';
-import offscreenCanvasSupported from '../util/offscreen_canvas_supported';
+import {browser} from '../util/browser';
+import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
 import {OverscaledTileID} from './tile_id';
-import RasterTileSource from './raster_tile_source';
+import {RasterTileSource} from './raster_tile_source';
 // ensure DEMData is registered for worker transfer on main thread:
 import '../data/dem_data';
 
 import type {Source} from './source';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ExpiryData} from '../util/ajax';
 
-class RasterDEMTileSource extends RasterTileSource implements Source {
+export class RasterDEMTileSource extends RasterTileSource implements Source {
     encoding: 'mapbox' | 'terrarium';
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -132,7 +132,4 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
             tile.actor.send('removeDEMTile', {uid: tile.uid, source: this.id});
         }
     }
-
 }
-
-export default RasterDEMTileSource;

@@ -1,15 +1,15 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
 import {extend} from '../util/util';
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 import {ResourceType} from '../util/request_manager';
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 
 import type {Source} from './source';
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
-import type Actor from '../util/actor';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
+import type {Actor} from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
@@ -104,7 +104,7 @@ export type SetClusterOptions = {
  * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js-docs/example/heatmap/)
  * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js-docs/example/cluster/)
  */
-class GeoJSONSource extends Evented implements Source {
+export class GeoJSONSource extends Evented implements Source {
     type: 'geojson';
     id: string;
     minzoom: number;
@@ -430,5 +430,3 @@ class GeoJSONSource extends Evented implements Source {
         return false;
     }
 }
-
-export default GeoJSONSource;

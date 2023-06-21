@@ -1,6 +1,6 @@
-import DepthMode from '../gl/depth_mode';
-import CullFaceMode from '../gl/cull_face_mode';
-import Texture from './texture';
+import {DepthMode} from '../gl/depth_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
+import {Texture} from './texture';
 import {
     lineUniformValues,
     linePatternUniformValues,
@@ -8,16 +8,16 @@ import {
     lineGradientUniformValues
 } from './program/line_program';
 
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
-import type LineStyleLayer from '../style/style_layer/line_style_layer';
-import type LineBucket from '../data/bucket/line_bucket';
+import type {Painter} from './painter';
+import type {SourceCache} from '../source/source_cache';
+import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
+import type {LineBucket} from '../data/bucket/line_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 
-export default function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');

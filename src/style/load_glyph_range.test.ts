@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
-import loadGlyphRange from './load_glyph_range';
+import {loadGlyphRange} from './load_glyph_range';
 import {fakeXhr} from 'nise';
 
 test('loadGlyphRange', done => {

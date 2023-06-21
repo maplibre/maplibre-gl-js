@@ -1,20 +1,20 @@
 import {FillExtrusionLayoutArray, PosArray} from '../array_types.g';
 
 import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes';
-import SegmentVector from '../segment';
+import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
-import EXTENT from '../extent';
+import {EXTENT} from '../extent';
 import earcut from 'earcut';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
-import classifyRings from '../../util/classify_rings';
+import {classifyRings} from '../../util/classify_rings';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
 import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
-import loadGeometry from '../load_geometry';
-import toEvaluationFeature from '../evaluation_feature';
-import EvaluationParameters from '../../style/evaluation_parameters';
+import {loadGeometry} from '../load_geometry';
+import {toEvaluationFeature} from '../evaluation_feature';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
 
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
@@ -25,10 +25,10 @@ import type {
     PopulateParameters
 } from '../bucket';
 
-import type FillExtrusionStyleLayer from '../../style/style_layer/fill_extrusion_style_layer';
-import type Context from '../../gl/context';
-import type IndexBuffer from '../../gl/index_buffer';
-import type VertexBuffer from '../../gl/vertex_buffer';
+import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer';
+import type {Context} from '../../gl/context';
+import type {IndexBuffer} from '../../gl/index_buffer';
+import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
@@ -50,7 +50,7 @@ function addVertex(vertexArray, x, y, nx, ny, nz, t, e) {
     );
 }
 
-class FillExtrusionBucket implements Bucket {
+export class FillExtrusionBucket implements Bucket {
     index: number;
     zoom: number;
     overscaling: number;
@@ -288,8 +288,6 @@ class FillExtrusionBucket implements Bucket {
 }
 
 register('FillExtrusionBucket', FillExtrusionBucket, {omit: ['layers', 'features']});
-
-export default FillExtrusionBucket;
 
 function isBoundaryEdge(p1, p2) {
     return (p1.x === p2.x && (p1.x < 0 || p1.x > EXTENT)) ||

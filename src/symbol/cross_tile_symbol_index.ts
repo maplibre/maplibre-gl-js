@@ -1,13 +1,13 @@
 import KDBush from 'kdbush';
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 
 import {SymbolInstanceArray} from '../data/array_types.g';
 
 import type {SymbolInstance} from '../data/array_types.g';
 import type {OverscaledTileID} from '../source/tile_id';
-import type SymbolBucket from '../data/bucket/symbol_bucket';
-import type StyleLayer from '../style/style_layer';
-import type Tile from '../source/tile';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket';
+import type {StyleLayer} from '../style/style_layer';
+import type {Tile} from '../source/tile';
 
 /*
     The CrossTileSymbolIndex generally works on the assumption that
@@ -307,7 +307,7 @@ class CrossTileSymbolLayerIndex {
     }
 }
 
-class CrossTileSymbolIndex {
+export class CrossTileSymbolIndex {
     layerIndexes: {[layerId: string]: CrossTileSymbolLayerIndex};
     crossTileIDs: CrossTileIDs;
     maxBucketInstanceId: number;
@@ -365,5 +365,3 @@ class CrossTileSymbolIndex {
         }
     }
 }
-
-export default CrossTileSymbolIndex;

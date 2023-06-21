@@ -1,14 +1,14 @@
 import {extend} from '../util/util';
 import {Event, Evented} from '../util/evented';
 import {MapMouseEvent} from '../ui/events';
-import DOM from '../util/dom';
-import LngLat from '../geo/lng_lat';
+import {DOM} from '../util/dom';
+import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
-import smartWrap from '../util/smart_wrap';
+import {smartWrap} from '../util/smart_wrap';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 
 import type {PositionAnchor} from './anchor';
-import type Map from './map';
+import type {Map} from './map';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {PointLike} from './camera';
 
@@ -96,7 +96,7 @@ const focusQuerySelector = [
  * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
  * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
  */
-export default class Popup extends Evented {
+export class Popup extends Evented {
     _map: Map;
     options: PopupOptions;
     _content: HTMLElement;

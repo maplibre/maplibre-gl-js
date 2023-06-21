@@ -2,11 +2,11 @@ import Point from '@mapbox/point-geometry';
 
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 
-import type Anchor from './anchor';
+import type {Anchor} from './anchor';
 import type {PositionedIcon, Shaping} from './shaping';
 import {SHAPING_DEFAULT_OFFSET} from './shaping';
 import {IMAGE_PADDING} from '../render/image_atlas';
-import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleImage} from '../style/style_image';
 import ONE_EM from './one_em';

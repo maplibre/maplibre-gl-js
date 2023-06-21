@@ -1,15 +1,15 @@
 import Point from '@mapbox/point-geometry';
-import clipLine from './clip_line';
-import PathInterpolator from './path_interpolator';
+import {clipLine} from './clip_line';
+import {PathInterpolator} from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
-import GridIndex from './grid_index';
+import {GridIndex} from './grid_index';
 import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
 import * as projection from '../symbol/projection';
 
-import type Transform from '../geo/transform';
+import type {Transform} from '../geo/transform';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
@@ -44,7 +44,7 @@ export type FeatureKey = {
  *
  * @private
  */
-class CollisionIndex {
+export class CollisionIndex {
     grid: GridIndex<FeatureKey>;
     ignoredGrid: GridIndex<FeatureKey>;
     transform: Transform;
@@ -402,5 +402,3 @@ class CollisionIndex {
         return m;
     }
 }
-
-export default CollisionIndex;

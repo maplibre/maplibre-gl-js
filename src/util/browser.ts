@@ -11,7 +11,7 @@ let reducedMotionQuery: MediaQueryList;
 /**
  * @private
  */
-const exported = {
+export const browser = {
     /**
      * Provides a function that outputs milliseconds: either performance.now()
      * or a fallback to Date.now()
@@ -58,5 +58,3 @@ const exported = {
         return reducedMotionQuery.matches;
     },
 };
-
-export default exported;

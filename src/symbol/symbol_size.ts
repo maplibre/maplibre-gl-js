@@ -1,6 +1,6 @@
 import {Interpolate, interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {clamp} from '../util/util';
-import EvaluationParameters from '../style/evaluation_parameters';
+import {EvaluationParameters} from '../style/evaluation_parameters';
 
 import type {PropertyValue, PossiblyEvaluatedPropertyValue} from '../style/properties';
 import type {InterpolationType} from '@maplibre/maplibre-gl-style-spec';

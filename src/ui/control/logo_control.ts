@@ -1,6 +1,6 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 
 type LogoOptions = {
@@ -15,7 +15,7 @@ type LogoOptions = {
  * @param {boolean} [options.compact] If `true`, force a compact logo. If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
  **/
 
-class LogoControl implements IControl {
+export class LogoControl implements IControl {
     options: LogoOptions;
     _map: Map;
     _compact: boolean;
@@ -70,5 +70,3 @@ class LogoControl implements IControl {
     };
 
 }
-
-export default LogoControl;

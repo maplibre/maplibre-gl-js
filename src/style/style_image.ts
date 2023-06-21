@@ -1,6 +1,6 @@
 import {RGBAImage} from '../util/image';
 
-import type Map from '../ui/map';
+import type {Map} from '../ui/map';
 
 export type SpriteOnDemandStyleImage = {
     width: number;

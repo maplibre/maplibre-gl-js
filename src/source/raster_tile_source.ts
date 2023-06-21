@@ -1,18 +1,18 @@
 import {extend, pick} from '../util/util';
 
-import ImageRequest from '../util/image_request';
+import {ImageRequest} from '../util/image_request';
 
 import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import loadTileJSON from './load_tilejson';
-import TileBounds from './tile_bounds';
-import Texture from '../render/texture';
+import {loadTileJson} from './load_tilejson';
+import {TileBounds} from './tile_bounds';
+import {Texture} from '../render/texture';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import type {
@@ -20,7 +20,7 @@ import type {
     RasterDEMSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 
-class RasterTileSource extends Evented implements Source {
+export class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';
     id: string;
     minzoom: number;
@@ -61,7 +61,7 @@ class RasterTileSource extends Evented implements Source {
     load() {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
-        this._tileJSONRequest = loadTileJSON(this._options, this.map._requestManager, (err, tileJSON) => {
+        this._tileJSONRequest = loadTileJson(this._options, this.map._requestManager, (err, tileJSON) => {
             this._tileJSONRequest = null;
             this._loaded = true;
             if (err) {
@@ -155,5 +155,3 @@ class RasterTileSource extends Evented implements Source {
         return false;
     }
 }
-
-export default RasterTileSource;

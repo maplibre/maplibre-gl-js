@@ -1,9 +1,9 @@
-import RasterTileSource from './raster_tile_source';
+import {RasterTileSource} from './raster_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
-import Dispatcher from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
 import {fakeServer, FakeServer} from 'nise';
-import Tile from './tile';
+import {Tile} from './tile';
 import {stubAjaxGetImage} from '../util/test/util';
 
 function createSource(options, transformCallback?) {

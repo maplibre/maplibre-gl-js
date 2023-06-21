@@ -1,6 +1,6 @@
 import {register} from '../util/web_worker_transfer';
 
-class OpacityState {
+export class OpacityState {
     opacity: number;
     targetOpacity: number;
     time: number;
@@ -21,5 +21,3 @@ class OpacityState {
 }
 
 register('OpacityState', OpacityState);
-
-export default OpacityState;

@@ -1,6 +1,6 @@
-import throttle from '../util/throttle';
+import {throttle} from '../util/throttle';
 
-import type Map from './map';
+import type {Map} from './map';
 
 /*
  * Adds the map's position to its page's location hash.
@@ -8,7 +8,7 @@ import type Map from './map';
  *
  * @returns {Hash} `this`
  */
-class Hash {
+export class Hash {
     _map: Map;
     _hashName: string;
 
@@ -136,5 +136,3 @@ class Hash {
     _updateHash = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
 
 }
-
-export default Hash;

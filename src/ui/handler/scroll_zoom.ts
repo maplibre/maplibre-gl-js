@@ -1,12 +1,12 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 
 import {defaultEasing, bezier} from '../../util/util';
-import browser from '../../util/browser';
+import {browser} from '../../util/browser';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import LngLat from '../../geo/lng_lat';
-import TransformProvider from './transform-provider';
+import {LngLat} from '../../geo/lng_lat';
+import {TransformProvider} from './transform-provider';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 import type {AroundCenterOptions} from './two_fingers_touch';
 import {Handler} from '../handler_manager';
@@ -26,7 +26,7 @@ const maxScalePerFrame = 2;
 /**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
  */
-export default class ScrollZoomHandler implements Handler {
+export class ScrollZoomHandler implements Handler {
     _map: Map;
     _tr: TransformProvider;
     _el: HTMLElement;

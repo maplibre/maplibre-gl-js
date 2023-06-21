@@ -1,9 +1,9 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 
 import {Event} from '../../util/evented';
-import TransformProvider from './transform-provider';
+import {TransformProvider} from './transform-provider';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 import {Handler} from '../handler_manager';
 
@@ -11,7 +11,7 @@ import {Handler} from '../handler_manager';
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
  * The bounding box is defined by clicking and holding `shift` while dragging the cursor.
  */
-export default class BoxZoomHandler implements Handler {
+export class BoxZoomHandler implements Handler {
     _map: Map;
     _tr: TransformProvider;
     _el: HTMLElement;

@@ -1,6 +1,6 @@
 import {warnOnce} from '../util/util';
 
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 
 /**
  * A LineAtlas lets us reuse rendered dashed lines
@@ -11,7 +11,7 @@ import type Context from '../gl/context';
  * @param {number} height
  * @private
  */
-class LineAtlas {
+export class LineAtlas {
     width: number;
     height: number;
     nextRow: number;
@@ -204,5 +204,3 @@ class LineAtlas {
         }
     }
 }
-
-export default LineAtlas;

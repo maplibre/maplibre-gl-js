@@ -1,10 +1,10 @@
 
-import type Program from './program';
-import type VertexBuffer from '../gl/vertex_buffer';
-import type IndexBuffer from '../gl/index_buffer';
-import type Context from '../gl/context';
+import type {Program} from './program';
+import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {IndexBuffer} from '../gl/index_buffer';
+import type {Context} from '../gl/context';
 
-class VertexArrayObject {
+export class VertexArrayObject {
     context: Context;
     boundProgram: Program<any>;
     boundLayoutVertexBuffer: VertexBuffer;
@@ -157,5 +157,3 @@ class VertexArrayObject {
         }
     }
 }
-
-export default VertexArrayObject;

@@ -6,7 +6,7 @@ type Task = {
     cancelled: boolean;
 };
 
-class TaskQueue {
+export class TaskQueue {
     _queue: Array<Task>;
     _id: TaskID;
     _cleared: boolean;
@@ -62,5 +62,3 @@ class TaskQueue {
         this._queue = [];
     }
 }
-
-export default TaskQueue;

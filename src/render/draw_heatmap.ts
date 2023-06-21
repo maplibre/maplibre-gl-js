@@ -1,25 +1,23 @@
-import Texture from './texture';
+import {Texture} from './texture';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import DepthMode from '../gl/depth_mode';
-import StencilMode from '../gl/stencil_mode';
-import ColorMode from '../gl/color_mode';
-import CullFaceMode from '../gl/cull_face_mode';
-import Context from '../gl/context';
-import Framebuffer from '../gl/framebuffer';
+import {DepthMode} from '../gl/depth_mode';
+import {StencilMode} from '../gl/stencil_mode';
+import {ColorMode} from '../gl/color_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
+import {Context} from '../gl/context';
+import {Framebuffer} from '../gl/framebuffer';
 import {
     heatmapUniformValues,
     heatmapTextureUniformValues
 } from './program/heatmap_program';
 
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
-import type HeatmapStyleLayer from '../style/style_layer/heatmap_style_layer';
-import type HeatmapBucket from '../data/bucket/heatmap_bucket';
+import type {Painter} from './painter';
+import type {SourceCache} from '../source/source_cache';
+import type {HeatmapStyleLayer} from '../style/style_layer/heatmap_style_layer';
+import type {HeatmapBucket} from '../data/bucket/heatmap_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 
-export default drawHeatmap;
-
-function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: HeatmapStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: HeatmapStyleLayer, coords: Array<OverscaledTileID>) {
     if (layer.paint.get('heatmap-opacity') === 0) {
         return;
     }

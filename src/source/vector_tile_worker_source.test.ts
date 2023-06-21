@@ -2,12 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import VectorTileWorkerSource from '../source/vector_tile_worker_source';
-import StyleLayerIndex from '../style/style_layer_index';
+import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
+import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, FakeServer} from 'nise';
-import Actor from '../util/actor';
+import {Actor} from '../util/actor';
 import {TileParameters, WorkerTileParameters} from './worker_source';
-import WorkerTile from './worker_tile';
+import {WorkerTile} from './worker_tile';
 import {setPerformance} from '../util/test/util';
 
 describe('vector tile worker source', () => {
