@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Change all internal exports to named exports([#2711](https://github.com/maplibre/maplibre-gl-js/pull/2711))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
