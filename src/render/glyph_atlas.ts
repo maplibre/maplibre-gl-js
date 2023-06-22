@@ -24,7 +24,7 @@ export type GlyphPositions = {
     };
 };
 
-export default class GlyphAtlas {
+export class GlyphAtlas {
     image: AlphaImage;
     positions: GlyphPositions;
 

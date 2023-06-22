@@ -1,12 +1,12 @@
 import type {RequestParameters} from '../util/ajax';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import type {GlyphPositions} from '../render/glyph_atlas';
-import type ImageAtlas from '../render/image_atlas';
+import type {ImageAtlas} from '../render/image_atlas';
 import type {OverscaledTileID} from './tile_id';
 import type {Bucket} from '../data/bucket';
-import type FeatureIndex from '../data/feature_index';
+import type {FeatureIndex} from '../data/feature_index';
 import type {CollisionBoxArray} from '../data/array_types.g';
-import type DEMData from '../data/dem_data';
+import type {DEMData} from '../data/dem_data';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';

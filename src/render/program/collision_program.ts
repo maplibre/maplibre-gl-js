@@ -1,10 +1,10 @@
 import {Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding';
-import pixelsToTileUnits from '../../source/pixels_to_tile_units';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 
-import type Context from '../../gl/context';
+import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type Transform from '../../geo/transform';
-import type Tile from '../../source/tile';
+import type {Transform} from '../../geo/transform';
+import type {Tile} from '../../source/tile';
 import {mat4} from 'gl-matrix';
 
 export type CollisionUniformsType = {

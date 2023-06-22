@@ -1,9 +1,9 @@
-import FeatureMap from './feature_position_map';
+import {FeaturePositionMap} from './feature_position_map';
 import {serialize, deserialize} from '../util/web_worker_transfer';
 
 describe('FeaturePositionMap', () => {
     test('Can be queried after serialization/deserialization', () => {
-        const featureMap = new FeatureMap();
+        const featureMap = new FeaturePositionMap();
         featureMap.add(7, 1, 0, 1);
         featureMap.add(3, 2, 1, 2);
         featureMap.add(7, 3, 2, 3);
@@ -11,7 +11,7 @@ describe('FeaturePositionMap', () => {
         featureMap.add(2, 5, 4, 5);
         featureMap.add(7, 6, 5, 7);
 
-        const featureMap2 = deserialize(serialize(featureMap, [])) as FeatureMap;
+        const featureMap2 = deserialize(serialize(featureMap, [])) as FeaturePositionMap;
 
         const compareIndex = (a, b) => a.index - b.index;
 
@@ -23,7 +23,7 @@ describe('FeaturePositionMap', () => {
     });
 
     test('Can not be queried before serialization/deserialization', () => {
-        const featureMap = new FeatureMap();
+        const featureMap = new FeaturePositionMap();
         featureMap.add(0, 1, 2, 3);
 
         expect(() => {

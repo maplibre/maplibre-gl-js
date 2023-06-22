@@ -1,5 +1,5 @@
 import Layout from './layout';
-import SymbolBucket from '../../../src/data/bucket/symbol_bucket';
+import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket';
 import {performSymbolLayout} from '../../../src/symbol/symbol_layout';
 import {OverscaledTileID} from '../../../src/source/tile_id';
 

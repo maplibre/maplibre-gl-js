@@ -1,4 +1,4 @@
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import {isImageBitmap} from '../util/util';
 
@@ -15,7 +15,7 @@ type EmptyImage = {
 type DataTextureImage = RGBAImage | AlphaImage | EmptyImage;
 export type TextureImage = TexImageSource | DataTextureImage;
 
-class Texture {
+export class Texture {
     context: Context;
     size: [number, number];
     texture: WebGLTexture;
@@ -108,5 +108,3 @@ class Texture {
         this.texture = null;
     }
 }
-
-export default Texture;

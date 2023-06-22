@@ -1,10 +1,10 @@
 import {TapRecognizer} from './tap_recognizer';
 import type Point from '@mapbox/point-geometry';
-import type Map from '../map';
-import TransformProvider from './transform-provider';
+import type {Map} from '../map';
+import {TransformProvider} from './transform-provider';
 import {Handler} from '../handler_manager';
 
-export default class TapZoomHandler implements Handler {
+export class TapZoomHandler implements Handler {
     _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;

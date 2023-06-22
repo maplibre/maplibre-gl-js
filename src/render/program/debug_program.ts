@@ -1,6 +1,6 @@
 import {UniformColor, UniformMatrix4f, Uniform1i, Uniform1f} from '../uniform_binding';
 
-import type Context from '../../gl/context';
+import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {Color} from '@maplibre/maplibre-gl-style-spec';
 import {mat4} from 'gl-matrix';

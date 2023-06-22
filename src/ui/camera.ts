@@ -1,19 +1,19 @@
 import {extend, warnOnce, clamp, wrap, defaultEasing, pick} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import browser from '../util/browser';
-import LngLat from '../geo/lng_lat';
-import LngLatBounds from '../geo/lng_lat_bounds';
+import {browser} from '../util/browser';
+import {LngLat} from '../geo/lng_lat';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Debug} from '../util/debug';
-import Terrain from '../render/terrain';
+import {Terrain} from '../render/terrain';
 
-import type Transform from '../geo/transform';
+import type {Transform} from '../geo/transform';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
-import MercatorCoordinate from '../geo/mercator_coordinate';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -141,7 +141,7 @@ export type CameraUpdateTransformFunction =  (next: {
     elevation?: number;
 };
 
-abstract class Camera extends Evented {
+export abstract class Camera extends Evented {
     transform: Transform;
     terrain: Terrain;
 
@@ -1457,5 +1457,3 @@ function addAssertions(camera: Camera) { //eslint-disable-line
 }
 
 let canary; // eslint-disable-line
-
-export default Camera;

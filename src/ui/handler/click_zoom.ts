@@ -1,9 +1,9 @@
 import type Point from '@mapbox/point-geometry';
-import type Map from '../map';
-import TransformProvider from './transform-provider';
+import type {Map} from '../map';
+import {TransformProvider} from './transform-provider';
 import {Handler} from '../handler_manager';
 
-export default class ClickZoomHandler implements Handler {
+export class ClickZoomHandler implements Handler {
 
     _tr: TransformProvider;
     _enabled: boolean;

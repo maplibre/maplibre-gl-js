@@ -1,13 +1,13 @@
 import {fakeServer, FakeServer} from 'nise';
 import {Source} from './source';
-import VectorTileSource from './vector_tile_source';
-import Tile from './tile';
+import {VectorTileSource} from './vector_tile_source';
+import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher} from '../util/test/util';
-import Map from '../ui/map';
+import {Map} from '../ui/map';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);

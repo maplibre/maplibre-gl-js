@@ -1,23 +1,21 @@
-import DepthMode from '../gl/depth_mode';
-import StencilMode from '../gl/stencil_mode';
-import ColorMode from '../gl/color_mode';
-import CullFaceMode from '../gl/cull_face_mode';
+import {DepthMode} from '../gl/depth_mode';
+import {StencilMode} from '../gl/stencil_mode';
+import {ColorMode} from '../gl/color_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
 import {
     fillExtrusionUniformValues,
     fillExtrusionPatternUniformValues,
 } from './program/fill_extrusion_program';
 
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
-import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_style_layer';
-import type FillExtrusionBucket from '../data/bucket/fill_extrusion_bucket';
+import type {Painter} from './painter';
+import type {SourceCache} from '../source/source_cache';
+import type {FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
+import type {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 
-import updatePatternPositionsInProgram from './update_pattern_positions_in_program';
+import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 
-export default draw;
-
-function draw(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawFillExtrusion(painter: Painter, source: SourceCache, layer: FillExtrusionStyleLayer, coords: Array<OverscaledTileID>) {
     const opacity = layer.paint.get('fill-extrusion-opacity');
     if (opacity === 0) {
         return;

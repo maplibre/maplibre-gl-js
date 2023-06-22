@@ -1,14 +1,14 @@
 import {CircleLayoutArray} from '../array_types.g';
 
 import {members as layoutAttributes} from './circle_attributes';
-import SegmentVector from '../segment';
+import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
-import loadGeometry from '../load_geometry';
-import toEvaluationFeature from '../evaluation_feature';
-import EXTENT from '../extent';
+import {loadGeometry} from '../load_geometry';
+import {toEvaluationFeature} from '../evaluation_feature';
+import {EXTENT} from '../extent';
 import {register} from '../../util/web_worker_transfer';
-import EvaluationParameters from '../../style/evaluation_parameters';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
 
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
@@ -18,11 +18,11 @@ import type {
     IndexedFeature,
     PopulateParameters
 } from '../bucket';
-import type CircleStyleLayer from '../../style/style_layer/circle_style_layer';
-import type HeatmapStyleLayer from '../../style/style_layer/heatmap_style_layer';
-import type Context from '../../gl/context';
-import type IndexBuffer from '../../gl/index_buffer';
-import type VertexBuffer from '../../gl/vertex_buffer';
+import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
+import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
+import type {Context} from '../../gl/context';
+import type {IndexBuffer} from '../../gl/index_buffer';
+import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
@@ -41,7 +41,7 @@ function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
  * vector that is where it points.
  * @private
  */
-class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implements Bucket {
+export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implements Bucket {
     index: number;
     zoom: number;
     overscaling: number;
@@ -195,5 +195,3 @@ class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implement
 }
 
 register('CircleBucket', CircleBucket, {omit: ['layers']});
-
-export default CircleBucket;

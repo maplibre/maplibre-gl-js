@@ -1,7 +1,7 @@
-import Style from './style';
-import SourceCache from '../source/source_cache';
-import StyleLayer from './style_layer';
-import Transform from '../geo/transform';
+import {Style} from './style';
+import {SourceCache} from '../source/source_cache';
+import {StyleLayer} from './style_layer';
+import {Transform} from '../geo/transform';
 import {extend} from '../util/util';
 import {RequestManager} from '../util/request_manager';
 import {Event, Evented} from '../util/evented';
@@ -11,14 +11,14 @@ import {
     clearRTLTextPlugin,
     evented as rtlTextPluginEvented
 } from '../source/rtl_text_plugin';
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
 import {fakeXhr, fakeServer} from 'nise';
 
-import EvaluationParameters from './evaluation_parameters';
+import {EvaluationParameters} from './evaluation_parameters';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {SourceClass} from '../source/source';
-import GeoJSONSource from '../source/geojson_source';
+import {GeoJSONSource} from '../source/geojson_source';
 
 function createStyleJSON(properties?) {
     return extend({

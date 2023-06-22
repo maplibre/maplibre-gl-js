@@ -16,19 +16,19 @@ import type {FeatureFilter, FeatureState,
     LayerSpecification,
     FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties';
-import EvaluationParameters from './evaluation_parameters';
+import {EvaluationParameters} from './evaluation_parameters';
 import type {CrossfadeParameters} from './evaluation_parameters';
 
-import type Transform from '../geo/transform';
+import type {Transform} from '../geo/transform';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
-import type Map from '../ui/map';
+import type {Map} from '../ui/map';
 import type {StyleSetterOptions} from './style';
 import {mat4} from 'gl-matrix';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 const TRANSITION_SUFFIX = '-transition';
 
-abstract class StyleLayer extends Evented {
+export abstract class StyleLayer extends Evented {
     id: string;
     metadata: unknown;
     type: LayerSpecification['type'] | CustomLayerInterface['type'];
@@ -282,5 +282,3 @@ abstract class StyleLayer extends Evented {
         return false;
     }
 }
-
-export default StyleLayer;

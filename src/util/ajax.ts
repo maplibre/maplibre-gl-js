@@ -1,5 +1,5 @@
 import {extend, warnOnce, isWorker} from './util';
-import config from './config';
+import {config} from './config';
 
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';

@@ -4,12 +4,12 @@ import potpack from 'potpack';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {RGBAImage} from '../util/image';
 import {ImagePosition} from './image_atlas';
-import Texture from './texture';
+import {Texture} from './texture';
 import {renderStyleImage} from '../style/style_image';
 import {warnOnce} from '../util/util';
 
 import type {StyleImage} from '../style/style_image';
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 import type {PotpackBox} from 'potpack';
 import type {Callback} from '../types/callback';
 
@@ -35,7 +35,7 @@ const padding = 1;
     data-driven support for `*-pattern`, we'll likely use per-bucket pattern atlases, and that would be a good time
     to refactor this.
 */
-class ImageManager extends Evented {
+export class ImageManager extends Evented {
     images: {[_: string]: StyleImage};
     updatedImages: {[_: string]: boolean};
     callbackDispatchedThisFrame: {[_: string]: boolean};
@@ -326,5 +326,3 @@ class ImageManager extends Evented {
         }
     }
 }
-
-export default ImageManager;

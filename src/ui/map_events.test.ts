@@ -1,5 +1,5 @@
 import simulate, {window} from '../../test/unit/lib/simulate_interaction';
-import StyleLayer from '../style/style_layer';
+import {StyleLayer} from '../style/style_layer';
 import {createMap, beforeMapTest} from '../util/test/util';
 import {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {MapLayerEventType, MapLibreEvent} from './events';

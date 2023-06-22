@@ -13,4 +13,4 @@
  * @private
  * @readonly
  */
-export default 8192;
+export const EXTENT = 8192;

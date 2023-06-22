@@ -1,15 +1,15 @@
-import type Map from '../map';
+import type {Map} from '../map';
 import type {PointLike} from '../camera';
-import type Transform from '../../geo/transform';
+import type {Transform} from '../../geo/transform';
 import Point from '@mapbox/point-geometry';
-import LngLat from '../../geo/lng_lat';
+import {LngLat} from '../../geo/lng_lat';
 
 /**
  * Shared utilities for the Handler classes to access the correct camera state.
  * If Camera.transformCameraUpdate is specified, the "desired state" of camera may differ from the state used for rendering.
  * The handlers need the "desired state" to track accumulated changes.
  */
-class TransformProvider {
+export class TransformProvider {
     _map: Map;
 
     constructor(map: Map) {
@@ -40,5 +40,3 @@ class TransformProvider {
         return this.transform.pointLocation(Point.convert(point), this._map.terrain);
     }
 }
-
-export default TransformProvider;

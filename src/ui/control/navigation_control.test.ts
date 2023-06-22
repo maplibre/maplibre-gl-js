@@ -1,6 +1,6 @@
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
-import NavigationControl from './navigation_control';
+import {NavigationControl} from './navigation_control';
 
 function createMap() {
     return globalCreateMap({});

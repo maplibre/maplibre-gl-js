@@ -1,7 +1,7 @@
-import type SourceCache from './source_cache';
-import type StyleLayer from '../style/style_layer';
-import type CollisionIndex from '../symbol/collision_index';
-import type Transform from '../geo/transform';
+import type {SourceCache} from './source_cache';
+import type {StyleLayer} from '../style/style_layer';
+import type {CollisionIndex} from '../symbol/collision_index';
+import type {Transform} from '../geo/transform';
 import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';

@@ -1,5 +1,5 @@
 import {createMap, beforeMapTest} from '../../util/test/util';
-import FullscreenControl from './fullscreen_control';
+import {FullscreenControl} from './fullscreen_control';
 
 beforeEach(() => {
     beforeMapTest();

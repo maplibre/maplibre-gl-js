@@ -6,13 +6,13 @@ import {
     Uniform2f,
     UniformMatrix4f
 } from '../uniform_binding';
-import pixelsToTileUnits from '../../source/pixels_to_tile_units';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 
-import type Context from '../../gl/context';
-import type Tile from '../../source/tile';
+import type {Context} from '../../gl/context';
+import type {Tile} from '../../source/tile';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type Painter from '../painter';
-import type HeatmapStyleLayer from '../../style/style_layer/heatmap_style_layer';
+import type {Painter} from '../painter';
+import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
 
 export type HeatmapUniformsType = {
     'u_extrude_scale': Uniform1f;

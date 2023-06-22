@@ -1,8 +1,8 @@
 import {extend} from '../../util/util';
-import Map from '../map';
-import DOM from '../../util/dom';
+import {Map} from '../map';
+import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import browser from '../../util/browser';
+import {browser} from '../../util/browser';
 
 import {beforeMapTest} from '../../util/test/util';
 

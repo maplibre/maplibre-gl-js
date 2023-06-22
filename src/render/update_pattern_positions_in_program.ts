@@ -1,9 +1,9 @@
 import type {CrossFaded} from '../style/properties';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type Tile from '../source/tile';
-import type ProgramConfiguration from '../data/program_configuration';
-import type FillExtrusionStyleLayer from '../style/style_layer/fill_extrusion_style_layer';
-import type FillStyleLayer from '../style/style_layer/fill_style_layer';
+import type {Tile} from '../source/tile';
+import type {ProgramConfiguration} from '../data/program_configuration';
+import type {FillExtrusionStyleLayer} from '../style/style_layer/fill_extrusion_style_layer';
+import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 
 /**
  * A simple helper shared by draw_fill and draw_fill_extrusions to find the correct pattern positions AND update program.
@@ -18,7 +18,7 @@ import type FillStyleLayer from '../style/style_layer/fill_style_layer';
  * @param tile - current tile being drawn
  * @param layer - current layer being rendered
  */
-export default function updatePatternPositionsInProgram(
+export function updatePatternPositionsInProgram(
     programConfiguration: ProgramConfiguration,
     propertyName: 'fill-pattern' | 'fill-extrusion-pattern',
     constantPattern: CrossFaded<ResolvedImage>,

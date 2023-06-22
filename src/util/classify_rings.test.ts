@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
-import classifyRings from './classify_rings';
+import {classifyRings} from './classify_rings';
 import Point from '@mapbox/point-geometry';
 
 // Load a fill feature from fixture tile.

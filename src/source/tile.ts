@@ -1,32 +1,32 @@
 import {uniqueId, parseCacheControl} from '../util/util';
 import {deserialize as deserializeBucket} from '../data/bucket';
 import '../data/feature_index';
-import type FeatureIndex from '../data/feature_index';
-import GeoJSONFeature from '../util/vectortile_to_geojson';
+import type {FeatureIndex} from '../data/feature_index';
+import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
-import SymbolBucket from '../data/bucket/symbol_bucket';
+import {SymbolBucket} from '../data/bucket/symbol_bucket';
 import {CollisionBoxArray} from '../data/array_types.g';
-import Texture from '../render/texture';
-import browser from '../util/browser';
-import toEvaluationFeature from '../data/evaluation_feature';
-import EvaluationParameters from '../style/evaluation_parameters';
-import SourceFeatureState from '../source/source_state';
+import {Texture} from '../render/texture';
+import {browser} from '../util/browser';
+import {toEvaluationFeature} from '../data/evaluation_feature';
+import {EvaluationParameters} from '../style/evaluation_parameters';
+import {SourceFeatureState} from '../source/source_state';
 import {lazyLoadRTLTextPlugin} from './rtl_text_plugin';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
 import type {Bucket} from '../data/bucket';
-import type StyleLayer from '../style/style_layer';
+import type {StyleLayer} from '../style/style_layer';
 import type {WorkerTileResult} from './worker_source';
-import type Actor from '../util/actor';
-import type DEMData from '../data/dem_data';
+import type {Actor} from '../util/actor';
+import type {DEMData} from '../data/dem_data';
 import type {AlphaImage} from '../util/image';
-import type ImageAtlas from '../render/image_atlas';
-import type ImageManager from '../render/image_manager';
-import type Context from '../gl/context';
+import type {ImageAtlas} from '../render/image_atlas';
+import type {ImageManager} from '../render/image_manager';
+import type {Context} from '../gl/context';
 import type {OverscaledTileID} from './tile_id';
-import type Framebuffer from '../gl/framebuffer';
-import type Transform from '../geo/transform';
+import type {Framebuffer} from '../gl/framebuffer';
+import type {Transform} from '../geo/transform';
 import type {LayerFeatureStates} from './source_state';
 import type {Cancelable} from '../types/cancelable';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -49,7 +49,7 @@ export type TileState = // Tile data is in the process of loading.
  *
  * @private
  */
-class Tile {
+export class Tile {
     tileID: OverscaledTileID;
     uid: number;
     uses: number;
@@ -480,5 +480,3 @@ class Tile {
         return false;
     }
 }
-
-export default Tile;

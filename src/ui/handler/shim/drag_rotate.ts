@@ -4,7 +4,7 @@ import type {MousePitchHandler, MouseRotateHandler} from '../mouse';
  * The `DragRotateHandler` allows the user to rotate the map by clicking and
  * dragging the cursor while holding the right mouse button or `ctrl` key.
  */
-export default class DragRotateHandler {
+export class DragRotateHandler {
 
     _mouseRotate: MouseRotateHandler;
     _mousePitch: MousePitchHandler;

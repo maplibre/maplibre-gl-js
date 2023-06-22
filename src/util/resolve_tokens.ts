@@ -1,5 +1,3 @@
-export default resolveTokens;
-
 /**
  * Replace tokens in a string template with values in an object
  *
@@ -8,7 +6,7 @@ export default resolveTokens;
  * @returns the template with tokens replaced
  * @private
  */
-function resolveTokens(
+export function resolveTokens(
     properties: {
         readonly [x: string]: unknown;
     },

@@ -1,6 +1,6 @@
-import Dispatcher from './dispatcher';
-import workerFactory from './web_worker';
-import WorkerPool from './worker_pool';
+import {Dispatcher} from './dispatcher';
+import {workerFactory} from './web_worker';
+import {WorkerPool} from './worker_pool';
 
 describe('Dispatcher', () => {
     test('requests and releases workers from pool', () => {

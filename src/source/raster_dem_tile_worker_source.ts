@@ -1,6 +1,6 @@
-import DEMData from '../data/dem_data';
+import {DEMData} from '../data/dem_data';
 import {RGBAImage} from '../util/image';
-import type Actor from '../util/actor';
+import type {Actor} from '../util/actor';
 import type {
     WorkerDEMTileParameters,
     WorkerDEMTileCallback,
@@ -8,7 +8,7 @@ import type {
 } from './worker_source';
 import {isImageBitmap} from '../util/util';
 
-class RasterDEMTileWorkerSource {
+export class RasterDEMTileWorkerSource {
     actor: Actor;
     loaded: {[_: string]: DEMData};
     offscreenCanvas: OffscreenCanvas;
@@ -54,5 +54,3 @@ class RasterDEMTileWorkerSource {
         }
     }
 }
-
-export default RasterDEMTileWorkerSource;

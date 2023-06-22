@@ -1,4 +1,4 @@
-import LngLat, {earthRadius} from '../geo/lng_lat';
+import {LngLat, earthRadius} from '../geo/lng_lat';
 import type {LngLatLike} from '../geo/lng_lat';
 import {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 
@@ -75,7 +75,7 @@ export function mercatorScale(lat: number) {
  *
  * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js-docs/example/custom-style-layer/)
  */
-class MercatorCoordinate implements IMercatorCoordinate {
+export class MercatorCoordinate implements IMercatorCoordinate {
     x: number;
     y: number;
     z: number;
@@ -143,7 +143,4 @@ class MercatorCoordinate implements IMercatorCoordinate {
         // 1 meter / circumference at equator in meters * Mercator projection scale factor at this latitude
         return 1 / earthCircumfrence * mercatorScale(latFromMercatorY(this.y));
     }
-
 }
-
-export default MercatorCoordinate;

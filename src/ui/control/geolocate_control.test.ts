@@ -1,14 +1,14 @@
 import geolocation from 'mock-geolocation';
-import LngLatBounds from '../../geo/lng_lat_bounds';
+import {LngLatBounds} from '../../geo/lng_lat_bounds';
 import {createMap, beforeMapTest} from '../../util/test/util';
-import GeolocateControl from './geolocate_control';
+import {GeolocateControl} from './geolocate_control';
 jest.mock('../../util/geolocation_support', () => (
     {
         checkGeolocationSupport: jest.fn()
     }
 ));
 import {checkGeolocationSupport} from '../../util/geolocation_support';
-import type LngLat from '../../geo/lng_lat';
+import type {LngLat} from '../../geo/lng_lat';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits

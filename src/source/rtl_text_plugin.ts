@@ -1,5 +1,5 @@
 import {getArrayBuffer} from '../util/ajax';
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
 import {isWorker} from '../util/util';
 

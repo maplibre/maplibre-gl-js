@@ -1,13 +1,13 @@
 import {getArrayBuffer} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 
-import parseGlyphPBF from './parse_glyph_pbf';
+import {parseGlyphPbf} from './parse_glyph_pbf';
 
 import type {StyleGlyph} from './style_glyph';
 import type {RequestManager} from '../util/request_manager';
 import type {Callback} from '../types/callback';
 
-export default function loadGlyphRange(fontstack: string,
+export function loadGlyphRange(fontstack: string,
     range: number,
     urlTemplate: string,
     requestManager: RequestManager,
@@ -28,7 +28,7 @@ export default function loadGlyphRange(fontstack: string,
         } else if (data) {
             const glyphs = {};
 
-            for (const glyph of parseGlyphPBF(data)) {
+            for (const glyph of parseGlyphPbf(data)) {
                 glyphs[glyph.id] = glyph;
             }
 

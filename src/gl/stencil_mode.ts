@@ -3,7 +3,7 @@ import type {StencilOpConstant, StencilTestGL} from './types';
 const ALWAYS = 0x0207;
 const KEEP = 0x1E00;
 
-class StencilMode {
+export class StencilMode {
     test: StencilTestGL;
     ref: number;
     mask: number;
@@ -25,5 +25,3 @@ class StencilMode {
 }
 
 StencilMode.disabled = new StencilMode({func: ALWAYS, mask: 0}, 0, 0, KEEP, KEEP, KEEP);
-
-export default StencilMode;

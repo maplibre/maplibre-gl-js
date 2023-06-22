@@ -1,4 +1,4 @@
-import loadGeometry from './load_geometry';
+import {loadGeometry} from './load_geometry';
 import type Point from '@mapbox/point-geometry';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
@@ -23,7 +23,7 @@ type EvaluationFeature = {
  * @param {boolean} needGeometry
  * @private
  */
-export default function toEvaluationFeature(feature: VectorTileFeature, needGeometry: boolean): EvaluationFeature {
+export function toEvaluationFeature(feature: VectorTileFeature, needGeometry: boolean): EvaluationFeature {
     return {type: feature.type,
         id: feature.id,
         properties: feature.properties,

@@ -1,5 +1,5 @@
-import Actor from './actor';
-import workerFactory from './web_worker';
+import {Actor} from './actor';
+import {workerFactory} from './web_worker';
 import {MessageBus} from '../../test/unit/lib/web_worker_mock';
 
 const originalWorker = global.Worker;

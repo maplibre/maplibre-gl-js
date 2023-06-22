@@ -7,7 +7,7 @@ import {interpolates, Color, StylePropertySpecification, normalizePropertyExpres
     CompositeExpression, TransitionSpecification,
     PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
-import EvaluationParameters from './evaluation_parameters';
+import {EvaluationParameters} from './evaluation_parameters';
 
 import {CanonicalTileID} from '../source/tile_id';
 

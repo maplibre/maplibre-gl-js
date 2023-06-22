@@ -1,4 +1,4 @@
-import GridIndex from './grid_index';
+import {GridIndex} from './grid_index';
 import type {GridKey} from './grid_index';
 
 describe('GridIndex', () => {

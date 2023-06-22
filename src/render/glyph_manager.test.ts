@@ -1,10 +1,10 @@
-import parseGlyphPBF from '../style/parse_glyph_pbf';
-import GlyphManager from './glyph_manager';
+import {parseGlyphPbf} from '../style/parse_glyph_pbf';
+import {GlyphManager} from './glyph_manager';
 import fs from 'fs';
 import {RequestManager} from '../util/request_manager';
 
 const glyphs = {};
-for (const glyph of parseGlyphPBF(fs.readFileSync('./test/unit/assets/0-255.pbf'))) {
+for (const glyph of parseGlyphPbf(fs.readFileSync('./test/unit/assets/0-255.pbf'))) {
     glyphs[glyph.id] = glyph;
 }
 

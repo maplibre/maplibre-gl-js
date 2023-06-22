@@ -1,5 +1,5 @@
-import LngLat from './lng_lat';
-import LngLatBounds from './lng_lat_bounds';
+import {LngLat} from './lng_lat';
+import {LngLatBounds} from './lng_lat_bounds';
 
 describe('LngLatBounds', () => {
     test('#constructor', () => {

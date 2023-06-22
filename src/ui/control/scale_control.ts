@@ -1,7 +1,7 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 import {extend} from '../../util/util';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 
 export type Unit = 'imperial' | 'metric' | 'nautical';
@@ -32,7 +32,7 @@ const defaultOptions: ScaleOptions = {
  *
  * scale.setUnit('metric');
  */
-class ScaleControl implements IControl {
+export class ScaleControl implements IControl {
     _map: Map;
     _container: HTMLElement;
     options: ScaleOptions;
@@ -75,8 +75,6 @@ class ScaleControl implements IControl {
         updateScale(this._map, this._container, this.options);
     };
 }
-
-export default ScaleControl;
 
 function updateScale(map, container, options) {
     // A horizontal scale is imagined to be present at center of the map
