@@ -1,6 +1,6 @@
-import StyleLayer from '../style_layer';
+import {StyleLayer} from '../style_layer';
 
-import FillExtrusionBucket from '../../data/bucket/fill_extrusion_bucket';
+import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket';
 import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
 import {translateDistance, translate} from '../query_utils';
 import properties, {FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g';
@@ -10,14 +10,14 @@ import Point from '@mapbox/point-geometry';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
-import type Transform from '../../geo/transform';
+import type {Transform} from '../../geo/transform';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {
     z: number;
 }
 
-class FillExtrusionStyleLayer extends StyleLayer {
+export class FillExtrusionStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<FillExtrusionPaintProps>;
     _transitioningPaint: Transitioning<FillExtrusionPaintProps>;
     paint: PossiblyEvaluated<FillExtrusionPaintProps, FillExtrusionPaintPropsPossiblyEvaluated>;
@@ -222,5 +222,3 @@ function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4,
     }
     return projectedQueryGeometry;
 }
-
-export default FillExtrusionStyleLayer;

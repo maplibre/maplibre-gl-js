@@ -1,5 +1,5 @@
 import type {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, AroundCenterOptions} from '../two_fingers_touch';
-import type TapDragZoomHandler from '../tap_drag_zoom';
+import type {TapDragZoomHandler} from '../tap_drag_zoom';
 
 /**
  * The `TwoFingersTouchZoomRotateHandler` allows the user to zoom and rotate the map by
@@ -8,7 +8,7 @@ import type TapDragZoomHandler from '../tap_drag_zoom';
  * They can zoom with one finger by double tapping and dragging. On the second tap,
  * hold the finger down and drag up or down to zoom in or out.
  */
-export default class TwoFingersTouchZoomRotateHandler {
+export class TwoFingersTouchZoomRotateHandler {
 
     _el: HTMLElement;
     _touchZoom: TwoFingersTouchZoomHandler;

@@ -1,33 +1,33 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import StyleLayer from './style_layer';
-import createStyleLayer from './create_style_layer';
-import loadSprite from './load_sprite';
-import ImageManager from '../render/image_manager';
-import GlyphManager from '../render/glyph_manager';
-import Light from './light';
-import LineAtlas from '../render/line_atlas';
+import {StyleLayer} from './style_layer';
+import {createStyleLayer} from './create_style_layer';
+import {loadSprite} from './load_sprite';
+import {ImageManager} from '../render/image_manager';
+import {GlyphManager} from '../render/glyph_manager';
+import {Light} from './light';
+import {LineAtlas} from '../render/line_atlas';
 import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer, makeRequest} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
-import browser from '../util/browser';
-import Dispatcher from '../util/dispatcher';
+import {browser} from '../util/browser';
+import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
-import SourceCache from '../source/source_cache';
-import GeoJSONSource from '../source/geojson_source';
+import {SourceCache} from '../source/source_cache';
+import {GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, operations as diffOperations} from '@maplibre/maplibre-gl-style-spec';
-import getWorkerPool from '../util/global_worker_pool';
+import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {
     registerForPluginStateChange,
     evented as rtlTextPluginEvented,
     triggerPluginCompletionEvent
 } from '../source/rtl_text_plugin';
-import PauseablePlacement from './pauseable_placement';
-import ZoomHistory from './zoom_history';
-import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index';
+import {PauseablePlacement} from './pauseable_placement';
+import {ZoomHistory} from './zoom_history';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
@@ -40,12 +40,12 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
 }> | null) =>
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
-import type Map from '../ui/map';
-import type Transform from '../geo/transform';
+import type {Map} from '../ui/map';
+import type {Transform} from '../geo/transform';
 import type {StyleImage} from './style_image';
 import type {StyleGlyph} from './style_glyph';
 import type {Callback} from '../types/callback';
-import type EvaluationParameters from './evaluation_parameters';
+import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
 import type {Cancelable} from '../types/cancelable';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
@@ -152,7 +152,7 @@ export type StyleSwapOptions = {
 /**
  * @private
  */
-class Style extends Evented {
+export class Style extends Evented {
     map: Map;
     stylesheet: StyleSpecification;
     dispatcher: Dispatcher;
@@ -194,7 +194,7 @@ class Style extends Evented {
         super();
 
         this.map = map;
-        this.dispatcher = new Dispatcher(getWorkerPool(), this, map._getMapId());
+        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), this, map._getMapId());
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
@@ -1157,6 +1157,11 @@ class Style extends Evented {
     }
 
     serialize(): StyleSpecification {
+        // We return undefined before we're loaded, following the pattern of Map.getStyle() before
+        // the Style object is initialized.
+        // Internally, Style._validate() calls Style.serialize() but callers are responsible for
+        // calling Style._checkLoaded() first if their validation requires the style to be loaded.
+        if (!this._loaded) return;
 
         const sources = mapObject(this.sourceCaches, (source) => source.serialize());
         const layers = this._serializeByIds(this._order);
@@ -1681,5 +1686,3 @@ class Style extends Evented {
 }
 
 Style.registerForPluginStateChange = registerForPluginStateChange;
-
-export default Style;

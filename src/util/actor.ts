@@ -1,6 +1,6 @@
 import {isWorker, isSafari} from './util';
 import {serialize, deserialize} from './web_worker_transfer';
-import ThrottledInvoker from './throttled_invoker';
+import {ThrottledInvoker} from './throttled_invoker';
 
 import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
@@ -16,7 +16,7 @@ import type {Cancelable} from '../types/cancelable';
  * @param {string|number} mapId A unique identifier for the Map instance using this Actor.
  * @private
  */
-class Actor {
+export class Actor {
     target: any;
     parent: any;
     mapId: string | null;
@@ -223,5 +223,3 @@ class Actor {
         this.target.removeEventListener('message', this.receive, false);
     }
 }
-
-export default Actor;

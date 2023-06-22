@@ -1,5 +1,5 @@
-import browser from '../util/browser';
-import type Map from './map';
+import {browser} from '../util/browser';
+import type {Map} from './map';
 import {bezier, clamp, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
@@ -38,7 +38,7 @@ export type InertiaOptions = {
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
 
-export default class HandlerInertia {
+export class HandlerInertia {
     _map: Map;
     _inertiaBuffer: Array<{
         time: number;

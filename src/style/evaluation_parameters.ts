@@ -1,4 +1,4 @@
-import ZoomHistory from './zoom_history';
+import {ZoomHistory} from './zoom_history';
 import {isStringInSupportedScript} from '../util/script_detection';
 import {plugin as rtlTextPlugin} from '../source/rtl_text_plugin';
 
@@ -10,7 +10,7 @@ export type CrossfadeParameters = {
     t: number;
 };
 
-class EvaluationParameters {
+export class EvaluationParameters {
     zoom: number;
     now: number;
     fadeDuration: number;
@@ -56,5 +56,3 @@ class EvaluationParameters {
             {fromScale: 0.5, toScale: 1, t: 1 - (1 - t) * fraction};
     }
 }
-
-export default EvaluationParameters;

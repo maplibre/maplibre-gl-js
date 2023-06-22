@@ -1,34 +1,34 @@
 import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
-import browser from '../util/browser';
-import DOM from '../util/dom';
+import {browser} from '../util/browser';
+import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
 
 import {getJSON} from '../util/ajax';
-import ImageRequest from '../util/image_request';
+import {ImageRequest} from '../util/image_request';
 import type {GetImageCallback} from '../util/image_request';
 
 import {RequestManager, ResourceType} from '../util/request_manager';
-import Style, {StyleSwapOptions} from '../style/style';
-import EvaluationParameters from '../style/evaluation_parameters';
-import Painter from '../render/painter';
-import Transform from '../geo/transform';
-import Hash from './hash';
-import HandlerManager from './handler_manager';
-import Camera, {CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} from './camera';
-import LngLat from '../geo/lng_lat';
-import LngLatBounds from '../geo/lng_lat_bounds';
+import {Style, StyleSwapOptions} from '../style/style';
+import {EvaluationParameters} from '../style/evaluation_parameters';
+import {Painter} from '../render/painter';
+import {Transform} from '../geo/transform';
+import {Hash} from './hash';
+import {HandlerManager} from './handler_manager';
+import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} from './camera';
+import {LngLat} from '../geo/lng_lat';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import AttributionControl from './control/attribution_control';
-import LogoControl from './control/logo_control';
+import {AttributionControl} from './control/attribution_control';
+import {LogoControl} from './control/logo_control';
 
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
-import TaskQueue from '../util/task_queue';
-import webpSupported from '../util/webp_supported';
+import {TaskQueue} from '../util/task_queue';
+import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
 import {Source} from '../source/source';
-import StyleLayer from '../style/style_layer';
+import {StyleLayer} from '../style/style_layer';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -38,16 +38,16 @@ import type {MapEvent, MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
-import type ScrollZoomHandler from './handler/scroll_zoom';
-import type BoxZoomHandler from './handler/box_zoom';
+import type {ScrollZoomHandler} from './handler/scroll_zoom';
+import type {BoxZoomHandler} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
-import type DragRotateHandler from './handler/shim/drag_rotate';
-import DragPanHandler, {DragPanOptions} from './handler/shim/drag_pan';
+import type {DragRotateHandler} from './handler/shim/drag_rotate';
+import {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
 
-import type KeyboardHandler from './handler/keyboard';
-import type DoubleClickZoomHandler from './handler/shim/dblclick_zoom';
-import type TwoFingersTouchZoomRotateHandler from './handler/shim/two_fingers_touch';
-import defaultLocale from './default_locale';
+import type {KeyboardHandler} from './handler/keyboard';
+import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
+import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
+import {defaultLocale} from './default_locale';
 import type {TaskID} from '../util/task_queue';
 import type {Cancelable} from '../types/cancelable';
 import type {
@@ -62,9 +62,9 @@ import type {
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import Terrain from '../render/terrain';
-import RenderToTexture from '../render/render_to_texture';
-import config from '../util/config';
+import {Terrain} from '../render/terrain';
+import {RenderToTexture} from '../render/render_to_texture';
+import {config} from '../util/config';
 
 const version = packageJSON.version;
 /* eslint-enable no-use-before-define */
@@ -305,7 +305,7 @@ const defaultOptions = {
  * });
  * @see [Display a map](https://maplibre.org/maplibre-gl-js-docs/example/simple-map/)
  */
-class Map extends Camera {
+export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
@@ -3166,5 +3166,3 @@ class Map extends Camera {
         return this.transform.elevation;
     }
 }
-
-export default Map;

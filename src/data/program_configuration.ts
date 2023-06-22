@@ -4,19 +4,19 @@ import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
 import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
 import {clamp} from '../util/util';
-import patternAttributes from './bucket/pattern_attributes';
-import EvaluationParameters from '../style/evaluation_parameters';
-import FeaturePositionMap from './feature_position_map';
+import {patternAttributes} from './bucket/pattern_attributes';
+import {EvaluationParameters} from '../style/evaluation_parameters';
+import {FeaturePositionMap} from './feature_position_map';
 import {Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
 
 import type {UniformLocations} from '../render/uniform_binding';
 
 import type {CanonicalTileID} from '../source/tile_id';
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
-import type VertexBuffer from '../gl/vertex_buffer';
+import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {ImagePosition} from '../render/image_atlas';
 import type {
     Feature,
@@ -415,7 +415,7 @@ class CrossFadedCompositeBinder implements AttributeBinder {
  *
  * @private
  */
-export default class ProgramConfiguration {
+export class ProgramConfiguration {
     binders: {[_: string]: AttributeBinder | UniformBinder};
     cacheKey: string;
 

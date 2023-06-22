@@ -1,4 +1,4 @@
-import browser from './browser';
+import {browser} from './browser';
 
 describe('browser', () => {
     test('frame', done => {

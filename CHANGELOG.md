@@ -2,9 +2,11 @@
 
 ### ✨ Features and improvements
 
+- Change all internal exports to named exports([#2711](https://github.com/maplibre/maplibre-gl-js/pull/2711))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Return undefined instead of throwing from `Style.serialize()` when the style hasn't loaded yet ([#2712](https://github.com/maplibre/maplibre-gl-js/pull/2712)) 
 - Fix the `tap then drag` zoom gesture detection to abort when the two taps are far away ([#2673](https://github.com/maplibre/maplibre-gl-js/pull/2673))
 - _...Add new stuff here..._
 

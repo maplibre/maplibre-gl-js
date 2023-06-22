@@ -1,22 +1,21 @@
-import FeatureIndex from '../data/feature_index';
-
+import {FeatureIndex} from '../data/feature_index';
 import {performSymbolLayout} from '../symbol/symbol_layout';
 import {CollisionBoxArray} from '../data/array_types.g';
-import DictionaryCoder from '../util/dictionary_coder';
-import SymbolBucket from '../data/bucket/symbol_bucket';
-import LineBucket from '../data/bucket/line_bucket';
-import FillBucket from '../data/bucket/fill_bucket';
-import FillExtrusionBucket from '../data/bucket/fill_extrusion_bucket';
+import {DictionaryCoder} from '../util/dictionary_coder';
+import {SymbolBucket} from '../data/bucket/symbol_bucket';
+import {LineBucket} from '../data/bucket/line_bucket';
+import {FillBucket} from '../data/bucket/fill_bucket';
+import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import {warnOnce, mapObject} from '../util/util';
-import ImageAtlas from '../render/image_atlas';
-import GlyphAtlas from '../render/glyph_atlas';
-import EvaluationParameters from '../style/evaluation_parameters';
+import {ImageAtlas} from '../render/image_atlas';
+import {GlyphAtlas} from '../render/glyph_atlas';
+import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
 
 import type {Bucket} from '../data/bucket';
-import type Actor from '../util/actor';
-import type StyleLayer from '../style/style_layer';
-import type StyleLayerIndex from '../style/style_layer_index';
+import type {Actor} from '../util/actor';
+import type {StyleLayer} from '../style/style_layer';
+import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {StyleImage} from '../style/style_image';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {
@@ -26,7 +25,7 @@ import type {
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
 
-class WorkerTile {
+export class WorkerTile {
     tileID: OverscaledTileID;
     uid: string;
     zoom: number;
@@ -232,5 +231,3 @@ function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, avai
         layer.recalculate(parameters, availableImages);
     }
 }
-
-export default WorkerTile;

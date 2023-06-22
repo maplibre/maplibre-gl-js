@@ -1,5 +1,5 @@
 import {createMap, beforeMapTest} from '../../util/test/util';
-import ScaleControl from './scale_control';
+import {ScaleControl} from './scale_control';
 
 beforeEach(() => {
     beforeMapTest();

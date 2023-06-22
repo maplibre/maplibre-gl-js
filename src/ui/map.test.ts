@@ -1,7 +1,7 @@
-import Map, {MapOptions} from './map';
+import {Map, MapOptions} from './map';
 import {createMap, setErrorWebGlContext, beforeMapTest} from '../util/test/util';
-import LngLat from '../geo/lng_lat';
-import Tile from '../source/tile';
+import {LngLat} from '../geo/lng_lat';
+import {Tile} from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
@@ -11,16 +11,16 @@ import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {IControl} from './control/control';
-import EvaluationParameters from '../style/evaluation_parameters';
+import {EvaluationParameters} from '../style/evaluation_parameters';
 import {fakeServer, FakeServer} from 'nise';
 import {CameraOptions} from './camera';
-import Terrain, {} from '../render/terrain';
+import {Terrain} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import Transform from '../geo/transform';
+import {Transform} from '../geo/transform';
 import {StyleImageInterface} from '../style/style_image';
-import Style from '../style/style';
+import {Style} from '../style/style';
 import {MapSourceDataEvent} from './events';
-import config from '../util/config';
+import {config} from '../util/config';
 
 function createStyleSource() {
     return {
@@ -600,6 +600,13 @@ describe('Map', () => {
     });
 
     describe('#getStyle', () => {
+        test('returns undefined if the style has not loaded yet', done => {
+            const style = createStyle();
+            const map = createMap({style});
+            expect(map.getStyle()).toBeUndefined();
+            done();
+        });
+
         test('returns the style', done => {
             const style = createStyle();
             const map = createMap({style});

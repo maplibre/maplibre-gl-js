@@ -1,6 +1,6 @@
 import {Handler} from '../handler_manager';
-import type Map from '../map';
-import TransformProvider from './transform-provider';
+import type {Map} from '../map';
+import {TransformProvider} from './transform-provider';
 
 const defaultOptions = {
     panStep: 100,
@@ -22,7 +22,7 @@ const defaultOptions = {
  * - `Shift+⇡`: Increase the pitch by 10 degrees.
  * - `Shift+⇣`: Decrease the pitch by 10 degrees.
  */
-export default class KeyboardHandler implements Handler {
+export class KeyboardHandler implements Handler {
     _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;

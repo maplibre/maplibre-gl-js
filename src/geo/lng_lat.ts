@@ -27,7 +27,7 @@ export const earthRadius = 6371008.8;
  * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
  * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
  */
-class LngLat {
+export class LngLat {
     lng: number;
     lat: number;
 
@@ -148,5 +148,3 @@ export type LngLatLike = LngLat | {
     lon: number;
     lat: number;
 } | [number, number];
-
-export default LngLat;

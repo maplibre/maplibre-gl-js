@@ -1,5 +1,5 @@
-import Tile from './tile';
-import TileCache from './tile_cache';
+import {Tile} from './tile';
+import {TileCache} from './tile_cache';
 import {OverscaledTileID} from './tile_id';
 
 const idA = new OverscaledTileID(10, 0, 10, 0, 1);

@@ -1,12 +1,12 @@
-import Camera, {CameraOptions} from '../ui/camera';
-import Transform from '../geo/transform';
-import TaskQueue, {TaskID} from '../util/task_queue';
-import browser from '../util/browser';
+import {Camera, CameraOptions} from '../ui/camera';
+import {Transform} from '../geo/transform';
+import {TaskQueue, TaskID} from '../util/task_queue';
+import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import Terrain from '../render/terrain';
-import LngLat, {LngLatLike} from '../geo/lng_lat';
+import {Terrain} from '../render/terrain';
+import {LngLat, LngLatLike} from '../geo/lng_lat';
 
 beforeEach(() => {
     setMatchMedia();

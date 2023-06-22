@@ -2,10 +2,10 @@ import {
     queryRenderedFeatures,
     querySourceFeatures
 } from './query_features';
-import SourceCache from './source_cache';
-import Transform from '../geo/transform';
+import {SourceCache} from './source_cache';
+import {Transform} from '../geo/transform';
 import Point from '@mapbox/point-geometry';
-import Dispatcher from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
 
 describe('QueryFeatures#rendered', () => {
     test('returns empty object if source returns no tiles', () => {

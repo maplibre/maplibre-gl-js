@@ -4,9 +4,9 @@ import {mat4, vec4} from 'gl-matrix';
 import * as symbolSize from './symbol_size';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
-import type Painter from '../render/painter';
-import type Transform from '../geo/transform';
-import type SymbolBucket from '../data/bucket/symbol_bucket';
+import type {Painter} from '../render/painter';
+import type {Transform} from '../geo/transform';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
     SymbolLineVertexArray,

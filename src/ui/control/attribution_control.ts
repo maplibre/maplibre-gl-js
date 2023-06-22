@@ -1,6 +1,6 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 import type {MapDataEvent} from '../events';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -23,7 +23,7 @@ type AttributionOptions = {
  *         compact: true
  *     }));
  */
-class AttributionControl implements IControl {
+export class AttributionControl implements IControl {
     options: AttributionOptions;
     _map: Map;
     _compact: boolean;
@@ -188,7 +188,4 @@ class AttributionControl implements IControl {
             }
         }
     };
-
 }
-
-export default AttributionControl;

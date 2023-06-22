@@ -1,4 +1,4 @@
-import AttributionControl from './attribution_control';
+import {AttributionControl} from './attribution_control';
 import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';

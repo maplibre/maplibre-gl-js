@@ -19,9 +19,9 @@ import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
 import circleAttributes from '../src/data/bucket/circle_attributes';
 import fillAttributes from '../src/data/bucket/fill_attributes';
 import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes';
-import lineAttributes from '../src/data/bucket/line_attributes';
-import lineAttributesExt from '../src/data/bucket/line_attributes_ext';
-import patternAttributes from '../src/data/bucket/pattern_attributes';
+import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
+import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';
+import {patternAttributes} from '../src/data/bucket/pattern_attributes';
 // symbol layer specific arrays
 import {
     symbolLayoutAttributes,
@@ -144,8 +144,8 @@ const layoutAttributes = {
     fill: fillAttributes,
     'fill-extrusion': fillExtrusionAttributes,
     heatmap: circleAttributes,
-    line: lineAttributes,
-    lineExt: lineAttributesExt,
+    line: lineLayoutAttributes,
+    lineExt: lineLayoutAttributesExt,
     pattern: patternAttributes
 };
 for (const name in layoutAttributes) {

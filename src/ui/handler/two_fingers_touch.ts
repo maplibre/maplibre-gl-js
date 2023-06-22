@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
-import DOM from '../../util/dom';
-import type Map from '../map';
+import {DOM} from '../../util/dom';
+import type {Map} from '../map';
 import {Handler} from '../handler_manager';
 
 export type AroundCenterOptions = {

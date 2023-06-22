@@ -1,16 +1,14 @@
-import DepthMode from '../gl/depth_mode';
-import StencilMode from '../gl/stencil_mode';
-import CullFaceMode from '../gl/cull_face_mode';
+import {DepthMode} from '../gl/depth_mode';
+import {StencilMode} from '../gl/stencil_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
 import {debugUniformValues} from './program/debug_program';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import ColorMode from '../gl/color_mode';
+import {ColorMode} from '../gl/color_mode';
 
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
+import type {Painter} from './painter';
+import type {SourceCache} from '../source/source_cache';
 import type {OverscaledTileID} from '../source/tile_id';
-import Style from '../style/style';
-
-export default drawDebug;
+import {Style} from '../style/style';
 
 const topColor = new Color(1, 0, 0, 1);
 const btmColor = new Color(0, 1, 0, 1);
@@ -61,7 +59,7 @@ function drawDebugSSRect(painter: Painter, x: number, y: number, width: number, 
     gl.disable(gl.SCISSOR_TEST);
 }
 
-function drawDebug(painter: Painter, sourceCache: SourceCache, coords: Array<OverscaledTileID>) {
+export function drawDebug(painter: Painter, sourceCache: SourceCache, coords: Array<OverscaledTileID>) {
     for (let i = 0; i < coords.length; i++) {
         drawDebugTile(painter, sourceCache, coords[i]);
     }

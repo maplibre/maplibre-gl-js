@@ -1,7 +1,7 @@
-import config from './util/config';
+import {config} from './util/config';
 import maplibre from './index';
 import {getJSON, getArrayBuffer} from './util/ajax';
-import ImageRequest from './util/image_request';
+import {ImageRequest} from './util/image_request';
 
 describe('maplibre', () => {
     beforeEach(() => {

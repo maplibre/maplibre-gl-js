@@ -1,11 +1,11 @@
-import type ClickZoomHandler from '../click_zoom';
-import type TapZoomHandler from './../tap_zoom';
+import type {ClickZoomHandler} from '../click_zoom';
+import type {TapZoomHandler} from './../tap_zoom';
 
 /**
  * The `DoubleClickZoomHandler` allows the user to zoom the map at a point by
  * double clicking or double tapping.
  */
-export default class DoubleClickZoomHandler {
+export class DoubleClickZoomHandler {
 
     _clickZoom: ClickZoomHandler;
     _tapZoom: TapZoomHandler;

@@ -1,5 +1,5 @@
 import {mapObject} from '../util/util';
-import StyleLayerIndex from './style_layer_index';
+import {StyleLayerIndex} from './style_layer_index';
 
 describe('StyleLayerIndex', () => {
     test('StyleLayerIndex#replace', () => {

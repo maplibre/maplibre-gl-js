@@ -1,6 +1,6 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {IControl} from './control';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -17,7 +17,7 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
  *         source: "terrain"
  *     }));
  */
-export default class TerrainControl implements IControl {
+export class TerrainControl implements IControl {
     options: TerrainSpecification;
     _map: Map;
     _container: HTMLElement;

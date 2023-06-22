@@ -1,14 +1,14 @@
 import {Event, Evented} from '../../util/evented';
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 import {extend, warnOnce} from '../../util/util';
 import {checkGeolocationSupport} from '../../util/geolocation_support';
-import LngLat from '../../geo/lng_lat';
-import Marker from '../marker';
+import {LngLat} from '../../geo/lng_lat';
+import {Marker} from '../marker';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
-import LngLatBounds from '../../geo/lng_lat_bounds';
+import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
 type GeolocateOptions = {
     positionOptions?: PositionOptions;
@@ -71,7 +71,7 @@ let noTimeout = false;
  * }));
  * @see [Locate the user](https://maplibre.org/maplibre-gl-js-docs/example/locate-user/)
  */
-class GeolocateControl extends Evented implements IControl {
+export class GeolocateControl extends Evented implements IControl {
     _map: Map;
     options: GeolocateOptions;
     _container: HTMLElement;
@@ -526,8 +526,6 @@ class GeolocateControl extends Evented implements IControl {
         }
     }
 }
-
-export default GeolocateControl;
 
 /* Geolocate Control Watch States
  * This is the private state of the control.

@@ -1,9 +1,9 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 
 import {warnOnce} from '../../util/util';
 
 import {Event, Evented} from '../../util/evented';
-import type {default as Map, GestureOptions} from '../map';
+import type {Map, GestureOptions} from '../map';
 import type {IControl} from './control';
 
 type FullscreenOptions = {
@@ -32,7 +32,7 @@ type FullscreenOptions = {
  *
  */
 
-class FullscreenControl extends Evented implements IControl {
+export class FullscreenControl extends Evented implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
     _fullscreen: boolean;
@@ -176,6 +176,3 @@ class FullscreenControl extends Evented implements IControl {
         this._map.resize();
     }
 }
-
-export default FullscreenControl;
-

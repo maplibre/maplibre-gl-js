@@ -1,14 +1,14 @@
-import VideoSource from './video_source';
+import {VideoSource} from './video_source';
 import {extend} from '../util/util';
 import {getMockDispatcher} from '../util/test/util';
 
 import type {Coordinates} from './image_source';
-import Tile from './tile';
+import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
-import Transform from '../geo/transform';
-import VertexBuffer from '../gl/vertex_buffer';
-import SegmentVector from '../data/segment';
+import {Transform} from '../geo/transform';
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {SegmentVector} from '../data/segment';
 
 class StubMap extends Evented {
     transform: Transform;

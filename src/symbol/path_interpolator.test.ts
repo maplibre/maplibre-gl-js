@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import PathInterpolator from './path_interpolator';
+import {PathInterpolator} from './path_interpolator';
 
 describe('PathInterpolator', () => {
 

@@ -1,13 +1,13 @@
-import Painter from './painter';
-import Tile from '../source/tile';
+import {Painter} from './painter';
+import {Tile} from '../source/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawTerrain} from './draw_terrain';
-import Style from '../style/style';
-import Terrain from './terrain';
-import RenderPool from '../gl/render_pool';
-import Texture from './texture';
-import type StyleLayer from '../style/style_layer';
+import {Style} from '../style/style';
+import {Terrain} from './terrain';
+import {RenderPool} from '../gl/render_pool';
+import {Texture} from './texture';
+import type {StyleLayer} from '../style/style_layer';
 
 // lookup table which layers should rendered to texture
 const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
@@ -21,7 +21,7 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
 /**
  * RenderToTexture
  */
-export default class RenderToTexture {
+export class RenderToTexture {
     painter: Painter;
     terrain: Terrain;
     pool: RenderPool;

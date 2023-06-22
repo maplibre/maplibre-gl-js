@@ -1,5 +1,5 @@
 import {extend} from '../util/util';
-import Tile from './tile';
+import {Tile} from './tile';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
 
 export type FeatureStates = {[featureId: string]: FeatureState};
@@ -14,7 +14,7 @@ export type LayerFeatureStates = {[layer: string]: FeatureStates};
  * In deletedStates, all null's denote complete removal of state at that scope
  * @private
 */
-class SourceFeatureState {
+export class SourceFeatureState {
     state: LayerFeatureStates;
     stateChanges: LayerFeatureStates;
     deletedStates: {};
@@ -155,5 +155,3 @@ class SourceFeatureState {
         }
     }
 }
-
-export default SourceFeatureState;

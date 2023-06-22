@@ -1,6 +1,6 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 import {mat4, vec2, vec3, vec4} from 'gl-matrix';
 
 type $ObjMap<T extends {}, F extends (v: any) => any> = {

@@ -1,28 +1,28 @@
 import {create as createSource} from './source';
 
-import Tile from './tile';
+import {Tile} from './tile';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import TileCache from './tile_cache';
-import MercatorCoordinate from '../geo/mercator_coordinate';
+import {TileCache} from './tile_cache';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
-import EXTENT from '../data/extent';
-import Context from '../gl/context';
+import {EXTENT} from '../data/extent';
+import {Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {OverscaledTileID} from './tile_id';
-import SourceFeatureState from './source_state';
+import {SourceFeatureState} from './source_state';
 
 import type {Source} from './source';
-import type Map from '../ui/map';
-import type Style from '../style/style';
-import type Dispatcher from '../util/dispatcher';
-import type Transform from '../geo/transform';
+import type {Map} from '../ui/map';
+import type {Style} from '../style/style';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Transform} from '../geo/transform';
 import type {TileState} from './tile';
 import type {Callback} from '../types/callback';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
-import Terrain from '../render/terrain';
-import config from '../util/config';
+import {Terrain} from '../render/terrain';
+import {config} from '../util/config';
 
 /**
  * `SourceCache` is responsible for
@@ -35,7 +35,7 @@ import config from '../util/config';
  *
  * @private
  */
-class SourceCache extends Evented {
+export class SourceCache extends Evented {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
@@ -1057,5 +1057,3 @@ function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
 function isRasterType(type) {
     return type === 'raster' || type === 'image' || type === 'video';
 }
-
-export default SourceCache;

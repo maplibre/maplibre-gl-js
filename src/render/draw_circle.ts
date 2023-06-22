@@ -1,23 +1,21 @@
-import StencilMode from '../gl/stencil_mode';
-import DepthMode from '../gl/depth_mode';
-import CullFaceMode from '../gl/cull_face_mode';
-import Program from './program';
+import {StencilMode} from '../gl/stencil_mode';
+import {DepthMode} from '../gl/depth_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
+import {Program} from './program';
 import {circleUniformValues} from './program/circle_program';
-import SegmentVector from '../data/segment';
+import {SegmentVector} from '../data/segment';
 import {OverscaledTileID} from '../source/tile_id';
 
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
-import type CircleStyleLayer from '../style/style_layer/circle_style_layer';
-import type CircleBucket from '../data/bucket/circle_bucket';
-import type ProgramConfiguration from '../data/program_configuration';
-import type VertexBuffer from '../gl/vertex_buffer';
-import type IndexBuffer from '../gl/index_buffer';
+import type {Painter} from './painter';
+import type {SourceCache} from '../source/source_cache';
+import type {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
+import type {CircleBucket} from '../data/bucket/circle_bucket';
+import type {ProgramConfiguration} from '../data/program_configuration';
+import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {IndexBuffer} from '../gl/index_buffer';
 import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
 import type {TerrainData} from '../render/terrain';
-
-export default drawCircles;
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;
@@ -34,7 +32,7 @@ type SegmentsTileRenderState = {
     state: TileRenderState;
 };
 
-function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: CircleStyleLayer, coords: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'translucent') return;
 
     const opacity = layer.paint.get('circle-opacity');

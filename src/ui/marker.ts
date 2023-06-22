@@ -1,13 +1,13 @@
-import DOM from '../util/dom';
-import LngLat from '../geo/lng_lat';
+import {DOM} from '../util/dom';
+import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
-import smartWrap from '../util/smart_wrap';
+import {smartWrap} from '../util/smart_wrap';
 import {extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 import type {PositionAnchor} from './anchor';
 import {Event, Evented} from '../util/evented';
-import type Map from './map';
-import Popup, {Offset} from './popup';
+import type {Map} from './map';
+import {Popup, Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
 import type {PointLike} from './camera';
@@ -53,7 +53,7 @@ type MarkerOptions = {
  * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
  */
-export default class Marker extends Evented {
+export class Marker extends Evented {
     _map: Map;
     _anchor: PositionAnchor;
     _offset: Point;
