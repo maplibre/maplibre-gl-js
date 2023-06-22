@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 - Return undefined instead of throwing from `Style.serialize()` when the style hasn't loaded yet ([#2712](https://github.com/maplibre/maplibre-gl-js/pull/2712)) 
+- Don't throw an exception from `checkMaxAngle` when a label with length 0 is on the last segment of a line ([#2710](https://github.com/maplibre/maplibre-gl-js/pull/2710))
 - Fix the `tap then drag` zoom gesture detection to abort when the two taps are far away ([#2673](https://github.com/maplibre/maplibre-gl-js/pull/2673))
 - _...Add new stuff here..._
 
