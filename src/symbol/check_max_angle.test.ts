@@ -45,4 +45,10 @@ describe('checkMaxAngle', () => {
         expect(checkMaxAngle(line, anchor, 11, 5, Math.PI)).toBeFalsy();
         expect(checkMaxAngle(line, anchor, 10, 5, Math.PI)).toBeTruthy();
     });
+
+    test('one segment and label length is 0', () => {
+        const line = [new Point(0, 0), new Point(10, 0)];
+        const anchor = new Anchor(5, 0, 0, 0);
+        expect(checkMaxAngle(line, anchor, 0, 5, Math.PI)).toBeTruthy();
+    });
 });

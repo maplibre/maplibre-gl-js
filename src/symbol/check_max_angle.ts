@@ -16,8 +16,8 @@ import type {Anchor} from './anchor';
  */
 export function checkMaxAngle(line: Array<Point>, anchor: Anchor, labelLength: number, windowSize: number, maxAngle: number) {
 
-    // horizontal labels always pass
-    if (anchor.segment === undefined) return true;
+    // horizontal labels and labels with length 0 always pass
+    if (anchor.segment === undefined || labelLength === 0) return true;
 
     let p = anchor;
     let index = anchor.segment + 1;
