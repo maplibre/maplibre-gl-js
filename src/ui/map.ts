@@ -547,7 +547,9 @@ class Map extends Camera {
             }
         });
         this.on('data', (event: MapDataEvent) => {
-            this._update(event.dataType === 'style');
+            if (!this.isMoving()) {
+                this._update(event.dataType === 'style');
+            }
             this.fire(new Event(`${event.dataType}data`, event));
         });
         this.on('dataloading', (event: MapDataEvent) => {
