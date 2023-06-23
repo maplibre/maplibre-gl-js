@@ -37,7 +37,7 @@ const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
 
-const exported = {
+const maplibregl = {
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     Map,
@@ -201,7 +201,7 @@ const exported = {
 };
 
 //This gets automatically stripped out in production builds.
-Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
+//Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
 
 /**
  * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
@@ -227,5 +227,4 @@ Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPer
  * const pluginStatus = maplibregl.getRTLTextPluginStatus();
  */
 
-export default exported;
-
+export default maplibregl;

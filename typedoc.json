@@ -1,6 +1,6 @@
 {
     "$schema": "https://typedoc.org/schema.json",
-    "plugin": ["typedoc-plugin-missing-exports", "typedoc-plugin-rename-defaults"],
+    "plugin": ["typedoc-plugin-missing-exports", "typedoc-plugin-markdown"],
     "groupOrder": [
         "Map API",
         "Controls"
@@ -14,5 +14,6 @@
         "includeCategories": false,
         "includeGroups": true
     },
-    "name": "maplibre-gl-js@3.1.x"
+    "name": "maplibre-gl-js@3.1.x",
+    "hideInPageTOC": true 
   }
