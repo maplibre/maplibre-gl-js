@@ -484,6 +484,12 @@ export class Transform {
         return {lngLat, altitude: altitude + this.elevation};
     }
 
+    // check that camera is always over terrain
+    maxPitchForCameraAltitude(altitude: number) {
+        const pitch =  Math.acos((altitude - this._elevation) * this._pixelPerMeter / this.cameraToCenterDistance) / Math.PI * 180;
+        return isNaN(pitch) ? null : pitch;
+    }
+
     /**
      * This method works in combination with freezeElevation activated.
      * freezeElevtion is enabled during map-panning because during this the camera should sit in constant height.

@@ -357,6 +357,12 @@ type Complete<T> = {
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
 
+type CollisionInfo = {
+    cameraAltitude: number;
+    minAllowedAltitude: number;
+    maxPitch?: number | null;
+};
+
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
 
@@ -3416,5 +3422,19 @@ export class Map extends Camera {
      */
     getCameraTargetElevation(): number {
         return this.transform.elevation;
+    }
+
+    /**
+     * Returns information about collision between camera and terrain
+     * @returns The information about terrain collision.
+     */
+    checkTerrainCollision(): CollisionInfo {
+        // buffer above terrain surface
+        const buffer = Math.min(100, 4 * (25 - this.getZoom()));
+        const camera = this.transform.getCameraPosition();
+        const cameraAltitude = camera.altitude;
+        const minAllowedAltitude = this.terrain.getElevationForLngLatZoom(camera.lngLat, this.getZoom()) + buffer;
+        const maxPitch = camera.altitude < minAllowedAltitude ? this.transform.maxPitchForCameraAltitude(minAllowedAltitude) : null;
+        return {cameraAltitude, minAllowedAltitude, maxPitch};
     }
 }
