@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Change a map's language</title>
+    <meta property="og:description" content="Use setLayoutProperty to switch languages dynamically." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #buttons {
+        width: 90%;
+        margin: 0 auto;
+    }
+    .button {
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+        width: 20%;
+        padding: 8px;
+        border-radius: 3px;
+        margin-top: 10px;
+        font-size: 12px;
+        text-align: center;
+        color: #fff;
+        background: #ee8a65;
+        font-family: sans-serif;
+        font-weight: bold;
+    }
+</style>
+<div id="map"></div>
+<ul id="buttons">
+    <li id="button-fr" class="button">French</li>
+    <li id="button-ru" class="button">Russian</li>
+    <li id="button-de" class="button">German</li>
+    <li id="button-es" class="button">Spanish</li>
+</ul>
+<script>
+    var map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [16.05, 48],
+        zoom: 2.9
+    });
+
+    document
+        .getElementById('buttons')
+        .addEventListener('click', function (event) {
+            var language = event.target.id.substr('button-'.length);
+            // Use setLayoutProperty to set the value of a layout property in a style layer.
+            // The three arguments are the id of the layer, the name of the layout property,
+            // and the new property value.
+            map.setLayoutProperty('label_country', 'text-field', [
+                'get',
+                'name:' + language
+            ]);
+        });
+</script>
+</body>
+</html>

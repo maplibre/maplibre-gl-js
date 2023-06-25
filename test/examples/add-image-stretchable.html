@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a stretchable image to the map</title>
+    <meta property="og:description" content="Use a stretchable image as a background for text." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+    var map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        zoom: 0.1
+    });
+
+    var images = {
+        'popup': 'https://maplibre.org/maplibre-gl-js-docs/assets/popup.png',
+        'popup-debug':
+            'https://maplibre.org/maplibre-gl-js-docs/assets/popup_debug.png'
+    };
+
+    loadImages(images, function (loadedImages) {
+        map.on('load', function () {
+            map.addImage('popup-debug', loadedImages['popup-debug'], {
+                // The two (blue) columns of pixels that can be stretched horizontally:
+                //   - the pixels between x: 25 and x: 55 can be stretched
+                //   - the pixels between x: 85 and x: 115 can be stretched.
+                stretchX: [
+                    [25, 55],
+                    [85, 115]
+                ],
+                // The one (red) row of pixels that can be stretched vertically:
+                //   - the pixels between y: 25 and y: 100 can be stretched
+                stretchY: [[25, 100]],
+                // This part of the image that can contain text ([x1, y1, x2, y2]):
+                content: [25, 25, 115, 100],
+                // This is a high-dpi image:
+                pixelRatio: 2
+            });
+            map.addImage('popup', loadedImages['popup'], {
+                stretchX: [
+                    [25, 55],
+                    [85, 115]
+                ],
+                stretchY: [[25, 100]],
+                content: [25, 25, 115, 100],
+                pixelRatio: 2
+            });
+
+            map.addSource('points', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': [
+                        {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'Point',
+                                'coordinates': [40, -30]
+                            },
+                            'properties': {
+                                'image-name': 'popup-debug',
+                                'name': 'Line 1\nLine 2\nLine 3'
+                            }
+                        },
+                        {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'Point',
+                                'coordinates': [40, 30]
+                            },
+                            'properties': {
+                                'image-name': 'popup',
+                                'name': 'Line 1\nLine 2\nLine 3'
+                            }
+                        },
+                        {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'Point',
+                                'coordinates': [-40, -30]
+                            },
+                            'properties': {
+                                'image-name': 'popup-debug',
+                                'name': 'One longer line'
+                            }
+                        },
+                        {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'Point',
+                                'coordinates': [-40, 30]
+                            },
+                            'properties': {
+                                'image-name': 'popup',
+                                'name': 'One longer line'
+                            }
+                        }
+                    ]
+                }
+            });
+            map.addLayer({
+                'id': 'points',
+                'type': 'symbol',
+                'source': 'points',
+                'layout': {
+                    'text-field': ['get', 'name'],
+                    'icon-text-fit': 'both',
+                    'icon-image': ['get', 'image-name'],
+                    'icon-overlap': 'always',
+                    'text-overlap': 'always'
+                }
+            });
+
+            // the original, unstretched image for comparison
+            map.addSource('original', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'FeatureCollection',
+                    'features': [
+                        {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'Point',
+                                'coordinates': [0, -70]
+                            }
+                        }
+                    ]
+                }
+            });
+            map.addLayer({
+                'id': 'original',
+                'type': 'symbol',
+                'source': 'original',
+                'layout': {
+                    'text-field': 'unstretched image',
+                    'icon-image': 'popup-debug',
+                    'icon-overlap': 'always',
+                    'text-overlap': 'always'
+                }
+            });
+        });
+    });
+
+    function loadImages(urls, callback) {
+        var results = {};
+        for (var name in urls) {
+            map.loadImage(urls[name], makeCallback(name));
+        }
+
+        function makeCallback(name) {
+            return function (err, image) {
+                results[name] = err ? null : image;
+
+                // if all images are loaded, call the callback
+                if (Object.keys(results).length === Object.keys(urls).length) {
+                    callback(results);
+                }
+            };
+        }
+    }
+</script>
+</body>
+</html>
