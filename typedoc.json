@@ -2,10 +2,10 @@
     "$schema": "https://typedoc.org/schema.json",
     "plugin": ["typedoc-plugin-missing-exports", "typedoc-plugin-markdown"],
     "groupOrder": [
-        "Map API",
+        "Map",
         "Controls"
     ],
-    "out": "./docs",
+    "out": "./docs/API",
     "excludeExternals": true,
     "excludeNotDocumented": true,
     "internalModule": "maplibregl",
@@ -14,6 +14,6 @@
         "includeCategories": false,
         "includeGroups": true
     },
-    "name": "maplibre-gl-js@3.1.x",
-    "hideInPageTOC": true 
-  }
+    "name": "MapLibre GL",
+    "hideInPageTOC": true
+}
