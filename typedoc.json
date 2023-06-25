@@ -15,5 +15,7 @@
         "includeGroups": true
     },
     "name": "MapLibre GL",
-    "hideInPageTOC": true
-}
+    "githubPages": false,
+    "hideInPageTOC": true,
+    "hideBreadcrumbs": true
+  }
