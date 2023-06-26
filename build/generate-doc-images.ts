@@ -1,9 +1,11 @@
 import path from 'path';
 import fs from 'fs';
 import puppeteer from 'puppeteer';
+import packageJson from '../package.json' assert { type: 'json' };
+
 
 const exampleName = process.argv[2];
-const examplePath = path.resolve('..', 'test', 'example');
+const examplePath = path.resolve('test', 'examples');
 
 const browser = await puppeteer.launch({headless: exampleName === 'all'});
 
@@ -11,7 +13,7 @@ const page = await browser.newPage();
 // set viewport and double deviceScaleFactor to get a closer shot of the map
 await page.setViewport({
     width: 600,
-    height: 600,
+    height: 250,
     deviceScaleFactor: 2
 });
 
@@ -19,7 +21,7 @@ async function createImage(exampleName) {
     // get the example contents
     const html = fs.readFileSync(path.resolve(examplePath, `${exampleName}.html`), 'utf-8');
 
-    await page.setContent(html);
+    await page.setContent(html.replaceAll("../../dist", `https://unpkg.com/maplibre-gl@${packageJson.version}/dist`));
 
     // Wait for map to load, then wait two more seconds for images, etc. to load.
     await page
