@@ -351,7 +351,8 @@ export class Marker extends Evented {
             if (!('offset' in popup.options)) {
                 const markerHeight = 41 - (5.8 / 2);
                 const markerRadius = 13.5;
-                const linearOffset = Math.sqrt(Math.pow(markerRadius, 2) / 2);
+                // linearOffset = Math.sqrt(Math.pow(markerRadius, 2) / 2);
+                const linearOffset = markerRadius / Math.SQRT2;
                 popup.options.offset = this._defaultMarker ? {
                     'top': [0, 0],
                     'top-left': [0, 0],
