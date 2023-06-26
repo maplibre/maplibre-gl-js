@@ -508,9 +508,7 @@ export class Marker extends Evented {
      * marker.addClassName('some-class')
      */
     addClassName(className: string) {
-        if (this._element) {
-            this._element.classList.add(className);
-        }
+        this._element.classList.add(className);
     }
 
     /**
@@ -523,9 +521,7 @@ export class Marker extends Evented {
      * marker.removeClassName('some-class')
      */
     removeClassName(className: string) {
-        if (this._element) {
-            this._element.classList.remove(className);
-        }
+        this._element.classList.remove(className);
     }
 
     /**
@@ -540,9 +536,7 @@ export class Marker extends Evented {
      * marker.toggleClassName('toggleClass')
      */
     toggleClassName(className: string) {
-        if (this._element) {
-            return this._element.classList.toggle(className);
-        }
+        return this._element.classList.toggle(className);
     }
 
     _onMove = (e: MapMouseEvent | MapTouchEvent) => {
