@@ -59,7 +59,7 @@ let modulesFolder = path.join(typedocConfig.out, "modules");
 let content = fs.readFileSync(path.join(modulesFolder, typedocConfig.internalModule + ".md"), "utf-8");
 let lines = content.split("\n");
 let classesLineIndex = lines.indexOf(lines.find(l => l.endsWith("Classes")) as string);
-lines = lines.splice(3, classesLineIndex - 3);
+lines = lines.splice(2, classesLineIndex - 2);
 let contentString = generateAPIIntroMarkdown(lines);
 fs.writeFileSync(path.join(typedocConfig.out, "README.md"), contentString);
 
