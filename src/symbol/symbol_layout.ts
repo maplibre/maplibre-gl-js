@@ -75,7 +75,7 @@ export function evaluateVariableOffset(anchor: TextAnchor, offset: [number, numb
         let x = 0, y = 0;
         if (radialOffset < 0) radialOffset = 0; // Ignore negative offset.
         // solve for r where r^2 + r^2 = radialOffset^2
-        const hypotenuse = radialOffset / Math.sqrt(2);
+        const hypotenuse = radialOffset / Math.SQRT2;
         switch (anchor) {
             case 'top-right':
             case 'top-left':
