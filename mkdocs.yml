@@ -1,4 +1,6 @@
 site_name: MapLibre GL
+site_url: https://harelm.github.io/maplibre-docs-test/ # HM TODO: change this!
+repo_url: https://github.com/maplibre/maplibre-gl-js/
 theme:
   name: 'material'
   features:

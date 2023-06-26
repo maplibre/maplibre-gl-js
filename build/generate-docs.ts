@@ -40,7 +40,7 @@ function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
         indexMarkdown += `
 ## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
 
-![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName.replace(".md", "-500.webp")})
+![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace(".md", "-500.webp")})
 
 ${indexArrayItem.description}
 `
@@ -58,13 +58,17 @@ fs.unlinkSync(path.join(typedocConfig.out, "modules.md"));
 let modulesFolder = path.join(typedocConfig.out, "modules");
 let content = fs.readFileSync(path.join(modulesFolder, typedocConfig.internalModule + ".md"), "utf-8");
 let lines = content.split("\n");
-let classesLineIndex = lines.indexOf(lines.find(l => l.endsWith("Classes")));
+let classesLineIndex = lines.indexOf(lines.find(l => l.endsWith("Classes")) as string);
 lines = lines.splice(3, classesLineIndex - 3);
 let contentString = generateAPIIntroMarkdown(lines);
 fs.writeFileSync(path.join(typedocConfig.out, "README.md"), contentString);
 
 // Examples manupilation
 let examplesDocsFolder = path.join("docs", "examples");
+if (fs.existsSync(examplesDocsFolder)) {
+    fs.unlinkSync(examplesDocsFolder);
+}
+fs.mkdirSync(examplesDocsFolder);
 let examplesFolder = path.join("test", "examples");
 let files = fs.readdirSync(examplesFolder);
 let maplibreUnpgk = `https://unpkg.com/maplibre-gl@${packageJson.version}/`;
@@ -75,14 +79,14 @@ for (let file of files) {
     htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpgk);
     htmlContent = htmlContent.replace(/-dev.js/g, '.js');
     let htmlContentLines = htmlContent.split("\n");
-    let title = htmlContentLines.find(l => l.includes('<title')).replace("<title>", "").replace("</title>", "").trim();
-    let description = htmlContentLines.find(l => l.includes('og:description')).replace(/.*content=\"(.*)\".*/, '$1');
+    let title = htmlContentLines.find(l => l.includes('<title'))?.replace("<title>", "").replace("</title>", "").trim();
+    let description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
     fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
     let mdFileName = file.replace(".html", ".md");
     indexArray.push({
-        title,
-        description,
-        mdFileName
+        title: title!,
+        description: description!,
+        mdFileName: mdFileName
     });
     let exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent);
     fs.writeFileSync(path.join(examplesDocsFolder, mdFileName), exampleMarkdown);
