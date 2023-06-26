@@ -357,7 +357,7 @@ export class Map extends Camera {
     _locale: any;
     _removed: boolean;
     _clickTolerance: number;
-    _pixelRatio: number;
+    _overridePixelRatio: number | null;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /** image queue throttling handle. To be used later when clean up */
@@ -456,7 +456,7 @@ export class Map extends Camera {
         this._mapId = uniqueId();
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
-        this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
+        this._overridePixelRatio = options.pixelRatio;
         this.transformCameraUpdate = options.transformCameraUpdate;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
@@ -700,22 +700,23 @@ export class Map extends Camera {
      * @returns {number} The pixel ratio.
      */
     getPixelRatio() {
-        return this._pixelRatio;
+        return this._overridePixelRatio ?? devicePixelRatio;
     }
 
     /**
      * Sets the map's pixel ratio. This allows to override `devicePixelRatio`.
      * After this call, the canvas' `width` attribute will be `container.clientWidth * pixelRatio`
      * and its height attribute will be `container.clientHeight * pixelRatio`.
-     * @param {number} pixelRatio The pixel ratio.
+     * Set this to null to disable `devicePixelRatio` override.
+     * @param {number | null} pixelRatio The pixel ratio.
      */
-    setPixelRatio(pixelRatio: number) {
+    setPixelRatio(pixelRatio: number | null) {
         const [width, height] = this._containerDimensions();
 
-        this._pixelRatio = pixelRatio;
+        this._overridePixelRatio = pixelRatio;
 
-        this._resizeCanvas(width, height, pixelRatio);
-        this.painter.resize(width, height, pixelRatio);
+        this._resizeCanvas(width, height, this.getPixelRatio());
+        this.painter.resize(width, height, this.getPixelRatio());
     }
 
     /**
