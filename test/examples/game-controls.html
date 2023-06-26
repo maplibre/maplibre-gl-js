@@ -17,7 +17,7 @@
 <div id="map"></div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -29,43 +29,43 @@
     });
 
     // pixels the map pans when the up or down arrow is clicked
-    var deltaDistance = 100;
+    const deltaDistance = 100;
 
     // degrees the map rotates when the left or right arrow is clicked
-    var deltaDegrees = 25;
+    const deltaDegrees = 25;
 
     function easing(t) {
         return t * (2 - t);
     }
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.getCanvas().focus();
 
         map.getCanvas().addEventListener(
             'keydown',
-            function (e) {
+            (e) => {
                 e.preventDefault();
                 if (e.which === 38) {
                     // up
                     map.panBy([0, -deltaDistance], {
-                        easing: easing
+                        easing
                     });
                 } else if (e.which === 40) {
                     // down
                     map.panBy([0, deltaDistance], {
-                        easing: easing
+                        easing
                     });
                 } else if (e.which === 37) {
                     // left
                     map.easeTo({
                         bearing: map.getBearing() - deltaDegrees,
-                        easing: easing
+                        easing
                     });
                 } else if (e.which === 39) {
                     // right
                     map.easeTo({
                         bearing: map.getBearing() + deltaDegrees,
-                        easing: easing
+                        easing
                     });
                 }
             },

@@ -39,7 +39,7 @@
 
 <script src="https://npmcdn.com/@turf/turf@5.1.6/turf.min.js"></script>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -47,16 +47,16 @@
         zoom: 12
     });
 
-    var distanceContainer = document.getElementById('distance');
+    const distanceContainer = document.getElementById('distance');
 
     // GeoJSON object to hold our measurement features
-    var geojson = {
+    const geojson = {
         'type': 'FeatureCollection',
         'features': []
     };
 
     // Used to draw a line between points
-    var linestring = {
+    const linestring = {
         'type': 'Feature',
         'geometry': {
             'type': 'LineString',
@@ -64,7 +64,7 @@
         }
     };
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.addSource('geojson', {
             'type': 'geojson',
             'data': geojson
@@ -96,8 +96,8 @@
             filter: ['in', '$type', 'LineString']
         });
 
-        map.on('click', function (e) {
-            var features = map.queryRenderedFeatures(e.point, {
+        map.on('click', (e) => {
+            const features = map.queryRenderedFeatures(e.point, {
                 layers: ['measure-points']
             });
 
@@ -110,12 +110,12 @@
 
             // If a feature was clicked, remove it from the map
             if (features.length) {
-                var id = features[0].properties.id;
-                geojson.features = geojson.features.filter(function (point) {
+                const id = features[0].properties.id;
+                geojson.features = geojson.features.filter((point) => {
                     return point.properties.id !== id;
                 });
             } else {
-                var point = {
+                const point = {
                     'type': 'Feature',
                     'geometry': {
                         'type': 'Point',
@@ -131,7 +131,7 @@
 
             if (geojson.features.length > 1) {
                 linestring.geometry.coordinates = geojson.features.map(
-                    function (point) {
+                    (point) => {
                         return point.geometry.coordinates;
                     }
                 );
@@ -139,11 +139,11 @@
                 geojson.features.push(linestring);
 
                 // Populate the distanceContainer with total distance
-                var value = document.createElement('pre');
+                const value = document.createElement('pre');
                 value.textContent =
-                    'Total distance: ' +
-                    turf.length(linestring).toLocaleString() +
-                    'km';
+                    `Total distance: ${
+                        turf.length(linestring).toLocaleString()
+                    }km`;
                 distanceContainer.appendChild(value);
             }
 
@@ -151,14 +151,14 @@
         });
     });
 
-    map.on('mousemove', function (e) {
-        var features = map.queryRenderedFeatures(e.point, {
+    map.on('mousemove', (e) => {
+        const features = map.queryRenderedFeatures(e.point, {
             layers: ['measure-points']
         });
         // UI indicator for clicking/hovering a point on the map
-        map.getCanvas().style.cursor = features.length
-            ? 'pointer'
-            : 'crosshair';
+        map.getCanvas().style.cursor = features.length ?
+            'pointer' :
+            'crosshair';
     });
 </script>
 </body>

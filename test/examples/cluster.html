@@ -17,14 +17,14 @@
 <div id="map"></div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-103.59179687498357, 40.66995747013945],
         zoom: 3
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add a new source from our GeoJSON data and
         // set the 'cluster' option to true. GL-JS will
         // add the point_count property to your source data.
@@ -96,19 +96,19 @@
         });
 
         // inspect a cluster on click
-        map.on('click', 'clusters', function (e) {
-            var features = map.queryRenderedFeatures(e.point, {
+        map.on('click', 'clusters', (e) => {
+            const features = map.queryRenderedFeatures(e.point, {
                 layers: ['clusters']
             });
-            var clusterId = features[0].properties.cluster_id;
+            const clusterId = features[0].properties.cluster_id;
             map.getSource('earthquakes').getClusterExpansionZoom(
                 clusterId,
-                function (err, zoom) {
+                (err, zoom) => {
                     if (err) return;
 
                     map.easeTo({
                         center: features[0].geometry.coordinates,
-                        zoom: zoom
+                        zoom
                     });
                 }
             );
@@ -118,10 +118,10 @@
         // the unclustered-point layer, open a popup at
         // the location of the feature, with
         // description HTML from its properties.
-        map.on('click', 'unclustered-point', function (e) {
-            var coordinates = e.features[0].geometry.coordinates.slice();
-            var mag = e.features[0].properties.mag;
-            var tsunami;
+        map.on('click', 'unclustered-point', (e) => {
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const mag = e.features[0].properties.mag;
+            let tsunami;
 
             if (e.features[0].properties.tsunami === 1) {
                 tsunami = 'yes';
@@ -139,15 +139,15 @@
             new maplibregl.Popup()
                 .setLngLat(coordinates)
                 .setHTML(
-                    'magnitude: ' + mag + '<br>Was there a tsunami?: ' + tsunami
+                    `magnitude: ${mag}<br>Was there a tsunami?: ${tsunami}`
                 )
                 .addTo(map);
         });
 
-        map.on('mouseenter', 'clusters', function () {
+        map.on('mouseenter', 'clusters', () => {
             map.getCanvas().style.cursor = 'pointer';
         });
-        map.on('mouseleave', 'clusters', function () {
+        map.on('mouseleave', 'clusters', () => {
             map.getCanvas().style.cursor = '';
         });
     });

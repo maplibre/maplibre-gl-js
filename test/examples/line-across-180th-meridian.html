@@ -16,7 +16,7 @@
 <body>
 <div id="map"></div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -24,7 +24,7 @@
         zoom: 0
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.addLayer({
             'id': 'route',
             'type': 'line',
@@ -36,7 +36,7 @@
                     'geometry': createGeometry(false)
                 }
             },
-            'layout': { 'line-cap': 'round' },
+            'layout': {'line-cap': 'round'},
             'paint': {
                 'line-color': '#007296',
                 'line-width': 4
@@ -64,7 +64,7 @@
                     'geometry': createGeometry(true)
                 }
             },
-            'layout': { 'line-cap': 'round' },
+            'layout': {'line-cap': 'round'},
             'paint': {
                 'line-color': '#F06317',
                 'line-width': 4
@@ -82,7 +82,7 @@
         });
 
         function createGeometry(doesCrossAntimeridian) {
-            var geometry = {
+            const geometry = {
                 'type': 'LineString',
                 'coordinates': [
                     [-72.42187, -16.59408],
@@ -97,8 +97,8 @@
             // If it is less than 180, add 360 to the second point.
 
             if (doesCrossAntimeridian) {
-                var startLng = geometry.coordinates[0][0];
-                var endLng = geometry.coordinates[1][0];
+                const startLng = geometry.coordinates[0][0];
+                const endLng = geometry.coordinates[1][0];
 
                 if (endLng - startLng >= 180) {
                     geometry.coordinates[1][0] -= 360;

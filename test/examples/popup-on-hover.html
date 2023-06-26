@@ -22,18 +22,18 @@
 </style>
 <div id="map"></div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-77.04, 38.907],
         zoom: 11.15
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.loadImage(
             'https://maplibre.org/maplibre-gl-js-docs/assets/custom_marker.png',
             // Add an image to use as a custom marker
-            function (error, image) {
+            (error, image) => {
                 if (error) throw error;
                 map.addImage('custom-marker', image);
 
@@ -90,7 +90,7 @@
                                 'type': 'Feature',
                                 'properties': {
                                     'description':
-                                        "<strong>Seersucker Bike Ride and Social</strong><p>Feeling dandy? Get fancy, grab your bike, and take part in this year's Seersucker Social bike ride from Dandies and Quaintrelles. After the ride enjoy a lawn party at Hillwood with jazz, cocktails, paper hat-making, and more. 11:00-7:00 p.m.</p>"
+                                        '<strong>Seersucker Bike Ride and Social</strong><p>Feeling dandy? Get fancy, grab your bike, and take part in this year\'s Seersucker Social bike ride from Dandies and Quaintrelles. After the ride enjoy a lawn party at Hillwood with jazz, cocktails, paper hat-making, and more. 11:00-7:00 p.m.</p>'
                                 },
                                 'geometry': {
                                     'type': 'Point',
@@ -123,7 +123,7 @@
                                 'type': 'Feature',
                                 'properties': {
                                     'description':
-                                        "<strong>A Little Night Music</strong><p>The Arlington Players' production of Stephen Sondheim's <em>A Little Night Music</em> comes to the Kogod Cradle at The Mead Center for American Theater (1101 6th Street SW) this weekend and next. 8:00 p.m.</p>"
+                                        '<strong>A Little Night Music</strong><p>The Arlington Players\' production of Stephen Sondheim\'s <em>A Little Night Music</em> comes to the Kogod Cradle at The Mead Center for American Theater (1101 6th Street SW) this weekend and next. 8:00 p.m.</p>'
                                 },
                                 'geometry': {
                                     'type': 'Point',
@@ -159,17 +159,17 @@
         );
 
         // Create a popup, but don't add it to the map yet.
-        var popup = new maplibregl.Popup({
+        const popup = new maplibregl.Popup({
             closeButton: false,
             closeOnClick: false
         });
 
-        map.on('mouseenter', 'places', function (e) {
+        map.on('mouseenter', 'places', (e) => {
             // Change the cursor style as a UI indicator.
             map.getCanvas().style.cursor = 'pointer';
 
-            var coordinates = e.features[0].geometry.coordinates.slice();
-            var description = e.features[0].properties.description;
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const description = e.features[0].properties.description;
 
             // Ensure that if the map is zoomed out such that multiple
             // copies of the feature are visible, the popup appears
@@ -183,7 +183,7 @@
             popup.setLngLat(coordinates).setHTML(description).addTo(map);
         });
 
-        map.on('mouseleave', 'places', function () {
+        map.on('mouseleave', 'places', () => {
             map.getCanvas().style.cursor = '';
             popup.remove();
         });

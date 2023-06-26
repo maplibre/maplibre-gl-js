@@ -46,7 +46,7 @@
 </div>
 
 <script>
-    var places = {
+    const places = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -122,9 +122,9 @@
         ]
     };
 
-    var layerIDs = []; // Will contain a list used to filter against.
-    var filterInput = document.getElementById('filter-input');
-    var map = new maplibregl.Map({
+    const layerIDs = []; // Will contain a list used to filter against.
+    const filterInput = document.getElementById('filter-input');
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -132,16 +132,16 @@
         zoom: 11.15
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add a GeoJSON source containing place coordinates and information.
         map.addSource('places', {
             'type': 'geojson',
             'data': places
         });
 
-        places.features.forEach(function (feature) {
-            var symbol = feature.properties['icon'];
-            var layerID = 'poi-' + symbol;
+        places.features.forEach((feature) => {
+            const symbol = feature.properties['icon'];
+            const layerID = `poi-${symbol}`;
 
             // Add a layer for this symbol type if it hasn't been added already.
             if (!map.getLayer(layerID)) {
@@ -150,7 +150,7 @@
                     'type': 'symbol',
                     'source': 'places',
                     'layout': {
-                        'icon-image': symbol + '_15',
+                        'icon-image': `${symbol}_15`,
                         'icon-overlap': 'always',
                         'text-field': symbol,
                         'text-font': [
@@ -174,11 +174,11 @@
             }
         });
 
-        filterInput.addEventListener('keyup', function (e) {
+        filterInput.addEventListener('keyup', (e) => {
             // If the input value matches a layerID set
             // it's visibility to 'visible' or else hide it.
-            var value = e.target.value.trim().toLowerCase();
-            layerIDs.forEach(function (layerID) {
+            const value = e.target.value.trim().toLowerCase();
+            layerIDs.forEach((layerID) => {
                 map.setLayoutProperty(
                     layerID,
                     'visibility',

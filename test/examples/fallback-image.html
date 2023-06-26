@@ -16,13 +16,13 @@
 <body>
 <div id="map"></div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-77, 38.75],
         zoom: 5
     });
-    map.on('load', function () {
+    map.on('load', () => {
         map.addSource('points', {
             'type': 'geojson',
             'data': {

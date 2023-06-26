@@ -16,7 +16,7 @@
 <body>
 <div id="map"></div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -26,18 +26,18 @@
         center: [-75.789, 41.874]
     });
 
-    var frameCount = 5;
-    var currentImage = 0;
+    const frameCount = 5;
+    let currentImage = 0;
 
     function getPath() {
         return (
-            'https://maplibre.org/maplibre-gl-js-docs/assets/radar' +
-            currentImage +
-            '.gif'
+            `https://maplibre.org/maplibre-gl-js-docs/assets/radar${
+                currentImage
+            }.gif`
         );
     }
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.addSource('radar', {
             type: 'image',
             url: getPath(),
@@ -57,9 +57,9 @@
             }
         });
 
-        setInterval(function () {
+        setInterval(() => {
             currentImage = (currentImage + 1) % frameCount;
-            map.getSource('radar').updateImage({ url: getPath() });
+            map.getSource('radar').updateImage({url: getPath()});
         }, 200);
     });
 </script>

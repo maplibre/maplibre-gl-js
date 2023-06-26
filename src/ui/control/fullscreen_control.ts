@@ -18,15 +18,15 @@ type FullscreenOptions = {
  * When [requestFullscreen](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen) is not supported, fullscreen is handled via CSS properties.
  * The map's `cooperativeGestures` option is temporarily disabled while the map
  * is in fullscreen mode, and is restored when the map exist fullscreen mode.
- * 
+ *
  * @group Controls
- * 
+ *
  * @example
  * // Adds a full screen control to the map
  * map.addControl(new maplibregl.FullscreenControl({container: document.querySelector('body')}));
- * 
+ *
  * @see [View a fullscreen map example](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
- * 
+ *
  * @event fullscreenstart - Fired when fullscreen mode has started
  * @event fullscreenend - Fired when fullscreen mode has ended
  *

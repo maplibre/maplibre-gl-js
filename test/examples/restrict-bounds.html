@@ -17,12 +17,12 @@
 <div id="map"></div>
 <script>
     // Set bounds to New York, New York
-    var bounds = [
+    const bounds = [
         [-74.04728500751165, 40.68392799015035], // Southwest coordinates
         [-73.91058699000139, 40.87764500765852] // Northeast coordinates
     ];
 
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',

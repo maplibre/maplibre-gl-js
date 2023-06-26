@@ -20,7 +20,7 @@
         'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js'
     );
 
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map', // container id
         style:
             'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', // stylesheet location
@@ -28,11 +28,11 @@
         zoom: 4 // starting zoom
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.setLayoutProperty('label_country', 'text-field', [
             'format',
             ['get', 'name_en'],
-            { 'font-scale': 1.2 },
+            {'font-scale': 1.2},
             '\n',
             {},
             ['get', 'name'],

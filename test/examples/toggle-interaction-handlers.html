@@ -82,7 +82,7 @@
 </nav>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -92,8 +92,8 @@
 
     document
         .getElementById('listing-group')
-        .addEventListener('change', function (e) {
-            var handler = e.target.id;
+        .addEventListener('change', (e) => {
+            const handler = e.target.id;
             if (e.target.checked) {
                 map[handler].enable();
             } else {

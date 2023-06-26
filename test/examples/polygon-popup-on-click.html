@@ -22,14 +22,14 @@
 </style>
 <div id="map"></div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-100.04, 38.907],
         zoom: 3
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add a source for the state polygons.
         map.addSource('states', {
             'type': 'geojson',
@@ -49,7 +49,7 @@
 
         // When a click event occurs on a feature in the states layer, open a popup at the
         // location of the click, with description HTML from its properties.
-        map.on('click', 'states-layer', function (e) {
+        map.on('click', 'states-layer', (e) => {
             new maplibregl.Popup()
                 .setLngLat(e.lngLat)
                 .setHTML(e.features[0].properties.name)
@@ -57,12 +57,12 @@
         });
 
         // Change the cursor to a pointer when the mouse is over the states layer.
-        map.on('mouseenter', 'states-layer', function () {
+        map.on('mouseenter', 'states-layer', () => {
             map.getCanvas().style.cursor = 'pointer';
         });
 
         // Change it back to a pointer when it leaves.
-        map.on('mouseleave', 'states-layer', function () {
+        map.on('mouseleave', 'states-layer', () => {
             map.getCanvas().style.cursor = '';
         });
     });

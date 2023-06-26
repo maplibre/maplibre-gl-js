@@ -43,7 +43,7 @@
     <li id="button-es" class="button">Spanish</li>
 </ul>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -53,14 +53,14 @@
 
     document
         .getElementById('buttons')
-        .addEventListener('click', function (event) {
-            var language = event.target.id.substr('button-'.length);
+        .addEventListener('click', (event) => {
+            const language = event.target.id.substr('button-'.length);
             // Use setLayoutProperty to set the value of a layout property in a style layer.
             // The three arguments are the id of the layer, the name of the layout property,
             // and the new property value.
             map.setLayoutProperty('label_country', 'text-field', [
                 'get',
-                'name:' + language
+                `name:${language}`
             ]);
         });
 </script>

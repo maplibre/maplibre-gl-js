@@ -139,7 +139,7 @@
     </section>
 </div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -149,7 +149,7 @@
         pitch: 45
     });
 
-    var chapters = {
+    const chapters = {
         'baker': {
             bearing: 27,
             center: [-0.15591514, 51.51830379],
@@ -203,9 +203,9 @@
 
     // On every scroll event, check which element is on screen
     window.onscroll = function () {
-        var chapterNames = Object.keys(chapters);
-        for (var i = 0; i < chapterNames.length; i++) {
-            var chapterName = chapterNames[i];
+        const chapterNames = Object.keys(chapters);
+        for (let i = 0; i < chapterNames.length; i++) {
+            const chapterName = chapterNames[i];
             if (isElementOnScreen(chapterName)) {
                 setActiveChapter(chapterName);
                 break;
@@ -213,7 +213,7 @@
         }
     };
 
-    var activeChapterName = 'baker';
+    let activeChapterName = 'baker';
     function setActiveChapter(chapterName) {
         if (chapterName === activeChapterName) return;
 
@@ -226,8 +226,8 @@
     }
 
     function isElementOnScreen(id) {
-        var element = document.getElementById(id);
-        var bounds = element.getBoundingClientRect();
+        const element = document.getElementById(id);
+        const bounds = element.getBoundingClientRect();
         return bounds.top < window.innerHeight && bounds.bottom > 0;
     }
 </script>

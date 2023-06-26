@@ -18,10 +18,10 @@
 <div id="map"></div>
 <script>
     //Animation from https://javascript.tutorials24x7.com/blog/how-to-draw-animated-circles-in-html5-canvas
-    var canvas = document.getElementById('canvasID');
-    var ctx = canvas.getContext('2d');
-    var circles = [];
-    var radius = 20;
+    const canvas = document.getElementById('canvasID');
+    const ctx = canvas.getContext('2d');
+    const circles = [];
+    const radius = 20;
 
     function Circle(x, y, dx, dy, radius, color) {
         this.x = x;
@@ -54,15 +54,13 @@
         };
     }
 
-    for (var i = 0; i < 5; i++) {
-        var color =
-            '#' +
-            (0x1000000 + Math.random() * 0xffffff).toString(16).substr(1, 6);
-        var x = Math.random() * (400 - radius * 2) + radius;
-        var y = Math.random() * (400 - radius * 2) + radius;
+    for (let i = 0; i < 5; i++) {
+        const color = `#${(0x1000000 + Math.random() * 0xffffff).toString(16).substr(1, 6)}`;
+        const x = Math.random() * (400 - radius * 2) + radius;
+        const y = Math.random() * (400 - radius * 2) + radius;
 
-        var dx = (Math.random() - 0.5) * 2;
-        var dy = (Math.random() - 0.5) * 2;
+        const dx = (Math.random() - 0.5) * 2;
+        const dy = (Math.random() - 0.5) * 2;
 
         circles.push(new Circle(x, y, dx, dy, radius, color));
     }
@@ -71,14 +69,14 @@
         requestAnimationFrame(animate);
         ctx.clearRect(0, 0, 400, 400);
 
-        for (var r = 0; r < 5; r++) {
+        for (let r = 0; r < 5; r++) {
             circles[r].update();
         }
     }
 
     animate();
 
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         zoom: 5,
         minZoom: 4,
@@ -87,7 +85,7 @@
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.addSource('canvas-source', {
             type: 'canvas',
             canvas: 'canvasID',

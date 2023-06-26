@@ -17,23 +17,23 @@
 <div id="map"></div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         zoom: 0
     });
 
-    var url = 'https://wanderdrone.appspot.com/';
-    map.on('load', function () {
-        var request = new XMLHttpRequest();
-        window.setInterval(function () {
+    const url = 'https://wanderdrone.appspot.com/';
+    map.on('load', () => {
+        const request = new XMLHttpRequest();
+        window.setInterval(() => {
             // make a GET request to parse the GeoJSON at the url
             request.open('GET', url, true);
             request.onload = function () {
                 if (this.status >= 200 && this.status < 400) {
                     // retrieve the JSON from the response
-                    var json = JSON.parse(this.response);
+                    const json = JSON.parse(this.response);
 
                     // update the drone symbol's location on the map
                     map.getSource('drone').setData(json);
@@ -48,7 +48,7 @@
             request.send();
         }, 2000);
 
-        map.addSource('drone', { type: 'geojson', data: url });
+        map.addSource('drone', {type: 'geojson', data: url});
         map.addLayer({
             'id': 'drone',
             'type': 'symbol',

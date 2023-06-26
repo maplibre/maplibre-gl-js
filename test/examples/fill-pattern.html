@@ -17,14 +17,14 @@
 <div id="map"></div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         zoom: 1
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add GeoJSON data
         map.addSource('source', {
             'type': 'geojson',
@@ -49,7 +49,7 @@
         // Load an image to use as the pattern
         map.loadImage(
             'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/64px-Cat_silhouette.svg.png',
-            function (err, image) {
+            (err, image) => {
                 // Throw an error if something went wrong
                 if (err) throw err;
 

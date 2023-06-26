@@ -47,7 +47,7 @@
 </div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map', // container id
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', //hosted style id
@@ -55,7 +55,7 @@
         zoom: 12 // starting zoom
     });
 
-    var draw = new MapboxDraw({
+    const draw = new MapboxDraw({
         displayControlsDefault: false,
         controls: {
             polygon: true,
@@ -69,16 +69,16 @@
     map.on('draw.update', updateArea);
 
     function updateArea(e) {
-        var data = draw.getAll();
-        var answer = document.getElementById('calculated-area');
+        const data = draw.getAll();
+        const answer = document.getElementById('calculated-area');
         if (data.features.length > 0) {
-            var area = turf.area(data);
+            const area = turf.area(data);
             // restrict to area to 2 decimal points
-            var rounded_area = Math.round(area * 100) / 100;
+            const roundedArea = Math.round(area * 100) / 100;
             answer.innerHTML =
-                '<p><strong>' +
-                rounded_area +
-                '</strong></p><p>square meters</p>';
+                `<p><strong>${
+                    roundedArea
+                }</strong></p><p>square meters</p>`;
         } else {
             answer.innerHTML = '';
             if (e.type !== 'draw.delete')

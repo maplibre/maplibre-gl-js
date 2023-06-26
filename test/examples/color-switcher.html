@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,16 +86,16 @@
 </div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [12.338, 45.4385],
         zoom: 17.4
     });
 
-    var swatches = document.getElementById('swatches');
-    var layer = document.getElementById('layer');
-    var colors = [
+    const swatches = document.getElementById('swatches');
+    const layer = document.getElementById('layer');
+    const colors = [
         '#ffffcc',
         '#a1dab4',
         '#41b6c4',
@@ -109,10 +108,10 @@
         '#bd0026'
     ];
 
-    colors.forEach(function (color) {
-        var swatch = document.createElement('button');
+    colors.forEach((color) => {
+        const swatch = document.createElement('button');
         swatch.style.backgroundColor = color;
-        swatch.addEventListener('click', function () {
+        swatch.addEventListener('click', () => {
             map.setPaintProperty(
                 layer.value,
                 layer.value === 'water' ? 'fill-color' : 'fill-extrusion-color',

@@ -41,7 +41,7 @@
 
 <script>
     // A GeoJSON object with a LineString route from the White House to Capitol Hill
-    var geojson = {
+    const geojson = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -67,7 +67,7 @@
         ]
     };
 
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -75,7 +75,7 @@
         zoom: 12
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.addSource('LineString', {
             'type': 'geojson',
             'data': geojson
@@ -96,16 +96,16 @@
 
         document
             .getElementById('zoomto')
-            .addEventListener('click', function () {
+            .addEventListener('click', () => {
                 // Geographic coordinates of the LineString
-                var coordinates = geojson.features[0].geometry.coordinates;
+                const coordinates = geojson.features[0].geometry.coordinates;
 
                 // Pass the first coordinates in the LineString to `lngLatBounds` &
                 // wrap each coordinate pair in `extend` to include them in the bounds
                 // result. A variation of this technique could be applied to zooming
                 // to the bounds of multiple Points or Polygon geomteries - it just
                 // requires wrapping all the coordinates with the extend method.
-                var bounds = coordinates.reduce(function (bounds, coord) {
+                const bounds = coordinates.reduce((bounds, coord) => {
                     return bounds.extend(coord);
                 }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
 

@@ -22,14 +22,14 @@
 </style>
 <div id="map"></div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-77.04, 38.907],
         zoom: 11.15
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.addSource('places', {
             'type': 'geojson',
             'data': {
@@ -159,9 +159,9 @@
 
         // When a click event occurs on a feature in the places layer, open a popup at the
         // location of the feature, with description HTML from its properties.
-        map.on('click', 'places', function (e) {
-            var coordinates = e.features[0].geometry.coordinates.slice();
-            var description = e.features[0].properties.description;
+        map.on('click', 'places', (e) => {
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const description = e.features[0].properties.description;
 
             // Ensure that if the map is zoomed out such that multiple
             // copies of the feature are visible, the popup appears
@@ -177,12 +177,12 @@
         });
 
         // Change the cursor to a pointer when the mouse is over the places layer.
-        map.on('mouseenter', 'places', function () {
+        map.on('mouseenter', 'places', () => {
             map.getCanvas().style.cursor = 'pointer';
         });
 
         // Change it back to a pointer when it leaves.
-        map.on('mouseleave', 'places', function () {
+        map.on('mouseleave', 'places', () => {
             map.getCanvas().style.cursor = '';
         });
     });

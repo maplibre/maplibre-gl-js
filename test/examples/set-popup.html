@@ -32,8 +32,8 @@
 <div id="map"></div>
 
 <script>
-    var monument = [-77.0353, 38.8895];
-    var map = new maplibregl.Map({
+    const monument = [-77.0353, 38.8895];
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: monument,
@@ -41,12 +41,12 @@
     });
 
     // create the popup
-    var popup = new maplibregl.Popup({ offset: 25 }).setText(
+    const popup = new maplibregl.Popup({offset: 25}).setText(
         'Construction on the Washington Monument began in 1848.'
     );
 
     // create DOM element for the marker
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     el.id = 'marker';
 
     // create the marker

@@ -157,25 +157,25 @@
     // the progress of the animation.
     // t is in a range of 0 to 1 where 0 is the initial
     // state and 1 is the completed state.
-    var easingFunctions = {
-        // start slow and gradually increase speed
-        easeInCubic: function (t) {
+    const easingFunctions = {
+    // start slow and gradually increase speed
+        easeInCubic (t) {
             return t * t * t;
         },
         // start fast with a long, slow wind-down
-        easeOutQuint: function (t) {
+        easeOutQuint (t) {
             return 1 - Math.pow(1 - t, 5);
         },
         // slow start and finish with fast middle
-        easeInOutCirc: function (t) {
-            return t < 0.5
-                ? (1 - Math.sqrt(1 - Math.pow(2 * t, 2))) / 2
-                : (Math.sqrt(1 - Math.pow(-2 * t + 2, 2)) + 1) / 2;
+        easeInOutCirc (t) {
+            return t < 0.5 ?
+                (1 - Math.sqrt(1 - Math.pow(2 * t, 2))) / 2 :
+                (Math.sqrt(1 - Math.pow(-2 * t + 2, 2)) + 1) / 2;
         },
         // fast start with a "bounce" at the end
-        easeOutBounce: function (t) {
-            var n1 = 7.5625;
-            var d1 = 2.75;
+        easeOutBounce (t) {
+            const n1 = 7.5625;
+            const d1 = 2.75;
 
             if (t < 1 / d1) {
                 return n1 * t * t;
@@ -190,27 +190,27 @@
     };
 
     // set up some helpful UX on the form
-    var durationValueSpan = document.getElementById('durationValue');
-    var durationInput = document.getElementById('duration');
-    durationValueSpan.innerHTML = durationInput.value / 1000 + ' seconds';
-    durationInput.addEventListener('change', function (e) {
-        durationValueSpan.innerHTML = e.target.value / 1000 + ' seconds';
+    const durationValueSpan = document.getElementById('durationValue');
+    const durationInput = document.getElementById('duration');
+    durationValueSpan.innerHTML = `${durationInput.value / 1000} seconds`;
+    durationInput.addEventListener('change', (e) => {
+        durationValueSpan.innerHTML = `${e.target.value / 1000} seconds`;
     });
 
-    var animateLabel = document.getElementById('animateLabel');
-    var animateValue = document.getElementById('animate');
-    animateValue.addEventListener('change', function (e) {
+    const animateLabel = document.getElementById('animateLabel');
+    const animateValue = document.getElementById('animate');
+    animateValue.addEventListener('change', (e) => {
         animateLabel.innerHTML = e.target.checked ? 'Yes' : 'No';
     });
 
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-95, 40],
         zoom: 3
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // add a layer to display the map's center point
         map.addSource('center', {
             'type': 'geojson',
@@ -232,35 +232,35 @@
             }
         });
 
-        var animateButton = document.getElementById('animateButton');
-        animateButton.addEventListener('click', function () {
-            var easingInput = document.getElementById('easing');
-            var easingFn =
-                easingFunctions[
-                    easingInput.options[easingInput.selectedIndex].value
-                ];
-            var duration = parseInt(durationInput.value, 10);
-            var animate = animateValue.checked;
-            var offsetX = parseInt(
+        const animateButton = document.getElementById('animateButton');
+        animateButton.addEventListener('click', () => {
+            const easingInput = document.getElementById('easing');
+            const easingFn =
+            easingFunctions[
+                easingInput.options[easingInput.selectedIndex].value
+            ];
+            const duration = parseInt(durationInput.value, 10);
+            const animate = animateValue.checked;
+            const offsetX = parseInt(
                 document.getElementById('offset-x').value,
                 10
             );
-            var offsetY = parseInt(
+            const offsetY = parseInt(
                 document.getElementById('offset-y').value,
                 10
             );
 
-            var animationOptions = {
-                duration: duration,
+            const animationOptions = {
+                duration,
                 easing: easingFn,
                 offset: [offsetX, offsetY],
-                animate: animate,
+                animate,
                 essential: true // animation will happen even if user has `prefers-reduced-motion` setting on
             };
 
             // Create a random location to fly to by offsetting the map's
             // initial center point by up to 10 degrees.
-            var center = [
+            const center = [
                 -95 + (Math.random() - 0.5) * 20,
                 40 + (Math.random() - 0.5) * 20
             ];
@@ -278,11 +278,11 @@
             map.setLayoutProperty(
                 'center',
                 'text-field',
-                'Center: [' +
-                    center[0].toFixed(1) +
-                    ', ' +
-                    center[1].toFixed(1) +
-                    ']'
+                `Center: [${
+                    center[0].toFixed(1)
+                }, ${
+                    center[1].toFixed(1)
+                }]`
             );
         });
     });

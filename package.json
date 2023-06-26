@@ -148,6 +148,7 @@
     "generate-style-code": "npm run tsnode build/generate-style-code.ts",
     "generate-typings": "npm run tsnode build/generate-typings.ts",
     "generate-docs": "typedoc && npm run tsnode build/generate-docs.ts",
+    "generate-images": "npm run tsnode build/generate-doc-images.ts",
     "build-dist": "run-p --print-label generate-typings build-dev build-prod build-csp build-csp-dev build-css",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",

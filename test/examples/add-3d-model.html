@@ -18,7 +18,7 @@
 <script src="https://unpkg.com/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
 <div id="map"></div>
 <script>
-    var map = (window.map = new maplibregl.Map({
+    const map = (window.map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -29,17 +29,17 @@
     }));
 
     // parameters to ensure the model is georeferenced correctly on the map
-    var modelOrigin = [148.9819, -35.39847];
-    var modelAltitude = 0;
-    var modelRotate = [Math.PI / 2, 0, 0];
+    const modelOrigin = [148.9819, -35.39847];
+    const modelAltitude = 0;
+    const modelRotate = [Math.PI / 2, 0, 0];
 
-    var modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat(
+    const modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat(
         modelOrigin,
         modelAltitude
     );
 
     // transformation parameters to position, rotate and scale the 3D model onto the map
-    var modelTransform = {
+    const modelTransform = {
         translateX: modelAsMercatorCoordinate.x,
         translateY: modelAsMercatorCoordinate.y,
         translateZ: modelAsMercatorCoordinate.z,
@@ -47,38 +47,38 @@
         rotateY: modelRotate[1],
         rotateZ: modelRotate[2],
         /* Since our 3D model is in real world meters, a scale transform needs to be
-         * applied since the CustomLayerInterface expects units in MercatorCoordinates.
-         */
+        * applied since the CustomLayerInterface expects units in MercatorCoordinates.
+        */
         scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits()
     };
 
-    var THREE = window.THREE;
+    const THREE = window.THREE;
 
     // configuration of the custom layer for a 3D model per the CustomLayerInterface
-    var customLayer = {
+    const customLayer = {
         id: '3d-model',
         type: 'custom',
         renderingMode: '3d',
-        onAdd: function (map, gl) {
+        onAdd (map, gl) {
             this.camera = new THREE.Camera();
             this.scene = new THREE.Scene();
 
             // create two three.js lights to illuminate the model
-            var directionalLight = new THREE.DirectionalLight(0xffffff);
+            const directionalLight = new THREE.DirectionalLight(0xffffff);
             directionalLight.position.set(0, -70, 100).normalize();
             this.scene.add(directionalLight);
 
-            var directionalLight2 = new THREE.DirectionalLight(0xffffff);
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff);
             directionalLight2.position.set(0, 70, 100).normalize();
             this.scene.add(directionalLight2);
 
             // use the three.js GLTF loader to add the 3D model to the three.js scene
-            var loader = new THREE.GLTFLoader();
+            const loader = new THREE.GLTFLoader();
             loader.load(
                 'https://maplibre.org/maplibre-gl-js-docs/assets/34M_17/34M_17.gltf',
-                function (gltf) {
+                (gltf) => {
                     this.scene.add(gltf.scene);
-                }.bind(this)
+                }
             );
             this.map = map;
 
@@ -91,22 +91,22 @@
 
             this.renderer.autoClear = false;
         },
-        render: function (gl, matrix) {
-            var rotationX = new THREE.Matrix4().makeRotationAxis(
+        render (gl, matrix) {
+            const rotationX = new THREE.Matrix4().makeRotationAxis(
                 new THREE.Vector3(1, 0, 0),
                 modelTransform.rotateX
             );
-            var rotationY = new THREE.Matrix4().makeRotationAxis(
+            const rotationY = new THREE.Matrix4().makeRotationAxis(
                 new THREE.Vector3(0, 1, 0),
                 modelTransform.rotateY
             );
-            var rotationZ = new THREE.Matrix4().makeRotationAxis(
+            const rotationZ = new THREE.Matrix4().makeRotationAxis(
                 new THREE.Vector3(0, 0, 1),
                 modelTransform.rotateZ
             );
 
-            var m = new THREE.Matrix4().fromArray(matrix);
-            var l = new THREE.Matrix4()
+            const m = new THREE.Matrix4().fromArray(matrix);
+            const l = new THREE.Matrix4()
                 .makeTranslation(
                     modelTransform.translateX,
                     modelTransform.translateY,
@@ -130,7 +130,7 @@
         }
     };
 
-    map.on('style.load', function () {
+    map.on('style.load', () => {
         map.addLayer(customLayer);
     });
 </script>

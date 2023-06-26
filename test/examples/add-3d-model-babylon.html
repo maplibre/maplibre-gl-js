@@ -18,9 +18,9 @@
 <script src="https://unpkg.com/babylonjs-loaders@5.42.2/babylonjs.loaders.min.js"></script>
 <div id="map"></div>
 <script>
-    var BABYLON = window.BABYLON;
+    const BABYLON = window.BABYLON;
 
-    var map = (window.map = new maplibregl.Map({
+    const map = (window.map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         zoom: 18,
@@ -30,8 +30,8 @@
     }));
 
     // World matrix parameters
-    var worldOrigin = [148.9819, -35.39847];
-    var worldAltitude = 0;
+    const worldOrigin = [148.9819, -35.39847];
+    const worldAltitude = 0;
 
     // Maplibre.js default coordinate system (no rotations)
     // +x east, -y north, +z up
@@ -39,17 +39,17 @@
 
     // Babylon.js default coordinate system
     // +x east, +y up, +z north
-    var worldRotate = [Math.PI / 2, 0, 0];
+    const worldRotate = [Math.PI / 2, 0, 0];
 
     // Calculate mercator coordinates and scale
-    var worldOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(
+    const worldOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(
         worldOrigin,
         worldAltitude
     );
     const worldScale = worldOriginMercator.meterInMercatorCoordinateUnits();
 
     // Calculate world matrix
-    var worldMatrix = BABYLON.Matrix.Compose(
+    const worldMatrix = BABYLON.Matrix.Compose(
         new BABYLON.Vector3(worldScale, worldScale, worldScale),
         BABYLON.Quaternion.FromEulerAngles(
             worldRotate[0],
@@ -64,11 +64,11 @@
     );
 
     // configuration of the custom layer for a 3D model per the CustomLayerInterface
-    var customLayer = {
+    const customLayer = {
         id: '3d-model',
         type: 'custom',
         renderingMode: '3d',
-        onAdd: function (map, gl) {
+        onAdd (map, gl) {
             this.engine = new BABYLON.Engine(
                 gl,
                 true,
@@ -126,7 +126,7 @@
 
             this.map = map;
         },
-        render: function (gl, matrix) {
+        render (gl, matrix) {
             const cameraMatrix = BABYLON.Matrix.FromArray(matrix);
 
             // world-view-projection matrix
@@ -139,7 +139,7 @@
         }
     };
 
-    map.on('style.load', function () {
+    map.on('style.load', () => {
         map.addLayer(customLayer);
     });
 </script>

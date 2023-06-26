@@ -17,13 +17,13 @@
 <div id="map"></div>
 
 <script>
-    var places = {
+    const places = {
         'type': 'FeatureCollection',
         'features': [
             {
                 'type': 'Feature',
                 'properties': {
-                    'description': "Ford's Theater",
+                    'description': 'Ford\'s Theater',
                     'icon': 'theatre'
                 },
                 'geometry': {
@@ -45,7 +45,7 @@
             {
                 'type': 'Feature',
                 'properties': {
-                    'description': "Horrible Harry's",
+                    'description': 'Horrible Harry\'s',
                     'icon': 'bar'
                 },
                 'geometry': {
@@ -100,14 +100,14 @@
         ]
     };
 
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-77.04, 38.907],
         zoom: 11.15
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add a GeoJSON source containing place coordinates and information.
         map.addSource('places', {
             'type': 'geojson',
@@ -127,7 +127,7 @@
             }
         });
 
-        map.rotateTo(180, { duration: 10000 });
+        map.rotateTo(180, {duration: 10000});
     });
 </script>
 </body>

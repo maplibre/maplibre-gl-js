@@ -34,9 +34,9 @@
 <br />
 <button id="fly">Fly</button>
 <script>
-    var start = [-74.5, 40];
-    var end = [74.5, 40];
-    var map = new maplibregl.Map({
+    const start = [-74.5, 40];
+    const end = [74.5, 40];
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -44,12 +44,12 @@
         zoom: 9
     });
 
-    var isAtStart = true;
+    let isAtStart = true;
 
-    document.getElementById('fly').addEventListener('click', function () {
+    document.getElementById('fly').addEventListener('click', () => {
         // depending on whether we're currently at point a or b, aim for
         // point a or b
-        var target = isAtStart ? end : start;
+        const target = isAtStart ? end : start;
 
         // and now we're at the opposite point
         isAtStart = !isAtStart;
@@ -69,7 +69,7 @@
 
             // This can be any easing function: it takes a number between
             // 0 and 1 and returns another number between 0 and 1.
-            easing: function (t) {
+            easing (t) {
                 return t;
             },
 

@@ -32,7 +32,7 @@
 <div id="map"></div>
 <pre id="info"></pre>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map', // container id
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -40,14 +40,14 @@
         zoom: 9 // starting zoom
     });
 
-    map.on('mousemove', function (e) {
+    map.on('mousemove', (e) => {
         document.getElementById('info').innerHTML =
             // e.point is the x, y coordinates of the mousemove event relative
             // to the top-left corner of the map
-            JSON.stringify(e.point) +
-            '<br />' +
-            // e.lngLat is the longitude, latitude geographical position of the event
-            JSON.stringify(e.lngLat.wrap());
+            `${JSON.stringify(e.point)
+            }<br />${
+                // e.lngLat is the longitude, latitude geographical position of the event
+                JSON.stringify(e.lngLat.wrap())}`;
     });
 </script>
 </body>

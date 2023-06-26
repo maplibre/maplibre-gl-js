@@ -24,7 +24,7 @@
 <div id="map"></div>
 <button id="viewbutton">View local GeoJSON file</button>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -32,11 +32,10 @@
         zoom: 8
     });
 
-    var viewbutton = document.getElementById('viewbutton');
+    const viewbutton = document.getElementById('viewbutton');
 
     async function buttonClickHandler() {
-        let fileHandle;
-        [fileHandle] = await window.showOpenFilePicker({
+        const [fileHandle] = await window.showOpenFilePicker({
             // allow only single file
             multiple: false,
 
@@ -44,7 +43,7 @@
             types: [
                 {
                     description: 'GeoJSON',
-                    accept: { 'application/geo+json': ['.geojson'] }
+                    accept: {'application/geo+json': ['.geojson']}
                 }
             ],
 

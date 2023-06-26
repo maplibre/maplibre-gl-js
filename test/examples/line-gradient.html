@@ -17,7 +17,7 @@
 <div id="map"></div>
 
 <script>
-    var map = (window.map = new maplibregl.Map({
+    const map = (window.map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -25,7 +25,7 @@
         zoom: 12
     }));
 
-    var geojson = {
+    const geojson = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -57,7 +57,7 @@
         ]
     };
 
-    map.on('load', function () {
+    map.on('load', () => {
         // 'line-gradient' can only be used with GeoJSON sources
         // and the source must have the 'lineMetrics' option set to true
         map.addSource('line', {

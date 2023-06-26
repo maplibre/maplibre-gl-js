@@ -27,7 +27,7 @@
 <div id="map"></div>
 
 <script>
-    var geojson = {
+    const geojson = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -66,7 +66,7 @@
         ]
     };
 
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -75,18 +75,18 @@
     });
 
     // add markers to map
-    geojson.features.forEach(function (marker) {
+    geojson.features.forEach((marker) => {
         // create a DOM element for the marker
-        var el = document.createElement('div');
+        const el = document.createElement('div');
         el.className = 'marker';
         el.style.backgroundImage =
-            'url(https://placekitten.com/g/' +
-            marker.properties.iconSize.join('/') +
-            '/)';
-        el.style.width = marker.properties.iconSize[0] + 'px';
-        el.style.height = marker.properties.iconSize[1] + 'px';
+            `url(https://placekitten.com/g/${
+                marker.properties.iconSize.join('/')
+            }/)`;
+        el.style.width = `${marker.properties.iconSize[0]}px`;
+        el.style.height = `${marker.properties.iconSize[1]}px`;
 
-        el.addEventListener('click', function () {
+        el.addEventListener('click', () => {
             window.alert(marker.properties.message);
         });
 

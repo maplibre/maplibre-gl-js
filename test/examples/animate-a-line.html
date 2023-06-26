@@ -31,7 +31,7 @@
 <div id="map"></div>
 <button id="pause"></button>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -40,7 +40,7 @@
     });
 
     // Create a GeoJSON source with an empty lineString.
-    var geojson = {
+    const geojson = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -53,14 +53,14 @@
         ]
     };
 
-    var speedFactor = 30; // number of frames per longitude degree
-    var animation; // to store and cancel the animation
-    var startTime = 0;
-    var progress = 0; // progress = timestamp - startTime
-    var resetTime = false; // indicator of whether time reset is needed for the animation
-    var pauseButton = document.getElementById('pause');
+    const speedFactor = 30; // number of frames per longitude degree
+    let animation; // to store and cancel the animation
+    let startTime = 0;
+    let progress = 0; // progress = timestamp - startTime
+    let resetTime = false; // indicator of whether time reset is needed for the animation
+    const pauseButton = document.getElementById('pause');
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.addSource('line', {
             'type': 'geojson',
             'data': geojson
@@ -87,7 +87,7 @@
         animateLine();
 
         // click the button to pause or play
-        pauseButton.addEventListener('click', function () {
+        pauseButton.addEventListener('click', () => {
             pauseButton.classList.toggle('pause');
             if (pauseButton.classList.contains('pause')) {
                 cancelAnimationFrame(animation);
@@ -99,7 +99,7 @@
 
         // reset startTime and progress once the tab loses or gains focus
         // requestAnimationFrame also pauses on hidden tabs by default
-        document.addEventListener('visibilitychange', function () {
+        document.addEventListener('visibilitychange', () => {
             resetTime = true;
         });
 
@@ -118,9 +118,9 @@
                 startTime = timestamp;
                 geojson.features[0].geometry.coordinates = [];
             } else {
-                var x = progress / speedFactor;
+                const x = progress / speedFactor;
                 // draw a sine wave with some math.
-                var y = Math.sin((x * Math.PI) / 90) * 40;
+                const y = Math.sin((x * Math.PI) / 90) * 40;
                 // append new coordinates to the lineString
                 geojson.features[0].geometry.coordinates.push([x, y]);
                 // then update the map

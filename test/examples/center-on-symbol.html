@@ -16,7 +16,7 @@
 <body>
 <div id="map"></div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -24,11 +24,11 @@
         zoom: 7.5
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add an image to use as a custom marker
         map.loadImage(
             'https://maplibre.org/maplibre-gl-js-docs/assets/custom_marker.png',
-            function (error, image) {
+            (error, image) => {
                 if (error) throw error;
                 map.addImage('custom-marker', image);
                 // Add a GeoJSON source with 3 points.
@@ -87,19 +87,19 @@
         );
 
         // Center the map on the coordinates of any clicked symbol from the 'symbols' layer.
-        map.on('click', 'symbols', function (e) {
+        map.on('click', 'symbols', (e) => {
             map.flyTo({
                 center: e.features[0].geometry.coordinates
             });
         });
 
         // Change the cursor to a pointer when the it enters a feature in the 'symbols' layer.
-        map.on('mouseenter', 'symbols', function () {
+        map.on('mouseenter', 'symbols', () => {
             map.getCanvas().style.cursor = 'pointer';
         });
 
         // Change it back to a pointer when it leaves.
-        map.on('mouseleave', 'symbols', function () {
+        map.on('mouseleave', 'symbols', () => {
             map.getCanvas().style.cursor = '';
         });
     });

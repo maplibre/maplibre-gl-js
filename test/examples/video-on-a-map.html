@@ -16,13 +16,13 @@
 <body>
 <div id="map"></div>
 <script>
-    var videoStyle = {
+    const videoStyle = {
         'version': 8,
         'sources': {
             'satellite': {
                 'type': 'raster',
                 'url':
-                    'https://api.maptiler.com/tiles/satellite/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                'https://api.maptiler.com/tiles/satellite/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
                 'tileSize': 256
             },
             'video': {
@@ -60,7 +60,7 @@
         ]
     };
 
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         minZoom: 14,
         zoom: 17,
@@ -69,9 +69,9 @@
         style: videoStyle
     });
 
-    var playingVideo = true;
+    let playingVideo = true;
 
-    map.on('click', function () {
+    map.on('click', () => {
         playingVideo = !playingVideo;
 
         if (playingVideo) map.getSource('video').play();

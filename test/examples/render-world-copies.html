@@ -37,7 +37,7 @@
 </div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map', // container id
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', // stylesheet location
@@ -45,15 +45,15 @@
         zoom: 0.01 // starting zoom
     });
 
-    var renderOptions = document.getElementById('menu');
-    var inputs = renderOptions.getElementsByTagName('input');
+    const renderOptions = document.getElementById('menu');
+    const inputs = renderOptions.getElementsByTagName('input');
 
     function switchRenderOption(option) {
-        var status = option.target.id;
+        const status = option.target.id;
         map.setRenderWorldCopies(status === 'true');
     }
 
-    for (var i = 0; i < inputs.length; i++) {
+    for (let i = 0; i < inputs.length; i++) {
         inputs[i].onclick = switchRenderOption;
     }
 </script>

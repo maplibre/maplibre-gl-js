@@ -17,7 +17,7 @@
 <div id="map"></div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         zoom: 0.3,
         center: [0, 20],
@@ -28,16 +28,16 @@
     map.addControl(new maplibregl.NavigationControl());
 
     // filters for classifying earthquakes into five categories based on magnitude
-    var mag1 = ['<', ['get', 'mag'], 2];
-    var mag2 = ['all', ['>=', ['get', 'mag'], 2], ['<', ['get', 'mag'], 3]];
-    var mag3 = ['all', ['>=', ['get', 'mag'], 3], ['<', ['get', 'mag'], 4]];
-    var mag4 = ['all', ['>=', ['get', 'mag'], 4], ['<', ['get', 'mag'], 5]];
-    var mag5 = ['>=', ['get', 'mag'], 5];
+    const mag1 = ['<', ['get', 'mag'], 2];
+    const mag2 = ['all', ['>=', ['get', 'mag'], 2], ['<', ['get', 'mag'], 3]];
+    const mag3 = ['all', ['>=', ['get', 'mag'], 3], ['<', ['get', 'mag'], 4]];
+    const mag4 = ['all', ['>=', ['get', 'mag'], 4], ['<', ['get', 'mag'], 5]];
+    const mag5 = ['>=', ['get', 'mag'], 5];
 
     // colors to use for the categories
-    var colors = ['#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c'];
+    const colors = ['#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c'];
 
-    map.on('load', function () {
+    map.on('load', () => {
         // add a clustered GeoJSON source for a sample set of earthquakes
         map.addSource('earthquakes', {
             'type': 'geojson',
@@ -86,7 +86,7 @@
                 'text-field': [
                     'number-format',
                     ['get', 'mag'],
-                    { 'min-fraction-digits': 1, 'max-fraction-digits': 1 }
+                    {'min-fraction-digits': 1, 'max-fraction-digits': 1}
                 ],
                 'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
                 'text-size': 10
@@ -102,24 +102,24 @@
         });
 
         // objects for caching and keeping track of HTML marker objects (for performance)
-        var markers = {};
-        var markersOnScreen = {};
+        const markers = {};
+        let markersOnScreen = {};
 
         function updateMarkers() {
-            var newMarkers = {};
-            var features = map.querySourceFeatures('earthquakes');
+            const newMarkers = {};
+            const features = map.querySourceFeatures('earthquakes');
 
             // for every cluster on the screen, create an HTML marker for it (if we didn't yet),
             // and add it to the map if it's not there already
-            for (var i = 0; i < features.length; i++) {
-                var coords = features[i].geometry.coordinates;
-                var props = features[i].properties;
+            for (let i = 0; i < features.length; i++) {
+                const coords = features[i].geometry.coordinates;
+                const props = features[i].properties;
                 if (!props.cluster) continue;
-                var id = props.cluster_id;
+                const id = props.cluster_id;
 
-                var marker = markers[id];
+                let marker = markers[id];
                 if (!marker) {
-                    var el = createDonutChart(props);
+                    const el = createDonutChart(props);
                     marker = markers[id] = new maplibregl.Marker({
                         element: el
                     }).setLngLat(coords);
@@ -136,7 +136,7 @@
         }
 
         // after the GeoJSON data is loaded, update markers on the screen and do so on every map move/moveend
-        map.on('data', function (e) {
+        map.on('data', (e) => {
             if (e.sourceId !== 'earthquakes' || !e.isSourceLoaded) return;
 
             map.on('move', updateMarkers);
@@ -147,37 +147,37 @@
 
     // code for creating an SVG donut chart from feature properties
     function createDonutChart(props) {
-        var offsets = [];
-        var counts = [
+        const offsets = [];
+        const counts = [
             props.mag1,
             props.mag2,
             props.mag3,
             props.mag4,
             props.mag5
         ];
-        var total = 0;
-        for (var i = 0; i < counts.length; i++) {
+        let total = 0;
+        for (let i = 0; i < counts.length; i++) {
             offsets.push(total);
             total += counts[i];
         }
-        var fontSize =
-            total >= 1000 ? 22 : total >= 100 ? 20 : total >= 10 ? 18 : 16;
-        var r = total >= 1000 ? 50 : total >= 100 ? 32 : total >= 10 ? 24 : 18;
-        var r0 = Math.round(r * 0.6);
-        var w = r * 2;
+        const fontSize =
+        total >= 1000 ? 22 : total >= 100 ? 20 : total >= 10 ? 18 : 16;
+        const r = total >= 1000 ? 50 : total >= 100 ? 32 : total >= 10 ? 24 : 18;
+        const r0 = Math.round(r * 0.6);
+        const w = r * 2;
 
-        var html =
-            '<div><svg width="' +
-            w +
-            '" height="' +
-            w +
-            '" viewbox="0 0 ' +
-            w +
-            ' ' +
-            w +
-            '" text-anchor="middle" style="font: ' +
-            fontSize +
-            'px sans-serif; display: block">';
+        let html =
+            `<div><svg width="${
+                w
+            }" height="${
+                w
+            }" viewbox="0 0 ${
+                w
+            } ${
+                w
+            }" text-anchor="middle" style="font: ${
+                fontSize
+            }px sans-serif; display: block">`;
 
         for (i = 0; i < counts.length; i++) {
             html += donutSegment(
@@ -189,34 +189,34 @@
             );
         }
         html +=
-            '<circle cx="' +
-            r +
-            '" cy="' +
-            r +
-            '" r="' +
-            r0 +
-            '" fill="white" /><text dominant-baseline="central" transform="translate(' +
-            r +
-            ', ' +
-            r +
-            ')">' +
-            total.toLocaleString() +
-            '</text></svg></div>';
+            `<circle cx="${
+                r
+            }" cy="${
+                r
+            }" r="${
+                r0
+            }" fill="white" /><text dominant-baseline="central" transform="translate(${
+                r
+            }, ${
+                r
+            })">${
+                total.toLocaleString()
+            }</text></svg></div>`;
 
-        var el = document.createElement('div');
+        const el = document.createElement('div');
         el.innerHTML = html;
         return el.firstChild;
     }
 
     function donutSegment(start, end, r, r0, color) {
         if (end - start === 1) end -= 0.00001;
-        var a0 = 2 * Math.PI * (start - 0.25);
-        var a1 = 2 * Math.PI * (end - 0.25);
-        var x0 = Math.cos(a0),
+        const a0 = 2 * Math.PI * (start - 0.25);
+        const a1 = 2 * Math.PI * (end - 0.25);
+        const x0 = Math.cos(a0),
             y0 = Math.sin(a0);
-        var x1 = Math.cos(a1),
+        const x1 = Math.cos(a1),
             y1 = Math.sin(a1);
-        var largeArc = end - start > 0.5 ? 1 : 0;
+        const largeArc = end - start > 0.5 ? 1 : 0;
 
         return [
             '<path d="M',
@@ -244,7 +244,7 @@
             0,
             r + r0 * x0,
             r + r0 * y0,
-            '" fill="' + color + '" />'
+            `" fill="${color}" />`
         ].join(' ');
     }
 </script>

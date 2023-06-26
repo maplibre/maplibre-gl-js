@@ -34,8 +34,8 @@
 <pre id="coordinates" class="coordinates"></pre>
 
 <script>
-    var coordinates = document.getElementById('coordinates');
-    var map = new maplibregl.Map({
+    const coordinates = document.getElementById('coordinates');
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -43,17 +43,15 @@
         zoom: 2
     });
 
-    var marker = new maplibregl.Marker({
-        draggable: true
-    })
+    const marker = new maplibregl.Marker({draggable: true})
         .setLngLat([0, 0])
         .addTo(map);
 
     function onDragEnd() {
-        var lngLat = marker.getLngLat();
+        const lngLat = marker.getLngLat();
         coordinates.style.display = 'block';
         coordinates.innerHTML =
-            'Longitude: ' + lngLat.lng + '<br />Latitude: ' + lngLat.lat;
+            `Longitude: ${lngLat.lng}<br />Latitude: ${lngLat.lat}`;
     }
 
     marker.on('dragend', onDragEnd);

@@ -29,7 +29,7 @@
     accept="application/geo+json,application/vnd.geo+json,.geojson"
 />
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -38,13 +38,13 @@
     });
 
     function handleFileSelect(evt) {
-        var file = evt.target.files[0]; // Read first selected file
+        const file = evt.target.files[0]; // Read first selected file
 
-        var reader = new FileReader();
+        const reader = new FileReader();
 
         reader.onload = function (theFile) {
             // Parse as (geo)JSON
-            var geoJSONcontent = JSON.parse(theFile.target.result);
+            const geoJSONcontent = JSON.parse(theFile.target.result);
 
             // Add as source to the map
             map.addSource('uploaded-source', {

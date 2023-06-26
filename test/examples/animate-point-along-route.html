@@ -48,7 +48,7 @@
 </div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         center: [-96, 37.8],
@@ -56,13 +56,13 @@
     });
 
     // San Francisco
-    var origin = [-122.414, 37.776];
+    const origin = [-122.414, 37.776];
 
     // Washington DC
-    var destination = [-77.032, 38.913];
+    const destination = [-77.032, 38.913];
 
     // A simple line from origin to destination.
-    var route = {
+    const route = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -77,7 +77,7 @@
 
     // A single point that animates along the route.
     // Coordinates are initially set to origin.
-    var point = {
+    const point = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -92,18 +92,18 @@
     };
 
     // Calculate the distance in kilometers between route start/end point.
-    var lineDistance = turf.lineDistance(route.features[0], 'kilometers');
+    const lineDistance = turf.lineDistance(route.features[0], 'kilometers');
 
-    var arc = [];
+    const arc = [];
 
     // Number of steps to use in the arc and animation, more steps means
     // a smoother arc and animation, but too many steps will result in a
     // low frame rate
-    var steps = 500;
+    const steps = 500;
 
     // Draw an arc between the `origin` & `destination` of the two points
-    for (var i = 0; i < lineDistance; i += lineDistance / steps) {
-        var segment = turf.along(route.features[0], i, 'kilometers');
+    for (let i = 0; i < lineDistance; i += lineDistance / steps) {
+        const segment = turf.along(route.features[0], i, 'kilometers');
         arc.push(segment.geometry.coordinates);
     }
 
@@ -111,9 +111,9 @@
     route.features[0].geometry.coordinates = arc;
 
     // Used to increment the value of the point measurement against the route.
-    var counter = 0;
+    let counter = 0;
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add a source and layer displaying a point which will be animated in a circle.
         map.addSource('route', {
             'type': 'geojson',
@@ -183,7 +183,7 @@
 
         document
             .getElementById('replay')
-            .addEventListener('click', function () {
+            .addEventListener('click', () => {
                 // Set the coordinates of the original point back to origin
                 point.features[0].geometry.coordinates = origin;
 

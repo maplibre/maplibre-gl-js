@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +16,7 @@
 <div id="map"></div>
 <script src="https://unpkg.com/maplibre-contour@0.0.2/dist/index.min.js"></script>
 <script>
-    var demSource = new mlcontour.DemSource({
+    const demSource = new mlcontour.DemSource({
         url: 'https://demotiles.maplibre.org/terrain-tiles/{z}/{x}/{y}.png',
         encoding: 'mapbox',
         maxzoom: 12,
@@ -30,7 +29,7 @@
     // tile for each tile request from maplibre
     demSource.setupMaplibre(maplibregl);
 
-    var map = (window.map = new maplibregl.Map({
+    const map = (window.map = new maplibregl.Map({
         container: 'map',
         zoom: 13,
         center: [11.3229, 47.2738],
@@ -50,11 +49,11 @@
                     type: 'vector',
                     tiles: [
                         demSource.contourProtocolUrl({
-                            // meters to feet
+                        // meters to feet
                             multiplier: 3.28084,
                             overzoom: 1,
                             thresholds: {
-                                // zoom: [minor, major]
+                            // zoom: [minor, major]
                                 11: [200, 1000],
                                 12: [100, 500],
                                 13: [100, 500],
@@ -74,8 +73,8 @@
                     id: 'hills',
                     type: 'hillshade',
                     source: 'hillshadeSource',
-                    layout: { visibility: 'visible' },
-                    paint: { 'hillshade-exaggeration': 0.25 }
+                    layout: {visibility: 'visible'},
+                    paint: {'hillshade-exaggeration': 0.25}
                 },
                 {
                     id: 'contours',
@@ -104,7 +103,7 @@
                         'text-field': [
                             'concat',
                             ['number-format', ['get', 'ele'], {}],
-                            "'"
+                            '\''
                         ],
                         'text-font': ['Noto Sans Bold']
                     }

@@ -33,7 +33,7 @@
 <div id="map"></div>
 <button id="zoom">Zoom to buildings</button>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -41,7 +41,7 @@
         zoom: 13
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         map.setPaintProperty('building', 'fill-color', [
             'interpolate',
             ['exponential', 0.5],
@@ -63,8 +63,8 @@
         ]);
     });
 
-    document.getElementById('zoom').addEventListener('click', function () {
-        map.zoomTo(19, { duration: 9000 });
+    document.getElementById('zoom').addEventListener('click', () => {
+        map.zoomTo(19, {duration: 9000});
     });
 </script>
 </body>

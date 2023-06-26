@@ -34,8 +34,8 @@
 <pre id="coordinates" class="coordinates"></pre>
 
 <script>
-    var coordinates = document.getElementById('coordinates');
-    var map = new maplibregl.Map({
+    const coordinates = document.getElementById('coordinates');
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -43,9 +43,9 @@
         zoom: 2
     });
 
-    var canvas = map.getCanvasContainer();
+    const canvas = map.getCanvasContainer();
 
-    var geojson = {
+    const geojson = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -59,7 +59,7 @@
     };
 
     function onMove(e) {
-        var coords = e.lngLat;
+        const coords = e.lngLat;
 
         // Set a UI indicator for dragging.
         canvas.style.cursor = 'grabbing';
@@ -71,13 +71,13 @@
     }
 
     function onUp(e) {
-        var coords = e.lngLat;
+        const coords = e.lngLat;
 
         // Print the coordinates of where the point had
         // finished being dragged to on the map.
         coordinates.style.display = 'block';
         coordinates.innerHTML =
-            'Longitude: ' + coords.lng + '<br />Latitude: ' + coords.lat;
+            `Longitude: ${coords.lng}<br />Latitude: ${coords.lat}`;
         canvas.style.cursor = '';
 
         // Unbind mouse/touch events
@@ -85,7 +85,7 @@
         map.off('touchmove', onMove);
     }
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add a single point to the map
         map.addSource('point', {
             'type': 'geojson',
@@ -103,17 +103,17 @@
         });
 
         // When the cursor enters a feature in the point layer, prepare for dragging.
-        map.on('mouseenter', 'point', function () {
+        map.on('mouseenter', 'point', () => {
             map.setPaintProperty('point', 'circle-color', '#3bb2d0');
             canvas.style.cursor = 'move';
         });
 
-        map.on('mouseleave', 'point', function () {
+        map.on('mouseleave', 'point', () => {
             map.setPaintProperty('point', 'circle-color', '#3887be');
             canvas.style.cursor = '';
         });
 
-        map.on('mousedown', 'point', function (e) {
+        map.on('mousedown', 'point', (e) => {
             // Prevent the default map drag behavior.
             e.preventDefault();
 
@@ -123,7 +123,7 @@
             map.once('mouseup', onUp);
         });
 
-        map.on('touchstart', 'point', function (e) {
+        map.on('touchstart', 'point', (e) => {
             if (e.points.length !== 1) return;
 
             // Prevent the default map drag behavior.

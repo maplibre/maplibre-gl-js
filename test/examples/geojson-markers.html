@@ -16,7 +16,7 @@
 <body>
 <div id="map"></div>
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/positron/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -24,11 +24,11 @@
         zoom: 1
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add an image to use as a custom marker
         map.loadImage(
             'https://maplibre.org/maplibre-gl-js-docs/assets/osgeo-logo.png',
-            function (error, image) {
+            (error, image) => {
                 if (error) throw error;
                 map.addImage('custom-marker', image);
                 // Add a GeoJSON source with 15 points
@@ -43,7 +43,7 @@
                                     'type': 'Point',
                                     'coordinates': [100.4933, 13.7551]
                                 },
-                                'properties': { 'year': '2004' }
+                                'properties': {'year': '2004'}
                             },
                             {
                                 'type': 'Feature',
@@ -51,7 +51,7 @@
                                     'type': 'Point',
                                     'coordinates': [6.6523, 46.5535]
                                 },
-                                'properties': { 'year': '2006' }
+                                'properties': {'year': '2006'}
                             },
                             {
                                 'type': 'Feature',
@@ -59,7 +59,7 @@
                                     'type': 'Point',
                                     'coordinates': [-123.3596, 48.4268]
                                 },
-                                'properties': { 'year': '2007' }
+                                'properties': {'year': '2007'}
                             },
                             {
                                 'type': 'Feature',
@@ -67,7 +67,7 @@
                                     'type': 'Point',
                                     'coordinates': [18.4264, -33.9224]
                                 },
-                                'properties': { 'year': '2008' }
+                                'properties': {'year': '2008'}
                             },
                             {
                                 'type': 'Feature',
@@ -75,7 +75,7 @@
                                     'type': 'Point',
                                     'coordinates': [151.195, -33.8552]
                                 },
-                                'properties': { 'year': '2009' }
+                                'properties': {'year': '2009'}
                             },
                             {
                                 'type': 'Feature',
@@ -83,7 +83,7 @@
                                     'type': 'Point',
                                     'coordinates': [2.1404, 41.3925]
                                 },
-                                'properties': { 'year': '2010' }
+                                'properties': {'year': '2010'}
                             },
                             {
                                 'type': 'Feature',
@@ -91,7 +91,7 @@
                                     'type': 'Point',
                                     'coordinates': [-104.8548, 39.7644]
                                 },
-                                'properties': { 'year': '2011' }
+                                'properties': {'year': '2011'}
                             },
                             {
                                 'type': 'Feature',
@@ -99,7 +99,7 @@
                                     'type': 'Point',
                                     'coordinates': [-1.1665, 52.9539]
                                 },
-                                'properties': { 'year': '2013' }
+                                'properties': {'year': '2013'}
                             },
                             {
                                 'type': 'Feature',
@@ -107,7 +107,7 @@
                                     'type': 'Point',
                                     'coordinates': [-122.6544, 45.5428]
                                 },
-                                'properties': { 'year': '2014' }
+                                'properties': {'year': '2014'}
                             },
                             {
                                 'type': 'Feature',
@@ -115,7 +115,7 @@
                                     'type': 'Point',
                                     'coordinates': [126.974, 37.5651]
                                 },
-                                'properties': { 'year': '2015' }
+                                'properties': {'year': '2015'}
                             },
                             {
                                 'type': 'Feature',
@@ -123,7 +123,7 @@
                                     'type': 'Point',
                                     'coordinates': [7.1112, 50.7255]
                                 },
-                                'properties': { 'year': '2016' }
+                                'properties': {'year': '2016'}
                             },
                             {
                                 'type': 'Feature',
@@ -131,7 +131,7 @@
                                     'type': 'Point',
                                     'coordinates': [-71.0314, 42.3539]
                                 },
-                                'properties': { 'year': '2017' }
+                                'properties': {'year': '2017'}
                             },
                             {
                                 'type': 'Feature',
@@ -139,7 +139,7 @@
                                     'type': 'Point',
                                     'coordinates': [39.2794, -6.8173]
                                 },
-                                'properties': { 'year': '2018' }
+                                'properties': {'year': '2018'}
                             },
                             {
                                 'type': 'Feature',
@@ -147,7 +147,7 @@
                                     'type': 'Point',
                                     'coordinates': [26.0961, 44.4379]
                                 },
-                                'properties': { 'year': '2019' }
+                                'properties': {'year': '2019'}
                             },
                             {
                                 'type': 'Feature',
@@ -155,7 +155,7 @@
                                     'type': 'Point',
                                     'coordinates': [-114.0879, 51.0279]
                                 },
-                                'properties': { 'year': '2020' }
+                                'properties': {'year': '2020'}
                             }
                         ]
                     }

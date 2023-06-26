@@ -31,23 +31,23 @@
 
         // method called when the layer is added to the map
         // https://maplibre.org/maplibre-gl-js-docs/api/properties/#styleimageinterface#onadd
-        onAdd: function (map, gl) {
-            // create GLSL source for vertex shader
+        onAdd (map, gl) {
+        // create GLSL source for vertex shader
             const vertexSource = `#version 300 es
-                
-                uniform mat4 u_matrix;
-                in vec2 a_pos;
-                void main() {
-                    gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
-                }`;
+            
+            uniform mat4 u_matrix;
+            in vec2 a_pos;
+            void main() {
+                gl_Position = u_matrix * vec4(a_pos, 0.0, 1.0);
+            }`;
 
             // create GLSL source for fragment shader
             const fragmentSource = `#version 300 es
 
-                out highp vec4 fragColor;
-                void main() {
-                    fragColor = vec4(1.0, 0.0, 0.0, 0.5);
-                }`;
+            out highp vec4 fragColor;
+            void main() {
+                fragColor = vec4(1.0, 0.0, 0.0, 0.5);
+            }`;
 
             // create a vertex shader
             const vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -100,7 +100,7 @@
 
         // method fired on each animation frame
         // https://maplibre.org/maplibre-gl-js-docs/api/map/#map.event:render
-        render: function (gl, matrix) {
+        render (gl, matrix) {
             gl.useProgram(this.program);
             gl.uniformMatrix4fv(
                 gl.getUniformLocation(this.program, 'u_matrix'),
@@ -117,7 +117,7 @@
     };
 
     // add the custom style layer to the map
-    map.on('load', function () {
+    map.on('load', () => {
         map.addLayer(highlightLayer, 'crimea-fill');
     });
 </script>

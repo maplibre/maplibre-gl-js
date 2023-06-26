@@ -16,7 +16,7 @@
 <body>
 <div id="map"></div>
 <script>
-    var map = (window.map = new maplibregl.Map({
+    const map = (window.map = new maplibregl.Map({
         container: 'map',
         zoom: 12,
         center: [11.39085, 47.27574],
@@ -54,8 +54,8 @@
                     id: 'hills',
                     type: 'hillshade',
                     source: 'hillshadeSource',
-                    layout: { visibility: 'visible' },
-                    paint: { 'hillshade-shadow-color': '#473B24' }
+                    layout: {visibility: 'visible'},
+                    paint: {'hillshade-shadow-color': '#473B24'}
                 }
             ],
             terrain: {

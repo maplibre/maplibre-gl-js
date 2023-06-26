@@ -67,7 +67,7 @@
 <nav id="filter-group" class="filter-group"></nav>
 
 <script>
-    var places = {
+    const places = {
         'type': 'FeatureCollection',
         'features': [
             {
@@ -143,8 +143,8 @@
         ]
     };
 
-    var filterGroup = document.getElementById('filter-group');
-    var map = new maplibregl.Map({
+    const filterGroup = document.getElementById('filter-group');
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
@@ -152,16 +152,16 @@
         zoom: 11.15
     });
 
-    map.on('load', function () {
+    map.on('load', () => {
         // Add a GeoJSON source containing place coordinates and information.
         map.addSource('places', {
             'type': 'geojson',
             'data': places
         });
 
-        places.features.forEach(function (feature) {
-            var symbol = feature.properties['icon'];
-            var layerID = 'poi-' + symbol;
+        places.features.forEach((feature) => {
+            const symbol = feature.properties['icon'];
+            const layerID = `poi-${symbol}`;
 
             // Add a layer for this symbol type if it hasn't been added already.
             if (!map.getLayer(layerID)) {
@@ -170,26 +170,26 @@
                     'type': 'symbol',
                     'source': 'places',
                     'layout': {
-                        'icon-image': symbol + '_15',
+                        'icon-image': `${symbol}_15`,
                         'icon-overlap': 'always'
                     },
                     'filter': ['==', 'icon', symbol]
                 });
 
                 // Add checkbox and label elements for the layer.
-                var input = document.createElement('input');
+                const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.id = layerID;
                 input.checked = true;
                 filterGroup.appendChild(input);
 
-                var label = document.createElement('label');
+                const label = document.createElement('label');
                 label.setAttribute('for', layerID);
                 label.textContent = symbol;
                 filterGroup.appendChild(label);
 
                 // When the checkbox changes, update the visibility of the layer.
-                input.addEventListener('change', function (e) {
+                input.addEventListener('change', (e) => {
                     map.setLayoutProperty(
                         layerID,
                         'visibility',

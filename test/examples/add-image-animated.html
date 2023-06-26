@@ -17,37 +17,37 @@
 <div id="map"></div>
 
 <script>
-    var map = new maplibregl.Map({
+    const map = new maplibregl.Map({
         container: 'map',
         style:
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
     });
 
-    var size = 200;
+    const size = 200;
 
     // implementation of StyleImageInterface to draw a pulsing dot icon on the map
     // see https://maplibre.org/maplibre-gl-js-docs/api/properties/#styleimageinterface for more info
-    var pulsingDot = {
+    const pulsingDot = {
         width: size,
         height: size,
         data: new Uint8Array(size * size * 4),
 
         // get rendering context for the map canvas when layer is added to the map
-        onAdd: function () {
-            var canvas = document.createElement('canvas');
+        onAdd () {
+            const canvas = document.createElement('canvas');
             canvas.width = this.width;
             canvas.height = this.height;
             this.context = canvas.getContext('2d');
         },
 
         // called once before every frame where the icon will be used
-        render: function () {
-            var duration = 1000;
-            var t = (performance.now() % duration) / duration;
+        render () {
+            const duration = 1000;
+            const t = (performance.now() % duration) / duration;
 
-            var radius = (size / 2) * 0.3;
-            var outerRadius = (size / 2) * 0.7 * t + radius;
-            var context = this.context;
+            const radius = (size / 2) * 0.3;
+            const outerRadius = (size / 2) * 0.7 * t + radius;
+            const context = this.context;
 
             // draw outer circle
             context.clearRect(0, 0, this.width, this.height);
@@ -59,7 +59,7 @@
                 0,
                 Math.PI * 2
             );
-            context.fillStyle = 'rgba(255, 200, 200,' + (1 - t) + ')';
+            context.fillStyle = `rgba(255, 200, 200,${1 - t})`;
             context.fill();
 
             // draw inner circle
@@ -93,8 +93,8 @@
         }
     };
 
-    map.on('load', function () {
-        map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
+    map.on('load', () => {
+        map.addImage('pulsing-dot', pulsingDot, {pixelRatio: 2});
 
         map.addSource('points', {
             'type': 'geojson',
