@@ -40,7 +40,7 @@ function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
         indexMarkdown += `
 ## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
 
-![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace(".md", "-500.webp")})
+![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace(".md", "-500.png")})
 
 ${indexArrayItem.description}
 `
@@ -52,8 +52,8 @@ if (!fs.existsSync(typedocConfig.out)) {
     throw new Error("Please run typedoc generation first!");
 }
 
-fs.unlinkSync(path.join(typedocConfig.out, "README.md"));
-fs.unlinkSync(path.join(typedocConfig.out, "modules.md"));
+fs.rmSync(path.join(typedocConfig.out, "README.md"));
+fs.rmSync(path.join(typedocConfig.out, "modules.md"));
 // Intro file for the API
 let modulesFolder = path.join(typedocConfig.out, "modules");
 let content = fs.readFileSync(path.join(modulesFolder, typedocConfig.internalModule + ".md"), "utf-8");
@@ -66,7 +66,7 @@ fs.writeFileSync(path.join(typedocConfig.out, "README.md"), contentString);
 // Examples manupilation
 let examplesDocsFolder = path.join("docs", "examples");
 if (fs.existsSync(examplesDocsFolder)) {
-    fs.unlinkSync(examplesDocsFolder);
+    fs.rmSync(examplesDocsFolder, { recursive: true, force: true});
 }
 fs.mkdirSync(examplesDocsFolder);
 let examplesFolder = path.join("test", "examples");
