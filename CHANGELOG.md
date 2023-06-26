@@ -3,10 +3,8 @@
 ### ✨ Features and improvements
 
 - Change all internal exports to named exports([#2711](https://github.com/maplibre/maplibre-gl-js/pull/2711))
-- _...Add new stuff here..._
-
-### ✨ Features and improvements
 - Add `className` option to Marker constructor ([#2729](https://github.com/maplibre/maplibre-gl-js/pull/2729))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Return undefined instead of throwing from `Style.serialize()` when the style hasn't loaded yet ([#2712](https://github.com/maplibre/maplibre-gl-js/pull/2712)) 
