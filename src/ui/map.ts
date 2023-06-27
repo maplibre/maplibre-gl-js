@@ -71,6 +71,9 @@ const version = packageJSON.version;
 export type MapOptions = {
     hash?: boolean | string;
     interactive?: boolean;
+    /**
+     * The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
+     */
     container: HTMLElement | string;
     bearingSnap?: number;
     attributionControl?: boolean;
@@ -83,9 +86,21 @@ export type MapOptions = {
     refreshExpiredTiles?: boolean;
     maxBounds?: LngLatBoundsLike;
     scrollZoom?: boolean | AroundCenterOptions;
+    /**
+     * The minimum zoom level of the map (0-24), default 0
+     */
     minZoom?: number | null;
+    /**
+     * The maximum zoom level of the map (0-24). default 22
+     */
     maxZoom?: number | null;
+    /**
+     * The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     */
     minPitch?: number | null;
+    /**
+     * The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     */
     maxPitch?: number | null;
     boxZoom?: boolean;
     dragRotate?: boolean;
@@ -113,6 +128,11 @@ export type MapOptions = {
     bounds?: LngLatBoundsLike;
     fitBoundsOptions?: FitBoundsOptions;
     localIdeographFontFamily?: string;
+    /**
+     * The map's MapLibre style. This must be an a JSON object conforming to
+     * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), 
+     * or a URL to such JSON.
+     */
     style: StyleSpecification | string;
     pitchWithRotate?: boolean;
     pixelRatio?: number;
@@ -217,18 +237,8 @@ const defaultOptions = {
  * Then MapLibre GL JS initializes the map on the page and returns your `Map`
  * object.
  *
- * @extends Evented
- * @param {MapOptions} options
- * @param {HTMLElement|string} options.container The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
- * @param {number} [options.minZoom=0] The minimum zoom level of the map (0-24).
- * @param {number} [options.maxZoom=22] The maximum zoom level of the map (0-24).
- * @param {number} [options.minPitch=0] The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
- * @param {number} [options.maxPitch=60] The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
- * @param {StyleSpecification|string} [options.style] The map's MapLibre style. This must be an a JSON object conforming to
- * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to
- * such JSON.
- *
- *
+ * @group Map
+ * @param options - the map options
  * @param {(boolean|string)} [options.hash=false] If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
  * For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
  * An additional string may optionally be provided to indicate a parameter-styled hash,
