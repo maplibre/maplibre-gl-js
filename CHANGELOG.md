@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Change all internal exports to named exports([#2711](https://github.com/maplibre/maplibre-gl-js/pull/2711))
+- Docs generation is now part of this repo([#2733](https://github.com/maplibre/maplibre-gl-js/pull/2733))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
