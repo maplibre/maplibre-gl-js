@@ -4,8 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    paths:
-      - '!**.md'
   workflow_dispatch:
 
 permissions:
