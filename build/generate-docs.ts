@@ -70,7 +70,7 @@ if (fs.existsSync(examplesDocsFolder)) {
 }
 fs.mkdirSync(examplesDocsFolder);
 const examplesFolder = path.join('test', 'examples');
-const files = fs.readdirSync(examplesFolder);
+const files = fs.readdirSync(examplesFolder).filter(f => f.endsWith('html'));
 const maplibreUnpgk = `https://unpkg.com/maplibre-gl@${packageJson.version}/`;
 const indexArray = [] as HtmlDoc[];
 for (const file of files) {

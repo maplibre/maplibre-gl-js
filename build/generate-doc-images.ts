@@ -3,7 +3,6 @@ import fs from 'fs';
 import puppeteer from 'puppeteer';
 import packageJson from '../package.json' assert { type: 'json' };
 
-
 const exampleName = process.argv[2];
 const examplePath = path.resolve('test', 'examples');
 
@@ -21,7 +20,7 @@ async function createImage(exampleName) {
     // get the example contents
     const html = fs.readFileSync(path.resolve(examplePath, `${exampleName}.html`), 'utf-8');
 
-    await page.setContent(html.replaceAll("../../dist", `https://unpkg.com/maplibre-gl@${packageJson.version}/dist`));
+    await page.setContent(html.replaceAll('../../dist', `https://unpkg.com/maplibre-gl@${packageJson.version}/dist`));
 
     // Wait for map to load, then wait two more seconds for images, etc. to load.
     await page
@@ -58,7 +57,7 @@ async function createImage(exampleName) {
 }
 
 if (exampleName === 'all') {
-    const allFiles = fs.readdirSync(examplePath);
+    const allFiles = fs.readdirSync(examplePath).filter(f => f.endsWith('html'));
     console.log(`Generating ${allFiles.length} images.`);
     for (const file of allFiles) {
         await createImage(file);
