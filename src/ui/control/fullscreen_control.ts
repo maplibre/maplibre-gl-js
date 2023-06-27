@@ -19,17 +19,29 @@ type FullscreenOptions = {
  * The map's `cooperativeGestures` option is temporarily disabled while the map
  * is in fullscreen mode, and is restored when the map exist fullscreen mode.
  *
- * @group Controls
+ * @implements {IControl}
+ * @param {FullscreenOptions} [options]
+ * @param {HTMLElement} [options.container] `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
  *
  * @example
- * // Adds a full screen control to the map
  * map.addControl(new maplibregl.FullscreenControl({container: document.querySelector('body')}));
+ * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
+ */
+
+/**
+ * Fired when fullscreen mode has started
  *
- * @see [View a fullscreen map example](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
+ * @event fullscreenstart
+ * @memberof FullscreenControl
+ * @instance
+ */
+
+/**
+ * Fired when fullscreen mode has ended
  *
- * @event fullscreenstart - Fired when fullscreen mode has started
- * @event fullscreenend - Fired when fullscreen mode has ended
- *
+ * @event fullscreenend
+ * @memberof FullscreenControl
+ * @instance
  */
 
 export class FullscreenControl extends Evented implements IControl {

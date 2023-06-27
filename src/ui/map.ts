@@ -215,7 +215,6 @@ const defaultOptions = {
  * object.
  *
  * @extends Evented
- * @group Map
  * @param {MapOptions} options
  * @param {HTMLElement|string} options.container The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
  * @param {number} [options.minZoom=0] The minimum zoom level of the map (0-24).

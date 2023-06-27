@@ -200,10 +200,8 @@ const maplibregl = {
     }
 };
 
-Debug.extend(maplibregl, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
-
 //This gets automatically stripped out in production builds.
-//Debug.extend(exported, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
+Debug.extend(maplibregl, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
 
 /**
  * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
