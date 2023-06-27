@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Change all internal exports to named exports([#2711](https://github.com/maplibre/maplibre-gl-js/pull/2711))
+- Add `className` option to Marker constructor ([#2729](https://github.com/maplibre/maplibre-gl-js/pull/2729))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
