@@ -4,6 +4,7 @@
 
 - Change all internal exports to named exports([#2711](https://github.com/maplibre/maplibre-gl-js/pull/2711))
 - Docs generation is now part of this repo([#2733](https://github.com/maplibre/maplibre-gl-js/pull/2733))
+- Add `className` option to Marker constructor ([#2729](https://github.com/maplibre/maplibre-gl-js/pull/2729))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
