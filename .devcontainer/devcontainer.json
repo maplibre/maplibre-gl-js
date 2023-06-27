@@ -1,4 +1,4 @@
 {
     "name": "MapLibre container using node.js",
-    "postCreateCommand": "/bin/bash -l -c \"sudo apt-get update && sudo apt-get install -y build-essential git libglew-dev libxi-dev default-jre default-jdk xvfb && /bin/basch -c nvm install && npm install\""
+    "postCreateCommand": "/bin/bash -l -c \"sudo apt-get update && sudo apt-get install -y build-essential git libglew-dev libxi-dev default-jre default-jdk xvfb && source $NVM_DIR/nvm.sh && nvm install && npm install\""
 }
