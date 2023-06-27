@@ -14,7 +14,7 @@
         "includeCategories": false,
         "includeGroups": true
     },
-    "name": "MapLibre GL",
+    "name": "MapLibre GL JS",
     "githubPages": false,
     "hideInPageTOC": true,
     "hideBreadcrumbs": true
