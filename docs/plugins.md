@@ -81,7 +81,10 @@ A plugin for taking measures on the map.
 #### any-routing
 A modular plugin for calculating routes.
 <br/><small>[View on GitHub](https://github.com/marucjmar/any-routing)</small>
-    
+
+#### maplibre-search-box
+Adds a control for searching for places using Stadia Maps.
+<br/><small>[View on GitHub](https://github.com/stadiamaps/maplibre-search-box)</small>
   
 ##  Map Rendering Plugins
 
