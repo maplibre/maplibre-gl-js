@@ -7,15 +7,21 @@ theme:
   logo: https://avatars.githubusercontent.com/u/75709127?s=48&v=4
   features:
     - content.code.copy
+    - navigation.tabs
+    - navigation.tabs.sticky
   palette: 
     # Palette toggle for light mode
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: amber
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
-
-    # Palette toggle for dark mode
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: amber
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -27,3 +33,14 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+
+extra:
+  social:
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/maplibre
+    - icon: fontawesome/brands/github
+      link: https://github.com/maplibre
+    - icon: fontawesome/brands/slack
+      link: https://osmus.slack.com/archives/C01G3D28DAB
+
+copyright: Copyright &copy; 2023 Maplibre
