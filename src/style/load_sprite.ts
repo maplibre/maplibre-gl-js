@@ -84,9 +84,9 @@ function doOnceCompleted(
         const json = jsonsMap[spriteName];
 
         for (const id in json) {
-            const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content} = json[id];
+            const {width, height, x, y, sdf, pixelRatio, stretchX, stretchY, content, contentMatch} = json[id];
             const spriteData = {width, height, x, y, context};
-            result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, spriteData};
+            result[spriteName][id] = {data: null, pixelRatio, sdf, stretchX, stretchY, content, contentMatch, spriteData};
         }
     }
 
