@@ -32,7 +32,7 @@ const defaultOptions: NavigationOptions = {
 /**
  * A `NavigationControl` control contains zoom buttons and a compass.
  *
- * @group Control
+ * @group Controls
  *  
  * @example
  * var nav = new maplibregl.NavigationControl();
