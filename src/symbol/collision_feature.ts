@@ -1,6 +1,6 @@
 import type {CollisionBoxArray} from '../data/array_types.g';
 import Point from '@mapbox/point-geometry';
-import type Anchor from './anchor';
+import type {Anchor} from './anchor';
 import {SymbolPadding} from '../style/style_layer/symbol_style_layer';
 import {applyContentMatch} from './shaping';
 
@@ -12,7 +12,7 @@ import {applyContentMatch} from './shaping';
  *
  * @private
  */
-class CollisionFeature {
+export class CollisionFeature {
     boxStartIndex: number;
     boxEndIndex: number;
     circleDiameter: number;
@@ -115,5 +115,3 @@ class CollisionFeature {
         this.boxEndIndex = collisionBoxArray.length;
     }
 }
-
-export default CollisionFeature;

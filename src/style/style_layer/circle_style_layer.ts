@@ -1,20 +1,19 @@
-import StyleLayer from '../style_layer';
+import {StyleLayer} from '../style_layer';
 
-import CircleBucket from '../../data/bucket/circle_bucket';
+import {CircleBucket} from '../../data/bucket/circle_bucket';
 import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
 import properties, {CircleLayoutPropsPossiblyEvaluated, CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
-import type {FeatureState} from '../../style-spec/expression';
-import type Transform from '../../geo/transform';
+import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {Transform} from '../../geo/transform';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
-import type {LayerSpecification} from '../../style-spec/types.g';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
-class CircleStyleLayer extends StyleLayer {
+export class CircleStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<CircleLayoutProps>;
     layout: PossiblyEvaluated<CircleLayoutProps, CircleLayoutPropsPossiblyEvaluated>;
 
@@ -94,5 +93,3 @@ function projectQueryGeometry(queryGeometry: Array<Point>, pixelPosMatrix: mat4)
         return projectPoint(p, pixelPosMatrix);
     });
 }
-
-export default CircleStyleLayer;

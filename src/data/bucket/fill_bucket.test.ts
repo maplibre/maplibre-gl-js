@@ -4,12 +4,12 @@ import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
-import segment from '../segment';
-import FillBucket from './fill_bucket';
-import FillStyleLayer from '../../style/style_layer/fill_style_layer';
-import {LayerSpecification} from '../../style-spec/types.g';
-import EvaluationParameters from '../../style/evaluation_parameters';
-import ZoomHistory from '../../style/zoom_history';
+import {SegmentVector} from '../segment';
+import {FillBucket} from './fill_bucket';
+import {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
+import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {ZoomHistory} from '../../style/zoom_history';
 import {BucketFeature, BucketParameters} from '../bucket';
 
 // Load a fill feature from fixture tile.
@@ -49,7 +49,7 @@ test('FillBucket', () => {
 test('FillBucket segmentation', () => {
     // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
     // breaking across array groups without tests taking a _long_ time.
-    Object.defineProperty(segment, 'MAX_VERTEX_ARRAY_LENGTH', {value: 256});
+    Object.defineProperty(SegmentVector, 'MAX_VERTEX_ARRAY_LENGTH', {value: 256});
 
     const layer = new FillStyleLayer({
         id: 'test',

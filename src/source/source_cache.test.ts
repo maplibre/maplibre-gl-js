@@ -1,15 +1,16 @@
-import SourceCache from './source_cache';
+import {SourceCache} from './source_cache';
 import {setSourceType} from './source';
-import Tile from './tile';
+import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import Transform from '../geo/transform';
-import LngLat from '../geo/lng_lat';
+import {Transform} from '../geo/transform';
+import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
-import browser from '../util/browser';
-import Dispatcher from '../util/dispatcher';
+import {browser} from '../util/browser';
+import {Dispatcher} from '../util/dispatcher';
 import {Callback} from '../types/callback';
+import {TileBounds} from './tile_bounds';
 
 class SourceMock extends Evented {
     id: string;
@@ -759,12 +760,14 @@ describe('SourceCache#update', () => {
         sourceCache.onAdd(undefined);
     });
 
-    test('retains children for fading when tile.fadeEndTime is not set', done => {
+    test('retain children for fading fadeEndTime is 0 (added but registerFadeDuration() is not called yet)', done => {
         const transform = new Transform();
         transform.resize(511, 511);
         transform.zoom = 1;
 
         const sourceCache = createSourceCache({
+
+            // not setting fadeEndTime because class Tile default is 0, and need to be tested
             loadTile(tile, callback) {
                 tile.timeAdded = Date.now();
                 tile.state = 'loaded';
@@ -1237,7 +1240,85 @@ describe('SourceCache#_updateRetainedTiles', () => {
 
     });
 
-    test('adds correct leaded parent tiles for overzoomed tiles', () => {
+    test('Only retain loaded parent tile when zooming in', () => {
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.state = 'loading';
+                callback();
+            }
+        });
+
+        let idealTiles = [new OverscaledTileID(9, 0, 9, 0, 0), new OverscaledTileID(9, 0, 9, 1, 0)];
+        let retained = sourceCache._updateRetainedTiles(idealTiles, 9);
+        // Parent loading tiles from z=8 not retained
+        expect(Object.keys(retained).sort()).toEqual(
+            idealTiles.map((tile) => tile.key).sort()
+        );
+
+        idealTiles = [new OverscaledTileID(10, 0, 10, 0, 0), new OverscaledTileID(10, 0, 10, 1, 0)];
+        retained = sourceCache._updateRetainedTiles(idealTiles, 10);
+        // Parent loading tiles from z=9 not retained
+        expect(Object.keys(retained).sort()).toEqual(
+            idealTiles.map((tile) => tile.key).sort()
+        );
+
+        const loadedTiles = idealTiles;
+        loadedTiles.forEach(t => {
+            sourceCache._tiles[t.key] = new Tile(t, undefined);
+            sourceCache._tiles[t.key].state = 'loaded';
+        });
+
+        idealTiles = [new OverscaledTileID(11, 0, 11, 0, 0), new OverscaledTileID(11, 0, 11, 1, 0)];
+        retained = sourceCache._updateRetainedTiles(idealTiles, 11);
+        // Parent loaded tile in the view port from z=10 was retained
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(10, 0, 10, 0, 0).key, // Parent loaded tile
+            new OverscaledTileID(11, 0, 11, 0, 0).key,
+            new OverscaledTileID(11, 0, 11, 1, 0).key
+        ].sort());
+
+    });
+
+    test('Only retain loaded child tile when zooming out', () => {
+        const sourceCache = createSourceCache({
+            loadTile(tile, callback) {
+                tile.state = 'loading';
+                callback();
+            }
+        });
+
+        let idealTiles = [new OverscaledTileID(7, 0, 7, 0, 0), new OverscaledTileID(7, 0, 7, 1, 0)];
+        let retained = sourceCache._updateRetainedTiles(idealTiles, 7);
+        // Client tiles from z=6 not retained
+        expect(Object.keys(retained).sort()).toEqual(
+            idealTiles.map((tile) => tile.key).sort()
+        );
+
+        idealTiles = [new OverscaledTileID(6, 0, 6, 0, 0), new OverscaledTileID(6, 0, 6, 1, 0)];
+        retained = sourceCache._updateRetainedTiles(idealTiles, 6);
+        // Client tiles from z=6 not retained
+        expect(Object.keys(retained).sort()).toEqual(
+            idealTiles.map((tile) => tile.key).sort()
+        );
+
+        const loadedTiles = idealTiles;
+        loadedTiles.forEach(t => {
+            sourceCache._tiles[t.key] = new Tile(t, undefined);
+            sourceCache._tiles[t.key].state = 'loaded';
+        });
+
+        idealTiles = [new OverscaledTileID(5, 0, 5, 0, 0), new OverscaledTileID(5, 0, 5, 1, 0)];
+        retained = sourceCache._updateRetainedTiles(idealTiles, 5);
+        // Child loaded tile in the view port from z=6 was retained
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(6, 0, 6, 0, 0).key,
+            new OverscaledTileID(6, 0, 6, 1, 0).key,
+            new OverscaledTileID(5, 0, 5, 0, 0).key,
+            new OverscaledTileID(5, 0, 5, 1, 0).key
+        ].sort());
+    });
+
+    test('adds correct loaded parent tiles for overzoomed tiles', () => {
         const sourceCache = createSourceCache({
             loadTile(tile, callback) {
                 tile.state = 'loading';
@@ -1449,6 +1530,10 @@ describe('source cache loaded', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
+                const tr = new Transform();
+                tr.resize(512, 512);
+                sourceCache.update(tr);
+
                 const coord = new OverscaledTileID(0, 0, 0, 0, 0);
                 sourceCache._addTile(coord);
 
@@ -1468,6 +1553,10 @@ describe('source cache loaded', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
+                const tr = new Transform();
+                tr.resize(512, 512);
+                sourceCache.update(tr);
+
                 const coord = new OverscaledTileID(0, 0, 0, 0, 0);
                 sourceCache._addTile(coord);
 
@@ -1476,6 +1565,132 @@ describe('source cache loaded', () => {
             }
         });
         sourceCache.onAdd(undefined);
+    });
+
+    test('SourceCache#loaded (unused)', done => {
+        const sourceCache = createSourceCache({
+            loadTile(tile) {
+                tile.state = 'errored';
+            }
+        }, false);
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(sourceCache.loaded()).toBeTruthy();
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('SourceCache#loaded (unusedForTerrain)', done => {
+        const sourceCache = createSourceCache({
+            loadTile(tile) {
+                tile.state = 'errored';
+            }
+        }, false);
+        sourceCache.usedForTerrain = false;
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(sourceCache.loaded()).toBeTruthy();
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('SourceCache#loaded (not loaded when no update)', done => {
+        const sourceCache = createSourceCache({
+            loadTile(tile) {
+                tile.state = 'errored';
+            }
+        });
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(sourceCache.loaded()).toBeFalsy();
+                done();
+            }
+        });
+        sourceCache.onAdd(undefined);
+    });
+
+    test('SourceCache#loaded (on last tile load)', done => {
+        const sourceCache = createSourceCache({
+            hasTile(tileID: OverscaledTileID) {
+                return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
+            },
+            loadTile(tile, callback) {
+                tile.state = 'loading';
+                setTimeout(() => {
+                    tile.state = 'loaded';
+                    callback();
+                });
+            }
+        });
+
+        const tr = new Transform();
+        tr.zoom = 10;
+        tr.resize(512, 512);
+        const expectedTilesLoaded = 4;
+        let loaded = 0;
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(sourceCache.loaded()).toBeFalsy();
+            } else if (e.tile !== undefined) {
+                loaded += 1;
+                if (sourceCache.loaded()) {
+                    expect(loaded).toBe(expectedTilesLoaded);
+                    done();
+                }
+            }
+        });
+
+        sourceCache.onAdd(undefined);
+        sourceCache.update(tr);
+    });
+
+    test('SourceCache#loaded (tiles outside bounds, idle)', done => {
+        const japan = new TileBounds([122.74, 19.33, 149.0, 45.67]);
+        const sourceCache = createSourceCache({
+            onAdd() {
+                if (this.sourceOptions.noLoad) return;
+                if (this.sourceOptions.error) {
+                    this.fire(new ErrorEvent(this.sourceOptions.error));
+                } else {
+                    this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
+                    this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
+                }
+            },
+            hasTile(tileID: OverscaledTileID) {
+                return japan.contains(tileID.canonical);
+            },
+            loadTile(tile, callback) {
+                tile.state = 'loading';
+                setTimeout(() => {
+                    tile.state = 'loaded';
+                    callback();
+                });
+            }
+        });
+
+        sourceCache.on('data', (e) => {
+            if (e.sourceDataType !== 'idle') {
+                expect(sourceCache.loaded()).toBeFalsy();
+            // 'idle' emission when source bounds are outside of viewport bounds
+            } else {
+                expect(sourceCache.loaded()).toBeTruthy();
+                done();
+            }
+        });
+
+        sourceCache.onAdd(undefined);
+        const tr = new Transform();
+        tr.zoom = 10;
+        tr.resize(512, 512);
+        sourceCache.update(tr);
     });
 });
 
@@ -1584,7 +1799,7 @@ describe('SourceCache#findLoadedParent', () => {
         expect(tiles[4].key in sourceCache._loadedParentTiles).toBe(true);
         expect(tiles[5].key in sourceCache._loadedParentTiles).toBe(true);
 
-        // Arbitray tiles should not in the cache
+        // Arbitrary tiles should not in the cache
         const notLoadedTiles = [
             new OverscaledTileID(2, 1, 2, 0, 0),
             new OverscaledTileID(2, 0, 2, 3, 0),

@@ -1,19 +1,20 @@
-import DOM from '../util/dom';
-import LngLat from '../geo/lng_lat';
+import {DOM} from '../util/dom';
+import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
-import smartWrap from '../util/smart_wrap';
-import {bindAll, extend} from '../util/util';
+import {smartWrap} from '../util/smart_wrap';
+import {extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 import type {PositionAnchor} from './anchor';
 import {Event, Evented} from '../util/evented';
-import type Map from './map';
-import Popup, {Offset} from './popup';
+import type {Map} from './map';
+import {Popup, Offset} from './popup';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
 import type {PointLike} from './camera';
 
 type MarkerOptions = {
     element?: HTMLElement;
+    className?: string;
     offset?: PointLike;
     anchor?: PositionAnchor;
     color?: string;
@@ -27,10 +28,11 @@ type MarkerOptions = {
 
 /**
  * Creates a marker component
- * @param {Object} [options]
+ * @param {MarkerOptions} [options]
  * @param {HTMLElement} [options.element] DOM element to use as a marker. The default is a light blue, droplet-shaped SVG marker.
- * @param {string} [options.anchor='center'] A string indicating the part of the Marker that should be positioned closest to the coordinate set via {@link Marker#setLngLat}.
- *   Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`.
+ * @param {string} [options.className] Space-separated CSS class names to add to marker element.
+ * @param {PositionAnchor} [options.anchor='center'] A string indicating the part of the Marker that should be positioned closest to the coordinate set via {@link Marker#setLngLat}.
+ * Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`.
  * @param {PointLike} [options.offset] The offset in pixels as a {@link PointLike} object to apply relative to the element's center. Negatives indicate left and up.
  * @param {string} [options.color='#3FB1CE'] The color to use for the default marker if options.element is not provided. The default is light blue.
  * @param {number} [options.scale=1] The scale to use for the default marker if options.element is not provided. The default scale corresponds to a height of `41px` and a width of `27px`.
@@ -53,7 +55,7 @@ type MarkerOptions = {
  * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
  */
-export default class Marker extends Evented {
+export class Marker extends Evented {
     _map: Map;
     _anchor: PositionAnchor;
     _offset: Point;
@@ -83,15 +85,6 @@ export default class Marker extends Evented {
         if (options instanceof HTMLElement || legacyOptions) {
             options = extend({element: options}, legacyOptions);
         }
-
-        bindAll([
-            '_update',
-            '_onMove',
-            '_onUp',
-            '_addDragHandler',
-            '_onMapClick',
-            '_onKeyPress'
-        ], this);
 
         this._anchor = options && options.anchor || 'center';
         this._color = options && options.color || '#3FB1CE';
@@ -228,6 +221,12 @@ export default class Marker extends Evented {
         });
         applyAnchorClass(this._element, this._anchor, 'marker');
 
+        if (options && options.className) {
+            for (const name of options.className.split(' ')) {
+                this._element.classList.add(name);
+            }
+        }
+
         this._popup = null;
     }
 
@@ -250,7 +249,7 @@ export default class Marker extends Evented {
         this._update();
 
         // If we attached the `click` listener to the marker element, the popup
-        // would close once the event propogated to `map` due to the
+        // would close once the event propagated to `map` due to the
         // `Popup#_onClickClose` listener.
         this._map.on('click', this._onMapClick);
 
@@ -385,7 +384,7 @@ export default class Marker extends Evented {
         return this;
     }
 
-    _onKeyPress(e: KeyboardEvent) {
+    _onKeyPress = (e: KeyboardEvent) => {
         const code = e.code;
         const legacyCode = e.charCode || e.keyCode;
 
@@ -395,16 +394,16 @@ export default class Marker extends Evented {
         ) {
             this.togglePopup();
         }
-    }
+    };
 
-    _onMapClick(e: MapMouseEvent) {
+    _onMapClick = (e: MapMouseEvent) => {
         const targetElement = e.originalEvent.target;
         const element = this._element;
 
         if (this._popup && (targetElement === element || element.contains(targetElement as any))) {
             this.togglePopup();
         }
-    }
+    };
 
     /**
      * Returns the {@link Popup} instance that is bound to the {@link Marker}.
@@ -441,9 +440,7 @@ export default class Marker extends Evented {
         return this;
     }
 
-    _update(e?: {
-        type: 'move' | 'moveend';
-    }) {
+    _update = (e?: { type: 'move' | 'moveend' }) => {
         if (!this._map) return;
 
         if (this._map.transform.renderWorldCopies) {
@@ -483,7 +480,7 @@ export default class Marker extends Evented {
             this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
             this._opacityTimeout = null;
         }, 100);
-    }
+    };
 
     /**
      * Get the marker's offset.
@@ -504,7 +501,48 @@ export default class Marker extends Evented {
         return this;
     }
 
-    _onMove(e: MapMouseEvent | MapTouchEvent) {
+    /**
+     * Adds a CSS class to the marker element.
+     *
+     * @param {string} className Non-empty string with CSS class name to add to marker element
+     *
+     * @example
+     * let marker = new maplibregl.Marker()
+     * marker.addClassName('some-class')
+     */
+    addClassName(className: string) {
+        this._element.classList.add(className);
+    }
+
+    /**
+     * Removes a CSS class from the marker element.
+     *
+     * @param {string} className Non-empty string with CSS class name to remove from marker element
+     *
+     * @example
+     * let marker = new maplibregl.Marker()
+     * marker.removeClassName('some-class')
+     */
+    removeClassName(className: string) {
+        this._element.classList.remove(className);
+    }
+
+    /**
+     * Add or remove the given CSS class on the marker element, depending on whether the element currently has that class.
+     *
+     * @param {string} className Non-empty string with CSS class name to add/remove
+     *
+     * @returns {boolean} if the class was removed return false, if class was added, then return true
+     *
+     * @example
+     * let marker = new maplibregl.Marker()
+     * marker.toggleClassName('toggleClass')
+     */
+    toggleClassName(className: string) {
+        return this._element.classList.toggle(className);
+    }
+
+    _onMove = (e: MapMouseEvent | MapTouchEvent) => {
         if (!this._isDragging) {
             const clickTolerance = this._clickTolerance || this._map._clickTolerance;
             this._isDragging = e.point.dist(this._pointerdownPos) >= clickTolerance;
@@ -545,9 +583,9 @@ export default class Marker extends Evented {
          * @property {Marker} marker object that is being dragged
          */
         this.fire(new Event('drag'));
-    }
+    };
 
-    _onUp() {
+    _onUp = () => {
         // revert to normal pointer event handling
         this._element.style.pointerEvents = 'auto';
         this._positionDelta = null;
@@ -571,9 +609,9 @@ export default class Marker extends Evented {
         }
 
         this._state = 'inactive';
-    }
+    };
 
-    _addDragHandler(e: MapMouseEvent | MapTouchEvent) {
+    _addDragHandler = (e: MapMouseEvent | MapTouchEvent) => {
         if (this._element.contains(e.originalEvent.target as any)) {
             e.preventDefault();
 
@@ -593,7 +631,7 @@ export default class Marker extends Evented {
             this._map.once('mouseup', this._onUp);
             this._map.once('touchend', this._onUp);
         }
-    }
+    };
 
     /**
      * Sets the `draggable` property and functionality of the marker

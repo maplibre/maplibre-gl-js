@@ -1,20 +1,21 @@
-import {getVideo, ResourceType} from '../util/ajax';
+import {getVideo} from '../util/ajax';
+import {ResourceType} from '../util/request_manager';
 
-import ImageSource from './image_source';
+import {ImageSource} from './image_source';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import SegmentVector from '../data/segment';
-import Texture from '../render/texture';
-import {ErrorEvent} from '../util/evented';
-import ValidationError from '../style-spec/error/validation_error';
+import {SegmentVector} from '../data/segment';
+import {Texture} from '../render/texture';
+import {Event, ErrorEvent} from '../util/evented';
+import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
 
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
 import type {Evented} from '../util/evented';
-import type {VideoSourceSpecification} from '../style-spec/types.g';
+import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * A data source containing video.
- * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources-video) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-video) for detailed documentation of options.)
  *
  * @example
  * // add to map
@@ -44,7 +45,7 @@ import type {VideoSourceSpecification} from '../style-spec/types.g';
  * map.removeSource('some id');  // remove
  * @see [Add a video](https://maplibre.org/maplibre-gl-js-docs/example/video-on-a-map/)
  */
-class VideoSource extends ImageSource {
+export class VideoSource extends ImageSource {
     options: VideoSourceSpecification;
     urls: Array<string>;
     video: HTMLVideoElement;
@@ -60,7 +61,7 @@ class VideoSource extends ImageSource {
         this.options = options;
     }
 
-    load() {
+    load = () => {
         this._loaded = false;
         const options = this.options;
 
@@ -90,7 +91,7 @@ class VideoSource extends ImageSource {
                 this._finishLoading();
             }
         });
-    }
+    };
 
     /**
      * Pauses the video.
@@ -152,7 +153,7 @@ class VideoSource extends ImageSource {
      */
     // setCoordinates inherited from ImageSource
 
-    prepare() {
+    prepare = () => {
         if (Object.keys(this.tiles).length === 0 || this.video.readyState < 2) {
             return; // not enough data for current position
         }
@@ -176,26 +177,30 @@ class VideoSource extends ImageSource {
             gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, this.video);
         }
 
+        let newTilesLoaded = false;
         for (const w in this.tiles) {
             const tile = this.tiles[w];
             if (tile.state !== 'loaded') {
                 tile.state = 'loaded';
                 tile.texture = this.texture;
+                newTilesLoaded = true;
             }
         }
-    }
 
-    serialize() {
+        if (newTilesLoaded) {
+            this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
+        }
+    };
+
+    serialize = (): VideoSourceSpecification => {
         return {
             type: 'video',
             urls: this.urls,
             coordinates: this.coordinates
         };
-    }
+    };
 
     hasTransition() {
         return this.video && !this.video.paused;
     }
 }
-
-export default VideoSource;

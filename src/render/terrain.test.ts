@@ -1,15 +1,15 @@
 import Point from '@mapbox/point-geometry';
-import Terrain from './terrain';
+import {Terrain} from './terrain';
 import gl from 'gl';
-import Context from '../gl/context';
+import {Context} from '../gl/context';
 import {RGBAImage} from '../util/image';
-import Texture from './texture';
-import type SourceCache from '../source/source_cache';
+import {Texture} from './texture';
+import type {SourceCache} from '../source/source_cache';
 import {OverscaledTileID} from '../source/tile_id';
-import type {TerrainSpecification} from '../style-spec/types.g';
-import type DEMData from '../data/dem_data';
-import Tile from '../source/tile';
-import Painter from './painter';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {DEMData} from '../data/dem_data';
+import {Tile} from '../source/tile';
+import {Painter} from './painter';
 
 describe('Terrain', () => {
     test('pointCoordiate should not return null', () => {

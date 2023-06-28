@@ -1,34 +1,33 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import StyleLayer from './style_layer';
-import createStyleLayer from './create_style_layer';
-import loadSprite from './load_sprite';
-import ImageManager from '../render/image_manager';
-import GlyphManager from '../render/glyph_manager';
-import Light from './light';
-import LineAtlas from '../render/line_atlas';
+import {StyleLayer} from './style_layer';
+import {createStyleLayer} from './create_style_layer';
+import {loadSprite} from './load_sprite';
+import {ImageManager} from '../render/image_manager';
+import {GlyphManager} from '../render/glyph_manager';
+import {Light} from './light';
+import {LineAtlas} from '../render/line_atlas';
 import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
-import {getJSON, getReferrer, makeRequest, ResourceType} from '../util/ajax';
-import browser from '../util/browser';
-import Dispatcher from '../util/dispatcher';
+import {coerceSpriteToArray} from '../util/style';
+import {getJSON, getReferrer, makeRequest} from '../util/ajax';
+import {ResourceType} from '../util/request_manager';
+import {browser} from '../util/browser';
+import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
 import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
-import SourceCache from '../source/source_cache';
-import GeoJSONSource from '../source/geojson_source';
-import styleSpec from '../style-spec/reference/latest';
-import getWorkerPool from '../util/global_worker_pool';
-import deref from '../style-spec/deref';
-import emptyStyle from '../style-spec/empty';
-import diffStyles, {operations as diffOperations} from '../style-spec/diff';
+import {SourceCache} from '../source/source_cache';
+import {GeoJSONSource} from '../source/geojson_source';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, operations as diffOperations} from '@maplibre/maplibre-gl-style-spec';
+import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {
     registerForPluginStateChange,
     evented as rtlTextPluginEvented,
     triggerPluginCompletionEvent
 } from '../source/rtl_text_plugin';
-import PauseablePlacement from './pauseable_placement';
-import ZoomHistory from './zoom_history';
-import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index';
+import {PauseablePlacement} from './pauseable_placement';
+import {ZoomHistory} from './zoom_history';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
 import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
@@ -41,12 +40,12 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
 }> | null) =>
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
-import type Map from '../ui/map';
-import type Transform from '../geo/transform';
+import type {Map} from '../ui/map';
+import type {Transform} from '../geo/transform';
 import type {StyleImage} from './style_image';
 import type {StyleGlyph} from './style_glyph';
 import type {Callback} from '../types/callback';
-import type EvaluationParameters from './evaluation_parameters';
+import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
 import type {Cancelable} from '../types/cancelable';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
@@ -56,7 +55,8 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
-} from '../style-spec/types.g';
+    SpriteSpecification,
+} from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
@@ -72,9 +72,9 @@ const supportedDiffOperations = pick(diffOperations, [
     'setLayerZoomRange',
     'setLight',
     'setTransition',
-    'setGeoJSONSourceData'
-    // 'setGlyphs',
-    // 'setSprite',
+    'setGeoJSONSourceData',
+    'setGlyphs',
+    'setSprite',
 ]);
 
 const ignoredDiffOperations = pick(diffOperations, [
@@ -152,7 +152,7 @@ export type StyleSwapOptions = {
 /**
  * @private
  */
-class Style extends Evented {
+export class Style extends Evented {
     map: Map;
     stylesheet: StyleSpecification;
     dispatcher: Dispatcher;
@@ -164,7 +164,7 @@ class Style extends Evented {
     _request: Cancelable;
     _spriteRequest: Cancelable;
     _layers: {[_: string]: StyleLayer};
-    _serializedLayers: {[_: string]: any};
+    _serializedLayers: {[_: string]: LayerSpecification};
     _order: Array<string>;
     sourceCaches: {[_: string]: SourceCache};
     zoomHistory: ZoomHistory;
@@ -175,8 +175,12 @@ class Style extends Evented {
     _updatedLayers: {[_: string]: true};
     _removedLayers: {[_: string]: StyleLayer};
     _changedImages: {[_: string]: true};
+    _glyphsDidChange: boolean;
     _updatedPaintProps: {[layer: string]: true};
     _layerOrderChanged: boolean;
+    // image ids of images loaded from style's sprite
+    _spritesImagesIds: {[spriteId: string]: string[]};
+    // image ids of all images loaded (sprite + user)
     _availableImages: Array<string>;
 
     crossTileSymbolIndex: CrossTileSymbolIndex;
@@ -184,25 +188,23 @@ class Style extends Evented {
     placement: Placement;
     z: number;
 
-    // exposed to allow stubbing by unit tests
-    static getSourceType: typeof getSourceType;
-    static setSourceType: typeof setSourceType;
     static registerForPluginStateChange: typeof registerForPluginStateChange;
 
     constructor(map: Map, options: StyleOptions = {}) {
         super();
 
         this.map = map;
-        this.dispatcher = new Dispatcher(getWorkerPool(), this);
+        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), this, map._getMapId());
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
         this.lineAtlas = new LineAtlas(256, 512);
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
 
+        this._spritesImagesIds = {};
         this._layers = {};
-        this._serializedLayers = {};
-        this._order  = [];
+
+        this._order = [];
         this.sourceCaches = {};
         this.zoomHistory = new ZoomHistory();
         this._loaded = false;
@@ -224,7 +226,13 @@ class Style extends Evented {
                     const allComplete = results.every((elem) => elem);
                     if (allComplete) {
                         for (const id in self.sourceCaches) {
-                            self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
+                            const sourceType = self.sourceCaches[id].getSource().type;
+                            if (sourceType === 'vector' || sourceType === 'geojson') {
+                                // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
+                                // They also load more quickly, so they're more likely to have already displaying tiles
+                                // that would be unnecessarily booted by the plugin load event
+                                self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
+                            }
                         }
                     }
                 }
@@ -308,20 +316,7 @@ class Style extends Evented {
         }
 
         this.glyphManager.setURL(nextState.glyphs);
-
-        const layers = deref(this.stylesheet.layers);
-
-        this._order = layers.map((layer) => layer.id);
-
-        this._layers = {};
-        this._serializedLayers = {};
-        for (let layer of layers) {
-            layer = createStyleLayer(layer);
-            layer.setEventedParent(this, {layer: {id: layer.id}});
-            this._layers[layer.id] = layer;
-            this._serializedLayers[layer.id] = layer.serialize();
-        }
-        this.dispatcher.broadcast('setLayers', this._serializeLayers(this._order));
+        this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
 
@@ -331,22 +326,88 @@ class Style extends Evented {
         this.fire(new Event('style.load'));
     }
 
-    _loadSprite(url: string) {
-        this._spriteRequest = loadSprite(url, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
+    private _createLayers() {
+        const dereferencedLayers = deref(this.stylesheet.layers);
+
+        // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
+        // can happen in parallel on both main and worker threads.
+        this.dispatcher.broadcast('setLayers', dereferencedLayers);
+
+        this._order = dereferencedLayers.map((layer) => layer.id);
+        this._layers = {};
+
+        // reset serialization field, to be populated only when needed
+        this._serializedLayers = null;
+        for (const layer of dereferencedLayers) {
+            const styledLayer = createStyleLayer(layer);
+            styledLayer.setEventedParent(this, {layer: {id: layer.id}});
+            this._layers[layer.id] = styledLayer;
+        }
+    }
+
+    _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
+        this.imageManager.setLoaded(false);
+
+        this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
             this._spriteRequest = null;
             if (err) {
                 this.fire(new ErrorEvent(err));
             } else if (images) {
-                for (const id in images) {
-                    this.imageManager.addImage(id, images[id]);
+                for (const spriteId in images) {
+                    this._spritesImagesIds[spriteId] = [];
+
+                    // remove old sprite's loaded images (for the same sprite id) that are not in new sprite
+                    const imagesToRemove = this._spritesImagesIds[spriteId] ? this._spritesImagesIds[spriteId].filter(id => !(id in images)) : [];
+                    for (const id of imagesToRemove) {
+                        this.imageManager.removeImage(id);
+                        this._changedImages[id] = true;
+                    }
+
+                    for (const id in images[spriteId]) {
+                        // don't prefix images of the "default" sprite
+                        const imageId = spriteId === 'default' ? id : `${spriteId}:${id}`;
+                        // save all the sprite's images' ids to be able to delete them in `removeSprite`
+                        this._spritesImagesIds[spriteId].push(imageId);
+                        if (imageId in this.imageManager.images) {
+                            this.imageManager.updateImage(imageId, images[spriteId][id], false);
+                        } else {
+                            this.imageManager.addImage(imageId, images[spriteId][id]);
+                        }
+
+                        if (isUpdate) {
+                            this._changedImages[imageId] = true;
+                        }
+                    }
                 }
             }
 
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
+
+            if (isUpdate) {
+                this._changed = true;
+            }
+
             this.dispatcher.broadcast('setImages', this._availableImages);
             this.fire(new Event('data', {dataType: 'style'}));
+
+            if (completion) {
+                completion(err);
+            }
         });
+    }
+
+    _unloadSprite() {
+        for (const id of Object.values(this._spritesImagesIds).flat()) {
+            this.imageManager.removeImage(id);
+            this._changedImages[id] = true;
+        }
+
+        this._spritesImagesIds = {};
+        this._availableImages = this.imageManager.listImages();
+        this._changed = true;
+        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.fire(new Event('data', {dataType: 'style'}));
     }
 
     _validateLayer(layer: StyleLayer) {
@@ -387,14 +448,48 @@ class Style extends Evented {
         return true;
     }
 
-    _serializeLayers(ids: Array<string>): Array<LayerSpecification> {
+    /**
+     * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
+     * @param ids an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
+     * @returns {Array<LayerSpecification>} generated result
+     */
+    private _serializeByIds(ids?: Array<string>): Array<LayerSpecification> {
+
+        const serializedLayersDictionary = this._serializedAllLayers();
+        if (!ids || ids.length === 0) {
+            return Object.values(serializedLayersDictionary);
+        }
+
         const serializedLayers = [];
         for (const id of ids) {
-            const layer = this._layers[id];
-            if (layer.type !== 'custom') {
-                serializedLayers.push(layer.serialize());
+            // this check will skip all custom layers
+            if (serializedLayersDictionary[id]) {
+                serializedLayers.push(serializedLayersDictionary[id]);
             }
         }
+
+        return serializedLayers;
+    }
+
+    /**
+     * Lazy initialization of this._serializedLayers dictionary and return it
+     * @returns this._serializedLayers dictionary
+     */
+    private _serializedAllLayers(): {[_: string]: LayerSpecification} {
+        let serializedLayers = this._serializedLayers;
+        if (serializedLayers) {
+            return serializedLayers;
+        }
+
+        serializedLayers = this._serializedLayers = {};
+        const allLayerIds: string [] = Object.keys(this._layers);
+        for (const layerId of allLayerIds) {
+            const layer = this._layers[layerId];
+            if (layer.type !== 'custom') {
+                serializedLayers[layerId] = layer.serialize();
+            }
+        }
+
         return serializedLayers;
     }
 
@@ -454,6 +549,7 @@ class Style extends Evented {
             }
 
             this._updateTilesForChangedImages();
+            this._updateTilesForChangedGlyphs();
 
             for (const id in this._updatedPaintProps) {
                 this._layers[id].updateTransitions(parameters);
@@ -510,9 +606,18 @@ class Style extends Evented {
         }
     }
 
+    _updateTilesForChangedGlyphs() {
+        if (this._glyphsDidChange) {
+            for (const name in this.sourceCaches) {
+                this.sourceCaches[name].reloadTilesForDependencies(['glyphs'], ['']);
+            }
+            this._glyphsDidChange = false;
+        }
+    }
+
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
         this.dispatcher.broadcast('updateLayers', {
-            layers: this._serializeLayers(updatedIds),
+            layers: this._serializeByIds(updatedIds),
             removedIds
         });
     }
@@ -527,6 +632,7 @@ class Style extends Evented {
         this._updatedPaintProps = {};
 
         this._changedImages = {};
+        this._glyphsDidChange = false;
     }
 
     /**
@@ -542,13 +648,14 @@ class Style extends Evented {
     setState(nextState: StyleSpecification, options: StyleSwapOptions = {}) {
         this._checkLoaded();
 
-        nextState = options.transformStyle ? options.transformStyle(this.serialize(), nextState) : nextState;
+        const serializedStyle =  this.serialize();
+        nextState = options.transformStyle ? options.transformStyle(serializedStyle, nextState) : nextState;
         if (emitValidationErrors(this, validateStyle(nextState))) return false;
 
         nextState = clone(nextState);
         nextState.layers = deref(nextState.layers);
 
-        const changes = diffStyles(this.serialize(), nextState)
+        const changes = diffStyles(serializedStyle, nextState)
             .filter(op => !(op.command in ignoredDiffOperations));
 
         if (changes.length === 0) {
@@ -560,14 +667,14 @@ class Style extends Evented {
             throw new Error(`Unimplemented: ${unimplementedOps.map(op => op.command).join(', ')}.`);
         }
 
-        changes.forEach((op) => {
+        for (const op of changes) {
             if (op.command === 'setTransition') {
                 // `transition` is always read directly off of
                 // `this.stylesheet`, which we update below
-                return;
+                continue;
             }
             (this as any)[op.command].apply(this, op.args);
-        });
+        }
 
         this.stylesheet = nextState;
 
@@ -631,7 +738,7 @@ class Style extends Evented {
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
         sourceCache.style = this;
         sourceCache.setEventedParent(this, () => ({
-            isSourceLoaded: this.loaded(),
+            isSourceLoaded: sourceCache.loaded(),
             source: sourceCache.serialize(),
             sourceId: id
         }));
@@ -732,7 +839,6 @@ class Style extends Evented {
             this._validateLayer(layer);
 
             layer.setEventedParent(this, {layer: {id}});
-            this._serializedLayers[layer.id] = layer.serialize();
         }
 
         const index = before ? this._order.indexOf(before) : this._order.length;
@@ -749,7 +855,7 @@ class Style extends Evented {
         if (this._removedLayers[id] && layer.source && layer.type !== 'custom') {
             // If, in the current batch, we have already removed this layer
             // and we are now re-adding it with a different `type`, then we
-            // need to clear (rather than just reload) the underyling source's
+            // need to clear (rather than just reload) the underlying source's
             // tiles.  Otherwise, tiles marked 'reloading' will have buckets /
             // buffers that are set up for the _previous_ version of this
             // layer, causing, e.g.:
@@ -829,7 +935,10 @@ class Style extends Evented {
         this._changed = true;
         this._removedLayers[id] = layer;
         delete this._layers[id];
-        delete this._serializedLayers[id];
+
+        if (this._serializedLayers) {
+            delete this._serializedLayers[id];
+        }
         delete this._updatedLayers[id];
         delete this._updatedPaintProps[id];
 
@@ -1048,21 +1157,32 @@ class Style extends Evented {
     }
 
     serialize(): StyleSpecification {
+        // We return undefined before we're loaded, following the pattern of Map.getStyle() before
+        // the Style object is initialized.
+        // Internally, Style._validate() calls Style.serialize() but callers are responsible for
+        // calling Style._checkLoaded() first if their validation requires the style to be loaded.
+        if (!this._loaded) return;
+
+        const sources = mapObject(this.sourceCaches, (source) => source.serialize());
+        const layers = this._serializeByIds(this._order);
+        const myStyleSheet = this.stylesheet;
+
         return filterObject({
-            version: this.stylesheet.version,
-            name: this.stylesheet.name,
-            metadata: this.stylesheet.metadata,
-            light: this.stylesheet.light,
-            center: this.stylesheet.center,
-            zoom: this.stylesheet.zoom,
-            bearing: this.stylesheet.bearing,
-            pitch: this.stylesheet.pitch,
-            sprite: this.stylesheet.sprite,
-            glyphs: this.stylesheet.glyphs,
-            transition: this.stylesheet.transition,
-            sources: mapObject(this.sourceCaches, (source) => source.serialize()),
-            layers: this._serializeLayers(this._order)
-        }, (value) => { return value !== undefined; });
+            version: myStyleSheet.version,
+            name: myStyleSheet.name,
+            metadata: myStyleSheet.metadata,
+            light: myStyleSheet.light,
+            center: myStyleSheet.center,
+            zoom: myStyleSheet.zoom,
+            bearing: myStyleSheet.bearing,
+            pitch: myStyleSheet.pitch,
+            sprite: myStyleSheet.sprite,
+            glyphs: myStyleSheet.glyphs,
+            transition: myStyleSheet.transition,
+            sources,
+            layers
+        },
+        (value) => { return value !== undefined; });
     }
 
     _updateLayer(layer: StyleLayer) {
@@ -1073,6 +1193,10 @@ class Style extends Evented {
             this._updatedSources[layer.source] = 'reload';
             this.sourceCaches[layer.source].pause();
         }
+
+        // upon updating, serilized layer dictionary should be reset.
+        // When needed, it will be populated with the correct copy again.
+        this._serializedLayers = null;
         this._changed = true;
     }
 
@@ -1170,13 +1294,16 @@ class Style extends Evented {
 
         params.availableImages = this._availableImages;
 
+        // LayerSpecification is serialized StyleLayer, and this casting is safe.
+        const serializedLayers = this._serializedAllLayers() as {[_: string]: StyleLayer};
+
         for (const id in this.sourceCaches) {
             if (params.layers && !includedSources[id]) continue;
             sourceResults.push(
                 queryRenderedFeatures(
                     this.sourceCaches[id],
                     this._layers,
-                    this._serializedLayers,
+                    serializedLayers,
                     queryGeometry,
                     params,
                     transform)
@@ -1189,7 +1316,7 @@ class Style extends Evented {
             sourceResults.push(
                 queryRenderedSymbols(
                     this._layers,
-                    this._serializedLayers,
+                    serializedLayers,
                     this.sourceCaches,
                     queryGeometry,
                     params,
@@ -1217,11 +1344,11 @@ class Style extends Evented {
     }
 
     addSourceType(name: string, SourceType: SourceClass, callback: Callback<void>) {
-        if (Style.getSourceType(name)) {
+        if (getSourceType(name)) {
             return callback(new Error(`A source type called "${name}" already exists.`));
         }
 
-        Style.setSourceType(name, SourceType);
+        setSourceType(name, SourceType);
 
         if (!SourceType.workerSourceURL) {
             return callback(null, null);
@@ -1276,7 +1403,7 @@ class Style extends Evented {
         }, props)));
     }
 
-    _remove() {
+    _remove(mapRemoved: boolean = true) {
         if (this._request) {
             this._request.cancel();
             this._request = null;
@@ -1297,7 +1424,7 @@ class Style extends Evented {
         }
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
-        this.dispatcher.remove();
+        this.dispatcher.remove(mapRemoved);
     }
 
     _clearSource(id: string) {
@@ -1412,7 +1539,7 @@ class Style extends Evented {
         this.imageManager.getImages(params.icons, callback);
 
         // Apply queued image changes before setting the tile's dependencies so that the tile
-        // is not reloaded unecessarily. Without this forced update the reload could happen in cases
+        // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
         // like this one:
         // - icons contains "my-image"
         // - imageManager.getImages(...) triggers `onstyleimagemissing`
@@ -1429,19 +1556,133 @@ class Style extends Evented {
 
     getGlyphs(
         mapId: string,
-        params: {stacks: {[_: string]: Array<number>}},
+        params: {
+            stacks: {[_: string]: Array<number>};
+            source: string;
+            tileID: OverscaledTileID;
+            type: string;
+        },
         callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
     ) {
         this.glyphManager.getGlyphs(params.stacks, callback);
+        const sourceCache = this.sourceCaches[params.source];
+        if (sourceCache) {
+            // we are not setting stacks as dependencies since for now
+            // we just need to know which tiles have glyph dependencies
+            sourceCache.setDependencies(params.tileID.key, params.type, ['']);
+        }
     }
 
     getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
         return makeRequest(params, callback);
     }
+
+    getGlyphsUrl() {
+        return this.stylesheet.glyphs || null;
+    }
+
+    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+        this._checkLoaded();
+        if (glyphsUrl && this._validate(validateStyle.glyphs, 'glyphs', glyphsUrl, null, options)) {
+            return;
+        }
+
+        this._glyphsDidChange = true;
+        this.stylesheet.glyphs = glyphsUrl;
+        this.glyphManager.entries = {};
+        this.glyphManager.setURL(glyphsUrl);
+    }
+
+    /**
+     * Add a sprite.
+     *
+     * @param {string} id id of the desired sprite
+     * @param {string} url url to load the desired sprite from
+     * @param {StyleSetterOptions} [options] style setter options
+     * @param [completion] completion handler
+     */
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
+        this._checkLoaded();
+
+        const spriteToAdd = [{id, url}];
+        const updatedSprite = [
+            ...coerceSpriteToArray(this.stylesheet.sprite),
+            ...spriteToAdd
+        ];
+
+        if (this._validate(validateStyle.sprite, 'sprite', updatedSprite, null, options)) return;
+
+        this.stylesheet.sprite = updatedSprite;
+        this._loadSprite(spriteToAdd, true, completion);
+    }
+
+    /**
+     * Remove a sprite by its id. When the last sprite is removed, the whole `this.stylesheet.sprite` object becomes
+     * `undefined`. This falsy `undefined` value later prevents attempts to load the sprite when it's absent.
+     *
+     * @param id the id of the sprite to remove
+     */
+    removeSprite(id: string) {
+        this._checkLoaded();
+
+        const internalSpriteRepresentation = coerceSpriteToArray(this.stylesheet.sprite);
+
+        if (!internalSpriteRepresentation.find(sprite => sprite.id === id)) {
+            this.fire(new ErrorEvent(new Error(`Sprite "${id}" doesn't exists on this map.`)));
+            return;
+        }
+
+        if (this._spritesImagesIds[id]) {
+            for (const imageId of this._spritesImagesIds[id]) {
+                this.imageManager.removeImage(imageId);
+                this._changedImages[imageId] = true;
+            }
+        }
+
+        internalSpriteRepresentation.splice(internalSpriteRepresentation.findIndex(sprite => sprite.id === id), 1);
+        this.stylesheet.sprite = internalSpriteRepresentation.length > 0 ? internalSpriteRepresentation : undefined;
+
+        delete this._spritesImagesIds[id];
+        this._availableImages = this.imageManager.listImages();
+        this._changed = true;
+        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.fire(new Event('data', {dataType: 'style'}));
+    }
+
+    /**
+     * Get the current sprite value.
+     *
+     * @returns {Array} empty array when no sprite is set; id-url pairs otherwise
+     */
+    getSprite() {
+        return coerceSpriteToArray(this.stylesheet.sprite);
+    }
+
+    /**
+     * Set a new value for the style's sprite.
+     *
+     * @param {SpriteSpecification} sprite new sprite value
+     * @param {StyleSetterOptions} [options] style setter options
+     * @param [completion] completion handler
+     */
+    setSprite(sprite: SpriteSpecification, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
+        this._checkLoaded();
+
+        if (sprite && this._validate(validateStyle.sprite, 'sprite', sprite, null, options)) {
+            return;
+        }
+
+        this.stylesheet.sprite = sprite;
+
+        if (sprite) {
+            this._loadSprite(sprite, true, completion);
+        } else {
+            this._unloadSprite();
+            if (completion) {
+                completion(null);
+            }
+        }
+    }
 }
 
-Style.getSourceType = getSourceType;
-Style.setSourceType = setSourceType;
 Style.registerForPluginStateChange = registerForPluginStateChange;
-
-export default Style;

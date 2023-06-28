@@ -3,7 +3,7 @@ import {
     charAllowsIdeographicBreaking,
     charInComplexShapingScript
 } from '../util/script_detection';
-import verticalizePunctuation from '../util/verticalize_punctuation';
+import {verticalizePunctuation} from '../util/verticalize_punctuation';
 import {plugin as rtlTextPlugin} from '../source/rtl_text_plugin';
 import ONE_EM from './one_em';
 import {warnOnce} from '../util/util';
@@ -14,7 +14,7 @@ import {ContentAspectRatioMatchingMode} from '../style/style_image';
 import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
-import Formatted, {FormattedSection} from '../style-spec/expression/types/formatted';
+import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {
     none = 0,

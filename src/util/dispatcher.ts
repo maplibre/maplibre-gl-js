@@ -1,7 +1,7 @@
-import {uniqueId, asyncAll} from './util';
-import Actor from './actor';
+import {asyncAll} from './util';
+import {Actor} from './actor';
 
-import type WorkerPool from './worker_pool';
+import type {WorkerPool} from './worker_pool';
 
 /**
  * Responsible for sending messages from a {@link Source} to an associated
@@ -9,7 +9,7 @@ import type WorkerPool from './worker_pool';
  *
  * @private
  */
-class Dispatcher {
+export class Dispatcher {
     workerPool: WorkerPool;
     actors: Array<Actor>;
     currentActor: number;
@@ -20,15 +20,15 @@ class Dispatcher {
         new (...args: any): Actor;
     };
 
-    constructor(workerPool: WorkerPool, parent: any) {
+    constructor(workerPool: WorkerPool, parent: any, mapId: number) {
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
-        this.id = uniqueId();
-        const workers = this.workerPool.acquire(this.id);
+        this.id = mapId;
+        const workers = this.workerPool.acquire(mapId);
         for (let i = 0; i < workers.length; i++) {
             const worker = workers[i];
-            const actor = new Dispatcher.Actor(worker, parent, this.id);
+            const actor = new Dispatcher.Actor(worker, parent, mapId);
             actor.name = `Worker ${i}`;
             this.actors.push(actor);
         }
@@ -55,13 +55,11 @@ class Dispatcher {
         return this.actors[this.currentActor];
     }
 
-    remove() {
+    remove(mapRemoved: boolean = true) {
         this.actors.forEach((actor) => { actor.remove(); });
         this.actors = [];
-        this.workerPool.release(this.id);
+        if (mapRemoved) this.workerPool.release(this.id);
     }
 }
 
 Dispatcher.Actor = Actor;
-
-export default Dispatcher;

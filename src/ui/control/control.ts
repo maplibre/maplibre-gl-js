@@ -1,5 +1,5 @@
 export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-import type Map from '../map';
+import type {Map} from '../map';
 /**
  * Interface for interactive controls added to the map. This is a
  * specification for implementers to model: it is not

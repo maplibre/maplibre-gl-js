@@ -1,5 +1,5 @@
-import LngLat from './lng_lat';
-import LngLatBounds from './lng_lat_bounds';
+import {LngLat} from './lng_lat';
+import {LngLatBounds} from './lng_lat_bounds';
 
 describe('LngLatBounds', () => {
     test('#constructor', () => {
@@ -56,7 +56,21 @@ describe('LngLatBounds', () => {
         expect(bounds.getNorth()).toBe(10);
         expect(bounds.getEast()).toBe(10);
 
-        bounds.extend([-90, -90, 90, 90]);
+        bounds.extend([-80, -80, 80, 80]);
+
+        expect(bounds.getSouth()).toBe(-80);
+        expect(bounds.getWest()).toBe(-80);
+        expect(bounds.getNorth()).toBe(80);
+        expect(bounds.getEast()).toBe(80);
+
+        bounds.extend({lng: -90, lat: -90});
+
+        expect(bounds.getSouth()).toBe(-90);
+        expect(bounds.getWest()).toBe(-90);
+        expect(bounds.getNorth()).toBe(80);
+        expect(bounds.getEast()).toBe(80);
+
+        bounds.extend({lon: 90, lat: 90});
 
         expect(bounds.getSouth()).toBe(-90);
         expect(bounds.getWest()).toBe(-90);
@@ -172,6 +186,23 @@ describe('LngLatBounds', () => {
         const ne = new LngLat(-10, 10);
         const bounds = new LngLatBounds(sw, ne);
         expect(bounds.isEmpty()).toBe(false);
+    });
+
+    test('#fromLngLat', () => {
+        const center0 = new LngLat(0, 0);
+        const center1 = new LngLat(-73.9749, 40.7736);
+
+        const center0Radius10 = LngLatBounds.fromLngLat(center0, 10);
+        const center1Radius10 = LngLatBounds.fromLngLat(center1, 10);
+        const center1Radius0 = LngLatBounds.fromLngLat(center1);
+
+        expect(center0Radius10.toArray()).toEqual(
+            [[-0.00008983152770714982, -0.00008983152770714982], [0.00008983152770714982, 0.00008983152770714982]]
+        );
+        expect(center1Radius10.toArray()).toEqual(
+            [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
+        );
+        expect(center1Radius0.toArray()).toEqual([[-73.9749, 40.7736], [-73.9749, 40.7736]]);
     });
 
     describe('contains', () => {

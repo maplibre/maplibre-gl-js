@@ -1,4 +1,4 @@
-import LngLat from '../geo/lng_lat';
+import {LngLat} from '../geo/lng_lat';
 
 describe('LngLat', () => {
     test('#constructor', () => {
@@ -61,15 +61,5 @@ describe('LngLat', () => {
         const d = newYork.distanceTo(nullIsland); // 8667080.125666846 , "true distance" is 8661km
         expect(d > 8667079).toBeTruthy();
         expect(d < 8667081).toBeTruthy();
-    });
-
-    test('#toBounds', () => {
-        expect(new LngLat(0, 0).toBounds(10).toArray()).toEqual(
-            [[-0.00008983152770714982, -0.00008983152770714982], [0.00008983152770714982, 0.00008983152770714982]]
-        );
-        expect(new LngLat(-73.9749, 40.7736).toBounds(10).toArray()).toEqual(
-            [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
-        );
-        expect(new LngLat(-73.9749, 40.7736).toBounds().toArray()).toEqual([[-73.9749, 40.7736], [-73.9749, 40.7736]]);
     });
 });

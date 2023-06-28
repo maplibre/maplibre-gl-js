@@ -1,30 +1,68 @@
 import geolocation from 'mock-geolocation';
-import {createMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
-import GeolocateControl from './geolocate_control';
+import {LngLatBounds} from '../../geo/lng_lat_bounds';
+import {createMap, beforeMapTest} from '../../util/test/util';
+import {GeolocateControl} from './geolocate_control';
+jest.mock('../../util/geolocation_support', () => (
+    {
+        checkGeolocationSupport: jest.fn()
+    }
+));
+import {checkGeolocationSupport} from '../../util/geolocation_support';
+import type {LngLat} from '../../geo/lng_lat';
 
-geolocation.use();
-let map;
-
-// convert the coordinates of a LngLat object to a fixed number of digits
-function lngLatAsFixed(lngLat, digits) {
-    return Object.keys(lngLat).reduce((previous, current) => {
-        previous[current] = lngLat[current].toFixed(digits);
-        return previous;
-    }, {});
+/**
+ * Convert the coordinates of a LngLat object to a fixed number of digits
+ * @param lngLat {LngLatLike} the location
+ * @param digits {number} digits the number of digits to set
+ * @returns a string representation of the object with the required number of digits
+ */
+function lngLatAsFixed(lngLat: LngLat, digits: number): {lat: string; lng: string} {
+    return {
+        lng: lngLat.lng.toFixed(digits),
+        lat: lngLat.lat.toFixed(digits)
+    };
 }
 
-beforeEach(() => {
-    setWebGlContext();
-    setPerformance();
-    setMatchMedia();
-    map = createMap(undefined, undefined);
-});
-
-afterEach(() => {
-    map.remove();
-});
-
 describe('GeolocateControl with no options', () => {
+    geolocation.use();
+    let map;
+
+    beforeEach(() => {
+        beforeMapTest();
+        map = createMap(undefined, undefined);
+        (checkGeolocationSupport as any as jest.SpyInstance).mockImplementationOnce((cb) => cb(true));
+    });
+
+    afterEach(() => {
+        map.remove();
+    });
+
+    test('is disabled when there\'s no support', async () => {
+        (checkGeolocationSupport as any as jest.SpyInstance).mockReset().mockImplementationOnce((cb) => cb(false));
+        const geolocate = new GeolocateControl(undefined);
+        map.addControl(geolocate);
+        expect(geolocate._geolocateButton.disabled).toBeTruthy();
+    });
+
+    test('is enabled when there no support', async () => {
+        const geolocate = new GeolocateControl(undefined);
+        map.addControl(geolocate);
+        expect(geolocate._geolocateButton.disabled).toBeFalsy();
+    });
+
+    test('has permissions', async () => {
+
+        (window.navigator as any).permissions = {
+            query: () => Promise.resolve({state: 'granted'})
+        };
+
+        const geolocate = new GeolocateControl(undefined);
+        map.addControl(geolocate);
+
+        await new Promise(process.nextTick);
+        expect(geolocate._geolocateButton.disabled).toBeFalsy();
+    });
+
     test('error event', done => {
         const geolocate = new GeolocateControl(undefined);
         map.addControl(geolocate);
@@ -38,6 +76,21 @@ describe('GeolocateControl with no options', () => {
         });
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.sendError({code: 2, message: 'error message'});
+    });
+
+    test('does not throw if removed quickly', done => {
+        (checkGeolocationSupport as any as jest.SpyInstance).mockReset()
+            .mockImplementationOnce((cb) => {
+                return Promise.resolve(true)
+                    .then(result => {
+                        expect(() => cb(result)).not.toThrow();
+                    })
+                    .finally(done);
+            });
+
+        const geolocate = new GeolocateControl(undefined);
+        map.addControl(geolocate);
+        map.removeControl(geolocate);
     });
 
     test('outofmaxbounds event in active lock state', done => {
@@ -104,6 +157,16 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate.trigger()).toBeTruthy();
     });
 
+    test('trigger and then error when tracking user location should get to active error state', () => {
+        const geolocate = new GeolocateControl({trackUserLocation: true});
+        map.addControl(geolocate);
+
+        geolocate.trigger();
+        geolocation.sendError({code: 2, message: 'error message'});
+        expect(geolocate._watchState).toBe('ACTIVE_ERROR');
+        expect(geolocate._geolocateButton.classList.contains('maplibregl-ctrl-geolocate-active-error')).toBeTruthy();
+    });
+
     test('trigger before added to map', () => {
         jest.spyOn(console, 'warn').mockImplementation(() => { });
 
@@ -156,7 +219,7 @@ describe('GeolocateControl with no options', () => {
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1});
         await moveEndPromise;
-        expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '10.0000', 'lng': '20.0000'});
+        expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '10.0000', lng: '20.0000'});
         expect(map.getBearing()).toBe(45);
         expect(map.getZoom()).toBe(10);
     });
@@ -176,12 +239,14 @@ describe('GeolocateControl with no options', () => {
         geolocate._geolocateButton.dispatchEvent(click);
         geolocation.send({latitude: 10, longitude: 20, accuracy: 1000});
         await moveEndPromise;
-        expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '10.0000', 'lng': '20.0000'});
+        const mapCenter = map.getCenter();
+        expect(lngLatAsFixed(mapCenter, 4)).toEqual({lat: '10.0000', lng: '20.0000'});
 
         const mapBounds = map.getBounds();
 
         // map bounds should contain or equal accuracy bounds, that is the ensure accuracy bounds doesn't fall outside the map bounds
-        const accuracyBounds = map.getCenter().toBounds(1000);
+        const accuracyBounds = LngLatBounds.fromLngLat(mapCenter, 1000);
+
         expect(accuracyBounds.getNorth().toFixed(4) <= mapBounds.getNorth().toFixed(4)).toBeTruthy();
         expect(accuracyBounds.getSouth().toFixed(4) >= mapBounds.getSouth().toFixed(4)).toBeTruthy();
         expect(accuracyBounds.getEast().toFixed(4) <= mapBounds.getEast().toFixed(4)).toBeTruthy();
@@ -189,7 +254,8 @@ describe('GeolocateControl with no options', () => {
 
         // map bounds should not be too much bigger on all edges of the accuracy bounds (this test will only work for an orthogonal bearing),
         // ensures map bounds does not contain buffered accuracy bounds, as if it does there is too much gap around the accuracy bounds
-        const bufferedAccuracyBounds = map.getCenter().toBounds(1100);
+        const bufferedAccuracyBounds = LngLatBounds.fromLngLat(mapCenter, 1100);
+
         expect(
             (bufferedAccuracyBounds.getNorth().toFixed(4) < mapBounds.getNorth().toFixed(4)) &&
             (bufferedAccuracyBounds.getSouth().toFixed(4) > mapBounds.getSouth().toFixed(4)) &&
@@ -216,13 +282,13 @@ describe('GeolocateControl with no options', () => {
             if (moveendCount > 0) return;
             moveendCount++;
 
-            expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '10.0000', 'lng': '20.0000'});
+            expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '10.0000', lng: '20.0000'});
             expect(geolocate._userLocationDotMarker._map).toBeTruthy();
             expect(
                 geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')
             ).toBeFalsy();
             map.once('moveend', () => {
-                expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({'lat': '40.0000', 'lng': '50.0000'});
+                expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '40.0000', lng: '50.0000'});
                 geolocate.once('error', () => {
                     expect(geolocate._userLocationDotMarker._map).toBeTruthy();
                     expect(
@@ -402,14 +468,31 @@ describe('GeolocateControl with no options', () => {
         map.jumpTo({
             center: [10, 20]
         });
+
+        // test with bugger radius
         let zoomendPromise = map.once('zoomend');
-        map.zoomTo(10, {duration: 0});
-        await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('20px'); // 700m = 20px at zoom 10
-        zoomendPromise = map.once('zoomend');
         map.zoomTo(12, {duration: 0});
         await zoomendPromise;
-        expect(geolocate._circleElement.style.width).toBe('79px'); // 700m = 79px at zoom 12
+        expect(geolocate._circleElement.style.width).toBe('79px');
+        console.log(geolocate._circleElement.style.width);
+        zoomendPromise = map.once('zoomend');
+        map.zoomTo(10, {duration: 0});
+        await zoomendPromise;
+        expect(geolocate._circleElement.style.width).toBe('20px');
+        console.log(geolocate._circleElement.style.width);
+        zoomendPromise = map.once('zoomend');
+
+        // test with smaller radius
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 20});
+        map.zoomTo(20, {duration: 0});
+        await zoomendPromise;
+        expect(geolocate._circleElement.style.width).toBe('19982px');
+        console.log(geolocate._circleElement.style.width);
+        zoomendPromise = map.once('zoomend');
+        map.zoomTo(18, {duration: 0});
+        await zoomendPromise;
+        expect(geolocate._circleElement.style.width).toBe('4996px');
+        console.log(geolocate._circleElement.style.width);
     });
 
     test('shown even if trackUserLocation = false', async () => {

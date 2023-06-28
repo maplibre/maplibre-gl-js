@@ -1,18 +1,19 @@
 import {Event} from '../util/evented';
 
-import DOM from '../util/dom';
+import {DOM} from '../util/dom';
 import Point from '@mapbox/point-geometry';
 import {extend} from '../util/util';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
-import type Map from './map';
-import type LngLat from '../geo/lng_lat';
-import {SourceSpecification} from '../style-spec/types.g';
+import type {Map} from './map';
+import type {LngLat} from '../geo/lng_lat';
+import {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export type MapLayerMouseEvent = MapMouseEvent & { features?: GeoJSON.Feature[] };
+export type MapLayerMouseEvent = MapMouseEvent & { features?: MapGeoJSONFeature[] };
 
-export type MapLayerTouchEvent = MapTouchEvent & { features?: GeoJSON.Feature[] };
+export type MapLayerTouchEvent = MapTouchEvent & { features?: MapGeoJSONFeature[] };
 
-export type MapSourceDataType = 'content' | 'metadata';
+export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
 
 export type MapLayerEventType = {
     click: MapLayerMouseEvent;
@@ -31,7 +32,7 @@ export type MapLayerEventType = {
     touchcancel: MapLayerTouchEvent;
 };
 
-export interface MapLibreEvent<TOrig = undefined> {
+export interface MapLibreEvent<TOrig = unknown> {
     type: string;
     target: Map;
     originalEvent: TOrig;
@@ -269,7 +270,7 @@ export class MapWheelEvent extends Event {
  * @typedef {Object} MapLibreZoomEvent
  * @property {MouseEvent} originalEvent The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
  * @property {string} type The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
- * @property {Map} target The `Map` instance that triggerred the event
+ * @property {Map} target The `Map` instance that triggered the event
  */
 export type MapLibreZoomEvent = {
     type: 'boxzoomstart' | 'boxzoomend' | 'boxzoomcancel';
@@ -283,15 +284,22 @@ export type MapLibreZoomEvent = {
  * `dataType`s are:
  *
  * - `'source'`: The non-tile data associated with any source
- * - `'style'`: The [style](https://maplibre.org/maplibre-gl-js-docs/style-spec/) used by the map
+ * - `'style'`: The [style](https://maplibre.org/maplibre-style-spec/) used by the map
+ *
+ * Possible values for `sourceDataType`s are:
+ *
+ * - `'metadata'`: indicates that any necessary source metadata has been loaded (such as TileJSON) and it is ok to start loading tiles
+ * - `'content'`: indicates the source data has changed (such as when source.setData() has been called on GeoJSONSource)
+ * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
+ * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
  *
  * @typedef {Object} MapDataEvent
  * @property {string} type The event type.
  * @property {string} dataType The type of data that has changed. One of `'source'`, `'style'`.
  * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
- * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) if the event has a `dataType` of `source`.
+ * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-style-spec/#sources) if the event has a `dataType` of `source`.
  * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
- * that internal data has been received or changed. Possible values are `metadata`, `content` and `visibility`.
+ * that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
  * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
  * the event is related to loading of a tile.
  * @property {Coordinates} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
@@ -400,7 +408,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
-     * the cursor is pressed while inside a visible portion of the specifed layer.
+     * the cursor is pressed while inside a visible portion of the specified layer.
      *
      * @event mousedown
      * @memberof Map
@@ -429,7 +437,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
-     * the cursor is released while inside a visible portion of the specifed layer.
+     * the cursor is released while inside a visible portion of the specified layer.
      *
      * @event mouseup
      * @memberof Map
@@ -460,7 +468,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
-     * the cursor is moved inside a visible portion of the specifed layer.
+     * the cursor is moved inside a visible portion of the specified layer.
      *
      * @event mouseover
      * @memberof Map
@@ -523,7 +531,7 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
-     * point that is pressed and released contains a visible portion of the specifed layer.
+     * point that is pressed and released contains a visible portion of the specified layer.
      *
      * @event click
      * @memberof Map
@@ -554,7 +562,9 @@ export type MapEvent =
      *
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only
-     * when the point that is clicked twice contains a visible portion of the specifed layer.
+     * when the point that is clicked twice contains a visible portion of the specified layer.
+     *
+     * **Note:** Under normal conditions, this event will be preceded by two {@link Map.event:click} events.
      *
      * @event dblclick
      * @memberof Map
@@ -604,7 +614,7 @@ export type MapEvent =
      * Fired when a pointing device (usually a mouse) leaves a visible portion of a specified layer, or leaves
      * the map canvas.
      *
-     * **Important:** This event can only be listened for when {@link Map#on} includes three arguements,
+     * **Important:** This event can only be listened for when {@link Map#on} includes three arguments,
      * where the second argument specifies the desired layer.
      *
      * @event mouseleave
@@ -688,6 +698,7 @@ export type MapEvent =
      * @memberof Map
      * @instance
      * @property {MapTouchEvent} data
+     * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
@@ -1232,7 +1243,7 @@ export type MapEvent =
     /**
      * Fired when an error occurs. This is GL JS's primary error reporting
      * mechanism. We use an event instead of `throw` to better accommodate
-     * asyncronous operations. If no listeners are bound to the `error` event, the
+     * asynchronous operations. If no listeners are bound to the `error` event, the
      * error will be printed to the console.
      *
      * @event error
@@ -1310,7 +1321,7 @@ export type MapEvent =
 
     /**
      * Fired when any map data (style, source, tile, etc) begins loading or
-     * changing asyncronously. All `dataloading` events are followed by a `data`,
+     * changing asynchronously. All `dataloading` events are followed by a `data`,
      * `dataabort` or `error` event. See {@link MapDataEvent} for more information.
      *
      * @event dataloading
@@ -1330,7 +1341,7 @@ export type MapEvent =
     | 'dataloading'
 
     /**
-     * Fired when the map's style begins loading or changing asyncronously.
+     * Fired when the map's style begins loading or changing asynchronously.
      * All `styledataloading` events are followed by a `styledata`
      * or `error` event. See {@link MapDataEvent} for more information.
      *
@@ -1343,7 +1354,7 @@ export type MapEvent =
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // map's style begins loading or
-     * // changing asyncronously.
+     * // changing asynchronously.
      * map.on('styledataloading', function() {
      *   console.log('A styledataloading event occurred.');
      * });
@@ -1351,7 +1362,7 @@ export type MapEvent =
     | 'styledataloading'
 
     /**
-     * Fired when one of the map's sources begins loading or changing asyncronously.
+     * Fired when one of the map's sources begins loading or changing asynchronously.
      * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
      * See {@link MapDataEvent} for more information.
      *
@@ -1364,7 +1375,7 @@ export type MapEvent =
      * var map = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // map's sources begin loading or
-     * // changing asyncronously.
+     * // changing asynchronously.
      * map.on('sourcedataloading', function() {
      *   console.log('A sourcedataloading event occurred.');
      * });
@@ -1383,10 +1394,10 @@ export type MapEvent =
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
-     * // Set an event listener that fires
-     * // an icon or pattern is missing.
-     * map.on('styleimagemissing', function() {
-     *   console.log('A styleimagemissing event occurred.');
+     * // Set an event listener that fires an icon or pattern is missing.
+     * map.on('styleimagemissing', function(event: MapStyleImageMissingEvent) {
+     *   const imageId = event.id
+     *   console.log('A styleimagemissing event occurred for image id', imageId);
      * });
      * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-missing-generated/)
      */

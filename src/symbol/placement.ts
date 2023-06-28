@@ -1,27 +1,27 @@
-import CollisionIndex from './collision_index';
+import {CollisionIndex} from './collision_index';
 import type {FeatureKey} from './collision_index';
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 import * as symbolSize from './symbol_size';
 import * as projection from './projection';
 import {getAnchorJustification, evaluateVariableOffset} from './symbol_layout';
 import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
-import pixelsToTileUnits from '../source/pixels_to_tile_units';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import Point from '@mapbox/point-geometry';
-import type Transform from '../geo/transform';
-import type StyleLayer from '../style/style_layer';
+import type {Transform} from '../geo/transform';
+import type {StyleLayer} from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {getOverlapMode, OverlapMode} from '../style/style_layer/symbol_style_layer';
+import {getOverlapMode, OverlapMode} from '../style/style_layer/overlap_mode';
 
-import type Tile from '../source/tile';
-import SymbolBucket, {CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
+import type {Tile} from '../source/tile';
+import {SymbolBucket, CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
 
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance} from '../data/array_types.g';
-import type FeatureIndex from '../data/feature_index';
+import type {FeatureIndex} from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {TextAnchor} from './symbol_layout';
-import Terrain from '../render/terrain';
+import {Terrain} from '../render/terrain';
 import {warnOnce} from '../util/util';
 
 class OpacityState {
@@ -460,6 +460,9 @@ export class Placement {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
         }
 
+        const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
+        const getElevation = this.terrain ? (x: number, y: number) => this.terrain.getElevation(tileID, x, y) : null;
+
         const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays) => {
             if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
             if (holdingForFade) {
@@ -491,14 +494,6 @@ export class Placement {
             }
             if (collisionArrays.verticalTextFeatureIndex) {
                 verticalTextFeatureIndex = collisionArrays.verticalTextFeatureIndex;
-            }
-
-            // update elevation of collisionArrays
-            const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
-            const getElevation = this.terrain ? (x: number, y: number) => this.terrain.getElevation(tileID, x, y) : null;
-            for (const boxType of ['textBox', 'verticalTextBox', 'iconBox', 'verticalIconBox']) {
-                const box = collisionArrays[boxType];
-                if (box) box.elevation = getElevation ? getElevation(box.anchorPointX, box.anchorPointY) : 0;
             }
 
             const textBox = collisionArrays.textBox;

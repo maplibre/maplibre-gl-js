@@ -1,6 +1,6 @@
 import type Point from '@mapbox/point-geometry';
 
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 import {DragMoveHandler, DragPanResult, DragRotateResult, DragPitchResult, DragHandler} from './drag_handler';
 import {MouseMoveStateManager} from './drag_move_state_manager';
 

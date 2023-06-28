@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display line that crosses 180th meridian</title>
+    <meta property="og:description" content="Draw a line across the 180th meridian using a GeoJSON source." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-41.62667, 26.11598],
+        zoom: 0
+    });
+
+    map.on('load', () => {
+        map.addLayer({
+            'id': 'route',
+            'type': 'line',
+            'source': {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': createGeometry(false)
+                }
+            },
+            'layout': {'line-cap': 'round'},
+            'paint': {
+                'line-color': '#007296',
+                'line-width': 4
+            }
+        });
+
+        map.addLayer({
+            'id': 'route-label',
+            'type': 'symbol',
+            'source': 'route',
+            'layout': {
+                'symbol-placement': 'line-center',
+                'text-field': 'Crosses the world'
+            }
+        });
+
+        map.addLayer({
+            'id': 'route-two',
+            'type': 'line',
+            'source': {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': createGeometry(true)
+                }
+            },
+            'layout': {'line-cap': 'round'},
+            'paint': {
+                'line-color': '#F06317',
+                'line-width': 4
+            }
+        });
+
+        map.addLayer({
+            'id': 'route-two-label',
+            'type': 'symbol',
+            'source': 'route-two',
+            'layout': {
+                'symbol-placement': 'line-center',
+                'text-field': 'Crosses 180th meridian'
+            }
+        });
+
+        function createGeometry(doesCrossAntimeridian) {
+            const geometry = {
+                'type': 'LineString',
+                'coordinates': [
+                    [-72.42187, -16.59408],
+                    [140.27343, 35.67514]
+                ]
+            };
+
+            // To draw a line across the 180th meridian,
+            // if the longitude of the second point minus
+            // the longitude of original (or previous) point is >= 180,
+            // subtract 360 from the longitude of the second point.
+            // If it is less than 180, add 360 to the second point.
+
+            if (doesCrossAntimeridian) {
+                const startLng = geometry.coordinates[0][0];
+                const endLng = geometry.coordinates[1][0];
+
+                if (endLng - startLng >= 180) {
+                    geometry.coordinates[1][0] -= 360;
+                } else if (endLng - startLng < 180) {
+                    geometry.coordinates[1][0] += 360;
+                }
+            }
+
+            return geometry;
+        }
+    });
+</script>
+</body>
+</html>

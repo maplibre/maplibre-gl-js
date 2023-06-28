@@ -1,4 +1,4 @@
-/* eslint-disable import/unambiguous, import/no-commonjs */
+/* eslint-disable import/no-commonjs */
 
 const mapnik = require('mapnik');
 const fs = require('fs');

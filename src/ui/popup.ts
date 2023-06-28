@@ -1,14 +1,14 @@
-import {extend, bindAll} from '../util/util';
+import {extend} from '../util/util';
 import {Event, Evented} from '../util/evented';
 import {MapMouseEvent} from '../ui/events';
-import DOM from '../util/dom';
-import LngLat from '../geo/lng_lat';
+import {DOM} from '../util/dom';
+import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
-import smartWrap from '../util/smart_wrap';
+import {smartWrap} from '../util/smart_wrap';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 
 import type {PositionAnchor} from './anchor';
-import type Map from './map';
+import type {Map} from './map';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {PointLike} from './camera';
 
@@ -48,32 +48,32 @@ const focusQuerySelector = [
 /**
  * A popup component.
  *
- * @param {Object} [options]
+ * @param {PopupOptions} [options]
  * @param {boolean} [options.closeButton=true] If `true`, a close button will appear in the
- *   top right corner of the popup.
+ * top right corner of the popup.
  * @param {boolean} [options.closeOnClick=true] If `true`, the popup will closed when the
- *   map is clicked.
+ * map is clicked.
  * @param {boolean} [options.closeOnMove=false] If `true`, the popup will closed when the
- *   map moves.
+ * map moves.
  * @param {boolean} [options.focusAfterOpen=true] If `true`, the popup will try to focus the
- *   first focusable element inside the popup.
- * @param {string} [options.anchor] - A string indicating the part of the Popup that should
- *   be positioned closest to the coordinate set via {@link Popup#setLngLat}.
- *   Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`,
- *   `'top-right'`, `'bottom-left'`, and `'bottom-right'`. If unset the anchor will be
- *   dynamically set to ensure the popup falls within the map container with a preference
- *   for `'bottom'`.
+ * first focusable element inside the popup.
+ * @param {PositionAnchor} [options.anchor] - A string indicating the part of the Popup that should
+ * be positioned closest to the coordinate set via {@link Popup#setLngLat}.
+ * Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`,
+ * `'top-right'`, `'bottom-left'`, and `'bottom-right'`. If unset the anchor will be
+ * dynamically set to ensure the popup falls within the map container with a preference
+ * for `'bottom'`.
  * @param {number|PointLike|Object} [options.offset] -
- *  A pixel offset applied to the popup's location specified as:
- *   - a single number specifying a distance from the popup's location
- *   - a {@link PointLike} specifying a constant offset
- *   - an object of {@link Point}s specifing an offset for each anchor position
- *  Negative offsets indicate left and up.
+ * A pixel offset applied to the popup's location specified as:
+ * - a single number specifying a distance from the popup's location
+ * - a {@link PointLike} specifying a constant offset
+ * - an object of {@link Point}s specifying an offset for each anchor position
+ * Negative offsets indicate left and up.
  * @param {string} [options.className] Space-separated CSS class names to add to popup container
  * @param {string} [options.maxWidth='240px'] -
- *  A string that sets the CSS property of the popup's maximum width, eg `'300px'`.
- *  To ensure the popup resizes to fit its content, set this property to `'none'`.
- *  Available values can be found here: https://developer.mozilla.org/en-US/docs/Web/CSS/max-width
+ * A string that sets the CSS property of the popup's maximum width, eg `'300px'`.
+ * To ensure the popup resizes to fit its content, set this property to `'none'`.
+ * Available values can be found here: https://developer.mozilla.org/en-US/docs/Web/CSS/max-width
  * @example
  * var markerHeight = 50, markerRadius = 10, linearOffset = 25;
  * var popupOffsets = {
@@ -96,7 +96,7 @@ const focusQuerySelector = [
  * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
  * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
  */
-export default class Popup extends Evented {
+export class Popup extends Evented {
     _map: Map;
     options: PopupOptions;
     _content: HTMLElement;
@@ -110,7 +110,6 @@ export default class Popup extends Evented {
     constructor(options?: PopupOptions) {
         super();
         this.options = extend(Object.create(defaultOptions), options);
-        bindAll(['_update', '_onClose', 'remove', '_onMouseMove', '_onMouseUp', '_onDrag'], this);
     }
 
     /**
@@ -156,7 +155,7 @@ export default class Popup extends Evented {
         }
 
         /**
-         * Fired when the popup is opened manually or programatically.
+         * Fired when the popup is opened manually or programmatically.
          *
          * @event open
          * @memberof Popup
@@ -194,7 +193,7 @@ export default class Popup extends Evented {
      * popup.remove();
      * @returns {Popup} `this`
      */
-    remove() {
+    remove = () => {
         if (this._content) {
             DOM.remove(this._content);
         }
@@ -216,7 +215,7 @@ export default class Popup extends Evented {
         }
 
         /**
-         * Fired when the popup is closed manually or programatically.
+         * Fired when the popup is closed manually or programmatically.
          *
          * @event close
          * @memberof Popup
@@ -237,7 +236,7 @@ export default class Popup extends Evented {
         this.fire(new Event('close'));
 
         return this;
-    }
+    };
 
     /**
      * Returns the geographical location of the popup's anchor.
@@ -499,19 +498,19 @@ export default class Popup extends Evented {
         }
     }
 
-    _onMouseUp(event: MapMouseEvent) {
+    _onMouseUp = (event: MapMouseEvent) => {
         this._update(event.point);
-    }
+    };
 
-    _onMouseMove(event: MapMouseEvent) {
+    _onMouseMove = (event: MapMouseEvent) => {
         this._update(event.point);
-    }
+    };
 
-    _onDrag(event: MapMouseEvent) {
+    _onDrag = (event: MapMouseEvent) => {
         this._update(event.point);
-    }
+    };
 
-    _update(cursor?: Point) {
+    _update = (cursor?: Point) => {
         const hasPosition = this._lngLat || this._trackPointer;
 
         if (!this._map || !hasPosition || !this._content) { return; }
@@ -521,8 +520,9 @@ export default class Popup extends Evented {
             this._tip       = DOM.create('div', 'maplibregl-popup-tip', this._container);
             this._container.appendChild(this._content);
             if (this.options.className) {
-                this.options.className.split(' ').forEach(name =>
-                    this._container.classList.add(name));
+                for (const name of this.options.className.split(' ')) {
+                    this._container.classList.add(name);
+                }
             }
 
             if (this._trackPointer) {
@@ -574,7 +574,7 @@ export default class Popup extends Evented {
         const offsetedPos = pos.add(offset[anchor]).round();
         DOM.setTransform(this._container, `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`);
         applyAnchorClass(this._container, anchor, 'popup');
-    }
+    };
 
     _focusFirstElement() {
         if (!this.options.focusAfterOpen || !this._container) return;
@@ -584,9 +584,9 @@ export default class Popup extends Evented {
         if (firstFocusable) firstFocusable.focus();
     }
 
-    _onClose() {
+    _onClose = () => {
         this.remove();
-    }
+    };
 }
 
 function normalizeOffset(offset?: Offset | null) {

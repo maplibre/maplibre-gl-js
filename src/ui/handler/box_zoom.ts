@@ -1,16 +1,19 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 
 import {Event} from '../../util/evented';
+import {TransformProvider} from './transform-provider';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
+import {Handler} from '../handler_manager';
 
 /**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
  * The bounding box is defined by clicking and holding `shift` while dragging the cursor.
  */
-class BoxZoomHandler {
+export class BoxZoomHandler implements Handler {
     _map: Map;
+    _tr: TransformProvider;
     _el: HTMLElement;
     _container: HTMLElement;
     _enabled: boolean;
@@ -27,6 +30,7 @@ class BoxZoomHandler {
         clickTolerance: number;
     }) {
         this._map = map;
+        this._tr = new TransformProvider(map);
         this._el = map.getCanvasContainer();
         this._container = map.getContainer();
         this._clickTolerance = options.clickTolerance || 1;
@@ -127,7 +131,7 @@ class BoxZoomHandler {
         } else {
             this._map.fire(new Event('boxzoomend', {originalEvent: e}));
             return {
-                cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._map.getBearing(), {linear: true})
+                cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true})
             };
         }
     }
@@ -161,5 +165,3 @@ class BoxZoomHandler {
         return this._map.fire(new Event(type, {originalEvent: e}));
     }
 }
-
-export default BoxZoomHandler;

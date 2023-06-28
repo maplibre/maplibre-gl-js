@@ -1,10 +1,10 @@
-import {createMap as globalCreateMap, setPerformance, setWebGlContext} from '../util/test/util';
-import Marker from './marker';
-import Popup from './popup';
-import LngLat from '../geo/lng_lat';
+import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
+import {Marker} from './marker';
+import {Popup} from './popup';
+import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
-import type Terrain from '../render/terrain';
+import type {Terrain} from '../render/terrain';
 
 function createMap(options = {}) {
     const container = window.document.createElement('div');
@@ -15,8 +15,7 @@ function createMap(options = {}) {
 }
 
 beforeEach(() => {
-    setWebGlContext();
-    setPerformance();
+    beforeMapTest();
 });
 
 describe('marker', () => {
@@ -86,6 +85,37 @@ describe('marker', () => {
         expect(map.getCanvasContainer().querySelectorAll('.maplibregl-marker')).toHaveLength(1);
 
         map.remove();
+    });
+
+    test('Marker adds classes from className option, methods for class manipulations works properly', () => {
+        const map = createMap();
+        const marker = new Marker({className: 'some classes'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        const markerElement = marker.getElement();
+        expect(markerElement.classList.contains('some')).toBeTruthy();
+        expect(markerElement.classList.contains('classes')).toBeTruthy();
+
+        marker.addClassName('addedClass');
+        expect(markerElement.classList.contains('addedClass')).toBeTruthy();
+
+        marker.removeClassName('addedClass');
+        expect(!markerElement.classList.contains('addedClass')).toBeTruthy();
+
+        marker.toggleClassName('toggle');
+        expect(markerElement.classList.contains('toggle')).toBeTruthy();
+
+        marker.toggleClassName('toggle');
+        expect(!markerElement.classList.contains('toggle')).toBeTruthy();
+
+        expect(() => marker.addClassName('should throw exception')).toThrow(window.DOMException);
+        expect(() => marker.removeClassName('should throw exception')).toThrow(window.DOMException);
+        expect(() => marker.toggleClassName('should throw exception')).toThrow(window.DOMException);
+
+        expect(() => marker.addClassName('')).toThrow(window.DOMException);
+        expect(() => marker.removeClassName('')).toThrow(window.DOMException);
+        expect(() => marker.toggleClassName('')).toThrow(window.DOMException);
     });
 
     test('Marker provides LngLat accessors', () => {

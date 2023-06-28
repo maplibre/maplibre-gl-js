@@ -1,0 +1,39 @@
+<h2>Click on an image to toggle between expected and actual</h2>
+The initial image is the actual one
+<div class="tests failed">
+  <h1 style="color: red">Failed Tests (${failedItemsLength})</h1>
+  <button id="toggle-failed">Click to toggle category visibility</button>
+  ${failedItems}
+</div>
+
+<div class="tests errored">
+  <h1 style="color: black">Errored Tests (${erroredItemsLength})</h1>
+  <button id="toggle-errored">Click to toggle category visibility</button>
+  ${erroredItems}
+</div>
+
+<script>
+  document.addEventListener('click', handleClick);
+
+  function handleClick(e) {
+      const el = e.target;
+      if (el.tagName !== 'IMG' || !el.dataset.altSrc) {
+          return;
+      }
+      // swap between alt-src and src - both are defined in the render test report generation
+      const tmp = el.src;
+      el.src = el.dataset.altSrc;
+      el.dataset.altSrc = tmp;
+  }
+
+  document.getElementById('toggle-failed').addEventListener('click', () => {
+      for (const row of document.querySelectorAll('.tests.failed .test')) {
+          row.classList.toggle('hide');
+      }
+  });
+  document.getElementById('toggle-errored').addEventListener('click', () => {
+      for (const row of document.querySelectorAll('.tests.errored .test.')) {
+          row.classList.toggle('hide');
+      }
+  });
+</script>

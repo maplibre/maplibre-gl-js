@@ -1,21 +1,20 @@
-import StyleLayer from '../style_layer';
+import {StyleLayer} from '../style_layer';
 
-import FillBucket from '../../data/bucket/fill_bucket';
+import {FillBucket} from '../../data/bucket/fill_bucket';
 import {polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
 import {translateDistance, translate} from '../query_utils';
 import properties, {FillLayoutPropsPossiblyEvaluated, FillPaintPropsPossiblyEvaluated} from './fill_style_layer_properties.g';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 
-import type {FeatureState} from '../../style-spec/expression';
+import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
 import type Point from '@mapbox/point-geometry';
 import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g';
-import type EvaluationParameters from '../evaluation_parameters';
-import type Transform from '../../geo/transform';
-import type {LayerSpecification} from '../../style-spec/types.g';
+import type {EvaluationParameters} from '../evaluation_parameters';
+import type {Transform} from '../../geo/transform';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
-class FillStyleLayer extends StyleLayer {
+export class FillStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<FillLayoutProps>;
     layout: PossiblyEvaluated<FillLayoutProps, FillLayoutPropsPossiblyEvaluated>;
 
@@ -64,5 +63,3 @@ class FillStyleLayer extends StyleLayer {
         return true;
     }
 }
-
-export default FillStyleLayer;

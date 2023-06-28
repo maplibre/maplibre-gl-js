@@ -1,23 +1,24 @@
-import Style from './style';
-import SourceCache from '../source/source_cache';
-import StyleLayer from './style_layer';
-import Transform from '../geo/transform';
+import {Style} from './style';
+import {SourceCache} from '../source/source_cache';
+import {StyleLayer} from './style_layer';
+import {Transform} from '../geo/transform';
 import {extend} from '../util/util';
 import {RequestManager} from '../util/request_manager';
 import {Event, Evented} from '../util/evented';
+import {RGBAImage} from '../util/image';
 import {
     setRTLTextPlugin,
     clearRTLTextPlugin,
     evented as rtlTextPluginEvented
 } from '../source/rtl_text_plugin';
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
 import {fakeXhr, fakeServer} from 'nise';
-import {WorkerGlobalScopeInterface} from '../util/web_worker';
-import EvaluationParameters from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '../style-spec/types.g';
+
+import {EvaluationParameters} from './evaluation_parameters';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {SourceClass} from '../source/source';
-import GeoJSONSource from '../source/geojson_source';
+import {GeoJSONSource} from '../source/geojson_source';
 
 function createStyleJSON(properties?) {
     return extend({
@@ -79,7 +80,6 @@ function createStyle(map = getStubMap()) {
 
 let sinonFakeXMLServer;
 let sinonFakeServer;
-let _self;
 let mockConsoleError;
 
 beforeEach(() => {
@@ -87,20 +87,12 @@ beforeEach(() => {
     sinonFakeServer = fakeServer.create();
     sinonFakeXMLServer = fakeXhr.useFakeXMLHttpRequest();
 
-    _self = {
-        addEventListener() {}
-    } as any as WorkerGlobalScopeInterface & typeof globalThis;
-    global.self = _self;
-
     mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
 });
 
 afterEach(() => {
     sinonFakeXMLServer.restore();
     sinonFakeServer.restore();
-
-    global.self = undefined;
-
     mockConsoleError.mockRestore();
 });
 
@@ -129,7 +121,58 @@ describe('Style', () => {
             done();
         });
         sinonFakeServer.respond();
-        new Style(createStyleJSON());
+        new Style(getStubMap());
+    });
+
+    test('RTL plugin load reloads vector source but not raster source', done => {
+        const map = getStubMap();
+        const style = new Style(map);
+        map.style = style;
+        style.loadJSON({
+            'version': 8,
+            'sources': {
+                'raster': {
+                    type: 'raster',
+                    tiles: ['http://tiles.server']
+                },
+                'vector': {
+                    type: 'vector',
+                    tiles: ['http://tiles.server']
+                }
+            },
+            'layers': [{
+                'id': 'raster',
+                'type': 'raster',
+                'source': 'raster'
+            }]
+        });
+
+        style.on('style.load', () => {
+            jest.spyOn(style.sourceCaches['raster'], 'reload');
+            jest.spyOn(style.sourceCaches['vector'], 'reload');
+
+            clearRTLTextPlugin();
+            sinonFakeServer.respondWith('/plugin.js', 'doesn\'t matter');
+            const _broadcast = style.dispatcher.broadcast;
+            style.dispatcher.broadcast = function (type, state, callback) {
+                if (type === 'syncRTLPluginState') {
+                    // Mock a response from four workers saying they've loaded the plugin
+                    callback(undefined, [true, true, true, true]);
+                } else {
+                    _broadcast(type, state, callback);
+                }
+            };
+            setRTLTextPlugin('/plugin.js', (error) => {
+                expect(error).toBeUndefined();
+                setTimeout(() => {
+                    clearRTLTextPlugin();
+                    expect(style.sourceCaches['raster'].reload).not.toHaveBeenCalled();
+                    expect(style.sourceCaches['vector'].reload).toHaveBeenCalled();
+                    done();
+                }, 0);
+            });
+            sinonFakeServer.respond();
+        });
     });
 });
 
@@ -181,6 +224,16 @@ describe('Style#loadURL', () => {
 });
 
 describe('Style#loadJSON', () => {
+    test('serialize() returns undefined until style is loaded', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        expect(style.serialize()).toBeUndefined();
+        style.on('style.load', () => {
+            expect(style.serialize()).toEqual(createStyleJSON());
+            done();
+        });
+    });
+
     test('fires "dataloading" (synchronously)', () => {
         const style = new Style(getStubMap());
         const spy = jest.fn();
@@ -248,6 +301,60 @@ describe('Style#loadJSON', () => {
                 expect(e.target).toBe(style);
                 expect(e.dataType).toBe('style');
                 done();
+            });
+
+            respond();
+        });
+    });
+
+    test('Validate sprite image extraction', done => {
+        // Stubbing to bypass Web APIs that supported by jsdom:
+        // * `URL.createObjectURL` in ajax.getImage (https://github.com/tmpvar/jsdom/issues/1721)
+        // * `canvas.getContext('2d')` in browser.getImageData
+        jest.spyOn(browser, 'getImageData');
+        // stub Image so we can invoke 'onload'
+        // https://github.com/jsdom/jsdom/commit/58a7028d0d5b6aacc5b435daee9fd8f9eacbb14c
+
+        // fake the image request (sinon doesn't allow non-string data for
+        // server.respondWith, so we do so manually)
+        const requests = [];
+        sinonFakeXMLServer.onCreate = req => { requests.push(req); };
+        const respond = () => {
+            let req = requests.find(req => req.url === 'http://example.com/sprite.png');
+            req.setStatus(200);
+            req.response = new ArrayBuffer(8);
+            req.onload();
+
+            req = requests.find(req => req.url === 'http://example.com/sprite.json');
+            req.setStatus(200);
+            req.response = '{"image1": {"width": 1, "height": 1, "x": 0, "y": 0, "pixelRatio": 1.0}}';
+            req.onload();
+        };
+
+        const style = new Style(getStubMap());
+
+        style.loadJSON({
+            'version': 8,
+            'sources': {},
+            'layers': [],
+            'sprite': 'http://example.com/sprite'
+        });
+
+        style.once('data', (e) => {
+            expect(e.target).toBe(style);
+            expect(e.dataType).toBe('style');
+
+            style.once('data', (e) => {
+                expect(e.target).toBe(style);
+                expect(e.dataType).toBe('style');
+                style.imageManager.getImages(['image1'], (error, response) => {
+                    const image = response['image1'];
+                    expect(image.data).toBeInstanceOf(RGBAImage);
+                    expect(image.data.width).toBe(1);
+                    expect(image.data.height).toBe(1);
+                    expect(image.pixelRatio).toBe(1);
+                    done();
+                });
             });
 
             respond();
@@ -437,6 +544,108 @@ describe('Style#loadJSON', () => {
             expect(style.stylesheet.layers).toHaveLength(1);
             done();
         });
+    });
+});
+
+describe('Style#_load', () => {
+    test('initiates sprite loading when it\'s present', () => {
+        const style = new Style(getStubMap());
+
+        const prevStyleSpec = createStyleJSON({
+            sprite: 'https://example.com/test1'
+        });
+
+        const nextStyleSpec = createStyleJSON({
+            sprite: 'https://example.com/test2'
+        });
+
+        const _loadSpriteSpyOn = jest.spyOn(style, '_loadSprite');
+        style._load(nextStyleSpec, {}, prevStyleSpec);
+
+        expect(_loadSpriteSpyOn).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not initiate sprite loading when it\'s absent (undefined)', () => {
+        const style = new Style(getStubMap());
+
+        const prevStyleSpec = createStyleJSON({
+            sprite: 'https://example.com/test1'
+        });
+
+        const nextStyleSpec = createStyleJSON({sprite: undefined});
+
+        const _loadSpriteSpyOn = jest.spyOn(style, '_loadSprite');
+        style._load(nextStyleSpec, {}, prevStyleSpec);
+
+        expect(_loadSpriteSpyOn).not.toHaveBeenCalled();
+    });
+
+    test('layers are broadcasted to worker', () => {
+        const style = new Style(getStubMap());
+        let dispatchType;
+        let dispatchData;
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }]
+        });
+
+        const _broadcastSpyOn = jest.spyOn(style.dispatcher, 'broadcast')
+            .mockImplementation((type: string, data) => {
+                dispatchType = type;
+                dispatchData = data;
+            });
+
+        style._load(styleSpec, {});
+
+        expect(_broadcastSpyOn).toHaveBeenCalled();
+        expect(dispatchType).toBe('setLayers');
+
+        expect(dispatchData).toHaveLength(1);
+        expect(dispatchData[0].id).toBe('background');
+
+        // cleanup
+        _broadcastSpyOn.mockReset();
+    });
+
+    test('validate style when validate option is true', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }, {
+                id: 'custom',
+                type: 'custom'
+            }]
+        });
+        const stub = jest.spyOn(console, 'error');
+
+        style._load(styleSpec, {validate: true});
+
+        // 1. layers[1]: missing required property "source"
+        // 2. layers[1].type: expected one of [fill, line, symbol, circle, heatmap, fill-extrusion, raster, hillshade, background], "custom" found
+        expect(stub).toHaveBeenCalledTimes(2);
+
+        // cleanup
+        stub.mockReset();
+    });
+
+    test('layers are NOT serialized immediately after creation', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }, {
+                id: 'custom',
+                type: 'custom'
+            }]
+        });
+
+        style._load(styleSpec, {validate: false});
+        expect(style._serializedLayers).toBeNull();
     });
 });
 
@@ -867,6 +1076,129 @@ describe('Style#removeSource', () => {
             sourceCache.fire(new Event('data'));
             sourceCache.fire(new Event('error'));
 
+            done();
+        });
+    });
+});
+
+describe('Style#addSprite', () => {
+    test('throw before loaded', () => {
+        const style = new Style(getStubMap());
+        expect(() => style.addSprite('test', 'https://example.com/sprite')).toThrow(/load/i);
+    });
+
+    test('validates input and fires an error if there\'s already an existing sprite with the same id', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        style.on('style.load', () => {
+            style.on('error', (error) => {
+                expect(error.error.message).toMatch(/sprite: all the sprites' ids must be unique, but test is duplicated/);
+                done();
+            });
+
+            style.addSprite('test', 'https://example.com/sprite');
+            style.addSprite('test', 'https://example.com/sprite2');
+        });
+    });
+
+    test('adds a new sprite to the stylesheet when there\'s no sprite at all', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        style.on('style.load', () => {
+            style.addSprite('test', 'https://example.com/sprite');
+            expect(style.stylesheet.sprite).toStrictEqual([{id: 'test', url: 'https://example.com/sprite'}]);
+            done();
+        });
+    });
+
+    test('adds a new sprite to the stylesheet when there\'s a stringy sprite existing', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: 'https://example.com/default'}));
+        style.on('style.load', () => {
+            style.addSprite('test', 'https://example.com/sprite');
+            expect(style.stylesheet.sprite).toStrictEqual([
+                {id: 'default', url: 'https://example.com/default'},
+                {id: 'test', url: 'https://example.com/sprite'}
+            ]);
+            done();
+        });
+    });
+
+    test('adds a new sprite to the stylesheet when there\'s an array-sprite existing', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: [{id: 'default', url: 'https://example.com/default'}]}));
+        style.on('style.load', () => {
+            style.addSprite('test', 'https://example.com/sprite');
+            expect(style.stylesheet.sprite).toStrictEqual([
+                {id: 'default', url: 'https://example.com/default'},
+                {id: 'test', url: 'https://example.com/sprite'}
+            ]);
+            done();
+        });
+    });
+});
+
+describe('Style#removeSprite', () => {
+    test('throw before loaded', () => {
+        const style = new Style(getStubMap());
+        expect(() => style.removeSprite('test')).toThrow(/load/i);
+    });
+
+    test('fires an error when trying to delete an non-existing sprite (sprite: undefined)', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        style.on('style.load', () => {
+            style.on('error', (error) => {
+                expect(error.error.message).toMatch(/Sprite \"test\" doesn't exists on this map./);
+                done();
+            });
+
+            style.removeSprite('test');
+        });
+    });
+
+    test('fires an error when trying to delete an non-existing sprite (sprite: single url)', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: 'https://example.com/sprite'}));
+        style.on('style.load', () => {
+            style.on('error', (error) => {
+                expect(error.error.message).toMatch(/Sprite \"test\" doesn't exists on this map./);
+                done();
+            });
+
+            style.removeSprite('test');
+        });
+    });
+
+    test('fires an error when trying to delete an non-existing sprite (sprite: array)', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: [{id: 'default', url: 'https://example.com/sprite'}]}));
+        style.on('style.load', () => {
+            style.on('error', (error) => {
+                expect(error.error.message).toMatch(/Sprite \"test\" doesn't exists on this map./);
+                done();
+            });
+
+            style.removeSprite('test');
+        });
+    });
+
+    test('removes the sprite when it\'s a single URL', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sprite: 'https://example.com/test'}));
+        style.on('style.load', () => {
+            style.removeSprite('default');
+            expect(style.stylesheet.sprite).toBeUndefined();
+            done();
+        });
+    });
+
+    test('removes the sprite when it\'s an array', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON([{id: 'default', url: 'https://example.com/sprite'}]));
+        style.on('style.load', () => {
+            style.removeSprite('default');
+            expect(style.stylesheet.sprite).toBeUndefined();
             done();
         });
     });
@@ -1404,7 +1736,7 @@ describe('Style#setPaintProperty', () => {
             let styleUpdateCalled = false;
 
             (source as any).on('data', (e) => setTimeout(() => {
-                if (!begun && sourceCache.loaded()) {
+                if (!begun) {
                     begun = true;
                     jest.spyOn(sourceCache, 'reload').mockImplementation(() => {
                         expect(styleUpdateCalled).toBeTruthy();
@@ -2052,7 +2384,7 @@ describe('Style defers  ...', () => {
         style.on('style.load', () => {
             style.update({} as EvaluationParameters);
 
-            // spies to track defered methods
+            // spies to track deferred methods
             const mockStyleFire = jest.spyOn(style, 'fire');
             jest.spyOn(style, '_reloadSource');
             jest.spyOn(style, '_updateWorkerLayers');
@@ -2147,16 +2479,33 @@ describe('Style#query*Features', () => {
         style.querySourceFeatures([{x: 0, y: 0}], {filter: 'invalidFilter', validate: false}, transform);
         expect(errors).toBe(0);
     });
+
+    test('serialized layers should be correctly updated after adding/removing layers', () => {
+
+        let serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(1);
+        expect(serializedStyle.layers[0].id).toBe('symbol');
+
+        const layer = {
+            id: 'background',
+            type: 'background'
+        } as LayerSpecification;
+        style.addLayer(layer);
+
+        // serialize again
+        serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(2);
+        expect(serializedStyle.layers[1].id).toBe('background');
+
+        // remove and serialize
+        style.removeLayer('background');
+        serializedStyle = style.serialize();
+        expect(serializedStyle.layers).toHaveLength(1);
+
+    });
 });
 
 describe('Style#addSourceType', () => {
-    const _types = {'existing' () {}};
-
-    jest.spyOn(Style, 'getSourceType').mockImplementation(name => _types[name]);
-    jest.spyOn(Style, 'setSourceType').mockImplementation((name, create) => {
-        _types[name] = create;
-    });
-
     test('adds factory function', done => {
         const style = new Style(getStubMap());
         const sourceType = function () {} as any as SourceClass;
@@ -2168,8 +2517,9 @@ describe('Style#addSourceType', () => {
             }
         };
 
-        style.addSourceType('foo', sourceType, () => {
-            expect(_types['foo']).toBe(sourceType);
+        style.addSourceType('foo', sourceType, (arg1, arg2) => {
+            expect(arg1).toBeNull();
+            expect(arg2).toBeNull();
             done();
         });
     });
@@ -2179,9 +2529,8 @@ describe('Style#addSourceType', () => {
         const sourceType = function () {} as any as SourceClass;
         sourceType.workerSourceURL = 'worker-source.js' as any as URL;
 
-        style.dispatcher.broadcast = function (type, params) {
+        style.dispatcher.broadcast = (type, params) => {
             if (type === 'loadWorkerSource') {
-                expect(_types['bar']).toBe(sourceType);
                 expect(params['name']).toBe('bar');
                 expect(params['url']).toBe('worker-source.js');
                 done();
@@ -2194,7 +2543,7 @@ describe('Style#addSourceType', () => {
     test('refuses to add new type over existing name', done => {
         const style = new Style(getStubMap());
         const sourceType = function () {} as any as SourceClass;
-        style.addSourceType('existing', sourceType, (err) => {
+        style.addSourceType('canvas', sourceType, (err) => {
             expect(err).toBeTruthy();
             done();
         });

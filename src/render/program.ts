@@ -1,22 +1,22 @@
-import shaders from '../shaders/shaders';
-import ProgramConfiguration from '../data/program_configuration';
-import VertexArrayObject from './vertex_array_object';
-import Context from '../gl/context';
+import {shaders} from '../shaders/shaders';
+import {ProgramConfiguration} from '../data/program_configuration';
+import {VertexArrayObject} from './vertex_array_object';
+import {Context} from '../gl/context';
 
-import type SegmentVector from '../data/segment';
-import type VertexBuffer from '../gl/vertex_buffer';
-import type IndexBuffer from '../gl/index_buffer';
-import type DepthMode from '../gl/depth_mode';
-import type StencilMode from '../gl/stencil_mode';
-import type ColorMode from '../gl/color_mode';
-import type CullFaceMode from '../gl/cull_face_mode';
+import type {SegmentVector} from '../data/segment';
+import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {IndexBuffer} from '../gl/index_buffer';
+import type {DepthMode} from '../gl/depth_mode';
+import type {StencilMode} from '../gl/stencil_mode';
+import type {ColorMode} from '../gl/color_mode';
+import type {CullFaceMode} from '../gl/cull_face_mode';
 import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
 import type {BinderUniform} from '../data/program_configuration';
 import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
 import type {TerrainData} from '../render/terrain';
-import Terrain from '../render/terrain';
+import {Terrain} from '../render/terrain';
 
-export type DrawMode = WebGLRenderingContext['LINES'] | WebGLRenderingContext['TRIANGLES'] | WebGLRenderingContext['LINE_STRIP'];
+export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
 function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> {
     const result = [];
@@ -28,7 +28,7 @@ function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> 
     }
     return result;
 }
-class Program<Us extends UniformBindings> {
+export class Program<Us extends UniformBindings> {
     program: WebGLProgram;
     attributes: {[_: string]: number};
     numAttributes: number;
@@ -74,8 +74,10 @@ class Program<Us extends UniformBindings> {
         if (terrain) {
             defines.push('#define TERRAIN3D;');
         }
+
         const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
         const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
+
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         if (gl.isContextLost()) {
             this.failedToCreate = true;
@@ -107,7 +109,6 @@ class Program<Us extends UniformBindings> {
         }
 
         gl.linkProgram(this.program);
-
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
@@ -155,7 +156,7 @@ class Program<Us extends UniformBindings> {
         context.setColorMode(colorMode);
         context.setCullFace(cullFaceMode);
 
-        // set varaibles used by the 3d functions defined in _prelude.vertex.glsl
+        // set variables used by the 3d functions defined in _prelude.vertex.glsl
         if (terrain) {
             context.activeTexture.set(gl.TEXTURE2);
             gl.bindTexture(gl.TEXTURE_2D, terrain.depthTexture);
@@ -211,5 +212,3 @@ class Program<Us extends UniformBindings> {
         }
     }
 }
-
-export default Program;

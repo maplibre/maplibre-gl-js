@@ -1,11 +1,12 @@
-import Camera, {CameraOptions} from '../ui/camera';
-import Transform from '../geo/transform';
-import TaskQueue, {TaskID} from '../util/task_queue';
-import browser from '../util/browser';
+import {Camera, CameraOptions} from '../ui/camera';
+import {Transform} from '../geo/transform';
+import {TaskQueue, TaskID} from '../util/task_queue';
+import {browser} from '../util/browser';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import Terrain from '../render/terrain';
+import {Terrain} from '../render/terrain';
+import {LngLat, LngLatLike} from '../geo/lng_lat';
 
 beforeEach(() => {
     setMatchMedia();
@@ -1995,5 +1996,161 @@ describe('#fitScreenCoordinates', () => {
         expect(fixedLngLat(camera.getCenter(), 4)).toEqual({lng: -45, lat: 40.9799});
         expect(fixedNum(camera.getZoom(), 3)).toBe(2);
         expect(camera.getBearing()).toBeCloseTo(0);
+    });
+});
+
+describe('queryTerrainElevation', () => {
+    let camera: Camera;
+
+    beforeEach(() => {
+        camera = createCamera();
+    });
+
+    test('should return null if terrain is not set', () => {
+        camera.terrain = null;
+        const result = camera.queryTerrainElevation([0, 0]);
+        expect(result).toBeNull();
+    });
+
+    test('should return the correct elevation', () => {
+        // Set up mock transform and terrain objects
+        const transform = new Transform(0, 22, 0, 60, true);
+        transform.getElevation = jest.fn().mockReturnValue(200);
+        transform.elevation = 50;
+        const terrain = {} as Terrain;
+
+        // Set up camera with mock transform and terrain
+        camera.transform = transform;
+        camera.terrain = terrain;
+
+        // Call queryTerrainElevation with mock lngLat
+        const lngLatLike: LngLatLike = [1, 2];
+        const expectedElevation = 150; // 200 - 50 = 150
+        const result = camera.queryTerrainElevation(lngLatLike);
+
+        // Check that transform.getElevation was called with the correct arguments
+        expect(transform.getElevation).toHaveBeenCalledWith(
+            expect.objectContaining({
+                lng: lngLatLike[0],
+                lat: lngLatLike[1],
+            }),
+            terrain
+        );
+
+        // Check that the correct elevation value was returned
+        expect(result).toEqual(expectedElevation);
+    });
+});
+
+describe('#transformCameraUpdate', () => {
+
+    test('invoke transformCameraUpdate callback during jumpTo', done => {
+        const camera = createCamera();
+
+        let callbackCount = 0;
+        let eventCount = 0;
+
+        camera.transformCameraUpdate = () => {
+            callbackCount++;
+            return {};
+        };
+
+        camera
+            .on('move', () => {
+                eventCount++;
+                expect(eventCount).toBe(callbackCount);
+            })
+            .on('moveend', () => {
+                done();
+            });
+
+        camera.jumpTo({center: [100, 0]});
+    });
+
+    test('invoke transformCameraUpdate callback during easeTo', done => {
+        expect.assertions(2);
+        const camera = createCamera();
+        const stub = jest.spyOn(browser, 'now');
+        stub.mockImplementation(() => 0);
+
+        let callbackCount = 0;
+        let eventCount = 0;
+
+        camera.transformCameraUpdate = () => {
+            callbackCount++;
+            return {};
+        };
+
+        camera
+            .on('move', () => {
+                eventCount++;
+                expect(eventCount).toBe(callbackCount);
+            })
+            .on('moveend', () => {
+                done();
+            });
+
+        camera.easeTo({center: [100, 0], duration: 10});
+
+        setTimeout(() => {
+            stub.mockImplementation(() => 1);
+            camera.simulateFrame();
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 10);
+                camera.simulateFrame();
+            }, 0);
+        }, 0);
+    });
+
+    test('invoke transformCameraUpdate callback during flyTo', done => {
+        expect.assertions(2);
+        const camera = createCamera();
+        const stub = jest.spyOn(browser, 'now');
+        stub.mockImplementation(() => 0);
+
+        let callbackCount = 0;
+        let eventCount = 0;
+
+        camera.transformCameraUpdate = () => {
+            callbackCount++;
+            return {};
+        };
+
+        camera
+            .on('move', () => {
+                eventCount++;
+                expect(eventCount).toBe(callbackCount);
+            })
+            .on('moveend', () => {
+                done();
+            });
+
+        camera.flyTo({center: [100, 0], duration: 10});
+
+        setTimeout(() => {
+            stub.mockImplementation(() => 1);
+            camera.simulateFrame();
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 10);
+                camera.simulateFrame();
+            }, 0);
+        }, 0);
+    });
+
+    test('transformCameraUpdate overrides proposed camera settings', () => {
+        const camera = createCamera();
+
+        camera.transformCameraUpdate = ({center, zoom}) => {
+            return {
+                center: LngLat.convert([center.lng, center.lat + 10]),
+                zoom: Math.round(zoom)
+            };
+        };
+
+        camera.flyTo({center: [100, 0], zoom: 3.2, animate: false});
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 100, lat: 10});
+        expect(fixedNum(camera.getZoom())).toBe(3);
     });
 });

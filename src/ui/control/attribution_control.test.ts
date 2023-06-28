@@ -1,5 +1,5 @@
-import AttributionControl from './attribution_control';
-import {createMap as globalCreateMap, setWebGlContext, setPerformance, setMatchMedia} from '../../util/test/util';
+import {AttributionControl} from './attribution_control';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
 
@@ -21,9 +21,7 @@ function createMap() {
 let map;
 
 beforeEach(() => {
-    setWebGlContext();
-    setPerformance();
-    setMatchMedia();
+    beforeMapTest();
     map = createMap();
 });
 

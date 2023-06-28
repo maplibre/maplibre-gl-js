@@ -1,7 +1,5 @@
 import Point from '@mapbox/point-geometry';
 
-export default clipLine;
-
 /**
  * Returns the part of a multiline that intersects with the provided rectangular box.
  *
@@ -13,7 +11,7 @@ export default clipLine;
  * @returns lines
  * @private
  */
-function clipLine(lines: Array<Array<Point>>, x1: number, y1: number, x2: number, y2: number): Array<Array<Point>> {
+export function clipLine(lines: Array<Array<Point>>, x1: number, y1: number, x2: number, y2: number): Array<Array<Point>> {
     const clippedLines = [];
 
     for (let l = 0; l < lines.length; l++) {

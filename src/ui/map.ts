@@ -1,31 +1,34 @@
-import {extend, bindAll, warnOnce, uniqueId, isImageBitmap} from '../util/util';
-import browser from '../util/browser';
-import DOM from '../util/dom';
+import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
+import {browser} from '../util/browser';
+import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-import {getImage, GetImageCallback, getJSON, ResourceType} from '../util/ajax';
-import {RequestManager} from '../util/request_manager';
-import Style, {StyleSwapOptions} from '../style/style';
-import EvaluationParameters from '../style/evaluation_parameters';
-import Painter from '../render/painter';
-import Transform from '../geo/transform';
-import Hash from './hash';
-import HandlerManager from './handler_manager';
-import Camera, {CameraOptions} from './camera';
-import LngLat from '../geo/lng_lat';
-import LngLatBounds from '../geo/lng_lat_bounds';
+
+import {getJSON} from '../util/ajax';
+import {ImageRequest} from '../util/image_request';
+import type {GetImageCallback} from '../util/image_request';
+
+import {RequestManager, ResourceType} from '../util/request_manager';
+import {Style, StyleSwapOptions} from '../style/style';
+import {EvaluationParameters} from '../style/evaluation_parameters';
+import {Painter} from '../render/painter';
+import {Transform} from '../geo/transform';
+import {Hash} from './hash';
+import {HandlerManager} from './handler_manager';
+import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} from './camera';
+import {LngLat} from '../geo/lng_lat';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import AttributionControl from './control/attribution_control';
-import LogoControl from './control/logo_control';
-import {supported} from '@mapbox/mapbox-gl-supported';
+import {AttributionControl} from './control/attribution_control';
+import {LogoControl} from './control/logo_control';
+
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
-import TaskQueue from '../util/task_queue';
-import webpSupported from '../util/webp_supported';
+import {TaskQueue} from '../util/task_queue';
+import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
-import {setCacheLimits} from '../util/tile_request_cache';
 import {Source} from '../source/source';
-import StyleLayer from '../style/style_layer';
+import {StyleLayer} from '../style/style_layer';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -33,18 +36,18 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapEvent, MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
-import type {StyleImageInterface, StyleImageMetadata} from '../style/style_image';
+import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
-import type ScrollZoomHandler from './handler/scroll_zoom';
-import type BoxZoomHandler from './handler/box_zoom';
-import type {TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
-import type DragRotateHandler from './handler/shim/drag_rotate';
-import DragPanHandler, {DragPanOptions} from './handler/shim/drag_pan';
+import type {ScrollZoomHandler} from './handler/scroll_zoom';
+import type {BoxZoomHandler} from './handler/box_zoom';
+import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
+import type {DragRotateHandler} from './handler/shim/drag_rotate';
+import {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
 
-import type KeyboardHandler from './handler/keyboard';
-import type DoubleClickZoomHandler from './handler/shim/dblclick_zoom';
-import type TwoFingersTouchZoomRotateHandler from './handler/shim/two_fingers_touch';
-import defaultLocale from './default_locale';
+import type {KeyboardHandler} from './handler/keyboard';
+import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
+import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
+import {defaultLocale} from './default_locale';
 import type {TaskID} from '../util/task_queue';
 import type {Cancelable} from '../types/cancelable';
 import type {
@@ -54,12 +57,14 @@ import type {
     LightSpecification,
     SourceSpecification,
     TerrainSpecification
-} from '../style-spec/types.g';
+} from '@maplibre/maplibre-gl-style-spec';
+
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import Terrain from '../render/terrain';
-import RenderToTexture from '../render/render_to_texture';
+import {Terrain} from '../render/terrain';
+import {RenderToTexture} from '../render/render_to_texture';
+import {config} from '../util/config';
 
 const version = packageJSON.version;
 /* eslint-enable no-use-before-define */
@@ -77,18 +82,18 @@ export type MapOptions = {
     antialias?: boolean;
     refreshExpiredTiles?: boolean;
     maxBounds?: LngLatBoundsLike;
-    scrollZoom?: boolean;
+    scrollZoom?: boolean | AroundCenterOptions;
     minZoom?: number | null;
     maxZoom?: number | null;
     minPitch?: number | null;
     maxPitch?: number | null;
     boxZoom?: boolean;
     dragRotate?: boolean;
-    dragPan?: DragPanOptions | boolean;
+    dragPan?: boolean | DragPanOptions;
     keyboard?: boolean;
     doubleClickZoom?: boolean;
-    touchZoomRotate?: boolean;
-    touchPitch?: boolean;
+    touchZoomRotate?: boolean | AroundCenterOptions;
+    touchPitch?: boolean | AroundCenterOptions;
     cooperativeGestures?: boolean | GestureOptions;
     trackResize?: boolean;
     center?: LngLatLike;
@@ -97,20 +102,32 @@ export type MapOptions = {
     pitch?: number;
     renderWorldCopies?: boolean;
     maxTileCacheSize?: number;
+    maxTileCacheZoomLevels?: number;
     transformRequest?: RequestTransformFunction;
+    transformCameraUpdate?: CameraUpdateTransformFunction;
     locale?: any;
     fadeDuration?: number;
     crossSourceCollisions?: boolean;
     collectResourceTiming?: boolean;
     clickTolerance?: number;
     bounds?: LngLatBoundsLike;
-    fitBoundsOptions?: Object;
+    fitBoundsOptions?: FitBoundsOptions;
     localIdeographFontFamily?: string;
     style: StyleSpecification | string;
     pitchWithRotate?: boolean;
     pixelRatio?: number;
+    validateStyle?: boolean;
 };
 
+/**
+ * An options object for the gesture settings
+ * @example
+ * let options = {
+ *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
+ *   macHelpText: "Use ⌘ + scroll to zoom the map",
+ *   mobileHelpText: "Use two fingers to move the map",
+ * }
+ */
 export type GestureOptions = {
     windowsHelpText?: string;
     macHelpText?: string;
@@ -179,10 +196,13 @@ const defaultOptions = {
     renderWorldCopies: true,
     refreshExpiredTiles: true,
     maxTileCacheSize: null,
+    maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
     localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
+    transformCameraUpdate: null,
     fadeDuration: 300,
-    crossSourceCollisions: true
+    crossSourceCollisions: true,
+    validateStyle: true
 } as CompleteMapOptions;
 
 /**
@@ -195,26 +215,26 @@ const defaultOptions = {
  * object.
  *
  * @extends Evented
- * @param {Object} options
+ * @param {MapOptions} options
  * @param {HTMLElement|string} options.container The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
  * @param {number} [options.minZoom=0] The minimum zoom level of the map (0-24).
  * @param {number} [options.maxZoom=22] The maximum zoom level of the map (0-24).
  * @param {number} [options.minPitch=0] The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {number} [options.maxPitch=60] The maximum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
- * @param {Object|string} [options.style] The map's MapLibre style. This must be an a JSON object conforming to
- * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/), or a URL to
+ * @param {StyleSpecification|string} [options.style] The map's MapLibre style. This must be an a JSON object conforming to
+ * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to
  * such JSON.
  *
  *
  * @param {(boolean|string)} [options.hash=false] If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
- *   For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
- *   An additional string may optionally be provided to indicate a parameter-styled hash,
- *   e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
- *   is a custom parameter and bar is an arbitrary hash distinct from the map hash.
+ * For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
+ * An additional string may optionally be provided to indicate a parameter-styled hash,
+ * e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
+ * is a custom parameter and bar is an arbitrary hash distinct from the map hash.
  * @param {boolean} [options.interactive=true] If `false`, no mouse, touch, or keyboard listeners will be attached to the map, so it will not respond to interaction.
  * @param {number} [options.bearingSnap=7] The threshold, measured in degrees, that determines when the map's
- *   bearing will snap to north. For example, with a `bearingSnap` of 7, if the user rotates
- *   the map within 7 degrees of north, the map will automatically snap to exact north.
+ * bearing will snap to north. For example, with a `bearingSnap` of 7, if the user rotates
+ * the map within 7 degrees of north, the map will automatically snap to exact north.
  * @param {boolean} [options.pitchWithRotate=true] If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
  * @param {number} [options.clickTolerance=3] The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).
  * @param {boolean} [options.attributionControl=true] If `true`, an {@link AttributionControl} will be added to the map.
@@ -222,48 +242,46 @@ const defaultOptions = {
  * @param {boolean} [options.maplibreLogo=false] If `true`, the MapLibre logo will be shown.
  * @param {string} [options.logoPosition='bottom-left'] A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
  * @param {boolean} [options.failIfMajorPerformanceCaveat=false] If `true`, map creation will fail if the performance of MapLibre
- *   GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
+ * GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
  * @param {boolean} [options.preserveDrawingBuffer=false] If `true`, the map's canvas can be exported to a PNG using `map.getCanvas().toDataURL()`. This is `false` by default as a performance optimization.
  * @param {boolean} [options.antialias] If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
  * @param {boolean} [options.refreshExpiredTiles=true] If `false`, the map won't attempt to re-request tiles once they expire per their HTTP `cacheControl`/`expires` headers.
  * @param {LngLatBoundsLike} [options.maxBounds] If set, the map will be constrained to the given bounds.
- * @param {boolean|Object} [options.scrollZoom=true] If `true`, the "scroll to zoom" interaction is enabled. An `Object` value is passed as options to {@link ScrollZoomHandler#enable}.
+ * @param {boolean|AroundCenterOptions} [options.scrollZoom=true] If `true`, the "scroll to zoom" interaction is enabled. {@link AroundCenterOptions} are passed as options to {@link ScrollZoomHandler#enable}.
  * @param {boolean} [options.boxZoom=true] If `true`, the "box zoom" interaction is enabled (see {@link BoxZoomHandler}).
  * @param {boolean} [options.dragRotate=true] If `true`, the "drag to rotate" interaction is enabled (see {@link DragRotateHandler}).
- * @param {boolean|Object} [options.dragPan=true] If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
+ * @param {boolean|DragPanOptions} [options.dragPan=true] If `true`, the "drag to pan" interaction is enabled. An `Object` value is passed as options to {@link DragPanHandler#enable}.
  * @param {boolean} [options.keyboard=true] If `true`, keyboard shortcuts are enabled (see {@link KeyboardHandler}).
  * @param {boolean} [options.doubleClickZoom=true] If `true`, the "double click to zoom" interaction is enabled (see {@link DoubleClickZoomHandler}).
- * @param {boolean|Object} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
- * @param {boolean|Object} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
- * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
- * A valid options object includes the following properties to customize the text on the informational screen. The values below are the defaults.
- * {
- *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
- *   macHelpText: "Use ⌘ + scroll to zoom the map",
- *   mobileHelpText: "Use two fingers to move the map",
- * }
+ * @param {boolean|AroundCenterOptions} [options.touchZoomRotate=true] If `true`, the "pinch to rotate and zoom" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchZoomRotateHandler#enable}.
+ * @param {boolean|AroundCenterOptions} [options.touchPitch=true] If `true`, the "drag to pitch" interaction is enabled. An `Object` value is passed as options to {@link TwoFingersTouchPitchHandler#enable}.
+ * @param {boolean|GestureOptions} [options.cooperativeGestures=undefined] If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link #FullscreenControl}.
  * @param {boolean} [options.trackResize=true] If `true`, the map will automatically resize when the browser window resizes.
- * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
+ * @param {LngLatLike} [options.center=[0, 0]] The initial geographical centerpoint of the map. If `center` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `[0, 0]` Note: MapLibre GL JS uses longitude, latitude coordinate order (as opposed to latitude, longitude) to match GeoJSON.
  * @param {number} [options.zoom=0] The initial zoom level of the map. If `zoom` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.bearing=0] The initial bearing (rotation) of the map, measured in degrees counter-clockwise from north. If `bearing` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`.
  * @param {number} [options.pitch=0] The initial pitch (tilt) of the map, measured in degrees away from the plane of the screen (0-85). If `pitch` is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to `0`. Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
  * @param {LngLatBoundsLike} [options.bounds] The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
- * @param {Object} [options.fitBoundsOptions] A {@link Map#fitBounds} options object to use _only_ when fitting the initial `bounds` provided above.
+ * @param {fitBoundsOptions} [options.fitBoundsOptions] A {@link Map#fitBounds} options object to use _only_ when fitting the initial `bounds` provided above.
  * @param {boolean} [options.renderWorldCopies=true] If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
  * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
  * container, there will be blank space beyond 180 and -180 degrees longitude.
  * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
  * map and the other on the left edge of the map) at every zoom level.
- * @param {number} [options.maxTileCacheSize=null] The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport.
+ * @param {number} [options.maxTileCacheSize=null] The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
+ * @param {number} [options.maxTileCacheZoomLevels=5] The maximum number of zoom levels for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying `maxTileCacheZoomLevels` with approx number of tiles in the viewport for a given source.
+ * @param {boolean} [options.validateStyle=true] If false, style validation will be skipped. Useful in production environment.
  * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
- *   font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
- *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
- *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
- *   The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js-docs/example/local-ideographs).)
+ * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
+ * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
+ * Set to `false`, to enable font settings from the map's style for these glyph ranges.
+ * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js-docs/example/local-ideographs).)
  * @param {RequestTransformFunction} [options.transformRequest=null] A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
- *   Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
+ * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
+ * @param {CameraUpdateTransformFunction} [options.transformCameraUpdate=null] A callback run before the Map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
+ * Expected to return an object containing center, zoom, pitch or bearing values to overwrite.
  * @param {boolean} [options.collectResourceTiming=false] If `true`, Resource Timing API information will be collected for requests made by GeoJSON and Vector Tile web workers (this information is normally inaccessible from the main Javascript thread). Information will be returned in a `resourceTiming` property of relevant `data` events.
- * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
+ * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
  * @param {boolean} [options.crossSourceCollisions=true] If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
  * @param {Object} [options.locale=null] A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
  * @param {number} [options.pixelRatio] The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
@@ -286,7 +304,7 @@ const defaultOptions = {
  * });
  * @see [Display a map](https://maplibre.org/maplibre-gl-js-docs/example/simple-map/)
  */
-class Map extends Camera {
+export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
@@ -298,7 +316,7 @@ class Map extends Camera {
     _interactive: boolean;
     _cooperativeGestures: boolean | GestureOptions;
     _cooperativeGesturesScreen: HTMLElement;
-    _metaPress: boolean;
+    _metaKey: keyof MouseEvent;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -307,14 +325,18 @@ class Map extends Camera {
     _vertices: boolean;
     _canvas: HTMLCanvasElement;
     _maxTileCacheSize: number;
+    _maxTileCacheZoomLevels: number;
     _frame: Cancelable;
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
+
     _loaded: boolean;
+    _idleTriggered: boolean;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
     _trackResize: boolean;
+    _resizeObserver: ResizeObserver;
     _preserveDrawingBuffer: boolean;
     _failIfMajorPerformanceCaveat: boolean;
     _antialias: boolean;
@@ -329,12 +351,16 @@ class Map extends Camera {
     _controls: Array<IControl>;
     _mapId: number;
     _localIdeographFontFamily: string;
+    _validateStyle: boolean;
     _requestManager: RequestManager;
     _locale: any;
     _removed: boolean;
     _clickTolerance: number;
-    _pixelRatio: number;
+    _overridePixelRatio: number | null;
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+
+    /** image queue throttling handle. To be used later when clean up */
+    _imageQueueHandle: number;
 
     /**
      * The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
@@ -411,7 +437,9 @@ class Map extends Camera {
 
         this._interactive = options.interactive;
         this._cooperativeGestures = options.cooperativeGestures;
+        this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._maxTileCacheSize = options.maxTileCacheSize;
+        this._maxTileCacheZoomLevels = options.maxTileCacheZoomLevels;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
         this._preserveDrawingBuffer = options.preserveDrawingBuffer;
         this._antialias = options.antialias;
@@ -427,7 +455,10 @@ class Map extends Camera {
         this._mapId = uniqueId();
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
-        this._pixelRatio = options.pixelRatio ?? devicePixelRatio;
+        this._overridePixelRatio = options.pixelRatio;
+        this.transformCameraUpdate = options.transformCameraUpdate;
+
+        this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
         this._requestManager = new RequestManager(options.transformRequest);
 
@@ -446,14 +477,6 @@ class Map extends Camera {
             this.setMaxBounds(options.maxBounds);
         }
 
-        bindAll([
-            '_onWindowOnline',
-            '_onWindowResize',
-            '_onMapScroll',
-            '_contextLost',
-            '_contextRestored'
-        ], this);
-
         this._setupContainer();
         this._setupPainter();
 
@@ -464,11 +487,22 @@ class Map extends Camera {
             this.painter.terrainFacilitator.dirty = true;
             this._update(true);
         });
+        this.once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
-            addEventListener('resize', this._onWindowResize, false);
-            addEventListener('orientationchange', this._onWindowResize, false);
+            let initialResizeEventCaptured = false;
+            this._resizeObserver = new ResizeObserver((entries) => {
+                if (!initialResizeEventCaptured) {
+                    initialResizeEventCaptured = true;
+                    return;
+                }
+
+                if (this._trackResize) {
+                    this.resize(entries)._update();
+                }
+            });
+            this._resizeObserver.observe(this._container);
         }
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
@@ -497,6 +531,8 @@ class Map extends Camera {
         this.resize();
 
         this._localIdeographFontFamily = options.localIdeographFontFamily;
+        this._validateStyle = options.validateStyle;
+
         if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
 
         if (options.attributionControl)
@@ -625,8 +661,8 @@ class Map extends Camera {
      * or when the map is shown after being initially hidden with CSS.
      *
      * @param eventData Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
-     *   events that get triggered as a result of resize. This can be useful for differentiating the
-     *   source of an event (for example, user-initiated or programmatically-triggered events).
+     * events that get triggered as a result of resize. This can be useful for differentiating the
+     * source of an event (for example, user-initiated or programmatically-triggered events).
      * @returns {Map} `this`
      * @example
      * // Resize the map when the map container is shown
@@ -641,6 +677,7 @@ class Map extends Camera {
 
         this._resizeCanvas(width, height, this.getPixelRatio());
         this.transform.resize(width, height);
+        this._requestedCameraState?.resize(width, height);
         this.painter.resize(width, height, this.getPixelRatio());
 
         const fireMoving = !this._moving;
@@ -662,22 +699,23 @@ class Map extends Camera {
      * @returns {number} The pixel ratio.
      */
     getPixelRatio() {
-        return this._pixelRatio;
+        return this._overridePixelRatio ?? devicePixelRatio;
     }
 
     /**
      * Sets the map's pixel ratio. This allows to override `devicePixelRatio`.
      * After this call, the canvas' `width` attribute will be `container.clientWidth * pixelRatio`
      * and its height attribute will be `container.clientHeight * pixelRatio`.
-     * @param {number} pixelRatio The pixel ratio.
+     * Set this to null to disable `devicePixelRatio` override.
+     * @param {number | null} pixelRatio The pixel ratio.
      */
-    setPixelRatio(pixelRatio: number) {
+    setPixelRatio(pixelRatio: number | null) {
         const [width, height] = this._containerDimensions();
 
-        this._pixelRatio = pixelRatio;
+        this._overridePixelRatio = pixelRatio;
 
-        this._resizeCanvas(width, height, pixelRatio);
-        this.painter.resize(width, height, pixelRatio);
+        this._resizeCanvas(width, height, this.getPixelRatio());
+        this.painter.resize(width, height, this.getPixelRatio());
     }
 
     /**
@@ -738,7 +776,7 @@ class Map extends Camera {
      * no matter what the `minZoom` is set to.
      *
      * @param {number | null | undefined} minZoom The minimum zoom level to set (-2 - 24).
-     *   If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
+     * If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
      * @returns {Map} `this`
      * @example
      * map.setMinZoom(12.25);
@@ -773,7 +811,7 @@ class Map extends Camera {
      * the map will zoom to the new maximum.
      *
      * @param {number | null | undefined} maxZoom The maximum zoom level to set.
-     *   If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
+     * If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
      * @returns {Map} `this`
      * @example
      * map.setMaxZoom(18.75);
@@ -808,7 +846,7 @@ class Map extends Camera {
      * the map will pitch to the new minimum.
      *
      * @param {number | null | undefined} minPitch The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
-     *   If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
+     * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
      * @returns {Map} `this`
      */
     setMinPitch(minPitch?: number | null) {
@@ -843,7 +881,7 @@ class Map extends Camera {
      * the map will pitch to the new maximum.
      *
      * @param {number | null | undefined} maxPitch The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
-     *   If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
+     * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
      * @returns {Map} `this`
      */
     setMaxPitch(maxPitch?: number | null) {
@@ -906,6 +944,32 @@ class Map extends Camera {
     }
 
     /**
+     * Gets the map's cooperativeGestures option
+     *
+     * @returns {GestureOptions} gestureOptions
+     */
+    getCooperativeGestures() {
+        return this._cooperativeGestures;
+    }
+
+    /**
+     * Sets or clears the map's cooperativeGestures option
+     *
+     * @param {GestureOptions | null | undefined} gestureOptions If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
+     * @returns {Map} `this`
+     */
+    setCooperativeGestures(gestureOptions?: GestureOptions | boolean | null) {
+        this._cooperativeGestures = gestureOptions;
+        if (this._cooperativeGestures) {
+            this._setupCooperativeGestures();
+        } else {
+            this._destroyCooperativeGestures();
+        }
+
+        return this;
+    }
+
+    /**
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
      *
@@ -942,7 +1006,7 @@ class Map extends Camera {
      * var isMoving = map.isMoving();
      */
     isMoving(): boolean {
-        return this._moving || this.handlers.isMoving();
+        return this._moving || this.handlers?.isMoving();
     }
 
     /**
@@ -952,7 +1016,7 @@ class Map extends Camera {
      * var isZooming = map.isZooming();
      */
     isZooming(): boolean {
-        return this._zooming || this.handlers.isZooming();
+        return this._zooming || this.handlers?.isZooming();
     }
 
     /**
@@ -962,7 +1026,7 @@ class Map extends Camera {
      * map.isRotating();
      */
     isRotating(): boolean {
-        return this._rotating || this.handlers.isRotating();
+        return this._rotating || this.handlers?.isRotating();
     }
 
     _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener): {
@@ -1092,7 +1156,7 @@ class Map extends Camera {
      *     id: 'points-of-interest',
      *     source: {
      *       type: 'vector',
-     *       url: 'https://maplibre.org/maplibre-gl-js-docs/style-spec/'
+     *       url: 'https://maplibre.org/maplibre-style-spec/'
      *     },
      *     'source-layer': 'poi_label',
      *     type: 'circle',
@@ -1152,8 +1216,8 @@ class Map extends Camera {
      * @instance
      * @param {string} type The event type to add a listener for.
      * @param {Function} listener The function to be called when the event is fired.
-     *   The listener function is called with the data object passed to `fire`,
-     *   extended with `target` and `type` properties.
+     * The listener function is called with the data object passed to `fire`,
+     * extended with `target` and `type` properties.
      * @returns {Map} `this`
      */
 
@@ -1258,12 +1322,12 @@ class Map extends Camera {
      * map viewport.
      * The geometryOrOptions can receive a QueryRenderedFeaturesOptions only to support a situation where the function receives only one parameter which is the options parameter.
      * @param {QueryRenderedFeaturesOptions} [options] (optional) Options object.
-     * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-id) for the query to inspect.
-     *   Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
-     * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
-     *   to limit query results.
+     * @param {Array<string>} [options.layers] (optional) An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
+     * Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
+     * @param {FilterSpecification} [options.filter] (optional) A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
+     * to limit query results.
      * @param {Array<string>} [options.availableImages] (optional) An array of string representing the available images
-     * @param {boolean} [options.validate=true] (optional) Whether to check if the [options.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {boolean} [options.validate=true] (optional) Whether to check if the [options.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
@@ -1351,10 +1415,10 @@ class Map extends Camera {
      * @param {string} sourceId The ID of the vector tile or GeoJSON source to query.
      * @param {Object} [parameters] Options object.
      * @param {string} [parameters.sourceLayer] The name of the source layer
-     *   to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
-     * @param {Array} [parameters.filter] A [filter](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter)
-     *   to limit query results.
-     * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
+     * @param {Array} [parameters.filter] A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
+     * to limit query results.
+     * @param {boolean} [parameters.validate=true] Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      *
      * @returns {Array<MapGeoJSONFeature>} An array of MapGeoJSONFeature objects.
      *
@@ -1397,17 +1461,18 @@ class Map extends Camera {
      *
      *
      * @param style A JSON object conforming to the schema described in the
-     *   [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/), or a URL to such JSON.
-     * @param {Object} [options] Options object.
+     * [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
+     * @param {StyleSwapOptions & StyleOptions} [options] Options object.
      * @param {boolean} [options.diff=true] If false, force a 'full' update, removing the current style
-     *   and building the given one instead of attempting a diff-based update.
+     * and building the given one instead of attempting a diff-based update.
+     * @param {boolean} [options.validate=true] If false, style validation will be skipped. Useful in production environment.
      * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
-     *   font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
-     *   In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
-     *   Set to `false`, to enable font settings from the map's style for these glyph ranges.
-     *   Forces a full update.
+     * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
+     * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
+     * Set to `false`, to enable font settings from the map's style for these glyph ranges.
+     * Forces a full update.
      * @param {TransformStyleFunction} [options.transformStyle=undefined] transformStyle is a convenience function
-     *   that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
+     * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
      * @returns {Map} `this`
      *
      * @example
@@ -1442,7 +1507,11 @@ class Map extends Camera {
      * });
      */
     setStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
-        options = extend({}, {localIdeographFontFamily: this._localIdeographFontFamily}, options);
+        options = extend({},
+            {
+                localIdeographFontFamily: this._localIdeographFontFamily,
+                validate: this._validateStyle
+            }, options);
 
         if ((options.diff !== false && options.localIdeographFontFamily === this._localIdeographFontFamily) && this.style && style) {
             this._diffStyle(style, options);
@@ -1457,7 +1526,7 @@ class Map extends Camera {
      *  Updates the requestManager's transform request with a new function
      *
      * @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
-     *    Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
+     * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
      *
      * @returns {Map} `this`
      *
@@ -1488,7 +1557,9 @@ class Map extends Camera {
         const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
             this.style.setEventedParent(null);
-            this.style._remove();
+
+            // Only release workers when map is getting disposed
+            this.style._remove(!style);
         }
 
         if (!style) {
@@ -1549,7 +1620,7 @@ class Map extends Camera {
     /**
      * Returns the map's MapLibre style object, a JSON object which can be used to recreate the map's style.
      *
-     * @returns {Object} The map's style JSON object.
+     * @returns {StyleSpecification} The map's style JSON object.
      *
      * @example
      * var styleJson = map.getStyle();
@@ -1578,8 +1649,8 @@ class Map extends Camera {
      * Adds a source to the map's style.
      *
      * @param {string} id The ID of the source to add. Must not conflict with existing sources.
-     * @param {Object} source The source object, conforming to the
-     * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources) or
+     * @param {SourceSpecification} source The source object, conforming to the
+     * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
      * {@link CanvasSourceOptions}.
      * @fires source.add
      * @returns {Map} `this`
@@ -1653,6 +1724,13 @@ class Map extends Camera {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            // Warn once if user is using the same source for hillshade and terrain
+            for (const index in this.style._layers) {
+                const thisLayer = this.style._layers[index];
+                if (thisLayer.type === 'hillshade' && thisLayer.source === options.source) {
+                    warnOnce('You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
+                }
+            }
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.updateElevation(this.terrain);
@@ -1741,7 +1819,7 @@ class Map extends Camera {
      * corresponds to no existing sources.
      * The shape of the object varies by source type.
      * A list of options for each source type is available on the MapLibre Style Specification's
-     * [Sources](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/) page.
+     * [Sources](https://maplibre.org/maplibre-style-spec/sources/) page.
      * @example
      * var sourceObject = map.getSource('points');
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
@@ -1756,10 +1834,10 @@ class Map extends Camera {
     /**
      * Add an image to the style. This image can be displayed on the map like any other icon in the style's
      * sprite using the image's ID with
-     * [`icon-image`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layout-symbol-icon-image),
-     * [`background-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-background-background-pattern),
-     * [`fill-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-fill-fill-pattern),
-     * or [`line-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-line-line-pattern).
+     * [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
+     * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
+     * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
+     * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      * A {@link Map.event:error} event will be fired if there is not enough space in the sprite to add this image.
      *
      * @param id The ID of the image.
@@ -1849,10 +1927,10 @@ class Map extends Camera {
     /**
      * Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
      * sprite using the image's ID with
-     * [`icon-image`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layout-symbol-icon-image),
-     * [`background-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-background-background-pattern),
-     * [`fill-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-fill-fill-pattern),
-     * or [`line-pattern`](https://maplibre.org/maplibre-gl-js-docs/style-spec/#paint-line-line-pattern).
+     * [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
+     * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
+     * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
+     * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      *
      * @param id The ID of the image.
      * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -1895,6 +1973,22 @@ class Map extends Camera {
         existingImage.data.replace(data, copy);
 
         this.style.updateImage(id, existingImage);
+    }
+
+    /**
+     * Returns an image, specified by ID, currently available in the map.
+     * This includes both images from the style's original sprite
+     * and any images that have been added at runtime using {@link Map#addImage}.
+     *
+     * @param id The ID of the image.
+     * @returns {StyleImage} An image in the map with the specified ID.
+     *
+     * @example
+     * var coffeeShopIcon = map.getImage("coffee_cup");
+     *
+     */
+    getImage(id: string): StyleImage {
+        return this.style.getImage(id);
     }
 
     /**
@@ -1953,7 +2047,7 @@ class Map extends Camera {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      */
     loadImage(url: string, callback: GetImageCallback) {
-        getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
+        ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
     }
 
     /**
@@ -1972,41 +2066,41 @@ class Map extends Camera {
     }
 
     /**
-     * Adds a [MapLibre style layer](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers)
+     * Adds a [MapLibre style layer](https://maplibre.org/maplibre-style-spec/#layers)
      * to the map's style.
      *
      * A layer defines how data from a specified source will be styled. Read more about layer types
-     * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers).
+     * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#layers).
      *
      * TODO: JSDoc can't pass @param {(LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface} layer The layer to add,
-     * @param {Object} layer
-     * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layers) or,
+     * @param {LayerSpecification} layer
+     * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-style-spec/#layers) or,
      * less commonly, the {@link CustomLayerInterface} specification.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
      *
-     * @param {string} layer.id A unique identifer that you define.
+     * @param {string} layer.id A unique identifier that you define.
      * @param {string} layer.type The type of layer (for example `fill` or `symbol`).
-     * A list of layer types is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#type).
+     * A list of layer types is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/#type).
      *
      * (This can also be `custom`. For more information, see {@link CustomLayerInterface}.)
      * @param {string | SourceSpecification} [layer.source] The data source for the layer.
      * Reference a source that has _already been defined_ using the source's unique id.
-     * Reference a _new source_ using a source object (as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/)) directly.
+     * Reference a _new source_ using a source object (as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sources/)) directly.
      * This is **required** for all `layer.type` options _except_ for `custom` and `background`.
      * @param {string} [layer.sourceLayer] (optional) The name of the source layer within the specified `layer.source` to use for this style layer.
      * This is only applicable for vector tile sources and is **required** when `layer.source` is of the type `vector`.
      * @param {array} [layer.filter] (optional) An expression specifying conditions on source features.
      * Only features that match the filter are displayed.
-     * The MapLibre Style Specification includes more information on the limitations of the [`filter`](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter) parameter
-     * and a complete list of available [expressions](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/).
+     * The MapLibre Style Specification includes more information on the limitations of the [`filter`](https://maplibre.org/maplibre-style-spec/layers/#filter) parameter
+     * and a complete list of available [expressions](https://maplibre.org/maplibre-style-spec/expressions/).
      * If no filter is provided, all features in the source (or source layer for vector tilesets) will be displayed.
      * @param {Object} [layer.paint] (optional) Paint properties for the layer.
      * Available paint properties vary by `layer.type`.
-     * A full list of paint properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/).
+     * A full list of paint properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/).
      * If no paint properties are specified, default values will be used.
      * @param {Object} [layer.layout] (optional) Layout properties for the layer.
      * Available layout properties vary by `layer.type`.
-     * A full list of layout properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/).
+     * A full list of layout properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/).
      * If no layout properties are specified, default values will be used.
      * @param {number} [layer.maxzoom] (optional) The maximum zoom level for the layer.
      * At zoom levels equal to or greater than the maxzoom, the layer will be hidden.
@@ -2128,7 +2222,7 @@ class Map extends Camera {
      *
      * @param {string} id The ID of the layer to get.
      * @returns {StyleLayer} The layer with the specified ID, or `undefined`
-     *   if the ID corresponds to no existing layers.
+     * if the ID corresponds to no existing layers.
      *
      * @example
      * var stateDataLayer = map.getLayer('state-data');
@@ -2142,8 +2236,8 @@ class Map extends Camera {
 
     /**
      * Sets the zoom extent for the specified style layer. The zoom extent includes the
-     * [minimum zoom level](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-minzoom)
-     * and [maximum zoom level](https://maplibre.org/maplibre-gl-js-docs/style-spec/#layer-maxzoom))
+     * [minimum zoom level](https://maplibre.org/maplibre-style-spec/#layer-minzoom)
+     * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/#layer-maxzoom))
      * at which the layer will be rendered.
      *
      * Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
@@ -2178,9 +2272,9 @@ class Map extends Camera {
      *
      * @param {string} layerId The ID of the layer to which the filter will be applied.
      * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
-     *   [filter definition](https://maplibre.org/maplibre-gl-js-docs/style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
-     * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
+     * @param {StyleSetterOptions} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      *
      * @example
@@ -2216,9 +2310,9 @@ class Map extends Camera {
      * @param {string} layerId The ID of the layer to set the paint property in.
      * @param {string} name The name of the paint property to set.
      * @param {*} value The value of the paint property to set.
-     *   Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
-     * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
+     * @param {StyleSetterOptions} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
@@ -2246,9 +2340,9 @@ class Map extends Camera {
      *
      * @param {string} layerId The ID of the layer to set the layout property in.
      * @param {string} name The name of the layout property to set.
-     * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/).
-     * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
+     * @param {StyleSetterOptions} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
@@ -2270,11 +2364,103 @@ class Map extends Camera {
     }
 
     /**
+     * Sets the value of the style's glyphs property.
+     *
+     * @param glyphsUrl Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
+     * @param {StyleSetterOptions} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @returns {Map} `this`
+     * @example
+     * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
+     */
+    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.setGlyphs(glyphsUrl, options);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's glyphs URL
+     *
+     * @returns {string | null} glyphs Style's glyphs url
+     */
+    getGlyphs() {
+        return this.style.getGlyphsUrl();
+    }
+
+    /**
+     * Adds a sprite to the map's style.
+     *
+     * @param {string} id The ID of the sprite to add. Must not conflict with existing sprites.
+     * @param {string} url The URL to load the sprite from
+     * @param {StyleSetterOptions} [options] Options object.
+     * @fires style
+     * @returns {Map} `this`
+     * @example
+     * map.addSprite('sprite-two', 'http://example.com/sprite-two');
+     */
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.addSprite(id, url, options, (err) => {
+            if (!err) {
+                this._update(true);
+            }
+        });
+        return this;
+    }
+
+    /**
+     * Removes the sprite from the map's style.
+     *
+     * @param {string} id The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
+     * @fires style
+     * @returns {Map} `this`
+     * @example
+     * map.removeSprite('sprite-two');
+     * @example
+     * map.removeSprite('default');
+     */
+    removeSprite(id: string) {
+        this._lazyInitEmptyStyle();
+        this.style.removeSprite(id);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the as-is value of the style's sprite.
+     *
+     * @returns {SpriteSpecification | undefined} style's sprite url or a list of id-url pairs
+     */
+    getSprite() {
+        return this.style.getSprite();
+    }
+
+    /**
+     * Sets the value of the style's sprite property.
+     *
+     * @param spriteUrl Sprite URL to set.
+     * @param {StyleSetterOptions} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @returns {Map} `this`
+     * @example
+     * map.setSprite('YOUR_SPRITE_URL');
+     */
+    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.setSprite(spriteUrl, options, (err) => {
+            if (!err) {
+                this._update(true);
+            }
+        });
+        return this;
+    }
+
+    /**
      * Sets the any combination of light values.
      *
-     * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#light).
-     * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
+     * @param {StyleSetterOptions} [options] Options object.
+     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
      * @example
      * var layerVisibility = map.getLayoutProperty('my-layer', 'visibility');
@@ -2288,9 +2474,9 @@ class Map extends Camera {
     /**
      * Returns the value of the light object.
      *
-     * @returns {Object} light Light properties of the style.
+     * @returns {LightSpecification} light Light properties of the style.
      */
-    getLight() {
+    getLight(): LightSpecification {
         return this.style.getLight();
     }
 
@@ -2303,12 +2489,12 @@ class Map extends Camera {
      *
      * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
      * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
-     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/#vector-promoteId) option at the time the source is defined.
-     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-gl-js-docs/style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
+     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
+     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
-     * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
+     * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
-     * @param {Object} feature Feature identifier. Feature objects returned from
+     * @param {FeatureIdentifier} feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param {string | number} feature.id Unique id of the feature.
      * @param {string} feature.source The id of the vector or GeoJSON source for the feature.
@@ -2345,7 +2531,7 @@ class Map extends Camera {
      * If `key` is also specified, it removes only that key from that feature's state.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * @param {Object} target Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
+     * @param {FeatureIdentifier} target Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
      * Feature objects returned from {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param {string | number} target.id (optional) Unique id of the feature. Optional if key is not specified.
      * @param {string} target.source The id of the vector or GeoJSON source for the feature.
@@ -2394,9 +2580,9 @@ class Map extends Camera {
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-gl-js-docs/style-spec/expressions/#feature-state)._
+     * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
      *
-     * @param {Object} feature Feature identifier. Feature objects returned from
+     * @param {FeatureIdentifier} feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param {string | number} feature.id Unique id of the feature.
      * @param {string} feature.source The id of the vector or GeoJSON source for the feature.
@@ -2499,33 +2685,33 @@ class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
+    _cooperativeGesturesOnWheel = (event: WheelEvent) => {
+        this._onCooperativeGesture(event, event[this._metaKey], 1);
+    };
+
     _setupCooperativeGestures() {
         const container = this._container;
-        this._metaPress = false;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        let modifierKeyName = 'Control';
         let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
         if (navigator.platform.indexOf('Mac') === 0) {
             desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
-            modifierKeyName = 'Meta';
         }
         const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
         this._cooperativeGesturesScreen.innerHTML = `
             <div class="maplibregl-desktop-message">${desktopMessage}</div>
             <div class="maplibregl-mobile-message">${mobileMessage}</div>
         `;
-        document.addEventListener('keydown', (event) => {
-            if (event.key === modifierKeyName) this._metaPress = true;
-        });
-        document.addEventListener('keyup', (event) => {
-            if (event.key === modifierKeyName) this._metaPress = false;
-        });
         // Add event to canvas container since gesture container is pointer-events: none
-        this._canvasContainer.addEventListener('wheel', (e) => {
-            this._onCooperativeGesture(e, this._metaPress, 1);
-        }, false);
-        // Remove the traditional pan classes
-        this._canvasContainer.classList.remove('maplibregl-touch-drag-pan');
+        this._canvasContainer.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
+
+        // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
+        this._canvasContainer.classList.add('maplibregl-cooperative-gestures');
+    }
+
+    _destroyCooperativeGestures() {
+        DOM.remove(this._cooperativeGesturesScreen);
+        this._canvasContainer.removeEventListener('wheel', this._cooperativeGesturesOnWheel, false);
+        this._canvasContainer.classList.remove('maplibregl-cooperative-gestures');
     }
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
@@ -2539,11 +2725,15 @@ class Map extends Camera {
     }
 
     _setupPainter() {
-        const attributes = extend({}, supported.webGLContextAttributes, {
+
+        const attributes = {
+            alpha: true,
+            stencil: true,
+            depth: true,
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
             antialias: this._antialias || false
-        });
+        };
 
         let webglcontextcreationerrorDetailObject: any = null;
         this._canvas.addEventListener('webglcontextcreationerror', (args: WebGLContextEvent) => {
@@ -2554,8 +2744,9 @@ class Map extends Camera {
             }
         }, {once: true});
 
-        const gl = this._canvas.getContext('webgl', attributes) ||
-            this._canvas.getContext('experimental-webgl', attributes);
+        const gl =
+        this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
+        this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
@@ -2567,35 +2758,35 @@ class Map extends Camera {
             }
         }
 
-        this.painter = new Painter(gl as WebGLRenderingContext, this.transform);
+        this.painter = new Painter(gl, this.transform);
 
-        webpSupported.testSupport(gl as WebGLRenderingContext);
+        webpSupported.testSupport(gl);
     }
 
-    _contextLost(event: any) {
+    _contextLost = (event: any) => {
         event.preventDefault();
         if (this._frame) {
             this._frame.cancel();
             this._frame = null;
         }
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
-    }
+    };
 
-    _contextRestored(event: any) {
+    _contextRestored = (event: any) => {
         this._setupPainter();
         this.resize();
         this._update();
         this.fire(new Event('webglcontextrestored', {originalEvent: event}));
-    }
+    };
 
-    _onMapScroll(event: any) {
+    _onMapScroll = (event: any) => {
         if (event.target !== this._container) return;
 
         // Revert any scroll which would move the canvas outside of the view
         this._container.scrollTop = 0;
         this._container.scrollLeft = 0;
         return false;
-    }
+    };
 
     _onCooperativeGesture(event: any, metaPress, touches) {
         if (!metaPress && touches < 2) {
@@ -2630,7 +2821,7 @@ class Map extends Camera {
      * @private
      */
     _update(updateStyle?: boolean) {
-        if (!this.style) return this;
+        if (!this.style || !this.style._loaded) return this;
 
         this._styleDirty = this._styleDirty || updateStyle;
         this._sourcesDirty = true;
@@ -2667,13 +2858,7 @@ class Map extends Camera {
      * @private
      */
     _render(paintStartTimeStamp: number) {
-        let gpuTimer, frameStartTime = 0;
-        const extTimerQuery = this.painter.context.extTimerQuery;
-        if (this.listens('gpu-timing-frame')) {
-            gpuTimer = extTimerQuery.createQueryEXT();
-            extTimerQuery.beginQueryEXT(extTimerQuery.TIME_ELAPSED_EXT, gpuTimer);
-            frameStartTime = browser.now();
-        }
+        const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
         this.painter.context.setDirty();
@@ -2697,7 +2882,7 @@ class Map extends Camera {
 
             const parameters = new EvaluationParameters(zoom, {
                 now,
-                fadeDuration: this._fadeDuration,
+                fadeDuration,
                 zoomHistory: this.style.zoomHistory,
                 transition: this.style.getTransition()
             });
@@ -2723,7 +2908,7 @@ class Map extends Camera {
         if (this.terrain) this.terrain.sourceCache.update(this.transform, this.terrain);
         this.transform.updateElevation(this.terrain);
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, this._fadeDuration, this._crossSourceCollisions);
+        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
         // Actually draw
         this.painter.render(this.style, {
@@ -2732,9 +2917,8 @@ class Map extends Camera {
             rotating: this.isRotating(),
             zooming: this.isZooming(),
             moving: this.isMoving(),
-            fadeDuration: this._fadeDuration,
+            fadeDuration,
             showPadding: this.showPadding,
-            gpuTiming: !!this.listens('gpu-timing-layer'),
         });
 
         this.fire(new Event('render'));
@@ -2754,33 +2938,6 @@ class Map extends Camera {
             // all tiles held for fading. If we didn't do this, the tiles
             // would just sit in the SourceCaches until the next render
             this.style._releaseSymbolFadeTiles();
-        }
-
-        if (this.listens('gpu-timing-frame')) {
-            const renderCPUTime = browser.now() - frameStartTime;
-            extTimerQuery.endQueryEXT(extTimerQuery.TIME_ELAPSED_EXT, gpuTimer);
-            setTimeout(() => {
-                const renderGPUTime = extTimerQuery.getQueryObjectEXT(gpuTimer, extTimerQuery.QUERY_RESULT_EXT) / (1000 * 1000);
-                extTimerQuery.deleteQueryEXT(gpuTimer);
-                this.fire(new Event('gpu-timing-frame', {
-                    cpuTime: renderCPUTime,
-                    gpuTime: renderGPUTime
-                }));
-            }, 50); // Wait 50ms to give time for all GPU calls to finish before querying
-        }
-
-        if (this.listens('gpu-timing-layer')) {
-            // Resetting the Painter's per-layer timing queries here allows us to isolate
-            // the queries to individual frames.
-            const frameLayerQueries = this.painter.collectGpuTimers();
-
-            setTimeout(() => {
-                const renderedLayerTimes = this.painter.queryGpuTimers(frameLayerQueries);
-
-                this.fire(new Event('gpu-timing-layer', {
-                    layerTimes: renderedLayerTimes
-                }));
-            }, 50); // Wait 50ms to give time for all GPU calls to finish before querying
         }
 
         // Schedule another render frame if it's needed.
@@ -2846,11 +3003,12 @@ class Map extends Camera {
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {
-            removeEventListener('resize', this._onWindowResize, false);
-            removeEventListener('orientationchange', this._onWindowResize, false);
             removeEventListener('online', this._onWindowOnline, false);
         }
 
+        ImageRequest.removeThrottleControl(this._imageQueueHandle);
+
+        this._resizeObserver?.disconnect();
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
         if (extension) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
@@ -2858,7 +3016,7 @@ class Map extends Camera {
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
         if (this._cooperativeGestures) {
-            DOM.remove(this._cooperativeGesturesScreen);
+            this._destroyCooperativeGestures();
         }
         this._container.classList.remove('maplibregl-map');
 
@@ -2887,15 +3045,9 @@ class Map extends Camera {
         }
     }
 
-    _onWindowOnline() {
+    _onWindowOnline = () => {
         this._update();
-    }
-
-    _onWindowResize(event: Event) {
-        if (this._trackResize) {
-            this.resize({originalEvent: event})._update();
-        }
-    }
+    };
 
     /**
      * Gets and sets a Boolean indicating whether the map will render an outline
@@ -2999,11 +3151,6 @@ class Map extends Camera {
     get vertices(): boolean { return !!this._vertices; }
     set vertices(value: boolean) { this._vertices = value; this._update(); }
 
-    // for cache browser tests
-    _setCacheLimits(limit: number, checkThreshold: number) {
-        setCacheLimits(limit, checkThreshold);
-    }
-
     /**
      * Returns the package version of the library
      * @returns {string} Package version of the library
@@ -3022,5 +3169,3 @@ class Map extends Camera {
         return this.transform.elevation;
     }
 }
-
-export default Map;

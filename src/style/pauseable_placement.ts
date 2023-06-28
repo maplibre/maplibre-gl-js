@@ -1,13 +1,13 @@
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 
 import {Placement} from '../symbol/placement';
 
-import type Transform from '../geo/transform';
-import type StyleLayer from './style_layer';
-import type SymbolStyleLayer from './style_layer/symbol_style_layer';
-import type Tile from '../source/tile';
+import type {Transform} from '../geo/transform';
+import type {StyleLayer} from './style_layer';
+import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
+import type {Tile} from '../source/tile';
 import type {BucketPart} from '../symbol/placement';
-import Terrain from '../render/terrain';
+import {Terrain} from '../render/terrain';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;
@@ -60,7 +60,7 @@ class LayerPlacement {
     }
 }
 
-class PauseablePlacement {
+export class PauseablePlacement {
     placement: Placement;
     _done: boolean;
     _currentPlacementIndex: number;
@@ -97,8 +97,7 @@ class PauseablePlacement {
         const startTime = browser.now();
 
         const shouldPausePlacement = () => {
-            const elapsedTime = browser.now() - startTime;
-            return this._forceFullPlacement ? false : elapsedTime > 2;
+            return this._forceFullPlacement ? false : (browser.now() - startTime) > 2;
         };
 
         while (this._currentPlacementIndex >= 0) {
@@ -136,5 +135,3 @@ class PauseablePlacement {
         return this.placement;
     }
 }
-
-export default PauseablePlacement;

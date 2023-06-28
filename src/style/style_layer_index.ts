@@ -1,16 +1,15 @@
-import StyleLayer from './style_layer';
-import createStyleLayer from './create_style_layer';
+import {StyleLayer} from './style_layer';
+import {createStyleLayer} from './create_style_layer';
 
-import featureFilter from '../style-spec/feature_filter';
-import groupByLayout from '../style-spec/group_by_layout';
+import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
 
 import type {TypedStyleLayer} from './style_layer/typed_style_layer';
-import type {LayerSpecification} from '../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};
 export type Family<Layer extends TypedStyleLayer> = Array<Layer>;
 
-class StyleLayerIndex {
+export class StyleLayerIndex {
     familiesBySource: {
         [source: string]: {
             [sourceLayer: string]: Array<Family<any>>;
@@ -77,5 +76,3 @@ class StyleLayerIndex {
         }
     }
 }
-
-export default StyleLayerIndex;

@@ -58,8 +58,8 @@ export class Evented {
      *
      * @param {string} type The event type to add a listen for.
      * @param {Function} listener The function to be called when the event is fired.
-     *   The listener function is called with the data object passed to `fire`,
-     *   extended with `target` and `type` properties.
+     * The listener function is called with the data object passed to `fire`,
+     * extended with `target` and `type` properties.
      * @returns {Object} `this`
      */
     on(type: string, listener: Listener): this {

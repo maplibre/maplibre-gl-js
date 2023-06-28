@@ -2,20 +2,20 @@ import {getJSON} from '../util/ajax';
 
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
-import GeoJSONWrapper from './geojson_wrapper';
+import {GeoJSONWrapper} from './geojson_wrapper';
 import vtpbf from 'vt-pbf';
 import Supercluster from 'supercluster';
 import geojsonvt from 'geojson-vt';
-import VectorTileWorkerSource from './vector_tile_worker_source';
-import {createExpression} from '../style-spec/expression';
+import {VectorTileWorkerSource} from './vector_tile_worker_source';
+import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 
 import type {
     WorkerTileParameters,
     WorkerTileCallback,
 } from '../source/worker_source';
 
-import type Actor from '../util/actor';
-import type StyleLayerIndex from '../style/style_layer_index';
+import type {Actor} from '../util/actor';
+import type {StyleLayerIndex} from '../style/style_layer_index';
 
 import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
@@ -85,7 +85,7 @@ function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataC
  *
  * @private
  */
-class GeoJSONWorkerSource extends VectorTileWorkerSource {
+export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _pendingCallback: Callback<{
         resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
         abandoned?: boolean;
@@ -335,5 +335,3 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: { supe
 
     return superclusterOptions;
 }
-
-export default GeoJSONWorkerSource;

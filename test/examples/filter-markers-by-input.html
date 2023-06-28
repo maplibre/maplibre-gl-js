@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Filter symbols by text input</title>
+    <meta property="og:description" content="Filter symbols by icon name by typing in a text input." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    .filter-ctrl {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+    }
+
+    .filter-ctrl input[type='text'] {
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        width: 100%;
+        border: 0;
+        background-color: #fff;
+        margin: 0;
+        color: rgba(0, 0, 0, 0.5);
+        padding: 10px;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+        width: 180px;
+    }
+</style>
+<div id="map"></div>
+<div class="filter-ctrl">
+    <input
+        id="filter-input"
+        type="text"
+        name="filter"
+        placeholder="Filter by name"
+    />
+</div>
+
+<script>
+    const places = {
+        'type': 'FeatureCollection',
+        'features': [
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'theatre'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.038659, 38.931567]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'theatre'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.003168, 38.894651]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'bar'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.090372, 38.881189]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'bicycle'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.052477, 38.943951]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.031706, 38.914581]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.020945, 38.878241]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.007481, 38.876516]
+                }
+            }
+        ]
+    };
+
+    const layerIDs = []; // Will contain a list used to filter against.
+    const filterInput = document.getElementById('filter-input');
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-77.04, 38.907],
+        zoom: 11.15
+    });
+
+    map.on('load', () => {
+        // Add a GeoJSON source containing place coordinates and information.
+        map.addSource('places', {
+            'type': 'geojson',
+            'data': places
+        });
+
+        places.features.forEach((feature) => {
+            const symbol = feature.properties['icon'];
+            const layerID = `poi-${symbol}`;
+
+            // Add a layer for this symbol type if it hasn't been added already.
+            if (!map.getLayer(layerID)) {
+                map.addLayer({
+                    'id': layerID,
+                    'type': 'symbol',
+                    'source': 'places',
+                    'layout': {
+                        'icon-image': `${symbol}_15`,
+                        'icon-overlap': 'always',
+                        'text-field': symbol,
+                        'text-font': [
+                            'Open Sans Bold',
+                            'Arial Unicode MS Bold'
+                        ],
+                        'text-size': 11,
+                        'text-transform': 'uppercase',
+                        'text-letter-spacing': 0.05,
+                        'text-offset': [0, 1.5]
+                    },
+                    'paint': {
+                        'text-color': '#202',
+                        'text-halo-color': '#fff',
+                        'text-halo-width': 2
+                    },
+                    'filter': ['==', 'icon', symbol]
+                });
+
+                layerIDs.push(layerID);
+            }
+        });
+
+        filterInput.addEventListener('keyup', (e) => {
+            // If the input value matches a layerID set
+            // it's visibility to 'visible' or else hide it.
+            const value = e.target.value.trim().toLowerCase();
+            layerIDs.forEach((layerID) => {
+                map.setLayoutProperty(
+                    layerID,
+                    'visibility',
+                    layerID.indexOf(value) > -1 ? 'visible' : 'none'
+                );
+            });
+        });
+    });
+</script>
+</body>
+</html>

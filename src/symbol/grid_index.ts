@@ -1,4 +1,4 @@
-import type {OverlapMode} from '../style/style_layer/symbol_style_layer';
+import type {OverlapMode} from '../style/style_layer/overlap_mode';
 
 type QueryArgs = {
     hitTest: boolean;
@@ -57,7 +57,7 @@ function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
  *
  * @private
  */
-class GridIndex<T extends GridKey> {
+export class GridIndex<T extends GridKey> {
     circleKeys: Array<T>;
     boxKeys: Array<T>;
     boxCells: Array<Array<number>>;
@@ -410,5 +410,3 @@ class GridIndex<T extends GridKey> {
         return (dx * dx + dy * dy <= (radius * radius));
     }
 }
-
-export default GridIndex;

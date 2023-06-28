@@ -1,4 +1,4 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 
 const LEFT_BUTTON = 0;
 const RIGHT_BUTTON = 2;

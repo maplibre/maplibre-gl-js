@@ -14,7 +14,6 @@ const config = {
                                 params: {
                                     overrides: {
                                         removeViewBox: false,
-                                        removeDimensions: false,
                                     },
                                 },
                             },

@@ -1,12 +1,14 @@
 import {Event, Evented} from '../../util/evented';
-import DOM from '../../util/dom';
-import {extend, bindAll, warnOnce} from '../../util/util';
-import LngLat from '../../geo/lng_lat';
-import Marker from '../marker';
+import {DOM} from '../../util/dom';
+import {extend, warnOnce} from '../../util/util';
+import {checkGeolocationSupport} from '../../util/geolocation_support';
+import {LngLat} from '../../geo/lng_lat';
+import {Marker} from '../marker';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
+import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
 type GeolocateOptions = {
     positionOptions?: PositionOptions;
@@ -29,28 +31,6 @@ const defaultOptions: GeolocateOptions = {
     showAccuracyCircle: true,
     showUserLocation: true
 };
-
-let supportsGeolocation;
-
-function checkGeolocationSupport(callback) {
-    if (supportsGeolocation !== undefined) {
-        callback(supportsGeolocation);
-
-    } else if (window.navigator.permissions !== undefined) {
-        // navigator.permissions has incomplete browser support
-        // http://caniuse.com/#feat=permissions-api
-        // Test for the case where a browser disables Geolocation because of an
-        // insecure origin
-        window.navigator.permissions.query({name: 'geolocation'}).then((p) => {
-            supportsGeolocation = p.state !== 'denied';
-            callback(supportsGeolocation);
-        });
-
-    } else {
-        supportsGeolocation = !!window.navigator.geolocation;
-        callback(supportsGeolocation);
-    }
-}
 
 let numberOfWatches = 0;
 let noTimeout = false;
@@ -75,12 +55,12 @@ let noTimeout = false;
  * These interaction states can't be controlled programmatically, rather they are set based on user interactions.
  *
  * @implements {IControl}
- * @param {Object} [options]
- * @param {Object} [options.positionOptions={enableHighAccuracy: false, timeout: 6000}] A Geolocation API [PositionOptions](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions) object.
- * @param {Object} [options.fitBoundsOptions={maxZoom: 15}] A {@link Map#fitBounds} options object to use when the map is panned and zoomed to the user's location. The default is to use a `maxZoom` of 15 to limit how far the map will zoom in for very accurate locations.
- * @param {Object} [options.trackUserLocation=false] If `true` the Geolocate Control becomes a toggle button and when active the map will receive updates to the user's location as it changes.
- * @param {Object} [options.showAccuracyCircle=true] By default, if showUserLocation is `true`, a transparent circle will be drawn around the user location indicating the accuracy (95% confidence level) of the user's location. Set to `false` to disable. Always disabled when showUserLocation is `false`.
- * @param {Object} [options.showUserLocation=true] By default a dot will be shown on the map at the user's location. Set to `false` to disable.
+ * @param {GeolocateOptions} [options]
+ * @param {PositionOptions} [options.positionOptions={enableHighAccuracy: false, timeout: 6000}] A Geolocation API [PositionOptions](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions) object.
+ * @param {FitBoundsOptions} [options.fitBoundsOptions={maxZoom: 15}] A {@link Map#fitBounds} options object to use when the map is panned and zoomed to the user's location. The default is to use a `maxZoom` of 15 to limit how far the map will zoom in for very accurate locations.
+ * @param {boolean} [options.trackUserLocation=false] If `true` the Geolocate Control becomes a toggle button and when active the map will receive updates to the user's location as it changes.
+ * @param {boolean} [options.showAccuracyCircle=true] By default, if showUserLocation is `true`, a transparent circle will be drawn around the user location indicating the accuracy (95% confidence level) of the user's location. Set to `false` to disable. Always disabled when showUserLocation is `false`.
+ * @param {boolean} [options.showUserLocation=true] By default a dot will be shown on the map at the user's location. Set to `false` to disable.
  *
  * @example
  * map.addControl(new maplibregl.GeolocateControl({
@@ -91,7 +71,7 @@ let noTimeout = false;
  * }));
  * @see [Locate the user](https://maplibre.org/maplibre-gl-js-docs/example/locate-user/)
  */
-class GeolocateControl extends Evented implements IControl {
+export class GeolocateControl extends Evented implements IControl {
     _map: Map;
     options: GeolocateOptions;
     _container: HTMLElement;
@@ -110,16 +90,6 @@ class GeolocateControl extends Evented implements IControl {
     constructor(options: GeolocateOptions) {
         super();
         this.options = extend({}, defaultOptions, options);
-
-        bindAll([
-            '_onSuccess',
-            '_onError',
-            '_onZoom',
-            '_finish',
-            '_setupUI',
-            '_updateCamera',
-            '_updateMarker'
-        ], this);
     }
 
     onAdd(map: Map) {
@@ -204,7 +174,7 @@ class GeolocateControl extends Evented implements IControl {
      * @param {Position} position the Geolocation API Position
      * @private
      */
-    _onSuccess(position: GeolocationPosition) {
+    _onSuccess = (position: GeolocationPosition) => {
         if (!this._map) {
             // control has since been removed
             return;
@@ -264,7 +234,7 @@ class GeolocateControl extends Evented implements IControl {
 
         this.fire(new Event('geolocate', position));
         this._finish();
-    }
+    };
 
     /**
      * Update the camera location to center on the current position
@@ -272,16 +242,17 @@ class GeolocateControl extends Evented implements IControl {
      * @param {Position} position the Geolocation API Position
      * @private
      */
-    _updateCamera(position: GeolocationPosition) {
+    _updateCamera = (position: GeolocationPosition) => {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
         const radius = position.coords.accuracy;
         const bearing = this._map.getBearing();
         const options = extend({bearing}, this.options.fitBoundsOptions);
+        const newBounds = LngLatBounds.fromLngLat(center, radius);
 
-        this._map.fitBounds(center.toBounds(radius), options, {
+        this._map.fitBounds(newBounds, options, {
             geolocateSource: true // tag this camera change so it won't cause the control to change to background state
         });
-    }
+    };
 
     /**
      * Update the user location dot Marker to the current position
@@ -289,7 +260,7 @@ class GeolocateControl extends Evented implements IControl {
      * @param {Position} [position] the Geolocation API Position
      * @private
      */
-    _updateMarker(position?: GeolocationPosition | null) {
+    _updateMarker = (position?: GeolocationPosition | null) => {
         if (position) {
             const center = new LngLat(position.coords.longitude, position.coords.latitude);
             this._accuracyCircleMarker.setLngLat(center).addTo(this._map);
@@ -302,25 +273,26 @@ class GeolocateControl extends Evented implements IControl {
             this._userLocationDotMarker.remove();
             this._accuracyCircleMarker.remove();
         }
-    }
+    };
 
     _updateCircleRadius() {
-        const y = this._map._container.clientHeight / 2;
-        const a = this._map.unproject([0, y]);
-        const b = this._map.unproject([1, y]);
-        const metersPerPixel = a.distanceTo(b);
-        const circleDiameter = Math.ceil(2.0 * this._accuracy / metersPerPixel);
+        const bounds = this._map.getBounds();
+        const southEastPoint = bounds.getSouthEast();
+        const northEastPoint = bounds.getNorthEast();
+        const mapHeightInMeters = southEastPoint.distanceTo(northEastPoint);
+        const mapHeightInPixels = this._map._container.clientHeight;
+        const circleDiameter = Math.ceil(2 * (this._accuracy / (mapHeightInMeters / mapHeightInPixels)));
         this._circleElement.style.width = `${circleDiameter}px`;
         this._circleElement.style.height = `${circleDiameter}px`;
     }
 
-    _onZoom() {
+    _onZoom = () => {
         if (this.options.showUserLocation && this.options.showAccuracyCircle) {
             this._updateCircleRadius();
         }
-    }
+    };
 
-    _onError(error: GeolocationPositionError) {
+    _onError = (error: GeolocationPositionError) => {
         if (!this._map) {
             // control has since been removed
             return;
@@ -361,14 +333,20 @@ class GeolocateControl extends Evented implements IControl {
         this.fire(new Event('error', error));
 
         this._finish();
-    }
+    };
 
-    _finish() {
+    _finish = () => {
         if (this._timeoutId) { clearTimeout(this._timeoutId); }
         this._timeoutId = undefined;
-    }
+    };
 
-    _setupUI(supported: boolean) {
+    _setupUI = (supported: boolean) => {
+        // this method is called asynchronously during onAdd
+        // the control could have been removed before reaching here
+        if (!this._map) {
+            return;
+        }
+
         this._container.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
         this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
@@ -424,7 +402,7 @@ class GeolocateControl extends Evented implements IControl {
                 }
             });
         }
-    }
+    };
 
     /**
      * Programmatically request and move the map to the user's location.
@@ -548,8 +526,6 @@ class GeolocateControl extends Evented implements IControl {
         }
     }
 }
-
-export default GeolocateControl;
 
 /* Geolocate Control Watch States
  * This is the private state of the control.

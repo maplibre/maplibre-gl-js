@@ -1,6 +1,6 @@
-import {bindAll, isWorker, isSafari} from './util';
+import {isWorker, isSafari} from './util';
 import {serialize, deserialize} from './web_worker_transfer';
-import ThrottledInvoker from './throttled_invoker';
+import {ThrottledInvoker} from './throttled_invoker';
 
 import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
@@ -16,10 +16,10 @@ import type {Cancelable} from '../types/cancelable';
  * @param {string|number} mapId A unique identifier for the Map instance using this Actor.
  * @private
  */
-class Actor {
+export class Actor {
     target: any;
     parent: any;
-    mapId: number;
+    mapId: string | null;
     callbacks: {
         number: any;
     };
@@ -34,7 +34,7 @@ class Actor {
     invoker: ThrottledInvoker;
     globalScope: any;
 
-    constructor(target: any, parent: any, mapId?: number | null) {
+    constructor(target: any, parent: any, mapId?: string) {
         this.target = target;
         this.parent = parent;
         this.mapId = mapId;
@@ -42,7 +42,6 @@ class Actor {
         this.tasks = {} as { number: any };
         this.taskQueue = [];
         this.cancelCallbacks = {} as { number: Cancelable };
-        bindAll(['receive', 'process'], this);
         this.invoker = new ThrottledInvoker(this.process);
         this.target.addEventListener('message', this.receive, false);
         this.globalScope = isWorker() ? target : window;
@@ -97,9 +96,16 @@ class Actor {
         };
     }
 
-    receive(message: any) {
-        const data = message.data,
-            id = data.id;
+    receive = (message: {
+        data: {
+            id: number;
+            type: string;
+            data: unknown;
+            targetMapId?: string | null;
+            mustQueue: boolean;
+        };}) => {
+        const data = message.data;
+        const id = data.id;
 
         if (!id) {
             return;
@@ -136,9 +142,9 @@ class Actor {
                 this.processTask(id, data);
             }
         }
-    }
+    };
 
-    process() {
+    process = () => {
         if (!this.taskQueue.length) {
             return;
         }
@@ -157,7 +163,7 @@ class Actor {
         }
 
         this.processTask(id, task);
-    }
+    };
 
     processTask(id: number, task: any) {
         if (task.type === '<response>') {
@@ -217,5 +223,3 @@ class Actor {
         this.target.removeEventListener('message', this.receive, false);
     }
 }
-
-export default Actor;

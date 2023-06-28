@@ -1,21 +1,21 @@
-import RenderToTexture from './render_to_texture';
-import type Painter from './painter';
-import type LineStyleLayer from '../style/style_layer/line_style_layer';
-import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
-import Context from '../gl/context';
+import {RenderToTexture} from './render_to_texture';
+import type {Painter} from './painter';
+import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
+import {Context} from '../gl/context';
 import gl from 'gl';
-import ColorMode from '../gl/color_mode';
-import Terrain from './terrain';
-import Style from '../style/style';
-import Tile from '../source/tile';
-import Map from '../ui/map';
+import {ColorMode} from '../gl/color_mode';
+import {Terrain} from './terrain';
+import {Style} from '../style/style';
+import {Tile} from '../source/tile';
+import {Map} from '../ui/map';
 import {OverscaledTileID} from '../source/tile_id';
-import SourceCache from '../source/source_cache';
-import {TerrainSpecification} from '../style-spec/types.g';
-import FillStyleLayer from '../style/style_layer/fill_style_layer';
-import RasterStyleLayer from '../style/style_layer/raster_style_layer';
-import HillshadeStyleLayer from '../style/style_layer/hillshade_style_layer';
-import BackgroundStyleLayer from '../style/style_layer/background_style_layer';
+import {SourceCache} from '../source/source_cache';
+import {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
+import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
+import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
+import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
 
 describe('render to texture', () => {
     const backgroundLayer = {

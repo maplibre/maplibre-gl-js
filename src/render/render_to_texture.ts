@@ -1,13 +1,13 @@
-import Painter from './painter';
-import Tile from '../source/tile';
-import Color from '../style-spec/util/color';
+import {Painter} from './painter';
+import {Tile} from '../source/tile';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawTerrain} from './draw_terrain';
-import Style from '../style/style';
-import Terrain from './terrain';
-import RenderPool from '../gl/render_pool';
-import Texture from './texture';
-import type StyleLayer from '../style/style_layer';
+import {Style} from '../style/style';
+import {Terrain} from './terrain';
+import {RenderPool} from '../gl/render_pool';
+import {Texture} from './texture';
+import type {StyleLayer} from '../style/style_layer';
 
 // lookup table which layers should rendered to texture
 const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
@@ -21,7 +21,7 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
 /**
  * RenderToTexture
  */
-export default class RenderToTexture {
+export class RenderToTexture {
     painter: Painter;
     terrain: Terrain;
     pool: RenderPool;
@@ -33,7 +33,7 @@ export default class RenderToTexture {
     _coordsDescendingInvStr: {[_: string]: {[_:string]: string}};
     // store for render-stacks
     // a render stack is a set of layers which should be rendered into one texture
-    // every stylesheet can have multipe stacks. A new stack is created if layers which should
+    // every stylesheet can have multiple stacks. A new stack is created if layers which should
     // not rendered to texture sit inbetween layers which should rendered to texture. e.g. hillshading or symbols
     _stacks: Array<Array<string>>;
     // remember the previous processed layer to check if a new stack is needed
@@ -156,7 +156,8 @@ export default class RenderToTexture {
                 tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
                 // prepare PoolObject for rendering
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
-                painter.context.clear({color: Color.transparent});
+                painter.context.clear({color: Color.transparent, stencil: 0});
+                painter.currentStencilSource = undefined;
                 for (let l = 0; l < layers.length; l++) {
                     const layer = painter.style._layers[layers[l]];
                     const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];

@@ -1,9 +1,8 @@
-import {createMap, setWebGlContext} from '../../util/test/util';
-import ScaleControl from './scale_control';
+import {createMap, beforeMapTest} from '../../util/test/util';
+import {ScaleControl} from './scale_control';
 
 beforeEach(() => {
-    setWebGlContext();
-    window.performance.mark = jest.fn();
+    beforeMapTest();
 });
 
 describe('ScaleControl', () => {

@@ -17,28 +17,27 @@ import {SymbolLayoutArray,
 } from '../array_types.g';
 
 import Point from '@mapbox/point-geometry';
-import SegmentVector from '../segment';
+import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray, LineIndexArray} from '../index_array_type';
-import transformText from '../../symbol/transform_text';
-import mergeLines from '../../symbol/merge_lines';
+import {transformText} from '../../symbol/transform_text';
+import {mergeLines} from '../../symbol/merge_lines';
 import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection';
 import {WritingMode} from '../../symbol/shaping';
-import loadGeometry from '../load_geometry';
-import toEvaluationFeature from '../evaluation_feature';
+import {loadGeometry} from '../load_geometry';
+import {toEvaluationFeature} from '../evaluation_feature';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
 import {verticalizedCharacterMap} from '../../util/verticalize_punctuation';
-import Anchor from '../../symbol/anchor';
-import {getSizeData} from '../../symbol/symbol_size';
-import {MAX_PACKED_SIZE} from '../../symbol/symbol_layout';
+import {Anchor} from '../../symbol/anchor';
+import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size';
+
 import {register} from '../../util/web_worker_transfer';
-import EvaluationParameters from '../../style/evaluation_parameters';
-import Formatted from '../../style-spec/expression/types/formatted';
-import ResolvedImage from '../../style-spec/expression/types/resolved_image';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {plugin as globalRTLTextPlugin, getRTLTextPluginStatus} from '../../source/rtl_text_plugin';
 import {mat4} from 'gl-matrix';
-
+import {getOverlapMode} from '../../style/style_layer/overlap_mode';
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
     Bucket,
@@ -48,10 +47,10 @@ import type {
 } from '../bucket';
 import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types.g';
 import type {StructArray, StructArrayMember, ViewType} from '../../util/struct_array';
-import SymbolStyleLayer, {getOverlapMode} from '../../style/style_layer/symbol_style_layer';
-import type Context from '../../gl/context';
-import type IndexBuffer from '../../gl/index_buffer';
-import type VertexBuffer from '../../gl/vertex_buffer';
+import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer';
+import type {Context} from '../../gl/context';
+import type {IndexBuffer} from '../../gl/index_buffer';
+import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type {SymbolQuad} from '../../symbol/quads';
 import type {SizeData} from '../../symbol/symbol_size';
 import type {FeatureStates} from '../../source/source_state';
@@ -308,7 +307,7 @@ register('CollisionBuffers', CollisionBuffers);
  *
  * @private
  */
-class SymbolBucket implements Bucket {
+export class SymbolBucket implements Bucket {
     static MAX_GLYPHS: number;
     static addDynamicAttributes: typeof addDynamicAttributes;
 
@@ -965,5 +964,4 @@ SymbolBucket.MAX_GLYPHS = 65535;
 
 SymbolBucket.addDynamicAttributes = addDynamicAttributes;
 
-export default SymbolBucket;
 export {addDynamicAttributes};

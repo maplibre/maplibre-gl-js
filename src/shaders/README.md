@@ -1,6 +1,6 @@
-# MapLibre GL Shaders
+# MapLibre GL JS Shaders
 
-This repository contains GL shaders which are shared by [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js) and [MapLibre GL Native](https://github.com/maplibre/maplibre-gl-native).
+This repository contains the GLSL shaders
 
 ## Pragmas
 
@@ -18,11 +18,11 @@ We abstract over this functionality using pragmas.
 main() {
     #pragma mapbox: initialize highp vec4 color
     ...
-    gl_FragColor = color;
+    fragColor = color;
 }
 ```
 
-This program defines a variable within `main` called `color`, initialize the value of `color`, then sets `gl_FragColor` to the value of `color`.
+This program defines a variable within `main` called `color`, initialize the value of `color`, then sets `fragColor` to the value of `color`.
 
 Pragmas take the following form.
 

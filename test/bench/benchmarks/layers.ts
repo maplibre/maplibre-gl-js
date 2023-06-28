@@ -111,7 +111,7 @@ export class LayerFillExtrusion extends LayerBenchmark {
 
 export class LayerHeatmap extends LayerBenchmark {
     async setup() {
-        const response = await fetch('/bench/data/naturalearth-land.json');
+        const response = await fetch('/test/bench/data/naturalearth-land.json');
         const data = await response.json();
         this.layerStyle = Object.assign({}, style, {
             sources: {

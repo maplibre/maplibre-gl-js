@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="about:blank">
 <script>
 // stub performance.now for deterministic rendering per-frame;
 // we'll later increment the value by 16 on every frame (16ms per frame for 60fps)
@@ -22,7 +23,6 @@ const map = new maplibregl.Map({
 });
 
 const gl = map.painter.context && map.painter.context.gl || map.painter.gl;
-const vao = map.painter.context && map.painter.context.extVertexArrayObject || map.painter.extVertexArrayObject;
 
 const tileStats = {};
 const frameStats = {};
@@ -63,7 +63,7 @@ map.on('data', function onData(e) {
     hookStats(frameStats, gl, 'drawElements', 'draw');
     hookStats(frameStats, gl, 'drawArrays', 'draw');
     hookStats(frameStats, gl, 'useProgram');
-    hookStats(frameStats, vao, 'bindVertexArrayOES', 'bindVAO');
+    hookStats(frameStats, gl, 'bindVertexArray', 'bindVAO');
 
     hookStats(frameStats, gl, 'bufferSubData', 'bufferSubData');
     hookStats(frameStats, gl, 'bufferSubData', 'bufferSubData_bytes', (args) => args[2].byteLength);

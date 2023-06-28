@@ -1,27 +1,66 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
 import {extend} from '../util/util';
-import EXTENT from '../data/extent';
-import {ResourceType} from '../util/ajax';
-import browser from '../util/browser';
+import {EXTENT} from '../data/extent';
+import {ResourceType} from '../util/request_manager';
+import {browser} from '../util/browser';
 
 import type {Source} from './source';
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
-import type Actor from '../util/actor';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
+import type {Actor} from '../util/actor';
 import type {Callback} from '../types/callback';
-import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '../style-spec/types.g';
+import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: any;
-    collectResourceTiming: boolean;
+    collectResourceTiming?: boolean;
+}
+
+export type GeoJsonSourceOptions = {
+    data?: GeoJSON.GeoJSON | string | undefined;
+    cluster?: boolean;
+    clusterMaxZoom?: number;
+    clusterRadius?: number;
+    clusterMinPoints?: number;
+    generateId?: boolean;
+}
+export type WorkerOptions = {
+    source?: string;
+    cluster?: boolean;
+    geojsonVtOptions?: {
+        buffer?: number;
+        tolerance?: number;
+        extent?: number;
+        maxZoom?: number;
+        linemetrics?: boolean;
+        generateId?: boolean;
+    };
+    superclusterOptions?: {
+        maxZoom?: number;
+        miniPoints?: number;
+        extent?: number;
+        radius?: number;
+        log?: boolean;
+        generateId?: boolean;
+    };
+    clusterProperties?: any;
+    fliter?: any;
+    promoteId?: any;
+    collectResourceTiming?: boolean;
+}
+
+export type SetClusterOptions = {
+    cluster?: boolean;
+    clusterMaxZoom?: number;
+    clusterRadius?: number;
 }
 
 /**
  * A source containing GeoJSON.
- * (See the [Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sources-geojson) for detailed documentation of options.)
+ * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
  * @example
  * map.addSource('some id', {
@@ -65,7 +104,7 @@ export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
  * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js-docs/example/heatmap/)
  * @see [Create and style clusters](https://maplibre.org/maplibre-gl-js-docs/example/cluster/)
  */
-class GeoJSONSource extends Evented implements Source {
+export class GeoJSONSource extends Evented implements Source {
     type: 'geojson';
     id: string;
     minzoom: number;
@@ -77,8 +116,8 @@ class GeoJSONSource extends Evented implements Source {
     isTileClipped: boolean;
     reparseOverscaled: boolean;
     _data: GeoJSON.GeoJSON | string | undefined;
-    _options: any;
-    workerOptions: any;
+    _options: GeoJsonSourceOptions;
+    workerOptions: WorkerOptions;
     map: Map;
     actor: Actor;
     _pendingLoads: number;
@@ -153,9 +192,9 @@ class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    load() {
+    load = () => {
         this._updateWorkerData();
-    }
+    };
 
     onAdd(map: Map) {
         this.map = map;
@@ -193,6 +232,25 @@ class GeoJSONSource extends Evented implements Source {
     updateData(diff: GeoJSONSourceDiff) {
         this._updateWorkerData(diff);
 
+        return this;
+    }
+
+    /**
+     * To disable/enable clustering on the source options
+     * @param {SetClusterOptions} options The options to set
+     * @returns {GeoJSONSource} this
+     * @example
+     * map.getSource('some id').setClusterOptions({cluster: false});
+     * map.getSource('some id').setClusterOptions({cluster: false, clusterRadius: 50, clusterMaxZoom: 14});
+     *
+     */
+    setClusterOptions(options:SetClusterOptions) {
+        this.workerOptions.cluster = options.cluster;
+        if (options) {
+            if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = options.clusterRadius;
+            if (options.clusterMaxZoom !== undefined) this.workerOptions.superclusterOptions.maxZoom = options.clusterMaxZoom;
+        }
+        this._updateWorkerData();
         return this;
     }
 
@@ -361,16 +419,14 @@ class GeoJSONSource extends Evented implements Source {
         this.actor.send('removeSource', {type: this.type, source: this.id});
     }
 
-    serialize() {
+    serialize = (): GeoJSONSourceSpecification => {
         return extend({}, this._options, {
             type: this.type,
             data: this._data
         });
-    }
+    };
 
     hasTransition() {
         return false;
     }
 }
-
-export default GeoJSONSource;

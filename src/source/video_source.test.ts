@@ -1,8 +1,33 @@
-import VideoSource from './video_source';
+import {VideoSource} from './video_source';
 import {extend} from '../util/util';
 import {getMockDispatcher} from '../util/test/util';
 
 import type {Coordinates} from './image_source';
+import {Tile} from './tile';
+import {OverscaledTileID} from './tile_id';
+import {Evented} from '../util/evented';
+import {Transform} from '../geo/transform';
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {SegmentVector} from '../data/segment';
+
+class StubMap extends Evented {
+    transform: Transform;
+    style: any;
+    painter: any;
+
+    constructor() {
+        super();
+        this.transform = new Transform();
+        this.style = {};
+        this.painter = {
+            context: {
+                gl: {
+                    texSubImage2D: () => {}
+                }
+            }
+        };
+    }
+}
 
 function createSource(options) {
     const c = options && options.video || window.document.createElement('video');
@@ -60,5 +85,40 @@ describe('VideoSource', () => {
         });
 
         expect(source.getVideo()).toBe(el);
+    });
+
+    test('fires idle event on prepare call when there is at least one not loaded tile', done => {
+        const source = createSource({
+            type: 'video',
+            urls: [],
+            video: {
+                readyState: 2,
+                play: () => {}
+            },
+            coordinates: [
+                [-76.54, 39.18],
+                [-76.52, 39.18],
+                [-76.52, 39.17],
+                [-76.54, 39.17]
+            ]
+        });
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        source.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'idle') {
+                expect(tile.state).toBe('loaded');
+                done();
+            }
+        });
+        source.onAdd(new StubMap() as any);
+
+        source.tiles[String(tile.tileID.wrap)] = tile;
+        // assign dummies directly so we don't need to stub the gl things
+        source.boundsBuffer = {} as VertexBuffer;
+        source.boundsSegments = {} as SegmentVector;
+        source.texture = {
+            update: () => {},
+            bind: () => {}
+        } as any;
+        source.prepare();
     });
 });

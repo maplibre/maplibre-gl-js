@@ -1,19 +1,19 @@
 import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
-import SymbolBucket from '../data/bucket/symbol_bucket';
-import SourceCache from '../source/source_cache';
-import Tile from '../source/tile';
-import SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
-import Painter from './painter';
-import Program from './program';
-import drawSymbol from './draw_symbol';
+import {SymbolBucket} from '../data/bucket/symbol_bucket';
+import {SourceCache} from '../source/source_cache';
+import {Tile} from '../source/tile';
+import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
+import {Painter} from './painter';
+import {Program} from './program';
+import {drawSymbols} from './draw_symbol';
 import * as symbolProjection from '../symbol/projection';
-import type ZoomHistory from '../style/zoom_history';
-import type Map from '../ui/map';
-import Transform from '../geo/transform';
-import type EvaluationParameters from '../style/evaluation_parameters';
-import type {SymbolLayerSpecification} from '../style-spec/types.g';
-import Style from '../style/style';
+import type {ZoomHistory} from '../style/zoom_history';
+import type {Map} from '../ui/map';
+import {Transform} from '../geo/transform';
+import type {EvaluationParameters} from '../style/evaluation_parameters';
+import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Style} from '../style/style';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -27,7 +27,7 @@ describe('drawSymbol', () => {
         const mockPainter = new Painter(null, null);
         mockPainter.renderPass = 'opaque';
 
-        drawSymbol(mockPainter, null, null, null, null);
+        drawSymbols(mockPainter, null, null, null, null);
 
         expect(mockPainter.colorModeForRenderPass).not.toHaveBeenCalled();
     });
@@ -88,7 +88,7 @@ describe('drawSymbol', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);
+        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
         expect(programMock.draw).toHaveBeenCalledTimes(1);
     });
@@ -154,7 +154,7 @@ describe('drawSymbol', () => {
         } as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
-        drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);
+        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
         expect(spy.mock.calls[0][9]).toBeFalsy(); // rotateToLine === false
     });
@@ -215,7 +215,7 @@ describe('drawSymbol', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawSymbol(painterMock, sourceCacheMock, layer, [tileId], null);
+        drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });

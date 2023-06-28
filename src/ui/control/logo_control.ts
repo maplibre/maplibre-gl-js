@@ -1,7 +1,6 @@
-import DOM from '../../util/dom';
-import {bindAll} from '../../util/util';
+import {DOM} from '../../util/dom';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 
 type LogoOptions = {
@@ -16,7 +15,7 @@ type LogoOptions = {
  * @param {boolean} [options.compact] If `true`, force a compact logo. If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
  **/
 
-class LogoControl implements IControl {
+export class LogoControl implements IControl {
     options: LogoOptions;
     _map: Map;
     _compact: boolean;
@@ -24,10 +23,6 @@ class LogoControl implements IControl {
 
     constructor(options: LogoOptions = {}) {
         this.options = options;
-
-        bindAll([
-            '_updateCompact'
-        ], this);
     }
 
     getDefaultPosition(): ControlPosition {
@@ -60,7 +55,7 @@ class LogoControl implements IControl {
         this._compact = undefined;
     }
 
-    _updateCompact() {
+    _updateCompact = () => {
         const containerChildren = this._container.children;
         if (containerChildren.length) {
             const anchor = containerChildren[0];
@@ -72,8 +67,6 @@ class LogoControl implements IControl {
                 anchor.classList.remove('maplibregl-compact');
             }
         }
-    }
+    };
 
 }
-
-export default LogoControl;

@@ -1,21 +1,21 @@
-import Anchor from './anchor';
+import {Anchor} from './anchor';
 
 import {getAnchors, getCenterAnchor} from './get_anchors';
-import clipLine from './clip_line';
+import {clipLine} from './clip_line';
 import {shapeText, shapeIcon, WritingMode, fitIconToText} from './shaping';
 import {getGlyphQuads, getIconQuads} from './quads';
-import CollisionFeature from './collision_feature';
+import {CollisionFeature} from './collision_feature';
 import {warnOnce} from '../util/util';
 import {
     allowsVerticalWritingMode,
     allowsLetterSpacing
 } from '../util/script_detection';
-import findPoleOfInaccessibility from '../util/find_pole_of_inaccessibility';
-import classifyRings from '../util/classify_rings';
-import EXTENT from '../data/extent';
-import SymbolBucket from '../data/bucket/symbol_bucket';
-import EvaluationParameters from '../style/evaluation_parameters';
-import {SIZE_PACK_FACTOR} from './symbol_size';
+import {findPoleOfInaccessibility} from '../util/find_pole_of_inaccessibility';
+import {classifyRings} from '../util/classify_rings';
+import {EXTENT} from '../data/extent';
+import {SymbolBucket} from '../data/bucket/symbol_bucket';
+import {EvaluationParameters} from '../style/evaluation_parameters';
+import {SIZE_PACK_FACTOR, MAX_PACKED_SIZE, MAX_GLYPH_ICON_SIZE} from './symbol_size';
 import ONE_EM from './one_em';
 import type {CanonicalTileID} from '../source/tile_id';
 import type {Shaping, PositionedIcon, TextJustify} from './shaping';
@@ -23,7 +23,7 @@ import type {CollisionBoxArray} from '../data/array_types.g';
 import type {SymbolFeature} from '../data/bucket/symbol_bucket';
 import type {StyleImage} from '../style/style_image';
 import type {StyleGlyph} from '../style/style_glyph';
-import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import type {ImagePosition} from '../render/image_atlas';
 import type {GlyphPosition} from '../render/glyph_atlas';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
@@ -486,10 +486,6 @@ function addFeature(bucket: SymbolBucket,
         }
     }
 }
-
-const MAX_GLYPH_ICON_SIZE = 255;
-const MAX_PACKED_SIZE = MAX_GLYPH_ICON_SIZE * SIZE_PACK_FACTOR;
-export {MAX_PACKED_SIZE};
 
 function addTextVertices(bucket: SymbolBucket,
     anchor: Point,

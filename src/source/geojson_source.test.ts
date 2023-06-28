@@ -1,10 +1,10 @@
-import Tile from './tile';
+import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import GeoJSONSource, {GeoJSONSourceOptions} from './geojson_source';
-import Transform from '../geo/transform';
-import LngLat from '../geo/lng_lat';
+import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
+import {Transform} from '../geo/transform';
+import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
-import Dispatcher from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
 import {RequestManager} from '../util/request_manager';
 
 const wrapDispatcher = (dispatcher) => {
@@ -193,7 +193,6 @@ describe('GeoJSONSource#update', () => {
             }
         });
 
-        /* eslint-disable no-new */
         new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined).load();
     });
 
@@ -246,6 +245,27 @@ describe('GeoJSONSource#update', () => {
             clusterMinPoints: 3,
             generateId: true
         } as GeoJSONSourceOptions, mockDispatcher, undefined).load();
+    });
+
+    test('modifying cluster properties after adding a source', done => {
+        // test setCluster function on GeoJSONSource
+        const mockDispatcher = wrapDispatcher({
+            send(message, params) {
+                expect(message).toBe('geojson.loadData');
+                expect(params.cluster).toBe(true);
+                expect(params.superclusterOptions.radius).toBe(80);
+                expect(params.superclusterOptions.maxZoom).toBe(16);
+                done();
+            }
+        });
+        new GeoJSONSource('id', {
+            data: {},
+            cluster: false,
+            clusterMaxZoom: 8,
+            clusterRadius: 100,
+            clusterMinPoints: 3,
+            generateId: true
+        } as GeoJSONSourceOptions, mockDispatcher, undefined).setClusterOptions({cluster: true, clusterRadius: 80, clusterMaxZoom: 16});
     });
 
     test('forwards Supercluster options with worker request, ignore max zoom of source', done => {

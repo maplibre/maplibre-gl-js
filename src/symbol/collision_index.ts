@@ -1,21 +1,21 @@
 import Point from '@mapbox/point-geometry';
-import clipLine from './clip_line';
-import PathInterpolator from './path_interpolator';
+import {clipLine} from './clip_line';
+import {PathInterpolator} from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
-import GridIndex from './grid_index';
+import {GridIndex} from './grid_index';
 import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
 import * as projection from '../symbol/projection';
 
-import type Transform from '../geo/transform';
+import type {Transform} from '../geo/transform';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
     SymbolLineVertexArray
 } from '../data/array_types.g';
-import type {OverlapMode} from '../style/style_layer/symbol_style_layer';
+import type {OverlapMode} from '../style/style_layer/overlap_mode';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -44,7 +44,7 @@ export type FeatureKey = {
  *
  * @private
  */
-class CollisionIndex {
+export class CollisionIndex {
     grid: GridIndex<FeatureKey>;
     ignoredGrid: GridIndex<FeatureKey>;
     transform: Transform;
@@ -140,7 +140,7 @@ class CollisionIndex {
 
         const labelPlaneAnchorPoint = projection.project(tileUnitAnchorPoint, labelPlaneMatrix, getElevation).point;
 
-        const projectionCache = {};
+        const projectionCache = {projections: {}, offsets: {}};
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
         const lineOffsetY = symbol.lineOffsetY * labelPlaneFontScale;
 
@@ -402,5 +402,3 @@ class CollisionIndex {
         return m;
     }
 }
-
-export default CollisionIndex;

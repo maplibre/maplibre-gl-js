@@ -1,20 +1,22 @@
-import {getImage, ResourceType} from '../util/ajax';
+import {ImageRequest} from '../util/image_request';
+import {ResourceType} from '../util/request_manager';
 import {extend, isImageBitmap} from '../util/util';
 import {Evented} from '../util/evented';
-import browser from '../util/browser';
-import offscreenCanvasSupported from '../util/offscreen_canvas_supported';
+import {browser} from '../util/browser';
+import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
 import {OverscaledTileID} from './tile_id';
-import RasterTileSource from './raster_tile_source';
+import {RasterTileSource} from './raster_tile_source';
 // ensure DEMData is registered for worker transfer on main thread:
 import '../data/dem_data';
 
 import type {Source} from './source';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
-import type {RasterDEMSourceSpecification} from '../style-spec/types.g';
+import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ExpiryData} from '../util/ajax';
 
-class RasterDEMTileSource extends RasterTileSource implements Source {
+export class RasterDEMTileSource extends RasterTileSource implements Source {
     encoding: 'mapbox' | 'terrarium';
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -38,10 +40,10 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this));
+        tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this), this.map._refreshExpiredTiles);
 
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
-        function imageLoaded(err, img) {
+        function imageLoaded(err: Error, img: (HTMLImageElement | ImageBitmap) & ExpiryData) {
             delete tile.request;
             if (tile.aborted) {
                 tile.state = 'unloaded';
@@ -51,8 +53,8 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
                 callback(err);
             } else if (img) {
                 if (this.map._refreshExpiredTiles) tile.setExpiryData(img);
-                delete (img as any).cacheControl;
-                delete (img as any).expires;
+                delete img.cacheControl;
+                delete img.expires;
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
                 const rawImageData = transfer ? img : browser.getImageData(img, 1);
                 const params = {
@@ -130,7 +132,4 @@ class RasterDEMTileSource extends RasterTileSource implements Source {
             tile.actor.send('removeDEMTile', {uid: tile.uid, source: this.id});
         }
     }
-
 }
-
-export default RasterDEMTileSource;

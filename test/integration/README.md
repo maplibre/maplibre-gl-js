@@ -3,19 +3,29 @@ These integration tests verify the correctness and consistency of [maplibre-gl-j
 
 ## Organization
 
-Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/)
+Tests are contained in a directory tree, generally organized by [style specification](https://maplibre.org/maplibre-style-spec/)
 property: `background-color`, `line-width`, etc., with a second level of directories below that for individual tests. For example, the test for specifying a literal `circle-radius` value lives in [`test/integration/render/tests/circle-radius/literal/`](./render/tests/circle-radius/literal).
 
 Within a leaf directory is a `style.json` file (e.g. [`circle-radius/literal/style.json`](./render/tests/circle-radius/literal/style.json)), which contains the minimal style needed for the given test case. The style can specify the map size, center, bearing, and pitch, and additional test metadata (e.g. output image dimensions).
 
 The expected output for a given test case is in `expected.png`, e.g. [`circle-radius/literal/expected.png`](./render/tests/circle-radius/literal/expected.png).
+There can be multiple files with the `expected` prefix since the output can vary slightly with each platform.
 
-Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories at the top level. The test
-harness sets up the environment such that requests for these resources are directed to the correct location.
+Supporting files -- glyphs, sprites, and tiles -- live in their own respective subdirectories of the [`test/integration/assets`](./assets) directory. The test
+harness sets up the environment such that requests for these resources are directed to the correct location. For example, images in the `assets/tiles` subdirectory can be referenced using `"local://tiles/{z}-{x}-{y}.satellite.png"` in the `style.json` file.
 
 The contents of vector tile fixtures can be read using the [`vt2geojson`](https://github.com/mapbox/vt2geojson) tool (see below).
 
-## Running tests
+## Running tests in GitHub
+All tests are run for every PR. If you're not sure yet if the tests are good, you may use a Draft PR to indicate that the work is still in progress.
+Each jos, or a group of tests, will create an atrifact of any of its tests fail. The artifacts are found at the bottom of the jobs summary
+
+<image width="80%" src="https://github.com/maplibre/maplibre-gl-js/assets/1304610/bc313a30-cdec-4de5-b6c9-90637ffbf79a"/>
+
+Download the appropriate artifact as a zip file, open it and view the `resutls.html` file it contains.
+The "Actual" image of a failed test can be saved and used as the new "Expected" image.
+
+## Running tests in the development environment
 
 To run the render tests:
 
@@ -23,21 +33,27 @@ To run the render tests:
 npm run test-render
 ```
 
-To run the query tests:
-```
-npm run test-query
-```
-
-To run the expression tests:
+To run the integration tests (except the render tests):
 
 ```
-npm run test-expressions
+npm run test-integration
 ```
 
-To run the browser tests (see [`browser/README.md`](./browser/README.md)):
+This includes the browser tests (see [`browser/README.md`](./browser/README.md))
+
+To run the build tests
+
 ```
-npm run test-browser
+npm run test-build
+````
+
+For running a subset of tests, you may use jest filters e.g.
+
 ```
+npm run test-integration --testPathIgnorePatterns "/test/integration/(query|build)/
+```
+
+Additionally, it may be helpful to use a visual jest frontend (e.g. `npx majestic`). Note that since render tests do not use Jest, these will still have to be run from the command line.
 
 ### Running specific tests
 
@@ -64,14 +80,19 @@ $ npm run test-render circle-radius/literal
 Results at: ./test/integration/render-tests/index.html
 Done in 2.32s.
 ```
+### Detailed debug messages for render tests
+Render tests are executed in browser, and by default console messages are hidden. If need to see them, please pass <code>--debug</code> parameter:
+```
+$ npm run test-render raster-masking/overlapping-zoom -- --debug
+```
 
 ### Viewing render test results
 
-During a render test run, the test harness will use GL-JS to create an `actual.png` image from the given `style.json`, and will then use [pixelmatch](https://github.com/mapbox/pixelmatch) to compare that image to `expected.png`, generating a `diff.png` highlighting the mismatching pixels (if any) in red.
+During a render test run, the test harness will use puppeteer to drive real browser and create an `actual.png` image from the given `style.json`, and will then use [pixelmatch](https://github.com/mapbox/pixelmatch) to compare that image to `expected.png`, generating a `diff.png` highlighting the mismatching pixels (if any) in red.
 
-If you invoke the tests with the `--report` param...
+By default render tests generate reports in <code>./test/integration/render/</code> directory:
 ```
-$ npm run test-render -- --report
+$ npm run test-render
 ...
 1211 passed (99.8%)
 2 failed (0.2%)
@@ -83,12 +104,32 @@ Results logged to './test/integration/render/results.html'
 open ./test/integration/render/results.html
 ```
 
-Same parameter can be used to view results for a single test...
+If want to skip the report, please pass <code>--skip-report</code> parameter
 ```
-$ npm run test-render circle-radius/literal -- --report
+$ npm run test-render circle-radius/literal -- --skip-report
 ```
 
-## Notes on the query integration tests
+### Updating results of render test results
+
+Note that the CI is running the render tests. If they fail, the `report.html` is uploaded as an artifact. This file can be download, opened in the browser and with right click - save the image the actual CI render test result can be stored as the expected image.
+
+To run this manually you can use the following commands
+On Linux:
+```
+xvfb-run -a UPDATE=true npm run test-render
+```
+On Mac:
+```
+UPDATE=true npm run test-render
+```
+Or on Windows with PowerShell:
+```
+$env:UPDATE=$true; npm run test-render
+```
+
+
+
+#### Notes on the query integration tests
 
 In test/integration/lib/query-browser-jest.test.ts a web server is automatically started to expose static assets from the integration folder. In order to start a similar server manually, run:
 
@@ -114,20 +155,6 @@ Query tests can be run in the browser, the server for serving up the test page a
 ```
 npm run start
 ```
-OR
-```
-npm run start-debug
-```
-
-If you want to run only the test server run:
-```
-npm run watch-query
-```
-
-Then open the following url in the browser of your choice to start running the tests.
-```
-http://localhost:7357/
-```
 
 ### Running specific tests
 
@@ -144,7 +171,6 @@ So the server uses platform notifications to inform when the build has finished.
 ```
 DISABLE_BUILD_NOTIFICATIONS=true
 ```
-
 
 ## Writing new tests
 
@@ -167,13 +193,9 @@ To add a new render test:
 5. Commit the new `style.json` and `expected.png` :rocket:
 
 ## Updating results of query-tests
-You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled:
+You can update the expected results of query-tests by running them with with the `UPDATE` flag enabled, for example on Linux:
 ```
 UPDATE=true npm run test-query
-```
-You have to regenerate the fixture afterwards
-```
- npm run generate-query-test-fixtures
 ```
 Check carefully if all changes are intended.
 

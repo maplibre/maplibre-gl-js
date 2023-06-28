@@ -1,10 +1,10 @@
 import path from 'path';
 import fs from 'fs';
-import glob from 'glob';
-import {createPropertyExpression} from '../../../src/style-spec/expression';
-import {isFunction} from '../../../src/style-spec/function';
-import convertFunction from '../../../src/style-spec/function/convert';
-import {toString} from '../../../src/style-spec/expression/types';
+import {globSync} from 'glob';
+import {createPropertyExpression,
+    isFunction,
+    convertFunction,
+    toString} from '@maplibre/maplibre-gl-style-spec';
 import {CanonicalTileID} from '../../../src/source/tile_id';
 import {getGeometry} from './lib/geometry';
 import {stringify} from './lib/util';
@@ -13,7 +13,7 @@ import {ExpressionFixture} from './fixture-types';
 
 const decimalSigFigs =  6;
 
-const expressionTestFileNames = glob.sync('**/test.json', {cwd: __dirname});
+const expressionTestFileNames = globSync('**/test.json', {cwd: __dirname});
 describe('expression', () => {
 
     expressionTestFileNames.forEach((expressionTestFileName) => {
@@ -39,7 +39,16 @@ describe('expression', () => {
 
                 const expected = fixture.expected;
                 const compileOk = deepEqual(result.compiled, expected.compiled, decimalSigFigs);
+                if (!compileOk) {
+                    console.log(`Expected ${JSON.stringify(expected.compiled)}`);
+                    console.log(`Result   ${JSON.stringify(result.compiled)}`);
+                }
+
                 const evalOk = compileOk && deepEqual(result.outputs, expected.outputs, decimalSigFigs);
+                if (!evalOk) {
+                    console.log(`Expected ${JSON.stringify(expected.outputs)}`);
+                    console.log(`Result   ${JSON.stringify(result.outputs)}`);
+                }
 
                 expect(compileOk).toBeTruthy();
                 expect(evalOk).toBeTruthy();
@@ -86,7 +95,7 @@ function evaluateFixture(fixture) {
     return result;
 }
 
-function evaluateExpression (fixture: ExpressionFixture, expression, compilationResult) {
+function evaluateExpression(fixture: ExpressionFixture, expression, compilationResult) {
 
     let availableImages;
     let canonical;
@@ -100,7 +109,7 @@ function evaluateExpression (fixture: ExpressionFixture, expression, compilation
         return;
     }
 
-    const evaluationResult = [];
+    const evaluationResult: any[] = [];
 
     expression = expression.value;
     const type = expression._styleExpression.expression.type; // :scream:

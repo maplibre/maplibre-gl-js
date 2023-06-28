@@ -3,11 +3,11 @@ import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
-import segment from '../segment';
-import LineBucket from './line_bucket';
-import LineStyleLayer from '../../style/style_layer/line_style_layer';
-import {LayerSpecification} from '../../style-spec/types.g';
-import EvaluationParameters from '../../style/evaluation_parameters';
+import {SegmentVector} from '../segment';
+import {LineBucket} from './line_bucket';
+import {LineStyleLayer} from '../../style/style_layer/line_style_layer';
+import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {BucketFeature, BucketParameters} from '../bucket';
 
 // Load a line feature from fixture tile.
@@ -105,7 +105,7 @@ describe('LineBucket', () => {
 
         // Stub MAX_VERTEX_ARRAY_LENGTH so we can test features
         // breaking across array groups without tests taking a _long_ time.
-        segment.MAX_VERTEX_ARRAY_LENGTH = 256;
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 256;
 
         const layer = new LineStyleLayer({id: 'test', type: 'line'} as LayerSpecification);
         layer.recalculate({zoom: 0, zoomHistory: {}} as EvaluationParameters, undefined);

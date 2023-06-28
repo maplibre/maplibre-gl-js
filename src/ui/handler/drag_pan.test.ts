@@ -1,7 +1,7 @@
-import DOM from '../../util/dom';
+import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
-import Map, {MapOptions} from '../map';
+import {beforeMapTest} from '../../util/test/util';
+import {Map, MapOptions} from '../map';
 import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 
 function createMap(clickTolerance?, dragPan?) {
@@ -13,9 +13,7 @@ function createMap(clickTolerance?, dragPan?) {
 }
 
 beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
+    beforeMapTest();
 });
 
 // MouseEvent.buttons = 1 // left button

@@ -17,19 +17,19 @@ jobs:
           fetch-depth: 0
           ref: main
 
-      - name: Use Node.js 16 x64
-        uses: actions/setup-node@v3.5.1
+      - name: Use Node.js 18 x64
+        uses: actions/setup-node@v3.6.0
         with:
-          node-version: 16
+          node-version: 18
           architecture: x64
           registry-url: 'https://registry.npmjs.org'
 
       - name: Get version
         id: package-version
-        uses: martinbeentjes/npm-get-version-action@v1.2.3
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
 
-      - name: Check tag does not exist yet
-        run: if git rev-list v${{ steps.package-version.outputs.current-version }}; then echo "Tag already exists. Aborting the release process."; exit 1; fi
+      # - name: Check tag does not exist yet
+      #   run: if git rev-list v${{ steps.package-version.outputs.current-version }}; then echo "Tag already exists. Aborting the release process."; exit 1; fi
 
       - name: Tag commit and push
         uses: mathieudutour/github-tag-action@v6.1
@@ -56,14 +56,6 @@ jobs:
           npm run build-benchmarks
           npm run generate-typings
 
-      - name: Empty postinstall.js
-        run: |
-          echo "// empty in published package" > postinstall.js
-
-      - name: Write dist/package.json
-        run: |
-          echo "{ \"type\": \"commonjs\", \"name\": \"maplibre-gl\" }" > dist/package.json
-
       - name: Create Archive
         run: |
           zip -r dist dist
@@ -79,26 +71,18 @@ jobs:
       - name: Create GitHub Release (regular)
         id: create_regular_release
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        uses: actions/create-release@v1
+        uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.prepare_release.outputs.version_tag }}
-          release_name: ${{steps.prepare_release.outputs.version_tag }}
-          body_path: ${{ steps.release_notes.outputs.release_notes }}
+          tag: ${{ steps.prepare_release.outputs.version_tag }}
+          name: ${{steps.prepare_release.outputs.version_tag }}
+          bodyFile: ${{ steps.release_notes.outputs.release_notes }}
+          artifacts: "dist.zip"
+          artifactContentType: "application/zip"
+          allowUpdates: true
           draft: false
           prerelease: false
-
-      - name: Upload GitHub Release Assets (regular)
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_regular_release.outputs.upload_url }}
-          asset_path: ./dist.zip
-          asset_name: dist.zip
-          asset_content_type: application/zip
 
       - name: Create GitHub Release (prerelease)
         id: create_prerelease

@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-export default class DOM {
+export class DOM {
     private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
 
     private static userSelect: string;
@@ -48,7 +48,7 @@ export default class DOM {
         el.style[DOM.transformProp] = value;
     }
 
-    public static addEventListener(target: any, type: any, callback: any, options: {
+    public static addEventListener(target: HTMLElement | Window | Document, type: string, callback: EventListenerOrEventListenerObject, options: {
         passive?: boolean;
         capture?: boolean;
     } = {}) {
@@ -59,7 +59,7 @@ export default class DOM {
         }
     }
 
-    public static removeEventListener(target: any, type: any, callback: any, options: {
+    public static removeEventListener(target: HTMLElement | Window | Document, type: string, callback: EventListenerOrEventListenerObject, options: {
         passive?: boolean;
         capture?: boolean;
     } = {}) {

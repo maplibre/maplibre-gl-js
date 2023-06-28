@@ -1,13 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {setMatchMedia, setPerformance, setWebGlContext} from '../../util/test/util';
 import {generateMousePanHandler, generateMousePitchHandler, generateMouseRotationHandler} from './mouse';
-
-beforeEach(() => {
-    setPerformance();
-    setWebGlContext();
-    setMatchMedia();
-});
 
 describe('mouse handler tests', () => {
     test('MouseRotateHandler', () => {

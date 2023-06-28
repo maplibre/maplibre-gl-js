@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {chromium} from 'playwright';
+import puppeteer from 'puppeteer';
 import PDFMerger from 'pdf-merger-js';
 import minimist from 'minimist';
 
@@ -30,26 +30,22 @@ if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
 }
 
-const url = new URL('http://localhost:9966/bench/versions');
+const url = new URL('http://localhost:9966/test/bench/versions/index.html');
 
 if (argv.compare !== true && argv.compare !== undefined) { // handle --compare without argument as the default
     for (const compare of [].concat(argv.compare))
         url.searchParams.append('compare', compare || '');
 }
 
-console.log(`Starting headeless chrome at: ${url.toString()}`);
+console.log(`Starting headless chrome at: ${url.toString()}`);
 
-const browser = await chromium.launch({
-    headless: true,
-    args: ['--use-gl=angle', '--no-sandbox', '--disable-setuid-sandbox']
-});
+const browser = await puppeteer.launch({headless: 'new'});
 
 try {
-    const context = await browser.newContext({
-        viewport: {width: 1280, height: 1024}
-    });
-    context.setDefaultTimeout(0);
-    const webPage = await context.newPage();
+
+    const webPage = await browser.newPage();
+    await webPage.setDefaultTimeout(0);
+    await webPage.setViewport({width: 1280, height: 1024});
 
     url.hash = 'NONE';
     await webPage.goto(url.toString());

@@ -1,12 +1,12 @@
-import StyleLayer from '../style_layer';
+import {StyleLayer} from '../style_layer';
 
 import properties, {RasterPaintPropsPossiblyEvaluated} from './raster_style_layer_properties.g';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
 import type {RasterPaintProps} from './raster_style_layer_properties.g';
-import type {LayerSpecification} from '../../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-class RasterStyleLayer extends StyleLayer {
+export class RasterStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<RasterPaintProps>;
     _transitioningPaint: Transitioning<RasterPaintProps>;
     paint: PossiblyEvaluated<RasterPaintProps, RasterPaintPropsPossiblyEvaluated>;
@@ -15,5 +15,3 @@ class RasterStyleLayer extends StyleLayer {
         super(layer, properties);
     }
 }
-
-export default RasterStyleLayer;

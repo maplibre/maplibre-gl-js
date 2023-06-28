@@ -1,5 +1,5 @@
 import type {WorkerInterface, WorkerGlobalScopeInterface, MessageListener} from '../../../src/util/web_worker';
-import MaplibreWorker from '../../../src/source/worker';
+import MapLibreWorker from '../../../src/source/worker';
 
 export class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
     addListeners: Array<MessageListener>;
@@ -55,7 +55,7 @@ export class MessageBus implements WorkerInterface, WorkerGlobalScopeInterface {
     parentBus.target = workerBus;
     workerBus.target = parentBus;
 
-    new MaplibreWorker(workerBus);
+    new MapLibreWorker(workerBus);
 
     return parentBus;
 };

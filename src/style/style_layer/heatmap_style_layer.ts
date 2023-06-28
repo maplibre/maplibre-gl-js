@@ -1,17 +1,17 @@
-import StyleLayer from '../style_layer';
+import {StyleLayer} from '../style_layer';
 
-import HeatmapBucket from '../../data/bucket/heatmap_bucket';
+import {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
 import {RGBAImage} from '../../util/image';
 import properties, {HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g';
 import {renderColorRamp} from '../../util/color_ramp';
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
-import type Texture from '../../render/texture';
-import type Framebuffer from '../../gl/framebuffer';
+import type {Texture} from '../../render/texture';
+import type {Framebuffer} from '../../gl/framebuffer';
 import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
-import type {LayerSpecification} from '../../style-spec/types.g';
+import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-class HeatmapStyleLayer extends StyleLayer {
+export class HeatmapStyleLayer extends StyleLayer {
 
     heatmapFbo: Framebuffer;
     colorRamp: RGBAImage;
@@ -67,5 +67,3 @@ class HeatmapStyleLayer extends StyleLayer {
         return this.paint.get('heatmap-opacity') !== 0 && this.visibility !== 'none';
     }
 }
-
-export default HeatmapStyleLayer;

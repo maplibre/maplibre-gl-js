@@ -1,24 +1,24 @@
 
-import Tile from '../source/tile';
+import {Tile} from '../source/tile';
 import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dAttributes from '../data/pos3d_attributes';
-import SegmentVector from '../data/segment';
-import VertexBuffer from '../gl/vertex_buffer';
-import IndexBuffer from '../gl/index_buffer';
-import Painter from './painter';
-import Texture from '../render/texture';
-import type Framebuffer from '../gl/framebuffer';
+import {SegmentVector} from '../data/segment';
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {IndexBuffer} from '../gl/index_buffer';
+import {Painter} from './painter';
+import {Texture} from '../render/texture';
+import type {Framebuffer} from '../gl/framebuffer';
 import Point from '@mapbox/point-geometry';
-import MercatorCoordinate from '../geo/mercator_coordinate';
-import TerrainSourceCache from '../source/terrain_source_cache';
-import SourceCache from '../source/source_cache';
-import EXTENT from '../data/extent';
-import {number as mix} from '../style-spec/util/interpolate';
-import type {TerrainSpecification} from '../style-spec/types.g';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {TerrainSourceCache} from '../source/terrain_source_cache';
+import {SourceCache} from '../source/source_cache';
+import {EXTENT} from '../data/extent';
+import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {earthRadius} from '../geo/lng_lat';
 
 export type TerrainData = {
@@ -40,12 +40,12 @@ export type TerrainMesh = {
 }
 
 /**
- * This is the main class which handles most of the 3D Terrain logic. It has the follwing topics:
+ * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
  *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
  *    3) creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
  *    4) stores all render-to-texture tiles in the this.sourceCache._tiles
- *    5) calculates the elevation for a spezific tile-coordinate
+ *    5) calculates the elevation for a specific tile-coordinate
  *    6) creates a terrain-mesh
  *
  *    A note about the GPU resource-usage:
@@ -67,7 +67,7 @@ export type TerrainMesh = {
  *
  */
 
-export default class Terrain {
+export class Terrain {
     // The style this terrain crresponds to
     painter: Painter;
     // the sourcecache this terrain is based on
@@ -76,7 +76,7 @@ export default class Terrain {
     options: TerrainSpecification;
     // define the meshSize per tile.
     meshSize: number;
-    // multiplicator for the elevation. Used to make terrain more "extrem".
+    // multiplicator for the elevation. Used to make terrain more "extreme".
     exaggeration: number;
     // to not see pixels in the render-to-texture tiles it is good to render them bigger
     // this number is the multiplicator (must be a power of 2) for the current tileSize.
@@ -138,7 +138,7 @@ export default class Terrain {
             const tr = terrain.tile.dem.get(c[0], c[1] + 1);
             const bl = terrain.tile.dem.get(c[0] + 1, c[1]);
             const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
-            elevation = mix(mix(tl, tr, coord[0] - c[0]), mix(bl, br, coord[0] - c[0]), coord[1] - c[1]);
+            elevation = interpolates.number(interpolates.number(tl, tr, coord[0] - c[0]), interpolates.number(bl, br, coord[0] - c[0]), coord[1] - c[1]);
         }
         return elevation;
     }
@@ -161,8 +161,8 @@ export default class Terrain {
      * @returns {TerrainData} the terrain data to use in the program
      */
     getTerrainData(tileID: OverscaledTileID): TerrainData {
-        // create empty DEM Obejcts, which will used while raster-dem tiles are loading.
-        // creates an empty depth-buffer texture which is needed, during the initialisation process of the 3d mesh..
+        // create empty DEM Objects, which will used while raster-dem tiles are loading.
+        // creates an empty depth-buffer texture which is needed, during the initialization process of the 3d mesh..
         if (!this._emptyDemTexture) {
             const context = this.painter.context;
             const image = new RGBAImage({width: 1, height: 1}, new Uint8Array(1 * 4));
@@ -237,7 +237,7 @@ export default class Terrain {
             this._fboDepthTexture.bind(painter.context.gl.NEAREST, painter.context.gl.CLAMP_TO_EDGE);
         }
         if (!this._fbo) {
-            this._fbo = painter.context.createFramebuffer(width, height, true);
+            this._fbo = painter.context.createFramebuffer(width, height, true, false);
             this._fbo.depthAttachment.set(painter.context.createRenderbuffer(painter.context.gl.DEPTH_COMPONENT16, width, height));
         }
         this._fbo.colorAttachment.set(texture === 'coords' ? this._fboCoordsTexture.texture : this._fboDepthTexture.texture);

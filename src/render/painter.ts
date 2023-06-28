@@ -1,67 +1,52 @@
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {mat4, vec3} from 'gl-matrix';
-import SourceCache from '../source/source_cache';
-import EXTENT from '../data/extent';
-import pixelsToTileUnits from '../source/pixels_to_tile_units';
-import SegmentVector from '../data/segment';
+import {SourceCache} from '../source/source_cache';
+import {EXTENT} from '../data/extent';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
+import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import posAttributes from '../data/pos_attributes';
-import ProgramConfiguration from '../data/program_configuration';
-import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index';
-import shaders from '../shaders/shaders';
-import Program from './program';
+import {ProgramConfiguration} from '../data/program_configuration';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
+import {shaders} from '../shaders/shaders';
+import {Program} from './program';
 import {programUniforms} from './program/program_uniforms';
-import Context from '../gl/context';
-import DepthMode from '../gl/depth_mode';
-import StencilMode from '../gl/stencil_mode';
-import ColorMode from '../gl/color_mode';
-import CullFaceMode from '../gl/cull_face_mode';
-import Texture from './texture';
+import {Context} from '../gl/context';
+import {DepthMode} from '../gl/depth_mode';
+import {StencilMode} from '../gl/stencil_mode';
+import {ColorMode} from '../gl/color_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
+import {Texture} from './texture';
 import {clippingMaskUniformValues} from './program/clipping_mask_program';
-import Color from '../style-spec/util/color';
-import symbol from './draw_symbol';
-import circle from './draw_circle';
-import heatmap from './draw_heatmap';
-import line from './draw_line';
-import fill from './draw_fill';
-import fillExtrusion from './draw_fill_extrusion';
-import hillshade from './draw_hillshade';
-import raster from './draw_raster';
-import background from './draw_background';
-import debug, {drawDebugPadding, selectDebugSource} from './draw_debug';
-import custom from './draw_custom';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {drawSymbols} from './draw_symbol';
+import {drawCircles} from './draw_circle';
+import {drawHeatmap} from './draw_heatmap';
+import {drawLine} from './draw_line';
+import {drawFill} from './draw_fill';
+import {drawFillExtrusion} from './draw_fill_extrusion';
+import {drawHillshade} from './draw_hillshade';
+import {drawRaster} from './draw_raster';
+import {drawBackground} from './draw_background';
+import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
+import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 
-const draw = {
-    symbol,
-    circle,
-    heatmap,
-    line,
-    fill,
-    'fill-extrusion': fillExtrusion,
-    hillshade,
-    raster,
-    background,
-    debug,
-    custom
-};
-
-import type Transform from '../geo/transform';
-import type Tile from '../source/tile';
-import type Style from '../style/style';
-import type StyleLayer from '../style/style_layer';
+import type {Transform} from '../geo/transform';
+import type {Tile} from '../source/tile';
+import type {Style} from '../style/style';
+import type {StyleLayer} from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
-import type LineAtlas from './line_atlas';
-import type ImageManager from './image_manager';
-import type GlyphManager from './glyph_manager';
-import type VertexBuffer from '../gl/vertex_buffer';
-import type IndexBuffer from '../gl/index_buffer';
+import type {LineAtlas} from './line_atlas';
+import type {ImageManager} from './image_manager';
+import type {GlyphManager} from './glyph_manager';
+import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
-import type ResolvedImage from '../style-spec/expression/types/resolved_image';
-import type {RGBAImage} from '../util/image';
-import RenderToTexture from './render_to_texture';
+import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import {RenderToTexture} from './render_to_texture';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -72,17 +57,16 @@ type PainterOptions = {
     rotating: boolean;
     zooming: boolean;
     moving: boolean;
-    gpuTiming: boolean;
     fadeDuration: number;
 };
 
 /**
  * Initialize a new painter object.
  *
- * @param {Canvas} gl an experimental-webgl drawing context
+ * @param {Canvas} gl a webgl drawing context
  * @private
  */
-class Painter {
+export class Painter {
     context: Context;
     transform: Transform;
     renderToTexture: RenderToTexture;
@@ -123,8 +107,6 @@ class Painter {
     cache: {[_: string]: Program<any>};
     crossTileSymbolIndex: CrossTileSymbolIndex;
     symbolFadeChange: number;
-    gpuTimers: {[_: string]: any};
-    emptyTexture: Texture;
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
@@ -132,7 +114,7 @@ class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGLRenderingContext, transform: Transform) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: Transform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
@@ -146,8 +128,6 @@ class Painter {
         this.depthEpsilon = 1 / Math.pow(2, 16);
 
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
-
-        this.gpuTimers = {};
     }
 
     /*
@@ -214,12 +194,6 @@ class Painter {
         quadTriangleIndices.emplaceBack(0, 1, 2);
         quadTriangleIndices.emplaceBack(2, 1, 3);
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
-
-        this.emptyTexture = new Texture(context, {
-            width: 1,
-            height: 1,
-            data: new Uint8Array([0, 0, 0, 0])
-        } as RGBAImage, context.gl.RGBA);
 
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
@@ -380,19 +354,16 @@ class Painter {
         const layerIds = this.style._order;
         const sourceCaches = this.style.sourceCaches;
 
-        for (const id in sourceCaches) {
-            const sourceCache = sourceCaches[id];
-            if (sourceCache.used) {
-                sourceCache.prepare(this.context);
-            }
-        }
-
         const coordsAscending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
+            if (sourceCache.used) {
+                sourceCache.prepare(this.context);
+            }
+
             coordsAscending[id] = sourceCache.getVisibleCoordinates();
             coordsDescending[id] = coordsAscending[id].slice().reverse();
             coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
@@ -486,7 +457,7 @@ class Painter {
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
-                draw.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
+                drawDebug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }
         }
 
@@ -504,52 +475,38 @@ class Painter {
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
-        this.gpuTimingStart(layer);
-        draw[layer.type](painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
-        this.gpuTimingEnd();
-    }
-
-    gpuTimingStart(layer: StyleLayer) {
-        if (!this.options.gpuTiming) return;
-        const ext = this.context.extTimerQuery;
-        // This tries to time the draw call itself, but note that the cost for drawing a layer
-        // may be dominated by the cost of uploading vertices to the GPU.
-        // To instrument that, we'd need to pass the layerTimers object down into the bucket
-        // uploading logic.
-        let layerTimer = this.gpuTimers[layer.id];
-        if (!layerTimer) {
-            layerTimer = this.gpuTimers[layer.id] = {
-                calls: 0,
-                cpuTime: 0,
-                query: ext.createQueryEXT()
-            };
+        switch (layer.type) {
+            case 'symbol':
+                drawSymbols(painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
+                break;
+            case 'circle':
+                drawCircles(painter, sourceCache, layer as any, coords);
+                break;
+            case 'heatmap':
+                drawHeatmap(painter, sourceCache, layer as any, coords);
+                break;
+            case 'line':
+                drawLine(painter, sourceCache, layer as any, coords);
+                break;
+            case 'fill':
+                drawFill(painter, sourceCache, layer as any, coords);
+                break;
+            case 'fill-extrusion':
+                drawFillExtrusion(painter, sourceCache, layer as any, coords);
+                break;
+            case 'hillshade':
+                drawHillshade(painter, sourceCache, layer as any, coords);
+                break;
+            case 'raster':
+                drawRaster(painter, sourceCache, layer as any, coords);
+                break;
+            case 'background':
+                drawBackground(painter, sourceCache, layer as any, coords);
+                break;
+            case 'custom':
+                drawCustom(painter, sourceCache, layer as any);
+                break;
         }
-        layerTimer.calls++;
-        ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, layerTimer.query);
-    }
-
-    gpuTimingEnd() {
-        if (!this.options.gpuTiming) return;
-        const ext = this.context.extTimerQuery;
-        ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
-    }
-
-    collectGpuTimers() {
-        const currentLayerTimers = this.gpuTimers;
-        this.gpuTimers = {};
-        return currentLayerTimers;
-    }
-
-    queryGpuTimers(gpuTimers: {[_: string]: any}) {
-        const layers = {};
-        for (const layerId in gpuTimers) {
-            const gpuTimer = gpuTimers[layerId];
-            const ext = this.context.extTimerQuery;
-            const gpuTime = ext.getQueryObjectEXT(gpuTimer.query, ext.QUERY_RESULT_EXT) / (1000 * 1000);
-            ext.deleteQueryEXT(gpuTimer.query);
-            layers[layerId] = gpuTime;
-        }
-        return layers;
     }
 
     /**
@@ -673,11 +630,8 @@ class Painter {
     }
 
     destroy() {
-        this.emptyTexture.destroy();
         if (this.debugOverlayTexture) {
             this.debugOverlayTexture.destroy();
         }
     }
 }
-
-export default Painter;

@@ -4,8 +4,8 @@ import type {
     StructArrayMember
 } from '../util/struct_array';
 
-import type Program from '../render/program';
-import type Context from '../gl/context';
+import type {Program} from '../render/program';
+import type {Context} from '../gl/context';
 
 /**
  * @enum {string} AttributeType
@@ -24,10 +24,10 @@ const AttributeType = {
 
 /**
  * The `VertexBuffer` class turns a `StructArray` into a WebGL buffer. Each member of the StructArray's
- * Struct type is converted to a WebGL atribute.
+ * Struct type is converted to a WebGL attribute.
  * @private
  */
-class VertexBuffer {
+export class VertexBuffer {
     length: number;
     attributes: ReadonlyArray<StructArrayMember>;
     itemSize: number;
@@ -67,7 +67,7 @@ class VertexBuffer {
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, array.arrayBuffer);
     }
 
-    enableAttributes(gl: WebGLRenderingContext, program: Program<any>) {
+    enableAttributes(gl: WebGLRenderingContext|WebGL2RenderingContext, program: Program<any>) {
         for (let j = 0; j < this.attributes.length; j++) {
             const member = this.attributes[j];
             const attribIndex: number | void = program.attributes[member.name];
@@ -83,7 +83,7 @@ class VertexBuffer {
      * @param program The active WebGL program
      * @param vertexOffset Index of the starting vertex of the segment
      */
-    setVertexAttribPointers(gl: WebGLRenderingContext, program: Program<any>, vertexOffset?: number | null) {
+    setVertexAttribPointers(gl: WebGLRenderingContext|WebGL2RenderingContext, program: Program<any>, vertexOffset?: number | null) {
         for (let j = 0; j < this.attributes.length; j++) {
             const member = this.attributes[j];
             const attribIndex: number | void = program.attributes[member.name];
@@ -112,5 +112,3 @@ class VertexBuffer {
         }
     }
 }
-
-export default VertexBuffer;

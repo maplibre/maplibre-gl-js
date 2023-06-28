@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
-import Transform from './transform';
-import LngLat from './lng_lat';
+import {Transform} from './transform';
+import {LngLat} from './lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
-import type Terrain from '../render/terrain';
+import type {Terrain} from '../render/terrain';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -457,6 +457,15 @@ describe('transform', () => {
         const top = Math.max(0, transform.height / 2 - transform.getHorizon());
         expect(top).toBeCloseTo(79.1823898251593, 10);
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
+    });
+
+    test('getElevation with lng less than -180 wraps correctly', () => {
+        const OVERSCALETILEID_DOES_NOT_THROW = 4;
+        const terrain = {
+            getElevation: () => OVERSCALETILEID_DOES_NOT_THROW
+        } as any as Terrain;
+        const transform = new Transform(0, 22, 0, 85, true);
+        expect(transform.getElevation(new LngLat(-183, 40), terrain)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
     });
 
 });

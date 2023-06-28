@@ -2,37 +2,28 @@ import fs from 'fs';
 import path from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import VectorTileWorkerSource from '../source/vector_tile_worker_source';
-import StyleLayerIndex from '../style/style_layer_index';
+import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
+import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, FakeServer} from 'nise';
-import Actor from '../util/actor';
+import {Actor} from '../util/actor';
 import {TileParameters, WorkerTileParameters} from './worker_source';
-import WorkerTile from './worker_tile';
+import {WorkerTile} from './worker_tile';
 import {setPerformance} from '../util/test/util';
 
 describe('vector tile worker source', () => {
     const actor = {send: () => {}} as any as Actor;
     let server: FakeServer;
-    let originalGetEntriesByName;
-    let originalMeasure;
-    let originalMark;
 
     beforeEach(() => {
         global.fetch = null;
         server = fakeServer.create();
         setPerformance();
-        originalGetEntriesByName = window.performance.getEntriesByName;
-        originalMeasure = window.performance.measure;
-        originalMark = window.performance.mark;
 
     });
 
     afterEach(() => {
         server.restore();
         jest.clearAllMocks();
-        window.performance.getEntriesByName = originalGetEntriesByName;
-        window.performance.measure = originalMeasure;
-        window.performance.mark = originalMark;
     });
     test('VectorTileWorkerSource#abortTile aborts pending request', () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);

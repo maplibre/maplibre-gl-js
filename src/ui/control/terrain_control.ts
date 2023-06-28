@@ -1,25 +1,23 @@
-import DOM from '../../util/dom';
-import {bindAll} from '../../util/util';
+import {DOM} from '../../util/dom';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {IControl} from './control';
-import type {TerrainSpecification} from '../../style-spec/types.g';
+import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
- * An `TerrainControl` control adds a button to turn terrain on and off.
+ * A `TerrainControl` control contains a button for turning the terrain on and off.
  *
  * @implements {IControl}
- * @param {Object} [options]
- * @param {string} [options.id] The ID of the raster-dem source to use.
- * @param {Object} [options.options]
- * @param {number} [options.options.exaggeration]
+ * @param {TerrainSpecification} [options]
+ * @param {string} [options.source] The ID of the raster-dem source to use.
+ * @param {number} [options.exaggeration]
  * @example
  * var map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({
  *         source: "terrain"
  *     }));
  */
-export default class TerrainControl implements IControl {
+export class TerrainControl implements IControl {
     options: TerrainSpecification;
     _map: Map;
     _container: HTMLElement;
@@ -27,11 +25,6 @@ export default class TerrainControl implements IControl {
 
     constructor(options: TerrainSpecification) {
         this.options = options;
-
-        bindAll([
-            '_toggleTerrain',
-            '_updateTerrainIcon',
-        ], this);
     }
 
     onAdd(map: Map) {
@@ -53,16 +46,16 @@ export default class TerrainControl implements IControl {
         this._map = undefined;
     }
 
-    _toggleTerrain() {
+    _toggleTerrain = () => {
         if (this._map.getTerrain()) {
             this._map.setTerrain(null);
         } else {
             this._map.setTerrain(this.options);
         }
         this._updateTerrainIcon();
-    }
+    };
 
-    _updateTerrainIcon() {
+    _updateTerrainIcon = () => {
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain');
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled');
         if (this._map.terrain) {
@@ -72,5 +65,5 @@ export default class TerrainControl implements IControl {
             this._terrainButton.classList.add('maplibregl-ctrl-terrain');
             this._terrainButton.title = this._map._getUIString('TerrainControl.enableTerrain');
         }
-    }
+    };
 }

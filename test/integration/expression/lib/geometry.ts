@@ -1,5 +1,5 @@
 
-import MercatorCoordinate from '../../../../src/geo/mercator_coordinate';
+import {MercatorCoordinate} from '../../../../src/geo/mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {CanonicalTileID} from '../../../../src/source/tile_id';
 import {LngLatLike} from '../../../../src/geo/lng_lat';
@@ -61,7 +61,7 @@ export function getGeometry(feature, geometry, canonical: CanonicalTileID) {
         } else if (type === 'MultiPolygon') {
             feature.type = 'Polygon';
             for (let i = 0; i < coords.length; i++) {
-                const polygon = [];
+                const polygon: Point[][] = [];
                 polygon.push(...convertLines(coords[i], canonical));
                 feature.geometry.push(polygon);
             }

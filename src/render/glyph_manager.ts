@@ -1,7 +1,7 @@
-import loadGlyphRange from '../style/load_glyph_range';
+import {loadGlyphRange} from '../style/load_glyph_range';
 
 import TinySDF from '@mapbox/tiny-sdf';
-import isChar from '../util/is_char_in_unicode_block';
+import {unicodeBlockLookup} from '../util/is_char_in_unicode_block';
 import {asyncAll} from '../util/util';
 import {AlphaImage} from '../util/image';
 
@@ -25,7 +25,7 @@ type Entry = {
     tinySDF?: TinySDF;
 };
 
-export default class GlyphManager {
+export class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string;
     entries: {
@@ -100,6 +100,11 @@ export default class GlyphManager {
                 return;
             }
 
+            if (!this.url) {
+                callback(new Error('glyphsUrl is not set'));
+                return;
+            }
+
             let requests = entry.requests[range];
             if (!requests) {
                 requests = entry.requests[range] = [];
@@ -158,10 +163,10 @@ export default class GlyphManager {
     _doesCharSupportLocalGlyph(id: number): boolean {
         /* eslint-disable new-cap */
         return !!this.localIdeographFontFamily &&
-            (isChar['CJK Unified Ideographs'](id) ||
-                isChar['Hangul Syllables'](id) ||
-                isChar['Hiragana'](id) ||
-                isChar['Katakana'](id));
+            (unicodeBlockLookup['CJK Unified Ideographs'](id) ||
+            unicodeBlockLookup['Hangul Syllables'](id) ||
+            unicodeBlockLookup['Hiragana'](id) ||
+            unicodeBlockLookup['Katakana'](id));
         /* eslint-enable new-cap */
     }
 

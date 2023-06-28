@@ -1,14 +1,14 @@
 import Point from '@mapbox/point-geometry';
-import drawCollisionDebug from './draw_collision_debug';
+import {drawCollisionDebug} from './draw_collision_debug';
 
-import SegmentVector from '../data/segment';
-import pixelsToTileUnits from '../source/pixels_to_tile_units';
+import {SegmentVector} from '../data/segment';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import * as symbolProjection from '../symbol/projection';
 import {EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../symbol/symbol_size';
 import {mat4} from 'gl-matrix';
-import StencilMode from '../gl/stencil_mode';
-import DepthMode from '../gl/depth_mode';
-import CullFaceMode from '../gl/cull_face_mode';
+import {StencilMode} from '../gl/stencil_mode';
+import {DepthMode} from '../gl/depth_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
 import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
@@ -22,22 +22,21 @@ import {
     symbolTextAndIconUniformValues
 } from './program/symbol_program';
 
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
-import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
+import type {Painter} from './painter';
+import type {SourceCache} from '../source/source_cache';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
-import type Texture from '../render/texture';
+import type {Texture} from '../render/texture';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {UniformValues} from './uniform_binding';
 import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
 import type {CrossTileID, VariableOffset} from '../symbol/placement';
-import type SymbolBucket from '../data/bucket/symbol_bucket';
-import type {SymbolBuffers} from '../data/bucket/symbol_bucket';
+import type {SymbolBucket, SymbolBuffers} from '../data/bucket/symbol_bucket';
 import type {TerrainData} from '../render/terrain';
-import type {SymbolLayerSpecification} from '../style-spec/types.g';
-import type Transform from '../geo/transform';
-import type ColorMode from '../gl/color_mode';
-import type Program from './program';
+import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {Transform} from '../geo/transform';
+import type {ColorMode} from '../gl/color_mode';
+import type {Program} from './program';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -58,7 +57,7 @@ type SymbolTileRenderState = {
 
 const identityMat4 = mat4.identity(new Float32Array(16));
 
-export default function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
+export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: SymbolStyleLayer, coords: Array<OverscaledTileID>, variableOffsets: {
     [_ in CrossTileID]: VariableOffset;
 }) {
     if (painter.renderPass !== 'translucent') return;
@@ -408,10 +407,12 @@ function drawLayerSymbols(
         const state = segmentState.state;
 
         context.activeTexture.set(gl.TEXTURE0);
+        // @ts-ignore
         state.atlasTexture.bind(state.atlasInterpolation, gl.CLAMP_TO_EDGE);
         if (state.atlasTextureIcon) {
             context.activeTexture.set(gl.TEXTURE1);
             if (state.atlasTextureIcon) {
+                // @ts-ignore
                 state.atlasTextureIcon.bind(state.atlasInterpolationIcon, gl.CLAMP_TO_EDGE);
             }
         }
