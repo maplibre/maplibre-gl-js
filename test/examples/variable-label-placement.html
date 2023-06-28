@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Variable label placement</title>
+    <meta property="og:description" content="Use text-variable-anchor to allow high priority labels to shift position to stay on the map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+    const places = {
+        'type': 'FeatureCollection',
+        'features': [
+            {
+                'type': 'Feature',
+                'properties': {
+                    'description': 'Ford\'s Theater',
+                    'icon': 'theatre'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.038659, 38.931567]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'description': 'The Gaslight',
+                    'icon': 'theatre'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.003168, 38.894651]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'description': 'Horrible Harry\'s',
+                    'icon': 'bar'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.090372, 38.881189]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'description': 'Bike Party',
+                    'icon': 'bicycle'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.052477, 38.943951]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'description': 'Rockabilly Rockstars',
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.031706, 38.914581]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'description': 'District Drum Tribe',
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.020945, 38.878241]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'description': 'Motown Memories',
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.007481, 38.876516]
+                }
+            }
+        ]
+    };
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-77.04, 38.907],
+        zoom: 11.15
+    });
+
+    map.on('load', () => {
+        // Add a GeoJSON source containing place coordinates and information.
+        map.addSource('places', {
+            'type': 'geojson',
+            'data': places
+        });
+
+        map.addLayer({
+            'id': 'poi-labels',
+            'type': 'symbol',
+            'source': 'places',
+            'layout': {
+                'text-field': ['get', 'description'],
+                'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+                'text-radial-offset': 0.5,
+                'text-justify': 'auto',
+                'icon-image': ['concat', ['get', 'icon'], '_15']
+            }
+        });
+
+        map.rotateTo(180, {duration: 10000});
+    });
+</script>
+</body>
+</html>

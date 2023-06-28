@@ -1,0 +1,29 @@
+site_name: MapLibre GL JS
+site_url: https://harelm.github.io/maplibre-docs-test/ # HM TODO: change this!
+repo_url: https://github.com/maplibre/maplibre-gl-js/
+theme:
+  name: 'material'
+  favicon: https://maplibre.org/favicon.ico
+  logo: https://avatars.githubusercontent.com/u/75709127?s=48&v=4
+  features:
+    - content.code.copy
+  palette: 
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

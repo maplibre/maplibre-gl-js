@@ -3,6 +3,8 @@
 /dist/
 /dist_type/
 /test/bench/results/
+/docs/API
+/docs/examples
 *.es.js
 *.js.map
 node_modules
