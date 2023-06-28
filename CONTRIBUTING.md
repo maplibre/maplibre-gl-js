@@ -39,6 +39,11 @@ This is not intended to be a strict process but rather a guideline that will bui
 
 ## Preparing your Development Environment
 
+### CodeSpaces
+
+By creating a code spcace you should be able to start working immidiately after the post create script finishes running.
+This script basically installes everything written here in the linux part.
+
 ### OSX
 
 Install the Xcode Command Line Tools Package
