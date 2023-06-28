@@ -130,7 +130,7 @@ export type MapOptions = {
     localIdeographFontFamily?: string;
     /**
      * The map's MapLibre style. This must be an a JSON object conforming to
-     * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), 
+     * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
      */
     style: StyleSpecification | string;
