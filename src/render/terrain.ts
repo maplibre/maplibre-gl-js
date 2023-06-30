@@ -138,7 +138,7 @@ export class Terrain {
             const tr = terrain.tile.dem.get(c[0], c[1] + 1);
             const bl = terrain.tile.dem.get(c[0] + 1, c[1]);
             const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
-            elevation = interpolates.number(interpolates.number(tl, tr, coord[0] - c[0]), interpolates.number(bl, br, coord[0] - c[0]), coord[1] - c[1]);
+            elevation = interpolates.number(interpolates.number(tl, tr, coord[1] - c[1]), interpolates.number(bl, br, coord[1] - c[1]), coord[0] - c[0]);
         }
         return elevation;
     }
