@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>View local GeoJSON (experimental)</title>
+    <meta property="og:description" content="View local GeoJSON with experimental File System Access API." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #viewbutton {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+</style>
+<div id="map"></div>
+<button id="viewbutton">View local GeoJSON file</button>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-8.3226655, 53.7654751],
+        zoom: 8
+    });
+
+    const viewbutton = document.getElementById('viewbutton');
+
+    async function buttonClickHandler() {
+        const [fileHandle] = await window.showOpenFilePicker({
+            // allow only single file
+            multiple: false,
+
+            // apply filter for GeoJSON files
+            types: [
+                {
+                    description: 'GeoJSON',
+                    accept: {'application/geo+json': ['.geojson']}
+                }
+            ],
+
+            // start in download directory
+            startIn: 'downloads'
+        });
+
+        // get file handle and read content
+        const file = await fileHandle.getFile();
+        const contents = await file.text();
+
+        // parse file as json and add as source to the map
+        map.addSource('uploaded-source', {
+            'type': 'geojson',
+            'data': JSON.parse(contents)
+        });
+
+        map.addLayer({
+            'id': 'uploaded-polygons',
+            'type': 'fill',
+            'source': 'uploaded-source',
+            'paint': {
+                'fill-color': '#888888',
+                'fill-outline-color': 'red',
+                'fill-opacity': 0.4
+            },
+            // filter for (multi)polygons; for also displaying linestrings
+            // or points add more layers with different filters
+            'filter': ['==', '$type', 'Polygon']
+        });
+    }
+
+    if ('showOpenFilePicker' in window) {
+        viewbutton.addEventListener('click', buttonClickHandler);
+    } else {
+        viewbutton.innerText =
+            'Your browser does not support File System Access API';
+        // If you want a fallback, try <input type="file">; but this uses classical file upload
+    }
+</script>
+</body>
+</html>

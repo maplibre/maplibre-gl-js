@@ -520,8 +520,9 @@ export class Popup extends Evented {
             this._tip       = DOM.create('div', 'maplibregl-popup-tip', this._container);
             this._container.appendChild(this._content);
             if (this.options.className) {
-                this.options.className.split(' ').forEach(name =>
-                    this._container.classList.add(name));
+                for (const name of this.options.className.split(' ')) {
+                    this._container.classList.add(name);
+                }
             }
 
             if (this._trackPointer) {

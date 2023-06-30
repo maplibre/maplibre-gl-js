@@ -87,6 +87,37 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Marker adds classes from className option, methods for class manipulations works properly', () => {
+        const map = createMap();
+        const marker = new Marker({className: 'some classes'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        const markerElement = marker.getElement();
+        expect(markerElement.classList.contains('some')).toBeTruthy();
+        expect(markerElement.classList.contains('classes')).toBeTruthy();
+
+        marker.addClassName('addedClass');
+        expect(markerElement.classList.contains('addedClass')).toBeTruthy();
+
+        marker.removeClassName('addedClass');
+        expect(!markerElement.classList.contains('addedClass')).toBeTruthy();
+
+        marker.toggleClassName('toggle');
+        expect(markerElement.classList.contains('toggle')).toBeTruthy();
+
+        marker.toggleClassName('toggle');
+        expect(!markerElement.classList.contains('toggle')).toBeTruthy();
+
+        expect(() => marker.addClassName('should throw exception')).toThrow(window.DOMException);
+        expect(() => marker.removeClassName('should throw exception')).toThrow(window.DOMException);
+        expect(() => marker.toggleClassName('should throw exception')).toThrow(window.DOMException);
+
+        expect(() => marker.addClassName('')).toThrow(window.DOMException);
+        expect(() => marker.removeClassName('')).toThrow(window.DOMException);
+        expect(() => marker.toggleClassName('')).toThrow(window.DOMException);
+    });
+
     test('Marker provides LngLat accessors', () => {
         expect(new Marker().getLngLat()).toBeUndefined();
 

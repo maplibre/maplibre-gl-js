@@ -14,6 +14,7 @@ import type {PointLike} from './camera';
 
 type MarkerOptions = {
     element?: HTMLElement;
+    className?: string;
     offset?: PointLike;
     anchor?: PositionAnchor;
     color?: string;
@@ -29,6 +30,7 @@ type MarkerOptions = {
  * Creates a marker component
  * @param {MarkerOptions} [options]
  * @param {HTMLElement} [options.element] DOM element to use as a marker. The default is a light blue, droplet-shaped SVG marker.
+ * @param {string} [options.className] Space-separated CSS class names to add to marker element.
  * @param {PositionAnchor} [options.anchor='center'] A string indicating the part of the Marker that should be positioned closest to the coordinate set via {@link Marker#setLngLat}.
  * Options are `'center'`, `'top'`, `'bottom'`, `'left'`, `'right'`, `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`.
  * @param {PointLike} [options.offset] The offset in pixels as a {@link PointLike} object to apply relative to the element's center. Negatives indicate left and up.
@@ -218,6 +220,12 @@ export class Marker extends Evented {
             e.preventDefault();
         });
         applyAnchorClass(this._element, this._anchor, 'marker');
+
+        if (options && options.className) {
+            for (const name of options.className.split(' ')) {
+                this._element.classList.add(name);
+            }
+        }
 
         this._popup = null;
     }
@@ -491,6 +499,47 @@ export class Marker extends Evented {
         this._offset = Point.convert(offset);
         this._update();
         return this;
+    }
+
+    /**
+     * Adds a CSS class to the marker element.
+     *
+     * @param {string} className Non-empty string with CSS class name to add to marker element
+     *
+     * @example
+     * let marker = new maplibregl.Marker()
+     * marker.addClassName('some-class')
+     */
+    addClassName(className: string) {
+        this._element.classList.add(className);
+    }
+
+    /**
+     * Removes a CSS class from the marker element.
+     *
+     * @param {string} className Non-empty string with CSS class name to remove from marker element
+     *
+     * @example
+     * let marker = new maplibregl.Marker()
+     * marker.removeClassName('some-class')
+     */
+    removeClassName(className: string) {
+        this._element.classList.remove(className);
+    }
+
+    /**
+     * Add or remove the given CSS class on the marker element, depending on whether the element currently has that class.
+     *
+     * @param {string} className Non-empty string with CSS class name to add/remove
+     *
+     * @returns {boolean} if the class was removed return false, if class was added, then return true
+     *
+     * @example
+     * let marker = new maplibregl.Marker()
+     * marker.toggleClassName('toggleClass')
+     */
+    toggleClassName(className: string) {
+        return this._element.classList.toggle(className);
     }
 
     _onMove = (e: MapMouseEvent | MapTouchEvent) => {
