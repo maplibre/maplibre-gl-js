@@ -77,7 +77,9 @@ export class NavigationControl implements IControl {
             this._compassIcon.setAttribute('aria-hidden', 'true');
         }
     }
-
+    /**
+     * Updates the zoom buttons based on the current zoom level.
+     */
     _updateZoomButtons = () => {
         const zoom = this._map.getZoom();
         const isMax = zoom === this._map.getMaxZoom();
@@ -87,7 +89,9 @@ export class NavigationControl implements IControl {
         this._zoomInButton.setAttribute('aria-disabled', isMax.toString());
         this._zoomOutButton.setAttribute('aria-disabled', isMin.toString());
     };
-
+    /**
+     * Rotates the compass arrow based on the map's transform.
+     */
     _rotateCompassArrow = () => {
         const rotate = this.options.visualizePitch ?
             `scale(${1 / Math.pow(Math.cos(this._map.transform.pitch * (Math.PI / 180)), 0.5)}) rotateX(${this._map.transform.pitch}deg) rotateZ(${this._map.transform.angle * (180 / Math.PI)}deg)` :
@@ -95,7 +99,11 @@ export class NavigationControl implements IControl {
 
         this._compassIcon.style.transform = rotate;
     };
-
+    /**
+     * Adds the NavigationControl to the map.
+     * @param map - The Map instance.
+     * @returns The container element of the control.
+     */
     onAdd(map: Map) {
         this._map = map;
         if (this.options.showZoom) {
@@ -115,7 +123,9 @@ export class NavigationControl implements IControl {
         }
         return this._container;
     }
-
+    /**
+     * Removes the NavigationControl from the map.
+     */
     onRemove() {
         DOM.remove(this._container);
         if (this.options.showZoom) {
@@ -132,14 +142,23 @@ export class NavigationControl implements IControl {
 
         delete this._map;
     }
-
+    /**
+     * Creates a button element with the specified class and click event handler.
+     * @param className - The class name of the button.
+     * @param fn - The click event handler function.
+     * @returns The created button element.
+     */
     _createButton(className: string, fn: (e?: any) => unknown) {
         const a = DOM.create('button', className, this._container) as HTMLButtonElement;
         a.type = 'button';
         a.addEventListener('click', fn);
         return a;
     }
-
+    /**
+     * Sets the title and ARIA label of a button.
+     * @param button - The button element.
+     * @param title - The title key for localization.
+     */
     _setButtonTitle = (button: HTMLButtonElement, title: string) => {
         const str = this._map._getUIString(`NavigationControl.${title}`);
         button.title = str;
@@ -177,19 +196,32 @@ class MouseRotateWrapper {
         DOM.addEventListener(element, 'touchstart', this.touchstart, {passive: false});
         DOM.addEventListener(element, 'touchcancel', this.reset);
     }
-
+    /**
+     * Starts the mouse interaction for rotation and pitch adjustment.
+     * @param e - The MouseEvent object.
+     * @param point - The Point object representing the starting point of the interaction.
+     */
     startMouse(e: MouseEvent, point: Point) {
         this.mouseRotate.dragStart(e, point);
         if (this.mousePitch) this.mousePitch.dragStart(e, point);
         DOM.disableDrag();
     }
 
+    /**
+     * Starts the touch interaction for rotation and pitch adjustment.
+     * @param e - The TouchEvent object.
+     * @param point - The Point object representing the starting point of the interaction.
+     */
     startTouch(e: TouchEvent, point: Point) {
         this.touchRotate.dragStart(e, point);
         if (this.touchPitch) this.touchPitch.dragStart(e, point);
         DOM.disableDrag();
     }
-
+    /**
+     * Moves the mouse during the interaction, adjusting the bearing and pitch accordingly.
+     * @param e - The MouseEvent object.
+     * @param point - The Point object representing the current point of the interaction.
+     */
     moveMouse(e: MouseEvent, point: Point) {
         const map = this.map;
         const {bearingDelta} = this.mouseRotate.dragMove(e, point) || {};
@@ -199,7 +231,11 @@ class MouseRotateWrapper {
             if (pitchDelta) map.setPitch(map.getPitch() + pitchDelta);
         }
     }
-
+    /**
+     * Moves the touch during the interaction, adjusting the bearing and pitch accordingly.
+     * @param e - The TouchEvent object.
+     * @param point - The Point object representing the current point of the interaction.
+     */
     moveTouch(e: TouchEvent, point: Point) {
         const map = this.map;
         const {bearingDelta} = this.touchRotate.dragMove(e, point) || {};
@@ -210,7 +246,10 @@ class MouseRotateWrapper {
         }
     }
 
-    off() {
+    /**
+     * Turns off the mouse and touch event listeners and resets the interaction.
+     */
+    off() : void {
         const element = this.element;
         DOM.removeEventListener(element, 'mousedown', this.mousedown);
         DOM.removeEventListener(element, 'touchstart', this.touchstart, {passive: false});
@@ -220,31 +259,49 @@ class MouseRotateWrapper {
         this.offTemp();
     }
 
-    offTemp() {
+    /**
+     * Disables temporary event listeners and enables drag functionality for both mouse and touch interactions.
+     */
+    offTemp(): void {
         DOM.enableDrag();
         DOM.removeEventListener(window, 'mousemove', this.mousemove);
         DOM.removeEventListener(window, 'mouseup', this.mouseup);
         DOM.removeEventListener(window, 'touchmove', this.touchmove, {passive: false});
         DOM.removeEventListener(window, 'touchend', this.touchend);
     }
-
-    mousedown = (e: MouseEvent) => {
+    /**
+     * Event handler for the `mousedown` event.
+     * @param e - The MouseEvent object.
+     */
+    mousedown = (e: MouseEvent): void => {
         this.startMouse(extend({}, e, {ctrlKey: true, preventDefault: () => e.preventDefault()}), DOM.mousePos(this.element, e));
         DOM.addEventListener(window, 'mousemove', this.mousemove);
         DOM.addEventListener(window, 'mouseup', this.mouseup);
     };
 
-    mousemove = (e: MouseEvent) => {
+    /**
+     * Event handler for the `mousemove` event.
+     * @param e - The MouseEvent object.
+     */
+    mousemove = (e: MouseEvent): void => {
         this.moveMouse(e, DOM.mousePos(this.element, e));
     };
 
-    mouseup = (e: MouseEvent) => {
+    /**
+     * Event handler for the `mouseup` event.
+     * @param e - The MouseEvent object.
+     */
+    mouseup = (e: MouseEvent): void => {
         this.mouseRotate.dragEnd(e);
         if (this.mousePitch) this.mousePitch.dragEnd(e);
         this.offTemp();
     };
 
-    touchstart = (e: TouchEvent) => {
+    /**
+     * Event handler for the `touchstart` event.
+     * @param e - The TouchEvent object.
+     */
+    touchstart = (e: TouchEvent): void => {
         if (e.targetTouches.length !== 1) {
             this.reset();
         } else {
@@ -255,7 +312,11 @@ class MouseRotateWrapper {
         }
     };
 
-    touchmove = (e: TouchEvent) => {
+    /**
+     * Event handler for the `touchmove` event.
+     * @param e - The TouchEvent object.
+     */
+    touchmove = (e: TouchEvent): void => {
         if (e.targetTouches.length !== 1) {
             this.reset();
         } else {
@@ -264,7 +325,11 @@ class MouseRotateWrapper {
         }
     };
 
-    touchend = (e: TouchEvent) => {
+    /**
+     * Event handler for the `touchend` event.
+     * @param e - The TouchEvent object.
+     */
+    touchend = (e: TouchEvent): void => {
         if (e.targetTouches.length === 0 &&
             this._startPos &&
             this._lastPos &&
@@ -276,7 +341,10 @@ class MouseRotateWrapper {
         this.offTemp();
     };
 
-    reset = () => {
+    /**
+     * Resets the rotation and pitch states for both mouse and touch interactions.
+     */
+    reset = (): void => {
         this.mouseRotate.reset();
         if (this.mousePitch) this.mousePitch.reset();
         this.touchRotate.reset();
