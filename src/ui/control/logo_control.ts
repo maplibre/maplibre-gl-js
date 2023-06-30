@@ -13,7 +13,7 @@ type LogoOptions = {
  * @implements {IControl}
  * @param {Object} [options]
  * @param {boolean} [options.compact] If `true`, force a compact logo. If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
- **/
+ */
 
 export class LogoControl implements IControl {
     options: LogoOptions;
@@ -24,12 +24,21 @@ export class LogoControl implements IControl {
     constructor(options: LogoOptions = {}) {
         this.options = options;
     }
-
+    /**
+     * Get the default position of the control.
+     *
+     * @returns {ControlPosition} The default position.
+     */
     getDefaultPosition(): ControlPosition {
         return 'bottom-left';
     }
-
-    onAdd(map: Map) {
+    /**
+     * Called when the control is added to the map.
+     *
+     * @param {Map} map The Map object.
+     * @returns {HTMLElement} The control container element.
+     */
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         this._compact = this.options && this.options.compact;
         this._container = DOM.create('div', 'maplibregl-ctrl');
@@ -48,7 +57,10 @@ export class LogoControl implements IControl {
         return this._container;
     }
 
-    onRemove() {
+    /**
+     * Called when the control is removed from the map.
+     */
+    onRemove(): void {
         DOM.remove(this._container);
         this._map.off('resize', this._updateCompact);
         this._map = undefined;
