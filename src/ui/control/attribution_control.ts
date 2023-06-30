@@ -14,14 +14,18 @@ type AttributionOptions = {
  * An `AttributionControl` control presents the map's attribution information. By default, the attribution control is expanded (regardless of map width).
  *
  * @implements {IControl}
- * @param {AttributionOptions} [options]
- * @param {boolean} [options.compact] If `true`, the attribution control will always collapse when moving the map. If `false`, force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.  **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.**
- * @param {string | Array<string>} [options.customAttribution] String or strings to show in addition to any other attributions.
+ * @public
+ *
+ * @param options - The options for the `AttributionControl`.
+ * @param options.compact - If `true`, the attribution control will always collapse when moving the map. If `false`, force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide. Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.
+ * @param options.customAttribution - String or strings to show in addition to any other attributions.
+ *
  * @example
- * var map = new maplibregl.Map({attributionControl: false})
- *     .addControl(new maplibregl.AttributionControl({
- *         compact: true
- *     }));
+ * // Create a new map with an `AttributionControl`
+ * const map = new maplibregl.Map({ attributionControl: false });
+ * map.addControl(new maplibregl.AttributionControl({
+ *     compact: true
+ * }));
  */
 export class AttributionControl implements IControl {
     options: AttributionOptions;
