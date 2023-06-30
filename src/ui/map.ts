@@ -54,6 +54,7 @@ import type {
     LayerSpecification,
     FilterSpecification,
     StyleSpecification,
+    SpriteSpecification,
     LightSpecification,
     SourceSpecification,
     TerrainSpecification
@@ -140,13 +141,7 @@ export type MapOptions = {
 };
 
 /**
- * An options object for the gesture settings
- * @example
- * let options = {
- *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
- *   macHelpText: "Use ⌘ + scroll to zoom the map",
- *   mobileHelpText: "Use two fingers to move the map",
- * }
+ * An options object for the gesture settings.
  */
 export type GestureOptions = {
     windowsHelpText?: string;
@@ -155,13 +150,22 @@ export type GestureOptions = {
 };
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
+/**
+ * A complete version of `MapOptions` where all properties are required.
+ */
 type Complete<T> = {
     [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
 }
 
 // This type is used inside map since all properties are assigned a default value.
+/**
+ * Complete version of `MapOptions` where all properties are required.
+ */
 export type CompleteMapOptions = Complete<MapOptions>;
 
+/**
+ * Options for querying rendered features on the map.
+ */
 type QueryRenderedFeaturesOptions = {
     layers?: Array<string>;
     filter?: FilterSpecification;
@@ -171,14 +175,15 @@ type QueryRenderedFeaturesOptions = {
 
 const defaultMinZoom = -2;
 const defaultMaxZoom = 22;
-
 // the default values, but also the valid range
 const defaultMinPitch = 0;
 const defaultMaxPitch = 60;
-
 // use this variable to check maxPitch for validity
 const maxPitchThreshold = 85;
 
+/**
+ * Default options for configuring the MapLibre GL JS map.
+ */
 const defaultOptions = {
     center: [0, 0],
     zoom: 0,
@@ -1533,42 +1538,69 @@ export class Map extends Camera {
     }
 
     /**
-     *  Updates the requestManager's transform request with a new function
+     * Updates the requestManager's transform request with a new function.
      *
-     * @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
-     * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
+     * @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the URL, set headers, or set the credentials property for cross-origin requests.
+     * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
      *
-     * @returns {Map} `this`
+     * @returns Returns the current Map instance.
      *
-     *  @example
-     *  map.setTransformRequest((url: string, resourceType: string) => {});
+     * @example
+     * map.setTransformRequest((url: string, resourceType: string) => {
+     *   // Modify the URL or set headers
+     *   return {
+     *     url: modifiedUrl,
+     *     headers: customHeaders,
+     *     credentials: true
+     *   };
+     * });
      */
-    setTransformRequest(transformRequest: RequestTransformFunction) {
+    setTransformRequest(transformRequest: RequestTransformFunction): Map {
         this._requestManager.setTransformRequest(transformRequest);
         return this;
     }
 
-    _getUIString(key: string) {
+    /**
+     * Retrieves the UI string associated with the specified key.
+     *
+     * @param key The key of the UI string to retrieve.
+     * @returns The UI string corresponding to the provided key.
+     * @throws Throws an error if the UI string is missing.
+     */
+    _getUIString(key: string): string {
         const str = this._locale[key];
         if (str == null) {
             throw new Error(`Missing UI string '${key}'`);
         }
-
         return str;
     }
-
-    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions) {
-        // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
+    /**
+     * Updates the map's style with a new style specification or URL.
+     *
+     * @param style The new style specification, URL, or `null`.
+     * @param options Additional options for style swapping.
+     * @returns The map instance.
+     *
+     * @remarks
+     * If the `transformStyle` option is enabled and the previous style is not loaded yet,
+     * the update will be delayed until the previous style is loaded.
+     *
+     * If `style` is `null`, the current style will be removed.
+     *
+     * @example
+     * map.updateStyle('https://example.com/style.json');
+     * map.updateStyle({ version: 8, sources: { ... }, layers: [ ... ] });
+     * map.updateStyle(null);
+     */
+    _updateStyle(style: StyleSpecification | string | null, options?: StyleSwapOptions & StyleOptions): Map {
         if (options.transformStyle && this.style && !this.style._loaded) {
             this.style.once('style.load', () => this._updateStyle(style, options));
-            return;
+            return this;
         }
 
         const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
         if (this.style) {
             this.style.setEventedParent(null);
-
-            // Only release workers when map is getting disposed
             this.style._remove(!style);
         }
 
@@ -1590,6 +1622,12 @@ export class Map extends Camera {
         return this;
     }
 
+    /**
+     * Initializes an empty style if it doesn't already exist.
+     * This method is used internally.
+     *
+     * @private
+     */
     _lazyInitEmptyStyle() {
         if (!this.style) {
             this.style = new Style(this, {});
@@ -1598,6 +1636,14 @@ export class Map extends Camera {
         }
     }
 
+    /**
+     * Performs a style diff and updates the map's style based on the provided style specification or URL.
+     * This method is used internally.
+     *
+     * @private
+     * @param style The style specification or URL.
+     * @param options Additional options for style swapping.
+     */
     _diffStyle(style: StyleSpecification | string, options?: StyleSwapOptions & StyleOptions) {
         if (typeof style === 'string') {
             const url = style;
@@ -1614,6 +1660,14 @@ export class Map extends Camera {
         }
     }
 
+    /**
+     * Updates the map's style based on the provided style specification.
+     * This method is used internally.
+     *
+     * @private
+     * @param style The style specification.
+     * @param options Additional options for style swapping.
+     */
     _updateDiff(style: StyleSpecification, options?: StyleSwapOptions & StyleOptions) {
         try {
             if (this.style.setState(style, options)) {
@@ -1621,7 +1675,7 @@ export class Map extends Camera {
             }
         } catch (e) {
             warnOnce(
-                `Unable to perform style diff: ${e.message || e.error || e}.  Rebuilding the style from scratch.`
+                `Unable to perform style diff: ${e.message || e.error || e}. Rebuilding the style from scratch.`
             );
             this._updateStyle(style, options);
         }
@@ -1630,7 +1684,7 @@ export class Map extends Camera {
     /**
      * Returns the map's MapLibre style object, a JSON object which can be used to recreate the map's style.
      *
-     * @returns {StyleSpecification} The map's style JSON object.
+     * @returns The map's style JSON object.
      *
      * @example
      * var styleJson = map.getStyle();
@@ -1645,12 +1699,12 @@ export class Map extends Camera {
     /**
      * Returns a Boolean indicating whether the map's style is fully loaded.
      *
-     * @returns {boolean} A Boolean indicating whether the style is fully loaded.
+     * @returns A Boolean indicating whether the style is fully loaded.
      *
      * @example
      * var styleLoadStatus = map.isStyleLoaded();
      */
-    isStyleLoaded() {
+    isStyleLoaded(): void | boolean {
         if (!this.style) return warnOnce('There is no style added to the map.');
         return this.style.loaded();
     }
@@ -1658,12 +1712,11 @@ export class Map extends Camera {
     /**
      * Adds a source to the map's style.
      *
-     * @param {string} id The ID of the source to add. Must not conflict with existing sources.
-     * @param {SourceSpecification} source The source object, conforming to the
-     * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
-     * {@link CanvasSourceOptions}.
+     * @param id - The ID of the source to add. Must not conflict with existing sources.
+     * @param source - The source object, conforming to the MapLibre Style Specification's
+     * [source definition](https://maplibre.org/maplibre-style-spec/#sources) or {@link CanvasSourceOptions}.
      * @fires source.add
-     * @returns {Map} `this`
+     * @returns `this`
      * @example
      * map.addSource('my-data', {
      *   type: 'vector',
@@ -1693,11 +1746,10 @@ export class Map extends Camera {
     }
 
     /**
-     * Returns a Boolean indicating whether the source is loaded. Returns `true` if the source with
-     * the given ID in the map's style has no outstanding network requests, otherwise `false`.
+     * Returns a Boolean indicating whether the source is loaded.
      *
-     * @param {string} id The ID of the source to be checked.
-     * @returns {boolean} A Boolean indicating whether the source is loaded.
+     * @param id - The ID of the source to be checked.
+     * @returns A Boolean indicating whether the source is loaded.
      * @example
      * var sourceLoaded = map.isSourceLoaded('bathymetry-data');
      */
@@ -1712,38 +1764,42 @@ export class Map extends Camera {
 
     /**
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
-     * @param {TerrainSpecification} [options] Options object.
-     * @returns {Map} `this`
+     *
+     * @param options - Options object specifying the terrain source.
+     * @returns `this`
      * @example
      * map.setTerrain({ source: 'terrain' });
      */
     setTerrain(options: TerrainSpecification): Map {
         this.style._checkLoaded();
 
-        // clear event handlers
+        // Clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
 
         if (!options) {
-            // remove terrain
+            // Remove terrain
             if (this.terrain) this.terrain.sourceCache.destruct();
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.updateElevation(this.terrain);
         } else {
-            // add terrain
+            // Add terrain
             const sourceCache = this.style.sourceCaches[options.source];
-            if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
-            // Warn once if user is using the same source for hillshade and terrain
+            if (!sourceCache) throw new Error(`Cannot load terrain because there is no source with ID: ${options.source}`);
+
+            // Warn once if the same source is used for hillshade and terrain
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
                 if (thisLayer.type === 'hillshade' && thisLayer.source === options.source) {
                     warnOnce('You are using the same source for a hillshade layer and for 3D terrain. Please consider using two separate sources to improve rendering quality.');
                 }
             }
+
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.updateElevation(this.terrain);
+
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
                     this.terrain.sourceCache.freeRtt();
@@ -1752,6 +1808,7 @@ export class Map extends Camera {
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
             };
+
             this.style.on('data', this._terrainDataCallback);
         }
 
@@ -1760,22 +1817,22 @@ export class Map extends Camera {
     }
 
     /**
-     * Get the terrain-options if terrain is loaded
-     * @returns {TerrainSpecification} the TerrainSpecification passed to setTerrain
+     * Get the terrain options if terrain is loaded.
+     *
+     * @returns The `TerrainSpecification` passed to `setTerrain`, or `undefined` if terrain is not loaded.
      * @example
-     * map.getTerrain(); // { source: 'terrain' };
+     * const terrainOptions = map.getTerrain(); // { source: 'terrain' };
      */
     getTerrain(): TerrainSpecification {
         return this.terrain && this.terrain.options;
     }
 
     /**
-     * Returns a Boolean indicating whether all tiles in the viewport from all sources on
-     * the style are loaded.
+     * Returns a boolean indicating whether all tiles in the viewport from all sources on the style are loaded.
      *
-     * @returns {boolean} A Boolean indicating whether all tiles are loaded.
+     * @returns A boolean indicating whether all tiles are loaded.
      * @example
-     * var tilesLoaded = map.areTilesLoaded();
+     * const tilesLoaded = map.areTilesLoaded();
      */
     areTilesLoaded(): boolean {
         const sources = this.style && this.style.sourceCaches;
@@ -1791,12 +1848,12 @@ export class Map extends Camera {
     }
 
     /**
-     * Adds a [custom source type](#Custom Sources), making it available for use with
-     * {@link Map#addSource}.
+     * Adds a custom source type, making it available for use with `map.addSource`.
+     *
      * @private
-     * @param {string} name The name of the source type; source definition objects use this name in the `{type: ...}` field.
-     * @param {Function} SourceType A {@link Source} constructor.
-     * @param {Callback<void>} callback Called when the source type is ready or with an error argument if there is an error.
+     * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
+     * @param SourceType - A constructor for the custom source type.
+     * @param callback - Called when the source type is ready or with an error argument if there is an error.
      */
     addSourceType(name: string, SourceType: any, callback: Callback<void>) {
         this._lazyInitEmptyStyle();
@@ -1806,8 +1863,8 @@ export class Map extends Camera {
     /**
      * Removes a source from the map's style.
      *
-     * @param {string} id The ID of the source to remove.
-     * @returns {Map} `this`
+     * @param id - The ID of the source to remove.
+     * @returns `this`
      * @example
      * map.removeSource('bathymetry-data');
      */
@@ -1820,18 +1877,16 @@ export class Map extends Camera {
      * Returns the source with the specified ID in the map's style.
      *
      * This method is often used to update a source using the instance members for the relevant
-     * source type as defined in [Sources](#sources).
+     * source type as defined in Sources.
      * For example, setting the `data` for a GeoJSON source or updating the `url` and `coordinates`
      * of an image source.
      *
-     * @param {string} id The ID of the source to get.
-     * @returns {Source | undefined} The style source with the specified ID or `undefined` if the ID
-     * corresponds to no existing sources.
+     * @param id - The ID of the source to get.
+     * @returns The style source with the specified ID or `undefined` if the ID corresponds to no existing sources.
      * The shape of the object varies by source type.
-     * A list of options for each source type is available on the MapLibre Style Specification's
-     * [Sources](https://maplibre.org/maplibre-style-spec/sources/) page.
+     * A list of options for each source type is available on the MapLibre Style Specification's Sources page.
      * @example
-     * var sourceObject = map.getSource('points');
+     * const sourceObject = map.getSource('points');
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      * @see [Animate a point](https://maplibre.org/maplibre-gl-js-docs/example/animate-point-along-line/)
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js-docs/example/live-geojson/)
@@ -1850,15 +1905,15 @@ export class Map extends Camera {
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      * A {@link Map.event:error} event will be fired if there is not enough space in the sprite to add this image.
      *
-     * @param id The ID of the image.
-     * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
+     * @param id - The ID of the image.
+     * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
-     * @param options Options object.
-     * @param options.pixelRatio The ratio of pixels in the image to physical pixels on the screen
-     * @param options.sdf Whether the image should be interpreted as an SDF image
-     * @param options.content `[x1, y1, x2, y2]`  If `icon-text-fit` is used in a layer with this image, this option defines the part of the image that can be covered by the content in `text-field`.
-     * @param options.stretchX `[[x1, x2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched horizontally.
-     * @param options.stretchY `[[y1, y2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched vertically.
+     * @param options - Options object.
+     * @param options.pixelRatio - The ratio of pixels in the image to physical pixels on the screen.
+     * @param options.sdf - Whether the image should be interpreted as an SDF image.
+     * @param options.content - `[x1, y1, x2, y2]` If `icon-text-fit` is used in a layer with this image, this option defines the part of the image that can be covered by the content in `text-field`.
+     * @param options.stretchX - `[[x1, x2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched horizontally.
+     * @param options.stretchY - `[[y1, y2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched vertically.
      *
      * @example
      * // If the style's sprite does not already contain an image with ID 'cat',
@@ -1886,40 +1941,49 @@ export class Map extends Camera {
      * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image/)
      * @see Use `ImageData`: [Add a generated icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-generated/)
      */
-    addImage(id: string,
+    addImage(
+        id: string,
         image: HTMLImageElement | ImageBitmap | ImageData | {
             width: number;
             height: number;
             data: Uint8Array | Uint8ClampedArray;
         } | StyleImageInterface,
-        {
-            pixelRatio = 1,
-            sdf = false,
-            stretchX,
-            stretchY,
-            content
-        }: Partial<StyleImageMetadata> = {}) {
+        options?: Partial<StyleImageMetadata>
+    ) {
         this._lazyInitEmptyStyle();
         const version = 0;
 
         if (image instanceof HTMLImageElement || isImageBitmap(image)) {
             const {width, height, data} = browser.getImageData(image);
-            this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, sdf, version});
+            this.style.addImage(id, {
+                data: new RGBAImage({width, height}, data),
+                pixelRatio: options?.pixelRatio ?? 1,
+                stretchX: options?.stretchX,
+                stretchY: options?.stretchY,
+                content: options?.content,
+                sdf: options?.sdf ?? false,
+                version
+            });
         } else if (image.width === undefined || image.height === undefined) {
-            return this.fire(new ErrorEvent(new Error(
-                'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
-                'or object with `width`, `height`, and `data` properties with the same format as `ImageData`')));
+            return this.fire(
+                new ErrorEvent(
+                    new Error(
+                        'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
+                            'or object with `width`, `height`, and `data` properties with the same format as `ImageData`'
+                    )
+                )
+            );
         } else {
             const {width, height, data} = image as ImageData;
-            const userImage = (image as any as StyleImageInterface);
+            const userImage = image as StyleImageInterface;
 
             this.style.addImage(id, {
                 data: new RGBAImage({width, height}, new Uint8Array(data)),
-                pixelRatio,
-                stretchX,
-                stretchY,
-                content,
-                sdf,
+                pixelRatio: options?.pixelRatio ?? 1,
+                stretchX: options?.stretchX,
+                stretchY: options?.stretchY,
+                content: options?.content,
+                sdf: options?.sdf ?? false,
                 version,
                 userImage
             });
@@ -1939,8 +2003,8 @@ export class Map extends Camera {
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      *
-     * @param id The ID of the image.
-     * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
+     * @param id - The ID of the image.
+     * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
      *
      * @example
@@ -1987,8 +2051,8 @@ export class Map extends Camera {
      * This includes both images from the style's original sprite
      * and any images that have been added at runtime using {@link Map#addImage}.
      *
-     * @param id The ID of the image.
-     * @returns {StyleImage} An image in the map with the specified ID.
+     * @param id - The ID of the image.
+     * @returns An image in the map with the specified ID.
      *
      * @example
      * var coffeeShopIcon = map.getImage("coffee_cup");
@@ -2003,9 +2067,9 @@ export class Map extends Camera {
      * in the style's original sprite and any images
      * that have been added at runtime using {@link Map#addImage}.
      *
-     * @param id The ID of the image.
+     * @param id - The ID of the image.
      *
-     * @returns {boolean} A Boolean indicating whether the image exists.
+     * @returns A Boolean indicating whether the image exists.
      * @example
      * // Check if an image with the ID 'cat' exists in
      * // the style's sprite.
@@ -2025,7 +2089,7 @@ export class Map extends Camera {
      * sprite or any images
      * that have been added at runtime using {@link Map#addImage}.
      *
-     * @param id The ID of the image.
+     * @param id - The ID of the image.
      *
      * @example
      * // If an image with the ID 'cat' exists in
@@ -2040,8 +2104,8 @@ export class Map extends Camera {
      * Load an image from an external URL to be used with {@link Map#addImage}. External
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
-     * @param {string} url The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @param {Callback<HTMLImageElement | ImageBitmap>} callback Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
+     * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
+     * @param callback - Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
      *
      * @example
      * // Load an image from an external URL.
@@ -2062,7 +2126,7 @@ export class Map extends Camera {
      * This includes both images from the style's original sprite
      * and any images that have been added at runtime using {@link Map#addImage}.
      *
-     * @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
+     * @returns An Array of strings containing the names of all sprites/images currently available in the map.
      *
      * @example
      * var allImages = map.listImages();
@@ -2184,7 +2248,7 @@ export class Map extends Camera {
      * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/vector-source/)
      * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js-docs/example/wms/)
      */
-    addLayer(layer: (LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface, beforeId?: string) {
+    addLayer(layer: (LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface, beforeId?: string): Map {
         this._lazyInitEmptyStyle();
         this.style.addLayer(layer, beforeId);
         return this._update(true);
@@ -2201,12 +2265,11 @@ export class Map extends Camera {
      * // Move a layer with ID 'polygon' before the layer with ID 'country-label'. The `polygon` layer will appear beneath the `country-label` layer on the map.
      * map.moveLayer('polygon', 'country-label');
      */
-    moveLayer(id: string, beforeId?: string) {
+    moveLayer(id: string, beforeId?: string): Map {
         this.style.moveLayer(id, beforeId);
         return this._update(true);
     }
 
-    // eslint-disable-next-line jsdoc/require-returns
     /**
      * Removes the layer with the given ID from the map's style.
      *
@@ -2219,7 +2282,7 @@ export class Map extends Camera {
      * // If a layer with ID 'state-data' exists, remove it.
      * if (map.getLayer('state-data')) map.removeLayer('state-data');
      */
-    removeLayer(id: string) {
+    removeLayer(id: string): Map {
         this.style.removeLayer(id);
         return this._update(true);
     }
@@ -2261,7 +2324,7 @@ export class Map extends Camera {
      * map.setLayerZoomRange('my-layer', 2, 5);
      *
      */
-    setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number) {
+    setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number): Map {
         this.style.setLayerZoomRange(layerId, minzoom, maxzoom);
         return this._update(true);
     }
@@ -2296,7 +2359,7 @@ export class Map extends Camera {
      *
      * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
      */
-    setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}) {
+    setFilter(layerId: string, filter?: FilterSpecification | null, options: StyleSetterOptions = {}): Map {
         this.style.setFilter(layerId, filter, options);
         return this._update(true);
     }
@@ -2307,7 +2370,7 @@ export class Map extends Camera {
      * @param {string} layerId The ID of the style layer whose filter to get.
      * @returns {Array} The layer's filter.
      */
-    getFilter(layerId: string) {
+    getFilter(layerId: string): any {
         return this.style.getFilter(layerId);
     }
 
@@ -2326,7 +2389,7 @@ export class Map extends Camera {
      * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js-docs/example/color-switcher/)
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
-    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
+    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): Map {
         this.style.setPaintProperty(layerId, name, value, options);
         return this._update(true);
     }
@@ -2338,7 +2401,7 @@ export class Map extends Camera {
      * @param {string} name The name of a paint property to get.
      * @returns {*} The value of the specified paint property.
      */
-    getPaintProperty(layerId: string, name: string) {
+    getPaintProperty(layerId: string, name: string): any {
         return this.style.getPaintProperty(layerId, name);
     }
 
@@ -2354,7 +2417,7 @@ export class Map extends Camera {
      * @example
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
      */
-    setLayoutProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
+    setLayoutProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): Map {
         this.style.setLayoutProperty(layerId, name, value, options);
         return this._update(true);
     }
@@ -2366,7 +2429,7 @@ export class Map extends Camera {
      * @param {string} name The name of the layout property to get.
      * @returns {*} The value of the specified layout property.
      */
-    getLayoutProperty(layerId: string, name: string) {
+    getLayoutProperty(layerId: string, name: string): any {
         return this.style.getLayoutProperty(layerId, name);
     }
 
@@ -2380,18 +2443,18 @@ export class Map extends Camera {
      * @example
      * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
      */
-    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}): Map {
         this._lazyInitEmptyStyle();
         this.style.setGlyphs(glyphsUrl, options);
         return this._update(true);
     }
 
     /**
-     * Returns the value of the style's glyphs URL
+     * Returns the value of the style's glyphs URL.
      *
-     * @returns {string | null} glyphs Style's glyphs url
+     * @returns {string | null} glyphs Style's glyphs URL.
      */
-    getGlyphs() {
+    getGlyphs(): string | null {
         return this.style.getGlyphsUrl();
     }
 
@@ -2399,14 +2462,14 @@ export class Map extends Camera {
      * Adds a sprite to the map's style.
      *
      * @param {string} id The ID of the sprite to add. Must not conflict with existing sprites.
-     * @param {string} url The URL to load the sprite from
+     * @param {string} url The URL to load the sprite from.
      * @param {StyleSetterOptions} [options] Options object.
      * @fires style
      * @returns {Map} `this`
      * @example
      * map.addSprite('sprite-two', 'http://example.com/sprite-two');
      */
-    addSprite(id: string, url: string, options: StyleSetterOptions = {}) {
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}): Map {
         this._lazyInitEmptyStyle();
         this.style.addSprite(id, url, options, (err) => {
             if (!err) {
@@ -2427,32 +2490,33 @@ export class Map extends Camera {
      * @example
      * map.removeSprite('default');
      */
-    removeSprite(id: string) {
+    removeSprite(id: string): Map {
         this._lazyInitEmptyStyle();
         this.style.removeSprite(id);
         return this._update(true);
     }
 
     /**
-     * Returns the as-is value of the style's sprite.
+     * Returns the current value of the style's sprite.
      *
-     * @returns {SpriteSpecification | undefined} style's sprite url or a list of id-url pairs
+     * @returns {SpriteSpecification | undefined} The style's sprite URL or a list of ID-URL pairs.
      */
-    getSprite() {
+    getSprite(): SpriteSpecification | undefined {
         return this.style.getSprite();
     }
 
     /**
      * Sets the value of the style's sprite property.
      *
-     * @param spriteUrl Sprite URL to set.
+     * @param {string | null} spriteUrl The sprite URL to set.
      * @param {StyleSetterOptions} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
+     *
      * @example
      * map.setSprite('YOUR_SPRITE_URL');
      */
-    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}) {
+    setSprite(spriteUrl: string | null, options: StyleSetterOptions = {}): Map {
         this._lazyInitEmptyStyle();
         this.style.setSprite(spriteUrl, options, (err) => {
             if (!err) {
@@ -2463,16 +2527,17 @@ export class Map extends Camera {
     }
 
     /**
-     * Sets the any combination of light values.
+     * Sets any combination of light values.
      *
-     * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
+     * @param {LightSpecification} light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
      * @param {StyleSetterOptions} [options] Options object.
      * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
      * @returns {Map} `this`
+     *
      * @example
      * var layerVisibility = map.getLayoutProperty('my-layer', 'visibility');
      */
-    setLight(light: LightSpecification, options: StyleSetterOptions = {}) {
+    setLight(light: LightSpecification, options: StyleSetterOptions = {}): Map {
         this._lazyInitEmptyStyle();
         this.style.setLight(light, options);
         return this._update(true);
@@ -2481,7 +2546,7 @@ export class Map extends Camera {
     /**
      * Returns the value of the light object.
      *
-     * @returns {LightSpecification} light Light properties of the style.
+     * @returns {LightSpecification} Light properties of the style.
      */
     getLight(): LightSpecification {
         return this.style.getLight();
@@ -2508,6 +2573,8 @@ export class Map extends Camera {
      * @param {string} [feature.sourceLayer] (optional) *For vector tile sources, `sourceLayer` is required.*
      * @param {Object} state A set of key-value pairs. The values should be valid JSON types.
      *
+     * @returns {void}
+     *
      * @example
      * // When the mouse moves over the `my-layer` layer, update
      * // the feature state for the feature under the mouse
@@ -2525,12 +2592,11 @@ export class Map extends Camera {
      *
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      */
-    setFeatureState(feature: FeatureIdentifier, state: any) {
+    setFeatureState(feature: FeatureIdentifier, state: any): void {
         this.style.setFeatureState(feature, state);
-        return this._update();
+        this._update();
     }
 
-    // eslint-disable-next-line jsdoc/require-returns
     /**
      * Removes the `state` of a feature, setting it back to the default behavior.
      * If only a `target.source` is specified, it will remove the state for all features from that source.
@@ -2577,9 +2643,9 @@ export class Map extends Camera {
      * });
      *
      */
-    removeFeatureState(target: FeatureIdentifier, key?: string) {
+    removeFeatureState(target: FeatureIdentifier, key?: string): void {
         this.style.removeFeatureState(target, key);
-        return this._update();
+        this._update();
     }
 
     /**
@@ -2620,7 +2686,7 @@ export class Map extends Camera {
      *
      * @returns {HTMLElement} The map's container.
      */
-    getContainer() {
+    getContainer(): HTMLElement {
         return this._container;
     }
 
@@ -2636,7 +2702,7 @@ export class Map extends Camera {
      * @returns {HTMLElement} The container of the map's `<canvas>`.
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
-    getCanvasContainer() {
+    getCanvasContainer(): HTMLElement {
         return this._canvasContainer;
     }
 
@@ -2648,11 +2714,17 @@ export class Map extends Camera {
      * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
      * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js-docs/example/center-on-symbol/)
      */
-    getCanvas() {
+    getCanvas(): HTMLCanvasElement {
         return this._canvas;
     }
 
-    _containerDimensions() {
+    /**
+     * Retrieves the dimensions of the container element.
+     *
+     * @returns {[number, number]} An array containing the width and height of the container element.
+     * @private
+     */
+    _containerDimensions(): [number, number] {
         let width = 0;
         let height = 0;
 
@@ -2664,7 +2736,13 @@ export class Map extends Camera {
         return [width, height];
     }
 
-    _setupContainer() {
+    /**
+     * Sets up the map container by adding necessary classes, creating the canvas element,
+     * and attaching event listeners.
+     *
+     * @private
+     */
+    _setupContainer(): void {
         const container = this._container;
         container.classList.add('maplibregl-map');
 
@@ -2692,11 +2770,23 @@ export class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _cooperativeGesturesOnWheel = (event: WheelEvent) => {
+    /**
+     * Event handler for the 'wheel' event during cooperative gestures.
+     * Calls the '_onCooperativeGesture' method with the event details.
+     *
+     * @param event - The wheel event object.
+     * @private
+     */
+    _cooperativeGesturesOnWheel = (event: WheelEvent): void => {
         this._onCooperativeGesture(event, event[this._metaKey], 1);
     };
 
-    _setupCooperativeGestures() {
+    /**
+     * Set up the cooperative gestures by creating a screen element and adding event listeners.
+     *
+     * @private
+     */
+    _setupCooperativeGestures(): void {
         const container = this._container;
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
         let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
@@ -2715,14 +2805,27 @@ export class Map extends Camera {
         this._canvasContainer.classList.add('maplibregl-cooperative-gestures');
     }
 
-    _destroyCooperativeGestures() {
+    /**
+     * Clean up the cooperative gestures by removing the screen element and event listeners.
+     *
+     * @private
+     */
+    _destroyCooperativeGestures(): void {
         DOM.remove(this._cooperativeGesturesScreen);
         this._canvasContainer.removeEventListener('wheel', this._cooperativeGesturesOnWheel, false);
         this._canvasContainer.classList.remove('maplibregl-cooperative-gestures');
     }
 
-    _resizeCanvas(width: number, height: number, pixelRatio: number) {
-        // Request the required canvas size taking the pixelratio into account.
+    /**
+     * Resize the canvas to the specified dimensions and pixel ratio.
+     *
+     * @param width - The width of the canvas.
+     * @param height - The height of the canvas.
+     * @param pixelRatio - The pixel ratio of the canvas.
+     * @private
+     */
+    _resizeCanvas(width: number, height: number, pixelRatio: number): void {
+        // Request the required canvas size taking the pixel ratio into account.
         this._canvas.width = pixelRatio * width;
         this._canvas.height = pixelRatio * height;
 
@@ -2731,15 +2834,20 @@ export class Map extends Camera {
         this._canvas.style.height = `${height}px`;
     }
 
-    _setupPainter() {
-
-        const attributes = {
+    /**
+     * Set up the painter by creating a WebGL context, initializing WebGL attributes,
+     * handling WebGL context creation errors, and creating a new Painter instance.
+     *
+     * @private
+     */
+    _setupPainter(): void {
+        const attributes: WebGLContextAttributes = {
             alpha: true,
             stencil: true,
             depth: true,
             failIfMajorPerformanceCaveat: this._failIfMajorPerformanceCaveat,
             preserveDrawingBuffer: this._preserveDrawingBuffer,
-            antialias: this._antialias || false
+            antialias: this._antialias || false,
         };
 
         let webglcontextcreationerrorDetailObject: any = null;
@@ -2751,9 +2859,9 @@ export class Map extends Camera {
             }
         }, {once: true});
 
-        const gl =
-        this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
-        this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+        const gl: WebGL2RenderingContext | WebGLRenderingContext =
+            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
+            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
@@ -2770,7 +2878,14 @@ export class Map extends Camera {
         webpSupported.testSupport(gl);
     }
 
-    _contextLost = (event: any) => {
+    /**
+     * Event handler for the 'webglcontextlost' event.
+     * Cancels the frame and triggers a 'webglcontextlost' event.
+     *
+     * @param event - The original event object.
+     * @private
+     */
+    _contextLost = (event: any): void => {
         event.preventDefault();
         if (this._frame) {
             this._frame.cancel();
@@ -2779,14 +2894,29 @@ export class Map extends Camera {
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
 
-    _contextRestored = (event: any) => {
+    /**
+     * Event handler for the 'webglcontextrestored' event.
+     * Sets up the painter, resizes the map, updates it, and triggers a 'webglcontextrestored' event.
+     *
+     * @param event - The original event object.
+     * @internal
+     */
+    _contextRestored(event: any): void {
         this._setupPainter();
         this.resize();
         this._update();
         this.fire(new Event('webglcontextrestored', {originalEvent: event}));
-    };
+    }
 
-    _onMapScroll = (event: any) => {
+    /**
+     * Event handler for the map scroll event.
+     * Reverts any scroll that would move the canvas outside of the view.
+     *
+     * @param event - The scroll event object.
+     * @returns - A boolean indicating whether the event should be propagated.
+     * @private
+     */
+    _onMapScroll = (event: any): boolean => {
         if (event.target !== this._container) return;
 
         // Revert any scroll which would move the canvas outside of the view
@@ -2795,7 +2925,17 @@ export class Map extends Camera {
         return false;
     };
 
-    _onCooperativeGesture(event: any, metaPress, touches) {
+    /**
+     * Event handler for cooperative gestures.
+     * Shows an alert message to the user on how to scroll/pan if necessary.
+     *
+     * @param event - The event object.
+     * @param metaPress - Indicates whether a meta key is pressed.
+     * @param touches - The number of touches involved.
+     * @returns - A boolean indicating whether the event should be propagated.
+     * @private
+     */
+    _onCooperativeGesture(event: any, metaPress: any, touches: number): boolean {
         if (!metaPress && touches < 2) {
             // Alert user how to scroll/pan
             this._cooperativeGesturesScreen.classList.add('maplibregl-show');
@@ -2813,21 +2953,20 @@ export class Map extends Camera {
      * or if there has been a change to the sources or style that
      * has not yet fully loaded.
      *
-     * @returns {boolean} A Boolean indicating whether the map is fully loaded.
+     * @returns A Boolean indicating whether the map is fully loaded.
      */
-    loaded() {
+    loaded(): boolean {
         return !this._styleDirty && !this._sourcesDirty && !!this.style && this.style.loaded();
     }
 
     /**
      * Update this map's style and sources, and re-render the map.
      *
-     * @param {boolean} updateStyle mark the map's style for reprocessing as
-     * well as its sources
-     * @returns {Map} this
+     * @param updateStyle - Mark the map's style for reprocessing as well as its sources.
+     * @returns This map instance.
      * @private
      */
-    _update(updateStyle?: boolean) {
+    _update(updateStyle?: boolean): Map {
         if (!this.style || !this.style._loaded) return this;
 
         this._styleDirty = this._styleDirty || updateStyle;
@@ -2838,9 +2977,11 @@ export class Map extends Camera {
     }
 
     /**
-     * Request that the given callback be executed during the next render
-     * frame.  Schedule a render frame if one is not already scheduled.
-     * @returns An id that can be used to cancel the callback
+     * Request that the given callback be executed during the next render frame.
+     * Schedule a render frame if one is not already scheduled.
+     *
+     * @param callback - The callback function to be executed during the next render frame.
+     * @returns An ID that can be used to cancel the callback.
      * @private
      */
     _requestRenderFrame(callback: () => void): TaskID {
@@ -2848,23 +2989,29 @@ export class Map extends Camera {
         return this._renderTaskQueue.add(callback);
     }
 
-    _cancelRenderFrame(id: TaskID) {
+    /**
+     * Cancel a previously scheduled render frame callback.
+     *
+     * @param id - The ID of the callback to cancel.
+     * @private
+     */
+    _cancelRenderFrame(id: TaskID): void {
         this._renderTaskQueue.remove(id);
     }
 
     /**
-     * Call when a (re-)render of the map is required:
-     * - The style has changed (`setPaintProperty()`, etc.)
-     * - Source data has changed (e.g. tiles have finished loading)
-     * - The map has is moving (or just finished moving)
-     * - A transition is in progress
+     * Call when a (re-)render of the map is required.
      *
-     * @param {number} paintStartTimeStamp  The time when the animation frame began executing.
+     * - The style has changed (`setPaintProperty()`, etc.).
+     * - Source data has changed (e.g. tiles have finished loading).
+     * - The map is moving (or just finished moving).
+     * - A transition is in progress.
      *
-     * @returns {Map} this
+     * @param {number} paintStartTimeStamp - The time when the animation frame began executing.
+     * @returns {Map} This map instance.
      * @private
      */
-    _render(paintStartTimeStamp: number) {
+    _render(paintStartTimeStamp: number): Map {
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
 
         // A custom layer may have used the context asynchronously. Mark the state as dirty.
@@ -2993,8 +3140,10 @@ export class Map extends Camera {
      * Use this method when you are done using the map and wish to ensure that it no
      * longer consumes browser resources. Afterwards, you must not call any other
      * methods on the map.
+     *
+     * @public
      */
-    remove() {
+    remove(): void {
         if (this._hash) this._hash.remove();
 
         for (const control of this._controls) control.onRemove(this);
@@ -3034,15 +3183,17 @@ export class Map extends Camera {
     }
 
     /**
-     * Trigger the rendering of a single frame. Use this method with custom layers to
-     * repaint the map when the layer changes. Calling this multiple times before the
-     * next frame is rendered will still result in only a single frame being rendered.
+     * Triggers the rendering of a single frame. Use this method with custom layers to repaint
+     * the map when the layer changes. Calling this multiple times before the next frame is
+     * rendered will still result in only a single frame being rendered.
+     *
+     * @public
      * @example
      * map.triggerRepaint();
      * @see [Add a 3D model](https://maplibre.org/maplibre-gl-js-docs/example/add-3d-model/)
      * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-animated/)
      */
-    triggerRepaint() {
+    triggerRepaint(): void {
         if (this.style && !this._frame) {
             this._frame = browser.frame((paintStartTimeStamp: number) => {
                 PerformanceUtils.frame(paintStartTimeStamp);
@@ -3052,22 +3203,18 @@ export class Map extends Camera {
         }
     }
 
-    _onWindowOnline = () => {
+    private _onWindowOnline = () => {
         this._update();
     };
 
     /**
-     * Gets and sets a Boolean indicating whether the map will render an outline
-     * around each tile and the tile ID. These tile boundaries are useful for
-     * debugging.
+     * Gets and sets a boolean indicating whether the map will render an outline
+     * around each tile and the tile ID. These tile boundaries are useful for debugging.
      *
      * The uncompressed file size of the first vector source is drawn in the top left
      * corner of each tile, next to the tile ID.
      *
-     * @name showTileBoundaries
-     * @type {boolean}
-     * @instance
-     * @memberof Map
+     * @public
      * @example
      * map.showTileBoundaries = true;
      */
@@ -3079,13 +3226,9 @@ export class Map extends Camera {
     }
 
     /**
-     * Gets and sets a Boolean indicating whether the map will visualize
-     * the padding offsets.
+     * Gets and sets a boolean indicating whether the map will visualize the padding offsets.
      *
-     * @name showPadding
-     * @type {boolean}
-     * @instance
-     * @memberof Map
+     * @public
      */
     get showPadding(): boolean { return !!this._showPadding; }
     set showPadding(value: boolean) {
@@ -3095,15 +3238,11 @@ export class Map extends Camera {
     }
 
     /**
-     * Gets and sets a Boolean indicating whether the map will render boxes
-     * around all symbols in the data source, revealing which symbols
-     * were rendered or which were hidden due to collisions.
+     * Gets and sets a boolean indicating whether the map will render boxes around all symbols
+     * in the data source, revealing which symbols were rendered or which were hidden due to collisions.
      * This information is useful for debugging.
      *
-     * @name showCollisionBoxes
-     * @type {boolean}
-     * @instance
-     * @memberof Map
+     * @public
      */
     get showCollisionBoxes(): boolean { return !!this._showCollisionBoxes; }
     set showCollisionBoxes(value: boolean) {
@@ -3119,17 +3258,14 @@ export class Map extends Camera {
         }
     }
 
-    /*
-     * Gets and sets a Boolean indicating whether the map should color-code
-     * each fragment to show how many times it has been shaded.
+    /**
+     * Gets and sets a boolean indicating whether the map should color-code each fragment
+     * to show how many times it has been shaded.
      * White fragments have been shaded 8 or more times.
      * Black fragments have been shaded 0 times.
      * This information is useful for debugging.
      *
-     * @name showOverdraw
-     * @type {boolean}
-     * @instance
-     * @memberof Map
+     * @public
      */
     get showOverdrawInspector(): boolean { return !!this._showOverdrawInspector; }
     set showOverdrawInspector(value: boolean) {
@@ -3139,13 +3275,10 @@ export class Map extends Camera {
     }
 
     /**
-     * Gets and sets a Boolean indicating whether the map will
-     * continuously repaint. This information is useful for analyzing performance.
+     * Gets and sets a boolean indicating whether the map will continuously repaint.
+     * This information is useful for analyzing performance.
      *
-     * @name repaint
-     * @type {boolean}
-     * @instance
-     * @memberof Map
+     * @public
      */
     get repaint(): boolean { return !!this._repaint; }
     set repaint(value: boolean) {
@@ -3154,13 +3287,17 @@ export class Map extends Camera {
             this.triggerRepaint();
         }
     }
-    // show vertices
+    /**
+     * Gets and sets a boolean indicating whether to show vertices.
+     *
+     * @public
+     */
     get vertices(): boolean { return !!this._vertices; }
     set vertices(value: boolean) { this._vertices = value; this._update(); }
 
     /**
-     * Returns the package version of the library
-     * @returns {string} Package version of the library
+     * Returns the package version of the library.
+     * @returns Package version of the library.
      */
     get version(): string {
         return version;
@@ -3170,7 +3307,7 @@ export class Map extends Camera {
      * Returns the elevation for the point where the camera is looking.
      * This value corresponds to:
      * "meters above sea level" * "exaggeration"
-     * @returns {number} * The elevation.
+     * @returns The elevation.
      */
     getCameraTargetElevation(): number {
         return this.transform.elevation;
