@@ -3,7 +3,7 @@ import type {FeatureKey} from './collision_index';
 import {EXTENT} from '../data/extent';
 import * as symbolSize from './symbol_size';
 import * as projection from './projection';
-import {getAnchorJustification, evaluateVariableOffset} from './symbol_layout';
+import {getAnchorJustification} from './symbol_layout';
 import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
@@ -17,12 +17,13 @@ import {getOverlapMode, OverlapMode} from '../style/style_layer/overlap_mode';
 import type {Tile} from '../source/tile';
 import {SymbolBucket, CollisionArrays, SingleCollisionBox} from '../data/bucket/symbol_bucket';
 
-import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance} from '../data/array_types.g';
+import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
 import type {FeatureIndex} from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';
-import type {TextAnchor} from './symbol_layout';
+import type {TextAnchor} from '../style/style_layer/symbol_style_layer';
 import {Terrain} from '../render/terrain';
 import {warnOnce} from '../util/util';
+import {TextAnchorEnum} from '../style/style_layer/symbol_style_layer';
 
 class OpacityState {
     opacity: number;
@@ -147,10 +148,9 @@ function calculateVariableLayoutShift(
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(anchor);
     const shiftX = -(horizontalAlign - 0.5) * width;
     const shiftY = -(verticalAlign - 0.5) * height;
-    const offset = evaluateVariableOffset(anchor, textOffset);
     return new Point(
-        shiftX + offset[0] * textBoxScale,
-        shiftY + offset[1] * textBoxScale
+        shiftX + textOffset[0] * textBoxScale,
+        shiftY + textOffset[1] * textBoxScale
     );
 }
 
@@ -339,7 +339,7 @@ export class Placement {
     }
 
     attemptAnchorPlacement(
-        anchor: TextAnchor,
+        textAnchorOffset: TextAnchorOffset,
         textBox: SingleCollisionBox,
         width: number,
         height: number,
@@ -363,7 +363,8 @@ export class Placement {
             };
         } {
 
-        const textOffset = [symbolInstance.textOffset0, symbolInstance.textOffset1] as [number, number];
+        const anchor = TextAnchorEnum[textAnchorOffset.textAnchor] as TextAnchor;
+        const textOffset = [textAnchorOffset.textOffset0, textAnchorOffset.textOffset1] as [number, number];
         const shift = calculateVariableLayoutShift(anchor, width, height, textOffset, textBoxScale);
 
         const placedGlyphBoxes = this.collisionIndex.placeCollisionBox(
@@ -528,7 +529,11 @@ export class Placement {
                     }
                 };
 
-                if (!layout.get('text-variable-anchor')) {
+                const textAnchorOffsetStart = symbolInstance.textAnchorOffsetStartIndex;
+                const textAnchorOffsetEnd = symbolInstance.textAnchorOffsetEndIndex;
+
+                // If start+end indices match, text-variable-anchor is not in play.
+                if (textAnchorOffsetEnd === textAnchorOffsetStart) {
                     const placeBox = (collisionTextBox, orientation) => {
                         const placedFeature = this.collisionIndex.placeCollisionBox(
                             collisionTextBox,
@@ -561,46 +566,53 @@ export class Placement {
                     updatePreviousOrientationIfNotPlaced(placed && placed.box && placed.box.length);
 
                 } else {
-                    let anchors = layout.get('text-variable-anchor');
-
-                    // If this symbol was in the last placement, shift the previously used
-                    // anchor to the front of the anchor list, only if the previous anchor
-                    // is still in the anchor list
-                    if (this.prevPlacement && this.prevPlacement.variableOffsets[symbolInstance.crossTileID]) {
-                        const prevOffsets = this.prevPlacement.variableOffsets[symbolInstance.crossTileID];
-                        if (anchors.indexOf(prevOffsets.anchor) > 0) {
-                            anchors = anchors.filter(anchor => anchor !== prevOffsets.anchor);
-                            anchors.unshift(prevOffsets.anchor);
-                        }
-                    }
+                    // If this symbol was in the last placement, prefer placement using same anchor, if it's still available
+                    let prevAnchor = TextAnchorEnum[this.prevPlacement?.variableOffsets[symbolInstance.crossTileID]?.anchor];
 
                     const placeBoxForVariableAnchors = (collisionTextBox, collisionIconBox, orientation) => {
                         const width = collisionTextBox.x2 - collisionTextBox.x1;
                         const height = collisionTextBox.y2 - collisionTextBox.y1;
                         const textBoxScale = symbolInstance.textBoxScale;
-
                         const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
 
                         let placedBox: {
                             box: Array<number>;
                             offscreen: boolean;
                         } = {box: [], offscreen: false};
-                        const placementAttempts = (textOverlapMode !== 'never') ? anchors.length * 2 : anchors.length;
-                        for (let i = 0; i < placementAttempts; ++i) {
-                            const anchor = anchors[i % anchors.length];
-                            const overlapMode = (i >= anchors.length) ? textOverlapMode : 'never';
-                            const result = this.attemptAnchorPlacement(
-                                anchor, collisionTextBox, width, height,
-                                textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix,
-                                collisionGroup, overlapMode, symbolInstance, bucket, orientation, variableIconBox, getElevation);
+                        let placementPasses = (textOverlapMode === 'never') ? 1 : 2;
+                        let overlapMode: OverlapMode = 'never';
 
-                            if (result) {
-                                placedBox = result.placedGlyphBoxes;
-                                if (placedBox && placedBox.box && placedBox.box.length) {
-                                    placeText = true;
-                                    shift = result.shift;
-                                    break;
+                        if (prevAnchor) {
+                            placementPasses++;
+                        }
+
+                        for (let pass = 0; pass < placementPasses; pass++) {
+                            for (let i = textAnchorOffsetStart; i < textAnchorOffsetEnd; i++) {
+                                const textAnchorOffset = bucket.textAnchorOffsets.get(i);
+
+                                if (prevAnchor && textAnchorOffset.textAnchor !== prevAnchor) {
+                                    continue;
                                 }
+
+                                const result = this.attemptAnchorPlacement(
+                                    textAnchorOffset, collisionTextBox, width, height,
+                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix,
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, variableIconBox, getElevation);
+
+                                if (result) {
+                                    placedBox = result.placedGlyphBoxes;
+                                    if (placedBox && placedBox.box && placedBox.box.length) {
+                                        placeText = true;
+                                        shift = result.shift;
+                                        return placedBox;
+                                    }
+                                }
+                            }
+
+                            if (prevAnchor) {
+                                prevAnchor = null;
+                            } else {
+                                overlapMode = textOverlapMode;
                             }
                         }
 
@@ -952,11 +964,12 @@ export class Placement {
         if (bucket.hasIconCollisionBoxData()) bucket.iconCollisionBox.collisionVertexArray.clear();
         if (bucket.hasTextCollisionBoxData()) bucket.textCollisionBox.collisionVertexArray.clear();
 
-        const layout = bucket.layers[0].layout;
+        const layer = bucket.layers[0];
+        const layout = layer.layout;
         const duplicateOpacityState = new JointOpacityState(null, 0, false, false, true);
         const textAllowOverlap = layout.get('text-allow-overlap');
         const iconAllowOverlap = layout.get('icon-allow-overlap');
-        const variablePlacement = layout.get('text-variable-anchor');
+        const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const hasIconTextFit = layout.get('icon-text-fit') !== 'none';
@@ -1074,7 +1087,7 @@ export class Placement {
                     let shift = new Point(0, 0);
                     if (collisionArrays.textBox || collisionArrays.verticalTextBox) {
                         let used = true;
-                        if (variablePlacement) {
+                        if (hasVariablePlacement) {
                             const variableOffset = this.variableOffsets[crossTileID];
                             if (variableOffset) {
                                 // This will show either the currently placed position or the last

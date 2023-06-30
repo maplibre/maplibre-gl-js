@@ -311,6 +311,10 @@ export class Layout<Props> {
         this._values = (Object.create(properties.defaultPropertyValues) as any);
     }
 
+    hasValue<S extends keyof Props>(name: S) {
+        return this._values[name].value !== undefined;
+    }
+
     getValue<S extends keyof Props>(name: S) {
         return clone(this._values[name].value);
     }

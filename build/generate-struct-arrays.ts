@@ -35,7 +35,8 @@ import {
     placement,
     symbolInstance,
     glyphOffset,
-    lineVertex
+    lineVertex,
+    textAnchorOffset
 } from '../src/data/bucket/symbol_attributes';
 
 const typeAbbreviations = {
@@ -164,6 +165,7 @@ createStructArrayType('placed_symbol', placement, true);
 createStructArrayType('symbol_instance', symbolInstance, true);
 createStructArrayType('glyph_offset', glyphOffset, true);
 createStructArrayType('symbol_line_vertex', lineVertex, true);
+createStructArrayType('text_anchor_offset', textAnchorOffset, true);
 
 // feature index array
 createStructArrayType('feature_index', createLayout([

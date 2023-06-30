@@ -13,7 +13,8 @@ import {SymbolLayoutArray,
     PlacedSymbolArray,
     SymbolInstanceArray,
     GlyphOffsetArray,
-    SymbolLineVertexArray
+    SymbolLineVertexArray,
+    TextAnchorOffsetArray
 } from '../array_types.g';
 
 import Point from '@mapbox/point-geometry';
@@ -332,6 +333,7 @@ export class SymbolBucket implements Bucket {
     lineVertexArray: SymbolLineVertexArray;
     features: Array<SymbolFeature>;
     symbolInstances: SymbolInstanceArray;
+    textAnchorOffsets: TextAnchorOffsetArray;
     collisionArrays: Array<CollisionArrays>;
     sortKeyRanges: Array<SortKeyRange>;
     pixelRatio: number;
@@ -411,6 +413,7 @@ export class SymbolBucket implements Bucket {
         this.glyphOffsetArray = new GlyphOffsetArray();
         this.lineVertexArray = new SymbolLineVertexArray();
         this.symbolInstances = new SymbolInstanceArray();
+        this.textAnchorOffsets = new TextAnchorOffsetArray();
     }
 
     calculateGlyphDependencies(text: string, stack: {[_: number]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
