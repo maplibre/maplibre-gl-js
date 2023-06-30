@@ -22,12 +22,19 @@ export class TerrainControl implements IControl {
     _map: Map;
     _container: HTMLElement;
     _terrainButton: HTMLButtonElement;
-
+    /**
+     * Creates an instance of TerrainControl.
+     * @param options - The options for the TerrainControl.
+     */
     constructor(options: TerrainSpecification) {
         this.options = options;
     }
-
-    onAdd(map: Map) {
+    /**
+     * Adds the control to the map.
+     * @param map - The map instance to add the control to.
+     * @returns The container element of the control.
+     */
+    onAdd(map: Map):HTMLElement {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
         this._terrainButton = DOM.create('button', 'maplibregl-ctrl-terrain', this._container);
@@ -40,13 +47,19 @@ export class TerrainControl implements IControl {
         return this._container;
     }
 
-    onRemove() {
+    /**
+     * Removes the control from the map.
+     */
+    onRemove(): void {
         DOM.remove(this._container);
         this._map.off('terrain', this._updateTerrainIcon);
         this._map = undefined;
     }
 
-    _toggleTerrain = () => {
+    /**
+     * Toggles the terrain on and off.
+     */
+    private _toggleTerrain = (): void  => {
         if (this._map.getTerrain()) {
             this._map.setTerrain(null);
         } else {
@@ -55,7 +68,10 @@ export class TerrainControl implements IControl {
         this._updateTerrainIcon();
     };
 
-    _updateTerrainIcon = () => {
+    /**
+     * Updates the terrain icon based on the current terrain state.
+     */
+    private _updateTerrainIcon = (): void => {
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain');
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled');
         if (this._map.terrain) {
