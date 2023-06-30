@@ -43,7 +43,7 @@ export class AttributionControl implements IControl {
         return 'bottom-right';
     }
 
-    onAdd(map: Map) {
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         this._compact = this.options && this.options.compact;
         this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib');
@@ -64,7 +64,7 @@ export class AttributionControl implements IControl {
         return this._container;
     }
 
-    onRemove() {
+    onRemove(): void {
         DOM.remove(this._container);
 
         this._map.off('styledata', this._updateData);
@@ -78,13 +78,13 @@ export class AttributionControl implements IControl {
         this._attribHTML = undefined;
     }
 
-    _setElementTitle(element: HTMLElement, title: string) {
+    private _setElementTitle(element: HTMLElement, title: string): void {
         const str = this._map._getUIString(`AttributionControl.${title}`);
         element.title = str;
         element.setAttribute('aria-label', str);
     }
 
-    _toggleAttribution = () => {
+    private _toggleAttribution = (): void => {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.setAttribute('open', '');
@@ -96,13 +96,13 @@ export class AttributionControl implements IControl {
         }
     };
 
-    _updateData = (e: MapDataEvent) => {
+    private _updateData = (e: MapDataEvent): void => {
         if (e && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility' || e.dataType === 'style' || e.type === 'terrain')) {
             this._updateAttributions();
         }
     };
 
-    _updateAttributions() {
+    private _updateAttributions(): void {
         if (!this._map.style) return;
         let attributions: Array<string> = [];
         if (this.options.customAttribution) {
@@ -165,7 +165,7 @@ export class AttributionControl implements IControl {
         this._editLink = null;
     }
 
-    _updateCompact = () => {
+    private _updateCompact = (): void => {
         if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
             if (this._compact === false) {
                 this._container.setAttribute('open', '');
@@ -181,7 +181,7 @@ export class AttributionControl implements IControl {
         }
     };
 
-    _updateCompactMinimize = () => {
+    private _updateCompactMinimize = (): void => {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.classList.remove('maplibregl-compact-show');
