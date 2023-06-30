@@ -25,7 +25,12 @@ Adds a control to allow users to plot driving, walking, and cycling directions o
 #### mapbox-gl-draw
 Adds support for drawing and editing features on maps.
 <br/><small>[View on GitHub](https://github.com/mapbox/mapbox-gl-draw)</small>
-    
+
+#### terra-draw
+
+Provides a MapLibre GL JS adapter to allow creation, selection and editing of geometries.
+<br/><small>[View on GitHub](https://github.com/JamesLMilner/terra-draw)</small>
+
 #### mapbox-gl-elevation
 Adds a control to retrieve altitude from terrain RGB tilesets.
 <br/><small>[View on GitHub](https://github.com/watergis/mapbox-gl-elevation)</small>
