@@ -78,13 +78,13 @@ export class AttributionControl implements IControl {
         this._attribHTML = undefined;
     }
 
-    private _setElementTitle(element: HTMLElement, title: string): void {
+    _setElementTitle(element: HTMLElement, title: string): void {
         const str = this._map._getUIString(`AttributionControl.${title}`);
         element.title = str;
         element.setAttribute('aria-label', str);
     }
 
-    private _toggleAttribution = (): void => {
+    _toggleAttribution = (): void => {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.setAttribute('open', '');
@@ -96,13 +96,13 @@ export class AttributionControl implements IControl {
         }
     };
 
-    private _updateData = (e: MapDataEvent): void => {
+    _updateData = (e: MapDataEvent): void => {
         if (e && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility' || e.dataType === 'style' || e.type === 'terrain')) {
             this._updateAttributions();
         }
     };
 
-    private _updateAttributions(): void {
+    _updateAttributions(): void {
         if (!this._map.style) return;
         let attributions: Array<string> = [];
         if (this.options.customAttribution) {
@@ -165,7 +165,7 @@ export class AttributionControl implements IControl {
         this._editLink = null;
     }
 
-    private _updateCompact = (): void => {
+    _updateCompact = (): void => {
         if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
             if (this._compact === false) {
                 this._container.setAttribute('open', '');
@@ -181,7 +181,7 @@ export class AttributionControl implements IControl {
         }
     };
 
-    private _updateCompactMinimize = (): void => {
+    _updateCompactMinimize = (): void => {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.classList.remove('maplibregl-compact-show');
