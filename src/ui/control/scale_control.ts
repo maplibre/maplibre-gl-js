@@ -6,6 +6,9 @@ import type {ControlPosition, IControl} from './control';
 
 export type Unit = 'imperial' | 'metric' | 'nautical';
 
+/**
+ * Options for the `ScaleControl`.
+ */
 type ScaleOptions = {
     maxWidth?: number;
     unit?: Unit;
@@ -37,18 +40,32 @@ export class ScaleControl implements IControl {
     _container: HTMLElement;
     options: ScaleOptions;
 
+    /**
+     * Constructs a new instance of the `ScaleControl` class with the provided options.
+     * @param {ScaleOptions} options - The options for the `ScaleControl`.
+     */
     constructor(options: ScaleOptions) {
         this.options = extend({}, defaultOptions, options);
     }
-
+    /**
+     * Gets the default position of the `ScaleControl`.
+     * @returns {ControlPosition} - The default position of the control.
+     */
     getDefaultPosition(): ControlPosition {
         return 'bottom-left';
     }
-
+    /**
+     * Event handler for the 'move' event.
+     * @private
+     */
     _onMove = () => {
         updateScale(this._map, this._container, this.options);
     };
-
+    /**
+     * Adds the `ScaleControl` to the map.
+     * @param {Map} map - The map instance to which the control is added.
+     * @returns {HTMLElement} - The container element of the control.
+     */
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-scale', map.getContainer());
@@ -58,7 +75,9 @@ export class ScaleControl implements IControl {
 
         return this._container;
     }
-
+    /**
+     * Removes the `ScaleControl` from the map.
+     */
     onRemove() {
         DOM.remove(this._container);
         this._map.off('move', this._onMove);
@@ -66,17 +85,22 @@ export class ScaleControl implements IControl {
     }
 
     /**
-     * Set the scale's unit of the distance
-     *
-     * @param unit Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
+     * Sets the unit of the scale's distance.
+     * @param {Unit} unit - The unit of the distance (`'imperial'`, `'metric'`, or `'nautical'`).
      */
-    setUnit = (unit: Unit) => {
+    setUnit = (unit: Unit): void => {
         this.options.unit = unit;
         updateScale(this._map, this._container, this.options);
     };
 }
 
-function updateScale(map, container, options) {
+/**
+ * Updates the scale control based on the map's current state.
+ * @param {Map} map - The map instance.
+ * @param {HTMLElement} container - The container element of the scale control.
+ * @param {ScaleOptions} options - The options for the scale control.
+ */
+function updateScale(map, container, options): void {
     // A horizontal scale is imagined to be present at center of the map
     // container with maximum length (Default) as 100px.
     // Using spherical law of cosines approximation, the real distance is
@@ -107,20 +131,35 @@ function updateScale(map, container, options) {
         setScale(container, maxWidth, maxMeters, map._getUIString('ScaleControl.Meters'));
     }
 }
-
-function setScale(container, maxWidth, maxDistance, unit) {
+/**
+ * Sets the scale on the scale control element.
+ * @param {HTMLElement} container - The container element of the scale control.
+ * @param {number} maxWidth - The maximum width of the scale control in pixels.
+ * @param {number} maxDistance - The maximum distance to be displayed on the scale control.
+ * @param {string} unit - The unit of distance for the scale control.
+ */
+function setScale(container, maxWidth, maxDistance, unit):void  {
     const distance = getRoundNum(maxDistance);
     const ratio = distance / maxDistance;
     container.style.width = `${maxWidth * ratio}px`;
     container.innerHTML = `${distance}&nbsp;${unit}`;
 }
 
-function getDecimalRoundNum(d) {
+/**
+ * Rounds a decimal number to a near pretty number.
+ * @param {number} d - The decimal number to be rounded.
+ * @returns {number} The rounded number.
+ */
+function getDecimalRoundNum(d):number {
     const multiplier = Math.pow(10, Math.ceil(-Math.log(d) / Math.LN10));
     return Math.round(d * multiplier) / multiplier;
 }
-
-function getRoundNum(num) {
+/**
+ * Rounds a number to a near pretty number based on a set of predefined thresholds.
+ * @param {number} num - The number to be rounded.
+ * @returns {number} The rounded number.
+ */
+function getRoundNum(num):number {
     const pow10 = Math.pow(10, (`${Math.floor(num)}`).length - 1);
     let d = num / pow10;
 
