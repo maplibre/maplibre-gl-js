@@ -76,6 +76,7 @@ export type MapOptions = {
      * The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
      * @param {number} [options.bearingSnap=7] The threshold, measured in degrees, that determines when the map's
      * @param {boolean|AroundCenterOptions} [options.scrollZoom=true] If `true`, the "scroll to zoom" interaction is enabled. {@link AroundCenterOptions} are passed as options to {@link ScrollZoomHandler#enable}.
+     * @param {string | Array<string>} [options.customAttribution] String or strings to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
      */
     container: HTMLElement | string;
     bearingSnap?: number;
@@ -125,6 +126,11 @@ export type MapOptions = {
       * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
       * @param {boolean} [options.crossSourceCollisions=true] If `true`, symbols from multiple sources can collide with each other during collision detection. If `false`, collision detection is run separately for the symbols in each source.
       * @param {Object} [options.locale=null] A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
+      * @param {fitBoundsOptions} [options.fitBoundsOptions] A {@link Map#fitBounds} options object to use _only_ when fitting the initial `bounds` provided above.
+      * @param {LngLatBoundsLike} [options.bounds] The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
+      * @param {boolean} [options.renderWorldCopies=true] If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+      * - The world will be rendered only if the map's `center` is within the world.      * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
+
      */
     maxPitch?: number | null;
     boxZoom?: boolean;
@@ -159,6 +165,7 @@ export type MapOptions = {
      * or a URL to such JSON.
      * @param {boolean} [options.pitchWithRotate=true] If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
      * @param {number} [options.pixelRatio] The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
+     * @param {boolean} [options.validateStyle=true] If false, style validation will be skipped. Useful in production environment.
      */
     style: StyleSpecification | string;
     pitchWithRotate?: boolean;
@@ -211,6 +218,7 @@ const maxPitchThreshold = 85;
  * Default options for configuring the MapLibre GL JS map.
  * @param {boolean} [options.attributionControl=true] If `true`, an {@link AttributionControl} will be added to the map.
  * @param {number} [options.fadeDuration=300] Controls the duration of the fade-in/fade-out animation for label collisions after initial map load, in milliseconds. This setting affects all symbol layers. This setting does not affect the duration of runtime styling transitions or raster tile cross-fading.
+ * @param {(boolean|string)} [options.hash=false] If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
  */
 const defaultOptions = {
     center: [0, 0],
@@ -269,24 +277,17 @@ const defaultOptions = {
  *
  * @group Map
  * @param options - the map options
- * @param {(boolean|string)} [options.hash=false] If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
  * For example, `http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60`.
  * An additional string may optionally be provided to indicate a parameter-styled hash,
  * e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
  * is a custom parameter and bar is an arbitrary hash distinct from the map hash.
  * bearing will snap to north. For example, with a `bearingSnap` of 7, if the user rotates
  * the map within 7 degrees of north, the map will automatically snap to exact north.
- * @param {string | Array<string>} [options.customAttribution] String or strings to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
  * GL JS would be dramatically worse than expected (i.e. a software renderer would be used).
- * @param {LngLatBoundsLike} [options.bounds] The initial bounds of the map. If `bounds` is specified, it overrides `center` and `zoom` constructor options.
- * @param {fitBoundsOptions} [options.fitBoundsOptions] A {@link Map#fitBounds} options object to use _only_ when fitting the initial `bounds` provided above.
- * @param {boolean} [options.renderWorldCopies=true] If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
  * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
  * container, there will be blank space beyond 180 and -180 degrees longitude.
  * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
  * map and the other on the left edge of the map) at every zoom level.
- * @param {boolean} [options.validateStyle=true] If false, style validation will be skipped. Useful in production environment.
- * @param {string} [options.localIdeographFontFamily='sans-serif'] Defines a CSS
  * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
  * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
  * Set to `false`, to enable font settings from the map's style for these glyph ranges.
