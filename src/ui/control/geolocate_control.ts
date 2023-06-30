@@ -128,7 +128,7 @@ export class GeolocateControl extends Evented implements IControl {
      * @returns {boolean} Returns `true` if position is outside the map's maxbounds, otherwise returns `false`.
      * @private
      */
-    _isOutOfMapMaxBounds(position: GeolocationPosition) {
+    _isOutOfMapMaxBounds(position: GeolocationPosition): boolean {
         const bounds = this._map.getMaxBounds();
         const coordinates = position.coords;
 
@@ -139,7 +139,12 @@ export class GeolocateControl extends Evented implements IControl {
             coordinates.latitude > bounds.getNorth()
         );
     }
-
+    /**
+     * Sets the error state of the geolocate control based on the current watch state.
+     * Updates the CSS classes of the geolocate button and performs additional actions based on the watch state.
+     *
+     * @private
+     */
     _setErrorState() {
         switch (this._watchState) {
             case 'WAITING_ACTIVE':
@@ -169,9 +174,10 @@ export class GeolocateControl extends Evented implements IControl {
     }
 
     /**
-     * When the Geolocation API returns a new location, update the GeolocateControl.
+     * Callback function triggered when the Geolocation API returns a new location.
+     * Updates the GeolocateControl based on the received position.
      *
-     * @param {Position} position the Geolocation API Position
+     * @param {GeolocationPosition} position - The Geolocation API Position.
      * @private
      */
     _onSuccess = (position: GeolocationPosition) => {
@@ -237,9 +243,9 @@ export class GeolocateControl extends Evented implements IControl {
     };
 
     /**
-     * Update the camera location to center on the current position
+     * Update the camera location to center on the current position.
      *
-     * @param {Position} position the Geolocation API Position
+     * @param {GeolocationPosition} position - The Geolocation API Position.
      * @private
      */
     _updateCamera = (position: GeolocationPosition) => {
@@ -408,13 +414,14 @@ export class GeolocateControl extends Evented implements IControl {
      * Programmatically request and move the map to the user's location.
      *
      * @returns {boolean} Returns `false` if called before control was added to a map, otherwise returns `true`.
+     *
      * @example
      * // Initialize the geolocate control.
-     * var geolocate = new maplibregl.GeolocateControl({
-     *  positionOptions: {
-     *    enableHighAccuracy: true
-     *  },
-     *  trackUserLocation: true
+     * const geolocate = new maplibregl.GeolocateControl({
+     *   positionOptions: {
+     *     enableHighAccuracy: true
+     *   },
+     *   trackUserLocation: true
      * });
      * // Add the control to the map.
      * map.addControl(geolocate);
