@@ -2777,6 +2777,8 @@ describe('Map', () => {
             map.resize();
             expect(map.getCanvas().width).toBe(7536);
             expect(map.getCanvas().height).toBe(4239);
+            // Check if maxCanvasSize is updated
+            expect(map._maxCanvasSize).toEqual([7536, 4239]);
         });
     });
 

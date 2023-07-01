@@ -681,15 +681,16 @@ export class Map extends Camera {
         const width = dimensions[0];
         const height = dimensions[1];
 
-        let clampedPixelRatio = this._getClampedPixelRatio(width, height, this._maxCanvasSize[0],  this._maxCanvasSize[1]);
+        const clampedPixelRatio = this._getClampedPixelRatio(width, height);
         this._resizeCanvas(width, height, clampedPixelRatio);
         this.painter.resize(width, height, clampedPixelRatio);
 
         // check if we've reached GL limits, in that case further clamps pixelRatio
         if (this.painter.overLimit()) {
             const gl = this.painter.context.gl;
-            const maxSize = Math.max(gl.drawingBufferWidth, gl.drawingBufferHeight);
-            clampedPixelRatio = this._getClampedPixelRatio(width, height, maxSize,  maxSize);
+            // store updated _maxCanvasSize value
+            this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
+            const clampedPixelRatio = this._getClampedPixelRatio(width, height);
             this._resizeCanvas(width, height, clampedPixelRatio);
             this.painter.resize(width, height, clampedPixelRatio);
         }
@@ -712,10 +713,11 @@ export class Map extends Camera {
     }
 
     /*
-     * Return the map's pixel ratio eventually scaled down to respect maxCanvasWidth and maxCanvasHeight.
+     * Return the map's pixel ratio eventually scaled down to respect maxCanvasSize.
      * Internally you should use this and not getPixelRatio().
      */
-    _getClampedPixelRatio(width: number, height: number, maxCanvasWidth: number, maxCanvasHeight: number): number {
+    _getClampedPixelRatio(width: number, height: number): number {
+        const {0: maxCanvasWidth, 1: maxCanvasHeight} = this._maxCanvasSize;
         const pixelRatio = this.getPixelRatio();
 
         const canvasWidth = width * pixelRatio;
@@ -2702,7 +2704,7 @@ export class Map extends Camera {
         this._canvas.setAttribute('role', 'region');
 
         const dimensions = this._containerDimensions();
-        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1], this._maxCanvasSize[0], this._maxCanvasSize[1]);
+        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
         this._resizeCanvas(dimensions[0], dimensions[1], clampedPixelRatio);
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
