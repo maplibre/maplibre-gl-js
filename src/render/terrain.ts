@@ -17,7 +17,6 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainSourceCache} from '../source/terrain_source_cache';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
-import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {earthRadius} from '../geo/lng_lat';
 
@@ -128,19 +127,25 @@ export class Terrain {
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
-        let elevation = 0;
         const terrain = this.getTerrainData(tileID);
-        if (terrain.tile && terrain.tile.dem) {
-            const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
-            const coord = [pos[0] * terrain.tile.dem.dim, pos[1] * terrain.tile.dem.dim];
-            const c = [Math.floor(coord[0]), Math.floor(coord[1])];
-            const tl = terrain.tile.dem.get(c[0], c[1]);
-            const tr = terrain.tile.dem.get(c[0], c[1] + 1);
-            const bl = terrain.tile.dem.get(c[0] + 1, c[1]);
-            const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
-            elevation = interpolates.number(interpolates.number(tl, tr, coord[0] - c[0]), interpolates.number(bl, br, coord[0] - c[0]), coord[1] - c[1]);
-        }
-        return elevation;
+        const dem = terrain.tile?.dem;
+        if (!dem)
+            return 0;
+
+        const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
+        const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
+
+        // bilinear interpolation
+        const cx = Math.floor(coord[0]),
+            cy = Math.floor(coord[1]),
+            tx = coord[0] - cx,
+            ty = coord[1] - cy;
+        return (
+            dem.get(cx, cy) * (1 - tx) * (1 - ty) +
+            dem.get(cx + 1, cy) * (tx) * (1 - ty) +
+            dem.get(cx, cy + 1) * (1 - tx) * (ty) +
+            dem.get(cx + 1, cy + 1) * (tx) * (ty)
+        );
     }
 
     /**
