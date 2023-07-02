@@ -2412,9 +2412,9 @@ export class Map extends Camera {
     /**
      * Returns the value of the style's glyphs URL
      *
-     * @returns {string | null} glyphs Style's glyphs url
+     * @returns glyphs Style's glyphs url
      */
-    getGlyphs() {
+    getGlyphs(): string | null {
         return this.style.getGlyphsUrl();
     }
 
@@ -2459,9 +2459,9 @@ export class Map extends Camera {
     /**
      * Returns the as-is value of the style's sprite.
      *
-     * @returns {SpriteSpecification | undefined} style's sprite url or a list of id-url pairs
+     * @returns style's sprite list of id-url pairs
      */
-    getSprite() {
+    getSprite(): {id: string; url: string}[] {
         return this.style.getSprite();
     }
 
@@ -2503,7 +2503,7 @@ export class Map extends Camera {
     /**
      * Returns the value of the light object.
      *
-     * @returns {LightSpecification} light Light properties of the style.
+     * @returns light Light properties of the style.
      */
     getLight(): LightSpecification {
         return this.style.getLight();
@@ -2629,9 +2629,9 @@ export class Map extends Camera {
     /**
      * Returns the map's containing HTML element.
      *
-     * @returns {HTMLElement} The map's container.
+     * @returns The map's container.
      */
-    getContainer() {
+    getContainer(): HTMLElement {
         return this._container;
     }
 
@@ -2644,22 +2644,22 @@ export class Map extends Camera {
      * attached. It will receive bubbled events from child elements such as the `<canvas>`, but not from
      * map controls.
      *
-     * @returns {HTMLElement} The container of the map's `<canvas>`.
+     * @returns The container of the map's `<canvas>`.
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
-    getCanvasContainer() {
+    getCanvasContainer(): HTMLElement {
         return this._canvasContainer;
     }
 
     /**
      * Returns the map's `<canvas>` element.
      *
-     * @returns {HTMLCanvasElement} The map's `<canvas>` element.
+     * @returns The map's `<canvas>` element.
      * @see [Measure distances](https://maplibre.org/maplibre-gl-js-docs/example/measure/)
      * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
      * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js-docs/example/center-on-symbol/)
      */
-    getCanvas() {
+    getCanvas(): HTMLCanvasElement {
         return this._canvas;
     }
 
@@ -2824,9 +2824,9 @@ export class Map extends Camera {
      * or if there has been a change to the sources or style that
      * has not yet fully loaded.
      *
-     * @returns {boolean} A Boolean indicating whether the map is fully loaded.
+     * @returns A Boolean indicating whether the map is fully loaded.
      */
-    loaded() {
+    loaded(): boolean {
         return !this._styleDirty && !this._sourcesDirty && !!this.style && this.style.loaded();
     }
 
@@ -2982,9 +2982,9 @@ export class Map extends Camera {
      * Force a synchronous redraw of the map.
      * @example
      * map.redraw();
-     * @returns {Map} `this`
+     * @returns `this`
      */
-    redraw(): Map {
+    redraw(): this {
         if (this.style) {
             // cancel the scheduled update
             if (this._frame) {
@@ -3171,7 +3171,7 @@ export class Map extends Camera {
 
     /**
      * Returns the package version of the library
-     * @returns {string} Package version of the library
+     * @returns Package version of the library
      */
     get version(): string {
         return version;
@@ -3181,7 +3181,7 @@ export class Map extends Camera {
      * Returns the elevation for the point where the camera is looking.
      * This value corresponds to:
      * "meters above sea level" * "exaggeration"
-     * @returns {number} * The elevation.
+     * @returns The elevation.
      */
     getCameraTargetElevation(): number {
         return this.transform.elevation;
