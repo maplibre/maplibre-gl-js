@@ -407,7 +407,7 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
         output.push(
             `    /**
      * Return the ${structTypeClass} at the given location in the array.
-     * @param {number} index The index of the element.
+     * @param index The index of the element.
      * @private
      */
     get(index: number): ${structTypeClass} {

@@ -19,10 +19,25 @@ export type StyleImageData = {
 };
 
 export type StyleImageMetadata = {
+    /**
+     * The ratio of pixels in the image to physical pixels on the screen
+     */
     pixelRatio: number;
+    /**
+     * Whether the image should be interpreted as an SDF image
+     */
     sdf: boolean;
+    /**
+     * If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched horizontally.
+     */
     stretchX?: Array<[number, number]>;
+    /**
+     * If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched vertically.
+     */
     stretchY?: Array<[number, number]>;
+    /**
+     * If `icon-text-fit` is used in a layer with this image, this option defines the part of the image that can be covered by the content in `text-field`.
+     */
     content?: [number, number, number, number];
 };
 

@@ -157,8 +157,8 @@ const maplibregl = {
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
      *
      * @function addProtocol
-     * @param {string} customProtocol - the protocol to hook, for example 'custom'
-     * @param {Function} loadFn - the function to use when trying to fetch a tile specified by the customProtocol
+     * @param customProtocol - the protocol to hook, for example 'custom'
+     * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
      * // this will fetch a file using the fetch API (this is obviously a non interesting example...)
      * maplibregl.addProtocol('custom', (params, callback) => {
@@ -191,7 +191,7 @@ const maplibregl = {
      * Removes a previously added protocol
      *
      * @function removeProtocol
-     * @param {string} customProtocol - the custom protocol to remove registration for
+     * @param customProtocol - the custom protocol to remove registration for
      * @example
      * maplibregl.removeProtocol('custom');
      */
@@ -208,9 +208,9 @@ Debug.extend(maplibregl, {isSafari, getPerformanceMetrics: PerformanceUtils.getP
  * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
  *
  * @function setRTLTextPlugin
- * @param {string} pluginURL URL pointing to the Mapbox RTL text plugin source.
- * @param {Function} callback Called with an error argument if there is an error.
- * @param {boolean} lazy If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
+ * @param pluginURL URL pointing to the Mapbox RTL text plugin source.
+ * @param callback Called with an error argument if there is an error.
+ * @param lazy If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
  * rtl text will then be rendered only after the plugin finishes loading.
  * @example
  * maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js');

@@ -8,7 +8,7 @@ import {ImageRequest} from '../util/image_request';
 import type {GetImageCallback} from '../util/image_request';
 
 import {RequestManager, ResourceType} from '../util/request_manager';
-import {QueryRenderedFeaturesOptions, Style, StyleSwapOptions} from '../style/style';
+import {Style, StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {Painter} from '../render/painter';
 import {Transform} from '../geo/transform';
@@ -65,7 +65,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
-import { QuerySourceFeatureOptions } from '../source/query_features';
+import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions } from '../source/query_features';
 
 const version = packageJSON.version;
 /* eslint-enable no-use-before-define */
@@ -335,6 +335,10 @@ export type GestureOptions = {
     macHelpText?: string;
     mobileHelpText?: string;
 };
+
+export type AddImageOptions = {
+    
+}
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
 type Complete<T> = {
@@ -2008,12 +2012,7 @@ export class Map extends Camera {
      * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
      * @param options Options object.
-     * @param options.pixelRatio The ratio of pixels in the image to physical pixels on the screen
-     * @param options.sdf Whether the image should be interpreted as an SDF image
-     * @param options.content `[x1, y1, x2, y2]`  If `icon-text-fit` is used in a layer with this image, this option defines the part of the image that can be covered by the content in `text-field`.
-     * @param options.stretchX `[[x1, x2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched horizontally.
-     * @param options.stretchY `[[y1, y2], ...]` If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched vertically.
-     *
+     
      * @example
      * // If the style's sprite does not already contain an image with ID 'cat',
      * // add the image 'cat-icon.png' to the style's sprite with the ID 'cat'.
@@ -2046,7 +2045,6 @@ export class Map extends Camera {
             height: number;
             data: Uint8Array | Uint8ClampedArray;
         } | StyleImageInterface,
-        // HM TODO: convert to type
         {
             pixelRatio = 1,
             sdf = false,
@@ -2085,7 +2083,6 @@ export class Map extends Camera {
         }
     }
 
-    // eslint-disable-next-line jsdoc/require-returns
     /**
      * Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
      * sprite using the image's ID with
@@ -2143,7 +2140,7 @@ export class Map extends Camera {
      * and any images that have been added at runtime using {@link Map#addImage}.
      *
      * @param id The ID of the image.
-     * @returns {StyleImage} An image in the map with the specified ID.
+     * @returns An image in the map with the specified ID.
      *
      * @example
      * var coffeeShopIcon = map.getImage("coffee_cup");
@@ -2160,7 +2157,7 @@ export class Map extends Camera {
      *
      * @param id The ID of the image.
      *
-     * @returns {boolean} A Boolean indicating whether the image exists.
+     * @returns A Boolean indicating whether the image exists.
      * @example
      * // Check if an image with the ID 'cat' exists in
      * // the style's sprite.
@@ -2195,8 +2192,8 @@ export class Map extends Camera {
      * Load an image from an external URL to be used with {@link Map#addImage}. External
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
-     * @param {string} url The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @param {Callback<HTMLImageElement | ImageBitmap>} callback Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
+     * @param url The URL of the image file. Image file must be in png, webp, or jpg format.
+     * @param callback Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
      *
      * @example
      * // Load an image from an external URL.
@@ -2217,13 +2214,13 @@ export class Map extends Camera {
      * This includes both images from the style's original sprite
      * and any images that have been added at runtime using {@link Map#addImage}.
      *
-     * @returns {Array<string>} An Array of strings containing the names of all sprites/images currently available in the map.
+     * @returns An Array of strings containing the names of all sprites/images currently available in the map.
      *
      * @example
      * var allImages = map.listImages();
      *
      */
-    listImages() {
+    listImages(): Array<string> {
         return this.style.listImages();
     }
 
@@ -2234,53 +2231,17 @@ export class Map extends Camera {
      * A layer defines how data from a specified source will be styled. Read more about layer types
      * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#layers).
      *
-     * TODO: JSDoc can't pass @param {(LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface} layer The layer to add,
-     * @param {LayerSpecification} layer
+     * @param layer The layer to add,
      * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-style-spec/#layers) or,
      * less commonly, the {@link CustomLayerInterface} specification.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
      *
-     * @param {string} layer.id A unique identifier that you define.
-     * @param {string} layer.type The type of layer (for example `fill` or `symbol`).
-     * A list of layer types is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/#type).
-     *
-     * (This can also be `custom`. For more information, see {@link CustomLayerInterface}.)
-     * @param {string | SourceSpecification} [layer.source] The data source for the layer.
-     * Reference a source that has _already been defined_ using the source's unique id.
-     * Reference a _new source_ using a source object (as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sources/)) directly.
-     * This is **required** for all `layer.type` options _except_ for `custom` and `background`.
-     * @param {string} [layer.sourceLayer] (optional) The name of the source layer within the specified `layer.source` to use for this style layer.
-     * This is only applicable for vector tile sources and is **required** when `layer.source` is of the type `vector`.
-     * @param {array} [layer.filter] (optional) An expression specifying conditions on source features.
-     * Only features that match the filter are displayed.
-     * The MapLibre Style Specification includes more information on the limitations of the [`filter`](https://maplibre.org/maplibre-style-spec/layers/#filter) parameter
-     * and a complete list of available [expressions](https://maplibre.org/maplibre-style-spec/expressions/).
-     * If no filter is provided, all features in the source (or source layer for vector tilesets) will be displayed.
-     * @param {Object} [layer.paint] (optional) Paint properties for the layer.
-     * Available paint properties vary by `layer.type`.
-     * A full list of paint properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/).
-     * If no paint properties are specified, default values will be used.
-     * @param {Object} [layer.layout] (optional) Layout properties for the layer.
-     * Available layout properties vary by `layer.type`.
-     * A full list of layout properties for each layer type is available in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers/).
-     * If no layout properties are specified, default values will be used.
-     * @param {number} [layer.maxzoom] (optional) The maximum zoom level for the layer.
-     * At zoom levels equal to or greater than the maxzoom, the layer will be hidden.
-     * The value can be any number between `0` and `24` (inclusive).
-     * If no maxzoom is provided, the layer will be visible at all zoom levels for which there are tiles available.
-     * @param {number} [layer.minzoom] (optional) The minimum zoom level for the layer.
-     * At zoom levels less than the minzoom, the layer will be hidden.
-     * The value can be any number between `0` and `24` (inclusive).
-     * If no minzoom is provided, the layer will be visible at all zoom levels for which there are tiles available.
-     * @param {Object} [layer.metadata] (optional) Arbitrary properties useful to track with the layer, but do not influence rendering.
-     * @param {string} [layer.renderingMode] This is only applicable for layers with the type `custom`.
-     * See {@link CustomLayerInterface} for more information.
-     * @param {string} [beforeId] The ID of an existing layer to insert the new layer before,
+     * @param beforeId The ID of an existing layer to insert the new layer before,
      * resulting in the new layer appearing visually beneath the existing layer.
      * If this argument is not specified, the layer will be appended to the end of the layers array
      * and appear visually above all other layers.
      *
-     * @returns {Map} `this`
+     * @returns `this`
      *
      * @example
      * // Add a circle layer with a vector source
@@ -2348,15 +2309,15 @@ export class Map extends Camera {
     /**
      * Moves a layer to a different z-position.
      *
-     * @param {string} id The ID of the layer to move.
-     * @param {string} [beforeId] The ID of an existing layer to insert the new layer before. When viewing the map, the `id` layer will appear beneath the `beforeId` layer. If `beforeId` is omitted, the layer will be appended to the end of the layers array and appear above all other layers on the map.
-     * @returns {Map} `this`
+     * @param id The ID of the layer to move.
+     * @param beforeId The ID of an existing layer to insert the new layer before. When viewing the map, the `id` layer will appear beneath the `beforeId` layer. If `beforeId` is omitted, the layer will be appended to the end of the layers array and appear above all other layers on the map.
+     * @returns `this`
      *
      * @example
      * // Move a layer with ID 'polygon' before the layer with ID 'country-label'. The `polygon` layer will appear beneath the `country-label` layer on the map.
      * map.moveLayer('polygon', 'country-label');
      */
-    moveLayer(id: string, beforeId?: string) {
+    moveLayer(id: string, beforeId?: string): this {
         this.style.moveLayer(id, beforeId);
         return this._update(true);
     }
@@ -2367,7 +2328,7 @@ export class Map extends Camera {
      *
      * If no such layer exists, an `error` event is fired.
      *
-     * @param {string} id id of the layer to remove
+     * @param id id of the layer to remove
      * @fires error
      *
      * @example
@@ -2382,8 +2343,8 @@ export class Map extends Camera {
     /**
      * Returns the layer with the specified ID in the map's style.
      *
-     * @param {string} id The ID of the layer to get.
-     * @returns {StyleLayer} The layer with the specified ID, or `undefined`
+     * @param id The ID of the layer to get.
+     * @returns The layer with the specified ID, or `undefined`
      * if the ID corresponds to no existing layers.
      *
      * @example
@@ -2407,16 +2368,16 @@ export class Map extends Camera {
      * zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
      * layer will not be rendered at all zoom levels in the zoom range.
      *
-     * @param {string} layerId The ID of the layer to which the zoom extent will be applied.
-     * @param {number} minzoom The minimum zoom to set (0-24).
-     * @param {number} maxzoom The maximum zoom to set (0-24).
-     * @returns {Map} `this`
+     * @param layerId The ID of the layer to which the zoom extent will be applied.
+     * @param minzoom The minimum zoom to set (0-24).
+     * @param maxzoom The maximum zoom to set (0-24).
+     * @returns `this`
      *
      * @example
      * map.setLayerZoomRange('my-layer', 2, 5);
      *
      */
-    setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number) {
+    setLayerZoomRange(layerId: string, minzoom: number, maxzoom: number): this {
         this.style.setLayerZoomRange(layerId, minzoom, maxzoom);
         return this._update(true);
     }
@@ -2432,12 +2393,11 @@ export class Map extends Camera {
      *
      * To clear the filter, pass `null` or `undefined` as the second parameter.
      *
-     * @param {string} layerId The ID of the layer to which the filter will be applied.
-     * @param {Array | null | undefined} filter The filter, conforming to the MapLibre Style Specification's
+     * @param layerId The ID of the layer to which the filter will be applied.
+     * @param filter The filter, conforming to the MapLibre Style Specification's
      * [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
-     * @param {StyleSetterOptions} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-     * @returns {Map} `this`
+     * @param options Options object.
+     * @returns `this`
      *
      * @example
      * // display only features with the 'name' property 'USA'
@@ -2469,8 +2429,8 @@ export class Map extends Camera {
     /**
      * Sets the value of a paint property in the specified style layer.
      *
-     * @param {string} layerId The ID of the layer to set the paint property in.
-     * @param {string} name The name of the paint property to set.
+     * @param layerId The ID of the layer to set the paint property in.
+     * @param name The name of the paint property to set.
      * @param {*} value The value of the paint property to set.
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * @param {StyleSetterOptions} [options] Options object.
