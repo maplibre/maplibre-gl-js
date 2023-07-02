@@ -6,16 +6,23 @@ import {clamp} from '../util/util';
  * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
  * This shifts the apprent center or the vanishing point of the map. This is useful for adding floating UI elements
  * on top of the map and having the vanishing point shift as UI elements resize.
- *
- * @param {number} [top=0]
- * @param {number} [bottom=0]
- * @param {number} [left=0]
- * @param {number} [right=0]
  */
 export class EdgeInsets {
+    /**
+     * @defaultValue 0
+     */
     top: number;
+    /**
+     * @defaultValue 0
+     */
     bottom: number;
+    /**
+     * @defaultValue 0
+     */
     left: number;
+    /**
+     * @defaultValue 0
+     */
     right: number;
 
     constructor(top: number = 0, bottom: number = 0, left: number = 0, right: number = 0) {
