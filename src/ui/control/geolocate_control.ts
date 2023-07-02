@@ -86,8 +86,21 @@ let noTimeout = false;
  * }));
  * @see [Locate the user](https://maplibre.org/maplibre-gl-js-docs/example/locate-user/)
  *
- * @event trackuserlocationend Fired when the Geolocate Control changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when trackUserLocation is true. In the background state, the dot on the map will update with location updates but the camera will not.
+ * ## Events
+ * 
+ * @event `trackuserlocationend` - Fired when the Geolocate Control changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when trackUserLocation is true. In the background state, the dot on the map will update with location updates but the camera will not.
  *
+ * @event `trackuserlocationstart` - Fired when the Geolocate Control changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a geolocate event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no geolocate event will follow unless the users's location changes).
+ * 
+ * @event `geolocate` - Fired on each Geolocation API position update which returned as success. 
+ * `data` - The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
+ *
+ * @event `error` - Fired on each Geolocation API position update which returned as an error. 
+ * `data` - The returned [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/PositionError) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
+ * 
+ * @event `outofmaxbounds` Fired on each Geolocation API position update which returned as success but user position is out of map maxBounds. 
+ * `data` - The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
+ * 
  * @example
  * // Initialize the geolocate control.
  * let geolocate = new maplibregl.GeolocateControl({
@@ -103,8 +116,6 @@ let noTimeout = false;
  * geolocate.on('trackuserlocationend', function() {
  *   console.log('A trackuserlocationend event has occurred.')
  * });
- *
- * @event trackuserlocationstart Fired when the Geolocate Control changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a geolocate event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no geolocate event will follow unless the users's location changes).
  *
  * @example
  * // Initialize the geolocate control.
@@ -122,11 +133,6 @@ let noTimeout = false;
  *   console.log('A trackuserlocationstart event has occurred.')
  * });
  *
- * /**
- * @event geolocate Fired on each Geolocation API position update which returned as success.
- *
- * @property data The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
- *
  * @example
  * // Initialize the geolocate control.
  * let geolocate = new maplibregl.GeolocateControl({
@@ -143,10 +149,6 @@ let noTimeout = false;
  *   console.log('A geolocate event has occurred.')
  * });
  *
- * @event error Fired on each Geolocation API position update which returned as an error.
- *
- * @property data The returned [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/PositionError) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
- *
  * @example
  * // Initialize the geolocate control.
  * let geolocate = new maplibregl.GeolocateControl({
@@ -162,10 +164,6 @@ let noTimeout = false;
  * geolocate.on('error', function() {
  *   console.log('An error event has occurred.')
  * });
- *
- * @event outofmaxbounds Fired on each Geolocation API position update which returned as success but user position is out of map maxBounds.
- *
- * @property data The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
  *
  * @example
  * // Initialize the geolocate control.

@@ -29,9 +29,11 @@ type FullscreenOptions = {
  * map.addControl(new maplibregl.FullscreenControl({container: document.querySelector('body')}));
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
  *
- * @event fullscreenstart - Fired when fullscreen mode has started
+ * ## Events
+ * 
+ * @event `fullscreenstart` - Fired when fullscreen mode has started
  *
- * @event fullscreenend - Fired when fullscreen mode has ended
+ * @event `fullscreenend` - Fired when fullscreen mode has ended
  */
 export class FullscreenControl extends Evented implements IControl {
     _map: Map;
@@ -65,10 +67,7 @@ export class FullscreenControl extends Evented implements IControl {
         }
     }
 
-    /**
-     * {@inheritDoc IControl.onAdd}
-     * @param map
-     */
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map): HTMLElement {
         this._map = map;
         if (!this._container) this._container = this._map.getContainer();
