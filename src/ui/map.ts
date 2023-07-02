@@ -318,6 +318,11 @@ export type MapOptions = {
      * @defaultValue true
      */
     validateStyle?: boolean;
+    /**
+     * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height. 
+     * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
+     */
+    maxCanvasSize?: [number, number];
 };
 
 /**
@@ -400,7 +405,9 @@ const defaultOptions = {
     transformCameraUpdate: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
-    validateStyle: true
+    validateStyle: true,
+    /** Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
+    maxCanvasSize: [4096, 4096]
 } as CompleteMapOptions;
 
 /**
@@ -486,6 +493,7 @@ export class Map extends Camera {
     _removed: boolean;
     _clickTolerance: number;
     _overridePixelRatio: number | null;
+    _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /** image queue throttling handle. To be used later when clean up */
@@ -585,6 +593,7 @@ export class Map extends Camera {
         this._locale = extend({}, defaultLocale, options.locale);
         this._clickTolerance = options.clickTolerance;
         this._overridePixelRatio = options.pixelRatio;
+        this._maxCanvasSize = options.maxCanvasSize;
         this.transformCameraUpdate = options.transformCameraUpdate;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
@@ -804,10 +813,22 @@ export class Map extends Camera {
         const width = dimensions[0];
         const height = dimensions[1];
 
-        this._resizeCanvas(width, height, this.getPixelRatio());
+        const clampedPixelRatio = this._getClampedPixelRatio(width, height);
+        this._resizeCanvas(width, height, clampedPixelRatio);
+        this.painter.resize(width, height, clampedPixelRatio);
+
+        // check if we've reached GL limits, in that case further clamps pixelRatio
+        if (this.painter.overLimit()) {
+            const gl = this.painter.context.gl;
+            // store updated _maxCanvasSize value
+            this._maxCanvasSize = [gl.drawingBufferWidth, gl.drawingBufferHeight];
+            const clampedPixelRatio = this._getClampedPixelRatio(width, height);
+            this._resizeCanvas(width, height, clampedPixelRatio);
+            this.painter.resize(width, height, clampedPixelRatio);
+        }
+
         this.transform.resize(width, height);
         this._requestedCameraState?.resize(width, height);
-        this.painter.resize(width, height, this.getPixelRatio());
 
         const fireMoving = !this._moving;
         if (fireMoving) {
@@ -823,8 +844,26 @@ export class Map extends Camera {
         return this;
     }
 
+    /*
+     * Return the map's pixel ratio eventually scaled down to respect maxCanvasSize.
+     * Internally you should use this and not getPixelRatio().
+     */
+    _getClampedPixelRatio(width: number, height: number): number {
+        const {0: maxCanvasWidth, 1: maxCanvasHeight} = this._maxCanvasSize;
+        const pixelRatio = this.getPixelRatio();
+
+        const canvasWidth = width * pixelRatio;
+        const canvasHeight = height * pixelRatio;
+
+        const widthScaleFactor = canvasWidth > maxCanvasWidth ? (maxCanvasWidth / canvasWidth) : 1;
+        const heightScaleFactor = canvasHeight > maxCanvasHeight ? (maxCanvasHeight / canvasHeight) : 1;
+
+        return Math.min(widthScaleFactor, heightScaleFactor) * pixelRatio;
+    }
+
     /**
      * Returns the map's pixel ratio.
+     * Note that the pixel ratio actually applied may be lower to respect maxCanvasSize.
      * @returns The pixel ratio.
      */
     getPixelRatio(): number {
@@ -836,15 +875,12 @@ export class Map extends Camera {
      * After this call, the canvas' `width` attribute will be `container.clientWidth * pixelRatio`
      * and its height attribute will be `container.clientHeight * pixelRatio`.
      * Set this to null to disable `devicePixelRatio` override.
+     * Note that the pixel ratio actually applied may be lower to respect maxCanvasSize.
      * @param pixelRatio The pixel ratio.
      */
-    setPixelRatio(pixelRatio: number | null) {
-        const [width, height] = this._containerDimensions();
-
+    setPixelRatio(pixelRatio: number) {
         this._overridePixelRatio = pixelRatio;
-
-        this._resizeCanvas(width, height, this.getPixelRatio());
-        this.painter.resize(width, height, this.getPixelRatio());
+        this.resize();
     }
 
     /**
@@ -2692,7 +2728,8 @@ export class Map extends Camera {
         this._canvas.setAttribute('role', 'region');
 
         const dimensions = this._containerDimensions();
-        this._resizeCanvas(dimensions[0], dimensions[1], this.getPixelRatio());
+        const clampedPixelRatio = this._getClampedPixelRatio(dimensions[0], dimensions[1]);
+        this._resizeCanvas(dimensions[0], dimensions[1], clampedPixelRatio);
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
         const positions = this._controlPositions = {};
@@ -2734,8 +2771,8 @@ export class Map extends Camera {
 
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
         // Request the required canvas size taking the pixelratio into account.
-        this._canvas.width = pixelRatio * width;
-        this._canvas.height = pixelRatio * height;
+        this._canvas.width = Math.floor(pixelRatio * width);
+        this._canvas.height = Math.floor(pixelRatio * height);
 
         // Maintain the same canvas size, potentially downscaling it for HiDPI displays
         this._canvas.style.width = `${width}px`;

@@ -135,8 +135,8 @@ export class Painter {
      * for a new width and height value.
      */
     resize(width: number, height: number, pixelRatio: number) {
-        this.width = width * pixelRatio;
-        this.height = height * pixelRatio;
+        this.width = Math.floor(width * pixelRatio);
+        this.height = Math.floor(height * pixelRatio);
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
@@ -633,5 +633,15 @@ export class Painter {
         if (this.debugOverlayTexture) {
             this.debugOverlayTexture.destroy();
         }
+    }
+
+    /*
+     * Return true if drawing buffer size is != from requested size.
+     * That means that we've reached GL limits somehow.
+     * Note: drawing buffer size changes only when canvas size changes
+     */
+    overLimit() {
+        const {drawingBufferWidth, drawingBufferHeight} = this.context.gl;
+        return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
     }
 }
