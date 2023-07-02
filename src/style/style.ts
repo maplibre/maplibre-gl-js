@@ -87,8 +87,17 @@ const ignoredDiffOperations = pick(diffOperations, [
 const empty = emptyStyle() as StyleSpecification;
 
 export type FeatureIdentifier = {
+    /**
+     * Unique id of the feature.
+     */
     id?: string | number | undefined;
+    /**
+     * The id of the vector or GeoJSON source for the feature.
+     */
     source: string;
+    /**
+     * *For vector tile sources, `sourceLayer` is required.*
+     */
     sourceLayer?: string | undefined;
 };
 
