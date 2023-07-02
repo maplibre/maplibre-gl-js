@@ -65,7 +65,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
-import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions } from '../source/query_features';
+import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 
 const version = packageJSON.version;
 /* eslint-enable no-use-before-define */
@@ -336,7 +336,7 @@ export type GestureOptions = {
 };
 
 export type AddImageOptions = {
-    
+
 }
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
@@ -1920,7 +1920,7 @@ export class Map extends Camera {
      * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
      * @param options Options object.
-     
+     * @returns `this`
      * @example
      * // If the style's sprite does not already contain an image with ID 'cat',
      * // add the image 'cat-icon.png' to the style's sprite with the ID 'cat'.
@@ -1953,13 +1953,14 @@ export class Map extends Camera {
             height: number;
             data: Uint8Array | Uint8ClampedArray;
         } | StyleImageInterface,
-        {
+        options: Partial<StyleImageMetadata> = {}): this {
+        const {
             pixelRatio = 1,
             sdf = false,
             stretchX,
             stretchY,
             content
-        }: Partial<StyleImageMetadata> = {}) {
+        } = options;
         this._lazyInitEmptyStyle();
         const version = 0;
 
@@ -1988,6 +1989,7 @@ export class Map extends Camera {
             if (userImage.onAdd) {
                 userImage.onAdd(this, id);
             }
+            return this;
         }
     }
 
@@ -2002,7 +2004,7 @@ export class Map extends Camera {
      * @param id The ID of the image.
      * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
-     *
+     * @returns `this`
      * @example
      * // If an image with the ID 'cat' already exists in the style's sprite,
      * // replace that image with a new image, 'other-cat-icon.png'.
@@ -2013,7 +2015,7 @@ export class Map extends Camera {
             width: number;
             height: number;
             data: Uint8Array | Uint8ClampedArray;
-        } | StyleImageInterface) {
+        } | StyleImageInterface): this {
 
         const existingImage = this.style.getImage(id);
         if (!existingImage) {
@@ -2040,6 +2042,7 @@ export class Map extends Camera {
         existingImage.data.replace(data, copy);
 
         this.style.updateImage(id, existingImage);
+        return this;
     }
 
     /**
@@ -2230,7 +2233,6 @@ export class Map extends Camera {
         return this._update(true);
     }
 
-    // eslint-disable-next-line jsdoc/require-returns
     /**
      * Removes the layer with the given ID from the map's style.
      *
@@ -2238,12 +2240,13 @@ export class Map extends Camera {
      *
      * @param id id of the layer to remove
      * @fires error
+     * @returns `this`
      *
      * @example
      * // If a layer with ID 'state-data' exists, remove it.
      * if (map.getLayer('state-data')) map.removeLayer('state-data');
      */
-    removeLayer(id: string) {
+    removeLayer(id: string): this {
         this.style.removeLayer(id);
         return this._update(true);
     }
@@ -2327,10 +2330,10 @@ export class Map extends Camera {
     /**
      * Returns the filter applied to the specified style layer.
      *
-     * @param {string} layerId The ID of the style layer whose filter to get.
-     * @returns {Array} The layer's filter.
+     * @param layerId The ID of the style layer whose filter to get.
+     * @returns The layer's filter.
      */
-    getFilter(layerId: string) {
+    getFilter(layerId: string): FilterSpecification | void {
         return this.style.getFilter(layerId);
     }
 
@@ -2339,17 +2342,16 @@ export class Map extends Camera {
      *
      * @param layerId The ID of the layer to set the paint property in.
      * @param name The name of the paint property to set.
-     * @param {*} value The value of the paint property to set.
+     * @param value The value of the paint property to set.
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
-     * @param {StyleSetterOptions} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-     * @returns {Map} `this`
+     * @param options Options object.
+     * @returns `this`
      * @example
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
      * @see [Change a layer's color with buttons](https://maplibre.org/maplibre-gl-js-docs/example/color-switcher/)
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
-    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
+    setPaintProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): this {
         this.style.setPaintProperty(layerId, name, value, options);
         return this._update(true);
     }
@@ -2357,9 +2359,9 @@ export class Map extends Camera {
     /**
      * Returns the value of a paint property in the specified style layer.
      *
-     * @param {string} layerId The ID of the layer to get the paint property from.
-     * @param {string} name The name of a paint property to get.
-     * @returns {*} The value of the specified paint property.
+     * @param layerId The ID of the layer to get the paint property from.
+     * @param name The name of a paint property to get.
+     * @returns The value of the specified paint property.
      */
     getPaintProperty(layerId: string, name: string) {
         return this.style.getPaintProperty(layerId, name);
@@ -2368,16 +2370,15 @@ export class Map extends Camera {
     /**
      * Sets the value of a layout property in the specified style layer.
      *
-     * @param {string} layerId The ID of the layer to set the layout property in.
-     * @param {string} name The name of the layout property to set.
-     * @param {*} value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
-     * @param {StyleSetterOptions} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if `value` conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-     * @returns {Map} `this`
+     * @param layerId The ID of the layer to set the layout property in.
+     * @param name The name of the layout property to set.
+     * @param value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
+     * @param options Options object.
+     * @returns `this`
      * @example
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
      */
-    setLayoutProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}) {
+    setLayoutProperty(layerId: string, name: string, value: any, options: StyleSetterOptions = {}): this {
         this.style.setLayoutProperty(layerId, name, value, options);
         return this._update(true);
     }
@@ -2385,9 +2386,9 @@ export class Map extends Camera {
     /**
      * Returns the value of a layout property in the specified style layer.
      *
-     * @param {string} layerId The ID of the layer to get the layout property from.
-     * @param {string} name The name of the layout property to get.
-     * @returns {*} The value of the specified layout property.
+     * @param layerId The ID of the layer to get the layout property from.
+     * @param name The name of the layout property to get.
+     * @returns The value of the specified layout property.
      */
     getLayoutProperty(layerId: string, name: string) {
         return this.style.getLayoutProperty(layerId, name);
@@ -2397,13 +2398,12 @@ export class Map extends Camera {
      * Sets the value of the style's glyphs property.
      *
      * @param glyphsUrl Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
-     * @param {StyleSetterOptions} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-     * @returns {Map} `this`
+     * @param options Options object.
+     * @returns `this`
      * @example
      * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
      */
-    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}) {
+    setGlyphs(glyphsUrl: string | null, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.setGlyphs(glyphsUrl, options);
         return this._update(true);
@@ -2421,15 +2421,15 @@ export class Map extends Camera {
     /**
      * Adds a sprite to the map's style.
      *
-     * @param {string} id The ID of the sprite to add. Must not conflict with existing sprites.
-     * @param {string} url The URL to load the sprite from
-     * @param {StyleSetterOptions} [options] Options object.
+     * @param id The ID of the sprite to add. Must not conflict with existing sprites.
+     * @param url The URL to load the sprite from
+     * @param options Options object.
      * @fires style
-     * @returns {Map} `this`
+     * @returns `this`
      * @example
      * map.addSprite('sprite-two', 'http://example.com/sprite-two');
      */
-    addSprite(id: string, url: string, options: StyleSetterOptions = {}) {
+    addSprite(id: string, url: string, options: StyleSetterOptions = {}): this {
         this._lazyInitEmptyStyle();
         this.style.addSprite(id, url, options, (err) => {
             if (!err) {
@@ -2442,9 +2442,9 @@ export class Map extends Camera {
     /**
      * Removes the sprite from the map's style.
      *
-     * @param {string} id The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
+     * @param id The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
      * @fires style
-     * @returns {Map} `this`
+     * @returns `this`
      * @example
      * map.removeSprite('sprite-two');
      * @example
@@ -2469,9 +2469,8 @@ export class Map extends Camera {
      * Sets the value of the style's sprite property.
      *
      * @param spriteUrl Sprite URL to set.
-     * @param {StyleSetterOptions} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-     * @returns {Map} `this`
+     * @param options Options object.
+     * @returns `this`
      * @example
      * map.setSprite('YOUR_SPRITE_URL');
      */
@@ -2489,9 +2488,9 @@ export class Map extends Camera {
      * Sets the any combination of light values.
      *
      * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
-     * @param {StyleSetterOptions} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-     * @returns {Map} `this`
+     * @param options Options object.
+     * @returns `this`
+     *
      * @example
      * var layerVisibility = map.getLayoutProperty('my-layer', 'visibility');
      */
@@ -2510,7 +2509,6 @@ export class Map extends Camera {
         return this.style.getLight();
     }
 
-    // eslint-disable-next-line jsdoc/require-returns
     /**
      * Sets the `state` of a feature.
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
@@ -2524,12 +2522,10 @@ export class Map extends Camera {
      *
      * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
-     * @param {FeatureIdentifier} feature Feature identifier. Feature objects returned from
+     * @param feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
-     * @param {string | number} feature.id Unique id of the feature.
-     * @param {string} feature.source The id of the vector or GeoJSON source for the feature.
-     * @param {string} [feature.sourceLayer] (optional) *For vector tile sources, `sourceLayer` is required.*
-     * @param {Object} state A set of key-value pairs. The values should be valid JSON types.
+     * @param state A set of key-value pairs. The values should be valid JSON types.
+     * @returns `this`
      *
      * @example
      * // When the mouse moves over the `my-layer` layer, update
@@ -2548,12 +2544,11 @@ export class Map extends Camera {
      *
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      */
-    setFeatureState(feature: FeatureIdentifier, state: any) {
+    setFeatureState(feature: FeatureIdentifier, state: any): this {
         this.style.setFeatureState(feature, state);
         return this._update();
     }
 
-    // eslint-disable-next-line jsdoc/require-returns
     /**
      * Removes the `state` of a feature, setting it back to the default behavior.
      * If only a `target.source` is specified, it will remove the state for all features from that source.
@@ -2561,13 +2556,10 @@ export class Map extends Camera {
      * If `key` is also specified, it removes only that key from that feature's state.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * @param {FeatureIdentifier} target Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
+     * @param target Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
      * Feature objects returned from {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
-     * @param {string | number} target.id (optional) Unique id of the feature. Optional if key is not specified.
-     * @param {string} target.source The id of the vector or GeoJSON source for the feature.
-     * @param {string} [target.sourceLayer] (optional) *For vector tile sources, `sourceLayer` is required.*
-     * @param {string} key (optional) The key in the feature state to reset.
-     *
+     * @param key (optional) The key in the feature state to reset.
+     * @returns `this`
      * @example
      * // Reset the entire state object for all features
      * // in the `my-source` source
@@ -2600,7 +2592,7 @@ export class Map extends Camera {
      * });
      *
      */
-    removeFeatureState(target: FeatureIdentifier, key?: string) {
+    removeFeatureState(target: FeatureIdentifier, key?: string): this {
         this.style.removeFeatureState(target, key);
         return this._update();
     }
@@ -2612,13 +2604,9 @@ export class Map extends Camera {
      *
      * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
      *
-     * @param {FeatureIdentifier} feature Feature identifier. Feature objects returned from
+     * @param feature Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
-     * @param {string | number} feature.id Unique id of the feature.
-     * @param {string} feature.source The id of the vector or GeoJSON source for the feature.
-     * @param {string} [feature.sourceLayer] (optional) *For vector tile sources, `sourceLayer` is required.*
-     *
-     * @returns {Object} The state of the feature: a set of key-value pairs that was assigned to the feature at runtime.
+     * @returns The state of the feature: a set of key-value pairs that was assigned to the feature at runtime.
      *
      * @example
      * // When the mouse moves over the `my-layer` layer,
@@ -2845,9 +2833,9 @@ export class Map extends Camera {
     /**
      * Update this map's style and sources, and re-render the map.
      *
-     * @param {boolean} updateStyle mark the map's style for reprocessing as
+     * @param updateStyle mark the map's style for reprocessing as
      * well as its sources
-     * @returns {Map} this
+     * @returns `this`
      * @private
      */
     _update(updateStyle?: boolean) {
@@ -2882,9 +2870,9 @@ export class Map extends Camera {
      * - The map has is moving (or just finished moving)
      * - A transition is in progress
      *
-     * @param {number} paintStartTimeStamp  The time when the animation frame began executing.
+     * @param paintStartTimeStamp  The time when the animation frame began executing.
      *
-     * @returns {Map} this
+     * @returns `this`
      * @private
      */
     _render(paintStartTimeStamp: number) {
