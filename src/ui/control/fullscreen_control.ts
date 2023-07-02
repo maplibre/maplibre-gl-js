@@ -6,6 +6,9 @@ import {Event, Evented} from '../../util/evented';
 import type {Map, GestureOptions} from '../map';
 import type {IControl} from './control';
 
+/**
+ * The {@link FullscreenControl} options
+ */
 type FullscreenOptions = {
     /**
      * `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
@@ -62,7 +65,11 @@ export class FullscreenControl extends Evented implements IControl {
         }
     }
 
-    onAdd(map: Map) {
+    /**
+     * {@inheritDoc IControl.onAdd}
+     * @param map
+     */
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         if (!this._container) this._container = this._map.getContainer();
         this._controlContainer = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
@@ -70,6 +77,7 @@ export class FullscreenControl extends Evented implements IControl {
         return this._controlContainer;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._controlContainer);
         this._map = null;

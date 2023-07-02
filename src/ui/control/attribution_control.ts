@@ -4,19 +4,25 @@ import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 import type {MapDataEvent} from '../events';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-
+/**
+ * The {@link AttributionControl} options
+ */
 type AttributionOptions = {
+    /**
+     * If `true`, the attribution control will always collapse when moving the map. If `false`,
+     * force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.
+     * **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.**
+     */
     compact?: boolean;
+    /**
+     * Attributions to show in addition to any other attributions.
+     */
     customAttribution?: string | Array<string>;
 };
 
 /**
  * An `AttributionControl` control presents the map's attribution information. By default, the attribution control is expanded (regardless of map width).
- *
- * @implements {IControl}
- * @param {AttributionOptions} [options]
- * @param {boolean} [options.compact] If `true`, the attribution control will always collapse when moving the map. If `false`, force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.  **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.**
- * @param {string | Array<string>} [options.customAttribution] String or strings to show in addition to any other attributions.
+ * @group Controls
  * @example
  * var map = new maplibregl.Map({attributionControl: false})
  *     .addControl(new maplibregl.AttributionControl({
@@ -35,6 +41,9 @@ export class AttributionControl implements IControl {
     styleId: string;
     styleOwner: string;
 
+    /**
+     * @param options the attribution options
+     */
     constructor(options: AttributionOptions = {}) {
         this.options = options;
     }
@@ -43,6 +52,10 @@ export class AttributionControl implements IControl {
         return 'bottom-right';
     }
 
+    /**
+     * {@inheritDoc IControl.onAdd}
+     * @param map
+     */
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options && this.options.compact;
@@ -64,6 +77,7 @@ export class AttributionControl implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._container);
 
