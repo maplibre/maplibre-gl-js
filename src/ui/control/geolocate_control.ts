@@ -255,8 +255,8 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * Check if the Geolocation API Position is outside the map's maxbounds.
      *
-     * @param {Position} position the Geolocation API Position
-     * @returns {boolean} Returns `true` if position is outside the map's maxbounds, otherwise returns `false`.
+     * @param position the Geolocation API Position
+     * @returns `true` if position is outside the map's maxbounds, otherwise returns `false`.
      * @private
      */
     _isOutOfMapMaxBounds(position: GeolocationPosition) {
@@ -302,7 +302,7 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * When the Geolocation API returns a new location, update the GeolocateControl.
      *
-     * @param {Position} position the Geolocation API Position
+     * @param position the Geolocation API Position
      * @private
      */
     _onSuccess = (position: GeolocationPosition) => {
@@ -370,7 +370,7 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * Update the camera location to center on the current position
      *
-     * @param {Position} position the Geolocation API Position
+     * @param position the Geolocation API Position
      * @private
      */
     _updateCamera = (position: GeolocationPosition) => {
@@ -388,7 +388,7 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * Update the user location dot Marker to the current position
      *
-     * @param {Position} [position] the Geolocation API Position
+     * @param position the Geolocation API Position
      * @private
      */
     _updateMarker = (position?: GeolocationPosition | null) => {
@@ -538,7 +538,7 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * Programmatically request and move the map to the user's location.
      *
-     * @returns {boolean} Returns `false` if called before control was added to a map, otherwise returns `true`.
+     * @returns `false` if called before control was added to a map, otherwise returns `true`.
      * @example
      * // Initialize the geolocate control.
      * let geolocate = new maplibregl.GeolocateControl({
@@ -553,7 +553,7 @@ export class GeolocateControl extends Evented implements IControl {
      *   geolocate.trigger();
      * });
      */
-    trigger() {
+    trigger(): boolean {
         if (!this._setup) {
             warnOnce('Geolocate control triggered before added to a map');
             return false;
