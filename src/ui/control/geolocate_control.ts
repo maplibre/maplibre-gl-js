@@ -126,7 +126,7 @@ let noTimeout = false;
  * @event geolocate Fired on each Geolocation API position update which returned as success.
  *
  * @property data The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
- * 
+ *
  * @example
  * // Initialize the geolocate control.
  * var geolocate = new maplibregl.GeolocateControl({
