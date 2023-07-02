@@ -3,18 +3,25 @@ import {DOM} from '../../util/dom';
 import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 
+/**
+ * The {@link LogoControl} options object
+ */
 type LogoOptions = {
+    /**
+     * If `true`, force a compact logo. 
+     * If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
+     */
     compact?: boolean;
 };
 
 /**
  * A `LogoControl` is a control that adds the watermark.
- *
- * @implements {IControl}
- * @param {Object} [options]
- * @param {boolean} [options.compact] If `true`, force a compact logo. If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
+ * 
+ * @group Controls
+ * 
+ * @example
+ * map.addControl(new maplibregl.LogoControl({compact: false}));
  **/
-
 export class LogoControl implements IControl {
     options: LogoOptions;
     _map: Map;
@@ -29,6 +36,7 @@ export class LogoControl implements IControl {
         return 'bottom-left';
     }
 
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options && this.options.compact;
@@ -48,6 +56,7 @@ export class LogoControl implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._container);
         this._map.off('resize', this._updateCompact);

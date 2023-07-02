@@ -90,7 +90,7 @@ let noTimeout = false;
  *
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -108,7 +108,7 @@ let noTimeout = false;
  *
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -129,7 +129,7 @@ let noTimeout = false;
  *
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -149,7 +149,7 @@ let noTimeout = false;
  *
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -169,7 +169,7 @@ let noTimeout = false;
  *
  * @example
  * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new maplibregl.GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -543,7 +543,7 @@ export class GeolocateControl extends Evented implements IControl {
      * @returns {boolean} Returns `false` if called before control was added to a map, otherwise returns `true`.
      * @example
      * // Initialize the geolocate control.
-     * var geolocate = new maplibregl.GeolocateControl({
+     * let geolocate = new maplibregl.GeolocateControl({
      *  positionOptions: {
      *    enableHighAccuracy: true
      *  },

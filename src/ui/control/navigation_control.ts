@@ -35,7 +35,7 @@ const defaultOptions: NavigationOptions = {
  * @group Controls
  *
  * @example
- * var nav = new maplibregl.NavigationControl();
+ * let nav = new maplibregl.NavigationControl();
  * map.addControl(nav, 'top-left');
  * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js-docs/example/navigation/)
  * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
