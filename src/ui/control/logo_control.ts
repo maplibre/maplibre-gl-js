@@ -8,7 +8,7 @@ import type {ControlPosition, IControl} from './control';
  */
 type LogoOptions = {
     /**
-     * If `true`, force a compact logo. 
+     * If `true`, force a compact logo.
      * If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
      */
     compact?: boolean;
@@ -16,9 +16,9 @@ type LogoOptions = {
 
 /**
  * A `LogoControl` is a control that adds the watermark.
- * 
+ *
  * @group Controls
- * 
+ *
  * @example
  * map.addControl(new maplibregl.LogoControl({compact: false}));
  **/

@@ -8,7 +8,7 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
  * A `TerrainControl` control contains a button for turning the terrain on and off.
  *
  * @group Controls
- * 
+ *
  * @example
  * let map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({
