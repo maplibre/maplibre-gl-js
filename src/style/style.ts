@@ -15,7 +15,7 @@ import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
-import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
+import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, operations as diffOperations} from '@maplibre/maplibre-gl-style-spec';
@@ -93,7 +93,17 @@ export type FeatureIdentifier = {
 };
 
 export type StyleOptions = {
+    /**
+     * If false, style validation will be skipped. Useful in production environment.
+     */
     validate?: boolean;
+    /**
+     * Defines a CSS
+     * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
+     * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
+     * Set to `false`, to enable font settings from the map's style for these glyph ranges.
+     * Forces a full update.
+     */
     localIdeographFontFamily?: string;
 };
 
@@ -145,7 +155,15 @@ export type StyleSetterOptions = {
 export type TransformStyleFunction = (previous: StyleSpecification | undefined, next: StyleSpecification) => StyleSpecification;
 
 export type StyleSwapOptions = {
+    /**
+     * If false, force a 'full' update, removing the current style
+     * and building the given one instead of attempting a diff-based update.
+     */
     diff?: boolean;
+    /**
+     * TransformStyleFunction is a convenience function
+     * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
+     */
     transformStyle?: TransformStyleFunction;
 }
 
@@ -1268,7 +1286,7 @@ export class Style extends Evented {
         return features;
     }
 
-    queryRenderedFeatures(queryGeometry: any, params: any, transform: Transform) {
+    queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: Transform) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
@@ -1330,11 +1348,7 @@ export class Style extends Evented {
 
     querySourceFeatures(
         sourceID: string,
-        params?: {
-            sourceLayer?: string;
-            filter?: FilterSpecification;
-            validate?: boolean;
-        }
+        params?: QuerySourceFeatureOptions
     ) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);

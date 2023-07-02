@@ -8,6 +8,46 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 
+/**
+ * Options to pass to query the map for the rendered features
+ */
+export type QueryRenderedFeaturesOptions = {
+    /**
+     * An array of [style layer IDs](https://maplibre.org/maplibre-style-spec/#layer-id) for the query to inspect.
+     * Only features within these layers will be returned. If this parameter is undefined, all layers will be checked.
+     */
+    layers?: Array<string>;
+    /**
+     * A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter) to limit query results.
+     */
+    filter?: FilterSpecification;
+    /**
+     * An array of string representing the available images
+     */
+    availableImages?: Array<string>;
+    /**
+     * Whether to check if the [options.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     */
+    validate?: boolean;
+};
+
+export type QuerySourceFeatureOptions = {
+    /**
+     * The name of the source layer to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.
+     */
+    sourceLayer?: string;
+    /**
+     * A [filter](https://maplibre.org/maplibre-style-spec/layers/#filter)
+     * to limit query results.
+     */
+    filter?: FilterSpecification;
+    /**
+     * Whether to check if the [parameters.filter] conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     * @defaultValue true
+     */
+    validate?: boolean;
+}
+
 /*
  * Returns a matrix that can be used to convert from tile coordinates to viewport pixel coordinates.
  */
@@ -42,11 +82,7 @@ export function queryRenderedFeatures(
     styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,
-    params: {
-        filter: FilterSpecification;
-        layers: Array<string>;
-        availableImages: Array<string>;
-    },
+    params: QueryRenderedFeaturesOptions,
     transform: Transform
 ): { [key: string]: Array<{featureIndex: number; feature: MapGeoJSONFeature}> } {
 
@@ -94,11 +130,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     serializedLayers: {[_: string]: StyleLayer},
     sourceCaches: {[_: string]: SourceCache},
     queryGeometry: Array<Point>,
-    params: {
-        filter: FilterSpecification;
-        layers: Array<string>;
-        availableImages: Array<string>;
-    },
+    params: QueryRenderedFeaturesOptions,
     collisionIndex: CollisionIndex,
     retainedQueryData: {
         [_: number]: RetainedQueryData;
@@ -166,11 +198,7 @@ export function queryRenderedSymbols(styleLayers: {[_: string]: StyleLayer},
     return result;
 }
 
-export function querySourceFeatures(sourceCache: SourceCache, params: {
-    sourceLayer?: string;
-    filter?: FilterSpecification;
-    validate?: boolean;
-}) {
+export function querySourceFeatures(sourceCache: SourceCache, params: QuerySourceFeatureOptions) {
     const tiles = sourceCache.getRenderableIds().map((id) => {
         return sourceCache.getTileByID(id);
     });
