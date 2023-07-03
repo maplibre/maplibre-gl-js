@@ -4,27 +4,26 @@ This folder contains developer documentation for MapLibre GL JS. Put any diagram
 
 API documentation is written as [TSDoc comments](https://tsdoc.org/) and processed with [typedoc](https://typedoc.org/)
 
-- Classes, methods, events, and anything else in the public interface must be documented with TSDoc comments, and the typescript `public` can be used to indicate that it's public API.
-- The `@internal` tag can be used to indicate that a class, method, or event is not part of the public interface and should not be documented.
-- Methods implementing an interface need an `{@inheritDoc reference}` in order to inherit the documentation from the interface.
-- Use `@group` to indicate to which group to send a specific class, these groups are defined in `typedoc.json` file and are important for the API documentation intro file.
-- Text within TSDoc comments may use markdown formatting. Code identifiers must be surrounded by \`backticks\`.
-- Documentation must be written in grammatically correct sentences ending with periods.
-- Documentation must specify measurement units when applicable.
-- Documentation descriptions must contain more information than what is obvious from the identifier and JSDoc metadata.
-- Class descriptions should describe what the class _is_, or what its instances _are_. They do not document the constructor, but the class. They should begin with either a complete sentence or a phrase that would complete a sentence beginning with "A `T` is..." or "The `T` class is..." Examples: "Lists are ordered indexed dense collections." "A class used for asynchronous computations."
-- Function descriptions should begin with a third person singular present tense verb, as if completing a sentence beginning with "This function..." If the primary purpose of the function is to return a value, the description should begin with "Returns..." Examples: "Returns the layer with the specified id." "Sets the map's center point."
-- `@param`, `@property`, and `@returns` descriptions should be capitalized and end with a period. They should begin as if completing a sentence beginning with "This is..." or "This..."
-- Functions that do not return a value (return `void`), should not have a `@returns` annotation.
-- Member descriptions should document what a member represents or gets and sets. They should also indicate whether the member is read-only.
-- Event descriptions should begin with "Fired when..." and so should describe when the event fires. Event entries should clearly document any data passed to the handler, with a link to MDN documentation of native Event objects when applicable.
+* Classes, methods, events, and anything else in the public interface must be documented with TSDoc comments, and the typescript `public` can be used to indicate that it's public API.
+* The `@internal` tag can be used to indicate that a class, method, or event is not part of the public interface and should not be documented.
+* Methods implementing an interface need an `{@inheritDoc reference}` in order to inherit the documentation from the interface.
+* Use `@group` to indicate to which group to send a specific class, these groups are defined in `typedoc.json` file and are important for the API documentation intro file.
+* Text within TSDoc comments may use markdown formatting. Code identifiers must be surrounded by \`backticks\`.
+* Documentation must be written in grammatically correct sentences ending with periods.
+* Documentation must specify measurement units when applicable.
+* Documentation descriptions must contain more information than what is obvious from the identifier and JSDoc metadata.
+* Class descriptions should describe what the class *is*, or what its instances *are*. They do not document the constructor, but the class. They should begin with either a complete sentence or a phrase that would complete a sentence beginning with "A `T` is..." or "The `T` class is..." Examples: "Lists are ordered indexed dense collections." "A class used for asynchronous computations."
+* Function descriptions should begin with a third person singular present tense verb, as if completing a sentence beginning with "This function..." If the primary purpose of the function is to return a value, the description should begin with "Returns..." Examples: "Returns the layer with the specified id." "Sets the map's center point."
+* `@param`, `@property`, and `@returns` descriptions should be capitalized and end with a period. They should begin as if completing a sentence beginning with "This is..." or "This..."
+* Functions that do not return a value (return `void`), should not have a `@returns` annotation.
+* Member descriptions should document what a member represents or gets and sets. They should also indicate whether the member is read-only.
+* Event descriptions should begin with "Fired when..." and so should describe when the event fires. Event entries should clearly document any data passed to the handler, with a link to MDN documentation of native Event objects when applicable.
 
 ## Writing Examples
 
 Examples are written as regular html files in `test/examples`. Each example should have a title and a og:description.
-
-- `title`: A short title for the example in **sentence case** as a **verb phrase**.
-- `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
+* `title`: A short title for the example in **sentence case** as a **verb phrase**.
+* `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
 
 Every example **must** have an accompanying image.
 
@@ -55,7 +54,6 @@ To update or add a new example, PR the relevant changes to this repo. The exampl
 ## How does all this work?
 
 It uses 3 tools:
-
 1. [TypeDoc](https://typedoc.org/) cli
 2. [MkDocs material](https://squidfunk.github.io/mkdocs-material/)
 3. `generate-docs.ts` script
