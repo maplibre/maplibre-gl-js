@@ -7,12 +7,10 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * A `TerrainControl` control contains a button for turning the terrain on and off.
  *
- * @implements {IControl}
- * @param {TerrainSpecification} [options]
- * @param {string} [options.source] The ID of the raster-dem source to use.
- * @param {number} [options.exaggeration]
+ * @group Controls
+ *
  * @example
- * var map = new maplibregl.Map({TerrainControl: false})
+ * let map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({
  *         source: "terrain"
  *     }));
@@ -27,6 +25,7 @@ export class TerrainControl implements IControl {
         this.options = options;
     }
 
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
@@ -40,6 +39,7 @@ export class TerrainControl implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._container);
         this._map.off('terrain', this._updateTerrainIcon);

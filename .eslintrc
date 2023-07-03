@@ -13,7 +13,7 @@
   "plugins": [
     "@typescript-eslint",
     "import",
-    "jsdoc",
+    "eslint-plugin-tsdoc",
     "jest"
   ],
   "rules": {
@@ -80,15 +80,7 @@
         "max": 1
     }],
     "import/no-relative-packages": ["error"],
-    "jsdoc/check-param-names": "warn",
-    "jsdoc/require-param": "warn",
-    "jsdoc/require-param-description": "warn",
-    "jsdoc/require-param-name": "warn",
-    "jsdoc/require-returns": "warn",
-    "jsdoc/require-returns-description": "warn",
-    "jsdoc/check-alignment": "error",
-    "jsdoc/check-line-alignment": "error",
-
+    //"tsdoc/syntax": "warn", // this allows to link the tsdocs, but there are too many warnings at this point...
     // Jest https://www.npmjs.com/package/eslint-plugin-jest
     "jest/no-commented-out-tests": "error",
     "jest/no-disabled-tests": "warn",
@@ -103,25 +95,7 @@
     "jest/no-deprecated-functions": "warn"
   },
   "reportUnusedDisableDirectives": true,
-  "settings": {
-    "jsdoc":{
-      "ignorePrivate": true
-    }
-  },
   "ignorePatterns": ["build/*.js", "*.json"],
-  "overrides": [
-    {
-      "files": ["test/**"],
-      "rules": {
-        "jsdoc/check-param-names": "off",
-        "jsdoc/require-param": "off",
-        "jsdoc/require-param-description": "off",
-        "jsdoc/require-param-name": "off",
-        "jsdoc/require-returns": "off",
-        "jsdoc/require-returns-description": "off"
-      }
-    }
-  ],
   "globals": {
     "performance": true
   },
