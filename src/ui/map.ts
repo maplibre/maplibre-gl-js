@@ -69,6 +69,9 @@ import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../s
 
 const version = packageJSON.version;
 
+/**
+ * The {@link Map} options object.
+ */
 export type MapOptions = {
     /**
      * If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
@@ -199,7 +202,7 @@ export type MapOptions = {
      */
     touchPitch?: boolean | AroundCenterOptions;
     /**
-     * If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link #FullscreenControl}.
+     * If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link FullscreenControl}.
      * @defaultValue undefined
      */
     cooperativeGestures?: boolean | GestureOptions;
