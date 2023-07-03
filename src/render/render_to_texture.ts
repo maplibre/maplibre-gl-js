@@ -108,8 +108,8 @@ export class RenderToTexture {
      * Because of the stylesheet possibility to mixing render-to-texture layers
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
-     * @param {StyleLayer} layer the layer to render
-     * @returns {boolean} if true layer is rendered to texture, otherwise false
+     * @param layer the layer to render
+     * @returns if true layer is rendered to texture, otherwise false
      */
     renderLayer(layer: StyleLayer): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;

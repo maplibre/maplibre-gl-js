@@ -419,8 +419,8 @@ const defaultOptions = {
  * Then MapLibre GL JS initializes the map on the page and returns your `Map`
  * object.
  *
- * @group Map
- * @param options - the map options
+ * @group Main
+ * 
  * @example
  * var map = new maplibregl.Map({
  *   container: 'map',
