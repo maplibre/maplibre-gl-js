@@ -21,6 +21,8 @@ const defaultOptions = {
  * - `Shift+⇠`: Decrease the rotation by 15 degrees.
  * - `Shift+⇡`: Increase the pitch by 10 degrees.
  * - `Shift+⇣`: Decrease the pitch by 10 degrees.
+ * 
+ * @group Handlers
  */
 export class KeyboardHandler implements Handler {
     _tr: TransformProvider;
@@ -32,7 +34,7 @@ export class KeyboardHandler implements Handler {
     _rotationDisabled: boolean;
 
     /**
-    * @private
+    * @hidden
     */
     constructor(map: Map) {
         this._tr = new TransformProvider(map);

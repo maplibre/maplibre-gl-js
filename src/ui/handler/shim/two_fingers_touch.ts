@@ -7,6 +7,8 @@ import type {TapDragZoomHandler} from '../tap_drag_zoom';
  *
  * They can zoom with one finger by double tapping and dragging. On the second tap,
  * hold the finger down and drag up or down to zoom in or out.
+ * 
+ * @group Handlers
  */
 export class TwoFingersTouchZoomRotateHandler {
 
@@ -18,7 +20,7 @@ export class TwoFingersTouchZoomRotateHandler {
     _enabled: boolean;
 
     /**
-     * @private
+     * @hidden
     */
     constructor(el: HTMLElement, touchZoom: TwoFingersTouchZoomHandler, touchRotate: TwoFingersTouchRotateHandler, tapDragZoom: TapDragZoomHandler) {
         this._el = el;
@@ -32,8 +34,7 @@ export class TwoFingersTouchZoomRotateHandler {
     /**
      * Enables the "pinch to rotate and zoom" interaction.
      *
-     * @param {Object} [options] Options object.
-     * @param {string} [options.around] If "center" is passed, map will zoom around the center
+     * @param options Options object.
      *
      * @example
      *   map.touchZoomRotate.enable();
@@ -63,7 +64,7 @@ export class TwoFingersTouchZoomRotateHandler {
     /**
      * Returns a Boolean indicating whether the "pinch to rotate and zoom" interaction is enabled.
      *
-     * @returns {boolean} `true` if the "pinch to rotate and zoom" interaction is enabled.
+     * @returns `true` if the "pinch to rotate and zoom" interaction is enabled.
      */
     isEnabled() {
         return this._touchZoom.isEnabled() &&
@@ -74,7 +75,7 @@ export class TwoFingersTouchZoomRotateHandler {
     /**
      * Returns true if the handler is enabled and has detected the start of a zoom/rotate gesture.
      *
-     * @returns {boolean} //eslint-disable-line
+     * @returns `true` if the handler is active, `false` otherwise
      */
     isActive() {
         return this._touchZoom.isActive() || this._touchRotate.isActive() || this._tapDragZoom.isActive();
