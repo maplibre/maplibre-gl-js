@@ -28,7 +28,7 @@ export type DragPanOptions = {
 /**
  * The `DragPanHandler` allows the user to pan the map by clicking and dragging
  * the cursor.
- * 
+ *
  * @group Handlers
  */
 export class DragPanHandler {

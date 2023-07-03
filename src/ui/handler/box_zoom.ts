@@ -10,7 +10,7 @@ import {Handler} from '../handler_manager';
 /**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
  * The bounding box is defined by clicking and holding `shift` while dragging the cursor.
- * 
+ *
  * @group Handlers
  */
 export class BoxZoomHandler implements Handler {

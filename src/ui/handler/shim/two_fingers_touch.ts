@@ -7,7 +7,7 @@ import type {TapDragZoomHandler} from '../tap_drag_zoom';
  *
  * They can zoom with one finger by double tapping and dragging. On the second tap,
  * hold the finger down and drag up or down to zoom in or out.
- * 
+ *
  * @group Handlers
  */
 export class TwoFingersTouchZoomRotateHandler {

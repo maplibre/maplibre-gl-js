@@ -11,7 +11,7 @@ export type DragRotateHandlerOptions = {
 /**
  * The `DragRotateHandler` allows the user to rotate the map by clicking and
  * dragging the cursor while holding the right mouse button or `ctrl` key.
- * 
+ *
  * @group Handlers
  */
 export class DragRotateHandler {

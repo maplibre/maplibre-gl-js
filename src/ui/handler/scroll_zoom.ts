@@ -25,7 +25,7 @@ const maxScalePerFrame = 2;
 
 /**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
- * 
+ *
  * @group Handlers
  */
 export class ScrollZoomHandler implements Handler {

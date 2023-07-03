@@ -12,7 +12,7 @@ export type AroundCenterOptions = {
 
 /**
  * The `TwoFingersTouchHandler`s allows the user to zoom, pitch and rotate the map using two fingers
- * 
+ *
  * @group Handlers
  */
 abstract class TwoFingersTouchHandler implements Handler {
@@ -87,7 +87,7 @@ abstract class TwoFingersTouchHandler implements Handler {
 
     /**
      * Enables the "drag to pitch" interaction.
-     * 
+     *
      * @example
      * map.touchPitch.enable();
      */
@@ -142,7 +142,7 @@ function getZoomDelta(distance, lastDistance) {
 
 /**
  * The `TwoFingersTouchHandler`s allows the user to zoom the map two fingers
- * 
+ *
  * @group Handlers
  */
 export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
@@ -182,7 +182,7 @@ function getBearingDelta(a, b) {
 
 /**
  * The `TwoFingersTouchHandler`s allows the user to rotate the map two fingers
- * 
+ *
  * @group Handlers
  */
 export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
@@ -243,7 +243,7 @@ const ALLOWED_SINGLE_TOUCH_TIME = 100;
 
 /**
  * The `TwoFingersTouchPitchHandler` allows the user to pitch the map by dragging up and down with two fingers.
- * 
+ *
  * @group Handlers
  */
 export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {

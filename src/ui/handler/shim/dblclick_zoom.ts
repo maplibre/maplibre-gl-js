@@ -4,7 +4,7 @@ import type {TapZoomHandler} from './../tap_zoom';
 /**
  * The `DoubleClickZoomHandler` allows the user to zoom the map at a point by
  * double clicking or double tapping.
- * 
+ *
  * @group Handlers
  */
 export class DoubleClickZoomHandler {
