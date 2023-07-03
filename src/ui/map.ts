@@ -420,7 +420,7 @@ const defaultOptions = {
  * object.
  *
  * @group Main
- * 
+ *
  * @example
  * var map = new maplibregl.Map({
  *   container: 'map',

@@ -77,7 +77,7 @@ type MarkerOptions = {
  * var marker = new maplibregl.Marker()
  *   .setLngLat([30.5, 50.5])
  *   .addTo(map);
- * 
+ *
  * @group Main
  *
  * @example
@@ -89,7 +89,7 @@ type MarkerOptions = {
  *   .addTo(map);
  * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
- * 
+ *
  * ## Events
  *
  * @event `dragstart` Fired when dragging starts, `marker` object that is being dragged
