@@ -68,7 +68,7 @@ import {config} from '../util/config';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 
 const version = packageJSON.version;
-/* eslint-enable no-use-before-define */
+
 export type MapOptions = {
     /**
      * If `true`, the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL.
