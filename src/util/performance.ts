@@ -77,8 +77,7 @@ export const PerformanceUtils = {
 /**
  * Safe wrapper for the performance resource timing API in web workers with graceful degradation
  *
- * @param {RequestParameters} request
- * @private
+ * @hidden
  */
 export class RequestPerformance {
     _marks: {

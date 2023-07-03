@@ -2,11 +2,11 @@ import {throttle} from '../util/throttle';
 
 import type {Map} from './map';
 
-/*
+/**
  * Adds the map's position to its page's location hash.
  * Passed as an option to the map object.
  *
- * @returns {Hash} `this`
+ * @group Controls
  */
 export class Hash {
     _map: Map;
@@ -16,11 +16,11 @@ export class Hash {
         this._hashName = hashName && encodeURIComponent(hashName);
     }
 
-    /*
+    /**
      * Map element to listen for coordinate changes
      *
-     * @param {Object} map
-     * @returns {Hash} `this`
+     * @param map
+     * @returns `this`
      */
     addTo(map: Map) {
         this._map = map;
@@ -29,10 +29,10 @@ export class Hash {
         return this;
     }
 
-    /*
+    /**
      * Removes hash
      *
-     * @returns {Popup} `this`
+     * @returns `this`
      */
     remove() {
         removeEventListener('hashchange', this._onHashChange, false);

@@ -2,7 +2,7 @@
     "$schema": "https://typedoc.org/schema.json",
     "plugin": ["typedoc-plugin-missing-exports", "typedoc-plugin-markdown"],
     "groupOrder": [
-        "Map",
+        "Main",
         "Controls",
         "Handlers"
     ],

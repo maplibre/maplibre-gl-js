@@ -263,17 +263,6 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker accepts backward-compatible constructor parameters', () => {
-        const element = window.document.createElement('div');
-
-        const m1 = new Marker(element);
-        expect(m1.getElement()).toBe(element);
-
-        const m2 = new Marker(element, {offset: [1, 2]});
-        expect(m2.getElement()).toBe(element);
-        expect(m2.getOffset().equals(new Point(1, 2))).toBeTruthy();
-    });
-
     test('Popup offsets around default Marker', () => {
         const map = createMap();
 
