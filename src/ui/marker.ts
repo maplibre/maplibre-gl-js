@@ -12,6 +12,9 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {MapMouseEvent, MapTouchEvent} from './events';
 import type {PointLike} from './camera';
 
+/**
+ * Alignment options of rotation and pitch
+ */
 type Alignment = 'map' | 'viewport' | 'auto';
 
 type MarkerOptions = {
