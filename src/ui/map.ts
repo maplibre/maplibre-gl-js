@@ -709,8 +709,8 @@ export class Map extends Camera {
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
-     * @param control The {@link IControl} to add.
-     * @param position position on the map to which the control will be added.
+     * @param control - The {@link IControl} to add.
+     * @param position - position on the map to which the control will be added.
      * Valid values are `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. Defaults to `'top-right'`.
      * @returns `this`
      * @example
@@ -745,7 +745,7 @@ export class Map extends Camera {
     /**
      * Removes the control from the map.
      *
-     * @param control The {@link IControl} to remove.
+     * @param control - The {@link IControl} to remove.
      * @returns `this`
      * @example
      * // Define a new navigation control.
@@ -769,7 +769,7 @@ export class Map extends Camera {
     /**
      * Checks if a control exists on the map.
      *
-     * @param control The {@link IControl} to check.
+     * @param control - The {@link IControl} to check.
      * @returns true if map contains control.
      * @example
      * // Define a new navigation control.
@@ -798,7 +798,7 @@ export class Map extends Camera {
      * This method must be called after the map's `container` is resized programmatically
      * or when the map is shown after being initially hidden with CSS.
      *
-     * @param eventData Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
+     * @param eventData - Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
      * @returns `this`
@@ -876,7 +876,7 @@ export class Map extends Camera {
      * and its height attribute will be `container.clientHeight * pixelRatio`.
      * Set this to null to disable `devicePixelRatio` override.
      * Note that the pixel ratio actually applied may be lower to respect maxCanvasSize.
-     * @param pixelRatio The pixel ratio.
+     * @param pixelRatio - The pixel ratio.
      */
     setPixelRatio(pixelRatio: number) {
         this._overridePixelRatio = pixelRatio;
@@ -914,7 +914,7 @@ export class Map extends Camera {
      * as close as possible to the operation's request while still
      * remaining within the bounds.
      *
-     * @param bounds The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
+     * @param bounds - The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
      * @returns `this`
      * @example
      * // Define bounds that conform to the `LngLatBoundsLike` object.
@@ -940,7 +940,7 @@ export class Map extends Camera {
      * if the map is 512px tall it will not be possible to zoom below zoom 0
      * no matter what the `minZoom` is set to.
      *
-     * @param minZoom The minimum zoom level to set (-2 - 24).
+     * @param minZoom - The minimum zoom level to set (-2 - 24).
      * If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
      * @returns `this`
      * @example
@@ -975,7 +975,7 @@ export class Map extends Camera {
      * If the map's current zoom level is higher than the new maximum,
      * the map will zoom to the new maximum.
      *
-     * @param maxZoom The maximum zoom level to set.
+     * @param maxZoom - The maximum zoom level to set.
      * If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
      * @returns `this`
      * @example
@@ -1010,7 +1010,7 @@ export class Map extends Camera {
      * If the map's current pitch is lower than the new minimum,
      * the map will pitch to the new minimum.
      *
-     * @param minPitch The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
      * @returns `this`
      */
@@ -1045,7 +1045,7 @@ export class Map extends Camera {
      * If the map's current pitch is higher than the new maximum,
      * the map will pitch to the new maximum.
      *
-     * @param maxPitch The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
+     * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
      * @returns `this`
      */
@@ -1091,7 +1091,7 @@ export class Map extends Camera {
     /**
      * Sets the state of `renderWorldCopies`.
      *
-     * @param renderWorldCopies If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+     * @param renderWorldCopies - If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
      * container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
@@ -1120,7 +1120,7 @@ export class Map extends Camera {
     /**
      * Sets or clears the map's cooperativeGestures option
      *
-     * @param gestureOptions If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
+     * @param gestureOptions - If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
      * @returns `this`
      */
     setCooperativeGestures(gestureOptions?: GestureOptions | boolean | null): Map {
@@ -1138,7 +1138,7 @@ export class Map extends Camera {
      * Returns a [Point](https://github.com/mapbox/point-geometry) representing pixel coordinates, relative to the map's `container`,
      * that correspond to the specified geographical location.
      *
-     * @param lnglat The geographical location to project.
+     * @param lnglat - The geographical location to project.
      * @returns The [Point](https://github.com/mapbox/point-geometry) corresponding to `lnglat`, relative to the map's `container`.
      * @example
      * var coordinate = [-122.420679, 37.772537];
@@ -1152,7 +1152,7 @@ export class Map extends Camera {
      * Returns a {@link LngLat} representing geographical coordinates that correspond
      * to the specified pixel coordinates.
      *
-     * @param point The pixel coordinates to unproject.
+     * @param point - The pixel coordinates to unproject.
      * @returns The {@link LngLat} corresponding to `point`.
      * @example
      * map.on('click', function(e) {
@@ -1249,7 +1249,7 @@ export class Map extends Camera {
     /**
      * Adds a listener for events of a specified type, optionally limited to features in a specified style layer.
      *
-     * @param type The event type to listen for. Events compatible with the optional `layerId` parameter are triggered
+     * @param type - The event type to listen for. Events compatible with the optional `layerId` parameter are triggered
      * when the cursor enters a visible portion of the specified layer from outside that layer or outside the map canvas.
      *
      * | Event                                                     | Compatible with `layerId` |
@@ -1305,11 +1305,11 @@ export class Map extends Camera {
      * | [`dataabort`](#map.event:dataabort)                       |                           |
      * | [`sourcedataabort`](#map.event:sourcedataabort)           |                           |
      *
-     * @param layer The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
+     * @param layer - The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing
      * an array of the matching features. If `layerIdOrListener` is not supplied, the event will not have a `features` property.
      * Please note that many event types are not compatible with the optional `layerIdOrListener` parameter.
-     * @param listener The function to be called when the event is fired.
+     * @param listener - The function to be called when the event is fired.
      * @returns `this`
      * @example
      * // Set an event listener that will fire
@@ -1375,16 +1375,16 @@ export class Map extends Camera {
     /**
      * Adds a listener that will be called only once to a specified event type occurring on features in a specified style layer.
      *
-     * @param type The event type to listen for; one of `'mousedown'`, `'mouseup'`, `'click'`, `'dblclick'`,
+     * @param type - The event type to listen for; one of `'mousedown'`, `'mouseup'`, `'click'`, `'dblclick'`,
      * `'mousemove'`, `'mouseenter'`, `'mouseleave'`, `'mouseover'`, `'mouseout'`, `'contextmenu'`, `'touchstart'`,
      * `'touchend'`, or `'touchcancel'`. `mouseenter` and `mouseover` events are triggered when the cursor enters
      * a visible portion of the specified layer from outside that layer or outside the map canvas. `mouseleave`
      * and `mouseout` events are triggered when the cursor leaves a visible portion of the specified layer, or leaves
      * the map canvas.
-     * @param layer The ID of a style layer or a listener if no ID is provided. Only events whose location is within a visible
+     * @param layer - The ID of a style layer or a listener if no ID is provided. Only events whose location is within a visible
      * feature in this layer will trigger the listener. The event will have a `features` property containing
      * an array of the matching features.
-     * @param listener The function to be called when the event is fired.
+     * @param listener - The function to be called when the event is fired.
      * @returns `this` if listener is provided, promise otherwise to allow easier usage of async/await
      */
     once<T extends keyof MapLayerEventType>(
@@ -1412,9 +1412,9 @@ export class Map extends Camera {
     /**
      * Removes an event listener for layer-specific events previously added with `Map#on`.
      *
-     * @param type The event type previously used to install the listener.
-     * @param layer The layer ID or listener previously used to install the listener.
-     * @param listener The function previously installed as a listener.
+     * @param type - The event type previously used to install the listener.
+     * @param layer - The layer ID or listener previously used to install the listener.
+     * @param listener - The function previously installed as a listener.
      * @returns `this`
      */
     off<T extends keyof MapLayerEventType>(
@@ -1454,13 +1454,13 @@ export class Map extends Camera {
      * Returns an array of MapGeoJSONFeature objects
      * representing visible features that satisfy the query parameters.
      *
-     * @param geometryOrOptions (optional) The geometry of the query region:
+     * @param geometryOrOptions - (optional) The geometry of the query region:
      * either a single point or southwest and northeast points describing a bounding box.
      * Omitting this parameter (i.e. calling {@link Map#queryRenderedFeatures} with zero arguments,
      * or with only a `options` argument) is equivalent to passing a bounding box encompassing the entire
      * map viewport.
      * The geometryOrOptions can receive a {@link QueryRenderedFeaturesOptions} only to support a situation where the function receives only one parameter which is the options parameter.
-     * @param options (optional) Options object.
+     * @param options - (optional) Options object.
      *
      * @returns An array of MapGeoJSONFeature objects.
      *
@@ -1545,8 +1545,8 @@ export class Map extends Camera {
      * Returns an array of MapGeoJSONFeature objects
      * representing features within the specified vector tile or GeoJSON source that satisfy the query parameters.
      *
-     * @param sourceId The ID of the vector tile or GeoJSON source to query.
-     * @param parameters Options object.
+     * @param sourceId - The ID of the vector tile or GeoJSON source to query.
+     * @param parameters - Options object.
      * @returns An array of MapGeoJSONFeature objects.
      *
      * In contrast to {@link Map#queryRenderedFeatures}, this function returns all features matching the query parameters,
@@ -1583,9 +1583,9 @@ export class Map extends Camera {
      * the given one from scratch.
      *
      *
-     * @param style A JSON object conforming to the schema described in the
+     * @param style - A JSON object conforming to the schema described in the
      * [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
-     * @param options Options object.
+     * @param options - Options object.
      * @returns `this`
      *
      * @example
@@ -1638,7 +1638,7 @@ export class Map extends Camera {
     /**
      *  Updates the requestManager's transform request with a new function
      *
-     * @param transformRequest A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
+     * @param transformRequest - A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
      * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
      *
      * @returns `this`
@@ -1761,8 +1761,8 @@ export class Map extends Camera {
     /**
      * Adds a source to the map's style.
      *
-     * @param id The ID of the source to add. Must not conflict with existing sources.
-     * @param source The source object, conforming to the
+     * @param id - The ID of the source to add. Must not conflict with existing sources.
+     * @param source - The source object, conforming to the
      * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
      * {@link CanvasSourceOptions}.
      * @fires source.add
@@ -1799,7 +1799,7 @@ export class Map extends Camera {
      * Returns a Boolean indicating whether the source is loaded. Returns `true` if the source with
      * the given ID in the map's style has no outstanding network requests, otherwise `false`.
      *
-     * @param id The ID of the source to be checked.
+     * @param id - The ID of the source to be checked.
      * @returns A Boolean indicating whether the source is loaded.
      * @example
      * var sourceLoaded = map.isSourceLoaded('bathymetry-data');
@@ -1815,7 +1815,7 @@ export class Map extends Camera {
 
     /**
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
-     * @param options Options object.
+     * @param options - Options object.
      * @returns `this`
      * @example
      * map.setTerrain({ source: 'terrain' });
@@ -1897,9 +1897,9 @@ export class Map extends Camera {
      * Adds a [custom source type](#Custom Sources), making it available for use with
      * {@link Map#addSource}.
      * @private
-     * @param name The name of the source type; source definition objects use this name in the `{type: ...}` field.
-     * @param SourceType A {@link Source} constructor.
-     * @param callback Called when the source type is ready or with an error argument if there is an error.
+     * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
+     * @param SourceType - A {@link Source} constructor.
+     * @param callback - Called when the source type is ready or with an error argument if there is an error.
      */
     addSourceType(name: string, SourceType: SourceClass, callback: Callback<void>) {
         this._lazyInitEmptyStyle();
@@ -1909,7 +1909,7 @@ export class Map extends Camera {
     /**
      * Removes a source from the map's style.
      *
-     * @param id The ID of the source to remove.
+     * @param id - The ID of the source to remove.
      * @returns `this`
      * @example
      * map.removeSource('bathymetry-data');
@@ -1927,7 +1927,7 @@ export class Map extends Camera {
      * For example, setting the `data` for a GeoJSON source or updating the `url` and `coordinates`
      * of an image source.
      *
-     * @param id The ID of the source to get.
+     * @param id - The ID of the source to get.
      * @returns The style source with the specified ID or `undefined` if the ID
      * corresponds to no existing sources.
      * The shape of the object varies by source type.
@@ -1952,10 +1952,10 @@ export class Map extends Camera {
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      * A {@link Map.event:error} event will be fired if there is not enough space in the sprite to add this image.
      *
-     * @param id The ID of the image.
-     * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
+     * @param id - The ID of the image.
+     * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
-     * @param options Options object.
+     * @param options - Options object.
      * @returns `this`
      * @example
      * // If the style's sprite does not already contain an image with ID 'cat',
@@ -2037,8 +2037,8 @@ export class Map extends Camera {
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      *
-     * @param id The ID of the image.
-     * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
+     * @param id - The ID of the image.
+     * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
      * @returns `this`
      * @example
@@ -2086,7 +2086,7 @@ export class Map extends Camera {
      * This includes both images from the style's original sprite
      * and any images that have been added at runtime using {@link Map#addImage}.
      *
-     * @param id The ID of the image.
+     * @param id - The ID of the image.
      * @returns An image in the map with the specified ID.
      *
      * @example
@@ -2102,7 +2102,7 @@ export class Map extends Camera {
      * in the style's original sprite and any images
      * that have been added at runtime using {@link Map#addImage}.
      *
-     * @param id The ID of the image.
+     * @param id - The ID of the image.
      *
      * @returns A Boolean indicating whether the image exists.
      * @example
@@ -2124,7 +2124,7 @@ export class Map extends Camera {
      * sprite or any images
      * that have been added at runtime using {@link Map#addImage}.
      *
-     * @param id The ID of the image.
+     * @param id - The ID of the image.
      *
      * @example
      * // If an image with the ID 'cat' exists in
@@ -2139,8 +2139,8 @@ export class Map extends Camera {
      * Load an image from an external URL to be used with {@link Map#addImage}. External
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
-     * @param url The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @param callback Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
+     * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
+     * @param callback - Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
      *
      * @example
      * // Load an image from an external URL.
@@ -2178,12 +2178,12 @@ export class Map extends Camera {
      * A layer defines how data from a specified source will be styled. Read more about layer types
      * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#layers).
      *
-     * @param layer The layer to add,
+     * @param layer - The layer to add,
      * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-style-spec/#layers) or,
      * less commonly, the {@link CustomLayerInterface} specification.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
      *
-     * @param beforeId The ID of an existing layer to insert the new layer before,
+     * @param beforeId - The ID of an existing layer to insert the new layer before,
      * resulting in the new layer appearing visually beneath the existing layer.
      * If this argument is not specified, the layer will be appended to the end of the layers array
      * and appear visually above all other layers.
@@ -2256,8 +2256,8 @@ export class Map extends Camera {
     /**
      * Moves a layer to a different z-position.
      *
-     * @param id The ID of the layer to move.
-     * @param beforeId The ID of an existing layer to insert the new layer before. When viewing the map, the `id` layer will appear beneath the `beforeId` layer. If `beforeId` is omitted, the layer will be appended to the end of the layers array and appear above all other layers on the map.
+     * @param id - The ID of the layer to move.
+     * @param beforeId - The ID of an existing layer to insert the new layer before. When viewing the map, the `id` layer will appear beneath the `beforeId` layer. If `beforeId` is omitted, the layer will be appended to the end of the layers array and appear above all other layers on the map.
      * @returns `this`
      *
      * @example
@@ -2274,7 +2274,7 @@ export class Map extends Camera {
      *
      * If no such layer exists, an `error` event is fired.
      *
-     * @param id id of the layer to remove
+     * @param id - id of the layer to remove
      * @fires error
      * @returns `this`
      *
@@ -2290,7 +2290,7 @@ export class Map extends Camera {
     /**
      * Returns the layer with the specified ID in the map's style.
      *
-     * @param id The ID of the layer to get.
+     * @param id - The ID of the layer to get.
      * @returns The layer with the specified ID, or `undefined`
      * if the ID corresponds to no existing layers.
      *
@@ -2315,9 +2315,9 @@ export class Map extends Camera {
      * zoom level of the source layer is higher than the minimum zoom level defined in the style layer, the style
      * layer will not be rendered at all zoom levels in the zoom range.
      *
-     * @param layerId The ID of the layer to which the zoom extent will be applied.
-     * @param minzoom The minimum zoom to set (0-24).
-     * @param maxzoom The maximum zoom to set (0-24).
+     * @param layerId - The ID of the layer to which the zoom extent will be applied.
+     * @param minzoom - The minimum zoom to set (0-24).
+     * @param maxzoom - The maximum zoom to set (0-24).
      * @returns `this`
      *
      * @example
@@ -2340,10 +2340,10 @@ export class Map extends Camera {
      *
      * To clear the filter, pass `null` or `undefined` as the second parameter.
      *
-     * @param layerId The ID of the layer to which the filter will be applied.
-     * @param filter The filter, conforming to the MapLibre Style Specification's
+     * @param layerId - The ID of the layer to which the filter will be applied.
+     * @param filter - The filter, conforming to the MapLibre Style Specification's
      * [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
-     * @param options Options object.
+     * @param options - Options object.
      * @returns `this`
      *
      * @example
@@ -2366,7 +2366,7 @@ export class Map extends Camera {
     /**
      * Returns the filter applied to the specified style layer.
      *
-     * @param layerId The ID of the style layer whose filter to get.
+     * @param layerId - The ID of the style layer whose filter to get.
      * @returns The layer's filter.
      */
     getFilter(layerId: string): FilterSpecification | void {
@@ -2376,11 +2376,11 @@ export class Map extends Camera {
     /**
      * Sets the value of a paint property in the specified style layer.
      *
-     * @param layerId The ID of the layer to set the paint property in.
-     * @param name The name of the paint property to set.
-     * @param value The value of the paint property to set.
+     * @param layerId - The ID of the layer to set the paint property in.
+     * @param name - The name of the paint property to set.
+     * @param value - The value of the paint property to set.
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
-     * @param options Options object.
+     * @param options - Options object.
      * @returns `this`
      * @example
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
@@ -2395,8 +2395,8 @@ export class Map extends Camera {
     /**
      * Returns the value of a paint property in the specified style layer.
      *
-     * @param layerId The ID of the layer to get the paint property from.
-     * @param name The name of a paint property to get.
+     * @param layerId - The ID of the layer to get the paint property from.
+     * @param name - The name of a paint property to get.
      * @returns The value of the specified paint property.
      */
     getPaintProperty(layerId: string, name: string) {
@@ -2406,10 +2406,10 @@ export class Map extends Camera {
     /**
      * Sets the value of a layout property in the specified style layer.
      *
-     * @param layerId The ID of the layer to set the layout property in.
-     * @param name The name of the layout property to set.
-     * @param value The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
-     * @param options Options object.
+     * @param layerId - The ID of the layer to set the layout property in.
+     * @param name - The name of the layout property to set.
+     * @param value - The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
+     * @param options - Options object.
      * @returns `this`
      * @example
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
@@ -2422,8 +2422,8 @@ export class Map extends Camera {
     /**
      * Returns the value of a layout property in the specified style layer.
      *
-     * @param layerId The ID of the layer to get the layout property from.
-     * @param name The name of the layout property to get.
+     * @param layerId - The ID of the layer to get the layout property from.
+     * @param name - The name of the layout property to get.
      * @returns The value of the specified layout property.
      */
     getLayoutProperty(layerId: string, name: string) {
@@ -2433,8 +2433,8 @@ export class Map extends Camera {
     /**
      * Sets the value of the style's glyphs property.
      *
-     * @param glyphsUrl Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
-     * @param options Options object.
+     * @param glyphsUrl - Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
+     * @param options - Options object.
      * @returns `this`
      * @example
      * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
@@ -2457,9 +2457,9 @@ export class Map extends Camera {
     /**
      * Adds a sprite to the map's style.
      *
-     * @param id The ID of the sprite to add. Must not conflict with existing sprites.
-     * @param url The URL to load the sprite from
-     * @param options Options object.
+     * @param id - The ID of the sprite to add. Must not conflict with existing sprites.
+     * @param url - The URL to load the sprite from
+     * @param options - Options object.
      * @fires style
      * @returns `this`
      * @example
@@ -2478,7 +2478,7 @@ export class Map extends Camera {
     /**
      * Removes the sprite from the map's style.
      *
-     * @param id The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
+     * @param id - The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
      * @fires style
      * @returns `this`
      * @example
@@ -2504,8 +2504,8 @@ export class Map extends Camera {
     /**
      * Sets the value of the style's sprite property.
      *
-     * @param spriteUrl Sprite URL to set.
-     * @param options Options object.
+     * @param spriteUrl - Sprite URL to set.
+     * @param options - Options object.
      * @returns `this`
      * @example
      * map.setSprite('YOUR_SPRITE_URL');
@@ -2523,8 +2523,8 @@ export class Map extends Camera {
     /**
      * Sets the any combination of light values.
      *
-     * @param light Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
-     * @param options Options object.
+     * @param light - Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
+     * @param options - Options object.
      * @returns `this`
      *
      * @example
@@ -2558,9 +2558,9 @@ export class Map extends Camera {
      *
      * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
-     * @param feature Feature identifier. Feature objects returned from
+     * @param feature - Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
-     * @param state A set of key-value pairs. The values should be valid JSON types.
+     * @param state - A set of key-value pairs. The values should be valid JSON types.
      * @returns `this`
      *
      * @example
@@ -2592,9 +2592,9 @@ export class Map extends Camera {
      * If `key` is also specified, it removes only that key from that feature's state.
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
-     * @param target Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
+     * @param target - Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
      * Feature objects returned from {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
-     * @param key (optional) The key in the feature state to reset.
+     * @param key - (optional) The key in the feature state to reset.
      * @returns `this`
      * @example
      * // Reset the entire state object for all features
@@ -2640,7 +2640,7 @@ export class Map extends Camera {
      *
      * _Note: To access the values in a feature's state object for the purposes of styling the feature, use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state)._
      *
-     * @param feature Feature identifier. Feature objects returned from
+     * @param feature - Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @returns The state of the feature: a set of key-value pairs that was assigned to the feature at runtime.
      *
@@ -2870,7 +2870,7 @@ export class Map extends Camera {
     /**
      * Update this map's style and sources, and re-render the map.
      *
-     * @param updateStyle mark the map's style for reprocessing as
+     * @param updateStyle - mark the map's style for reprocessing as
      * well as its sources
      * @returns `this`
      * @private
@@ -2907,7 +2907,7 @@ export class Map extends Camera {
      * - The map has is moving (or just finished moving)
      * - A transition is in progress
      *
-     * @param paintStartTimeStamp  The time when the animation frame began executing.
+     * @param paintStartTimeStamp -  The time when the animation frame began executing.
      *
      * @returns `this`
      * @private
