@@ -76,7 +76,7 @@ export type MapOptions = {
      * An additional string may optionally be provided to indicate a parameter-styled hash,
      * e.g. http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar, where foo
      * is a custom parameter and bar is an arbitrary hash distinct from the map hash.
-     * @devalueValue false
+     * @defaultValue false
      */
     hash?: boolean | string;
     /**
