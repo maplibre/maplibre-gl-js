@@ -2,7 +2,6 @@ import {DOM} from '../util/dom';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap';
-import {extend} from '../util/util';
 import {anchorTranslate, applyAnchorClass} from './anchor';
 import type {PositionAnchor} from './anchor';
 import {Event, Evented} from '../util/evented';
