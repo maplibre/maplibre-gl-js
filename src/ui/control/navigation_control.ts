@@ -8,6 +8,9 @@ import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandle
 import type {Map} from '../map';
 import type {IControl} from './control';
 
+/**
+ * The {@link NavigationControl} options object
+ */
 type NavigationOptions = {
     /**
      * If `true` the compass button is included.
