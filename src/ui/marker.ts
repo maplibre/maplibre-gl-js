@@ -17,6 +17,9 @@ import type {PointLike} from './camera';
  */
 type Alignment = 'map' | 'viewport' | 'auto';
 
+/**
+ * The {@link Marker} options object
+ */
 type MarkerOptions = {
     /**
      * DOM element to use as a marker. The default is a light blue, droplet-shaped SVG marker.
@@ -124,13 +127,11 @@ export class Marker extends Evented {
     _originalTabIndex: string; // original tabindex of _element
     _opacityTimeout: ReturnType<typeof setTimeout>;
 
-    constructor(options?: MarkerOptions, legacyOptions?: MarkerOptions) {
+    /**
+     * @param options the options
+     */
+    constructor(options?: MarkerOptions) {
         super();
-        // For backward compatibility -- the constructor used to accept the element as a
-        // required first argument, before it was made optional.
-        if (options instanceof HTMLElement || legacyOptions) {
-            options = extend({element: options}, legacyOptions);
-        }
 
         this._anchor = options && options.anchor || 'center';
         this._color = options && options.color || '#3FB1CE';
