@@ -3,6 +3,15 @@ import type {Map} from '../../ui/map';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
+/**
+ * @param gl The map's gl context.
+ * @param matrix The map's camera matrix. It projects spherical mercator
+ * coordinates to gl coordinates. The spherical mercator coordinate `[0, 0]` represents the
+ * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
+ * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
+ * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate#fromLngLat}
+ * can be used to project a `LngLat` to a mercator coordinate.
+ */
 type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4) => void;
 
 /**
@@ -23,7 +32,6 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, mat
  * - `"renderingMode": "2d"` to add a layer with no depth. If you need to use the depth buffer for a `"2d"` layer you must use an offscreen
  *   framebuffer and {@link CustomLayerInterface#prerender}
  *
- * @interface CustomLayerInterface
  * @example
  * // Custom layer implemented as ES6 class
  * class NullIslandLayer {
@@ -72,15 +80,15 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, mat
  */
 export interface CustomLayerInterface {
     /**
-     * @property {string} id A unique layer id.
+     * A unique layer id.
      */
     id: string;
     /**
-     * @property {string} type The layer's type. Must be `"custom"`.
+     * The layer's type. Must be `"custom"`.
      */
     type: 'custom';
     /**
-     * @property {string} renderingMode Either `"2d"` or `"3d"`. Defaults to `"2d"`.
+     * Either `"2d"` or `"3d"`. Defaults to `"2d"`.
      */
     renderingMode?: '2d' | '3d';
     /**
@@ -98,60 +106,28 @@ export interface CustomLayerInterface {
      * multiplied by the `a` value. If you are unable to provide colors in premultiplied form you
      * may want to change the blend function to
      * `gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA)`.
-     *
-     * @function
-     * @memberof CustomLayerInterface
-     * @instance
-     * @name render
-     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl The map's gl context.
-     * @param {Array<number>} matrix The map's camera matrix. It projects spherical mercator
-     * coordinates to gl coordinates. The spherical mercator coordinate `[0, 0]` represents the
-     * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
-     * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
-     * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate}.fromLngLat
-     * can be used to project a `LngLat` to a mercator coordinate.
      */
     render: CustomRenderMethod;
     /**
      * Optional method called during a render frame to allow a layer to prepare resources or render into a texture.
      *
      * The layer cannot make any assumptions about the current GL state and must bind a framebuffer before rendering.
-     *
-     * @function
-     * @memberof CustomLayerInterface
-     * @instance
-     * @name prerender
-     * @param {WebGL2RenderingContext} gl The map's gl context.
-     * @param {mat4} matrix The map's camera matrix. It projects spherical mercator
-     * coordinates to gl coordinates. The mercator coordinate `[0, 0]` represents the
-     * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
-     * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
-     * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate}.fromLngLat
-     * can be used to project a `LngLat` to a mercator coordinate.
      */
     prerender?: CustomRenderMethod;
     /**
      * Optional method called when the layer has been added to the Map with {@link Map#addLayer}. This
      * gives the layer a chance to initialize gl resources and register event listeners.
      *
-     * @function
-     * @memberof CustomLayerInterface
-     * @instance
-     * @name onAdd
-     * @param {Map} map The Map this custom layer was just added to.
-     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl The gl context for the map.
+     * @param map The Map this custom layer was just added to.
+     * @param gl The gl context for the map.
      */
     onAdd?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
     /**
      * Optional method called when the layer has been removed from the Map with {@link Map#removeLayer}. This
      * gives the layer a chance to clean up gl resources and event listeners.
      *
-     * @function
-     * @memberof CustomLayerInterface
-     * @instance
-     * @name onRemove
-     * @param {Map} map The Map this custom layer was just added to.
-     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl The gl context for the map.
+     * @param map The Map this custom layer was just added to.
+     * @param gl The gl context for the map.
      */
     onRemove?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
 }

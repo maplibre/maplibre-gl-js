@@ -4,6 +4,7 @@
     "groupOrder": [
         "Map",
         "Controls",
+        "Sources",
         "Handlers"
     ],
     "out": "./docs/API",

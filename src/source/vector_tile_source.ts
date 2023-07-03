@@ -22,6 +22,8 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
  *
+ * @group Sources
+ *
  * @example
  * map.addSource('some id', {
  *     type: 'vector',
@@ -140,10 +142,10 @@ export class VectorTileSource extends Evented implements Source {
     /**
      * Sets the source `tiles` property and re-renders the map.
      *
-     * @param {string[]} tiles An array of one or more tile source URLs, as in the TileJSON spec.
-     * @returns {VectorTileSource} this
+     * @param tiles An array of one or more tile source URLs, as in the TileJSON spec.
+     * @returns `this`
      */
-    setTiles(tiles: Array<string>) {
+    setTiles(tiles: Array<string>): this {
         this.setSourceProperty(() => {
             this._options.tiles = tiles;
         });
@@ -154,10 +156,10 @@ export class VectorTileSource extends Evented implements Source {
     /**
      * Sets the source `url` property and re-renders the map.
      *
-     * @param {string} url A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
-     * @returns {VectorTileSource} this
+     * @param url A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
+     * @returns `this`
      */
-    setUrl(url: string) {
+    setUrl(url: string): this {
         this.setSourceProperty(() => {
             this.url = url;
             this._options.url = url;
