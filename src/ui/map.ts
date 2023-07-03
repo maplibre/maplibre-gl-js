@@ -319,7 +319,7 @@ export type MapOptions = {
      */
     validateStyle?: boolean;
     /**
-     * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height. 
+     * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
      */
     maxCanvasSize?: [number, number];

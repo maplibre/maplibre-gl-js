@@ -4,6 +4,8 @@ import type {TapZoomHandler} from './../tap_zoom';
 /**
  * The `DoubleClickZoomHandler` allows the user to zoom the map at a point by
  * double clicking or double tapping.
+ *
+ * @group Handlers
  */
 export class DoubleClickZoomHandler {
 
@@ -11,7 +13,7 @@ export class DoubleClickZoomHandler {
     _tapZoom: TapZoomHandler;
 
     /**
-     * @private
+     * @hidden
     */
     constructor(clickZoom: ClickZoomHandler, TapZoom: TapZoomHandler) {
         this._clickZoom = clickZoom;
@@ -43,7 +45,7 @@ export class DoubleClickZoomHandler {
     /**
      * Returns a Boolean indicating whether the "double click to zoom" interaction is enabled.
      *
-     * @returns {boolean} `true` if the "double click to zoom" interaction is enabled.
+     * @returns `true` if the "double click to zoom" interaction is enabled.
      */
     isEnabled() {
         return this._clickZoom.isEnabled() && this._tapZoom.isEnabled();
@@ -52,7 +54,7 @@ export class DoubleClickZoomHandler {
     /**
      * Returns a Boolean indicating whether the "double click to zoom" interaction is active, i.e. currently being used.
      *
-     * @returns {boolean} `true` if the "double click to zoom" interaction is active.
+     * @returns `true` if the "double click to zoom" interaction is active.
      */
     isActive() {
         return this._clickZoom.isActive() || this._tapZoom.isActive();
