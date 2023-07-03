@@ -4,7 +4,7 @@ import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from './geojson_wrapper';
 import vtpbf from 'vt-pbf';
-import Supercluster from 'supercluster';
+import Supercluster, {type Options, type ClusterProperties} from 'supercluster';
 import geojsonvt from 'geojson-vt';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
@@ -29,9 +29,9 @@ export type LoadGeoJSONParameters = {
     dataDiff?: GeoJSONSourceDiff;
     source: string;
     cluster: boolean;
-    superclusterOptions?: any;
+    superclusterOptions?: Options<any, any>;
     geojsonVtOptions?: any;
-    clusterProperties?: any;
+    clusterProperties?: ClusterProperties;
     filter?: Array<unknown>;
     promoteId?: string;
 };
@@ -297,7 +297,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 }
 
-function getSuperclusterOptions({superclusterOptions, clusterProperties}: { superclusterOptions?: any; clusterProperties?: any}) {
+function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
     if (!clusterProperties || !superclusterOptions) return superclusterOptions;
 
     const mapExpressions = {};

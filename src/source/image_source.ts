@@ -24,9 +24,25 @@ import {Cancelable} from '../types/cancelable';
 
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
+export type UpdateImageOptions = {
+    /**
+     * Required image URL.
+     */
+    url: string;
+    /**
+     * Four geographical coordinates,
+     * represented as arrays of longitude and latitude numbers, which define the corners of the image.
+     * The coordinates start at the top left corner of the image and proceed in clockwise order.
+     * They do not have to represent a rectangle.
+     */
+    coordinates?: Coordinates;
+}
+
 /**
  * A data source containing an image.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-image) for detailed documentation of options.)
+ *
+ * @group Sources
  *
  * @example
  * // add to map
@@ -86,7 +102,7 @@ export class ImageSource extends Evented implements Source {
     _request: Cancelable;
 
     /**
-     * @private
+     * @hidden
      */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
@@ -139,18 +155,10 @@ export class ImageSource extends Evented implements Source {
      * Updates the image URL and, optionally, the coordinates. To avoid having the image flash after changing,
      * set the `raster-fade-duration` paint property on the raster layer to 0.
      *
-     * @param {Object} options Options object.
-     * @param {string} [options.url] Required image URL.
-     * @param {Array<Array<number>>} [options.coordinates] Four geographical coordinates,
-     * represented as arrays of longitude and latitude numbers, which define the corners of the image.
-     * The coordinates start at the top left corner of the image and proceed in clockwise order.
-     * They do not have to represent a rectangle.
-     * @returns {ImageSource} this
+     * @param options Options object.
+     * @returns this
      */
-    updateImage(options: {
-        url: string;
-        coordinates?: Coordinates;
-    }) {
+    updateImage(options: UpdateImageOptions): this {
         if (!options.url) {
             return this;
         }
@@ -187,13 +195,13 @@ export class ImageSource extends Evented implements Source {
     /**
      * Sets the image's coordinates and re-renders the map.
      *
-     * @param {Array<Array<number>>} coordinates Four geographical coordinates,
+     * @param coordinates Four geographical coordinates,
      * represented as arrays of longitude and latitude numbers, which define the corners of the image.
      * The coordinates start at the top left corner of the image and proceed in clockwise order.
      * They do not have to represent a rectangle.
-     * @returns {ImageSource} this
+     * @returns `this`
      */
-    setCoordinates(coordinates: Coordinates) {
+    setCoordinates(coordinates: Coordinates): this {
         this.coordinates = coordinates;
 
         // Calculate which mercator tile is suitable for rendering the video in
@@ -301,7 +309,7 @@ export class ImageSource extends Evented implements Source {
  * Given a list of coordinates, get their center as a coordinate.
  *
  * @returns centerpoint
- * @private
+ * @hidden
  */
 export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
     let minX = Infinity;
