@@ -46,9 +46,21 @@ export type WorkerOptions = {
     collectResourceTiming?: boolean;
 }
 
+/**
+ * The cluster options to set
+ */
 export type SetClusterOptions = {
+    /**
+     * Whether or not to cluster
+     */
     cluster?: boolean;
+    /**
+     * The cluster's max zoom
+     */
     clusterMaxZoom?: number;
+    /**
+     * The cluster's radius
+     */
     clusterRadius?: number;
 }
 
