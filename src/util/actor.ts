@@ -10,10 +10,7 @@ import type {Cancelable} from '../types/cancelable';
  * that maintains the relationship between asynchronous tasks and the objects
  * that spin them off - in this case, tasks like parsing parts of styles,
  * owned by the styles
- *
- * @param {WebWorker} target
- * @param {WebWorker} parent
- * @param {string|number} mapId A unique identifier for the Map instance using this Actor.
+ * 
  * @private
  */
 export class Actor {
@@ -34,6 +31,11 @@ export class Actor {
     invoker: ThrottledInvoker;
     globalScope: any;
 
+    /**
+     * @param target
+     * @param parent
+     * @param mapId A unique identifier for the Map instance using this Actor.
+     */
     constructor(target: any, parent: any, mapId?: string) {
         this.target = target;
         this.parent = parent;
