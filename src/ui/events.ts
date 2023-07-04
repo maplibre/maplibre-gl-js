@@ -15,6 +15,9 @@ export type MapLayerTouchEvent = MapTouchEvent & { features?: MapGeoJSONFeature[
 
 export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
 
+/**
+ * A mapping between the layer events and their type
+ */
 export type MapLayerEventType = {
     click: MapLayerMouseEvent;
     dblclick: MapLayerMouseEvent;
@@ -32,6 +35,9 @@ export type MapLayerEventType = {
     touchcancel: MapLayerTouchEvent;
 };
 
+/**
+ * The base event for MapLibre
+ */
 export interface MapLibreEvent<TOrig = unknown> {
     type: string;
     target: Map;
@@ -74,16 +80,7 @@ export interface MapSourceDataEvent extends MapLibreEvent {
  */
 export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
     /**
-     * The event type (one of {@link Map.event:mousedown},
-     * {@link Map.event:mouseup},
-     * {@link Map.event:click},
-     * {@link Map.event:dblclick},
-     * {@link Map.event:mousemove},
-     * {@link Map.event:mouseover},
-     * {@link Map.event:mouseenter},
-     * {@link Map.event:mouseleave},
-     * {@link Map.event:mouseout},
-     * {@link Map.event:contextmenu}).
+     * The event type {@link MapEventType}
      */
     type: 'mousedown' | 'mouseup' | 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseenter' | 'mouseleave' | 'mouseout' | 'contextmenu';
 

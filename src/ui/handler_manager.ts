@@ -28,18 +28,22 @@ class RenderFrameEvent extends Event {
     timeStamp: number;
 }
 
-// Handlers interpret dom events and return camera changes that should be
-// applied to the map (`HandlerResult`s). The camera changes are all deltas.
-// The handler itself should have no knowledge of the map's current state.
-// This makes it easier to merge multiple results and keeps handlers simpler.
-// For example, if there is a mousedown and mousemove, the mousePan handler
-// would return a `panDelta` on the mousemove.
+/**
+ * Handlers interpret dom events and return camera changes that should be
+ * applied to the map (`HandlerResult`s). The camera changes are all deltas.
+ * The handler itself should have no knowledge of the map's current state.
+ * This makes it easier to merge multiple results and keeps handlers simpler.
+ * For example, if there is a mousedown and mousemove, the mousePan handler
+ * would return a `panDelta` on the mousemove.
+ */
 export interface Handler {
     enable(): void;
     disable(): void;
     isEnabled(): boolean;
     isActive(): boolean;
-    // `reset` can be called by the manager at any time and must reset everything to it's original state
+    /**
+     * `reset` can be called by the manager at any time and must reset everything to it's original state
+     */
     reset(): void;
     // Handlers can optionally implement these methods.
     // They are called with dom events whenever those dom evens are received.
@@ -58,29 +62,45 @@ export interface Handler {
     readonly wheel?: (e: WheelEvent, point: Point) => HandlerResult | void;
     readonly keydown?: (e: KeyboardEvent) => HandlerResult | void;
     readonly keyup?: (e: KeyboardEvent) => HandlerResult | void;
-    // `renderFrame` is the only non-dom event. It is called during render
-    // frames and can be used to smooth camera changes (see scroll handler).
+    /**
+     * `renderFrame` is the only non-dom event. It is called during render
+     * frames and can be used to smooth camera changes (see scroll handler).
+     */
     readonly renderFrame?: () => HandlerResult | void;
 }
 
-// All handler methods that are called with events can optionally return a `HandlerResult`.
+/**
+ * All handler methods that are called with events can optionally return a `HandlerResult`.
+ */
 export type HandlerResult = {
     panDelta?: Point;
     zoomDelta?: number;
     bearingDelta?: number;
     pitchDelta?: number;
-    // the point to not move when changing the camera
+    /**
+     * the point to not move when changing the camera
+     */
     around?: Point | null;
-    // same as above, except for pinch actions, which are given higher priority
+    /**
+     * same as above, except for pinch actions, which are given higher priority
+     */
     pinchAround?: Point | null;
-    // A method that can fire a one-off easing by directly changing the map's camera.
+    /**
+     * A method that can fire a one-off easing by directly changing the map's camera.
+     */
     cameraAnimation?: (map: Map) => any;
-    // The last three properties are needed by only one handler: scrollzoom.
-    // The DOM event to be used as the `originalEvent` on any camera change events.
+    /**
+     * The last three properties are needed by only one handler: scrollzoom.
+     * The DOM event to be used as the `originalEvent` on any camera change events.
+     */
     originalEvent?: Event;
-    // Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
+    /**
+     * Makes the manager trigger a frame, allowing the handler to return multiple results over time (see scrollzoom).
+     */
     needsRenderFrame?: boolean;
-    // The camera changes won't get recorded for inertial zooming.
+    /**
+     * The camera changes won't get recorded for inertial zooming.
+     */
     noInertia?: boolean;
 };
 

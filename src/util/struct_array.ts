@@ -57,6 +57,9 @@ export type StructArrayLayout = {
     alignment: number;
 };
 
+/**
+ * An array that can be desialized
+ */
 export type SerializedStructArray = {
     length: number;
     arrayBuffer: ArrayBuffer;

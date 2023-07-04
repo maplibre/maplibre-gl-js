@@ -20,6 +20,9 @@ import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {earthRadius} from '../geo/lng_lat';
 
+/**
+ * A terrain GPU related object
+ */
 export type TerrainData = {
     'u_depth': number;
     'u_terrain': number;
@@ -32,6 +35,9 @@ export type TerrainData = {
     tile: Tile;
 }
 
+/**
+ * A terrain mesh object
+ */
 export type TerrainMesh = {
     indexBuffer: IndexBuffer;
     vertexBuffer: VertexBuffer;

@@ -28,6 +28,9 @@ import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 const TRANSITION_SUFFIX = '-transition';
 
+/**
+ * A base class for style layers
+ */
 export abstract class StyleLayer extends Evented {
     id: string;
     metadata: unknown;

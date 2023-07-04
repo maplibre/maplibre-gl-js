@@ -60,6 +60,9 @@ export class CanonicalTileID implements ICanonicalTileID {
     }
 }
 
+/**
+ * An unwrapped tile identifier
+ */
 export class UnwrappedTileID {
     wrap: number;
     canonical: CanonicalTileID;
@@ -72,6 +75,9 @@ export class UnwrappedTileID {
     }
 }
 
+/**
+ * An overscaled tile identifier
+ */
 export class OverscaledTileID {
     overscaledZ: number;
     wrap: number;

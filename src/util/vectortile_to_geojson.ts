@@ -6,6 +6,9 @@ type DistributiveOmit<T, K extends DistributiveKeys<T>> = T extends unknown
     ? Omit<T, K>
     : never;
 
+/**
+ * An extended geojson feature used by the events to return data to the listener
+ */
 export type MapGeoJSONFeature = GeoJSONFeature & {
     layer: DistributiveOmit<LayerSpecification, 'source'> & {source: string};
     source: string;
@@ -13,6 +16,9 @@ export type MapGeoJSONFeature = GeoJSONFeature & {
     state: { [key: string]: any };
 }
 
+/**
+ * A geojson feature
+ */
 export class GeoJSONFeature {
     type: 'Feature';
     _geometry: GeoJSON.Geometry;
