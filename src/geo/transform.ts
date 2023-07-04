@@ -240,8 +240,6 @@ export class Transform {
      * and +y axis pointing downwards. This accounts for padding.
      *
      * @readonly
-     * @type {Point}
-     * @memberof Transform
      */
     get centerPoint(): Point {
         return this._edgeInsets.getCenter(this.width, this.height);
@@ -250,9 +248,8 @@ export class Transform {
     /**
      * Returns if the padding params match
      *
-     * @param {PaddingOptions} padding the padding to check against
-     * @returns {boolean} true if they are equal, false otherwise
-     * @memberof Transform
+     * @param padding the padding to check against
+     * @returns true if they are equal, false otherwise
      */
     isPaddingEqual(padding: PaddingOptions): boolean {
         return this._edgeInsets.equals(padding);
@@ -261,10 +258,9 @@ export class Transform {
     /**
      * Helper method to update edge-insets in place
      *
-     * @param {PaddingOptions} start the starting padding
-     * @param {PaddingOptions} target the target padding
-     * @param {number} t the step/weight
-     * @memberof Transform
+     * @param start the starting padding
+     * @param target the target padding
+     * @param t the step/weight
      */
     interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number) {
         this._unmodified = false;
@@ -275,15 +271,19 @@ export class Transform {
 
     /**
      * Return a zoom level that will cover all tiles the transform
-     * @param {Object} options options
-     * @param {number} options.tileSize Tile size, expressed in screen pixels.
-     * @param {boolean} options.roundZoom Target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
-     * @returns {number} zoom level An integer zoom level at which all tiles will be visible.
+     * @param options options 
+     * @returns zoom level An integer zoom level at which all tiles will be visible.
      */
     coveringZoomLevel(options: {
+        /**
+         * Target zoom level. If true, the value will be rounded to the closest integer. Otherwise the value will be floored.
+         */
         roundZoom?: boolean;
+        /**
+         * Tile size, expressed in screen pixels.
+         */
         tileSize: number;
-    }) {
+    }): number {
         const z = (options.roundZoom ? Math.round : Math.floor)(
             this.zoom + this.scaleZoom(this.tileSize / options.tileSize)
         );
@@ -323,14 +323,8 @@ export class Transform {
     /**
      * Return all coordinates that could cover this transform for a covering
      * zoom level.
-     * @param {Object} options
-     * @param {number} options.tileSize
-     * @param {number} options.minzoom
-     * @param {number} options.maxzoom
-     * @param {boolean} options.roundZoom
-     * @param {boolean} options.reparseOverscaled
-     * @param {boolean} options.renderWorldCopies
-     * @returns {Array<OverscaledTileID>} OverscaledTileIDs
+     * @param options
+     * @returns OverscaledTileIDs
      * @private
      */
     coveringTiles(
@@ -495,9 +489,9 @@ export class Transform {
      * get the elevation from terrain for the current zoomlevel.
      * @param lnglat the location
      * @param terrain the terrain
-     * @returns {number} elevation in meters
+     * @returns elevation in meters
      */
-    getElevation(lnglat: LngLat, terrain: Terrain) {
+    getElevation(lnglat: LngLat, terrain: Terrain): number {
         const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
         const worldSize = (1 << this.tileZoom) * EXTENT;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
@@ -508,7 +502,7 @@ export class Transform {
 
     /**
      * get the camera position in LngLat and altitudes in meter
-     * @returns {Object} An object with lngLat & altitude.
+     * @returns An object with lngLat & altitude.
      */
     getCameraPosition(): {
         lngLat: LngLat;
@@ -523,7 +517,7 @@ export class Transform {
      * This method works in combination with freezeElevation activated.
      * freezeElevtion is enabled during map-panning because during this the camera should sit in constant height.
      * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
-     * @param {Terrain} terrain the terrain
+     * @param terrain the terrain
      */
     recalculateZoom(terrain: Terrain) {
         // find position the camera is looking on
@@ -563,9 +557,9 @@ export class Transform {
 
     /**
      * Given a location, return the screen point that corresponds to it
-     * @param {LngLat} lnglat location
-     * @param {Terrain} terrain optional terrain
-     * @returns {Point} screen point
+     * @param lnglat location
+     * @param terrain optional terrain
+     * @returns screen point
      * @private
      */
     locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
@@ -576,9 +570,9 @@ export class Transform {
 
     /**
      * Given a point on screen, return its lnglat
-     * @param {Point} p screen point
-     * @param {Terrain} terrain optional terrain
-     * @returns {LngLat} lnglat location
+     * @param p screen point
+     * @param terrain optional terrain
+     * @returns lnglat location
      * @private
      */
     pointLocation(p: Point, terrain?: Terrain): LngLat {
@@ -588,8 +582,8 @@ export class Transform {
     /**
      * Given a geographical lnglat, return an unrounded
      * coordinate that represents it at this transform's zoom level.
-     * @param {LngLat} lnglat
-     * @returns {MercatorCoordinate}
+     * @param lnglat
+     * @returns The mercator coordinate
      * @private
      */
     locationCoordinate(lnglat: LngLat): MercatorCoordinate {
@@ -598,8 +592,8 @@ export class Transform {
 
     /**
      * Given a Coordinate, return its geographical position.
-     * @param {Coordinate} coord
-     * @returns {LngLat} lnglat
+     * @param coord mercator coordivates
+     * @returns lng and lat 
      * @private
      */
     coordinateLocation(coord: MercatorCoordinate): LngLat {
@@ -608,9 +602,9 @@ export class Transform {
 
     /**
      * Given a Point, return its mercator coordinate.
-     * @param {Point} p the point
-     * @param {Terrain} terrain optional terrain
-     * @returns {LngLat} lnglat
+     * @param p the point
+     * @param terrain optional terrain
+     * @returns lnglat
      * @private
      */
     pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
@@ -652,9 +646,9 @@ export class Transform {
 
     /**
      * Given a coordinate, return the screen point that corresponds to it
-     * @param {Coordinate} coord
-     * @param {number} elevation default = 0
-     * @param {mat4} pixelMatrix, default = this.pixelMatrix
+     * @param coord
+     * @param elevation default = 0
+     * @param pixelMatrix, default = this.pixelMatrix
      * @returns {Point} screen point
      * @private
      */
@@ -667,7 +661,7 @@ export class Transform {
     /**
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
      * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
-     * @returns {LngLatBounds} Returns a {@link LngLatBounds} object describing the map's geographical bounds.
+     * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
      */
     getBounds(): LngLatBounds {
         const top = Math.max(0, this.height / 2 - this.getHorizon());
@@ -680,7 +674,7 @@ export class Transform {
 
     /**
      * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
-     * @returns {LngLatBounds} {@link LngLatBounds}
+     * @returns max bounds
      */
     getMaxBounds(): LngLatBounds | null {
         if (!this.latRange || this.latRange.length !== 2 ||
@@ -693,7 +687,7 @@ export class Transform {
      * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
      * multiplied by a static factor to simulate the earth-radius.
      * The calculated value is the horizontal line from the camera-height to sea-level.
-     * @returns {number} Horizon above center in pixels.
+     * @returns Horizon above center in pixels.
      */
     getHorizon(): number {
         return Math.tan(Math.PI / 2 - this._pitch) * this.cameraToCenterDistance * 0.85;
@@ -701,7 +695,7 @@ export class Transform {
 
     /**
      * Sets or clears the map's geographical constraints.
-     * @param {LngLatBounds} bounds A {@link LngLatBounds} object describing the new geographic boundaries of the map.
+     * @param bounds A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
     setMaxBounds(bounds?: LngLatBounds | null) {
         if (bounds) {
@@ -716,7 +710,7 @@ export class Transform {
 
     /**
      * Calculate the posMatrix that, given a tile coordinate, would be used to display the tile on a map.
-     * @param {UnwrappedTileID} unwrappedTileID;
+     * @param unwrappedTileID;
      * @private
      */
     calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 {
@@ -943,7 +937,7 @@ export class Transform {
         return topPoint[3] / this.cameraToCenterDistance;
     }
 
-    /*
+    /**
      * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
      * as the name for the location under the camera and on the surface of the earth (lng, lat, 0).
      * `cameraPoint` is the projected position of the `cameraLocation`.
@@ -960,15 +954,15 @@ export class Transform {
         return this.centerPoint.add(new Point(0, yOffset));
     }
 
-    /*
+    /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect
      * the query at the surface of the earth. Instead the feature may be closer and only intersect
      * the query because it extrudes into the air.
-     *
-     * This returns a geometry that includes all of the original query as well as all possible ares of the
+     * @param queryGeometry - For point queries, the line from the query point to the "camera point", 
+     * for other geometries, the envelope of the query geometry and the "camera point"
+     * @returns a geometry that includes all of the original query as well as all possible ares of the
      * screen where the *base* of a visible extrusion could be.
-     *  - For point queries, the line from the query point to the "camera point"
-     *  - For other geometries, the envelope of the query geometry and the "camera point"
+     *  
      */
     getCameraQueryGeometry(queryGeometry: Array<Point>): Array<Point> {
         const c = this.getCameraPoint();
