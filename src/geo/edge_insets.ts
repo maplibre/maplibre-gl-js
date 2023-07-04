@@ -43,11 +43,10 @@ export class EdgeInsets {
     /**
      * Interpolates the inset in-place.
      * This maintains the current inset value for any inset not present in `target`.
-     * @param {PaddingOptions | EdgeInsets} start interpolation start
-     * @param {PaddingOptions} target interpolation target
-     * @param {number} t interpolation step/weight
-     * @returns {EdgeInsets} the insets
-     * @memberof EdgeInsets
+     * @param start interpolation start
+     * @param target interpolation target
+     * @param t interpolation step/weight
+     * @returns the insets
      */
     interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): EdgeInsets {
         if (target.top != null && start.top != null) this.top = interpolates.number(start.top, target.top, t);
@@ -62,10 +61,9 @@ export class EdgeInsets {
      * Utility method that computes the new apprent center or vanishing point after applying insets.
      * This is in pixels and with the top left being (0.0) and +y being downwards.
      *
-     * @param {number} width the width
-     * @param {number} height the height
-     * @returns {Point} the point
-     * @memberof EdgeInsets
+     * @param width the width
+     * @param height the height
+     * @returns the point
      */
     getCenter(width: number, height: number): Point {
         // Clamp insets so they never overflow width/height and always calculate a valid center
