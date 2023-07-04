@@ -5,6 +5,7 @@ import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
+import {Debug} from '../util/debug';
 import {Terrain} from '../render/terrain';
 
 import type {Transform} from '../geo/transform';
@@ -1435,3 +1436,29 @@ export abstract class Camera extends Evented {
         return elevation - this.transform.elevation;
     }
 }
+
+// In debug builds, check that camera change events are fired in the correct order.
+// - ___start events needs to be fired before ___ and ___end events
+// - another ___start event can't be fired before a ___end event has been fired for the previous one
+function addAssertions(camera: Camera) { //eslint-disable-line
+    Debug.run(() => {
+        const inProgress = {} as any;
+
+        ['drag', 'zoom', 'rotate', 'pitch', 'move'].forEach(name => {
+            inProgress[name] = false;
+
+            camera.on(`${name}start`, () => {
+                inProgress[name] = true;
+            });
+
+            camera.on(`${name}end`, () => {
+                inProgress[name] = false;
+            });
+        });
+
+        // Canary used to test whether this function is stripped in prod build
+        canary = 'canary debug run';
+    });
+}
+
+let canary; // eslint-disable-line
