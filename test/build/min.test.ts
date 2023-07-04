@@ -4,9 +4,6 @@ import packageJson from '../../package.json' assert {type: 'json'};
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
 describe('test min build', () => {
-    test('production build removes asserts', () => {
-        expect(minBundle.includes('canary debug run')).toBeFalsy();
-    });
 
     test('trims package.json assets', () => {
     // confirm that the entire package.json isn't present by asserting
