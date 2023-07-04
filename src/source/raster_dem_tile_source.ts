@@ -16,6 +16,21 @@ import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ExpiryData} from '../util/ajax';
 
+/**
+ * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
+ * This source can be used to show hillshading and 3D terrain
+ *
+ * @group Sources
+ *
+ * @example
+ * map.addSource('raster-dem-source', {
+ *      type: 'raster-dem',
+ *      url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+ *      tileSize: 256
+ * });
+ *
+ * @see [3D Terrain](https://maplibre.org/maplibre-gl-js-docs/example/3d-terrain/)
+ */
 export class RasterDEMTileSource extends RasterTileSource implements Source {
     encoding: 'mapbox' | 'terrarium';
 
