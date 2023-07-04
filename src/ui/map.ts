@@ -110,7 +110,7 @@ export type MapOptions = {
      */
     maplibreLogo?: boolean;
     /**
-     * A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, `bottom-right`.
+     * A string representing the position of the MapLibre wordmark on the map. Valid options are `top-left`,`top-right`, `bottom-left`, or `bottom-right`.
      * @defaultValue 'bottom-left'
      */
     logoPosition?: ControlPosition;
@@ -126,7 +126,7 @@ export type MapOptions = {
      */
     preserveDrawingBuffer?: boolean;
     /**
-     * If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. this is `false` by default as a performance optimization.
+     * If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. This is `false` by default as a performance optimization.
      */
     antialias?: boolean;
     /**
@@ -144,7 +144,7 @@ export type MapOptions = {
      */
     scrollZoom?: boolean | AroundCenterOptions;
     /**
-     * The minimum zoom level of the map (0-24)
+     * The minimum zoom level of the map (0-24).
      * @defaultValue 0
      */
     minZoom?: number | null;
@@ -199,7 +199,7 @@ export type MapOptions = {
      */
     touchPitch?: boolean | AroundCenterOptions;
     /**
-     * If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link #FullscreenControl}.
+     * If `true` or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link #FullscreenControl}.
      * @defaultValue undefined
      */
     cooperativeGestures?: boolean | GestureOptions;
@@ -243,17 +243,17 @@ export type MapOptions = {
      */
     maxTileCacheSize?: number;
     /**
-     * The maximum number of zoom levels for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying `maxTileCacheZoomLevels` with approx number of tiles in the viewport for a given source.
+     * The maximum number of zoom levels for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying `maxTileCacheZoomLevels` with the approximate number of tiles in the viewport for a given source.
      * @defaultValue 5
      */
     maxTileCacheZoomLevels?: number;
     /**
-     * A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
+     * A callback run before the map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
      * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
      */
     transformRequest?: RequestTransformFunction;
     /**
-     * A callback run before the Map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
+     * A callback run before the map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
      * Expected to return an object containing center, zoom, pitch or bearing values to overwrite.
      */
     transformCameraUpdate?: CameraUpdateTransformFunction;
@@ -300,13 +300,13 @@ export type MapOptions = {
      */
     localIdeographFontFamily?: string;
     /**
-     * The map's MapLibre style. This must be an a JSON object conforming to
+     * The map's MapLibre style. This must be a JSON object conforming to
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
      */
     style: StyleSpecification | string;
     /**
-     * If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled. default true.
+     * If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled. Defaults to true.
      */
     pitchWithRotate?: boolean;
     /**
