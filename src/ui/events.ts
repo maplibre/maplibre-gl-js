@@ -44,10 +44,20 @@ export interface MapStyleDataEvent extends MapLibreEvent {
 
 export interface MapSourceDataEvent extends MapLibreEvent {
     dataType: 'source';
+    /**
+     * True if the event has a `dataType` of `source` and the source has no outstanding network requests.
+     */
     isSourceLoaded: boolean;
+    /**
+     * The [style spec representation of the source](https://maplibre.org/maplibre-style-spec/#sources) if the event has a `dataType` of `source`.
+     */
     source: SourceSpecification;
     sourceId: string;
     sourceDataType: MapSourceDataType;
+    /**
+     * The tile being loaded or changed, if the event has a `dataType` of `source` and
+     * the event is related to loading of a tile.
+     */
     tile: any;
 }
 /**
@@ -266,15 +276,19 @@ export class MapWheelEvent extends Event {
 
 /**
  * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
- *
- * @typedef {Object} MapLibreZoomEvent
- * @property {MouseEvent} originalEvent The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
- * @property {string} type The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
- * @property {Map} target The `Map` instance that triggered the event
  */
 export type MapLibreZoomEvent = {
+    /**
+     * The type of boxzoom event. One of `boxzoomstart`, `boxzoomend` or `boxzoomcancel`
+     */
     type: 'boxzoomstart' | 'boxzoomend' | 'boxzoomcancel';
+    /**
+     * The `Map` instance that triggered the event
+     */
     target: Map;
+    /**
+     * The DOM event that triggered the boxzoom event. Can be a `MouseEvent` or `KeyboardEvent`
+     */
     originalEvent: MouseEvent;
 };
 
@@ -293,17 +307,6 @@ export type MapLibreZoomEvent = {
  * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
  * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
  *
- * @typedef {Object} MapDataEvent
- * @property {string} type The event type.
- * @property {string} dataType The type of data that has changed. One of `'source'`, `'style'`.
- * @property {boolean} [isSourceLoaded] True if the event has a `dataType` of `source` and the source has no outstanding network requests.
- * @property {Object} [source] The [style spec representation of the source](https://maplibre.org/maplibre-style-spec/#sources) if the event has a `dataType` of `source`.
- * @property {string} [sourceDataType] Included if the event has a `dataType` of `source` and the event signals
- * that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
- * @property {Object} [tile] The tile being loaded or changed, if the event has a `dataType` of `source` and
- * the event is related to loading of a tile.
- * @property {Coordinates} [coord] The coordinate of the tile if the event has a `dataType` of `source` and
- * the event is related to loading of a tile.
  * @example
  * // The sourcedata event is an example of MapDataEvent.
  * // Set up an event listener on the map.
@@ -314,8 +317,17 @@ export type MapLibreZoomEvent = {
  * });
  */
 export type MapDataEvent = {
+    /**
+     * The event type.
+     */
     type: string;
+    /**
+     * The type of data that has changed. One of `'source'`, `'style'`. 
+     */
     dataType: string;
+    /**
+     *  Included if the event has a `dataType` of `source` and the event signals that internal data has been received or changed. Possible values are `metadata`, `content`, `visibility` and `idle`.
+     */
     sourceDataType: MapSourceDataType;
 };
 
@@ -411,8 +423,6 @@ export type MapEvent =
      * the cursor is pressed while inside a visible portion of the specified layer.
      *
      * @event mousedown
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -440,8 +450,6 @@ export type MapEvent =
      * the cursor is released while inside a visible portion of the specified layer.
      *
      * @event mouseup
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -471,8 +479,6 @@ export type MapEvent =
      * the cursor is moved inside a visible portion of the specified layer.
      *
      * @event mouseover
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -503,8 +509,6 @@ export type MapEvent =
      * the cursor is inside a visible portion of the specified layer.
      *
      * @event mousemove
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -534,8 +538,6 @@ export type MapEvent =
      * point that is pressed and released contains a visible portion of the specified layer.
      *
      * @event click
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -567,8 +569,6 @@ export type MapEvent =
      * **Note:** Under normal conditions, this event will be preceded by two {@link Map.event:click} events.
      *
      * @event dblclick
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -595,8 +595,6 @@ export type MapEvent =
      * where the second argument specifies the desired layer.
      *
      * @event mouseenter
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -618,8 +616,6 @@ export type MapEvent =
      * where the second argument specifies the desired layer.
      *
      * @event mouseleave
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -639,8 +635,6 @@ export type MapEvent =
      * Fired when a point device (usually a mouse) leaves the map's canvas.
      *
      * @event mouseout
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -658,8 +652,6 @@ export type MapEvent =
      * Fired when the right button of the mouse is clicked or the context menu key is pressed within the map.
      *
      * @event contextmenu
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent} data
      * @example
      * // Initialize the map
@@ -677,8 +669,6 @@ export type MapEvent =
      * Fired when a [`wheel`](https://developer.mozilla.org/en-US/docs/Web/Events/wheel) event occurs within the map.
      *
      * @event wheel
-     * @memberof Map
-     * @instance
      * @property {MapWheelEvent} data
      * @example
      * // Initialize the map
@@ -695,8 +685,6 @@ export type MapEvent =
      * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the map.
      *
      * @event touchstart
-     * @memberof Map
-     * @instance
      * @property {MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -714,8 +702,6 @@ export type MapEvent =
      * Fired when a [`touchend`](https://developer.mozilla.org/en-US/docs/Web/Events/touchend) event occurs within the map.
      *
      * @event touchend
-     * @memberof Map
-     * @instance
      * @property {MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -733,8 +719,6 @@ export type MapEvent =
      * Fired when a [`touchmove`](https://developer.mozilla.org/en-US/docs/Web/Events/touchmove) event occurs within the map.
      *
      * @event touchmove
-     * @memberof Map
-     * @instance
      * @property {MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -752,8 +736,6 @@ export type MapEvent =
      * Fired when a [`touchcancel`](https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel) event occurs within the map.
      *
      * @event touchcancel
-     * @memberof Map
-     * @instance
      * @property {MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -771,8 +753,6 @@ export type MapEvent =
      * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
      *
      * @event movestart
-     * @memberof Map
-     * @instance
      * @property {{originalEvent: DragEvent}} data
      * @example
      * // Initialize the map
@@ -791,8 +771,6 @@ export type MapEvent =
      * another, as the result of either user interaction or methods such as {@link Map#flyTo}.
      *
      * @event move
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -811,8 +789,6 @@ export type MapEvent =
      * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
      *
      * @event moveend
-     * @memberof Map
-     * @instance
      * @property {{originalEvent: DragEvent}} data
      * @example
      * // Initialize the map
@@ -830,8 +806,6 @@ export type MapEvent =
      * Fired when a "drag to pan" interaction starts. See {@link DragPanHandler}.
      *
      * @event dragstart
-     * @memberof Map
-     * @instance
      * @property {{originalEvent: DragEvent}} data
      * @example
      * // Initialize the map
@@ -848,8 +822,6 @@ export type MapEvent =
      * Fired repeatedly during a "drag to pan" interaction. See {@link DragPanHandler}.
      *
      * @event drag
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -866,8 +838,6 @@ export type MapEvent =
      * Fired when a "drag to pan" interaction ends. See {@link DragPanHandler}.
      *
      * @event dragend
-     * @memberof Map
-     * @instance
      * @property {{originalEvent: DragEvent}} data
      * @example
      * // Initialize the map
@@ -886,8 +856,6 @@ export type MapEvent =
      * as the result of either user interaction or methods such as {@link Map#flyTo}.
      *
      * @event zoomstart
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -905,8 +873,6 @@ export type MapEvent =
      * as the result of either user interaction or methods such as {@link Map#flyTo}.
      *
      * @event zoom
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -924,8 +890,6 @@ export type MapEvent =
      * as the result of either user interaction or methods such as {@link Map#flyTo}.
      *
      * @event zoomend
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -942,8 +906,6 @@ export type MapEvent =
      * Fired when a "drag to rotate" interaction starts. See {@link DragRotateHandler}.
      *
      * @event rotatestart
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -960,8 +922,6 @@ export type MapEvent =
      * Fired repeatedly during a "drag to rotate" interaction. See {@link DragRotateHandler}.
      *
      * @event rotate
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -978,8 +938,6 @@ export type MapEvent =
      * Fired when a "drag to rotate" interaction ends. See {@link DragRotateHandler}.
      *
      * @event rotateend
-     * @memberof Map
-     * @instance
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * // Initialize the map
@@ -997,8 +955,6 @@ export type MapEvent =
      * the result of either user interaction or methods such as {@link Map#flyTo} .
      *
      * @event pitchstart
-     * @memberof Map
-     * @instance
      * @property {MapEventData} data
      * @example
      * // Initialize the map
@@ -1017,8 +973,6 @@ export type MapEvent =
      * or methods such as {@link Map#flyTo}.
      *
      * @event pitch
-     * @memberof Map
-     * @instance
      * @property {MapEventData} data
      * @example
      * // Initialize the map
@@ -1036,8 +990,6 @@ export type MapEvent =
      * the result of either user interaction or methods such as {@link Map#flyTo}.
      *
      * @event pitchend
-     * @memberof Map
-     * @instance
      * @property {MapEventData} data
      * @example
      * // Initialize the map
@@ -1054,8 +1006,6 @@ export type MapEvent =
      * Fired when a "box zoom" interaction starts. See {@link BoxZoomHandler}.
      *
      * @event boxzoomstart
-     * @memberof Map
-     * @instance
      * @property {MapLibreZoomEvent} data
      * @example
      * // Initialize the map
@@ -1072,9 +1022,6 @@ export type MapEvent =
      * Fired when a "box zoom" interaction ends.  See {@link BoxZoomHandler}.
      *
      * @event boxzoomend
-     * @memberof Map
-     * @instance
-     * @type {Object}
      * @property {MapLibreZoomEvent} data
      * @example
      * // Initialize the map
@@ -1092,8 +1039,6 @@ export type MapEvent =
      * See {@link BoxZoomHandler}.
      *
      * @event boxzoomcancel
-     * @memberof Map
-     * @instance
      * @property {MapLibreZoomEvent} data
      * @example
      * // Initialize the map
@@ -1110,8 +1055,6 @@ export type MapEvent =
      * Fired immediately after the map has been resized.
      *
      * @event resize
-     * @memberof Map
-     * @instance
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -1127,8 +1070,6 @@ export type MapEvent =
      * Fired when the WebGL context is lost.
      *
      * @event webglcontextlost
-     * @memberof Map
-     * @instance
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -1144,8 +1085,6 @@ export type MapEvent =
      * Fired when the WebGL context is restored.
      *
      * @event webglcontextrestored
-     * @memberof Map
-     * @instance
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -1162,9 +1101,6 @@ export type MapEvent =
      * and the first visually complete rendering of the map has occurred.
      *
      * @event load
-     * @memberof Map
-     * @instance
-     * @type {Object}
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -1188,8 +1124,6 @@ export type MapEvent =
      * - the loading of a vector tile, GeoJSON file, glyph, or sprite
      *
      * @event render
-     * @memberof Map
-     * @instance
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -1210,8 +1144,6 @@ export type MapEvent =
      * - All fade/transition animations have completed
      *
      * @event idle
-     * @memberof Map
-     * @instance
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -1227,8 +1159,6 @@ export type MapEvent =
      * Fired immediately after the map has been removed with {@link Map.event:remove}.
      *
      * @event remove
-     * @memberof Map
-     * @instance
      * @example
      * // Initialize the map
      * var map = new maplibregl.Map({ // map options });
@@ -1247,8 +1177,6 @@ export type MapEvent =
      * error will be printed to the console.
      *
      * @event error
-     * @memberof Map
-     * @instance
      * @property {{error: {message: string}}} data
      * @example
      * // Initialize the map
@@ -1266,8 +1194,6 @@ export type MapEvent =
      * for more information.
      *
      * @event data
-     * @memberof Map
-     * @instance
      * @property {MapDataEvent} data
      * @example
      * // Initialize the map
@@ -1286,8 +1212,6 @@ export type MapEvent =
      * {@link MapDataEvent} for more information.
      *
      * @event styledata
-     * @memberof Map
-     * @instance
      * @property {MapDataEvent} data
      * @example
      * // Initialize the map
@@ -1305,8 +1229,6 @@ export type MapEvent =
      * to a source loads or changes. See {@link MapDataEvent} for more information.
      *
      * @event sourcedata
-     * @memberof Map
-     * @instance
      * @property {MapDataEvent} data
      * @example
      * // Initialize the map
@@ -1325,8 +1247,6 @@ export type MapEvent =
      * `dataabort` or `error` event. See {@link MapDataEvent} for more information.
      *
      * @event dataloading
-     * @memberof Map
-     * @instance
      * @property {MapDataEvent} data
      * @example
      * // Initialize the map
@@ -1346,8 +1266,6 @@ export type MapEvent =
      * or `error` event. See {@link MapDataEvent} for more information.
      *
      * @event styledataloading
-     * @memberof Map
-     * @instance
      * @property {MapDataEvent} data
      * @example
      * // Initialize the map
@@ -1367,8 +1285,6 @@ export type MapEvent =
      * See {@link MapDataEvent} for more information.
      *
      * @event sourcedataloading
-     * @memberof Map
-     * @instance
      * @property {MapDataEvent} data
      * @example
      * // Initialize the map
@@ -1388,8 +1304,6 @@ export type MapEvent =
      * being skipped. This event can be used to dynamically generate icons and patterns.
      *
      * @event styleimagemissing
-     * @memberof Map
-     * @instance
      * @property {string} id The id of the missing image.
      * @example
      * // Initialize the map
@@ -1405,16 +1319,12 @@ export type MapEvent =
 
     /**
      * @event style.load
-     * @memberof Map
-     * @instance
      * @private
      */
     | 'style.load'
 
     /**
      * @event terrain
-     * @memberof Map
-     * @instance
      * @private
      */
     | 'terrain'
@@ -1425,8 +1335,6 @@ export type MapEvent =
      * See {@link MapDataEvent} for more information.
      *
      * @event dataabort
-     * @memberof Map
-     * @instance
      * @property {MapDataEvent} data
      * @example
      * // Initialize the map
@@ -1444,8 +1352,6 @@ export type MapEvent =
      * See {@link MapDataEvent} for more information.
      *
      * @event sourcedataabort
-     * @memberof Map
-     * @instance
      * @property {MapDataEvent} data
      * @example
      * // Initialize the map

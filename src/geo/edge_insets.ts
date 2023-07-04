@@ -89,7 +89,6 @@ export class EdgeInsets {
      * read-only representation of the inset.
      *
      * @returns state as json
-     * @memberof EdgeInsets
      */
     toJSON(): PaddingOptions {
         return {

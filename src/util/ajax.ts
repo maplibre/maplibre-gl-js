@@ -6,14 +6,6 @@ import type {Cancelable} from '../types/cancelable';
 
 /**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
- * @typedef {Object} RequestParameters
- * @property {string} url The URL to be requested.
- * @property {Object} headers The headers to be sent with the request.
- * @property {string} method Request method `'GET' | 'POST' | 'PUT'`.
- * @property {string} body Request body.
- * @property {string} type Response body type to be returned `'string' | 'json' | 'arrayBuffer'`.
- * @property {string} credentials `'same-origin'|'include'` Use 'include' to send cookies with cross-origin requests.
- * @property {boolean} collectResourceTiming If true, Resource Timing API information will be collected for these transformed requests and returned in a resourceTiming property of relevant data events.
  * @example
  * // use transformRequest to modify requests that begin with `http://myHost`
  * transformRequest: function(url, resourceType) {
@@ -28,12 +20,33 @@ import type {Cancelable} from '../types/cancelable';
  *
  */
 export type RequestParameters = {
+    /**
+     * The URL to be requested.
+     */
     url: string;
+    /**
+     * The headers to be sent with the request.
+     */
     headers?: any;
+    /**
+     * Request method `'GET' | 'POST' | 'PUT'`.
+     */
     method?: 'GET' | 'POST' | 'PUT';
+    /**
+     * Request body.
+     */
     body?: string;
+    /**
+     * Response body type to be returned `'string' | 'json' | 'arrayBuffer'`.
+     */
     type?: 'string' | 'json' | 'arrayBuffer' | 'image';
+    /**
+     * `'same-origin'|'include'` Use 'include' to send cookies with cross-origin requests.
+     */
     credentials?: 'same-origin' | 'include';
+    /**
+     * If `true`, Resource Timing API information will be collected for these transformed requests and returned in a resourceTiming property of relevant data events.
+     */
     collectResourceTiming?: boolean;
 };
 

@@ -3116,10 +3116,6 @@ export class Map extends Camera {
      * The uncompressed file size of the first vector source is drawn in the top left
      * corner of each tile, next to the tile ID.
      *
-     * @name showTileBoundaries
-     * @type {boolean}
-     * @instance
-     * @memberof Map
      * @example
      * map.showTileBoundaries = true;
      */
@@ -3133,11 +3129,6 @@ export class Map extends Camera {
     /**
      * Gets and sets a Boolean indicating whether the map will visualize
      * the padding offsets.
-     *
-     * @name showPadding
-     * @type {boolean}
-     * @instance
-     * @memberof Map
      */
     get showPadding(): boolean { return !!this._showPadding; }
     set showPadding(value: boolean) {
@@ -3151,11 +3142,6 @@ export class Map extends Camera {
      * around all symbols in the data source, revealing which symbols
      * were rendered or which were hidden due to collisions.
      * This information is useful for debugging.
-     *
-     * @name showCollisionBoxes
-     * @type {boolean}
-     * @instance
-     * @memberof Map
      */
     get showCollisionBoxes(): boolean { return !!this._showCollisionBoxes; }
     set showCollisionBoxes(value: boolean) {
@@ -3171,17 +3157,12 @@ export class Map extends Camera {
         }
     }
 
-    /*
+    /**
      * Gets and sets a Boolean indicating whether the map should color-code
      * each fragment to show how many times it has been shaded.
      * White fragments have been shaded 8 or more times.
      * Black fragments have been shaded 0 times.
      * This information is useful for debugging.
-     *
-     * @name showOverdraw
-     * @type {boolean}
-     * @instance
-     * @memberof Map
      */
     get showOverdrawInspector(): boolean { return !!this._showOverdrawInspector; }
     set showOverdrawInspector(value: boolean) {
@@ -3193,11 +3174,6 @@ export class Map extends Camera {
     /**
      * Gets and sets a Boolean indicating whether the map will
      * continuously repaint. This information is useful for analyzing performance.
-     *
-     * @name repaint
-     * @type {boolean}
-     * @instance
-     * @memberof Map
      */
     get repaint(): boolean { return !!this._repaint; }
     set repaint(value: boolean) {
