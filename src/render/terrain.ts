@@ -65,44 +65,69 @@ export type TerrainMesh = {
  *         cache of the last 150 newest rendered tiles.
  *
  */
-
 export class Terrain {
-    // The style this terrain crresponds to
+    /**
+     * The style this terrain crresponds to
+     */
     painter: Painter;
-    // the sourcecache this terrain is based on
+    /**
+     * the sourcecache this terrain is based on
+     */
     sourceCache: TerrainSourceCache;
-    // the TerrainSpecification object passed to this instance
+    /**
+     * the TerrainSpecification object passed to this instance
+     */
     options: TerrainSpecification;
-    // define the meshSize per tile.
+    /**
+     * define the meshSize per tile.
+     */
     meshSize: number;
-    // multiplicator for the elevation. Used to make terrain more "extreme".
+    /**
+     * multiplicator for the elevation. Used to make terrain more "extreme".
+     */
     exaggeration: number;
-    // to not see pixels in the render-to-texture tiles it is good to render them bigger
-    // this number is the multiplicator (must be a power of 2) for the current tileSize.
-    // So to get good results with not too much memory footprint a value of 2 should be fine.
+    /**
+     * to not see pixels in the render-to-texture tiles it is good to render them bigger
+     * this number is the multiplicator (must be a power of 2) for the current tileSize.
+     * So to get good results with not too much memory footprint a value of 2 should be fine.
+     */
     qualityFactor: number;
-    // holds the framebuffer object in size of the screen to render the coords & depth into a texture.
+    /**
+     * holds the framebuffer object in size of the screen to render the coords & depth into a texture.
+     */
     _fbo: Framebuffer;
     _fboCoordsTexture: Texture;
     _fboDepthTexture: Texture;
     _emptyDepthTexture: Texture;
-    // GL Objects for the terrain-mesh
-    // The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
+    /**
+     * GL Objects for the terrain-mesh
+     * The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
+     */
     _mesh: TerrainMesh;
-    // coords index contains a list of tileID.keys. This index is used to identify
-    // the tile via the alpha-cannel in the coords-texture.
-    // As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
+    /**
+     * coords index contains a list of tileID.keys. This index is used to identify
+     * the tile via the alpha-cannel in the coords-texture.
+     * As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
+     */
     coordsIndex: Array<string>;
-    // tile-coords encoded in the rgb channel, _coordsIndex is in the alpha-channel.
+    /**
+     * tile-coords encoded in the rgb channel, _coordsIndex is in the alpha-channel.
+     */
     _coordsTexture: Texture;
-    // accuracy of the coords. 2 * tileSize should be enoughth.
+    /**
+     * accuracy of the coords. 2 * tileSize should be enoughth.
+     */
     _coordsTextureSize: number;
-    // variables for an empty dem texture, which is used while the raster-dem tile is loading.
+    /**
+     * variables for an empty dem texture, which is used while the raster-dem tile is loading.
+     */
     _emptyDemUnpack: number[];
     _emptyDemTexture: Texture;
     _emptyDemMatrix: mat4;
-    // as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
-    // matrices to transform from vector-tile coords to raster-dem-tile coords.
+    /**
+     * as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
+     * matrices to transform from vector-tile coords to raster-dem-tile coords.
+     */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
 
     constructor(painter: Painter, sourceCache: SourceCache, options: TerrainSpecification) {
@@ -119,11 +144,11 @@ export class Terrain {
 
     /**
      * get the elevation-value from original dem-data for a given tile-coordinate
-     * @param {OverscaledTileID} tileID - the tile to get elevation for
-     * @param {number} x between 0 .. EXTENT
-     * @param {number} y between 0 .. EXTENT
-     * @param {number} extent optional, default 8192
-     * @returns {number} - the elevation
+     * @param tileID - the tile to get elevation for
+     * @param x between 0 .. EXTENT
+     * @param y between 0 .. EXTENT
+     * @param extent optional, default 8192
+     * @returns the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
@@ -150,11 +175,11 @@ export class Terrain {
 
     /**
      * get the Elevation for given coordinate in respect of exaggeration.
-     * @param {OverscaledTileID} tileID - the tile id
-     * @param {number} x between 0 .. EXTENT
-     * @param {number} y between 0 .. EXTENT
-     * @param {number} extent optional, default 8192
-     * @returns {number} - the elevation
+     * @param tileID - the tile id
+     * @param x between 0 .. EXTENT
+     * @param y between 0 .. EXTENT
+     * @param extent optional, default 8192
+     * @returns the elevation
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         return this.getDEMElevation(tileID, x, y, extent) * this.exaggeration;
@@ -162,8 +187,8 @@ export class Terrain {
 
     /**
      * returns a Terrain Object for a tile. Unless the tile corresponds to data (e.g. tile is loading), return a flat dem object
-     * @param {OverscaledTileID} tileID - the tile to get the terrain for
-     * @returns {TerrainData} the terrain data to use in the program
+     * @param tileID - the tile to get the terrain for
+     * @returns the terrain data to use in the program
      */
     getTerrainData(tileID: OverscaledTileID): TerrainData {
         // create empty DEM Objects, which will used while raster-dem tiles are loading.
@@ -218,8 +243,8 @@ export class Terrain {
 
     /**
      * get a framebuffer as big as the map-div, which will be used to render depth & coords into a texture
-     * @param {string} texture - the texture
-     * @returns {Framebuffer} the frame buffer
+     * @param texture - the texture
+     * @returns the frame buffer
      */
     getFramebuffer(texture: string): Framebuffer {
         const painter = this.painter;
@@ -257,7 +282,7 @@ export class Terrain {
      *   - 4 higher bits for x
      *   - 4 higher bits for y
      *   - 8 bits for coordsIndex (1 .. 255) (= number of terraintile), is later setted in draw_terrain uniform value
-     * @returns {Texture} - the texture
+     * @returns the texture
      */
     getCoordsTexture(): Texture {
         const context = this.painter.context;
@@ -278,8 +303,8 @@ export class Terrain {
 
     /**
      * Reads a pixel from the coords-framebuffer and translate this to mercator.
-     * @param {Point} p Screen-Coordinate
-     * @returns {MercatorCoordinate} mercator coordinate for a screen pixel
+     * @param p Screen-Coordinate
+     * @returns mercator coordinate for a screen pixel
      */
     pointCoordinate(p: Point): MercatorCoordinate {
         const rgba = new Uint8Array(4);
@@ -305,7 +330,7 @@ export class Terrain {
 
     /**
      * create a regular mesh which will be used by all terrain-tiles
-     * @returns {TerrainMesh} - the created regular mesh
+     * @returns the created regular mesh
      */
     getTerrainMesh(): TerrainMesh {
         if (this._mesh) return this._mesh;
@@ -355,7 +380,7 @@ export class Terrain {
      * @param zoom current zoomlevel
      * @returns the elevation delta in meters
      */
-    getMeshFrameDelta(zoom: number) {
+    getMeshFrameDelta(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
         return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
@@ -365,7 +390,7 @@ export class Terrain {
      * exaggeration included in the terrain.
      *
      * @param tileID Id of the tile to be used as a source for the min/max elevation
-     * @returns {Object} Minimum and maximum elevation found in the tile, including the terrain's
+     * @returns the minimum and maximum elevation found in the tile, including the terrain's
      * exaggeration
      */
     getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
