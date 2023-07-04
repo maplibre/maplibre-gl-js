@@ -409,7 +409,7 @@ type ProjectionArgs = {
      * Function to get elevation at a point
      * @param x the x coordinate
      * @param y the y coordinate
-     * @returns 
+     * @returns
      */
     getElevation: (x: number, y: number) => number;
     /**

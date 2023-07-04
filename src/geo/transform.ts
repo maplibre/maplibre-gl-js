@@ -271,7 +271,7 @@ export class Transform {
 
     /**
      * Return a zoom level that will cover all tiles the transform
-     * @param options options 
+     * @param options options
      * @returns zoom level An integer zoom level at which all tiles will be visible.
      */
     coveringZoomLevel(options: {
@@ -593,7 +593,7 @@ export class Transform {
     /**
      * Given a Coordinate, return its geographical position.
      * @param coord mercator coordivates
-     * @returns lng and lat 
+     * @returns lng and lat
      * @private
      */
     coordinateLocation(coord: MercatorCoordinate): LngLat {
@@ -958,11 +958,11 @@ export class Transform {
      * When the map is pitched, some of the 3D features that intersect a query will not intersect
      * the query at the surface of the earth. Instead the feature may be closer and only intersect
      * the query because it extrudes into the air.
-     * @param queryGeometry - For point queries, the line from the query point to the "camera point", 
+     * @param queryGeometry - For point queries, the line from the query point to the "camera point",
      * for other geometries, the envelope of the query geometry and the "camera point"
      * @returns a geometry that includes all of the original query as well as all possible ares of the
      * screen where the *base* of a visible extrusion could be.
-     *  
+     *
      */
     getCameraQueryGeometry(queryGeometry: Array<Point>): Array<Point> {
         const c = this.getCameraPoint();

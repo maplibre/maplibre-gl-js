@@ -227,7 +227,7 @@ export class Tile {
 
     /**
      * Release any data or WebGL resources referenced by this tile.
-     * @returns 
+     * @returns
      * @private
      */
     unloadVectorData() {

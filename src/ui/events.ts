@@ -322,7 +322,7 @@ export type MapDataEvent = {
      */
     type: string;
     /**
-     * The type of data that has changed. One of `'source'`, `'style'`. 
+     * The type of data that has changed. One of `'source'`, `'style'`.
      */
     dataType: string;
     /**

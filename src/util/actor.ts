@@ -10,7 +10,7 @@ import type {Cancelable} from '../types/cancelable';
  * that maintains the relationship between asynchronous tasks and the objects
  * that spin them off - in this case, tasks like parsing parts of styles,
  * owned by the styles
- * 
+ *
  * @private
  */
 export class Actor {
