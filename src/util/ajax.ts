@@ -46,11 +46,6 @@ export type ResponseCallback<T> = (
 
 /**
  * An error thrown when a HTTP request results in an error response.
- * @extends Error
- * @param {number} status The response's HTTP status code.
- * @param {string} statusText The response's HTTP status text.
- * @param {string} url The request's URL.
- * @param {Blob} body The response's body.
  */
 export class AJAXError extends Error {
     /**
@@ -73,6 +68,12 @@ export class AJAXError extends Error {
      */
     body: Blob;
 
+    /**
+     * @param status The response's HTTP status code.
+     * @param statusText The response's HTTP status text.
+     * @param url The request's URL.
+     * @param body The response's body.
+     */
     constructor(status: number, statusText: string, url: string, body: Blob) {
         super(`AJAXError: ${statusText} (${status}): ${url}`);
         this.status = status;
