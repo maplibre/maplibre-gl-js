@@ -409,8 +409,7 @@ type ProjectionArgs = {
      * Function to get elevation at a point
      * @param x the x coordinate
      * @param y the y coordinate
-     * @returns
-     */
+    */
     getElevation: (x: number, y: number) => number;
     /**
      * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera

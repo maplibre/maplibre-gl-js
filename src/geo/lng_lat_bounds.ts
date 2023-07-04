@@ -291,7 +291,7 @@ export class LngLatBounds {
      * Returns a `LngLatBounds` from the coordinates extended by a given `radius`. The returned `LngLatBounds` completely contains the `radius`.
      *
      * @param center center coordinates of the new bounds.
-     * @param radius Distance in meters from the coordinates to extend the bounds. default 0
+     * @param radius Distance in meters from the coordinates to extend the bounds.
      * @returns A new `LngLatBounds` object representing the coordinates extended by the `radius`.
      * @example
      * var center = new maplibregl.LngLat(-73.9749, 40.7736);
