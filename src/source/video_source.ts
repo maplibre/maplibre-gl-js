@@ -17,6 +17,8 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  * A data source containing video.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-video) for detailed documentation of options.)
  *
+ * @group Sources
+ *
  * @example
  * // add to map
  * map.addSource('some id', {

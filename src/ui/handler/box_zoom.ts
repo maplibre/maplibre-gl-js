@@ -10,6 +10,8 @@ import {Handler} from '../handler_manager';
 /**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.
  * The bounding box is defined by clicking and holding `shift` while dragging the cursor.
+ *
+ * @group Handlers
  */
 export class BoxZoomHandler implements Handler {
     _map: Map;
@@ -24,7 +26,7 @@ export class BoxZoomHandler implements Handler {
     _clickTolerance: number;
 
     /**
-     * @private
+     * @hidden
      */
     constructor(map: Map, options: {
         clickTolerance: number;
@@ -39,7 +41,7 @@ export class BoxZoomHandler implements Handler {
     /**
      * Returns a Boolean indicating whether the "box zoom" interaction is enabled.
      *
-     * @returns {boolean} `true` if the "box zoom" interaction is enabled.
+     * @returns `true` if the "box zoom" interaction is enabled.
      */
     isEnabled() {
         return !!this._enabled;
@@ -48,7 +50,7 @@ export class BoxZoomHandler implements Handler {
     /**
      * Returns a Boolean indicating whether the "box zoom" interaction is active, i.e. currently being used.
      *
-     * @returns {boolean} `true` if the "box zoom" interaction is active.
+     * @returns `true` if the "box zoom" interaction is active.
      */
     isActive() {
         return !!this._active;

@@ -63,7 +63,6 @@ type PainterOptions = {
 /**
  * Initialize a new painter object.
  *
- * @param {Canvas} gl a webgl drawing context
  * @private
  */
 export class Painter {

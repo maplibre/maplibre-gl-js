@@ -19,8 +19,8 @@ type EvaluationFeature = {
 /**
  * Construct a new feature based on a VectorTileFeature for expression evaluation, the geometry of which
  * will be loaded based on necessity.
- * @param {VectorTileFeature} feature
- * @param {boolean} needGeometry
+ * @param feature the feature to evaluate
+ * @param needGeometry if set to true this will load the geometry
  * @private
  */
 export function toEvaluationFeature(feature: VectorTileFeature, needGeometry: boolean): EvaluationFeature {

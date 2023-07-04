@@ -15,7 +15,7 @@ import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {getSourceType, setSourceType, Source} from '../source/source';
 import type {SourceClass} from '../source/source';
-import {queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
+import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, operations as diffOperations} from '@maplibre/maplibre-gl-style-spec';
@@ -87,17 +87,39 @@ const ignoredDiffOperations = pick(diffOperations, [
 const empty = emptyStyle() as StyleSpecification;
 
 export type FeatureIdentifier = {
+    /**
+     * Unique id of the feature.
+     */
     id?: string | number | undefined;
+    /**
+     * The id of the vector or GeoJSON source for the feature.
+     */
     source: string;
+    /**
+     * *For vector tile sources, `sourceLayer` is required.*
+     */
     sourceLayer?: string | undefined;
 };
 
 export type StyleOptions = {
+    /**
+     * If false, style validation will be skipped. Useful in production environment.
+     */
     validate?: boolean;
+    /**
+     * Defines a CSS
+     * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
+     * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
+     * Set to `false`, to enable font settings from the map's style for these glyph ranges.
+     * Forces a full update.
+     */
     localIdeographFontFamily?: string;
 };
 
 export type StyleSetterOptions = {
+    /**
+     * Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
+     */
     validate?: boolean;
 };
 
@@ -108,10 +130,9 @@ export type StyleSetterOptions = {
  *      when a desired style is a certain combination of previous and incoming style
  *      when an incoming style requires modification based on external state
  *
- * @typedef {Function} TransformStyleFunction
- * @param {StyleSpecification | undefined} previousStyle The current style.
- * @param {StyleSpecification} nextStyle The next style.
- * @returns {boolean} resulting style that will to be applied to the map
+ * @param previousStyle The current style.
+ * @param nextStyle The next style.
+ * @returns resulting style that will to be applied to the map
  *
  * @example
  * map.setStyle('https://demotiles.maplibre.org/style.json', {
@@ -145,7 +166,15 @@ export type StyleSetterOptions = {
 export type TransformStyleFunction = (previous: StyleSpecification | undefined, next: StyleSpecification) => StyleSpecification;
 
 export type StyleSwapOptions = {
+    /**
+     * If false, force a 'full' update, removing the current style
+     * and building the given one instead of attempting a diff-based update.
+     */
     diff?: boolean;
+    /**
+     * TransformStyleFunction is a convenience function
+     * that allows to modify a style after it is fetched but before it is committed to the map state. Refer to {@link TransformStyleFunction}.
+     */
     transformStyle?: TransformStyleFunction;
 }
 
@@ -749,11 +778,11 @@ export class Style extends Evented {
 
     /**
      * Remove a source from this stylesheet, given its id.
-     * @param {string} id id of the source to remove
-     * @throws {Error} if no source is found with the given ID
-     * @returns {Map} The {@link Map} object.
+     * @param id id of the source to remove
+     * @throws if no source is found with the given ID
+     * @returns `this`.
      */
-    removeSource(id: string) {
+    removeSource(id: string): this {
         this._checkLoaded();
 
         if (this.sourceCaches[id] === undefined) {
@@ -776,8 +805,8 @@ export class Style extends Evented {
 
     /**
      * Set the data of a GeoJSON source, given its id.
-     * @param {string} id id of the source
-     * @param {GeoJSON|string} data GeoJSON source
+     * @param id id of the source
+     * @param data GeoJSON source
      */
     setGeoJSONSourceData(id: string, data: GeoJSON.GeoJSON | string) {
         this._checkLoaded();
@@ -792,8 +821,8 @@ export class Style extends Evented {
 
     /**
      * Get a source by id.
-     * @param {string} id id of the desired source
-     * @returns {Source | undefined} source
+     * @param id id of the desired source
+     * @returns source
      */
     getSource(id: string): Source | undefined {
         return this.sourceCaches[id] && this.sourceCaches[id].getSource();
@@ -802,12 +831,12 @@ export class Style extends Evented {
     /**
      * Add a layer to the map style. The layer will be inserted before the layer with
      * ID `before`, or appended if `before` is omitted.
-     * @param {Object | CustomLayerInterface} layerObject The style layer to add.
-     * @param {string} [before] ID of an existing layer to insert before
-     * @param {Object} options Style setter options.
-     * @returns {Map} The {@link Map} object.
+     * @param layerObject The style layer to add.
+     * @param before ID of an existing layer to insert before
+     * @param options Style setter options.
+     * @returns `this`.
      */
-    addLayer(layerObject: LayerSpecification | CustomLayerInterface, before?: string, options: StyleSetterOptions = {}) {
+    addLayer(layerObject: LayerSpecification | CustomLayerInterface, before?: string, options: StyleSetterOptions = {}): this {
         this._checkLoaded();
 
         const id = layerObject.id;
@@ -879,8 +908,8 @@ export class Style extends Evented {
     /**
      * Moves a layer to a different z-position. The layer will be inserted before the layer with
      * ID `before`, or appended if `before` is omitted.
-     * @param {string} id ID of the layer to move
-     * @param {string} [before] ID of an existing layer to insert before
+     * @param id ID of the layer to move
+     * @param before ID of an existing layer to insert before
      */
     moveLayer(id: string, before?: string) {
         this._checkLoaded();
@@ -914,7 +943,7 @@ export class Style extends Evented {
      *
      * If no such layer exists, an `error` event is fired.
      *
-     * @param {string} id id of the layer to remove
+     * @param id id of the layer to remove
      * @fires error
      */
     removeLayer(id: string) {
@@ -950,8 +979,8 @@ export class Style extends Evented {
     /**
      * Return the style layer object with the given `id`.
      *
-     * @param {string} id - id of the desired layer
-     * @returns {?Object} a layer, if one with the given `id` exists
+     * @param id - id of the desired layer
+     * @returns a layer, if one with the given `id` exists
      */
     getLayer(id: string): StyleLayer {
         return this._layers[id];
@@ -960,8 +989,8 @@ export class Style extends Evented {
     /**
      * checks if a specific layer is present within the style.
      *
-     * @param {string} id - id of the desired layer
-     * @returns {boolean} a boolean specifying if the given layer is present
+     * @param id the id of the desired layer
+     * @returns a boolean specifying if the given layer is present
      */
     hasLayer(id: string): boolean {
         return id in this._layers;
@@ -1016,10 +1045,10 @@ export class Style extends Evented {
 
     /**
      * Get a layer's filter object
-     * @param {string} layer the layer to inspect
-     * @returns {*} the layer's filter, if any
+     * @param layer the layer to inspect
+     * @returns the layer's filter, if any
      */
-    getFilter(layer: string) {
+    getFilter(layer: string): FilterSpecification | void {
         return clone(this.getLayer(layer).filter);
     }
 
@@ -1040,9 +1069,9 @@ export class Style extends Evented {
 
     /**
      * Get a layout property's value from a given layer
-     * @param {string} layerId the layer to inspect
-     * @param {string} name the name of the layout property
-     * @returns {*} the property value
+     * @param layerId the layer to inspect
+     * @param name the name of the layout property
+     * @returns the property value
      */
     getLayoutProperty(layerId: string, name: string) {
         const layer = this.getLayer(layerId);
@@ -1268,7 +1297,7 @@ export class Style extends Evented {
         return features;
     }
 
-    queryRenderedFeatures(queryGeometry: any, params: any, transform: Transform) {
+    queryRenderedFeatures(queryGeometry: any, params: QueryRenderedFeaturesOptions, transform: Transform) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'queryRenderedFeatures.filter', params.filter, null, params);
         }
@@ -1330,11 +1359,7 @@ export class Style extends Evented {
 
     querySourceFeatures(
         sourceID: string,
-        params?: {
-            sourceLayer?: string;
-            filter?: FilterSpecification;
-            validate?: boolean;
-        }
+        params?: QuerySourceFeatureOptions
     ) {
         if (params && params.filter) {
             this._validate(validateStyle.filter, 'querySourceFeatures.filter', params.filter, null, params);
@@ -1596,10 +1621,10 @@ export class Style extends Evented {
     /**
      * Add a sprite.
      *
-     * @param {string} id id of the desired sprite
-     * @param {string} url url to load the desired sprite from
-     * @param {StyleSetterOptions} [options] style setter options
-     * @param [completion] completion handler
+     * @param id id of the desired sprite
+     * @param url url to load the desired sprite from
+     * @param options style setter options
+     * @param completion the completion handler
      */
     addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
         this._checkLoaded();
@@ -1661,9 +1686,9 @@ export class Style extends Evented {
     /**
      * Set a new value for the style's sprite.
      *
-     * @param {SpriteSpecification} sprite new sprite value
-     * @param {StyleSetterOptions} [options] style setter options
-     * @param [completion] completion handler
+     * @param sprite new sprite value
+     * @param options style setter options
+     * @param completion the completion handler
      */
     setSprite(sprite: SpriteSpecification, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {
         this._checkLoaded();
