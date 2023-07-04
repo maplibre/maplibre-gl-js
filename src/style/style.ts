@@ -480,7 +480,7 @@ export class Style extends Evented {
     /**
      * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
      * @param ids an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
-     * @returns {Array<LayerSpecification>} generated result
+     * @returns generated result
      */
     private _serializeByIds(ids?: Array<string>): Array<LayerSpecification> {
 
@@ -671,7 +671,7 @@ export class Style extends Evented {
      * May throw an Error ('Unimplemented: METHOD') if the mapbox-gl-style-spec
      * diff algorithm produces an operation that is not supported.
      *
-     * @returns {boolean} true if any changes were made; false otherwise
+     * @returns true if any changes were made; false otherwise
      * @private
      */
     setState(nextState: StyleSpecification, options: StyleSwapOptions = {}) {
@@ -1677,7 +1677,7 @@ export class Style extends Evented {
     /**
      * Get the current sprite value.
      *
-     * @returns {Array} empty array when no sprite is set; id-url pairs otherwise
+     * @returns empty array when no sprite is set; id-url pairs otherwise
      */
     getSprite() {
         return coerceSpriteToArray(this.stylesheet.sprite);

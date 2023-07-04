@@ -52,7 +52,6 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  * {@link StyleImageInterface#render} method. The method is called every frame and
  * can be used to update the image.
  *
- * @interface StyleImageInterface
  * @see [Add an animated icon to the map.](https://maplibre.org/maplibre-gl-js-docs/example/add-image-animated/)
  *
  * @example
@@ -97,17 +96,8 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  */
 
 export interface StyleImageInterface {
-    /**
-     * @property {number} width
-     */
     width: number;
-    /**
-     * @property {number} height
-     */
     height: number;
-    /**
-     * @property {Uint8Array | Uint8ClampedArray} data
-     */
     data: Uint8Array | Uint8ClampedArray;
     /**
      * This method is called once before every frame where the icon will be used.
@@ -119,31 +109,18 @@ export interface StyleImageInterface {
      * If updates are infrequent it maybe easier to use {@link Map#updateImage} to update
      * the image instead of implementing this method.
      *
-     * @function
-     * @memberof StyleImageInterface
-     * @instance
-     * @name render
-     * @return {boolean} `true` if this method updated the image. `false` if the image was not changed.
+     * @return `true` if this method updated the image. `false` if the image was not changed.
      */
     render?: () => boolean;
     /**
      * Optional method called when the layer has been added to the Map with {@link Map#addImage}.
      *
-     * @function
-     * @memberof StyleImageInterface
-     * @instance
-     * @name onAdd
-     * @param {Map} map The Map this custom layer was just added to.
+     * @param map The Map this custom layer was just added to.
      */
     onAdd?: (map: Map, id: string) => void;
     /**
      * Optional method called when the icon is removed from the map with {@link Map#removeImage}.
      * This gives the image a chance to clean up resources and event listeners.
-     *
-     * @function
-     * @memberof StyleImageInterface
-     * @instance
-     * @name onRemove
      */
     onRemove?: () => void;
 }

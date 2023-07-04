@@ -43,11 +43,10 @@ export class EdgeInsets {
     /**
      * Interpolates the inset in-place.
      * This maintains the current inset value for any inset not present in `target`.
-     * @param {PaddingOptions | EdgeInsets} start interpolation start
-     * @param {PaddingOptions} target interpolation target
-     * @param {number} t interpolation step/weight
-     * @returns {EdgeInsets} the insets
-     * @memberof EdgeInsets
+     * @param start interpolation start
+     * @param target interpolation target
+     * @param t interpolation step/weight
+     * @returns the insets
      */
     interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): EdgeInsets {
         if (target.top != null && start.top != null) this.top = interpolates.number(start.top, target.top, t);
@@ -62,10 +61,9 @@ export class EdgeInsets {
      * Utility method that computes the new apprent center or vanishing point after applying insets.
      * This is in pixels and with the top left being (0.0) and +y being downwards.
      *
-     * @param {number} width the width
-     * @param {number} height the height
-     * @returns {Point} the point
-     * @memberof EdgeInsets
+     * @param width the width
+     * @param height the height
+     * @returns the point
      */
     getCenter(width: number, height: number): Point {
         // Clamp insets so they never overflow width/height and always calculate a valid center
@@ -90,8 +88,7 @@ export class EdgeInsets {
      * Returns the current state as json, useful when you want to have a
      * read-only representation of the inset.
      *
-     * @returns {PaddingOptions} state as json
-     * @memberof EdgeInsets
+     * @returns state as json
      */
     toJSON(): PaddingOptions {
         return {
@@ -123,19 +120,19 @@ export class EdgeInsets {
  */
 export type PaddingOptions = {
     /**
-     * @property {number} top Padding in pixels from the top of the map canvas.
+     * Padding in pixels from the top of the map canvas.
      */
     top: number;
     /**
-     * @property {number} bottom Padding in pixels from the bottom of the map canvas.
+     * Padding in pixels from the bottom of the map canvas.
      */
     bottom: number;
     /**
-     * @property {number} left Padding in pixels from the left of the map canvas.
+     * Padding in pixels from the left of the map canvas.
      */
     right: number;
     /**
-     * @property {number} right Padding in pixels from the right of the map canvas.
+     * Padding in pixels from the right of the map canvas.
      */
     left: number;
 };

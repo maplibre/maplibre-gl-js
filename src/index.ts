@@ -38,8 +38,6 @@ const version = packageJSON.version;
 export type * from '@maplibre/maplibre-gl-style-spec';
 
 const maplibregl = {
-    setRTLTextPlugin,
-    getRTLTextPluginStatus,
     Map,
     NavigationControl,
     GeolocateControl,
@@ -66,6 +64,28 @@ const maplibregl = {
     VectorTileSource,
     VideoSource,
     /**
+     * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
+     * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
+     *
+     * @param pluginURL URL pointing to the Mapbox RTL text plugin source.
+     * @param callback Called with an error argument if there is an error.
+     * @param lazy If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
+     * rtl text will then be rendered only after the plugin finishes loading.
+     * @example
+     * maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js');
+     * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js-docs/example/mapbox-gl-rtl-text/)
+     */
+    setRTLTextPlugin,
+    /**
+     * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
+     * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
+     * If the status is `loaded` and the plugin is requested again, an error will be thrown.
+     *
+     * @example
+     * const pluginStatus = maplibregl.getRTLTextPluginStatus();
+     */
+    getRTLTextPluginStatus,
+    /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
      * used, must be set before `prewarm()` is called to have an effect.
@@ -82,7 +102,6 @@ const maplibregl = {
      * would navigate between various views that can cause Map instances to constantly be
      * created and destroyed.
      *
-     * @function prewarm
      * @example
      * maplibregl.prewarm()
      */
@@ -93,7 +112,6 @@ const maplibregl = {
      * if you expect the user of your app to not return to a Map view at any point
      * in your application.
      *
-     * @function clearPrewarmedResources
      * @example
      * maplibregl.clearPrewarmedResources()
      */
@@ -101,7 +119,7 @@ const maplibregl = {
 
     /**
      * Returns the package version of the library
-     * @returns {string} Package version of the library
+     * @returns Package version of the library
      */
     get version(): string {
         return version;
@@ -113,7 +131,7 @@ const maplibregl = {
      * Make sure to set this property before creating any map instances for it to have effect.
      *
      * @var {string} workerCount
-     * @returns {number} Number of workers currently configured.
+     * @returns Number of workers currently configured.
      * @example
      * maplibregl.workerCount = 2;
      */
@@ -129,8 +147,7 @@ const maplibregl = {
      * Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
      * which affects performance in raster-heavy maps. 16 by default.
      *
-     * @var {string} maxParallelImageRequests
-     * @returns {number} Number of parallel requests currently configured.
+     * @returns Number of parallel requests currently configured.
      * @example
      * maplibregl.maxParallelImageRequests = 10;
      */
@@ -156,7 +173,6 @@ const maplibregl = {
      * The function passed will receive the request parameters and should call the callback with the resulting request,
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
      *
-     * @function addProtocol
      * @param customProtocol - the protocol to hook, for example 'custom'
      * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
@@ -190,7 +206,6 @@ const maplibregl = {
     /**
      * Removes a previously added protocol
      *
-     * @function removeProtocol
      * @param customProtocol - the custom protocol to remove registration for
      * @example
      * maplibregl.removeProtocol('custom');
@@ -202,29 +217,5 @@ const maplibregl = {
 
 //This gets automatically stripped out in production builds.
 Debug.extend(maplibregl, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
-
-/**
- * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
- * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
- *
- * @function setRTLTextPlugin
- * @param pluginURL URL pointing to the Mapbox RTL text plugin source.
- * @param callback Called with an error argument if there is an error.
- * @param lazy If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
- * rtl text will then be rendered only after the plugin finishes loading.
- * @example
- * maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js');
- * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js-docs/example/mapbox-gl-rtl-text/)
- */
-
-/**
- * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
- * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
- * If the status is `loaded` and the plugin is requested again, an error will be thrown.
- *
- * @function getRTLTextPluginStatus
- * @example
- * const pluginStatus = maplibregl.getRTLTextPluginStatus();
- */
 
 export default maplibregl;

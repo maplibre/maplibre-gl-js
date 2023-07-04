@@ -379,10 +379,10 @@ export class Popup extends Evented {
     /**
      * Returns the popup's maximum width.
      *
-     * @returns {string} The maximum width of the popup.
+     * @returns The maximum width of the popup.
      */
-    getMaxWidth() {
-        return this._container && this._container.style.maxWidth;
+    getMaxWidth(): string {
+        return this._container?.style.maxWidth;
     }
 
     /**

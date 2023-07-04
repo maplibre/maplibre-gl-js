@@ -897,10 +897,10 @@ export class SourceCache extends Evented {
      * Search through our current tiles and attempt to find the tiles that
      * cover the given bounds.
      * @param pointQueryGeometry coordinates of the corners of bounding rectangle
-     * @returns {Array<Object>} result items have {tile, minX, maxX, minY, maxY}, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
+     * @returns result items have {tile, minX, maxX, minY, maxY}, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      * @private
      */
-    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean) {
+    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): any[] {
 
         const tileResults = [];
 

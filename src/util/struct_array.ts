@@ -28,8 +28,8 @@ class Struct {
     size: number;
 
     /**
-     * @param {StructArray} structArray The StructArray the struct is stored in
-     * @param {number} index The index of the struct in the StructArray.
+     * @param structArray The StructArray the struct is stored in
+     * @param index The index of the struct in the StructArray.
      * @private
      */
     constructor(structArray: StructArray, index: number) {
@@ -154,7 +154,7 @@ abstract class StructArray {
      * Resize the array.
      * If `n` is greater than the current length then additional elements with undefined values are added.
      * If `n` is less than the current length then the array will be reduced to the first `n` elements.
-     * @param {number} n The new size of the array.
+     * @param n The new size of the array.
      */
     resize(n: number) {
         this.reserve(n);
@@ -164,7 +164,7 @@ abstract class StructArray {
     /**
      * Indicate a planned increase in size, so that any necessary allocation may
      * be done once, ahead of time.
-     * @param {number} n The expected size of the array.
+     * @param n The expected size of the array.
      */
     reserve(n: number) {
         if (n > this.capacity) {

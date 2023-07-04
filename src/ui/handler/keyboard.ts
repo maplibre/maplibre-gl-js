@@ -160,7 +160,7 @@ export class KeyboardHandler implements Handler {
      * Returns a Boolean indicating whether the "keyboard rotate and zoom"
      * interaction is enabled.
      *
-     * @returns {boolean} `true` if the "keyboard rotate and zoom"
+     * @returns `true` if the "keyboard rotate and zoom"
      * interaction is enabled.
      */
     isEnabled() {
@@ -171,7 +171,7 @@ export class KeyboardHandler implements Handler {
      * Returns true if the handler is enabled and has detected the start of a
      * zoom/rotate gesture.
      *
-     * @returns {boolean} `true` if the handler is enabled and has detected the
+     * @returns `true` if the handler is enabled and has detected the
      * start of a zoom/rotate gesture.
      */
     isActive() {

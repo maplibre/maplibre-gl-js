@@ -413,7 +413,7 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
  *  Returns true if the when run in the web-worker context.
  *
  * @private
- * @returns {boolean}
+ * @returns `true` if the when run in the web-worker context.
  */
 export function isWorker(): boolean {
     // @ts-ignore
@@ -461,7 +461,7 @@ let _isSafari = null;
  * @private
  * @param scope {WindowOrWorkerGlobalScope} Since this function is used both on the main thread and WebWorker context,
  *      let the calling scope pass in the global scope object.
- * @returns {boolean}
+ * @returns `true` when run in WebKit derived browsers.
  */
 export function isSafari(scope: any): boolean {
     if (_isSafari == null) {

@@ -156,7 +156,7 @@ export class ImageSource extends Evented implements Source {
      * set the `raster-fade-duration` paint property on the raster layer to 0.
      *
      * @param options Options object.
-     * @returns this
+     * @returns `this`
      */
     updateImage(options: UpdateImageOptions): this {
         if (!options.url) {

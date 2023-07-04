@@ -83,7 +83,7 @@ export class DragPanHandler {
     /**
      * Returns a Boolean indicating whether the "drag to pan" interaction is enabled.
      *
-     * @returns {boolean} `true` if the "drag to pan" interaction is enabled.
+     * @returns `true` if the "drag to pan" interaction is enabled.
      */
     isEnabled() {
         return this._mousePan.isEnabled() && this._touchPan.isEnabled();
@@ -92,7 +92,7 @@ export class DragPanHandler {
     /**
      * Returns a Boolean indicating whether the "drag to pan" interaction is active, i.e. currently being used.
      *
-     * @returns {boolean} `true` if the "drag to pan" interaction is active.
+     * @returns `true` if the "drag to pan" interaction is active.
      */
     isActive() {
         return this._mousePan.isActive() || this._touchPan.isActive();

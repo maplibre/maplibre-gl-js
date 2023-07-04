@@ -25,7 +25,7 @@ type TestData = {
     allowed: number;
     /**
      * Perceptual color difference threshold, number between 0 and 1, smaller is more sensitive
-     * @default 0.1285
+     * @defaultValue 0.1285
      */
     threshold: number;
     ok: boolean;
@@ -685,7 +685,7 @@ function printProgress(test: TestData, total: number, index: number) {
  * Prints the summary at the end of the run
  *
  * @param tests all the tests with their resutls
- * @returns
+ * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {
 

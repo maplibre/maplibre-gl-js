@@ -25,6 +25,9 @@ import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateab
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
+    /**
+     * Literal GeoJSON data. Must be provided if `request.url` is not.
+     */
     data?: string;
     dataDiff?: GeoJSONSourceDiff;
     source: string;
@@ -211,9 +214,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * expected as a literal (string or object) `params.data`.
      *
      * @param params
-     * @param [params.url] A URL to the remote GeoJSON data.
-     * @param [params.data] Literal GeoJSON data. Must be provided if `params.url` is not.
-     * @returns {Cancelable} A Cancelable object.
+     * @returns A Cancelable object.
      * @private
      */
     loadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable => {

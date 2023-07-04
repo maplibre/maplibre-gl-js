@@ -19,8 +19,8 @@ export class TileCache {
     order: Array<string>;
     onRemove: (element: Tile) => void;
     /**
-     * @param {number} max number of permitted values
-     * @param {Function} onRemove callback called with items when they expire
+     * @param max number of permitted values
+     * @param onRemove callback called with items when they expire
      */
     constructor(max: number, onRemove: (element: Tile) => void) {
         this.max = max;
@@ -31,7 +31,7 @@ export class TileCache {
     /**
      * Clear the cache
      *
-     * @returns {TileCache} this cache
+     * @returns this cache
      * @private
      */
     reset() {
@@ -52,10 +52,10 @@ export class TileCache {
      * Add a key, value combination to the cache, trimming its size if this pushes
      * it over max length.
      *
-     * @param {OverscaledTileID} tileID lookup key for the item
-     * @param {*} data any value
+     * @param tileID lookup key for the item
+     * @param data tile data
      *
-     * @returns {TileCache} this cache
+     * @returns this cache
      * @private
      */
     add(tileID: OverscaledTileID, data: Tile, expiryTimeout: number | void) {
@@ -89,8 +89,8 @@ export class TileCache {
     /**
      * Determine whether the value attached to `key` is present
      *
-     * @param {OverscaledTileID} tileID the key to be looked-up
-     * @returns {boolean} whether the cache has this value
+     * @param tileID the key to be looked-up
+     * @returns whether the cache has this value
      * @private
      */
     has(tileID: OverscaledTileID): boolean {
@@ -101,8 +101,8 @@ export class TileCache {
      * Get the value attached to a specific key and remove data from cache.
      * If the key is not found, returns `null`
      *
-     * @param {OverscaledTileID} tileID the key to look up
-     * @returns {*} the data, or null if it isn't found
+     * @param tileID the key to look up
+     * @returns the tile data, or null if it isn't found
      * @private
      */
     getAndRemove(tileID: OverscaledTileID): Tile {
@@ -137,8 +137,8 @@ export class TileCache {
      * Get the value attached to a specific key without removing data
      * from the cache. If the key is not found, returns `null`
      *
-     * @param {OverscaledTileID} tileID the key to look up
-     * @returns {*} the data, or null if it isn't found
+     * @param tileID the key to look up
+     * @returns the tile data, or null if it isn't found
      * @private
      */
     get(tileID: OverscaledTileID): Tile {
@@ -151,9 +151,9 @@ export class TileCache {
     /**
      * Remove a key/value combination from the cache.
      *
-     * @param {OverscaledTileID} tileID the key for the pair to delete
-     * @param {Tile} value If a value is provided, remove that exact version of the value.
-     * @returns {TileCache} this cache
+     * @param tileID the key for the pair to delete
+     * @param value If a value is provided, remove that exact version of the value.
+     * @returns this cache
      * @private
      */
     remove(tileID: OverscaledTileID, value?: {
@@ -179,8 +179,8 @@ export class TileCache {
     /**
      * Change the max size of the cache.
      *
-     * @param {number} max the max size of the cache
-     * @returns {TileCache} this cache
+     * @param max the max size of the cache
+     * @returns this cache
      * @private
      */
     setMaxSize(max: number): TileCache {
@@ -198,7 +198,7 @@ export class TileCache {
      * Remove entries that do not pass a filter function. Used for removing
      * stale tiles from the cache.
      *
-     * @param {function} filterFn Determines whether the tile is filtered. If the supplied function returns false, the tile will be filtered out.
+     * @param filterFn Determines whether the tile is filtered. If the supplied function returns false, the tile will be filtered out.
      */
     filter(filterFn: (tile: Tile) => boolean) {
         const removed = [];
