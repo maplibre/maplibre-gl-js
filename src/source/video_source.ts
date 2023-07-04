@@ -129,9 +129,9 @@ export class VideoSource extends ImageSource {
     /**
      * Returns the HTML `video` element.
      *
-     * @returns {HTMLVideoElement} The HTML `video` element.
+     * @returns The HTML `video` element.
      */
-    getVideo() {
+    getVideo(): HTMLVideoElement {
         return this.video;
     }
 
@@ -148,14 +148,9 @@ export class VideoSource extends ImageSource {
     /**
      * Sets the video's coordinates and re-renders the map.
      *
-     * @method setCoordinates
-     * @instance
-     * @memberof VideoSource
-     * @returns {VideoSource} this
+     * @returns `this`
      */
-    // setCoordinates inherited from ImageSource
-
-    prepare = () => {
+    prepare = (): this => {
         if (Object.keys(this.tiles).length === 0 || this.video.readyState < 2) {
             return; // not enough data for current position
         }

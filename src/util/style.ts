@@ -5,7 +5,7 @@ import {SpriteSpecification} from '@maplibre/maplibre-gl-style-spec';
  * empty array is returned.
  * duplicated entries with identical id/url will be removed in returned array
  * @param [sprite] {SpriteSpecification} optional sprite to coerce
- * @returns {Array} an empty array in case `undefined` is passed; id-url pairs otherwise
+ * @returns an empty array in case `undefined` is passed; id-url pairs otherwise
  */
 export function coerceSpriteToArray(sprite?: SpriteSpecification): {id: string; url: string}[] {
     const resultArray: {id: string; url: string}[]  = [];

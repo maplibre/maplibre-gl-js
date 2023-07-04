@@ -54,7 +54,7 @@ export class DragRotateHandler {
     /**
      * Returns a Boolean indicating whether the "drag to rotate" interaction is enabled.
      *
-     * @returns {boolean} `true` if the "drag to rotate" interaction is enabled.
+     * @returns `true` if the "drag to rotate" interaction is enabled.
      */
     isEnabled() {
         return this._mouseRotate.isEnabled() && (!this._pitchWithRotate || this._mousePitch.isEnabled());
@@ -63,7 +63,7 @@ export class DragRotateHandler {
     /**
      * Returns a Boolean indicating whether the "drag to rotate" interaction is active, i.e. currently being used.
      *
-     * @returns {boolean} `true` if the "drag to rotate" interaction is active.
+     * @returns `true` if the "drag to rotate" interaction is active.
      */
     isActive() {
         return this._mouseRotate.isActive() || this._mousePitch.isActive();

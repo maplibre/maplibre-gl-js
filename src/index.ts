@@ -101,7 +101,7 @@ const maplibregl = {
 
     /**
      * Returns the package version of the library
-     * @returns {string} Package version of the library
+     * @returns Package version of the library
      */
     get version(): string {
         return version;
@@ -113,7 +113,7 @@ const maplibregl = {
      * Make sure to set this property before creating any map instances for it to have effect.
      *
      * @var {string} workerCount
-     * @returns {number} Number of workers currently configured.
+     * @returns Number of workers currently configured.
      * @example
      * maplibregl.workerCount = 2;
      */
@@ -129,8 +129,7 @@ const maplibregl = {
      * Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
      * which affects performance in raster-heavy maps. 16 by default.
      *
-     * @var {string} maxParallelImageRequests
-     * @returns {number} Number of parallel requests currently configured.
+     * @returns Number of parallel requests currently configured.
      * @example
      * maplibregl.maxParallelImageRequests = 10;
      */

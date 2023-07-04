@@ -11,7 +11,7 @@ import type {Anchor} from './anchor';
  * @param windowSize The check fails if the combined angles within a part of the line that is `windowSize` long is too big.
  * @param maxAngle The maximum combined angle that any window along the label is allowed to have.
  *
- * @returns {boolean} whether the label should be placed
+ * @returns whether the label should be placed
  * @private
  */
 export function checkMaxAngle(line: Array<Point>, anchor: Anchor, labelLength: number, windowSize: number, maxAngle: number) {

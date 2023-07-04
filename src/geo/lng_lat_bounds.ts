@@ -292,7 +292,7 @@ export class LngLatBounds {
      *
      * @param center center coordinates of the new bounds.
      * @param radius Distance in meters from the coordinates to extend the bounds. default 0
-     * @returns {LngLatBounds} A new `LngLatBounds` object representing the coordinates extended by the `radius`.
+     * @returns A new `LngLatBounds` object representing the coordinates extended by the `radius`.
      * @example
      * var center = new maplibregl.LngLat(-73.9749, 40.7736);
      * maplibregl.LngLatBounds.fromLngLat(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]

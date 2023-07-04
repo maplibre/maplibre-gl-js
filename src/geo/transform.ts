@@ -649,7 +649,7 @@ export class Transform {
      * @param coord
      * @param elevation default = 0
      * @param pixelMatrix, default = this.pixelMatrix
-     * @returns {Point} screen point
+     * @returns screen point
      * @private
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this.pixelMatrix): Point {

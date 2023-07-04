@@ -153,7 +153,6 @@ export class Tile {
      * @param data
      * @param painter
      * @param justReloaded
-     * @returns {undefined}
      * @private
      */
     loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
