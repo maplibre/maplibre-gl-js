@@ -7,8 +7,8 @@ import type {Context} from '../gl/context';
  * by writing many of them to a texture and then fetching their positions
  * using .getDash.
  *
- * @param {number} width
- * @param {number} height
+ * @param width
+ * @param height
  * @private
  */
 export class LineAtlas {
@@ -34,9 +34,9 @@ export class LineAtlas {
     /**
      * Get or create a dash line pattern.
      *
-     * @param {Array<number>} dasharray
-     * @param {boolean} round whether to add circle caps in between dash segments
-     * @returns {Object} position of dash texture in { y, height, width }
+     * @param dasharray
+     * @param round whether to add circle caps in between dash segments
+     * @returns position of dash texture in { y, height, width }
      * @private
      */
     getDash(dasharray: Array<number>, round: boolean) {
