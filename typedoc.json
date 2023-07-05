@@ -4,6 +4,7 @@
     "groupOrder": [
         "Main",
         "Controls",
+        "Event Related",
         "Sources",
         "Handlers"
     ],

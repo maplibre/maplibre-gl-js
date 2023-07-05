@@ -10,14 +10,16 @@ import type {LngLat} from '../geo/lng_lat';
 import {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
- * @event
  * An event from the mouse relevant to a specific layer.
+ * 
+ * @group Event Related
  */
 export type MapLayerMouseEvent = MapMouseEvent & { features?: MapGeoJSONFeature[] };
 
 /**
- * @event
  * An event from a touch device relevat to a specific layer.
+ * 
+ * @group Event Related
  */
 export type MapLayerTouchEvent = MapTouchEvent & { features?: MapGeoJSONFeature[] };
 
@@ -47,28 +49,31 @@ export type MapLayerEventType = {
 };
 
 /**
- * @event
  * The base event for MapLibre
+ * 
+ * @group Event Related
  */
-export interface MapLibreEvent<TOrig = unknown> {
+export type MapLibreEvent<TOrig = unknown> = {
     type: MapEvent;
     target: Map;
     originalEvent: TOrig;
 }
 
 /**
- * @event
  * The style data event
+ * 
+ * @group Event Related
  */
-export interface MapStyleDataEvent extends MapLibreEvent {
+export type MapStyleDataEvent = MapLibreEvent & {
     dataType: 'style';
 }
 
 /**
- * @event
  * The source data event interface
+ * 
+ * @group Event Related
  */
-export interface MapSourceDataEvent extends MapLibreEvent {
+export type MapSourceDataEvent = MapLibreEvent  & {
     dataType: 'source';
     /**
      * True if the event has a `dataType` of `source` and the source has no outstanding network requests.
@@ -160,6 +165,8 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
 
 /**
  * `MapTouchEvent` is the event type for touch-related map events.
+ * 
+ * @group Event Related
  */
 export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
     /**
@@ -236,9 +243,9 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
 }
 
 /**
- * @event
- *
  * `MapWheelEvent` is the event type for the `wheel` map event.
+ * 
+ * @group Event Related
  */
 export class MapWheelEvent extends Event {
     /**
@@ -282,8 +289,9 @@ export class MapWheelEvent extends Event {
 }
 
 /**
- * @event
  * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
+ * 
+ * @group Event Related
  */
 export type MapLibreZoomEvent = {
     /**
@@ -301,8 +309,6 @@ export type MapLibreZoomEvent = {
 };
 
 /**
- * @event
- *
  * A `MapDataEvent` object is emitted with the `data`
  * and `dataloading` events. Possible values for
  * `dataType`s are:
@@ -317,6 +323,8 @@ export type MapLibreZoomEvent = {
  * - `'visibility'`: send when the source becomes used when at least one of its layers becomes visible in style sense (inside the layer's zoom range and with layout.visibility set to 'visible')
  * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
  *
+ * @group Event Related
+ * 
  * @example
  * ```ts
  * // The sourcedata event is an example of MapDataEvent.
@@ -344,16 +352,18 @@ export type MapDataEvent = {
 };
 
 /**
- * @event
- * tThe terrain event
+ * The terrain event
+ * 
+ * @group Event Related
  */
 export type MapTerrainEvent = {
     type: 'terrain';
 };
 
 /**
- * @event
  * An event related to the web gl context
+ * 
+ * @group Event Related
  */
 export type MapContextEvent = {
     type: 'webglcontextlost' | 'webglcontextrestored';
@@ -361,12 +371,13 @@ export type MapContextEvent = {
 };
 
 /**
- * @event
  * The style image missing event
+ * 
+ * @group Event Related
  *
  * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-missing-generated/)
  */
-export interface MapStyleImageMissingEvent extends MapLibreEvent {
+export type MapStyleImageMissingEvent = MapLibreEvent & {
     type: 'styleimagemissing';
     id: string;
 }
@@ -944,7 +955,7 @@ export type MapEventType = {
  *
  * @event `pitchstart` Fired whenever the map's pitch (tilt) begins a change as
  * the result of either user interaction or methods such as {@link Map#flyTo} .
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -960,7 +971,7 @@ export type MapEventType = {
  * @event `pitch` Fired repeatedly during the map's pitch (tilt) animation between
  * one state and another as the result of either user interaction
  * or methods such as {@link Map#flyTo}.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -975,7 +986,7 @@ export type MapEventType = {
  *
  * @event `pitchend` Fired immediately after the map's pitch (tilt) finishes changing as
  * the result of either user interaction or methods such as {@link Map#flyTo}.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -1155,7 +1166,7 @@ export type MapEventType = {
  *
  * @event `data` Fired when any map data loads or changes. See {@link MapDataEvent}
  * for more information.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -1170,7 +1181,7 @@ export type MapEventType = {
  * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
  *
  * @event `styledata` Fired when the map's style loads or changes.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -1185,7 +1196,7 @@ export type MapEventType = {
  *
  * @event `sourcedata` Fired when one of the map's sources loads or changes, including if a tile belonging
  * to a source loads or changes.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -1201,7 +1212,7 @@ export type MapEventType = {
  * @event `dataloading` Fired when any map data (style, source, tile, etc) begins loading or
  * changing asynchronously. All `dataloading` events are followed by a `data`,
  * `dataabort` or `error` event.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -1218,7 +1229,7 @@ export type MapEventType = {
  * @event `styledataloading` Fired when the map's style begins loading or changing asynchronously.
  * All `styledataloading` events are followed by a `styledata`
  * or `error` event.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -1234,7 +1245,7 @@ export type MapEventType = {
  *
  * @event `sourcedataloading` Fired when one of the map's sources begins loading or changing asynchronously.
  * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -1271,7 +1282,7 @@ export type MapEventType = {
  *
  * @event `dataabort` Fired when a request for one of the map's sources' tiles is aborted.
  * Fired when a request for one of the map's sources' data is aborted.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
@@ -1285,7 +1296,7 @@ export type MapEventType = {
  * ```
  *
  * @event `sourcedataabort` Fired when a request for one of the map's sources' data is aborted.
- * `data` - {@link MapEventData}
+ * `data` - {@link MapDataEvent}
  *
  * @example
  * ```ts
