@@ -313,8 +313,8 @@ export abstract class Camera extends Evented {
      *
      * @param center - The centerpoint to set.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      * @example
      * ```ts
@@ -331,8 +331,8 @@ export abstract class Camera extends Evented {
      * @param offset - `x` and `y` coordinates by which to pan the map.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
@@ -347,8 +347,8 @@ export abstract class Camera extends Evented {
      * @param lnglat - The location to pan the map to.
      * @param options - Options describing the destination and animation of the transition.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      * @example
      * ```ts
@@ -380,12 +380,12 @@ export abstract class Camera extends Evented {
      *
      * @param zoom - The zoom level to set (0-20).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires zoomstart
-     * @fires move
-     * @fires zoom
-     * @fires moveend
-     * @fires zoomend
+     * @event `movestart`
+     * @event `zoomstart`
+     * @event `move`
+     * @event `zoom`
+     * @event `moveend`
+     * @event `zoomend`
      * @returns `this`
      * @example
      * Zoom to the zoom level 5 without an animated transition
@@ -404,12 +404,12 @@ export abstract class Camera extends Evented {
      * @param zoom - The zoom level to transition to.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires zoomstart
-     * @fires move
-     * @fires zoom
-     * @fires moveend
-     * @fires zoomend
+     * @event `movestart`
+     * @event `zoomstart`
+     * @event `move`
+     * @event `zoom`
+     * @event `moveend`
+     * @event `zoomend`
      * @returns `this`
      * @example
      * ```ts
@@ -433,12 +433,12 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires zoomstart
-     * @fires move
-     * @fires zoom
-     * @fires moveend
-     * @fires zoomend
+     * @event `movestart`
+     * @event `zoomstart`
+     * @event `move`
+     * @event `zoom`
+     * @event `moveend`
+     * @event `zoomend`
      * @returns `this`
      * @example
      * Zoom the map in one level with a custom animation duration
@@ -456,12 +456,12 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires zoomstart
-     * @fires move
-     * @fires zoom
-     * @fires moveend
-     * @fires zoomend
+     * @event `movestart`
+     * @event `zoomstart`
+     * @event `move`
+     * @event `zoom`
+     * @event `moveend`
+     * @event `zoomend`
      * @returns `this`
      * @example
      * Zoom the map out one level with a custom animation offset
@@ -491,8 +491,8 @@ export abstract class Camera extends Evented {
      *
      * @param bearing - The desired bearing.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      * @example
      * Rotate the map to 90 degrees
@@ -519,8 +519,8 @@ export abstract class Camera extends Evented {
      *
      * @param padding - The desired padding.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      * @example
      * Sets a left padding of 300px, and a top padding of 50px
@@ -540,8 +540,8 @@ export abstract class Camera extends Evented {
      * @param bearing - The desired bearing.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      */
     rotateTo(bearing: number, options?: AnimationOptions, eventData?: any): this {
@@ -555,8 +555,8 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      */
     resetNorth(options?: AnimationOptions, eventData?: any): this {
@@ -569,8 +569,8 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      */
     resetNorthPitch(options?: AnimationOptions, eventData?: any): this {
@@ -588,8 +588,8 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      */
     snapToNorth(options?: AnimationOptions, eventData?: any): this {
@@ -611,9 +611,9 @@ export abstract class Camera extends Evented {
      *
      * @param pitch - The pitch to set, measured in degrees away from the plane of the screen (0-60).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires pitchstart
-     * @fires movestart
-     * @fires moveend
+     * @event `pitchstart`
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      */
     setPitch(pitch: number, eventData?: any): this {
@@ -740,8 +740,8 @@ export abstract class Camera extends Evented {
      * zoom level up to and including `Map#getMaxZoom()` that fits them in the viewport.
      * @param options- Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      * @example
      * ```ts
@@ -769,8 +769,8 @@ export abstract class Camera extends Evented {
      * @param bearing - Desired map bearing at end of animation, in degrees
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires moveend
+     * @event `movestart`
+     * @event `moveend`
      * @returns `this`
      * @example
      * ```ts
@@ -813,16 +813,16 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires zoomstart
-     * @fires pitchstart
-     * @fires rotate
-     * @fires move
-     * @fires zoom
-     * @fires pitch
-     * @fires moveend
-     * @fires zoomend
-     * @fires pitchend
+     * @event `movestart`
+     * @event `zoomstart`
+     * @event `pitchstart`
+     * @event `rotate`
+     * @event `move`
+     * @event `zoom`
+     * @event `pitch`
+     * @event `moveend`
+     * @event `zoomend`
+     * @event `pitchend`
      * @returns `this`
      * @example
      * ```ts
@@ -941,16 +941,16 @@ export abstract class Camera extends Evented {
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions} and {@link AnimationOptions}.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires zoomstart
-     * @fires pitchstart
-     * @fires rotate
-     * @fires move
-     * @fires zoom
-     * @fires pitch
-     * @fires moveend
-     * @fires zoomend
-     * @fires pitchend
+     * @event `movestart`
+     * @event `zoomstart`
+     * @event `pitchstart`
+     * @event `rotate`
+     * @event `move`
+     * @event `zoom`
+     * @event `pitch`
+     * @event `moveend`
+     * @event `zoomend`
+     * @event `pitchend`
      * @returns `this`
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
      */
@@ -1190,16 +1190,16 @@ export abstract class Camera extends Evented {
      * Accepts {@link CameraOptions}, {@link AnimationOptions},
      * and the following additional options.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @fires movestart
-     * @fires zoomstart
-     * @fires pitchstart
-     * @fires move
-     * @fires zoom
-     * @fires rotate
-     * @fires pitch
-     * @fires moveend
-     * @fires zoomend
-     * @fires pitchend
+     * @event `movestart`
+     * @event `zoomstart`
+     * @event `pitchstart`
+     * @event `move`
+     * @event `zoom`
+     * @event `rotate`
+     * @event `pitch`
+     * @event `moveend`
+     * @event `zoomend`
+     * @event `pitchend`
      * @returns `this`
      * @example
      * ```ts

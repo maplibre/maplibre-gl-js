@@ -1290,9 +1290,6 @@ export class Map extends Camera {
     /**
      * Adds a listener for events of a specified type, optionally limited to features in a specified style layer.
      *
-     * @param type - The event type to listen for. Events compatible with the optional `layerId` parameter are triggered
-     * when the cursor enters a visible portion of the specified layer from outside that layer or outside the map canvas.
-     *
      * | Event                                                     | Compatible with `layerId` |
      * |-----------------------------------------------------------|---------------------------|
      * | [`mousedown`](#map.event:mousedown)                       | yes                       |
@@ -1346,6 +1343,8 @@ export class Map extends Camera {
      * | [`dataabort`](#map.event:dataabort)                       |                           |
      * | [`sourcedataabort`](#map.event:sourcedataabort)           |                           |
      *
+     * @param type - The event type to listen for. Events compatible with the optional `layerId` parameter are triggered
+     * when the cursor enters a visible portion of the specified layer from outside that layer or outside the map canvas.
      * @param layer - The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing
      * an array of the matching features. If `layerIdOrListener` is not supplied, the event will not have a `features` property.
@@ -1380,7 +1379,7 @@ export class Map extends Camera {
      * ```ts
      * // Set an event listener that will fire
      * // when a feature on the countries layer of the map is clicked
-     * map.on('click', 'countries', function(e) {
+     * map.on('click', 'countries', (e) => {
      *   new maplibregl.Popup()
      *     .setLngLat(e.lngLat)
      *     .setHTML(`Country name: ${e.features[0].properties.name}`)
@@ -1392,13 +1391,20 @@ export class Map extends Camera {
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
+    on(type: MapEvent | string, listener: Listener): this;
     on<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): Map;
     on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
-    on(type: MapEvent | string, listener: Listener): this;
+    /**
+     * This is an overload of the `on` method that allows to listen to events based on the `layerId`
+     * @param type - The type of the event.
+     * @param layerIdOrListener - The ID of the layer.
+     * @param listener - The listener callback.
+     * @returns `this`
+     */
     on(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.on(type, layerIdOrListener as Listener);
@@ -1432,13 +1438,13 @@ export class Map extends Camera {
      * @param listener - The function to be called when the event is fired.
      * @returns `this` if listener is provided, promise otherwise to allow easier usage of async/await
      */
+    once(type: MapEvent | string, listener?: Listener): this | Promise<any>;
     once<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener?: (ev: MapLayerEventType[T] & Object) => void,
     ): this | Promise<MapLayerEventType[T] & Object>;
     once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
-    once(type: MapEvent | string, listener?: Listener): this | Promise<any>;
     once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
 
         if (listener === undefined) {
@@ -1828,7 +1834,7 @@ export class Map extends Camera {
      * @param source - The source object, conforming to the
      * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
      * {@link CanvasSourceSpecification}.
-     * @fires source.add
+     * @event `source.add`
      * @returns `this`
      * @example
      * ```ts
@@ -2367,7 +2373,7 @@ export class Map extends Camera {
      * If no such layer exists, an `error` event is fired.
      *
      * @param id - The ID of the layer to remove
-     * @fires error
+     * @event `error`
      * @returns `this`
      *
      * @example
@@ -2567,7 +2573,7 @@ export class Map extends Camera {
      * @param id - The ID of the sprite to add. Must not conflict with existing sprites.
      * @param url - The URL to load the sprite from
      * @param options - Options object.
-     * @fires style
+     * @event `style`
      * @returns `this`
      * @example
      * ```ts
@@ -2588,7 +2594,7 @@ export class Map extends Camera {
      * Removes the sprite from the map's style.
      *
      * @param id - The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
-     * @fires style
+     * @event `style`
      * @returns `this`
      * @example
      * ```ts

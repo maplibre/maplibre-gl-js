@@ -955,7 +955,7 @@ export class Style extends Evented {
      * If no such layer exists, an `error` event is fired.
      *
      * @param id - id of the layer to remove
-     * @fires error
+     * @event `error` - Fired if the layer does not exist
      */
     removeLayer(id: string) {
         this._checkLoaded();
