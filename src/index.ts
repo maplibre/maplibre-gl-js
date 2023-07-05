@@ -67,12 +67,14 @@ const maplibregl = {
      * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
      * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
      *
-     * @param pluginURL URL pointing to the Mapbox RTL text plugin source.
-     * @param callback Called with an error argument if there is an error.
-     * @param lazy If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
+     * @param pluginURL - URL pointing to the Mapbox RTL text plugin source.
+     * @param callback - Called with an error argument if there is an error.
+     * @param lazy - If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
      * rtl text will then be rendered only after the plugin finishes loading.
      * @example
+     * ```ts
      * maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js');
+     * ```
      * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js-docs/example/mapbox-gl-rtl-text/)
      */
     setRTLTextPlugin,
@@ -82,7 +84,9 @@ const maplibregl = {
      * If the status is `loaded` and the plugin is requested again, an error will be thrown.
      *
      * @example
+     * ```ts
      * const pluginStatus = maplibregl.getRTLTextPluginStatus();
+     * ```
      */
     getRTLTextPluginStatus,
     /**
@@ -103,7 +107,9 @@ const maplibregl = {
      * created and destroyed.
      *
      * @example
+     * ```ts
      * maplibregl.prewarm()
+     * ```
      */
     prewarm,
     /**
@@ -113,7 +119,9 @@ const maplibregl = {
      * in your application.
      *
      * @example
+     * ```ts
      * maplibregl.clearPrewarmedResources()
+     * ```
      */
     clearPrewarmedResources,
 
@@ -130,10 +138,11 @@ const maplibregl = {
      * By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3).
      * Make sure to set this property before creating any map instances for it to have effect.
      *
-     * @var {string} workerCount
      * @returns Number of workers currently configured.
      * @example
+     * ```ts
      * maplibregl.workerCount = 2;
+     * ```
      */
     get workerCount(): number {
         return WorkerPool.workerCount;
@@ -149,7 +158,9 @@ const maplibregl = {
      *
      * @returns Number of parallel requests currently configured.
      * @example
+     * ```ts
      * maplibregl.maxParallelImageRequests = 10;
+     * ```
      */
     get maxParallelImageRequests(): number {
         return config.MAX_PARALLEL_IMAGE_REQUESTS;
@@ -176,7 +187,8 @@ const maplibregl = {
      * @param customProtocol - the protocol to hook, for example 'custom'
      * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
-     * // this will fetch a file using the fetch API (this is obviously a non interesting example...)
+     * This will fetch a file using the fetch API (this is obviously a non interesting example...)
+     * ```ts
      * maplibregl.addProtocol('custom', (params, callback) => {
             fetch(`https://${params.url.split("://")[1]}`)
                 .then(t => {
@@ -198,6 +210,7 @@ const maplibregl = {
      *      callback(new Error('someErrorMessage'));
      *      return { cancel: () => { } };
      * });
+     * ```
      */
     addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
         config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
@@ -208,7 +221,9 @@ const maplibregl = {
      *
      * @param customProtocol - the custom protocol to remove registration for
      * @example
+     * ```ts
      * maplibregl.removeProtocol('custom');
+     * ```
      */
     removeProtocol(customProtocol: string) {
         delete config.REGISTERED_PROTOCOLS[customProtocol];

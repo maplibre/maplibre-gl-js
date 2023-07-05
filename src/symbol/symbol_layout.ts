@@ -364,7 +364,6 @@ export function getAnchorJustification(anchor: TextAnchor): TextJustify {
  * instance' for each _possible_ placement of the symbol feature.
  * (At render timePlaceSymbols#place() selects which of these instances to
  * show or hide based on collisions with symbols in other layers.)
- * @private
  */
 function addFeature(bucket: SymbolBucket,
     feature: SymbolFeature,
@@ -564,8 +563,6 @@ function getDefaultHorizontalShaping(
 
 /**
  * Add a single label & icon placement.
- *
- * @private
  */
 function addSymbol(bucket: SymbolBucket,
     anchor: Anchor,

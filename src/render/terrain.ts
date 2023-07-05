@@ -151,9 +151,9 @@ export class Terrain {
     /**
      * get the elevation-value from original dem-data for a given tile-coordinate
      * @param tileID - the tile to get elevation for
-     * @param x between 0 .. EXTENT
-     * @param y between 0 .. EXTENT
-     * @param extent optional, default 8192
+     * @param x - between 0 .. EXTENT
+     * @param y - between 0 .. EXTENT
+     * @param extent - optional, default 8192
      * @returns the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
@@ -182,9 +182,9 @@ export class Terrain {
     /**
      * get the Elevation for given coordinate in respect of exaggeration.
      * @param tileID - the tile id
-     * @param x between 0 .. EXTENT
-     * @param y between 0 .. EXTENT
-     * @param extent optional, default 8192
+     * @param x - between 0 .. EXTENT
+     * @param y - between 0 .. EXTENT
+     * @param extent - optional, default 8192
      * @returns the elevation
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
@@ -309,7 +309,7 @@ export class Terrain {
 
     /**
      * Reads a pixel from the coords-framebuffer and translate this to mercator.
-     * @param p Screen-Coordinate
+     * @param p - Screen-Coordinate
      * @returns mercator coordinate for a screen pixel
      */
     pointCoordinate(p: Point): MercatorCoordinate {
@@ -383,7 +383,7 @@ export class Terrain {
     /**
      * Calculates a height of the frame around the terrain-mesh to avoid stiching between
      * tile boundaries in different zoomlevels.
-     * @param zoom current zoomlevel
+     * @param zoom - current zoomlevel
      * @returns the elevation delta in meters
      */
     getMeshFrameDelta(zoom: number): number {
@@ -395,7 +395,7 @@ export class Terrain {
      * Get the minimum and maximum elevation contained in a tile. This includes any
      * exaggeration included in the terrain.
      *
-     * @param tileID Id of the tile to be used as a source for the min/max elevation
+     * @param tileID - ID of the tile to be used as a source for the min/max elevation
      * @returns the minimum and maximum elevation found in the tile, including the terrain's
      * exaggeration
      */

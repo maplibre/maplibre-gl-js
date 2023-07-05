@@ -82,7 +82,7 @@ type GradientTexture = {
 };
 
 /**
- * @private
+ * Line bucket class
  */
 export class LineBucket implements Bucket {
     distance: number;
@@ -503,13 +503,12 @@ export class LineBucket implements Bucket {
     /**
      * Add two vertices to the buffers.
      *
-     * @param p the line vertex to add buffer vertices for
-     * @param normal vertex normal
-     * @param endLeft extrude to shift the left vertex along the line
-     * @param endRight extrude to shift the left vertex along the line
-     * @param segment the segment object to add the vertex to
-     * @param round whether this is a round cap
-     * @private
+     * @param p - the line vertex to add buffer vertices for
+     * @param normal - vertex normal
+     * @param endLeft - extrude to shift the left vertex along the line
+     * @param endRight - extrude to shift the left vertex along the line
+     * @param segment - the segment object to add the vertex to
+     * @param round - whether this is a round cap
      */
     addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false) {
         // left and right extrude vectors, perpendicularly shifted by endLeft/endRight

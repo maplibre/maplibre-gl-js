@@ -45,9 +45,8 @@ export function altitudeFromMercatorZ(z: number, y: number) {
  *
  * At the equator the scale factor will be 1, which increases at higher latitudes.
  *
- * @param lat Latitude
+ * @param lat - Latitude
  * @returns scale factor
- * @private
  */
 export function mercatorScale(lat: number) {
     return 1 / Math.cos(lat * Math.PI / 180);
@@ -68,8 +67,9 @@ export function mercatorScale(lat: number) {
  * The `z` dimension of `MercatorCoordinate` is conformal. A cube in the mercator coordinate space would be rendered as a cube.
  *
  * @example
- * var nullIsland = new maplibregl.MercatorCoordinate(0.5, 0.5, 0);
- *
+ * ```ts
+ * let nullIsland = new maplibregl.MercatorCoordinate(0.5, 0.5, 0);
+ * ```
  * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js-docs/example/custom-style-layer/)
  */
 export class MercatorCoordinate implements IMercatorCoordinate {
@@ -78,9 +78,9 @@ export class MercatorCoordinate implements IMercatorCoordinate {
     z: number;
 
     /**
-     * @param x The x component of the position.
-     * @param y The y component of the position.
-     * @param z The z component of the position.
+     * @param x - The x component of the position.
+     * @param y - The y component of the position.
+     * @param z - The z component of the position.
      */
     constructor(x: number, y: number, z: number = 0) {
         this.x = +x;
@@ -91,12 +91,14 @@ export class MercatorCoordinate implements IMercatorCoordinate {
     /**
      * Project a `LngLat` to a `MercatorCoordinate`.
      *
-     * @param lngLatLike The location to project.
-     * @param altitude The altitude in meters of the position.
+     * @param lngLatLike - The location to project.
+     * @param altitude - The altitude in meters of the position.
      * @returns The projected mercator coordinate.
      * @example
-     * var coord = maplibregl.MercatorCoordinate.fromLngLat({ lng: 0, lat: 0}, 0);
+     * ```ts
+     * let coord = maplibregl.MercatorCoordinate.fromLngLat({ lng: 0, lat: 0}, 0);
      * coord; // MercatorCoordinate(0.5, 0.5, 0)
+     * ```
      */
     static fromLngLat(lngLatLike: LngLatLike, altitude: number = 0): MercatorCoordinate {
         const lngLat = LngLat.convert(lngLatLike);
@@ -112,8 +114,10 @@ export class MercatorCoordinate implements IMercatorCoordinate {
      *
      * @returns The `LngLat` object.
      * @example
-     * var coord = new maplibregl.MercatorCoordinate(0.5, 0.5, 0);
-     * var lngLat = coord.toLngLat(); // LngLat(0, 0)
+     * ```ts
+     * let coord = new maplibregl.MercatorCoordinate(0.5, 0.5, 0);
+     * let lngLat = coord.toLngLat(); // LngLat(0, 0)
+     * ```
      */
     toLngLat() {
         return new LngLat(
@@ -126,8 +130,10 @@ export class MercatorCoordinate implements IMercatorCoordinate {
      *
      * @returns The altitude in meters.
      * @example
-     * var coord = new maplibregl.MercatorCoordinate(0, 0, 0.02);
+     * ```ts
+     * let coord = new maplibregl.MercatorCoordinate(0, 0, 0.02);
      * coord.toAltitude(); // 6914.281956295339
+     * ```
      */
     toAltitude(): number {
         return altitudeFromMercatorZ(this.z, this.y);

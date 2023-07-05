@@ -3,16 +3,9 @@ import UnitBezier from '@mapbox/unitbezier';
 import type {Callback} from '../types/callback';
 
 /**
- * @module util
- * @private
- */
-
-/**
  * Given a value `t` that varies between 0 and 1, return
  * an interpolation function that eases between 0 and 1 in a pleasing
  * cubic in-out fashion.
- *
- * @private
  */
 export function easeCubicInOut(t: number): number {
     if (t <= 0) return 0;
@@ -26,11 +19,10 @@ export function easeCubicInOut(t: number): number {
  * Given given (x, y), (x1, y1) control points for a bezier curve,
  * return a function that interpolates along that curve.
  *
- * @param p1x control point 1 x coordinate
- * @param p1y control point 1 y coordinate
- * @param p2x control point 2 x coordinate
- * @param p2y control point 2 y coordinate
- * @private
+ * @param p1x - control point 1 x coordinate
+ * @param p1y - control point 1 y coordinate
+ * @param p2x - control point 2 x coordinate
+ * @param p2y - control point 2 y coordinate
  */
 export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: number) => number {
     const bezier = new UnitBezier(p1x, p1y, p2x, p2y);
@@ -42,19 +34,16 @@ export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: 
 /**
  * A default bezier-curve powered easing function with
  * control points (0.25, 0.1) and (0.25, 1)
- *
- * @private
  */
 export const defaultEasing = bezier(0.25, 0.1, 0.25, 1);
 
 /**
  * constrain n to the given range via min + max
  *
- * @param n value
- * @param min the minimum value to be returned
- * @param max the maximum value to be returned
+ * @param n - value
+ * @param min - the minimum value to be returned
+ * @param max - the maximum value to be returned
  * @returns the clamped value
- * @private
  */
 export function clamp(n: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, n));
@@ -63,11 +52,10 @@ export function clamp(n: number, min: number, max: number): number {
 /**
  * constrain n to the given range, excluding the minimum, via modular arithmetic
  *
- * @param n value
- * @param min the minimum value to be returned, exclusive
- * @param max the maximum value to be returned, inclusive
+ * @param n - value
+ * @param min - the minimum value to be returned, exclusive
+ * @param max - the maximum value to be returned, inclusive
  * @returns constrained number
- * @private
  */
 export function wrap(n: number, min: number, max: number): number {
     const d = max - min;
@@ -75,15 +63,14 @@ export function wrap(n: number, min: number, max: number): number {
     return (w === min) ? max : w;
 }
 
-/*
+/**
  * Call an asynchronous function on an array of arguments,
  * calling `callback` with the completed results of all calls.
  *
- * @param array input to each call of the async function.
- * @param fn an async function with signature (data, callback)
- * @param callback a callback run after all async work is done.
+ * @param array - input to each call of the async function.
+ * @param fn - an async function with signature (data, callback)
+ * @param callback - a callback run after all async work is done.
  * called with an array, containing the results of each async call.
- * @private
  */
 export function asyncAll<Item, Result>(
     array: Array<Item>,
@@ -103,12 +90,11 @@ export function asyncAll<Item, Result>(
     });
 }
 
-/*
+/**
  * Compute the difference between the keys in one object and the keys
  * in another object.
  *
  * @returns keys difference
- * @private
  */
 export function keysDifference<S, T>(
     obj: {[key: string]: S},
@@ -129,9 +115,8 @@ export function keysDifference<S, T>(
  * The last source object given overrides properties from previous
  * source objects.
  *
- * @param dest destination object
- * @param sources sources from which properties are pulled
- * @private
+ * @param dest - destination object
+ * @param sources - sources from which properties are pulled
  */
 export function extend(dest: any, ...sources: Array<any>): any {
     for (const src of sources) {
@@ -146,15 +131,15 @@ export function extend(dest: any, ...sources: Array<any>): any {
  * Given an object and a number of properties as strings, return version
  * of that object with only those properties.
  *
- * @param src the object
- * @param properties an array of property names chosen
+ * @param src - the object
+ * @param properties - an array of property names chosen
  * to appear on the resulting object.
  * @returns object with limited properties.
  * @example
- * var foo = { name: 'Charlie', age: 10 };
- * var justName = pick(foo, ['name']);
- * // justName = { name: 'Charlie' }
- * @private
+ * ```ts
+ * letfoo = { name: 'Charlie', age: 10 };
+ * letjustName = pick(foo, ['name']); // justName = { name: 'Charlie' }
+ * ```
  */
 export function pick(src: any, properties: Array<string>): any {
     const result = {};
@@ -174,7 +159,6 @@ let id = 1;
  * each call.
  *
  * @returns unique numeric id.
- * @private
  */
 export function uniqueId(): number {
     return id++;
@@ -182,7 +166,6 @@ export function uniqueId(): number {
 
 /**
  * Return whether a given value is a power of two
- * @private
  */
 export function isPowerOfTwo(value: number): boolean {
     return (Math.log(value) / Math.LN2) % 1 === 0;
@@ -190,7 +173,6 @@ export function isPowerOfTwo(value: number): boolean {
 
 /**
  * Return the next power of two, or the input value if already a power of two
- * @private
  */
 export function nextPowerOfTwo(value: number): number {
     if (value <= 1) return 1;
@@ -200,8 +182,6 @@ export function nextPowerOfTwo(value: number): number {
 /**
  * Create an object by mapping all the values of an existing object while
  * preserving their keys.
- *
- * @private
  */
 export function mapObject(input: any, iterator: Function, context?: any): any {
     const output = {};
@@ -213,8 +193,6 @@ export function mapObject(input: any, iterator: Function, context?: any): any {
 
 /**
  * Create an object by filtering out values of an existing object.
- *
- * @private
  */
 export function filterObject(input: any, iterator: Function, context?: any): any {
     const output = {};
@@ -228,8 +206,8 @@ export function filterObject(input: any, iterator: Function, context?: any): any
 
 /**
  * Deeply compares two object literals.
- * @param a first object literal to be compared
- * @param b second object literal to be compared
+ * @param a - first object literal to be compared
+ * @param b - second object literal to be compared
  * @returns true if the two object literals are deeply equal, false otherwise
  */
 export function deepEqual(a?: unknown | null, b?: unknown | null): boolean {
@@ -254,8 +232,6 @@ export function deepEqual(a?: unknown | null, b?: unknown | null): boolean {
 
 /**
  * Deeply clones two objects.
- *
- * @private
  */
 export function clone<T>(input: T): T {
     if (Array.isArray(input)) {
@@ -269,8 +245,6 @@ export function clone<T>(input: T): T {
 
 /**
  * Check if two arrays have at least one common element.
- *
- * @private
  */
 export function arraysIntersect<T>(a: Array<T>, b: Array<T>): boolean {
     for (let l = 0; l < a.length; l++) {
@@ -282,8 +256,6 @@ export function arraysIntersect<T>(a: Array<T>, b: Array<T>): boolean {
 /**
  * Print a warning message to the console and ensure duplicate warning messages
  * are not printed.
- *
- * @private
  */
 const warnOnceHistory: {[key: string]: boolean} = {};
 
@@ -298,7 +270,6 @@ export function warnOnce(message: string): void {
 /**
  * Indicates if the provided Points are in a counter clockwise (true) or clockwise (false) order
  *
- * @private
  * @returns true for a counter clockwise set of points
  */
 // http://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
@@ -310,10 +281,10 @@ export function isCounterClockwise(a: Point, b: Point, c: Point): boolean {
  * For two lines a and b in 2d space, defined by any two points along the lines,
  * find the intersection point, or return null if the lines are parallel
  *
- * @param a1 First point on line a
- * @param a2 Second point on line a
- * @param b1 First point on line b
- * @param b2 Second point on line b
+ * @param a1 - First point on line a
+ * @param a2 - Second point on line a
+ * @param b1 - First point on line b
+ * @param b2 - Second point on line b
  *
  * @returns the intersection point of the two lines or null if they are parallel
  */
@@ -343,8 +314,7 @@ export function findLineIntersection(a1: Point, a2: Point, b1: Point, b2: Point)
  * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
  * ordering.
  *
- * @private
- * @param ring Exterior or interior ring
+ * @param ring - Exterior or interior ring
  */
 export function calculateSignedArea(ring: Array<Point>): number {
     let sum = 0;
@@ -359,9 +329,8 @@ export function calculateSignedArea(ring: Array<Point>): number {
 /**
  * Detects closed polygons, first + last point are equal
  *
- * @private
- * @param points array of points
- * @return true if the points are a closed polygon
+ * @param points - array of points
+ * @returns `true` if the points are a closed polygon
  */
 export function isClosedPolygon(points: Array<Point>): boolean {
     // If it is 2 points that are the same then it is a point
@@ -384,9 +353,8 @@ export function isClosedPolygon(points: Array<Point>): boolean {
 /**
  * Converts spherical coordinates to cartesian coordinates.
  *
- * @private
- * @param spherical Spherical coordinates, in [radial, azimuthal, polar]
- * @return cartesian coordinates in [x, y, z]
+ * @param spherical - Spherical coordinates, in [radial, azimuthal, polar]
+ * @returns cartesian coordinates in [x, y, z]
  */
 
 export function sphericalToCartesian([r, azimuthal, polar]: [number, number, number]): {
@@ -412,7 +380,6 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
 /**
  *  Returns true if the when run in the web-worker context.
  *
- * @private
  * @returns `true` if the when run in the web-worker context.
  */
 export function isWorker(): boolean {
@@ -423,9 +390,8 @@ export function isWorker(): boolean {
 /**
  * Parses data from 'Cache-Control' headers.
  *
- * @private
- * @param cacheControl Value of 'Cache-Control' header
- * @return object containing parsed header info.
+ * @param cacheControl - Value of 'Cache-Control' header
+ * @returns object containing parsed header info.
  */
 
 export function parseCacheControl(cacheControl: string): any {
@@ -458,8 +424,7 @@ let _isSafari = null;
  *
  * This should be removed once the underlying Safari issue is fixed.
  *
- * @private
- * @param scope {WindowOrWorkerGlobalScope} Since this function is used both on the main thread and WebWorker context,
+ * @param scope - Since this function is used both on the main thread and WebWorker context,
  *      let the calling scope pass in the global scope object.
  * @returns `true` when run in WebKit derived browsers.
  */
@@ -513,8 +478,8 @@ export function isImageBitmap(image: any): image is ImageBitmap {
  * perfectly fine with ImageBitmaps. Might also be used for environments (other than testing) not supporting
  * ArrayBuffers.
  *
- * @param data {ArrayBuffer} Data to convert
- * @param callback A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image bitmap (when no error) as the second
+ * @param data - Data to convert
+ * @param callback - A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image bitmap (when no error) as the second
  */
 export function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
@@ -534,8 +499,8 @@ const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA
  * perfectly fine with ImageBitmaps. Might also be used for environments (other than testing) not supporting
  * ArrayBuffers.
  *
- * @param data {ArrayBuffer} Data to convert
- * @param callback A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image element (when no error) as the second
+ * @param data - Data to convert
+ * @param callback - A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image element (when no error) as the second
  */
 export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, image?: HTMLImageElement | null) => void) {
     const img: HTMLImageElement = new Image();

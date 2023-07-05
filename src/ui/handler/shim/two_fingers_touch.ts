@@ -34,12 +34,13 @@ export class TwoFingersTouchZoomRotateHandler {
     /**
      * Enables the "pinch to rotate and zoom" interaction.
      *
-     * @param options Options object.
+     * @param options - Options object.
      *
      * @example
-     *   map.touchZoomRotate.enable();
-     * @example
-     *   map.touchZoomRotate.enable({ around: 'center' });
+     * ```ts
+     * map.touchZoomRotate.enable();
+     * map.touchZoomRotate.enable({ around: 'center' });
+     * ```
      */
     enable(options?: AroundCenterOptions | boolean | null) {
         this._touchZoom.enable(options);
@@ -52,7 +53,9 @@ export class TwoFingersTouchZoomRotateHandler {
      * Disables the "pinch to rotate and zoom" interaction.
      *
      * @example
-     *   map.touchZoomRotate.disable();
+     * ```ts
+     * map.touchZoomRotate.disable();
+     * ```
      */
     disable() {
         this._touchZoom.disable();
@@ -86,7 +89,9 @@ export class TwoFingersTouchZoomRotateHandler {
      * interaction enabled.
      *
      * @example
-     *   map.touchZoomRotate.disableRotation();
+     * ```ts
+     * map.touchZoomRotate.disableRotation();
+     * ```
      */
     disableRotation() {
         this._rotationDisabled = true;
@@ -97,8 +102,10 @@ export class TwoFingersTouchZoomRotateHandler {
      * Enables the "pinch to rotate" interaction.
      *
      * @example
-     *   map.touchZoomRotate.enable();
-     *   map.touchZoomRotate.enableRotation();
+     * ```ts
+     * map.touchZoomRotate.enable();
+     * map.touchZoomRotate.enableRotation();
+     * ```
      */
     enableRotation() {
         this._rotationDisabled = false;

@@ -70,8 +70,8 @@ export class TerrainSourceCache extends Evented {
 
     /**
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
-     * @param transform the operation to do
-     * @param terrain the terrain
+     * @param transform - the operation to do
+     * @param terrain - the terrain
      */
     update(transform: Transform, terrain: Terrain): void {
         // load raster-dem tiles for the current scene.
@@ -102,7 +102,7 @@ export class TerrainSourceCache extends Evented {
 
     /**
      * Free render to texture cache
-     * @param tileID optional, free only corresponding to tileID.
+     * @param tileID - optional, free only corresponding to tileID.
      */
     freeRtt(tileID?: OverscaledTileID) {
         for (const key in this._tiles) {
@@ -122,7 +122,7 @@ export class TerrainSourceCache extends Evented {
 
     /**
      * get terrain tile by the TileID key
-     * @param id the tile id
+     * @param id - the tile id
      * @returns the tile
      */
     getTileByID(id: string): Tile {
@@ -171,8 +171,8 @@ export class TerrainSourceCache extends Evented {
 
     /**
      * find the covering raster-dem tile
-     * @param tileID the tile to look for
-     * @param searchForDEM Optinal parameter to search for (parent) souretiles with loaded dem.
+     * @param tileID - the tile to look for
+     * @param searchForDEM - Optinal parameter to search for (parent) souretiles with loaded dem.
      * @returns the tile
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {
@@ -193,7 +193,7 @@ export class TerrainSourceCache extends Evented {
 
     /**
      * get a list of tiles, loaded after a spezific time. This is used to update depth & coords framebuffers.
-     * @param time the time
+     * @param time - the time
      * @returns the relevant tiles
      */
     tilesAfterTime(time = Date.now()): Array<Tile> {

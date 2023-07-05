@@ -89,6 +89,7 @@ export interface MapSourceDataEvent extends MapLibreEvent {
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
  * @example
+ * ```ts
  * // The `click` event is an example of a `MapMouseEvent`.
  * // Set up an event listener on the map.
  * map.on('click', function(e) {
@@ -96,6 +97,7 @@ export interface MapSourceDataEvent extends MapLibreEvent {
  *   // coordinates of the point on the map that was clicked.
  *   console.log('A click event has occurred at ' + e.lngLat);
  * });
+ * ```
  */
 export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
     /**
@@ -140,7 +142,6 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
 
     /**
      * `true` if `preventDefault` has been called.
-     * @private
      */
     get defaultPrevented(): boolean {
         return this._defaultPrevented;
@@ -148,9 +149,6 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
 
     _defaultPrevented: boolean;
 
-    /**
-     * @private
-     */
     constructor(type: string, map: Map, originalEvent: MouseEvent, data: any = {}) {
         const point = DOM.mousePos(map.getCanvasContainer(), originalEvent);
         const lngLat = map.unproject(point);
@@ -217,7 +215,6 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
 
     /**
      * `true` if `preventDefault` has been called.
-     * @private
      */
     get defaultPrevented(): boolean {
         return this._defaultPrevented;
@@ -225,9 +222,6 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
 
     _defaultPrevented: boolean;
 
-    /**
-     * @private
-     */
     constructor(type: string, map: Map, originalEvent: TouchEvent) {
         const touches = type === 'touchend' ? originalEvent.changedTouches : originalEvent.touches;
         const points = DOM.touchPos(map.getCanvasContainer(), touches);
@@ -273,7 +267,6 @@ export class MapWheelEvent extends Event {
 
     /**
      * `true` if `preventDefault` has been called.
-     * @private
      */
     get defaultPrevented(): boolean {
         return this._defaultPrevented;
@@ -281,9 +274,7 @@ export class MapWheelEvent extends Event {
 
     _defaultPrevented: boolean;
 
-    /**
-     * @private
-     */
+    /** */
     constructor(type: string, map: Map, originalEvent: WheelEvent) {
         super(type, {originalEvent});
         this._defaultPrevented = false;
@@ -327,6 +318,7 @@ export type MapLibreZoomEvent = {
  * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
  *
  * @example
+ * ```ts
  * // The sourcedata event is an example of MapDataEvent.
  * // Set up an event listener on the map.
  * map.on('sourcedata', function(e) {
@@ -334,6 +326,7 @@ export type MapLibreZoomEvent = {
  *        // Do something when the source has finished loading
  *    }
  * });
+ * ```
  */
 export type MapDataEvent = {
     /**
@@ -458,19 +451,23 @@ export type MapEvent =
      * @event mousedown
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener
      * map.on('mousedown', function() {
      *   console.log('A mousedown event has occurred.');
      * });
+     * ```
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener for a specific layer
      * map.on('mousedown', 'poi-label', function() {
      *   console.log('A mousedown event has occurred on a visible portion of the poi-label layer.');
      * });
+     * ```
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     'mousedown'
@@ -485,19 +482,23 @@ export type MapEvent =
      * @event mouseup
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener
      * map.on('mouseup', function() {
      *   console.log('A mouseup event has occurred.');
      * });
+     * ```
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener for a specific layer
      * map.on('mouseup', 'poi-label', function() {
      *   console.log('A mouseup event has occurred on a visible portion of the poi-label layer.');
      * });
+     * ```
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     | 'mouseup'
@@ -514,19 +515,23 @@ export type MapEvent =
      * @event mouseover
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener
      * map.on('mouseover', function() {
      *   console.log('A mouseover event has occurred.');
      * });
+     * ```
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener for a specific layer
      * map.on('mouseover', 'poi-label', function() {
      *   console.log('A mouseover event has occurred on a visible portion of the poi-label layer.');
      * });
+     * ```
      * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/mouse-position/)
      * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
@@ -544,19 +549,23 @@ export type MapEvent =
      * @event mousemove
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener
      * map.on('mousemove', function() {
      *   console.log('A mousemove event has occurred.');
      * });
+     * ```
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener for a specific layer
      * map.on('mousemove', 'poi-label', function() {
      *   console.log('A mousemove event has occurred on a visible portion of the poi-label layer.');
      * });
+     * ```
      * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/mouse-position/)
      * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Display a popup on over](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
@@ -573,19 +582,22 @@ export type MapEvent =
      * @event click
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener
      * map.on('click', function(e) {
      *   console.log('A click event has occurred at ' + e.lngLat);
      * });
+     * ```
      * @example
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener for a specific layer
      * map.on('click', 'poi-label', function(e) {
      *   console.log('A click event has occurred on a visible portion of the poi-label layer at ' + e.lngLat);
      * });
+     * ```
      * @see [Measure distances](https://maplibre.org/maplibre-gl-js-docs/example/measure/)
      * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js-docs/example/center-on-symbol/)
      */
@@ -604,19 +616,23 @@ export type MapEvent =
      * @event dblclick
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener
      * map.on('dblclick', function(e) {
      *   console.log('A dblclick event has occurred at ' + e.lngLat);
      * });
+     * ```
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener for a specific layer
      * map.on('dblclick', 'poi-label', function(e) {
      *   console.log('A dblclick event has occurred on a visible portion of the poi-label layer at ' + e.lngLat);
      * });
+     * ```
      */
     | 'dblclick'
 
@@ -630,12 +646,14 @@ export type MapEvent =
      * @event mouseenter
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener
      * map.on('mouseenter', 'water', function() {
      *   console.log('A mouseenter event occurred on a visible portion of the water layer.');
      * });
+     * ```
      * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js-docs/example/center-on-symbol/)
      * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
      */
@@ -651,14 +669,16 @@ export type MapEvent =
      * @event mouseleave
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when the pointing device leaves
      * // a visible portion of the specified layer.
      * map.on('mouseleave', 'water', function() {
      *   console.log('A mouseleave event occurred.');
      * });
+     * ```
      * @see [Highlight features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
      */
@@ -670,14 +690,16 @@ export type MapEvent =
      * @event mouseout
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when the pointing device leave's
      * // the map's canvas.
      * map.on('mouseout', function() {
      *   console.log('A mouseout event occurred.');
      * });
+     * ```
      */
     | 'mouseout'
 
@@ -687,14 +709,16 @@ export type MapEvent =
      * @event contextmenu
      * @property {MapMouseEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when the right mouse button is
      * // pressed within the map.
      * map.on('contextmenu', function() {
      *   console.log('A contextmenu event occurred.');
      * });
+     * ```
      */
     | 'contextmenu'
 
@@ -704,13 +728,15 @@ export type MapEvent =
      * @event wheel
      * @property {MapWheelEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a wheel event occurs within the map.
      * map.on('wheel', function() {
      *   console.log('A wheel event occurred.');
      * });
+     * ```
      */
     | 'wheel'
 
@@ -720,13 +746,15 @@ export type MapEvent =
      * @event touchstart
      * @property {MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a touchstart event occurs within the map.
      * map.on('touchstart', function() {
      *   console.log('A touchstart event occurred.');
      * });
+     * ```
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     | 'touchstart'
@@ -737,13 +765,15 @@ export type MapEvent =
      * @event touchend
      * @property {MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a touchstart event occurs within the map.
      * map.on('touchstart', function() {
      *   console.log('A touchstart event occurred.');
      * });
+     * ```
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     | 'touchend'
@@ -754,13 +784,15 @@ export type MapEvent =
      * @event touchmove
      * @property {MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a touchmove event occurs within the map.
      * map.on('touchmove', function() {
      *   console.log('A touchmove event occurred.');
      * });
+     * ```
      * @see [Create a draggable point](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
     | 'touchmove'
@@ -771,13 +803,15 @@ export type MapEvent =
      * @event touchcancel
      * @property {MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a touchcancel event occurs within the map.
      * map.on('touchcancel', function() {
      *   console.log('A touchcancel event occurred.');
      * });
+     * ```
      */
     | 'touchcancel'
 
@@ -788,14 +822,16 @@ export type MapEvent =
      * @event movestart
      * @property {{originalEvent: DragEvent}} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just before the map begins a transition
      * // from one view to another.
      * map.on('movestart', function() {
      *   console.log('A movestart` event occurred.');
      * });
+     * ```
      */
     | 'movestart'
 
@@ -806,13 +842,15 @@ export type MapEvent =
      * @event move
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // repeatedly during an animated transition.
      * map.on('move', function() {
      *   console.log('A move event occurred.');
      * });
+     * ```
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
      */
     | 'move'
@@ -824,13 +862,15 @@ export type MapEvent =
      * @event moveend
      * @property {{originalEvent: DragEvent}} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just after the map completes a transition.
      * map.on('moveend', function() {
      *   console.log('A moveend event occurred.');
      * });
+     * ```
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
      */
     | 'moveend'
@@ -841,13 +881,15 @@ export type MapEvent =
      * @event dragstart
      * @property {{originalEvent: DragEvent}} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a "drag to pan" interaction starts.
      * map.on('dragstart', function() {
      *   console.log('A dragstart event occurred.');
      * });
+     * ```
      */
     | 'dragstart'
 
@@ -857,13 +899,15 @@ export type MapEvent =
      * @event drag
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // repeatedly  during a "drag to pan" interaction.
      * map.on('drag', function() {
      *   console.log('A drag event occurred.');
      * });
+     * ```
      */
     | 'drag'
 
@@ -873,13 +917,15 @@ export type MapEvent =
      * @event dragend
      * @property {{originalEvent: DragEvent}} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a "drag to pan" interaction ends.
      * map.on('dragend', function() {
      *   console.log('A dragend event occurred.');
      * });
+     * ```
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
      */
     | 'dragend'
@@ -891,13 +937,15 @@ export type MapEvent =
      * @event zoomstart
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just before a zoom transition starts.
      * map.on('zoomstart', function() {
      *   console.log('A zoomstart event occurred.');
      * });
+     * ```
      */
     | 'zoomstart'
 
@@ -908,13 +956,15 @@ export type MapEvent =
      * @event zoom
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // repeatedly during a zoom transition.
      * map.on('zoom', function() {
      *   console.log('A zoom event occurred.');
      * });
+     * ```
      */
     | 'zoom'
 
@@ -925,13 +975,15 @@ export type MapEvent =
      * @event zoomend
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just after a zoom transition finishes.
      * map.on('zoomend', function() {
      *   console.log('A zoomend event occurred.');
      * });
+     * ```
      */
     | 'zoomend'
 
@@ -941,13 +993,15 @@ export type MapEvent =
      * @event rotatestart
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just before a "drag to rotate" interaction starts.
      * map.on('rotatestart', function() {
      *   console.log('A rotatestart event occurred.');
      * });
+     * ```
      */
     | 'rotatestart'
 
@@ -957,13 +1011,15 @@ export type MapEvent =
      * @event rotate
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // repeatedly during "drag to rotate" interaction.
      * map.on('rotate', function() {
      *   console.log('A rotate event occurred.');
      * });
+     * ```
      */
     | 'rotate'
 
@@ -973,13 +1029,15 @@ export type MapEvent =
      * @event rotateend
      * @property {MapMouseEvent | MapTouchEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just after a "drag to rotate" interaction ends.
      * map.on('rotateend', function() {
      *   console.log('A rotateend event occurred.');
      * });
+     * ```
      */
     | 'rotateend'
 
@@ -990,13 +1048,15 @@ export type MapEvent =
      * @event pitchstart
      * @property {MapEventData} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just before a pitch (tilt) transition starts.
      * map.on('pitchstart', function() {
      *   console.log('A pitchstart event occurred.');
      * });
+     * ```
      */
     | 'pitchstart'
 
@@ -1008,13 +1068,15 @@ export type MapEvent =
      * @event pitch
      * @property {MapEventData} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // repeatedly during a pitch (tilt) transition.
      * map.on('pitch', function() {
      *   console.log('A pitch event occurred.');
      * });
+     * ```
      */
     | 'pitch'
 
@@ -1025,13 +1087,15 @@ export type MapEvent =
      * @event pitchend
      * @property {MapEventData} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just after a pitch (tilt) transition ends.
      * map.on('pitchend', function() {
      *   console.log('A pitchend event occurred.');
      * });
+     * ```
      */
     | 'pitchend'
 
@@ -1041,13 +1105,15 @@ export type MapEvent =
      * @event boxzoomstart
      * @property {MapLibreZoomEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just before a "box zoom" interaction starts.
      * map.on('boxzoomstart', function() {
      *   console.log('A boxzoomstart event occurred.');
      * });
+     * ```
      */
     | 'boxzoomstart'
 
@@ -1057,13 +1123,15 @@ export type MapEvent =
      * @event boxzoomend
      * @property {MapLibreZoomEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just after a "box zoom" interaction ends.
      * map.on('boxzoomend', function() {
      *   console.log('A boxzoomend event occurred.');
      * });
+     * ```
      */
     | 'boxzoomend'
 
@@ -1074,13 +1142,15 @@ export type MapEvent =
      * @event boxzoomcancel
      * @property {MapLibreZoomEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // the user cancels a "box zoom" interaction.
      * map.on('boxzoomcancel', function() {
      *   console.log('A boxzoomcancel event occurred.');
      * });
+     * ```
      */
     | 'boxzoomcancel'
 
@@ -1089,13 +1159,15 @@ export type MapEvent =
      *
      * @event resize
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // immediately after the map has been resized.
      * map.on('resize', function() {
      *   console.log('A resize event occurred.');
      * });
+     * ```
      */
     | 'resize'
 
@@ -1104,13 +1176,15 @@ export type MapEvent =
      *
      * @event webglcontextlost
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when the WebGL context is lost.
      * map.on('webglcontextlost', function() {
      *   console.log('A webglcontextlost event occurred.');
      * });
+     * ```
      */
     | 'webglcontextlost'
 
@@ -1119,13 +1193,15 @@ export type MapEvent =
      *
      * @event webglcontextrestored
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when the WebGL context is restored.
      * map.on('webglcontextrestored', function() {
      *   console.log('A webglcontextrestored event occurred.');
      * });
+     * ```
      */
     | 'webglcontextrestored'
 
@@ -1135,13 +1211,15 @@ export type MapEvent =
      *
      * @event load
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when the map has finished loading.
      * map.on('load', function() {
      *   console.log('A load event occurred.');
      * });
+     * ```
      * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js-docs/example/geojson-markers/)
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js-docs/example/live-geojson/)
      * @see [Animate a point](https://maplibre.org/maplibre-gl-js-docs/example/animate-point-along-line/)
@@ -1158,13 +1236,15 @@ export type MapEvent =
      *
      * @event render
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // whenever the map is drawn to the screen.
      * map.on('render', function() {
      *   console.log('A render event occurred.');
      * });
+     * ```
      */
     | 'render'
 
@@ -1178,13 +1258,15 @@ export type MapEvent =
      *
      * @event idle
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just before the map enters an "idle" state.
      * map.on('idle', function() {
      *   console.log('A idle event occurred.');
      * });
+     * ```
      */
     | 'idle'
 
@@ -1193,13 +1275,15 @@ export type MapEvent =
      *
      * @event remove
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // just after the map is removed.
      * map.on('remove', function() {
      *   console.log('A remove event occurred.');
      * });
+     * ```
      */
     | 'remove'
 
@@ -1212,13 +1296,15 @@ export type MapEvent =
      * @event error
      * @property {{error: {message: string}}} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when an error occurs.
      * map.on('error', function() {
      *   console.log('A error event occurred.');
      * });
+     * ```
      */
     | 'error'
 
@@ -1229,13 +1315,15 @@ export type MapEvent =
      * @event data
      * @property {MapDataEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when map data loads or changes.
      * map.on('data', function() {
      *   console.log('A data event occurred.');
      * });
+     * ```
      * @see [Display HTML clusters with custom properties](https://maplibre.org/maplibre-gl-js-docs/example/cluster-html/)
      */
     | 'data'
@@ -1247,13 +1335,15 @@ export type MapEvent =
      * @event styledata
      * @property {MapDataEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when the map's style loads or changes.
      * map.on('styledata', function() {
      *   console.log('A styledata event occurred.');
      * });
+     * ```
      */
     | 'styledata'
 
@@ -1264,13 +1354,15 @@ export type MapEvent =
      * @event sourcedata
      * @property {MapDataEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when one of the map's sources loads or changes.
      * map.on('sourcedata', function() {
      *   console.log('A sourcedata event occurred.');
      * });
+     * ```
      */
     | 'sourcedata'
 
@@ -1282,14 +1374,16 @@ export type MapEvent =
      * @event dataloading
      * @property {MapDataEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when any map data begins loading
      * // or changing asynchronously.
      * map.on('dataloading', function() {
      *   console.log('A dataloading event occurred.');
      * });
+     * ```
      */
     | 'dataloading'
 
@@ -1301,14 +1395,16 @@ export type MapEvent =
      * @event styledataloading
      * @property {MapDataEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // map's style begins loading or
      * // changing asynchronously.
      * map.on('styledataloading', function() {
      *   console.log('A styledataloading event occurred.');
      * });
+     * ```
      */
     | 'styledataloading'
 
@@ -1320,14 +1416,16 @@ export type MapEvent =
      * @event sourcedataloading
      * @property {MapDataEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // map's sources begin loading or
      * // changing asynchronously.
      * map.on('sourcedataloading', function() {
      *   console.log('A sourcedataloading event occurred.');
      * });
+     * ```
      */
     | 'sourcedataloading'
 
@@ -1339,26 +1437,26 @@ export type MapEvent =
      * @event styleimagemissing
      * @property {string} id The id of the missing image.
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires an icon or pattern is missing.
      * map.on('styleimagemissing', function(event: MapStyleImageMissingEvent) {
      *   const imageId = event.id
      *   console.log('A styleimagemissing event occurred for image id', imageId);
      * });
+     * ```
      * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-missing-generated/)
      */
     | 'styleimagemissing'
 
     /**
      * @event style.load
-     * @private
      */
     | 'style.load'
 
     /**
      * @event terrain
-     * @private
      */
     | 'terrain'
 
@@ -1370,13 +1468,15 @@ export type MapEvent =
      * @event dataabort
      * @property {MapDataEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a request for one of the map's sources' data is aborted.
      * map.on('dataabort', function() {
      *   console.log('A dataabort event occurred.');
      * });
+     * ```
      */
     | 'dataabort'
 
@@ -1387,12 +1487,14 @@ export type MapEvent =
      * @event sourcedataabort
      * @property {MapDataEvent} data
      * @example
+     * ```ts
      * // Initialize the map
-     * var map = new maplibregl.Map({ // map options });
+     * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener that fires
      * // when a request for one of the map's sources' data is aborted.
      * map.on('sourcedataabort', function() {
      *   console.log('A sourcedataabort event occurred.');
      * });
+     * ```
      */
     | 'sourcedataabort';

@@ -17,7 +17,8 @@ export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom
  * node.
  *
  * @example
- * // Control implemented as ES6 class
+ * Control implemented as ES6 class
+ * ```ts
  * class HelloWorldControl {
  *     onAdd(map) {
  *         this._map = map;
@@ -48,6 +49,7 @@ export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom
  *      this._container.parentNode.removeChild(this._container);
  *      this._map = undefined;
  * };
+ * ```
  */
 export interface IControl {
     /**
@@ -55,7 +57,7 @@ export interface IControl {
      * and resources. This method is called by {@link Map#addControl}
      * internally.
      *
-     * @param map the Map this control will be added to
+     * @param map - the Map this control will be added to
      * @returns The control's container element. This should
      * be created by the control and returned by onAdd without being attached
      * to the DOM: the map will insert the control's element into the DOM
@@ -67,7 +69,7 @@ export interface IControl {
      * and resources. This method is called by {@link Map#removeControl}
      * internally.
      *
-     * @param map the Map this control will be removed from
+     * @param map - the Map this control will be removed from
      */
     onRemove(map: Map): void;
     /**

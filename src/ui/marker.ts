@@ -78,20 +78,24 @@ type MarkerOptions = {
 /**
  * Creates a marker component
  *
- * @example
- * var marker = new maplibregl.Marker()
- *   .setLngLat([30.5, 50.5])
- *   .addTo(map);
- *
  * @group Main
  *
  * @example
- * // Set options
- * var marker = new maplibregl.Marker({
+ * ```ts
+ * let marker = new maplibregl.Marker()
+ *   .setLngLat([30.5, 50.5])
+ *   .addTo(map);
+ * ```
+ *
+ * @example
+ * Set options
+ * ```ts
+ * letmarker = new maplibregl.Marker({
  *     color: "#FFFFFF",
  *     draggable: true
  *   }).setLngLat([30.5, 50.5])
  *   .addTo(map);
+ * ```
  * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
  *
@@ -127,7 +131,7 @@ export class Marker extends Evented {
     _opacityTimeout: ReturnType<typeof setTimeout>;
 
     /**
-     * @param options the options
+     * @param options - the options
      */
     constructor(options?: MarkerOptions) {
         super();
@@ -278,12 +282,14 @@ export class Marker extends Evented {
 
     /**
      * Attaches the `Marker` to a `Map` object.
-     * @param map The MapLibre GL JS map to add the marker to.
+     * @param map - The MapLibre GL JS map to add the marker to.
      * @returns `this`
      * @example
-     * var marker = new maplibregl.Marker()
+     * ```ts
+     * let marker = new maplibregl.Marker()
      *   .setLngLat([30.5, 50.5])
      *   .addTo(map); // add the marker to the map
+     * ```
      */
     addTo(map: Map): this {
         this.remove();
@@ -305,8 +311,10 @@ export class Marker extends Evented {
     /**
      * Removes the marker from a map
      * @example
-     * var marker = new maplibregl.Marker().addTo(map);
+     * ```ts
+     * let marker = new maplibregl.Marker().addTo(map);
      * marker.remove();
+     * ```
      * @returns `this`
      */
     remove(): this {
@@ -340,10 +348,12 @@ export class Marker extends Evented {
      *
      * @returns A {@link LngLat} describing the marker's location.
      * @example
+     * ```ts
      * // Store the marker's longitude and latitude coordinates in a variable
-     * var lngLat = marker.getLngLat();
+     * let lngLat = marker.getLngLat();
      * // Print the marker's longitude and latitude values in the console
      * console.log('Longitude: ' + lngLat.lng + ', Latitude: ' + lngLat.lat )
+     * ```
      * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
      */
     getLngLat(): LngLat {
@@ -352,13 +362,15 @@ export class Marker extends Evented {
 
     /**
      * Set the marker's geographical position and move it.
-     * @param lnglat A {@link LngLat} describing where the marker should be located.
+     * @param lnglat - A {@link LngLat} describing where the marker should be located.
      * @returns `this`
      * @example
-     * // Create a new marker, set the longitude and latitude, and add it to the map
+     * Create a new marker, set the longitude and latitude, and add it to the map
+     * ```ts
      * new maplibregl.Marker()
      *   .setLngLat([-65.017, -16.457])
      *   .addTo(map);
+     * ```
      * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
      * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
      */
@@ -380,14 +392,16 @@ export class Marker extends Evented {
 
     /**
      * Binds a {@link Popup} to the {@link Marker}.
-     * @param popup An instance of the {@link Popup} class. If undefined or null, any popup
+     * @param popup - An instance of the {@link Popup} class. If undefined or null, any popup
      * set on this {@link Marker} instance is unset.
      * @returns `this`
      * @example
-     * var marker = new maplibregl.Marker()
+     * ```ts
+     * let marker = new maplibregl.Marker()
      *  .setLngLat([0, 0])
      *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>")) // add popup
      *  .addTo(map);
+     * ```
      * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
      */
     setPopup(popup?: Popup | null): this {
@@ -455,12 +469,14 @@ export class Marker extends Evented {
      * Returns the {@link Popup} instance that is bound to the {@link Marker}.
      * @returns popup
      * @example
-     * var marker = new maplibregl.Marker()
+     * ```ts
+     * let marker = new maplibregl.Marker()
      *  .setLngLat([0, 0])
      *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>"))
      *  .addTo(map);
      *
      * console.log(marker.getPopup()); // return the popup instance
+     * ```
      */
     getPopup(): Popup {
         return this._popup;
@@ -470,12 +486,14 @@ export class Marker extends Evented {
      * Opens or closes the {@link Popup} instance that is bound to the {@link Marker}, depending on the current state of the {@link Popup}.
      * @returns `this`
      * @example
-     * var marker = new maplibregl.Marker()
+     * ```ts
+     * let marker = new maplibregl.Marker()
      *  .setLngLat([0, 0])
      *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>"))
      *  .addTo(map);
      *
      * marker.togglePopup(); // toggle popup open or closed
+     * ```
      */
     togglePopup(): this {
         const popup = this._popup;
@@ -538,7 +556,7 @@ export class Marker extends Evented {
 
     /**
      * Sets the offset of the marker
-     * @param offset The offset in pixels as a {@link PointLike} object to apply relative to the element's center. Negatives indicate left and up.
+     * @param offset - The offset in pixels as a {@link PointLike} object to apply relative to the element's center. Negatives indicate left and up.
      * @returns `this`
      */
     setOffset(offset: PointLike): this {
@@ -550,11 +568,13 @@ export class Marker extends Evented {
     /**
      * Adds a CSS class to the marker element.
      *
-     * @param className Non-empty string with CSS class name to add to marker element
+     * @param className - on-empty string with CSS class name to add to marker element
      *
      * @example
+     * ```
      * let marker = new maplibregl.Marker()
      * marker.addClassName('some-class')
+     * ```
      */
     addClassName(className: string) {
         this._element.classList.add(className);
@@ -563,11 +583,13 @@ export class Marker extends Evented {
     /**
      * Removes a CSS class from the marker element.
      *
-     * @param className Non-empty string with CSS class name to remove from marker element
+     * @param className - Non-empty string with CSS class name to remove from marker element
      *
      * @example
+     * ```ts
      * let marker = new maplibregl.Marker()
      * marker.removeClassName('some-class')
+     * ```
      */
     removeClassName(className: string) {
         this._element.classList.remove(className);
@@ -576,13 +598,15 @@ export class Marker extends Evented {
     /**
      * Add or remove the given CSS class on the marker element, depending on whether the element currently has that class.
      *
-     * @param className Non-empty string with CSS class name to add/remove
+     * @param className - Non-empty string with CSS class name to add/remove
      *
      * @returns if the class was removed return false, if class was added, then return true
      *
      * @example
+     * ```ts
      * let marker = new maplibregl.Marker()
      * marker.toggleClassName('toggleClass')
+     * ```
      */
     toggleClassName(className: string): boolean {
         return this._element.classList.toggle(className);
@@ -652,7 +676,7 @@ export class Marker extends Evented {
 
     /**
      * Sets the `draggable` property and functionality of the marker
-     * @param shouldBeDraggable Turns drag functionality on/off
+     * @param shouldBeDraggable - Turns drag functionality on/off
      * @returns `this`
      */
     setDraggable(shouldBeDraggable?: boolean): this {
@@ -683,7 +707,7 @@ export class Marker extends Evented {
 
     /**
      * Sets the `rotation` property of the marker.
-     * @param rotation The rotation angle of the marker (clockwise, in degrees), relative to its respective {@link Marker#setRotationAlignment} setting.
+     * @param rotation - The rotation angle of the marker (clockwise, in degrees), relative to its respective {@link Marker#setRotationAlignment} setting.
      * @returns `this`
      */
     setRotation(rotation?: number): this {
@@ -702,7 +726,7 @@ export class Marker extends Evented {
 
     /**
      * Sets the `rotationAlignment` property of the marker.
-     * @param alignment Sets the `rotationAlignment` property of the marker. defaults to 'auto'
+     * @param alignment - Sets the `rotationAlignment` property of the marker. defaults to 'auto'
      * @returns `this`
      */
     setRotationAlignment(alignment?: Alignment): this {
@@ -721,7 +745,7 @@ export class Marker extends Evented {
 
     /**
      * Sets the `pitchAlignment` property of the marker.
-     * @param alignment Sets the `pitchAlignment` property of the marker. If alignment is 'auto', it will automatically match `rotationAlignment`.
+     * @param alignment - Sets the `pitchAlignment` property of the marker. If alignment is 'auto', it will automatically match `rotationAlignment`.
      * @returns `this`
      */
     setPitchAlignment(alignment?: Alignment): this {

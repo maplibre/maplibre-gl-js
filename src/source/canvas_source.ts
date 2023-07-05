@@ -39,6 +39,7 @@ export type CanvasSourceSpecification = {
  * @group Sources
  *
  * @example
+ * ```ts
  * // add to map
  * map.addSource('some id', {
  *    type: 'canvas',
@@ -53,7 +54,7 @@ export type CanvasSourceSpecification = {
  * });
  *
  * // update
- * var mySource = map.getSource('some id');
+ * letmySource = map.getSource('some id');
  * mySource.setCoordinates([
  *     [-76.54335737228394, 39.18579907229748],
  *     [-76.52803659439087, 39.1838364847587],
@@ -62,6 +63,7 @@ export type CanvasSourceSpecification = {
  * ]);
  *
  * map.removeSource('some id');  // remove
+ * ```
  */
 export class CanvasSource extends ImageSource {
     options: CanvasSourceSpecification;

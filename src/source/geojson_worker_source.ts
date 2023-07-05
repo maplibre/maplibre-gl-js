@@ -85,8 +85,6 @@ function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataC
  * representation.  To do so, create it with
  * `new GeoJSONWorkerSource(actor, layerIndex, customLoadGeoJSONFunction)`.
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
- *
- * @private
  */
 export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _pendingCallback: Callback<{
@@ -98,10 +96,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
 
     /**
-     * @param [loadGeoJSON] Optional method for custom loading/parsing of
+     * @param loadGeoJSON - Optional method for custom loading/parsing of
      * GeoJSON based on parameters passed from the main-thread Source.
      * See {@link GeoJSONWorkerSource#loadGeoJSON}.
-     * @private
      */
     constructor(actor: Actor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadGeoJSON?: LoadGeoJSON | null) {
         super(actor, layerIndex, availableImages, loadGeoJSONTile);
@@ -122,9 +119,8 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * When a `loadData` request comes in while a previous one is being processed,
      * the previous one is aborted.
      *
-     * @param params
-     * @param callback
-     * @private
+     * @param params - the parameters
+     * @param callback - the callback for completion or error
      */
     loadData(params: LoadGeoJSONParameters, callback: Callback<{
         resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
@@ -191,9 +187,8 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     * If the tile is loaded, uses the implementation in VectorTileWorkerSource.
     * Otherwise, such as after a setData() call, we load the tile fresh.
     *
-    * @param params
-    * @param params.uid The UID for this tile.
-    * @private
+    * @param params - the parameters
+    * @param callback - the callback for completion or error
     */
     reloadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
         const loaded = this.loaded,
@@ -213,9 +208,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * GeoJSON is loaded and parsed from `params.url` if it exists, or else
      * expected as a literal (string or object) `params.data`.
      *
-     * @param params
+     * @param params - the parameters
+     * @param callback - the callback for completion or error
      * @returns A Cancelable object.
-     * @private
      */
     loadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable => {
         const {promoteId} = params;

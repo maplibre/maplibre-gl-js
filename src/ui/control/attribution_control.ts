@@ -24,10 +24,12 @@ type AttributionOptions = {
  * An `AttributionControl` control presents the map's attribution information. By default, the attribution control is expanded (regardless of map width).
  * @group Controls
  * @example
- * var map = new maplibregl.Map({attributionControl: false})
+ * ```ts
+ * let map = new maplibregl.Map({attributionControl: false})
  *     .addControl(new maplibregl.AttributionControl({
  *         compact: true
  *     }));
+ * ```
  */
 export class AttributionControl implements IControl {
     options: AttributionOptions;
@@ -42,7 +44,7 @@ export class AttributionControl implements IControl {
     styleOwner: string;
 
     /**
-     * @param options the attribution options
+     * @param options - the attribution options
      */
     constructor(options: AttributionOptions = {}) {
         this.options = options;
@@ -52,10 +54,7 @@ export class AttributionControl implements IControl {
         return 'bottom-right';
     }
 
-    /**
-     * {@inheritDoc IControl.onAdd}
-     * @param map
-     */
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options && this.options.compact;

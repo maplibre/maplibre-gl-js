@@ -69,7 +69,7 @@ export namespace ImageRequest {
     /**
      * Install a callback to control when image queue throttling is desired.
      * (e.g. when the map view is moving)
-     * @param callback The callback function to install
+     * @param callback - The callback function to install
      * @returns handle that identifies the installed callback.
      */
     export const addThrottleControl = (callback: ImageQueueThrottleControlCallback): number => {
@@ -81,7 +81,7 @@ export namespace ImageRequest {
     /**
      * Remove a previously installed callback by passing in the handle returned
      * by {@link addThrottleControl}.
-     * @param callbackHandle The handle for the callback to remove.
+     * @param callbackHandle - The handle for the callback to remove.
      */
     export const removeThrottleControl = (callbackHandle: number): void => {
         delete throttleControlCallbacks[callbackHandle];
@@ -110,9 +110,9 @@ export namespace ImageRequest {
 
     /**
      * Request to load an image.
-     * @param requestParameters Request parameters.
-     * @param callback Callback to issue when the request completes.
-     * @param supportImageRefresh true, if the image request need to support refresh based on cache headers.
+     * @param requestParameters - Request parameters.
+     * @param callback - Callback to issue when the request completes.
+     * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
      * @returns Cancelable request.
      */
     export const getImage = (

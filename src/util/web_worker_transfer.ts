@@ -24,8 +24,17 @@ type Registry = {
     };
 };
 
+/**
+ * Register options
+ */
 type RegisterOptions<T> = {
+    /**
+     * List of properties to omit from serialization (e.g., cached/computed properties)
+     */
     omit?: ReadonlyArray<keyof T>;
+    /**
+     * List of properties that should be serialized by a simple shallow copy, rather than by a recursive call to serialize().
+     */
     shallow?: ReadonlyArray<keyof T>;
 };
 
@@ -34,11 +43,7 @@ const registry: Registry = {};
 /**
  * Register the given class as serializable.
  *
- * @param options
- * @param options.omit List of properties to omit from serialization (e.g., cached/computed properties)
- * @param options.shallow List of properties that should be serialized by a simple shallow copy, rather than by a recursive call to serialize().
- *
- * @private
+ * @param options - the registration options
  */
 export function register<T extends any>(
     name: string,
@@ -94,8 +99,6 @@ function isArrayBuffer(value: any): value is ArrayBuffer {
  * If a `transferables` array is provided, add any transferable objects (i.e.,
  * any ArrayBuffers or ArrayBuffer views) to the list. (If a copy is needed,
  * this should happen in the client code, before using serialize().)
- *
- * @private
  */
 export function serialize(input: unknown, transferables?: Array<Transferable> | null): Serialized {
     if (input === null ||

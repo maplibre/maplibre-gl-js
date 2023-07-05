@@ -6,8 +6,6 @@ import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-lin
 /**
  * Responsible for sending messages from a {@link Source} to an associated
  * {@link WorkerSource}.
- *
- * @private
  */
 export class Dispatcher {
     workerPool: WorkerPool;
@@ -37,7 +35,6 @@ export class Dispatcher {
 
     /**
      * Broadcast a message to all Workers.
-     * @private
      */
     broadcast(type: string, data: unknown, cb?: (...args: any[]) => any) {
         cb = cb || function () {};

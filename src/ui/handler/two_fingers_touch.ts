@@ -92,7 +92,9 @@ abstract class TwoFingersTouchHandler implements Handler {
      * Enables the "drag to pitch" interaction.
      *
      * @example
+     * ```ts
      * map.touchPitch.enable();
+     * ```
      */
     enable(options?: AroundCenterOptions | boolean | null) {
         this._enabled = true;
@@ -103,7 +105,9 @@ abstract class TwoFingersTouchHandler implements Handler {
      * Disables the "drag to pitch" interaction.
      *
      * @example
+     * ```ts
      * map.touchPitch.disable();
+     * ```
      */
     disable() {
         this._enabled = false;

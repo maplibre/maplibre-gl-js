@@ -78,11 +78,9 @@ export class SegmentVector {
     }
 }
 
-/*
+/**
  * The maximum size of a vertex array. This limit is imposed by WebGL's 16 bit
  * addressing of vertex buffers.
- * @private
- * @readonly
  */
 SegmentVector.MAX_VERTEX_ARRAY_LENGTH = Math.pow(2, 16) - 1;
 

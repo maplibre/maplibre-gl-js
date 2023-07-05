@@ -407,8 +407,8 @@ type ProjectionArgs = {
     labelPlaneMatrix: mat4;
     /**
      * Function to get elevation at a point
-     * @param x the x coordinate
-     * @param y the y coordinate
+     * @param x - the x coordinate
+     * @param y - the y coordinate
     */
     getElevation: (x: number, y: number) => number;
     /**
@@ -435,8 +435,8 @@ type ProjectionArgs = {
 
 /**
  * Transform a vertex from tile coordinates to label plane coordinates
- * @param index index of vertex to project
- * @param projectionArgs necessary data to project a vertex
+ * @param index - index of vertex to project
+ * @param projectionArgs - necessary data to project a vertex
  * @returns the vertex projected to the label plane
  */
 function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs): Point {
@@ -463,9 +463,9 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs):
 
 /**
  * Calculate the normal vector for a line segment
- * @param segmentVector will be mutated as a tiny optimization
- * @param offset magnitude of resulting vector
- * @param direction direction of line traversal
+ * @param segmentVector - will be mutated as a tiny optimization
+ * @param offset - magnitude of resulting vector
+ * @param direction - direction of line traversal
  * @returns a normal vector from the segment, with magnitude equal to offset amount
  */
 function transformToOffsetNormal(segmentVector: Point, offset: number, direction: number): Point {
@@ -476,14 +476,14 @@ function transformToOffsetNormal(segmentVector: Point, offset: number, direction
  * Construct offset line segments for the current segment and the next segment, then extend/shrink
  * the segments until they intersect. If the segments are parallel, then they will touch with no modification.
  *
- * @param index Index of the current vertex
- * @param prevToCurrentOffsetNormal Normal vector of the line segment from the previous vertex to the current vertex
- * @param currentVertex Current (non-offset) vertex projected to the label plane
- * @param lineStartIndex Beginning index for the line this label is on
- * @param lineEndIndex End index for the line this label is on
- * @param offsetPreviousVertex The previous vertex projected to the label plane, and then offset along the previous segments normal
- * @param lineOffsetY Magnitude of the offset
- * @param projectionArgs Necessary data for tile-to-label-plane projection
+ * @param index - Index of the current vertex
+ * @param prevToCurrentOffsetNormal - Normal vector of the line segment from the previous vertex to the current vertex
+ * @param currentVertex - Current (non-offset) vertex projected to the label plane
+ * @param lineStartIndex - Beginning index for the line this label is on
+ * @param lineEndIndex - End index for the line this label is on
+ * @param offsetPreviousVertex - The previous vertex projected to the label plane, and then offset along the previous segments normal
+ * @param lineOffsetY - Magnitude of the offset
+ * @param projectionArgs - Necessary data for tile-to-label-plane projection
  * @returns The point at which the current and next line segments intersect, once offset and extended/shrunk to their meeting point
  */
 function findOffsetIntersectionPoint(index: number, prevToCurrentOffsetNormal: Point, currentVertex: Point, lineStartIndex: number, lineEndIndex: number, offsetPreviousVertex: Point, lineOffsetY: number, projectionArgs: ProjectionArgs) {

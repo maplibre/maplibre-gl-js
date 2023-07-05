@@ -67,7 +67,8 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  * @see [Add an animated icon to the map.](https://maplibre.org/maplibre-gl-js-docs/example/add-image-animated/)
  *
  * @example
- * var flashingSquare = {
+ * ```ts
+ * let flashingSquare = {
  *     width: 64,
  *     height: 64,
  *     data: new Uint8Array(64 * 64 * 4),
@@ -81,16 +82,16 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  *         this.map.triggerRepaint();
  *
  *         // alternate between black and white based on the time
- *         var value = Math.round(Date.now() / 1000) % 2 === 0  ? 255 : 0;
+ *         let value = Math.round(Date.now() / 1000) % 2 === 0  ? 255 : 0;
  *
  *         // check if image needs to be changed
  *         if (value !== this.previousValue) {
  *             this.previousValue = value;
  *
- *             var bytesPerPixel = 4;
- *             for (var x = 0; x < this.width; x++) {
- *                 for (var y = 0; y < this.height; y++) {
- *                     var offset = (y * this.width + x) * bytesPerPixel;
+ *             let bytesPerPixel = 4;
+ *             for (let x = 0; x < this.width; x++) {
+ *                 for (let y = 0; y < this.height; y++) {
+ *                     let offset = (y * this.width + x) * bytesPerPixel;
  *                     this.data[offset + 0] = value;
  *                     this.data[offset + 1] = value;
  *                     this.data[offset + 2] = value;
@@ -105,6 +106,7 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  *  }
  *
  *  map.addImage('flashing_square', flashingSquare);
+ * ```
  */
 
 export interface StyleImageInterface {
@@ -121,13 +123,13 @@ export interface StyleImageInterface {
      * If updates are infrequent it maybe easier to use {@link Map#updateImage} to update
      * the image instead of implementing this method.
      *
-     * @return `true` if this method updated the image. `false` if the image was not changed.
+     * @returns `true` if this method updated the image. `false` if the image was not changed.
      */
     render?: () => boolean;
     /**
      * Optional method called when the layer has been added to the Map with {@link Map#addImage}.
      *
-     * @param map The Map this custom layer was just added to.
+     * @param map - The Map this custom layer was just added to.
      */
     onAdd?: (map: Map, id: string) => void;
     /**

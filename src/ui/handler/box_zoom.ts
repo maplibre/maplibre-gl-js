@@ -60,7 +60,9 @@ export class BoxZoomHandler implements Handler {
      * Enables the "box zoom" interaction.
      *
      * @example
-     *   map.boxZoom.enable();
+     * ```ts
+     * map.boxZoom.enable();
+     * ```
      */
     enable() {
         if (this.isEnabled()) return;
@@ -71,7 +73,9 @@ export class BoxZoomHandler implements Handler {
      * Disables the "box zoom" interaction.
      *
      * @example
-     *   map.boxZoom.disable();
+     * ```ts
+     * map.boxZoom.disable();
+     * ```
      */
     disable() {
         if (!this.isEnabled()) return;

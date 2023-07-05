@@ -64,7 +64,6 @@ export interface Source {
      * @returns A plain (stringifiable) JS object representing the current state of the source.
      * Creating a source using the returned object as the `options` should result in a Source that is
      * equivalent to this one.
-     * @private
      */
     serialize(): any;
     readonly prepare?: () => void;
@@ -91,12 +90,12 @@ export type SourceClass = {
 /**
  * Creates a tiled data source instance given an options object.
  *
- * @param id The id for the source. Must not be used by any existing source.
- * @param specification Source options, specific to the source type (except for `options.type`, which is always required).
- * @param source A source definition object compliant with
+ * @param id - The id for the source. Must not be used by any existing source.
+ * @param specification - Source options, specific to the source type (except for `options.type`, which is always required).
+ * @param source - A source definition object compliant with
  * [`maplibre-gl-style-spec`](https://maplibre.org/maplibre-style-spec/#sources) or, for a third-party source type,
   * with that type's requirements.
- * @param dispatcher A {@link Dispatcher} instance, which can be used to send messages to the workers.
+ * @param dispatcher - A {@link Dispatcher} instance, which can be used to send messages to the workers.
  * @returns a newly created source
  */
 export const create = (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source => {

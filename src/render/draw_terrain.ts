@@ -10,8 +10,8 @@ import {Terrain} from './terrain';
 
 /**
  * Redraw the Depth Framebuffer
- * @param painter the painter
- * @param terrain the terrain
+ * @param painter - the painter
+ * @param terrain - the terrain
  */
 function drawDepth(painter: Painter, terrain: Terrain) {
     const context = painter.context;
@@ -36,8 +36,8 @@ function drawDepth(painter: Painter, terrain: Terrain) {
 
 /**
  * Redraw the Coords Framebuffers
- * @param painter the painter
- * @param terrain the terrain
+ * @param painter - the painter
+ * @param terrain - the terrain
  */
 function drawCoords(painter: Painter, terrain: Terrain) {
     const context = painter.context;

@@ -72,8 +72,6 @@ export type BucketFeature = {
  * thread, is gets deserialized (using `new Bucket(serializedBucketData)`, with
  * the array data now stored in `bucket.buffers: BufferGroup`.  BufferGroups
  * hold the same data as ArrayGroups, but are tuned for consumption by WebGL.
- *
- * @private
  */
 export interface Bucket {
     layerIds: Array<string>;
@@ -90,8 +88,6 @@ export interface Bucket {
      * Release the WebGL resources associated with the buffers. Note that because
      * buckets are shared between layers having the same layout properties, they
      * must be destroyed in groups (all buckets for a tile, or all symbol buckets).
-     *
-     * @private
      */
     destroy(): void;
 }

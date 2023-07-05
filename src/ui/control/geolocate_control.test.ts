@@ -12,8 +12,8 @@ import type {LngLat} from '../../geo/lng_lat';
 
 /**
  * Convert the coordinates of a LngLat object to a fixed number of digits
- * @param lngLat {LngLatLike} the location
- * @param digits {number} digits the number of digits to set
+ * @param lngLat - the location
+ * @param digits - digits the number of digits to set
  * @returns a string representation of the object with the required number of digits
  */
 function lngLatAsFixed(lngLat: LngLat, digits: number): {lat: string; lng: string} {

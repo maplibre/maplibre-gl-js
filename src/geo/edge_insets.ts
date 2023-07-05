@@ -43,9 +43,9 @@ export class EdgeInsets {
     /**
      * Interpolates the inset in-place.
      * This maintains the current inset value for any inset not present in `target`.
-     * @param start interpolation start
-     * @param target interpolation target
-     * @param t interpolation step/weight
+     * @param start - interpolation start
+     * @param target - interpolation target
+     * @param t - interpolation step/weight
      * @returns the insets
      */
     interpolate(start: PaddingOptions | EdgeInsets, target: PaddingOptions, t: number): EdgeInsets {
@@ -61,8 +61,8 @@ export class EdgeInsets {
      * Utility method that computes the new apprent center or vanishing point after applying insets.
      * This is in pixels and with the top left being (0.0) and +y being downwards.
      *
-     * @param width the width
-     * @param height the height
+     * @param width - the width
+     * @param height - the height
      * @returns the point
      */
     getCenter(width: number, height: number): Point {
@@ -105,16 +105,20 @@ export class EdgeInsets {
  * non-negative integers.
  *
  * @example
- * var bbox = [[-79, 43], [-73, 45]];
+ * ```ts
+ * letbbox = [[-79, 43], [-73, 45]];
  * map.fitBounds(bbox, {
  *   padding: {top: 10, bottom:25, left: 15, right: 5}
  * });
+ * ```
  *
  * @example
- * var bbox = [[-79, 43], [-73, 45]];
+ * ```ts
+ * letbbox = [[-79, 43], [-73, 45]];
  * map.fitBounds(bbox, {
  *   padding: 20
  * });
+ * ```
  * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js-docs/example/zoomto-linestring/)
  * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
  */

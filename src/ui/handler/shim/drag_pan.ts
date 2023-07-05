@@ -12,7 +12,7 @@ export type DragPanOptions = {
     linearity?: number;
     /**
      * easing function applled to `map.panTo` when applying the drag.
-     * @param t the easing function
+     * @param t - the easing function
      * @defaultValue bezier(0, 0, 0.3, 1)
      */
     easing?: (t: number) => number;
@@ -53,16 +53,17 @@ export class DragPanHandler {
     /**
      * Enables the "drag to pan" interaction.
      *
-     * @param options Options object
+     * @param options - Options object
      * @example
+     * ```ts
      *   map.dragPan.enable();
-     * @example
      *   map.dragPan.enable({
      *      linearity: 0.3,
      *      easing: bezier(0, 0, 0.3, 1),
      *      maxSpeed: 1400,
      *      deceleration: 2500,
      *   });
+     * ```
      */
     enable(options?: DragPanOptions | boolean) {
         this._inertiaOptions = options || {};
@@ -75,7 +76,9 @@ export class DragPanHandler {
      * Disables the "drag to pan" interaction.
      *
      * @example
+     * ```ts
      * map.dragPan.disable();
+     * ```
      */
     disable() {
         this._mousePan.disable();

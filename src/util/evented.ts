@@ -53,8 +53,6 @@ export class ErrorEvent extends Event {
 
 /**
  * Methods mixed in to other classes for event capabilities.
- *
- * @mixin Evented
  */
 export class Evented {
     _listeners: Listeners;
@@ -65,8 +63,8 @@ export class Evented {
     /**
      * Adds a listener to a specified event type.
      *
-     * @param type The event type to add a listen for.
-     * @param listener The function to be called when the event is fired.
+     * @param type - The event type to add a listen for.
+     * @param listener - The function to be called when the event is fired.
      * The listener function is called with the data object passed to `fire`,
      * extended with `target` and `type` properties.
      * @returns `this`
@@ -81,8 +79,8 @@ export class Evented {
     /**
      * Removes a previously registered event listener.
      *
-     * @param type The event type to remove listeners for.
-     * @param listener The listener function to remove.
+     * @param type - The event type to remove listeners for.
+     * @param listener - The listener function to remove.
      * @returns `this`
      */
     off(type: string, listener: Listener) {
@@ -97,8 +95,8 @@ export class Evented {
      *
      * The listener will be called first time the event fires after the listener is registered.
      *
-     * @param type The event type to listen for.
-     * @param listener The function to be called when the event is fired the first time.
+     * @param type - The event type to listen for.
+     * @param listener - The function to be called when the event is fired the first time.
      * @returns `this` or a promise if a listener is not provided
      */
     once(type: string, listener?: Listener): this | Promise<any> {
@@ -157,9 +155,8 @@ export class Evented {
     /**
      * Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.
      *
-     * @param type The event type
+     * @param type - The event type
      * @returns `true` if there is at least one registered listener for specified event type, `false` otherwise
-     * @private
      */
     listens(type: string): boolean {
         return (
@@ -171,10 +168,7 @@ export class Evented {
 
     /**
      * Bubble all events fired by this instance of Evented to this parent instance of Evented.
-     *
-     * @private
      * @returns `this`
-     * @private
      */
     setEventedParent(parent?: Evented | null, data?: any | (() => any)) {
         this._eventedParent = parent;

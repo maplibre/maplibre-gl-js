@@ -10,10 +10,12 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
  * @group Controls
  *
  * @example
+ * ```ts
  * let map = new maplibregl.Map({TerrainControl: false})
  *     .addControl(new maplibregl.TerrainControl({
  *         source: "terrain"
  *     }));
+ * ```
  */
 export class TerrainControl implements IControl {
     options: TerrainSpecification;

@@ -8,9 +8,7 @@ let linkEl;
 
 let reducedMotionQuery: MediaQueryList;
 
-/**
- * @private
- */
+/** */
 export const browser = {
     /**
      * Provides a function that outputs milliseconds: either performance.now()
