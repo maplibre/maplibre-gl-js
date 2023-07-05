@@ -1634,7 +1634,7 @@ export class Style extends Evented {
      *
      * @param id - The id of the desired sprite
      * @param url - The url to load the desired sprite from
-     * @param options - Thr style setter options
+     * @param options - The style setter options
      * @param completion - The completion handler
      */
     addSprite(id: string, url: string, options: StyleSetterOptions = {}, completion?: (err: Error) => void) {

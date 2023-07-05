@@ -454,7 +454,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener
  * map.on('mousedown', function() {
  *   console.log('A mousedown event has occurred.');
@@ -464,7 +464,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener for a specific layer
  * map.on('mousedown', 'poi-label', function() {
  *   console.log('A mousedown event has occurred on a visible portion of the poi-label layer.');
@@ -484,7 +484,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener
  * map.on('mouseup', function() {
  *   console.log('A mouseup event has occurred.');
@@ -494,7 +494,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener for a specific layer
  * map.on('mouseup', 'poi-label', function() {
  *   console.log('A mouseup event has occurred on a visible portion of the poi-label layer.');
@@ -515,7 +515,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener
  * map.on('mouseover', function() {
  *   console.log('A mouseover event has occurred.');
@@ -524,7 +524,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener for a specific layer
  * map.on('mouseover', 'poi-label', function() {
  *   console.log('A mouseover event has occurred on a visible portion of the poi-label layer.');
@@ -545,7 +545,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener
  * map.on('mousemove', function() {
  *   console.log('A mousemove event has occurred.');
@@ -554,7 +554,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener for a specific layer
  * map.on('mousemove', 'poi-label', function() {
  *   console.log('A mousemove event has occurred on a visible portion of the poi-label layer.');
@@ -574,7 +574,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener
  * map.on('click', function(e) {
  *   console.log('A click event has occurred at ' + e.lngLat);
@@ -583,7 +583,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener for a specific layer
  * map.on('click', 'poi-label', function(e) {
  *   console.log('A click event has occurred on a visible portion of the poi-label layer at ' + e.lngLat);
@@ -605,7 +605,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener
  * map.on('dblclick', function(e) {
  *   console.log('A dblclick event has occurred at ' + e.lngLat);
@@ -614,7 +614,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener for a specific layer
  * map.on('dblclick', 'poi-label', function(e) {
  *   console.log('A dblclick event has occurred on a visible portion of the poi-label layer at ' + e.lngLat);
@@ -631,7 +631,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener
  * map.on('mouseenter', 'water', function() {
  *   console.log('A mouseenter event occurred on a visible portion of the water layer.');
@@ -650,7 +650,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when the pointing device leaves
  * // a visible portion of the specified layer.
@@ -667,7 +667,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when the pointing device leave's
  * // the map's canvas.
@@ -682,7 +682,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when the right mouse button is
  * // pressed within the map.
@@ -697,7 +697,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a wheel event occurs within the map.
  * map.on('wheel', function() {
@@ -711,7 +711,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a touchstart event occurs within the map.
  * map.on('touchstart', function() {
@@ -726,7 +726,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a touchstart event occurs within the map.
  * map.on('touchstart', function() {
@@ -741,7 +741,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a touchmove event occurs within the map.
  * map.on('touchmove', function() {
@@ -756,7 +756,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a touchcancel event occurs within the map.
  * map.on('touchcancel', function() {
@@ -771,7 +771,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just before the map begins a transition
  * // from one view to another.
@@ -787,7 +787,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // repeatedly during an animated transition.
  * map.on('move', function() {
@@ -803,7 +803,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just after the map completes a transition.
  * map.on('moveend', function() {
@@ -818,7 +818,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a "drag to pan" interaction starts.
  * map.on('dragstart', function() {
@@ -832,7 +832,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // repeatedly  during a "drag to pan" interaction.
  * map.on('drag', function() {
@@ -846,7 +846,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a "drag to pan" interaction ends.
  * map.on('dragend', function() {
@@ -862,7 +862,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just before a zoom transition starts.
  * map.on('zoomstart', function() {
@@ -877,7 +877,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // repeatedly during a zoom transition.
  * map.on('zoom', function() {
@@ -892,7 +892,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just after a zoom transition finishes.
  * map.on('zoomend', function() {
@@ -906,7 +906,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just before a "drag to rotate" interaction starts.
  * map.on('rotatestart', function() {
@@ -920,7 +920,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // repeatedly during "drag to rotate" interaction.
  * map.on('rotate', function() {
@@ -934,7 +934,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just after a "drag to rotate" interaction ends.
  * map.on('rotateend', function() {
@@ -949,7 +949,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just before a pitch (tilt) transition starts.
  * map.on('pitchstart', function() {
@@ -965,7 +965,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // repeatedly during a pitch (tilt) transition.
  * map.on('pitch', function() {
@@ -980,7 +980,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just after a pitch (tilt) transition ends.
  * map.on('pitchend', function() {
@@ -994,7 +994,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just before a "box zoom" interaction starts.
  * map.on('boxzoomstart', function() {
@@ -1008,7 +1008,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just after a "box zoom" interaction ends.
  * map.on('boxzoomend', function() {
@@ -1023,7 +1023,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // the user cancels a "box zoom" interaction.
  * map.on('boxzoomcancel', function() {
@@ -1036,7 +1036,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // immediately after the map has been resized.
  * map.on('resize', function() {
@@ -1049,7 +1049,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when the WebGL context is lost.
  * map.on('webglcontextlost', function() {
@@ -1062,7 +1062,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when the WebGL context is restored.
  * map.on('webglcontextrestored', function() {
@@ -1076,7 +1076,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when the map has finished loading.
  * map.on('load', function() {
@@ -1097,7 +1097,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // whenever the map is drawn to the screen.
  * map.on('render', function() {
@@ -1115,7 +1115,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just before the map enters an "idle" state.
  * map.on('idle', function() {
@@ -1128,7 +1128,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // just after the map is removed.
  * map.on('remove', function() {
@@ -1145,7 +1145,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when an error occurs.
  * map.on('error', function() {
@@ -1160,7 +1160,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when map data loads or changes.
  * map.on('data', function() {
@@ -1175,7 +1175,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when the map's style loads or changes.
  * map.on('styledata', function() {
@@ -1190,7 +1190,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when one of the map's sources loads or changes.
  * map.on('sourcedata', function() {
@@ -1206,7 +1206,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when any map data begins loading
  * // or changing asynchronously.
@@ -1223,7 +1223,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // map's style begins loading or
  * // changing asynchronously.
@@ -1239,7 +1239,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // map's sources begin loading or
  * // changing asynchronously.
@@ -1256,7 +1256,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires an icon or pattern is missing.
  * map.on('styleimagemissing', function(event: MapStyleImageMissingEvent) {
  *   const imageId = event.id
@@ -1276,7 +1276,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a request for one of the map's sources' data is aborted.
  * map.on('dataabort', function() {
@@ -1290,7 +1290,7 @@ export type MapEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * letmap = new maplibregl.Map({ // map options });
+ * let map = new maplibregl.Map({ // map options });
  * // Set an event listener that fires
  * // when a request for one of the map's sources' data is aborted.
  * map.on('sourcedataabort', function() {
