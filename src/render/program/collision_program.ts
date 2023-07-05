@@ -23,18 +23,18 @@ export type CollisionCircleUniformsType = {
 };
 
 const collisionUniforms = (context: Context, locations: UniformLocations): CollisionUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
-    'u_pixels_to_tile_units': new Uniform1f(context, locations.u_pixels_to_tile_units),
-    'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
-    'u_overscale_factor': new Uniform1f(context, locations.u_overscale_factor)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_camera_to_center_distance': new Uniform1f(context, locations['u_camera_to_center_distance']),
+    'u_pixels_to_tile_units': new Uniform1f(context, locations['u_pixels_to_tile_units']),
+    'u_extrude_scale': new Uniform2f(context, locations['u_extrude_scale']),
+    'u_overscale_factor': new Uniform1f(context, locations['u_overscale_factor'])
 });
 
 const collisionCircleUniforms = (context: Context, locations: UniformLocations): CollisionCircleUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_inv_matrix': new UniformMatrix4f(context, locations.u_inv_matrix),
-    'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
-    'u_viewport_size': new Uniform2f(context, locations.u_viewport_size)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_inv_matrix': new UniformMatrix4f(context, locations['u_inv_matrix']),
+    'u_camera_to_center_distance': new Uniform1f(context, locations['u_camera_to_center_distance']),
+    'u_viewport_size': new Uniform2f(context, locations['u_viewport_size'])
 });
 
 const collisionUniformValues = (matrix: mat4, transform: Transform, tile: Tile): UniformValues<CollisionUniformsType> => {

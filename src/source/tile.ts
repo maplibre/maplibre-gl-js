@@ -324,7 +324,7 @@ export class Tile {
         const vtLayers = featureIndex.loadVTLayers();
 
         const sourceLayer = params && params.sourceLayer ? params.sourceLayer : '';
-        const layer = vtLayers._geojsonTileLayer || vtLayers[sourceLayer];
+        const layer = vtLayers['_geojsonTileLayer'] || vtLayers[sourceLayer];
 
         if (!layer) return;
 

@@ -44,29 +44,29 @@ export type FillExtrusionPatternUniformsType = {
 };
 
 const fillExtrusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_lightpos': new Uniform3f(context, locations.u_lightpos),
-    'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
-    'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
-    'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
-    'u_opacity': new Uniform1f(context, locations.u_opacity)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_lightpos': new Uniform3f(context, locations['u_lightpos']),
+    'u_lightintensity': new Uniform1f(context, locations['u_lightintensity']),
+    'u_lightcolor': new Uniform3f(context, locations['u_lightcolor']),
+    'u_vertical_gradient': new Uniform1f(context, locations['u_vertical_gradient']),
+    'u_opacity': new Uniform1f(context, locations['u_opacity'])
 });
 
 const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocations): FillExtrusionPatternUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_lightpos': new Uniform3f(context, locations.u_lightpos),
-    'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
-    'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
-    'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
-    'u_height_factor': new Uniform1f(context, locations.u_height_factor),
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_lightpos': new Uniform3f(context, locations['u_lightpos']),
+    'u_lightintensity': new Uniform1f(context, locations['u_lightintensity']),
+    'u_lightcolor': new Uniform3f(context, locations['u_lightcolor']),
+    'u_vertical_gradient': new Uniform1f(context, locations['u_vertical_gradient']),
+    'u_height_factor': new Uniform1f(context, locations['u_height_factor']),
     // pattern uniforms
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_texsize': new Uniform2f(context, locations.u_texsize),
-    'u_pixel_coord_upper': new Uniform2f(context, locations.u_pixel_coord_upper),
-    'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
-    'u_scale': new Uniform3f(context, locations.u_scale),
-    'u_fade': new Uniform1f(context, locations.u_fade),
-    'u_opacity': new Uniform1f(context, locations.u_opacity)
+    'u_image': new Uniform1i(context, locations['u_image']),
+    'u_texsize': new Uniform2f(context, locations['u_texsize']),
+    'u_pixel_coord_upper': new Uniform2f(context, locations['u_pixel_coord_upper']),
+    'u_pixel_coord_lower': new Uniform2f(context, locations['u_pixel_coord_lower']),
+    'u_scale': new Uniform3f(context, locations['u_scale']),
+    'u_fade': new Uniform1f(context, locations['u_fade']),
+    'u_opacity': new Uniform1f(context, locations['u_opacity'])
 });
 
 const fillExtrusionUniformValues = (

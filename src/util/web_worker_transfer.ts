@@ -178,7 +178,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
                     serialize(property, transferables);
             }
             if (input instanceof Error) {
-                properties.message = input.message;
+                properties['message'] = input.message;
             }
         } else {
             if (transferables && properties as any === transferables[transferables.length - 1]) {
@@ -186,11 +186,11 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
             }
         }
 
-        if (properties.$name) {
+        if (properties['$name']) {
             throw new Error('$name property is reserved for worker serialization logic.');
         }
         if (name !== 'Object') {
-            properties.$name = name;
+            properties['$name'] = name;
         }
 
         return properties;
