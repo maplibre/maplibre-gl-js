@@ -90,7 +90,7 @@ type MarkerOptions = {
  * @example
  * Set options
  * ```ts
- * letmarker = new maplibregl.Marker({
+ * let marker = new maplibregl.Marker({
  *     color: "#FFFFFF",
  *     draggable: true
  *   }).setLngLat([30.5, 50.5])

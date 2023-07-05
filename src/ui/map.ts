@@ -759,7 +759,7 @@ export class Map extends Camera {
      * @example
      * ```ts
      * // Define a new navigation control.
-     * letnavigation = new maplibregl.NavigationControl();
+     * let navigation = new maplibregl.NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Remove zoom and rotation controls from the map.
@@ -785,7 +785,7 @@ export class Map extends Camera {
      * @example
      * ```ts
      * // Define a new navigation control.
-     * letnavigation = new maplibregl.NavigationControl();
+     * let navigation = new maplibregl.NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Check that the navigation control exists on the map.
@@ -937,7 +937,7 @@ export class Map extends Camera {
      * @example
      * Define bounds that conform to the `LngLatBoundsLike` object as set the max bounds.
      * ```ts
-     * letbounds = [
+     * let bounds = [
      *   [-74.04728, 40.68392], // [west, south]
      *   [-73.91058, 40.87764]  // [east, north]
      * ];
@@ -1547,7 +1547,7 @@ export class Map extends Camera {
      * @example
      * Find all features at a point
      * ```ts
-     * letfeatures = map.queryRenderedFeatures(
+     * let features = map.queryRenderedFeatures(
      *   [20, 35],
      *   { layers: ['my-layer-name'] }
      * );
@@ -1556,7 +1556,7 @@ export class Map extends Camera {
      * @example
      * Find all features within a static bounding box
      * ```ts
-     * letfeatures = map.queryRenderedFeatures(
+     * let features = map.queryRenderedFeatures(
      *   [[10, 20], [30, 50]],
      *   { layers: ['my-layer-name'] }
      * );
@@ -1576,7 +1576,7 @@ export class Map extends Camera {
      * @example
      * Query all rendered features from a single layer
      * ```ts
-     * letfeatures = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
+     * let features = map.queryRenderedFeatures({ layers: ['my-layer-name'] });
      * ```
      * @see [Get features under the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/)
      */
@@ -1819,7 +1819,7 @@ export class Map extends Camera {
      *
      * @example
      * ```ts
-     * letstyleLoadStatus = map.isStyleLoaded();
+     * let styleLoadStatus = map.isStyleLoaded();
      * ```
      */
     isStyleLoaded(): boolean | void {
@@ -2194,7 +2194,7 @@ export class Map extends Camera {
      * @example
      * Check if an image with the ID 'cat' exists in the style's sprite.
      * ```ts
-     * letcatIconExists = map.hasImage('cat');
+     * let catIconExists = map.hasImage('cat');
      * ```
      */
     hasImage(id: string): boolean {

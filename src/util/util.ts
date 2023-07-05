@@ -137,8 +137,8 @@ export function extend(dest: any, ...sources: Array<any>): any {
  * @returns object with limited properties.
  * @example
  * ```ts
- * letfoo = { name: 'Charlie', age: 10 };
- * letjustName = pick(foo, ['name']); // justName = { name: 'Charlie' }
+ * let foo = { name: 'Charlie', age: 10 };
+ * let justName = pick(foo, ['name']); // justName = { name: 'Charlie' }
  * ```
  */
 export function pick(src: any, properties: Array<string>): any {

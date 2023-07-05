@@ -106,7 +106,7 @@ export class EdgeInsets {
  *
  * @example
  * ```ts
- * letbbox = [[-79, 43], [-73, 45]];
+ * let bbox = [[-79, 43], [-73, 45]];
  * map.fitBounds(bbox, {
  *   padding: {top: 10, bottom:25, left: 15, right: 5}
  * });
@@ -114,7 +114,7 @@ export class EdgeInsets {
  *
  * @example
  * ```ts
- * letbbox = [[-79, 43], [-73, 45]];
+ * let bbox = [[-79, 43], [-73, 45]];
  * map.fitBounds(bbox, {
  *   padding: 20
  * });

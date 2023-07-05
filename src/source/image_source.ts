@@ -65,7 +65,7 @@ export type UpdateImageOptions = {
  * });
  *
  * // update coordinates
- * letmySource = map.getSource('some id');
+ * let mySource = map.getSource('some id');
  * mySource.setCoordinates([
  *     [-76.54335737228394, 39.18579907229748],
  *     [-76.52803659439087, 39.1838364847587],

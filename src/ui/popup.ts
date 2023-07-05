@@ -97,7 +97,7 @@ const focusQuerySelector = [
  * @example
  * Create a popup
  * ```ts
- * letpopup = new maplibregl.Popup();
+ * let popup = new maplibregl.Popup();
  * // Set an event listener that will fire
  * // any time the popup is opened
  * popup.on('open', function(){
@@ -108,7 +108,7 @@ const focusQuerySelector = [
  * @example
  * Create a popup
  * ```ts
- * letpopup = new maplibregl.Popup();
+ * let popup = new maplibregl.Popup();
  * // Set an event listener that will fire
  * // any time the popup is closed
  * popup.on('close', function(){
@@ -328,11 +328,11 @@ export class Popup extends Evented {
      * @example
      * Change the `Popup` element's font size
      * ```ts
-     * letpopup = new maplibregl.Popup()
+     * let popup = new maplibregl.Popup()
      *   .setLngLat([-96, 37.8])
      *   .setHTML("<p>Hello World!</p>")
      *   .addTo(map);
-     * letpopupElem = popup.getElement();
+     * let popupElem = popup.getElement();
      * popupElem.style.fontSize = "25px";
      * ```
      * @returns element
