@@ -81,7 +81,6 @@
     }],
     "import/no-relative-packages": ["error"],
     "tsdoc/syntax": "warn",
-    "tsdoc-escape-right-brace": "off",
     // Jest https://www.npmjs.com/package/eslint-plugin-jest
     "jest/no-commented-out-tests": "error",
     "jest/no-disabled-tests": "warn",
