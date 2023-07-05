@@ -6,6 +6,9 @@ import type {GlyphMetrics, StyleGlyph} from '../style/style_glyph';
 
 const padding = 1;
 
+/**
+ * A rectangle type with postion, width and height.
+ */
 export type Rect = {
     x: number;
     y: number;
@@ -13,11 +16,17 @@ export type Rect = {
     h: number;
 };
 
+/**
+ * The glyph's position
+ */
 export type GlyphPosition = {
     rect: Rect;
     metrics: GlyphMetrics;
 };
 
+/**
+ * The glyphs' positions
+ */
 export type GlyphPositions = {
     [_: string]: {
         [_: number]: GlyphPosition;

@@ -2,6 +2,9 @@
 
 import type {Transferable} from '../types/transferable';
 
+/**
+ * A view type size
+ */
 const viewTypes = {
     'Int8': Int8Array,
     'Uint8': Uint8Array,
@@ -12,6 +15,9 @@ const viewTypes = {
     'Float32': Float32Array
 };
 
+/**
+ * A view type size
+ */
 export type ViewType = keyof typeof viewTypes;
 
 /**
@@ -44,6 +50,9 @@ class Struct {
 const DEFAULT_CAPACITY = 128;
 const RESIZE_MULTIPLIER = 5;
 
+/**
+ * A struct array memeber
+ */
 export type StructArrayMember = {
     name: string;
     type: ViewType;
@@ -57,6 +66,9 @@ export type StructArrayLayout = {
     alignment: number;
 };
 
+/**
+ * An array that can be desialized
+ */
 export type SerializedStructArray = {
     length: number;
     arrayBuffer: ArrayBuffer;

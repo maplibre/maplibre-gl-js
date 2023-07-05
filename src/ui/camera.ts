@@ -23,6 +23,9 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate';
  */
 export type PointLike = Point | [number, number];
 
+/**
+ * A helper to allow require of at least one propery
+ */
 export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
 /**
@@ -59,6 +62,9 @@ export type CameraOptions = CenterZoomBearing & {
     around?: LngLatLike;
 };
 
+/**
+ * Holds center, zoom and bearing properties
+ */
 export type CenterZoomBearing = {
     /**
      * The desired center.
@@ -75,6 +81,9 @@ export type CenterZoomBearing = {
     bearing?: number;
 }
 
+/**
+ * The options object related to the {@link Map#jumpTo} method
+ */
 export type JumpToOptions = CameraOptions & {
     /**
      * Dimensions in pixels applied on each side of the viewport for shifting the vanishing point.
@@ -82,6 +91,9 @@ export type JumpToOptions = CameraOptions & {
     padding?: PaddingOptions;
 }
 
+/**
+ * A options object for the {@link Map#cameraForBounds} method
+ */
 export type CameraForBoundsOptions = CameraOptions & {
     /**
      * The amount of padding in pixels to add to the given bounds.
@@ -98,6 +110,9 @@ export type CameraForBoundsOptions = CameraOptions & {
     maxZoom?: number;
 }
 
+/**
+ * The {@link Map#flyTo} options object
+ */
 export type FlyToOptions = AnimationOptions & CameraOptions & {
     /**
      * The zooming "curve" that will occur along the
@@ -144,6 +159,9 @@ export type EaseToOptions = AnimationOptions & CameraOptions & {
     padding?: number | RequireAtLeastOne<PaddingOptions>;
 }
 
+/**
+ * Options for {@link Map#fitBounds} method
+ */
 export type FitBoundsOptions = FlyToOptions & {
     /**
      * If `true`, the map transitions using {@link Map#easeTo}. If `false`, the map transitions using {@link Map#flyTo}.
@@ -199,6 +217,9 @@ export type AnimationOptions = {
     freezeElevation?: boolean;
 };
 
+/**
+ * A callback hook that allows manipulating the camera and being notified about camera updates before they happen
+ */
 export type CameraUpdateTransformFunction =  (next: {
     center: LngLat;
     zoom: number;

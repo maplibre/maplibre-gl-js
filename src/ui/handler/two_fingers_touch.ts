@@ -3,6 +3,9 @@ import {DOM} from '../../util/dom';
 import type {Map} from '../map';
 import {Handler} from '../handler_manager';
 
+/**
+ * An options object sent to the enable function of some of the handlers
+ */
 export type AroundCenterOptions = {
     /**
      * If "center" is passed, map will zoom around the center of map

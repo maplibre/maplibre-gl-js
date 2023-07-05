@@ -9,12 +9,26 @@ import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
 import {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
+/**
+ * @event
+ * An event from the mouse relevant to a specific layer.
+ */
 export type MapLayerMouseEvent = MapMouseEvent & { features?: MapGeoJSONFeature[] };
 
+/**
+ * @event
+ * An event from a touch device relevat to a specific layer.
+ */
 export type MapLayerTouchEvent = MapTouchEvent & { features?: MapGeoJSONFeature[] };
 
+/**
+ * The source event data type
+ */
 export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
 
+/**
+ * A mapping between the layer events and their type
+ */
 export type MapLayerEventType = {
     click: MapLayerMouseEvent;
     dblclick: MapLayerMouseEvent;
@@ -32,16 +46,28 @@ export type MapLayerEventType = {
     touchcancel: MapLayerTouchEvent;
 };
 
+/**
+ * @event
+ * The base event for MapLibre
+ */
 export interface MapLibreEvent<TOrig = unknown> {
     type: string;
     target: Map;
     originalEvent: TOrig;
 }
 
+/**
+ * @event
+ * The style data event
+ */
 export interface MapStyleDataEvent extends MapLibreEvent {
     dataType: 'style';
 }
 
+/**
+ * @event
+ * The source data event interface
+ */
 export interface MapSourceDataEvent extends MapLibreEvent {
     dataType: 'source';
     /**
@@ -62,7 +88,6 @@ export interface MapSourceDataEvent extends MapLibreEvent {
 }
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
- * @extends {Event}
  * @example
  * // The `click` event is an example of a `MapMouseEvent`.
  * // Set up an event listener on the map.
@@ -74,16 +99,7 @@ export interface MapSourceDataEvent extends MapLibreEvent {
  */
 export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
     /**
-     * The event type (one of {@link Map.event:mousedown},
-     * {@link Map.event:mouseup},
-     * {@link Map.event:click},
-     * {@link Map.event:dblclick},
-     * {@link Map.event:mousemove},
-     * {@link Map.event:mouseover},
-     * {@link Map.event:mouseenter},
-     * {@link Map.event:mouseleave},
-     * {@link Map.event:mouseout},
-     * {@link Map.event:contextmenu}).
+     * The event type {@link MapEventType}
      */
     type: 'mousedown' | 'mouseup' | 'click' | 'dblclick' | 'mousemove' | 'mouseover' | 'mouseenter' | 'mouseleave' | 'mouseout' | 'contextmenu';
 
@@ -146,7 +162,6 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
 
 /**
  * `MapTouchEvent` is the event type for touch-related map events.
- * @extends {Event}
  */
 export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
     /**
@@ -193,7 +208,7 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
      * Calling this method will prevent the following default map behaviors:
      *
      *   * On `touchstart` events, the behavior of {@link DragPanHandler}
-     *   * On `touchstart` events, the behavior of {@link TouchZoomRotateHandler}
+     *   * On `touchstart` events, the behavior of {@link TwoFingersTouchZoomRotateHandler}
      *
      */
     preventDefault() {
@@ -227,8 +242,9 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
 }
 
 /**
+ * @event
+ *
  * `MapWheelEvent` is the event type for the `wheel` map event.
- * @extends {Object}
  */
 export class MapWheelEvent extends Event {
     /**
@@ -275,6 +291,7 @@ export class MapWheelEvent extends Event {
 }
 
 /**
+ * @event
  * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
  */
 export type MapLibreZoomEvent = {
@@ -293,8 +310,10 @@ export type MapLibreZoomEvent = {
 };
 
 /**
- * A `MapDataEvent` object is emitted with the {@link Map.event:data}
- * and {@link Map.event:dataloading} events. Possible values for
+ * @event
+ *
+ * A `MapDataEvent` object is emitted with the `data`
+ * and `dataloading` events. Possible values for
  * `dataType`s are:
  *
  * - `'source'`: The non-tile data associated with any source
@@ -331,15 +350,29 @@ export type MapDataEvent = {
     sourceDataType: MapSourceDataType;
 };
 
+/**
+ * @event
+ * tThe terrain event
+ */
 export type MapTerrainEvent = {
     type: 'terrain';
 };
 
+/**
+ * @event
+ * An event related to the web gl context
+ */
 export type MapContextEvent = {
     type: 'webglcontextlost' | 'webglcontextrestored';
     originalEvent: WebGLContextEvent;
 };
 
+/**
+ * @event
+ * The style image missing event
+ *
+ * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-missing-generated/)
+ */
 export interface MapStyleImageMissingEvent extends MapLibreEvent {
     type: 'styleimagemissing';
     id: string;

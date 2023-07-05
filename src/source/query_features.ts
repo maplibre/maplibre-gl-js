@@ -31,6 +31,9 @@ export type QueryRenderedFeaturesOptions = {
     validate?: boolean;
 };
 
+/**
+ * The options object related to the {@link Map#queryRenderedFeatures} method
+ */
 export type QuerySourceFeatureOptions = {
     /**
      * The name of the source layer to query. *For vector tile sources, this parameter is required.* For GeoJSON sources, it is ignored.

@@ -40,6 +40,9 @@ export type WorkerDEMTileParameters = TileParameters & {
     encoding: 'mapbox' | 'terrarium';
 };
 
+/**
+ * The worker tile's result type
+ */
 export type WorkerTileResult = {
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;

@@ -2,7 +2,7 @@ import {asyncAll} from './util';
 import {Actor} from './actor';
 
 import type {WorkerPool} from './worker_pool';
-
+import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
 /**
  * Responsible for sending messages from a {@link Source} to an associated
  * {@link WorkerSource}.

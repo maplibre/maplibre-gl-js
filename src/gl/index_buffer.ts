@@ -3,6 +3,9 @@ import type {StructArray} from '../util/struct_array';
 import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type';
 import type {Context} from '../gl/context';
 
+/**
+ * an index buffer class
+ */
 export class IndexBuffer {
     context: Context;
     buffer: WebGLBuffer;

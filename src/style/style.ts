@@ -85,7 +85,9 @@ const ignoredDiffOperations = pick(diffOperations, [
 ]);
 
 const empty = emptyStyle() as StyleSpecification;
-
+/**
+ * A feature identifier that is bound to a source
+ */
 export type FeatureIdentifier = {
     /**
      * Unique id of the feature.
@@ -101,6 +103,9 @@ export type FeatureIdentifier = {
     sourceLayer?: string | undefined;
 };
 
+/**
+ * The options object related to the {@link Map}'s style related methods
+ */
 export type StyleOptions = {
     /**
      * If false, style validation will be skipped. Useful in production environment.
@@ -116,6 +121,9 @@ export type StyleOptions = {
     localIdeographFontFamily?: string;
 };
 
+/**
+ * Supporting type to add validation to another style related type
+ */
 export type StyleSetterOptions = {
     /**
      * Whether to check if the filter conforms to the MapLibre Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
@@ -165,6 +173,9 @@ export type StyleSetterOptions = {
  */
 export type TransformStyleFunction = (previous: StyleSpecification | undefined, next: StyleSpecification) => StyleSpecification;
 
+/**
+ * The options object related to the {@link Map}'s style related methods
+ */
 export type StyleSwapOptions = {
     /**
      * If false, force a 'full' update, removing the current style

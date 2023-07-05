@@ -2,6 +2,9 @@ import {RGBAImage} from '../util/image';
 
 import type {Map} from '../ui/map';
 
+/**
+ * The sprite data
+ */
 export type SpriteOnDemandStyleImage = {
     width: number;
     height: number;
@@ -10,6 +13,9 @@ export type SpriteOnDemandStyleImage = {
     context: CanvasRenderingContext2D;
 };
 
+/**
+ * The style's image metadata
+ */
 export type StyleImageData = {
     data: RGBAImage;
     version?: number;
@@ -18,6 +24,9 @@ export type StyleImageData = {
     spriteData?: SpriteOnDemandStyleImage;
 };
 
+/**
+ * The style's image metadata
+ */
 export type StyleImageMetadata = {
     /**
      * The ratio of pixels in the image to physical pixels on the screen
@@ -41,6 +50,9 @@ export type StyleImageMetadata = {
     content?: [number, number, number, number];
 };
 
+/**
+ * the style's image, including data and metedata
+ */
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
 /**

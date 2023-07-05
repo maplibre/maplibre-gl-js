@@ -15,6 +15,9 @@ type EmptyImage = {
 type DataTextureImage = RGBAImage | AlphaImage | EmptyImage;
 export type TextureImage = TexImageSource | DataTextureImage;
 
+/**
+ * A `Texture` GL related object
+ */
 export class Texture {
     context: Context;
     size: [number, number];

@@ -1,6 +1,9 @@
 import type {MousePanHandler} from '../mouse';
 import type {TouchPanHandler} from './../touch_pan';
 
+/**
+ * A {@link DragPanHandler} options object
+ */
 export type DragPanOptions = {
     /**
      * factor used to scale the drag velocity

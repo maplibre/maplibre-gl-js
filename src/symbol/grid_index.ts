@@ -26,6 +26,9 @@ type QueryResult<T> = {
     y2: number;
 };
 
+/**
+ * A key for the grid
+ */
 export type GridKey = {
     overlapMode?: OverlapMode;
 }

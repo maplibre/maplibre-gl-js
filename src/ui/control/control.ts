@@ -1,5 +1,11 @@
-export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 import type {Map} from '../map';
+
+/**
+ * A position defintion for the control to be placed, can be in one of the corners of the map.
+ * When two or more controls are places in the same location they are stacked toward the center of the map.
+ */
+export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
 /**
  * Interface for interactive controls added to the map. This is a
  * specification for implementers to model: it is not

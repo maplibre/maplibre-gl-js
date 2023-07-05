@@ -13,6 +13,9 @@ import {CanonicalTileID} from '../source/tile_id';
 
 type TimePoint = number;
 
+/**
+ * A from-to type
+ */
 export type CrossFaded<T> = {
     to: T;
     from: T;

@@ -4,6 +4,9 @@ import {extend} from '../../util/util';
 import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 
+/**
+ * The unit type for length to use for the {@link ScaleControl}
+ */
 export type Unit = 'imperial' | 'metric' | 'nautical';
 
 /**
