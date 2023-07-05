@@ -24,7 +24,7 @@ const registeredSources = {} as {[key:string]: SourceClass};
  * @event `data` - Fired with `{dataType: 'source', sourceDataType: 'metadata'}` to indicate that any necessary metadata
  * has been loaded so that it's okay to call `loadTile`; and with `{dataType: 'source', sourceDataType: 'content'}`
  * to indicate that the source data has changed, so that any current caches should be flushed.
- * 
+ *
  * @group Sources
  */
 export interface Source {

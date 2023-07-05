@@ -53,7 +53,7 @@ export class ErrorEvent extends Event {
 
 /**
  * Methods mixed in to other classes for event capabilities.
- * 
+ *
  * @group Event Related
  */
 export class Evented {

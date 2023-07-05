@@ -11,14 +11,14 @@ import {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * An event from the mouse relevant to a specific layer.
- * 
+ *
  * @group Event Related
  */
 export type MapLayerMouseEvent = MapMouseEvent & { features?: MapGeoJSONFeature[] };
 
 /**
  * An event from a touch device relevat to a specific layer.
- * 
+ *
  * @group Event Related
  */
 export type MapLayerTouchEvent = MapTouchEvent & { features?: MapGeoJSONFeature[] };
@@ -50,7 +50,7 @@ export type MapLayerEventType = {
 
 /**
  * The base event for MapLibre
- * 
+ *
  * @group Event Related
  */
 export type MapLibreEvent<TOrig = unknown> = {
@@ -61,7 +61,7 @@ export type MapLibreEvent<TOrig = unknown> = {
 
 /**
  * The style data event
- * 
+ *
  * @group Event Related
  */
 export type MapStyleDataEvent = MapLibreEvent & {
@@ -70,7 +70,7 @@ export type MapStyleDataEvent = MapLibreEvent & {
 
 /**
  * The source data event interface
- * 
+ *
  * @group Event Related
  */
 export type MapSourceDataEvent = MapLibreEvent  & {
@@ -165,7 +165,7 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
 
 /**
  * `MapTouchEvent` is the event type for touch-related map events.
- * 
+ *
  * @group Event Related
  */
 export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
@@ -244,7 +244,7 @@ export class MapTouchEvent extends Event implements MapLibreEvent<TouchEvent> {
 
 /**
  * `MapWheelEvent` is the event type for the `wheel` map event.
- * 
+ *
  * @group Event Related
  */
 export class MapWheelEvent extends Event {
@@ -290,7 +290,7 @@ export class MapWheelEvent extends Event {
 
 /**
  * A `MapLibreZoomEvent` is the event type for the boxzoom-related map events emitted by the {@link BoxZoomHandler}.
- * 
+ *
  * @group Event Related
  */
 export type MapLibreZoomEvent = {
@@ -324,7 +324,7 @@ export type MapLibreZoomEvent = {
  * - `'idle'`: indicates that no new source data has been fetched (but the source has done loading)
  *
  * @group Event Related
- * 
+ *
  * @example
  * ```ts
  * // The sourcedata event is an example of MapDataEvent.
@@ -353,7 +353,7 @@ export type MapDataEvent = {
 
 /**
  * The terrain event
- * 
+ *
  * @group Event Related
  */
 export type MapTerrainEvent = {
@@ -362,7 +362,7 @@ export type MapTerrainEvent = {
 
 /**
  * An event related to the web gl context
- * 
+ *
  * @group Event Related
  */
 export type MapContextEvent = {
@@ -372,7 +372,7 @@ export type MapContextEvent = {
 
 /**
  * The style image missing event
- * 
+ *
  * @group Event Related
  *
  * @see [Generate and add a missing icon to the map](https://maplibre.org/maplibre-gl-js-docs/example/add-image-missing-generated/)
