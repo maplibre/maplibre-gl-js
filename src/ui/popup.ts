@@ -140,7 +140,7 @@ const focusQuerySelector = [
  * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
  * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
  *
- * ## Events
+ * ### Events
  *
  * @event `open` Fired when the popup is opened manually or programmatically. `popup` object that was opened
  *

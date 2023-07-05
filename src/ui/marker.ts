@@ -99,7 +99,7 @@ type MarkerOptions = {
  * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
  *
- * ## Events
+ * ### Events
  *
  * @event `dragstart` Fired when dragging starts, `marker` object that is being dragged
  *

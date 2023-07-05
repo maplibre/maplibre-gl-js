@@ -14,7 +14,7 @@ function generateAPIIntroMarkdown(lines: string[]): string {
 
 This file is intended as a reference for the important and public classes of this API.
 
-We reccomend to look at the [expamples](../examples/index.md) as they will help you the most to start with MapLibre.
+We reccomend to look at the [expamples](../example/index.md) as they will help you the most to start with MapLibre.
 `;
     intro += lines.map(l => l.replace('../', './')).join('\n');
     return intro;
@@ -64,7 +64,7 @@ const contentString = generateAPIIntroMarkdown(lines);
 fs.writeFileSync(path.join(typedocConfig.out, 'README.md'), contentString);
 
 // Examples manupilation
-const examplesDocsFolder = path.join('docs', 'examples');
+const examplesDocsFolder = path.join('docs', 'example');
 if (fs.existsSync(examplesDocsFolder)) {
     fs.rmSync(examplesDocsFolder, {recursive: true, force: true});
 }
