@@ -447,9 +447,9 @@ export type MapEvent =
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
      * the cursor is pressed while inside a visible portion of the specified layer.
+     * `data` - {@link MapMouseEvent}
      *
      * @event mousedown
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -478,9 +478,9 @@ export type MapEvent =
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
      * the cursor is released while inside a visible portion of the specified layer.
+     * `data` - {@link MapMouseEvent}
      *
      * @event mouseup
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -511,9 +511,9 @@ export type MapEvent =
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
      * the cursor is moved inside a visible portion of the specified layer.
+     * `data` - {@link MapMouseEvent}
      *
      * @event mouseover
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -545,9 +545,9 @@ export type MapEvent =
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
      * the cursor is inside a visible portion of the specified layer.
+     * `data` - {@link MapMouseEvent}
      *
      * @event mousemove
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -578,9 +578,9 @@ export type MapEvent =
      * **Note:** This event is compatible with the optional `layerId` parameter.
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
      * point that is pressed and released contains a visible portion of the specified layer.
+     * `data` - {@link MapMouseEvent}
      *
      * @event click
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -591,6 +591,7 @@ export type MapEvent =
      * });
      * ```
      * @example
+     * ```ts
      * // Initialize the map
      * letmap = new maplibregl.Map({ // map options });
      * // Set an event listener for a specific layer
@@ -611,10 +612,10 @@ export type MapEvent =
      * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only
      * when the point that is clicked twice contains a visible portion of the specified layer.
      *
-     * **Note:** Under normal conditions, this event will be preceded by two {@link Map.event:click} events.
+     * **Note:** Under normal conditions, this event will be preceded by two `click` events.
+     * `data` - {@link MapMouseEvent}
      *
      * @event dblclick
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -642,9 +643,9 @@ export type MapEvent =
      *
      * **Important:** This event can only be listened for when {@link Map#on} includes three arguments,
      * where the second argument specifies the desired layer.
+     * `data` - {@link MapMouseEvent}
      *
      * @event mouseenter
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -665,9 +666,9 @@ export type MapEvent =
      *
      * **Important:** This event can only be listened for when {@link Map#on} includes three arguments,
      * where the second argument specifies the desired layer.
+     * `data` - {@link MapMouseEvent}
      *
      * @event mouseleave
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -686,9 +687,9 @@ export type MapEvent =
 
     /**
      * Fired when a point device (usually a mouse) leaves the map's canvas.
+     * `data` - {@link MapMouseEvent}
      *
      * @event mouseout
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -705,9 +706,9 @@ export type MapEvent =
 
     /**
      * Fired when the right button of the mouse is clicked or the context menu key is pressed within the map.
+     * `data` - {@link MapMouseEvent}
      *
      * @event contextmenu
-     * @property {MapMouseEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -724,9 +725,9 @@ export type MapEvent =
 
     /**
      * Fired when a [`wheel`](https://developer.mozilla.org/en-US/docs/Web/Events/wheel) event occurs within the map.
+     * `data` - {@link MapWheelEvent}
      *
      * @event wheel
-     * @property {MapWheelEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -742,9 +743,9 @@ export type MapEvent =
 
     /**
      * Fired when a [`touchstart`](https://developer.mozilla.org/en-US/docs/Web/Events/touchstart) event occurs within the map.
+     * `data` - {@link MapTouchEvent}
      *
      * @event touchstart
-     * @property {MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -761,9 +762,9 @@ export type MapEvent =
 
     /**
      * Fired when a [`touchend`](https://developer.mozilla.org/en-US/docs/Web/Events/touchend) event occurs within the map.
+     * `data` - {@link MapTouchEvent}
      *
      * @event touchend
-     * @property {MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -780,9 +781,9 @@ export type MapEvent =
 
     /**
      * Fired when a [`touchmove`](https://developer.mozilla.org/en-US/docs/Web/Events/touchmove) event occurs within the map.
+     * `data` - {@link MapTouchEvent}
      *
      * @event touchmove
-     * @property {MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -799,9 +800,9 @@ export type MapEvent =
 
     /**
      * Fired when a [`touchcancel`](https://developer.mozilla.org/en-US/docs/Web/Events/touchcancel) event occurs within the map.
+     * `data` - {@link MapTouchEvent}
      *
      * @event touchcancel
-     * @property {MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -818,9 +819,9 @@ export type MapEvent =
     /**
      * Fired just before the map begins a transition from one
      * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
+     * `data` - `{originalEvent: {@link DragEvent}}`
      *
      * @event movestart
-     * @property {{originalEvent: DragEvent}} data
      * @example
      * ```ts
      * // Initialize the map
@@ -838,9 +839,9 @@ export type MapEvent =
     /**
      * Fired repeatedly during an animated transition from one view to
      * another, as the result of either user interaction or methods such as {@link Map#flyTo}.
+     * `data` - {@link MapMouseEvent} or {@link MapTouchEvent}
      *
      * @event move
-     * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -858,9 +859,9 @@ export type MapEvent =
     /**
      * Fired just after the map completes a transition from one
      * view to another, as the result of either user interaction or methods such as {@link Map#jumpTo}.
+     * `data` - `{originalEvent: {@link DragEvent}}`
      *
      * @event moveend
-     * @property {{originalEvent: DragEvent}} data
      * @example
      * ```ts
      * // Initialize the map
@@ -877,9 +878,9 @@ export type MapEvent =
 
     /**
      * Fired when a "drag to pan" interaction starts. See {@link DragPanHandler}.
+     * `data` - `{originalEvent: {@link DragEvent}}`
      *
      * @event dragstart
-     * @property {{originalEvent: DragEvent}} data
      * @example
      * ```ts
      * // Initialize the map
@@ -895,9 +896,9 @@ export type MapEvent =
 
     /**
      * Fired repeatedly during a "drag to pan" interaction. See {@link DragPanHandler}.
+     * `data` - {@link MapMouseEvent} or {@link MapTouchEvent}
      *
      * @event drag
-     * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -913,9 +914,9 @@ export type MapEvent =
 
     /**
      * Fired when a "drag to pan" interaction ends. See {@link DragPanHandler}.
+     * `data` - `{originalEvent: {@link DragEvent}}`
      *
      * @event dragend
-     * @property {{originalEvent: DragEvent}} data
      * @example
      * ```ts
      * // Initialize the map
@@ -933,9 +934,9 @@ export type MapEvent =
     /**
      * Fired just before the map begins a transition from one zoom level to another,
      * as the result of either user interaction or methods such as {@link Map#flyTo}.
+     * `data` - {@link MapMouseEvent} or {@link MapTouchEvent}
      *
      * @event zoomstart
-     * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -952,9 +953,9 @@ export type MapEvent =
     /**
      * Fired repeatedly during an animated transition from one zoom level to another,
      * as the result of either user interaction or methods such as {@link Map#flyTo}.
+     * `data` - {@link MapMouseEvent} or {@link MapTouchEvent}
      *
      * @event zoom
-     * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -971,9 +972,9 @@ export type MapEvent =
     /**
      * Fired just after the map completes a transition from one zoom level to another,
      * as the result of either user interaction or methods such as {@link Map#flyTo}.
+     * `data` - {@link MapMouseEvent} or {@link MapTouchEvent}
      *
      * @event zoomend
-     * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -989,9 +990,9 @@ export type MapEvent =
 
     /**
      * Fired when a "drag to rotate" interaction starts. See {@link DragRotateHandler}.
+     * `data` - {@link MapMouseEvent} or {@link MapTouchEvent}
      *
      * @event rotatestart
-     * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1007,9 +1008,9 @@ export type MapEvent =
 
     /**
      * Fired repeatedly during a "drag to rotate" interaction. See {@link DragRotateHandler}.
+     * `data` - {@link MapMouseEvent} or {@link MapTouchEvent}
      *
      * @event rotate
-     * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1025,9 +1026,9 @@ export type MapEvent =
 
     /**
      * Fired when a "drag to rotate" interaction ends. See {@link DragRotateHandler}.
+     * `data` - {@link MapMouseEvent} or {@link MapTouchEvent}
      *
      * @event rotateend
-     * @property {MapMouseEvent | MapTouchEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1044,9 +1045,9 @@ export type MapEvent =
     /**
      * Fired whenever the map's pitch (tilt) begins a change as
      * the result of either user interaction or methods such as {@link Map#flyTo} .
+     * `data` - {@link MapEventData}
      *
      * @event pitchstart
-     * @property {MapEventData} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1064,9 +1065,9 @@ export type MapEvent =
      * Fired repeatedly during the map's pitch (tilt) animation between
      * one state and another as the result of either user interaction
      * or methods such as {@link Map#flyTo}.
+     * `data` - {@link MapEventData}
      *
      * @event pitch
-     * @property {MapEventData} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1083,9 +1084,9 @@ export type MapEvent =
     /**
      * Fired immediately after the map's pitch (tilt) finishes changing as
      * the result of either user interaction or methods such as {@link Map#flyTo}.
+     * `data` - {@link MapEventData}
      *
      * @event pitchend
-     * @property {MapEventData} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1101,9 +1102,9 @@ export type MapEvent =
 
     /**
      * Fired when a "box zoom" interaction starts. See {@link BoxZoomHandler}.
+     * `data` - {@link MapLibreZoomEvent}
      *
      * @event boxzoomstart
-     * @property {MapLibreZoomEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1119,9 +1120,9 @@ export type MapEvent =
 
     /**
      * Fired when a "box zoom" interaction ends.  See {@link BoxZoomHandler}.
+     * `data` - {@link MapLibreZoomEvent}
      *
      * @event boxzoomend
-     * @property {MapLibreZoomEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1138,9 +1139,9 @@ export type MapEvent =
     /**
      * Fired when the user cancels a "box zoom" interaction, or when the bounding box does not meet the minimum size threshold.
      * See {@link BoxZoomHandler}.
+     * `data` - {@link MapLibreZoomEvent}
      *
      * @event boxzoomcancel
-     * @property {MapLibreZoomEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1271,7 +1272,7 @@ export type MapEvent =
     | 'idle'
 
     /**
-     * Fired immediately after the map has been removed with {@link Map.event:remove}.
+     * Fired immediately after the map has been removed with {@link Map#remove}.
      *
      * @event remove
      * @example
@@ -1292,9 +1293,9 @@ export type MapEvent =
      * mechanism. We use an event instead of `throw` to better accommodate
      * asynchronous operations. If no listeners are bound to the `error` event, the
      * error will be printed to the console.
+     * `data` - `{error: {message: string}}`
      *
      * @event error
-     * @property {{error: {message: string}}} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1311,9 +1312,9 @@ export type MapEvent =
     /**
      * Fired when any map data loads or changes. See {@link MapDataEvent}
      * for more information.
+     * `data` - {@link MapEventData}
      *
      * @event data
-     * @property {MapDataEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1329,11 +1330,10 @@ export type MapEvent =
     | 'data'
 
     /**
-     * Fired when the map's style loads or changes. See
-     * {@link MapDataEvent} for more information.
+     * Fired when the map's style loads or changes.
+     * `data` - {@link MapEventData}
      *
      * @event styledata
-     * @property {MapDataEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1349,10 +1349,10 @@ export type MapEvent =
 
     /**
      * Fired when one of the map's sources loads or changes, including if a tile belonging
-     * to a source loads or changes. See {@link MapDataEvent} for more information.
+     * to a source loads or changes.
+     * `data` - {@link MapEventData}
      *
      * @event sourcedata
-     * @property {MapDataEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1369,10 +1369,10 @@ export type MapEvent =
     /**
      * Fired when any map data (style, source, tile, etc) begins loading or
      * changing asynchronously. All `dataloading` events are followed by a `data`,
-     * `dataabort` or `error` event. See {@link MapDataEvent} for more information.
+     * `dataabort` or `error` event.
+     * `data` - {@link MapEventData}
      *
      * @event dataloading
-     * @property {MapDataEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1390,10 +1390,10 @@ export type MapEvent =
     /**
      * Fired when the map's style begins loading or changing asynchronously.
      * All `styledataloading` events are followed by a `styledata`
-     * or `error` event. See {@link MapDataEvent} for more information.
+     * or `error` event.
+     * `data` - {@link MapEventData}
      *
      * @event styledataloading
-     * @property {MapDataEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1411,10 +1411,9 @@ export type MapEvent =
     /**
      * Fired when one of the map's sources begins loading or changing asynchronously.
      * All `sourcedataloading` events are followed by a `sourcedata`, `sourcedataabort` or `error` event.
-     * See {@link MapDataEvent} for more information.
+     * `data` - {@link MapEventData}
      *
      * @event sourcedataloading
-     * @property {MapDataEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1433,9 +1432,9 @@ export type MapEvent =
      * Fired when an icon or pattern needed by the style is missing. The missing image can
      * be added with {@link Map#addImage} within this event listener callback to prevent the image from
      * being skipped. This event can be used to dynamically generate icons and patterns.
+     * `id` - `string`
      *
      * @event styleimagemissing
-     * @property {string} id The id of the missing image.
      * @example
      * ```ts
      * // Initialize the map
@@ -1463,10 +1462,9 @@ export type MapEvent =
     /**
      * Fired when a request for one of the map's sources' tiles is aborted.
      * Fired when a request for one of the map's sources' data is aborted.
-     * See {@link MapDataEvent} for more information.
+     * `data` - {@link MapEventData}
      *
      * @event dataabort
-     * @property {MapDataEvent} data
      * @example
      * ```ts
      * // Initialize the map
@@ -1482,10 +1480,9 @@ export type MapEvent =
 
     /**
      * Fired when a request for one of the map's sources' data is aborted.
-     * See {@link MapDataEvent} for more information.
+     * `data` - {@link MapEventData}
      *
      * @event sourcedataabort
-     * @property {MapDataEvent} data
      * @example
      * ```ts
      * // Initialize the map

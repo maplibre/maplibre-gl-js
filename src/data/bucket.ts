@@ -67,8 +67,8 @@ export type BucketFeature = {
  *
  * Buckets are designed to be built on a worker thread and then serialized and
  * transferred back to the main thread for rendering.  On the worker side, a
- * bucket's vertex, index, and attribute data is stored in `bucket.arrays: ArrayGroup`. 
- * When a bucket's data is serialized and sent back to the main thread, 
+ * bucket's vertex, index, and attribute data is stored in `bucket.arrays: ArrayGroup`.
+ * When a bucket's data is serialized and sent back to the main thread,
  * is gets deserialized (using `new Bucket(serializedBucketData)`, with
  * the array data now stored in `bucket.buffers: BufferGroup`. BufferGroups
  * hold the same data as ArrayGroups, but are tuned for consumption by WebGL.

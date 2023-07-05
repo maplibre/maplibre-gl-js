@@ -210,7 +210,7 @@ export type AnimationOptions = {
     animate?: boolean;
     /**
      * If `true`, then the animation is considered essential and will not be affected by
-     * [prefers-reduced-motion](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion).
+     * [`prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/\@media/prefers-reduced-motion).
      */
     essential?: boolean;
     /**

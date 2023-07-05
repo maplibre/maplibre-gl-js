@@ -8,7 +8,7 @@ import type {Program} from '../render/program';
 import type {Context} from '../gl/context';
 
 /**
- * @enum AttributeType
+ * An Enum for AttributeType
  */
 const AttributeType = {
     Int8: 'BYTE',
