@@ -217,7 +217,7 @@ const defaultOptions = {
  * Then MapLibre GL JS initializes the map on the page and returns your `Map`
  * object.
  *
- * @extends Evented
+ * @extends Camera
  * @param {MapOptions} options
  * @param {HTMLElement|string} options.container The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
  * @param {number} [options.minZoom=0] The minimum zoom level of the map (0-24).
