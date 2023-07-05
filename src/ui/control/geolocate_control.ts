@@ -11,7 +11,7 @@ import type {IControl} from './control';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
 /**
- * The {@link GeoLocationControl} options
+ * The {@link GeolocateControl} options
  */
 type GeolocateOptions = {
     /**

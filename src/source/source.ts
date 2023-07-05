@@ -70,6 +70,9 @@ export interface Source {
     readonly prepare?: () => void;
 }
 
+/**
+ * A supporting type to the source definition
+ */
 type SourceStatics = {
     /*
      * An optional URL to a script which, when run by a Worker, registers a {@link WorkerSource}
@@ -78,6 +81,9 @@ type SourceStatics = {
     workerSourceURL?: URL;
 };
 
+/**
+ * A general definition of a {@link Source} class for factory usage
+ */
 export type SourceClass = {
     new (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source;
 } & SourceStatics;

@@ -23,6 +23,9 @@ type ClearArgs = {
     stencil?: number;
 };
 
+/**
+ * A webgl wrapper class to allow injection, mocking and abstaction
+ */
 export class Context {
     gl: WebGLRenderingContext | WebGL2RenderingContext;
 

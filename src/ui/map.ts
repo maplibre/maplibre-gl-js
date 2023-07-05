@@ -1768,7 +1768,7 @@ export class Map extends Camera {
      * @param id The ID of the source to add. Must not conflict with existing sources.
      * @param source The source object, conforming to the
      * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
-     * {@link CanvasSourceOptions}.
+     * {@link CanvasSourceSpecification}.
      * @fires source.add
      * @returns `this`
      * @example
@@ -1954,7 +1954,7 @@ export class Map extends Camera {
      * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
-     * A {@link Map.event:error} event will be fired if there is not enough space in the sprite to add this image.
+     * A {@link ErrorEvent} event will be fired if there is not enough space in the sprite to add this image.
      *
      * @param id The ID of the image.
      * @param image The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`

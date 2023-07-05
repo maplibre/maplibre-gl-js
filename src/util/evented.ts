@@ -1,5 +1,8 @@
 import {extend} from './util';
 
+/**
+ * A listener method used as a callback to events
+ */
 export type Listener = (a: any) => any;
 
 type Listeners = {[_: string]: Array<Listener>};
@@ -21,6 +24,9 @@ function _removeEventListener(type: string, listener: Listener, listenerList: Li
     }
 }
 
+/**
+ * The event class
+ */
 export class Event {
     readonly type: string;
 
@@ -34,6 +40,9 @@ interface ErrorLike {
     message: string;
 }
 
+/**
+ * An error event
+ */
 export class ErrorEvent extends Event {
     error: ErrorLike;
 

@@ -4,6 +4,9 @@ import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {IndexBuffer} from '../gl/index_buffer';
 import type {Context} from '../gl/context';
 
+/**
+ * A vertex array object used to pass data to the webgl code
+ */
 export class VertexArrayObject {
     context: Context;
     boundProgram: Program<any>;

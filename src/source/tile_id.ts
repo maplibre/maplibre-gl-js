@@ -6,6 +6,9 @@ import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
 import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 
+/**
+ * A canonical way to define a tile ID
+ */
 export class CanonicalTileID implements ICanonicalTileID {
     z: number;
     x: number;

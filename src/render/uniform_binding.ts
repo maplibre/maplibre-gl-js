@@ -10,6 +10,9 @@ type $ObjMap<T extends {}, F extends (v: any) => any> = {
 export type UniformValues<Us extends {}> = $ObjMap<Us, <V>(u: Uniform<V>) => V>;
 export type UniformLocations = {[_: string]: WebGLUniformLocation};
 
+/**
+ * A base uniform abstract class
+ */
 abstract class Uniform<T> {
     gl: WebGLRenderingContext|WebGL2RenderingContext;
     location: WebGLUniformLocation;
@@ -146,4 +149,7 @@ export {
     UniformMatrix4f
 };
 
+/**
+ * A uniform bindings
+ */
 export type UniformBindings = {[_: string]: Uniform<any>};

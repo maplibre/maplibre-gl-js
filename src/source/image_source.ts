@@ -22,18 +22,24 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import {Cancelable} from '../types/cancelable';
 
+/**
+ * Four geographical coordinates,
+ * represented as arrays of longitude and latitude numbers, which define the corners of the image.
+ * The coordinates start at the top left corner of the image and proceed in clockwise order.
+ * They do not have to represent a rectangle.
+ */
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
 
+/**
+ * The options object for the {@link ImageSource#updateImage} method
+ */
 export type UpdateImageOptions = {
     /**
      * Required image URL.
      */
     url: string;
     /**
-     * Four geographical coordinates,
-     * represented as arrays of longitude and latitude numbers, which define the corners of the image.
-     * The coordinates start at the top left corner of the image and proceed in clockwise order.
-     * They do not have to represent a rectangle.
+     * The image coordinates
      */
     coordinates?: Coordinates;
 }

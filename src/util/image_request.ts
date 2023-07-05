@@ -6,6 +6,9 @@ import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker} from './
 import {webpSupported} from './webp_supported';
 import {config} from './config';
 
+/**
+ * The callback that is being called after an image was fetched
+ */
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
 type ImageQueueThrottleControlCallback = () => boolean;

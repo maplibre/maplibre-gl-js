@@ -5,6 +5,9 @@ import {register} from '../util/web_worker_transfer';
 import type {VertexArrayObject} from '../render/vertex_array_object';
 import type {StructArray} from '../util/struct_array';
 
+/**
+ * A single segment of a vector
+ */
 export type Segment = {
     sortKey?: number;
     vertexOffset: number;
@@ -14,6 +17,9 @@ export type Segment = {
     vaos: {[_: string]: VertexArrayObject};
 };
 
+/**
+ * Used for calculations on vector segments
+ */
 export class SegmentVector {
     static MAX_VERTEX_ARRAY_LENGTH: number;
     segments: Array<Segment>;

@@ -24,8 +24,7 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, mat
  * Custom layers must have a unique `id` and must have the `type` of `"custom"`.
  * They must implement `render` and may implement `prerender`, `onAdd` and `onRemove`.
  * They can trigger rendering using {@link Map#triggerRepaint}
- * and they should appropriately handle {@link Map.event:webglcontextlost} and
- * {@link Map.event:webglcontextrestored}.
+ * and they should appropriately handle {@link MapContextEvent} with `webglcontextlost` and `webglcontextrestored`.
  *
  * The `renderingMode` property controls whether the layer is treated as a `"2d"` or `"3d"` map layer. Use:
  * - `"renderingMode": "3d"` to use the depth buffer and share it with other layers

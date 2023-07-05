@@ -81,6 +81,9 @@ export type CenterZoomBearing = {
     bearing?: number;
 }
 
+/**
+ * The options object related to the {@link Map#jumpTo} method
+ */
 export type JumpToOptions = CameraOptions & {
     /**
      * Dimensions in pixels applied on each side of the viewport for shifting the vanishing point.
@@ -88,6 +91,9 @@ export type JumpToOptions = CameraOptions & {
     padding?: PaddingOptions;
 }
 
+/**
+ * A options object for the {@link Map#cameraForBounds} method
+ */
 export type CameraForBoundsOptions = CameraOptions & {
     /**
      * The amount of padding in pixels to add to the given bounds.

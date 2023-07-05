@@ -286,7 +286,9 @@ export function sameOrigin(inComingUrl: string) {
     const locationObj = window.location;
     return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
-
+/**
+ * A type used to store the tile's expiration date and cache control definition
+ */
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
     const video: HTMLVideoElement = window.document.createElement('video');

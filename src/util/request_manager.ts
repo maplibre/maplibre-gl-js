@@ -14,6 +14,10 @@ export const enum ResourceType {
     Unknown = 'Unknown',
 }
 
+/**
+ * This function is used to tranform a request.
+ * It is used just before executing the relevant request.
+ */
 export type RequestTransformFunction = (url: string, resourceType?: ResourceType) => RequestParameters | undefined;
 
 type UrlObject = {
