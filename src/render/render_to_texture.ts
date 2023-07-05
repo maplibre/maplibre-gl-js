@@ -108,7 +108,7 @@ export class RenderToTexture {
      * Because of the stylesheet possibility to mixing render-to-texture layers
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
-     * @param layer the layer to render
+     * @param layer - the layer to render
      * @returns if true layer is rendered to texture, otherwise false
      */
     renderLayer(layer: StyleLayer): boolean {

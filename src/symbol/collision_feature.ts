@@ -8,8 +8,6 @@ import {SymbolPadding} from '../style/style_layer/symbol_style_layer';
  * It is used with CollisionIndex to check if the label overlaps with any
  * previous labels. A CollisionFeature is mostly just a set of CollisionBox
  * objects.
- *
- * @private
  */
 export class CollisionFeature {
     boxStartIndex: number;
@@ -20,12 +18,11 @@ export class CollisionFeature {
      * Create a CollisionFeature, adding its collision box data to the given collisionBoxArray in the process.
      * For line aligned labels a collision circle diameter is computed instead.
      *
-     * @param anchor The point along the line around which the label is anchored.
-     * @param shaped The text or icon shaping results.
-     * @param boxScale A magic number used to convert from glyph metrics units to geometry units.
-     * @param padding The amount of padding to add around the label edges.
-     * @param alignLine Whether the label is aligned with the line or the viewport.
-     * @private
+     * @param anchor - The point along the line around which the label is anchored.
+     * @param shaped - The text or icon shaping results.
+     * @param boxScale - A magic number used to convert from glyph metrics units to geometry units.
+     * @param padding - The amount of padding to add around the label edges.
+     * @param alignLine - Whether the label is aligned with the line or the viewport.
      */
     constructor(collisionBoxArray: CollisionBoxArray,
         anchor: Anchor,

@@ -51,6 +51,7 @@ export type UpdateImageOptions = {
  * @group Sources
  *
  * @example
+ * ```ts
  * // add to map
  * map.addSource('some id', {
  *    type: 'image',
@@ -64,7 +65,7 @@ export type UpdateImageOptions = {
  * });
  *
  * // update coordinates
- * var mySource = map.getSource('some id');
+ * let mySource = map.getSource('some id');
  * mySource.setCoordinates([
  *     [-76.54335737228394, 39.18579907229748],
  *     [-76.52803659439087, 39.1838364847587],
@@ -84,6 +85,7 @@ export type UpdateImageOptions = {
  * })
  *
  * map.removeSource('some id');  // remove
+ * ```
  */
 export class ImageSource extends Evented implements Source {
     type: string;
@@ -161,7 +163,7 @@ export class ImageSource extends Evented implements Source {
      * Updates the image URL and, optionally, the coordinates. To avoid having the image flash after changing,
      * set the `raster-fade-duration` paint property on the raster layer to 0.
      *
-     * @param options Options object.
+     * @param options - The options object.
      * @returns `this`
      */
     updateImage(options: UpdateImageOptions): this {
@@ -201,7 +203,7 @@ export class ImageSource extends Evented implements Source {
     /**
      * Sets the image's coordinates and re-renders the map.
      *
-     * @param coordinates Four geographical coordinates,
+     * @param coordinates - Four geographical coordinates,
      * represented as arrays of longitude and latitude numbers, which define the corners of the image.
      * The coordinates start at the top left corner of the image and proceed in clockwise order.
      * They do not have to represent a rectangle.

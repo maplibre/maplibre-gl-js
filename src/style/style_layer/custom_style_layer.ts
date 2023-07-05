@@ -4,8 +4,8 @@ import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
- * @param gl The map's gl context.
- * @param matrix The map's camera matrix. It projects spherical mercator
+ * @param gl - The map's gl context.
+ * @param matrix - The map's camera matrix. It projects spherical mercator
  * coordinates to gl coordinates. The spherical mercator coordinate `[0, 0]` represents the
  * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
  * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
@@ -32,7 +32,8 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, mat
  *   framebuffer and {@link CustomLayerInterface#prerender}
  *
  * @example
- * // Custom layer implemented as ES6 class
+ * Custom layer implemented as ES6 class
+ * ```ts
  * class NullIslandLayer {
  *     constructor() {
  *         this.id = 'null-island';
@@ -76,6 +77,7 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, mat
  * map.on('load', function() {
  *     map.addLayer(new NullIslandLayer());
  * });
+ * ```
  */
 export interface CustomLayerInterface {
     /**
@@ -117,16 +119,16 @@ export interface CustomLayerInterface {
      * Optional method called when the layer has been added to the Map with {@link Map#addLayer}. This
      * gives the layer a chance to initialize gl resources and register event listeners.
      *
-     * @param map The Map this custom layer was just added to.
-     * @param gl The gl context for the map.
+     * @param map - The Map this custom layer was just added to.
+     * @param gl - The gl context for the map.
      */
     onAdd?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
     /**
      * Optional method called when the layer has been removed from the Map with {@link Map#removeLayer}. This
      * gives the layer a chance to clean up gl resources and event listeners.
      *
-     * @param map The Map this custom layer was just added to.
-     * @param gl The gl context for the map.
+     * @param map - The Map this custom layer was just added to.
+     * @param gl - The gl context for the map.
      */
     onRemove?(map: Map, gl: WebGLRenderingContext | WebGL2RenderingContext): void;
 }

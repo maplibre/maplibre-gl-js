@@ -236,7 +236,6 @@ function emitStructArrayLayout(locals) {
 
     output.push(
         ` *
- * @private
  */
 class ${structArrayLayoutClass} extends StructArray {`);
 
@@ -385,7 +384,6 @@ export type ${structTypeClass.replace('Struct', '')} = ${structTypeClass};
 
     output.push(
         `/**
- * @private
  */
 export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
 
@@ -408,7 +406,6 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
             `    /**
      * Return the ${structTypeClass} at the given location in the array.
      * @param index The index of the element.
-     * @private
      */
     get(index: number): ${structTypeClass} {
         return new ${structTypeClass}(this, index);

@@ -95,26 +95,31 @@ const focusQuerySelector = [
  *
  *
  * @example
- * // Create a popup
- * var popup = new maplibregl.Popup();
+ * Create a popup
+ * ```ts
+ * let popup = new maplibregl.Popup();
  * // Set an event listener that will fire
  * // any time the popup is opened
  * popup.on('open', function(){
  *   console.log('popup was opened');
  * });
+ * ```
  *
  * @example
- * // Create a popup
- * var popup = new maplibregl.Popup();
+ * Create a popup
+ * ```ts
+ * let popup = new maplibregl.Popup();
  * // Set an event listener that will fire
  * // any time the popup is closed
  * popup.on('close', function(){
  *   console.log('popup was closed');
  * });
+ * ```
  *
  * @example
- * var markerHeight = 50, markerRadius = 10, linearOffset = 25;
- * var popupOffsets = {
+ * ```ts
+ * let markerHeight = 50, markerRadius = 10, linearOffset = 25;
+ * let popupOffsets = {
  *  'top': [0, 0],
  *  'top-left': [0,0],
  *  'top-right': [0,0],
@@ -124,17 +129,18 @@ const focusQuerySelector = [
  *  'left': [markerRadius, (markerHeight - markerRadius) * -1],
  *  'right': [-markerRadius, (markerHeight - markerRadius) * -1]
  *  };
- * var popup = new maplibregl.Popup({offset: popupOffsets, className: 'my-class'})
+ * let popup = new maplibregl.Popup({offset: popupOffsets, className: 'my-class'})
  *   .setLngLat(e.lngLat)
  *   .setHTML("<h1>Hello World!</h1>")
  *   .setMaxWidth("300px")
  *   .addTo(map);
+ * ```
  * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
  * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
  * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
  * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
  *
- * ## Events
+ * ### Events
  *
  * @event `open` Fired when the popup is opened manually or programmatically. `popup` object that was opened
  *
@@ -159,13 +165,15 @@ export class Popup extends Evented {
     /**
      * Adds the popup to a map.
      *
-     * @param map The MapLibre GL JS map to add the popup to.
+     * @param map - The MapLibre GL JS map to add the popup to.
      * @returns `this`
      * @example
+     * ```ts
      * new maplibregl.Popup()
      *   .setLngLat([0, 0])
      *   .setHTML("<h1>Null Island</h1>")
      *   .addTo(map);
+     * ```
      * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
      * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
      * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
@@ -214,8 +222,10 @@ export class Popup extends Evented {
      * Removes the popup from the map it has been added to.
      *
      * @example
-     * var popup = new maplibregl.Popup().addTo(map);
+     * ```ts
+     * let popup = new maplibregl.Popup().addTo(map);
      * popup.remove();
+     * ```
      * @returns `this`
      */
     remove = (): this => {
@@ -260,7 +270,7 @@ export class Popup extends Evented {
     /**
      * Sets the geographical location of the popup's anchor, and moves the popup to it. Replaces trackPointer() behavior.
      *
-     * @param lnglat The geographical location to set as the popup's anchor.
+     * @param lnglat - The geographical location to set as the popup's anchor.
      * @returns `this`
      */
     setLngLat(lnglat: LngLatLike): this {
@@ -287,10 +297,12 @@ export class Popup extends Evented {
      * Tracks the popup anchor to the cursor position on screens with a pointer device (it will be hidden on touchscreens). Replaces the `setLngLat` behavior.
      * For most use cases, set `closeOnClick` and `closeButton` to `false`.
      * @example
-     * var popup = new maplibregl.Popup({ closeOnClick: false, closeButton: false })
+     * ```ts
+     * let popup = new maplibregl.Popup({ closeOnClick: false, closeButton: false })
      *   .setHTML("<h1>Hello World!</h1>")
      *   .trackPointer()
      *   .addTo(map);
+     * ```
      * @returns `this`
      */
     trackPointer(): this {
@@ -314,13 +326,15 @@ export class Popup extends Evented {
     /**
      * Returns the `Popup`'s HTML element.
      * @example
-     * // Change the `Popup` element's font size
-     * var popup = new maplibregl.Popup()
+     * Change the `Popup` element's font size
+     * ```ts
+     * let popup = new maplibregl.Popup()
      *   .setLngLat([-96, 37.8])
      *   .setHTML("<p>Hello World!</p>")
      *   .addTo(map);
-     * var popupElem = popup.getElement();
+     * let popupElem = popup.getElement();
      * popupElem.style.fontSize = "25px";
+     * ```
      * @returns element
      */
     getElement(): HTMLElement {
@@ -334,13 +348,15 @@ export class Popup extends Evented {
      * so it cannot insert raw HTML. Use this method for security against XSS
      * if the popup content is user-provided.
      *
-     * @param text Textual content for the popup.
+     * @param text - Textual content for the popup.
      * @returns `this`
      * @example
-     * var popup = new maplibregl.Popup()
+     * ```ts
+     * let popup = new maplibregl.Popup()
      *   .setLngLat(e.lngLat)
      *   .setText('Hello, world!')
      *   .addTo(map);
+     * ```
      */
     setText(text: string): this {
         return this.setDOMContent(document.createTextNode(text));
@@ -353,13 +369,15 @@ export class Popup extends Evented {
      * used only with trusted content. Consider {@link Popup#setText} if
      * the content is an untrusted text string.
      *
-     * @param html A string representing HTML content for the popup.
+     * @param html - A string representing HTML content for the popup.
      * @returns `this`
      * @example
-     * var popup = new maplibregl.Popup()
+     * ```ts
+     * let popup = new maplibregl.Popup()
      *   .setLngLat(e.lngLat)
      *   .setHTML("<h1>Hello World!</h1>")
      *   .addTo(map);
+     * ```
      * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
      * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
      * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
@@ -392,7 +410,7 @@ export class Popup extends Evented {
      * Sets the popup's maximum width. This is setting the CSS property `max-width`.
      * Available values can be found here: https://developer.mozilla.org/en-US/docs/Web/CSS/max-width
      *
-     * @param maxWidth A string representing the value for the maximum width.
+     * @param maxWidth - A string representing the value for the maximum width.
      * @returns `this`
      */
     setMaxWidth(maxWidth: string): this {
@@ -404,16 +422,18 @@ export class Popup extends Evented {
     /**
      * Sets the popup's content to the element provided as a DOM node.
      *
-     * @param htmlNode A DOM node to be used as content for the popup.
+     * @param htmlNode - A DOM node to be used as content for the popup.
      * @returns `this`
      * @example
-     * // create an element with the popup content
-     * var div = document.createElement('div');
+     * Create an element with the popup content
+     * ```ts
+     * let div = document.createElement('div');
      * div.innerHTML = 'Hello, world!';
-     * var popup = new maplibregl.Popup()
+     * let popup = new maplibregl.Popup()
      *   .setLngLat(e.lngLat)
      *   .setDOMContent(div)
      *   .addTo(map);
+     * ```
      */
     setDOMContent(htmlNode: Node): this {
         if (this._content) {
@@ -438,11 +458,13 @@ export class Popup extends Evented {
     /**
      * Adds a CSS class to the popup container element.
      *
-     * @param className Non-empty string with CSS class name to add to popup container
+     * @param className - Non-empty string with CSS class name to add to popup container
      *
      * @example
+     * ```ts
      * let popup = new maplibregl.Popup()
      * popup.addClassName('some-class')
+     * ```
      */
     addClassName(className: string) {
         if (this._container) {
@@ -453,11 +475,13 @@ export class Popup extends Evented {
     /**
      * Removes a CSS class from the popup container element.
      *
-     * @param className Non-empty string with CSS class name to remove from popup container
+     * @param className - Non-empty string with CSS class name to remove from popup container
      *
      * @example
+     * ```ts
      * let popup = new maplibregl.Popup()
      * popup.removeClassName('some-class')
+     * ```
      */
     removeClassName(className: string) {
         if (this._container) {
@@ -468,7 +492,7 @@ export class Popup extends Evented {
     /**
      * Sets the popup's offset.
      *
-     * @param offset Sets the popup's offset.
+     * @param offset - Sets the popup's offset.
      * @returns `this`
      */
     setOffset (offset?: Offset): this {
@@ -480,13 +504,15 @@ export class Popup extends Evented {
     /**
      * Add or remove the given CSS class on the popup container, depending on whether the container currently has that class.
      *
-     * @param className Non-empty string with CSS class name to add/remove
+     * @param className - Non-empty string with CSS class name to add/remove
      *
      * @returns if the class was removed return false, if class was added, then return true, undefined if there is no container
      *
      * @example
+     * ```ts
      * let popup = new maplibregl.Popup()
      * popup.toggleClassName('toggleClass')
+     * ```
      */
     toggleClassName(className: string): boolean | undefined {
         if (this._container) {

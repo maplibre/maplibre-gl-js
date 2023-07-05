@@ -5,7 +5,6 @@ let globalWorkerPool;
 /**
  * Creates (if necessary) and returns the single, global WorkerPool instance
  * to be shared across each Map
- * @private
  */
 export function getGlobalWorkerPool() {
     if (!globalWorkerPool) {

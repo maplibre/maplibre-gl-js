@@ -20,6 +20,7 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  * @group Sources
  *
  * @example
+ * ```ts
  * // add to map
  * map.addSource('some id', {
  *    type: 'video',
@@ -36,7 +37,7 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  * });
  *
  * // update
- * var mySource = map.getSource('some id');
+ * let mySource = map.getSource('some id');
  * mySource.setCoordinates([
  *     [-76.54335737228394, 39.18579907229748],
  *     [-76.52803659439087, 39.1838364847587],
@@ -45,6 +46,7 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  * ]);
  *
  * map.removeSource('some id');  // remove
+ * ```
  * @see [Add a video](https://maplibre.org/maplibre-gl-js-docs/example/video-on-a-map/)
  */
 export class VideoSource extends ImageSource {
@@ -53,9 +55,6 @@ export class VideoSource extends ImageSource {
     video: HTMLVideoElement;
     roundZoom: boolean;
 
-    /**
-     * @private
-     */
     constructor(id: string, options: VideoSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
         this.roundZoom = true;
@@ -115,7 +114,6 @@ export class VideoSource extends ImageSource {
 
     /**
      * Sets playback to a timestamp, in seconds.
-     * @private
      */
     seek(seconds: number) {
         if (this.video) {

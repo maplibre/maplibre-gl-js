@@ -16,7 +16,6 @@ import {Terrain} from '../render/terrain';
 /**
  * A single transform, generally used for a single tile to be
  * scaled, rotated, and zoomed.
- * @private
  */
 export class Transform {
     tileSize: number;
@@ -238,8 +237,6 @@ export class Transform {
     /**
      * The center of the screen in pixels with the top-left corner being (0,0)
      * and +y axis pointing downwards. This accounts for padding.
-     *
-     * @readonly
      */
     get centerPoint(): Point {
         return this._edgeInsets.getCenter(this.width, this.height);
@@ -248,7 +245,7 @@ export class Transform {
     /**
      * Returns if the padding params match
      *
-     * @param padding the padding to check against
+     * @param padding - the padding to check against
      * @returns true if they are equal, false otherwise
      */
     isPaddingEqual(padding: PaddingOptions): boolean {
@@ -258,9 +255,9 @@ export class Transform {
     /**
      * Helper method to update edge-insets in place
      *
-     * @param start the starting padding
-     * @param target the target padding
-     * @param t the step/weight
+     * @param start - the starting padding
+     * @param target - the target padding
+     * @param t - the step/weight
      */
     interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number) {
         this._unmodified = false;
@@ -271,7 +268,7 @@ export class Transform {
 
     /**
      * Return a zoom level that will cover all tiles the transform
-     * @param options options
+     * @param options - the options
      * @returns zoom level An integer zoom level at which all tiles will be visible.
      */
     coveringZoomLevel(options: {
@@ -294,8 +291,6 @@ export class Transform {
     /**
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
-     *
-     * @private
      */
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID) {
         const result = [new UnwrappedTileID(0, tileID)];
@@ -323,9 +318,8 @@ export class Transform {
     /**
      * Return all coordinates that could cover this transform for a covering
      * zoom level.
-     * @param options
+     * @param options - the options
      * @returns OverscaledTileIDs
-     * @private
      */
     coveringTiles(
         options: {
@@ -478,7 +472,7 @@ export class Transform {
 
     /**
      * Updates the center-elevation value unless freezeElevation is activated.
-     * @param terrain the terrain
+     * @param terrain - the terrain
      */
     updateElevation(terrain?: Terrain) {
         if (this.freezeElevation) return;
@@ -487,8 +481,8 @@ export class Transform {
 
     /**
      * get the elevation from terrain for the current zoomlevel.
-     * @param lnglat the location
-     * @param terrain the terrain
+     * @param lnglat - the location
+     * @param terrain - the terrain
      * @returns elevation in meters
      */
     getElevation(lnglat: LngLat, terrain: Terrain): number {
@@ -517,7 +511,7 @@ export class Transform {
      * This method works in combination with freezeElevation activated.
      * freezeElevtion is enabled during map-panning because during this the camera should sit in constant height.
      * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
-     * @param terrain the terrain
+     * @param terrain - the terrain
      */
     recalculateZoom(terrain: Terrain) {
         // find position the camera is looking on
@@ -557,10 +551,9 @@ export class Transform {
 
     /**
      * Given a location, return the screen point that corresponds to it
-     * @param lnglat location
-     * @param terrain optional terrain
+     * @param lnglat - location
+     * @param terrain - optional terrain
      * @returns screen point
-     * @private
      */
     locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return terrain ?
@@ -570,10 +563,9 @@ export class Transform {
 
     /**
      * Given a point on screen, return its lnglat
-     * @param p screen point
-     * @param terrain optional terrain
+     * @param p - screen point
+     * @param terrain - optional terrain
      * @returns lnglat location
-     * @private
      */
     pointLocation(p: Point, terrain?: Terrain): LngLat {
         return this.coordinateLocation(this.pointCoordinate(p, terrain));
@@ -582,9 +574,8 @@ export class Transform {
     /**
      * Given a geographical lnglat, return an unrounded
      * coordinate that represents it at this transform's zoom level.
-     * @param lnglat
+     * @param lnglat - the location
      * @returns The mercator coordinate
-     * @private
      */
     locationCoordinate(lnglat: LngLat): MercatorCoordinate {
         return MercatorCoordinate.fromLngLat(lnglat);
@@ -592,9 +583,8 @@ export class Transform {
 
     /**
      * Given a Coordinate, return its geographical position.
-     * @param coord mercator coordivates
+     * @param coord - mercator coordivates
      * @returns lng and lat
-     * @private
      */
     coordinateLocation(coord: MercatorCoordinate): LngLat {
         return coord && coord.toLngLat();
@@ -602,10 +592,9 @@ export class Transform {
 
     /**
      * Given a Point, return its mercator coordinate.
-     * @param p the point
-     * @param terrain optional terrain
+     * @param p - the point
+     * @param terrain - optional terrain
      * @returns lnglat
-     * @private
      */
     pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
@@ -646,11 +635,10 @@ export class Transform {
 
     /**
      * Given a coordinate, return the screen point that corresponds to it
-     * @param coord
-     * @param elevation default = 0
-     * @param pixelMatrix, default = this.pixelMatrix
+     * @param coord - the coordinates
+     * @param elevation - the elevation
+     * @param pixelMatrix - the pixel matrix
      * @returns screen point
-     * @private
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this.pixelMatrix): Point {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as any;
@@ -695,7 +683,7 @@ export class Transform {
 
     /**
      * Sets or clears the map's geographical constraints.
-     * @param bounds A {@link LngLatBounds} object describing the new geographic boundaries of the map.
+     * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
     setMaxBounds(bounds?: LngLatBounds | null) {
         if (bounds) {
@@ -710,8 +698,7 @@ export class Transform {
 
     /**
      * Calculate the posMatrix that, given a tile coordinate, would be used to display the tile on a map.
-     * @param unwrappedTileID;
-     * @private
+     * @param unwrappedTileID - the tile ID
      */
     calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 {
         const posMatrixKey = unwrappedTileID.key;

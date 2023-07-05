@@ -21,7 +21,7 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PluginState} from './rtl_text_plugin';
 
 /**
- * @private
+ * The Worker class responsidble for background thread related execution
  */
 export default class Worker {
     self: WorkerGlobalScopeInterface;
@@ -173,7 +173,6 @@ export default class Worker {
      * Load a {@link WorkerSource} script at params.url.  The script is run
      * (using importScripts) with `registerWorkerSource` in scope, which is a
      * function taking `(name, workerSourceObject)`.
-     *  @private
      */
     loadWorkerSource(map: string, params: {
         url: string;

@@ -36,6 +36,7 @@ const defaultOptions: ScaleOptions = {
  * @group Controls
  *
  * @example
+ * ```ts
  * let scale = new maplibregl.ScaleControl({
  *     maxWidth: 80,
  *     unit: 'imperial'
@@ -43,6 +44,7 @@ const defaultOptions: ScaleOptions = {
  * map.addControl(scale);
  *
  * scale.setUnit('metric');
+ * ```
  */
 export class ScaleControl implements IControl {
     _map: Map;
@@ -82,7 +84,7 @@ export class ScaleControl implements IControl {
     /**
      * Set the scale's unit of the distance
      *
-     * @param unit Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
+     * @param unit - Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
      */
     setUnit = (unit: Unit) => {
         this.options.unit = unit;

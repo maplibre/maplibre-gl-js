@@ -7,7 +7,6 @@ export const PRELOAD_POOL_ID = 'mapboxgl_preloaded_worker_pool';
 
 /**
  * Constructs a worker pool.
- * @private
  */
 export class WorkerPool {
     static workerCount: number;

@@ -24,7 +24,9 @@ export class DoubleClickZoomHandler {
      * Enables the "double click to zoom" interaction.
      *
      * @example
+     * ```ts
      * map.doubleClickZoom.enable();
+     * ```
      */
     enable() {
         this._clickZoom.enable();
@@ -35,7 +37,9 @@ export class DoubleClickZoomHandler {
      * Disables the "double click to zoom" interaction.
      *
      * @example
+     * ```ts
      * map.doubleClickZoom.disable();
+     * ```
      */
     disable() {
         this._clickZoom.disable();

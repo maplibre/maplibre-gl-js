@@ -304,8 +304,6 @@ register('CollisionBuffers', CollisionBuffers);
  *    and uses the CollisionIndex along with current camera settings to determine
  *    which symbols can actually show on the map. Collided symbols are hidden
  *    using a dynamic "OpacityVertexArray".
- *
- * @private
  */
 export class SymbolBucket implements Bucket {
     static MAX_GLYPHS: number;

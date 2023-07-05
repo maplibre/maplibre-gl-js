@@ -16,8 +16,7 @@ const MIN = -MAX - 1;
 /**
  * Loads a geometry from a VectorTileFeature and scales it to the common extent
  * used internally.
- * @param feature the vector tile feature to load
- * @private
+ * @param feature - the vector tile feature to load
  */
 export function loadGeometry(feature: VectorTileFeature): Array<Array<Point>> {
     const scale = EXTENT / feature.extent;

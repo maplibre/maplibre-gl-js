@@ -66,10 +66,7 @@ function packColor(color: Color): [number, number] {
  *
  *  Note that the shader source varies depending on whether we're using a uniform or
  *  attribute. We dynamically compile shaders at runtime to accommodate this.
- *
- * @private
  */
-
 interface AttributeBinder {
     populatePaintArray(
         length: number,
@@ -412,8 +409,6 @@ class CrossFadedCompositeBinder implements AttributeBinder {
  * When a vector tile is parsed, this same configuration information is used to
  * populate the attribute buffers needed for data-driven styling using the zoom
  * level and feature property data.
- *
- * @private
  */
 export class ProgramConfiguration {
     binders: {[_: string]: AttributeBinder | UniformBinder};

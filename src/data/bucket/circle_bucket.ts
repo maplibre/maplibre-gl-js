@@ -39,7 +39,6 @@ function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
  *
  * Each corner has a pos that is the center of the circle and an extrusion
  * vector that is where it points.
- * @private
  */
 export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> implements Bucket {
     index: number;

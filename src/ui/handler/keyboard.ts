@@ -139,7 +139,9 @@ export class KeyboardHandler implements Handler {
      * Enables the "keyboard rotate and zoom" interaction.
      *
      * @example
-     *   map.keyboard.enable();
+     * ```ts
+     * map.keyboard.enable();
+     * ```
      */
     enable() {
         this._enabled = true;
@@ -149,7 +151,9 @@ export class KeyboardHandler implements Handler {
      * Disables the "keyboard rotate and zoom" interaction.
      *
      * @example
-     *   map.keyboard.disable();
+     * ```ts
+     * map.keyboard.disable();
+     * ```
      */
     disable() {
         this._enabled = false;
@@ -183,7 +187,9 @@ export class KeyboardHandler implements Handler {
      * "keyboard zoom" interaction enabled.
      *
      * @example
-     *   map.keyboard.disableRotation();
+     * ```ts
+     * map.keyboard.disableRotation();
+     * ```
      */
     disableRotation() {
         this._rotationDisabled = true;
@@ -193,8 +199,10 @@ export class KeyboardHandler implements Handler {
      * Enables the "keyboard pan/rotate" interaction.
      *
      * @example
-     *   map.keyboard.enable();
-     *   map.keyboard.enableRotation();
+     * ```ts
+     * map.keyboard.enable();
+     * map.keyboard.enableRotation();
+     * ```
      */
     enableRotation() {
         this._rotationDisabled = false;

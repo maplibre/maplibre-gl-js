@@ -26,13 +26,16 @@ import type {
  * @group Sources
  *
  * @example
+ * ```ts
  * map.addSource('raster-source', {
  *     'type': 'raster',
  *     'tiles': ['https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'],
  *     'tileSize': 256,
  * });
+ * ```
  *
  * @example
+ * ```ts
  * map.addSource('wms-test-source', {
  *      'type': 'raster',
  * // use the tiles option to specify a WMS tile source URL
@@ -41,6 +44,7 @@ import type {
  *      ],
  *      'tileSize': 256
  * });
+ * ```
  * @see [Add a raster tile source](https://maplibre.org/maplibre-gl-js-docs/example/map-tiles/)
  * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js-docs/example/wms/)
  * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js-docs/example/satellite-map/)

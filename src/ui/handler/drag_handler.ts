@@ -47,7 +47,7 @@ export type DragMoveHandlerOptions<T, E extends Event> = {
     moveStateManager: DragMoveStateManager<E>;
     /**
      * A method used to assign the dragStart, dragMove, and dragEnd methods to the relevant event handlers, as well as assigning the contextmenu handler
-     * @param handler the handler
+     * @param handler - the handler
      */
     assignEvents: (handler: DragMoveHandler<T, E>) => void;
     /**

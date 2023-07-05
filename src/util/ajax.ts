@@ -7,6 +7,7 @@ import type {Cancelable} from '../types/cancelable';
 /**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
  * @example
+ * ```ts
  * // use transformRequest to modify requests that begin with `http://myHost`
  * transformRequest: function(url, resourceType) {
  *  if (resourceType === 'Source' && url.indexOf('http://myHost') > -1) {
@@ -16,8 +17,8 @@ import type {Cancelable} from '../types/cancelable';
  *      credentials: 'include'  // Include cookies for cross-origin requests
  *    }
  *   }
- *  }
- *
+ * }
+ * ```
  */
 export type RequestParameters = {
     /**
@@ -82,10 +83,10 @@ export class AJAXError extends Error {
     body: Blob;
 
     /**
-     * @param status The response's HTTP status code.
-     * @param statusText The response's HTTP status text.
-     * @param url The request's URL.
-     * @param body The response's body.
+     * @param status - The response's HTTP status code.
+     * @param statusText - The response's HTTP status text.
+     * @param url - The request's URL.
+     * @param body - The response's body.
      */
     constructor(status: number, statusText: string, url: string, body: Blob) {
         super(`AJAXError: ${statusText} (${status}): ${url}`);

@@ -19,7 +19,7 @@ export class Hash {
     /**
      * Map element to listen for coordinate changes
      *
-     * @param map
+     * @param map - The map object
      * @returns `this`
      */
     addTo(map: Map) {

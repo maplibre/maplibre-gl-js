@@ -1,6 +1,5 @@
 /**
  * Throttle the given function to run at most every `period` milliseconds.
- * @private
  */
 export function throttle(fn: () => void, time: number): () => ReturnType<typeof setTimeout> {
     let pending = false;

@@ -33,7 +33,9 @@ export class DragRotateHandler {
      * Enables the "drag to rotate" interaction.
      *
      * @example
+     * ```ts
      * map.dragRotate.enable();
+     * ```
      */
     enable() {
         this._mouseRotate.enable();
@@ -44,7 +46,9 @@ export class DragRotateHandler {
      * Disables the "drag to rotate" interaction.
      *
      * @example
+     * ```ts
      * map.dragRotate.disable();
+     * ```
      */
     disable() {
         this._mouseRotate.disable();

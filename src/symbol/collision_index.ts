@@ -41,8 +41,6 @@ export type FeatureKey = {
  * there's room for a symbol, then insertCollisionBox/Circles actually puts the
  * symbol in the index. The two step process allows paired symbols to be inserted
  * together even if they overlap.
- *
- * @private
  */
 export class CollisionIndex {
     grid: GridIndex<FeatureKey>;
@@ -282,8 +280,6 @@ export class CollisionIndex {
      * Because the geometries in the CollisionIndex are an approximation of the shape of
      * symbols on the map, we use the CollisionIndex to look up the symbol part of
      * `queryRenderedFeatures`.
-     *
-     * @private
      */
     queryRenderedSymbols(viewportQueryGeometry: Array<Point>) {
         if (viewportQueryGeometry.length === 0 || (this.grid.keysLength() === 0 && this.ignoredGrid.keysLength() === 0)) {

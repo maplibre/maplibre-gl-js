@@ -80,7 +80,7 @@
         "max": 1
     }],
     "import/no-relative-packages": ["error"],
-    //"tsdoc/syntax": "warn", // this allows to link the tsdocs, but there are too many warnings at this point...
+    "tsdoc/syntax": "warn",
     // Jest https://www.npmjs.com/package/eslint-plugin-jest
     "jest/no-commented-out-tests": "error",
     "jest/no-disabled-tests": "warn",
