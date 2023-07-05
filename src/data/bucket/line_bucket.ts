@@ -239,7 +239,7 @@ export class LineBucket implements Bucket {
             const start = +feature.properties['mapbox_clip_start'];
             const end = +feature.properties['mapbox_clip_end'];
             return {start, end};
-        }
+        } else return undefined;
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {

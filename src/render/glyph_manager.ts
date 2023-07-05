@@ -173,11 +173,11 @@ export class GlyphManager {
     _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph {
         const fontFamily = this.localIdeographFontFamily;
         if (!fontFamily) {
-            return;
+            return undefined;
         }
 
         if (!this._doesCharSupportLocalGlyph(id)) {
-            return;
+            return undefined;
         }
 
         let tinySDF = entry.tinySDF;
