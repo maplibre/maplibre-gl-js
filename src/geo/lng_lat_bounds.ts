@@ -5,6 +5,8 @@ import type {LngLatLike} from './lng_lat';
  * A {@link LngLatBounds} object, an array of {@link LngLatLike} objects in [sw, ne] order,
  * or an array of numbers in [west, south, east, north] order.
  *
+ * @group Geography and Geometry
+ *
  * @example
  * ```ts
  * let v1 = new maplibregl.LngLatBounds(
@@ -26,6 +28,8 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  * Note that any Mapbox GL method that accepts a `LngLatBounds` object as an argument or option
  * can also accept an `Array` of two {@link LngLatLike} constructs and will perform an implicit conversion.
  * This flexible type is documented as {@link LngLatBoundsLike}.
+ *
+ * @group Geography and Geometry
  *
  * @example
  * ```ts
