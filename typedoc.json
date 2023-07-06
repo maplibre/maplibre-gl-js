@@ -20,5 +20,6 @@
     "name": "MapLibre GL JS",
     "githubPages": false,
     "hideInPageTOC": true,
-    "hideBreadcrumbs": true
+    "hideBreadcrumbs": true,
+    "allReflectionsHaveOwnDocument": true
   }
