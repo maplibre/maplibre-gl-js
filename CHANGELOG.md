@@ -16,6 +16,7 @@
 - Fix the `tap then drag` zoom gesture detection to abort when the two taps are far away ([#2673](https://github.com/maplibre/maplibre-gl-js/pull/2673))
 - Fix regression - update pixel ratio when devicePixelRatio changes, restoring the v1.x behaviour ([#2706](https://github.com/maplibre/maplibre-gl-js/issues/2706))
 - Fix incorrect elevation calculation [#2772]
+- Fix compile errors (Not all code paths return a value /  Property '...' comes from an index signature, so it must be accessed with ['...'].) 
 - _...Add new stuff here..._
 
 ## 3.1.0
