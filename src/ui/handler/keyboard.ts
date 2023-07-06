@@ -48,7 +48,7 @@ export class KeyboardHandler implements Handler {
     }
 
     keydown(e: KeyboardEvent) {
-        if (e.altKey || e.ctrlKey || e.metaKey) return;
+        if (e.altKey || e.ctrlKey || e.metaKey) return undefined;
 
         let zoomDir = 0;
         let bearingDir = 0;
@@ -107,7 +107,7 @@ export class KeyboardHandler implements Handler {
                 break;
 
             default:
-                return;
+                return undefined;
         }
 
         if (this._rotationDisabled) {

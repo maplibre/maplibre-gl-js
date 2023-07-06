@@ -88,6 +88,7 @@ export class MapEventHandler implements Handler {
             // returning an object marks the handler as active and resets other handlers
             return {};
         }
+        return undefined;
     }
 
     isEnabled() {

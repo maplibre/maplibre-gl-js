@@ -54,44 +54,44 @@ export type LineSDFUniformsType = {
 };
 
 const lineUniforms = (context: Context, locations: UniformLocations): LineUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_ratio': new Uniform1f(context, locations['u_ratio']),
+    'u_device_pixel_ratio': new Uniform1f(context, locations['u_device_pixel_ratio']),
+    'u_units_to_pixels': new Uniform2f(context, locations['u_units_to_pixels'])
 });
 
 const lineGradientUniforms = (context: Context, locations: UniformLocations): LineGradientUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_image_height': new Uniform1f(context, locations.u_image_height)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_ratio': new Uniform1f(context, locations['u_ratio']),
+    'u_device_pixel_ratio': new Uniform1f(context, locations['u_device_pixel_ratio']),
+    'u_units_to_pixels': new Uniform2f(context, locations['u_units_to_pixels']),
+    'u_image': new Uniform1i(context, locations['u_image']),
+    'u_image_height': new Uniform1f(context, locations['u_image_height'])
 });
 
 const linePatternUniforms = (context: Context, locations: UniformLocations): LinePatternUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_texsize': new Uniform2f(context, locations.u_texsize),
-    'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
-    'u_scale': new Uniform3f(context, locations.u_scale),
-    'u_fade': new Uniform1f(context, locations.u_fade)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_texsize': new Uniform2f(context, locations['u_texsize']),
+    'u_ratio': new Uniform1f(context, locations['u_ratio']),
+    'u_device_pixel_ratio': new Uniform1f(context, locations['u_device_pixel_ratio']),
+    'u_image': new Uniform1i(context, locations['u_image']),
+    'u_units_to_pixels': new Uniform2f(context, locations['u_units_to_pixels']),
+    'u_scale': new Uniform3f(context, locations['u_scale']),
+    'u_fade': new Uniform1f(context, locations['u_fade'])
 });
 
 const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDFUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_ratio': new Uniform1f(context, locations.u_ratio),
-    'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
-    'u_patternscale_a': new Uniform2f(context, locations.u_patternscale_a),
-    'u_patternscale_b': new Uniform2f(context, locations.u_patternscale_b),
-    'u_sdfgamma': new Uniform1f(context, locations.u_sdfgamma),
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_tex_y_a': new Uniform1f(context, locations.u_tex_y_a),
-    'u_tex_y_b': new Uniform1f(context, locations.u_tex_y_b),
-    'u_mix': new Uniform1f(context, locations.u_mix)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_ratio': new Uniform1f(context, locations['u_ratio']),
+    'u_device_pixel_ratio': new Uniform1f(context, locations['u_device_pixel_ratio']),
+    'u_units_to_pixels': new Uniform2f(context, locations['u_units_to_pixels']),
+    'u_patternscale_a': new Uniform2f(context, locations['u_patternscale_a']),
+    'u_patternscale_b': new Uniform2f(context, locations['u_patternscale_b']),
+    'u_sdfgamma': new Uniform1f(context, locations['u_sdfgamma']),
+    'u_image': new Uniform1i(context, locations['u_image']),
+    'u_tex_y_a': new Uniform1f(context, locations['u_tex_y_a']),
+    'u_tex_y_b': new Uniform1f(context, locations['u_tex_y_b']),
+    'u_mix': new Uniform1f(context, locations['u_mix'])
 });
 
 const lineUniformValues = (

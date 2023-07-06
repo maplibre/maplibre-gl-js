@@ -48,33 +48,33 @@ export type FillOutlinePatternUniformsType = {
 };
 
 const fillUniforms = (context: Context, locations: UniformLocations): FillUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix'])
 });
 
 const fillPatternUniforms = (context: Context, locations: UniformLocations): FillPatternUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_texsize': new Uniform2f(context, locations.u_texsize),
-    'u_pixel_coord_upper': new Uniform2f(context, locations.u_pixel_coord_upper),
-    'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
-    'u_scale': new Uniform3f(context, locations.u_scale),
-    'u_fade': new Uniform1f(context, locations.u_fade)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_image': new Uniform1i(context, locations['u_image']),
+    'u_texsize': new Uniform2f(context, locations['u_texsize']),
+    'u_pixel_coord_upper': new Uniform2f(context, locations['u_pixel_coord_upper']),
+    'u_pixel_coord_lower': new Uniform2f(context, locations['u_pixel_coord_lower']),
+    'u_scale': new Uniform3f(context, locations['u_scale']),
+    'u_fade': new Uniform1f(context, locations['u_fade'])
 });
 
 const fillOutlineUniforms = (context: Context, locations: UniformLocations): FillOutlineUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_world': new Uniform2f(context, locations.u_world)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_world': new Uniform2f(context, locations['u_world'])
 });
 
 const fillOutlinePatternUniforms = (context: Context, locations: UniformLocations): FillOutlinePatternUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_world': new Uniform2f(context, locations.u_world),
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_texsize': new Uniform2f(context, locations.u_texsize),
-    'u_pixel_coord_upper': new Uniform2f(context, locations.u_pixel_coord_upper),
-    'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
-    'u_scale': new Uniform3f(context, locations.u_scale),
-    'u_fade': new Uniform1f(context, locations.u_fade)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_world': new Uniform2f(context, locations['u_world']),
+    'u_image': new Uniform1i(context, locations['u_image']),
+    'u_texsize': new Uniform2f(context, locations['u_texsize']),
+    'u_pixel_coord_upper': new Uniform2f(context, locations['u_pixel_coord_upper']),
+    'u_pixel_coord_lower': new Uniform2f(context, locations['u_pixel_coord_lower']),
+    'u_scale': new Uniform3f(context, locations['u_scale']),
+    'u_fade': new Uniform1f(context, locations['u_fade'])
 });
 
 const fillUniformValues = (matrix: mat4): UniformValues<FillUniformsType> => ({

@@ -408,7 +408,7 @@ export class SourceCache extends Evented {
      * Find a loaded parent of the given tile (up to minCoveringZoom)
      * @private
      */
-    findLoadedParent(tileID: OverscaledTileID, minCoveringZoom: number): Tile {
+    findLoadedParent(tileID: OverscaledTileID, minCoveringZoom: number): Tile | null {
         if (tileID.key in this._loadedParentTiles) {
             const parent = this._loadedParentTiles[tileID.key];
             if (parent && parent.tileID.overscaledZ >= minCoveringZoom) {
@@ -424,6 +424,7 @@ export class SourceCache extends Evented {
                 return tile;
             }
         }
+        return null;
     }
 
     _getLoadedTile(tileID: OverscaledTileID): Tile {

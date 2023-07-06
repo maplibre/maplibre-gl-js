@@ -62,12 +62,13 @@ function getCenterAnchor(line: Array<Point>,
             if (!angleWindowSize || checkMaxAngle(line, anchor, labelLength, angleWindowSize, maxAngle)) {
                 return anchor;
             } else {
-                return;
+                return undefined;
             }
         }
 
         prevDistance += segmentDistance;
     }
+    return undefined;
 }
 
 function getAnchors(line: Array<Point>,

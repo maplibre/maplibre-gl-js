@@ -341,6 +341,7 @@ export class GridIndex<T extends GridKey> {
                 }
             }
         }
+        return false;
     }
 
     private _forEachCell<TArg>(

@@ -687,6 +687,7 @@ export class Style extends Evented {
         }
         this.imageManager.addImage(id, image);
         this._afterImageUpdated(id);
+        return undefined;
     }
 
     updateImage(id: string, image: StyleImage) {
@@ -703,6 +704,7 @@ export class Style extends Evented {
         }
         this.imageManager.removeImage(id);
         this._afterImageUpdated(id);
+        return undefined;
     }
 
     _afterImageUpdated(id: string) {
@@ -772,6 +774,7 @@ export class Style extends Evented {
         sourceCache.setEventedParent(null);
         sourceCache.onRemove(this.map);
         this._changed = true;
+        return undefined;
     }
 
     /**
@@ -1161,7 +1164,7 @@ export class Style extends Evented {
         // the Style object is initialized.
         // Internally, Style._validate() calls Style.serialize() but callers are responsible for
         // calling Style._checkLoaded() first if their validation requires the style to be loaded.
-        if (!this._loaded) return;
+        if (!this._loaded) return undefined;
 
         const sources = mapObject(this.sourceCaches, (source) => source.serialize());
         const layers = this._serializeByIds(this._order);

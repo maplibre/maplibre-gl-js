@@ -9,7 +9,7 @@ export type ClippingMaskUniformsType = {
 };
 
 const clippingMaskUniforms = (context: Context, locations: UniformLocations): ClippingMaskUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix'])
 });
 
 const clippingMaskUniformValues = (matrix: mat4): UniformValues<ClippingMaskUniformsType> => ({

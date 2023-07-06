@@ -94,6 +94,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
             this._active = true;
             return move;
         }
+        return undefined;
     }
 
     dragStart(e: E, point: Point);
@@ -112,19 +113,19 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
     dragMove(e: E, point: Point);
     dragMove(e: E, point: Point[]);
     dragMove(e: E, point: Point | Point[]) {
-        if (!this.isEnabled()) return;
+        if (!this.isEnabled()) return undefined;
         const lastPoint = this._lastPoint;
-        if (!lastPoint) return;
+        if (!lastPoint) return undefined;
         e.preventDefault();
 
         if (!this._moveStateManager.isValidMoveEvent(e)) {
             this.reset(e);
-            return;
+            return undefined;
         }
 
         const movePoint = point['length'] ? point[0] : point;
 
-        if (!this._moved && movePoint.dist(lastPoint) < this._clickTolerance) return;
+        if (!this._moved && movePoint.dist(lastPoint) < this._clickTolerance) return undefined;
         this._moved = true;
         this._lastPoint = movePoint;
 

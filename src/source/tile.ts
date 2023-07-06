@@ -324,7 +324,7 @@ export class Tile {
         const vtLayers = featureIndex.loadVTLayers();
 
         const sourceLayer = params && params.sourceLayer ? params.sourceLayer : '';
-        const layer = vtLayers._geojsonTileLayer || vtLayers[sourceLayer];
+        const layer = vtLayers['_geojsonTileLayer'] || vtLayers[sourceLayer];
 
         if (!layer) return;
 
@@ -409,10 +409,11 @@ export class Tile {
             if (this.expiredRequestCount) {
                 return 1000 * (1 << Math.min(this.expiredRequestCount - 1, 31));
             } else {
-                // Max value for `setTimeout` implementations is a 32 bit integer; cap this accordingly
+                // Max value for `setTimeout` implementations is a 32-bit integer; cap this accordingly
                 return Math.min(this.expirationTime - new Date().getTime(), Math.pow(2, 31) - 1);
             }
         }
+        return undefined;
     }
 
     setFeatureState(states: LayerFeatureStates, painter: any) {

@@ -38,21 +38,21 @@ export type HillshadePrepareUniformsType = {
 };
 
 const hillshadeUniforms = (context: Context, locations: UniformLocations): HillshadeUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_latrange': new Uniform2f(context, locations.u_latrange),
-    'u_light': new Uniform2f(context, locations.u_light),
-    'u_shadow': new UniformColor(context, locations.u_shadow),
-    'u_highlight': new UniformColor(context, locations.u_highlight),
-    'u_accent': new UniformColor(context, locations.u_accent)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_image': new Uniform1i(context, locations['u_image']),
+    'u_latrange': new Uniform2f(context, locations['u_latrange']),
+    'u_light': new Uniform2f(context, locations['u_light']),
+    'u_shadow': new UniformColor(context, locations['u_shadow']),
+    'u_highlight': new UniformColor(context, locations['u_highlight']),
+    'u_accent': new UniformColor(context, locations['u_accent'])
 });
 
 const hillshadePrepareUniforms = (context: Context, locations: UniformLocations): HillshadePrepareUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
-    'u_image': new Uniform1i(context, locations.u_image),
-    'u_dimension': new Uniform2f(context, locations.u_dimension),
-    'u_zoom': new Uniform1f(context, locations.u_zoom),
-    'u_unpack': new Uniform4f(context, locations.u_unpack)
+    'u_matrix': new UniformMatrix4f(context, locations['u_matrix']),
+    'u_image': new Uniform1i(context, locations['u_image']),
+    'u_dimension': new Uniform2f(context, locations['u_dimension']),
+    'u_zoom': new Uniform1f(context, locations['u_zoom']),
+    'u_unpack': new Uniform4f(context, locations['u_unpack'])
 });
 
 const hillshadeUniformValues = (
