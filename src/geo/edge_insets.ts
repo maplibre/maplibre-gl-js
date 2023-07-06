@@ -6,6 +6,8 @@ import {clamp} from '../util/util';
  * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
  * This shifts the apprent center or the vanishing point of the map. This is useful for adding floating UI elements
  * on top of the map and having the vanishing point shift as UI elements resize.
+ * 
+ * @group Geography and Geometry
  */
 export class EdgeInsets {
     /**
@@ -103,6 +105,8 @@ export class EdgeInsets {
 /**
  * Options for setting padding on calls to methods such as {@link Map#fitBounds}, {@link Map#fitScreenCoordinates}, and {@link Map#setPadding}. Adjust these options to set the amount of padding in pixels added to the edges of the canvas. Set a uniform padding on all edges or individual values for each edge. All properties of this object must be
  * non-negative integers.
+ * 
+ * @group Geography and Geometry
  *
  * @example
  * ```ts

@@ -11,6 +11,8 @@ export const earthRadius = 6371008.8;
  * A {@link LngLat} object, an array of two numbers representing longitude and latitude,
  * or an object with `lng` and `lat` or `lon` and `lat` properties.
  *
+ * @group Geography and Geometry
+ * 
  * @example
  * ```ts
  * let v1 = new maplibregl.LngLat(-122.420679, 37.772537);
@@ -37,6 +39,8 @@ export type LngLatLike = LngLat | {
  * can also accept an `Array` of two numbers and will perform an implicit conversion.
  * This flexible type is documented as {@link LngLatLike}.
  *
+ * @group Geography and Geometry
+ * 
  * @example
  * ```ts
  * let ll = new maplibregl.LngLat(-123.9749, 40.7736);
@@ -136,7 +140,7 @@ export class LngLat {
      * to a `LngLat` object.
      *
      * If a `LngLat` object is passed in, the function returns it unchanged.
-     *
+     * 
      * @param input - An array of two numbers or object to convert, or a `LngLat` object to return.
      * @returns A new `LngLat` object, if a conversion occurred, or the original `LngLat` object.
      * @example
