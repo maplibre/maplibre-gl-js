@@ -34,7 +34,7 @@ import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
-import type {MapEvent, MapDataEvent} from './events';
+import type {MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
@@ -1235,7 +1235,7 @@ export class Map extends Camera {
         return this._rotating || this.handlers?.isRotating();
     }
 
-    _createDelegatedListener(type: MapEvent | string, layerId: string, listener: Listener): {
+    _createDelegatedListener(type: keyof MapEventType | string, layerId: string, listener: Listener): {
         layer: string;
         listener: Listener;
         delegates: {[type in keyof MapEventType]?: (e: any) => void};
@@ -1289,59 +1289,60 @@ export class Map extends Camera {
 
     /**
      * Adds a listener for events of a specified type, optionally limited to features in a specified style layer.
+     * See {@link MapEventType} and {@link MapLayerEventType} for a full list of events and their description.
      *
-     * | Event                                                     | Compatible with `layerId` |
-     * |-----------------------------------------------------------|---------------------------|
-     * | [`mousedown`](#map.event:mousedown)                       | yes                       |
-     * | [`mouseup`](#map.event:mouseup)                           | yes                       |
-     * | [`mouseover`](#map.event:mouseover)                       | yes                       |
-     * | [`mouseout`](#map.event:mouseout)                         | yes                       |
-     * | [`mousemove`](#map.event:mousemove)                       | yes                       |
-     * | [`mouseenter`](#map.event:mouseenter)                     | yes (required)            |
-     * | [`mouseleave`](#map.event:mouseleave)                     | yes (required)            |
-     * | [`click`](#map.event:click)                               | yes                       |
-     * | [`dblclick`](#map.event:dblclick)                         | yes                       |
-     * | [`contextmenu`](#map.event:contextmenu)                   | yes                       |
-     * | [`touchstart`](#map.event:touchstart)                     | yes                       |
-     * | [`touchend`](#map.event:touchend)                         | yes                       |
-     * | [`touchcancel`](#map.event:touchcancel)                   | yes                       |
-     * | [`wheel`](#map.event:wheel)                               |                           |
-     * | [`resize`](#map.event:resize)                             |                           |
-     * | [`remove`](#map.event:remove)                             |                           |
-     * | [`touchmove`](#map.event:touchmove)                       |                           |
-     * | [`movestart`](#map.event:movestart)                       |                           |
-     * | [`move`](#map.event:move)                                 |                           |
-     * | [`moveend`](#map.event:moveend)                           |                           |
-     * | [`dragstart`](#map.event:dragstart)                       |                           |
-     * | [`drag`](#map.event:drag)                                 |                           |
-     * | [`dragend`](#map.event:dragend)                           |                           |
-     * | [`zoomstart`](#map.event:zoomstart)                       |                           |
-     * | [`zoom`](#map.event:zoom)                                 |                           |
-     * | [`zoomend`](#map.event:zoomend)                           |                           |
-     * | [`rotatestart`](#map.event:rotatestart)                   |                           |
-     * | [`rotate`](#map.event:rotate)                             |                           |
-     * | [`rotateend`](#map.event:rotateend)                       |                           |
-     * | [`pitchstart`](#map.event:pitchstart)                     |                           |
-     * | [`pitch`](#map.event:pitch)                               |                           |
-     * | [`pitchend`](#map.event:pitchend)                         |                           |
-     * | [`boxzoomstart`](#map.event:boxzoomstart)                 |                           |
-     * | [`boxzoomend`](#map.event:boxzoomend)                     |                           |
-     * | [`boxzoomcancel`](#map.event:boxzoomcancel)               |                           |
-     * | [`webglcontextlost`](#map.event:webglcontextlost)         |                           |
-     * | [`webglcontextrestored`](#map.event:webglcontextrestored) |                           |
-     * | [`load`](#map.event:load)                                 |                           |
-     * | [`render`](#map.event:render)                             |                           |
-     * | [`idle`](#map.event:idle)                                 |                           |
-     * | [`error`](#map.event:error)                               |                           |
-     * | [`data`](#map.event:data)                                 |                           |
-     * | [`styledata`](#map.event:styledata)                       |                           |
-     * | [`sourcedata`](#map.event:sourcedata)                     |                           |
-     * | [`dataloading`](#map.event:dataloading)                   |                           |
-     * | [`styledataloading`](#map.event:styledataloading)         |                           |
-     * | [`sourcedataloading`](#map.event:sourcedataloading)       |                           |
-     * | [`styleimagemissing`](#map.event:styleimagemissing)       |                           |
-     * | [`dataabort`](#map.event:dataabort)                       |                           |
-     * | [`sourcedataabort`](#map.event:sourcedataabort)           |                           |
+     * | Event                  | Compatible with `layerId` |
+     * |------------------------|---------------------------|
+     * | `mousedown`            | yes                       |
+     * | `mouseup`              | yes                       |
+     * | `mouseover`            | yes                       |
+     * | `mouseout`             | yes                       |
+     * | `mousemove`            | yes                       |
+     * | `mouseenter`           | yes (required)            |
+     * | `mouseleave`           | yes (required)            |
+     * | `click`                | yes                       |
+     * | `dblclick`             | yes                       |
+     * | `contextmenu`          | yes                       |
+     * | `touchstart`           | yes                       |
+     * | `touchend`             | yes                       |
+     * | `touchcancel`          | yes                       |
+     * | `wheel`                |                           |
+     * | `resize`               |                           |
+     * | `remove`               |                           |
+     * | `touchmove`            |                           |
+     * | `movestart`            |                           |
+     * | `move`                 |                           |
+     * | `moveend`              |                           |
+     * | `dragstart`            |                           |
+     * | `drag`                 |                           |
+     * | `dragend`              |                           |
+     * | `zoomstart`            |                           |
+     * | `zoom`                 |                           |
+     * | `zoomend`              |                           |
+     * | `rotatestart`          |                           |
+     * | `rotate`               |                           |
+     * | `rotateend`            |                           |
+     * | `pitchstart`           |                           |
+     * | `pitch`                |                           |
+     * | `pitchend`             |                           |
+     * | `boxzoomstart`         |                           |
+     * | `boxzoomend`           |                           |
+     * | `boxzoomcancel`        |                           |
+     * | `webglcontextlost`     |                           |
+     * | `webglcontextrestored` |                           |
+     * | `load`                 |                           |
+     * | `render`               |                           |
+     * | `idle`                 |                           |
+     * | `error`                |                           |
+     * | `data`                 |                           |
+     * | `styledata`            |                           |
+     * | `sourcedata            |                           |
+     * | `dataloading`          |                           |
+     * | `styledataloading`     |                           |
+     * | `sourcedataloading`    |                           |
+     * | `styleimagemissing`    |                           |
+     * | `dataabort`            |                           |
+     * | `sourcedataabort`      |                           |
      *
      * @param type - The event type to listen for. Events compatible with the optional `layerId` parameter are triggered
      * when the cursor enters a visible portion of the specified layer from outside that layer or outside the map canvas.
@@ -1391,7 +1392,7 @@ export class Map extends Camera {
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js-docs/example/hover-styles/)
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-point/)
      */
-    on(type: MapEvent | string, listener: Listener): this;
+    on(type: keyof MapEventType | string, listener: Listener): this;
     on<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
@@ -1405,7 +1406,7 @@ export class Map extends Camera {
      * @param listener - The listener callback.
      * @returns `this`
      */
-    on(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+    on(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.on(type, layerIdOrListener as Listener);
         }
@@ -1417,7 +1418,7 @@ export class Map extends Camera {
         this._delegatedListeners[type].push(delegatedListener);
 
         for (const event in delegatedListener.delegates) {
-            this.on(event as MapEvent, delegatedListener.delegates[event]);
+            this.on(event, delegatedListener.delegates[event]);
         }
 
         return this;
@@ -1438,14 +1439,14 @@ export class Map extends Camera {
      * @param listener - The function to be called when the event is fired.
      * @returns `this` if listener is provided, promise otherwise to allow easier usage of async/await
      */
-    once(type: MapEvent | string, listener?: Listener): this | Promise<any>;
+    once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
     once<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener?: (ev: MapLayerEventType[T] & Object) => void,
     ): this | Promise<MapLayerEventType[T] & Object>;
     once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
-    once(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
+    once(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
 
         if (listener === undefined) {
             return super.once(type, layerIdOrListener as Listener);
@@ -1454,7 +1455,7 @@ export class Map extends Camera {
         const delegatedListener = this._createDelegatedListener(type, layerIdOrListener as string, listener);
 
         for (const event in delegatedListener.delegates) {
-            this.once(event as MapEvent, delegatedListener.delegates[event]);
+            this.once(event, delegatedListener.delegates[event]);
         }
 
         return this;
@@ -1464,18 +1465,18 @@ export class Map extends Camera {
      * Removes an event listener for layer-specific events previously added with `Map#on`.
      *
      * @param type - The event type previously used to install the listener.
-     * @param layer - The layer ID or listener previously used to install the listener.
-     * @param listener - The function previously installed as a listener.
+     * @param layerIdOrListener - The layer ID or listener previously used to install the listener.
+     * @param listener - (optional) The function previously installed as a listener.
      * @returns `this`
      */
+    off(type: keyof MapEventType | string, listener: Listener): this;
     off<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
-    off(type: MapEvent | string, listener: Listener): this;
-    off(type: MapEvent | string, layerIdOrListener: string | Listener, listener?: Listener): this {
+    off(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.off(type, layerIdOrListener as Listener);
         }

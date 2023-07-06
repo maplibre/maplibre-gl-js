@@ -150,7 +150,7 @@ abstract class StructArray {
     }
 
     /**
-     * Resets the the length of the array to 0 without de-allocating capcacity.
+     * Resets the length of the array to 0 without de-allocating capcacity.
      */
     clear() {
         this.length = 0;
