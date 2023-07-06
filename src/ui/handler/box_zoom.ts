@@ -115,9 +115,9 @@ export class BoxZoomHandler implements Handler {
     }
 
     mouseupWindow(e: MouseEvent, point: Point) {
-        if (!this._active) return;
+        if (!this._active) return undefined;
 
-        if (e.button !== 0) return;
+        if (e.button !== 0) return undefined;
 
         const p0 = this._startPos,
             p1 = point;
@@ -134,6 +134,7 @@ export class BoxZoomHandler implements Handler {
                 cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true})
             };
         }
+        return undefined;
     }
 
     keydown(e: KeyboardEvent) {

@@ -52,7 +52,7 @@ export class TouchPanHandler implements Handler {
                 this._cancelCooperativeMessage = true;
             }
         }
-        if (!this._active || mapTouches.length < this._minTouches) return;
+        if (!this._active || mapTouches.length < this._minTouches) return undefined;
         e.preventDefault();
         return this._calculateTransform(e, points, mapTouches);
     }
@@ -91,11 +91,11 @@ export class TouchPanHandler implements Handler {
 
         this._touches = touches;
 
-        if (touchDeltaCount < this._minTouches || !touchDeltaSum.mag()) return;
+        if (touchDeltaCount < this._minTouches || !touchDeltaSum.mag()) return undefined;
 
         const panDelta = touchDeltaSum.div(touchDeltaCount);
         this._sum._add(panDelta);
-        if (this._sum.mag() < this._clickTolerance) return;
+        if (this._sum.mag() < this._clickTolerance) return undefined;
 
         const around = touchPointSum.div(touchDeltaCount);
 

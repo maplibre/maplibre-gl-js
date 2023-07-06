@@ -244,10 +244,10 @@ export class ScrollZoomHandler implements Handler {
     }
 
     renderFrame() {
-        if (!this._frameId) return;
+        if (!this._frameId) return undefined;
         this._frameId = null;
 
-        if (!this.isActive()) return;
+        if (!this.isActive()) return undefined;
         const tr = this._tr.transform;
 
         // if we've had scroll events since the last render frame, consume the

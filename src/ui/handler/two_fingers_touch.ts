@@ -97,6 +97,7 @@ function getTouchById(mapTouches: Array<Touch>, points: Array<Point>, identifier
     for (let i = 0; i < mapTouches.length; i++) {
         if (mapTouches[i].identifier === identifier) return points[i];
     }
+    return undefined;
 }
 
 /* ZOOM */
@@ -125,7 +126,7 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
     _move(points: [Point, Point], pinchAround: Point) {
         const lastDistance = this._distance;
         this._distance = points[0].dist(points[1]);
-        if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance)) < ZOOM_THRESHOLD) return;
+        if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance)) < ZOOM_THRESHOLD) return undefined;
         this._active = true;
         return {
             zoomDelta: getZoomDelta(this._distance, lastDistance),
@@ -161,7 +162,7 @@ export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
         const lastVector = this._vector;
         this._vector = points[0].sub(points[1]);
 
-        if (!this._active && this._isBelowThreshold(this._vector)) return;
+        if (!this._active && this._isBelowThreshold(this._vector)) return undefined;
         this._active = true;
 
         return {
@@ -238,14 +239,14 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
     _move(points: [Point, Point], center: Point, e: TouchEvent) {
         // If cooperative gestures is enabled, we need a 3-finger minimum for this gesture to register
         if (this._map._cooperativeGestures && this._currentTouchCount < 3) {
-            return;
+            return undefined;
         }
 
         const vectorA = points[0].sub(this._lastPoints[0]);
         const vectorB = points[1].sub(this._lastPoints[1]);
 
         this._valid = this.gestureBeginsVertically(vectorA, vectorB, e.timeStamp);
-        if (!this._valid) return;
+        if (!this._valid) return undefined;
 
         this._lastPoints = points;
         this._active = true;

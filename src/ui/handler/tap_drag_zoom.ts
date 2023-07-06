@@ -56,7 +56,7 @@ export class TapDragZoomHandler implements Handler {
             this._tap.touchmove(e, points, mapTouches);
         } else if (this._swipePoint) {
             if (mapTouches[0].identifier !== this._swipeTouch) {
-                return;
+                return undefined;
             }
 
             const newSwipePoint = points[0];
@@ -70,6 +70,7 @@ export class TapDragZoomHandler implements Handler {
                 zoomDelta: dist / 128
             };
         }
+        return undefined;
     }
 
     touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {

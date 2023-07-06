@@ -69,6 +69,8 @@ export class TapZoomHandler implements Handler {
                     around: tr.unproject(zoomOutPoint)
                 }, {originalEvent: e})
             };
+        } else {
+            return undefined;
         }
     }
 

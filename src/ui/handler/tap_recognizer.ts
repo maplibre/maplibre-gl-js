@@ -79,6 +79,7 @@ export class SingleTapRecognizer {
             this.reset();
             if (centroid) return centroid;
         }
+        return undefined;
     }
 
 }
@@ -134,5 +135,6 @@ export class TapRecognizer {
                 return tap;
             }
         }
+        return undefined;
     }
 }

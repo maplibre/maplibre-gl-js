@@ -1584,7 +1584,7 @@ export class Map extends Camera {
         // transformStyle relies on having previous style serialized, if it is not loaded yet, delay _updateStyle until previous style is loaded
         if (options.transformStyle && this.style && !this.style._loaded) {
             this.style.once('style.load', () => this._updateStyle(style, options));
-            return;
+            return undefined;
         }
 
         const previousStyle = this.style && options.transformStyle ? this.style.serialize() : undefined;
@@ -1662,6 +1662,8 @@ export class Map extends Camera {
     getStyle(): StyleSpecification {
         if (this.style) {
             return this.style.serialize();
+        } else {
+            return undefined;
         }
     }
 
@@ -1728,7 +1730,7 @@ export class Map extends Camera {
         const source = this.style && this.style.sourceCaches[id];
         if (source === undefined) {
             this.fire(new ErrorEvent(new Error(`There is no source with ID '${id}'`)));
-            return;
+            return undefined;
         }
         return source.loaded();
     }
@@ -1951,6 +1953,7 @@ export class Map extends Camera {
                 userImage.onAdd(this, id);
             }
         }
+        return undefined;
     }
 
     // eslint-disable-next-line jsdoc/require-returns
@@ -2003,6 +2006,7 @@ export class Map extends Camera {
         existingImage.data.replace(data, copy);
 
         this.style.updateImage(id, existingImage);
+        return undefined;
     }
 
     /**
@@ -2811,9 +2815,9 @@ export class Map extends Camera {
     };
 
     _onMapScroll = (event: any) => {
-        if (event.target !== this._container) return;
+        if (event.target !== this._container) return undefined;
 
-        // Revert any scroll which would move the canvas outside of the view
+        // Revert any scroll which would move the canvas outside the view
         this._container.scrollTop = 0;
         this._container.scrollLeft = 0;
         return false;
@@ -2897,7 +2901,7 @@ export class Map extends Camera {
 
         this._renderTaskQueue.run(paintStartTimeStamp);
         // A task queue callback may have fired a user event which may have removed the map
-        if (this._removed) return;
+        if (this._removed) return undefined;
 
         let crossFading = false;
 
