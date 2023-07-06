@@ -34,8 +34,8 @@ export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
  * If `layerId` is included as the second argument in {@link Map#on}, the event listener will fire only when the
  * event action contains a visible portion of the specified layer.
  * The following example can be used for all the events.
- * 
- * @example 
+ *
+ * @example
  * ```ts
  * // Initialize the map
  * let map = new maplibregl.Map({ // map options });
@@ -48,14 +48,14 @@ export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
 export type MapLayerEventType = {
     /**
      * Fired when a pointing device (usually a mouse) is pressed and released contains a visible portion of the specified layer.
-     * 
+     *
      * @see [Measure distances](https://maplibre.org/maplibre-gl-js-docs/example/measure/)
      * @see [Center the map on a clicked symbol](https://maplibre.org/maplibre-gl-js-docs/example/center-on-symbol/)
      */
     click: MapLayerMouseEvent;
     /**
      * Fired when a pointing device (usually a mouse) is pressed and released twice contains a visible portion of the specified layer.
-     * 
+     *
      * **Note:** Under normal conditions, this event will be preceded by two `click` events.
      */
     dblclick: MapLayerMouseEvent;
@@ -106,7 +106,7 @@ export type MapLayerEventType = {
      * Fired when a point device (usually a mouse) leaves the visible portion of the specified layer.
      */
     mouseout: MapLayerMouseEvent;
-     /**
+    /**
      * Fired when the right button of the mouse is clicked or the context menu key is pressed within visible portion of the specified layer.
      */
     contextmenu: MapLayerMouseEvent;
@@ -132,8 +132,8 @@ export type MapLayerEventType = {
  * These events are used with the {@link Map#on} method.
  * When using a `layerId` with {@link Map#on} method, please refer to {@link MapLayerEventType}.
  * The following example can be used for all the events.
- * 
- * @example 
+ *
+ * @example
  * ```ts
  * // Initialize the map
  * let map = new maplibregl.Map({ // map options });

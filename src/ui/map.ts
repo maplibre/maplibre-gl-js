@@ -1336,7 +1336,7 @@ export class Map extends Camera {
      * | `error`                |                           |
      * | `data`                 |                           |
      * | `styledata`            |                           |
-     * | `sourcedata            |                           |
+     * | `sourcedata`           |                           |
      * | `dataloading`          |                           |
      * | `styledataloading`     |                           |
      * | `sourcedataloading`    |                           |
