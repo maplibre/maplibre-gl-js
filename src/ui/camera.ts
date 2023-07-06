@@ -18,7 +18,7 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate';
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *
  * @group Geography and Geometry
- * 
+ *
  * @example
  * ```ts
  * let p1 = new Point(-77, 38); // a PointLike which is a Point

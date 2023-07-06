@@ -67,7 +67,7 @@ export function mercatorScale(lat: number) {
  * The `z` dimension of `MercatorCoordinate` is conformal. A cube in the mercator coordinate space would be rendered as a cube.
  *
  * @group Geography and Geometry
- * 
+ *
  * @example
  * ```ts
  * let nullIsland = new maplibregl.MercatorCoordinate(0.5, 0.5, 0);

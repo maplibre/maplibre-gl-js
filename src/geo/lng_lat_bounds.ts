@@ -6,7 +6,7 @@ import type {LngLatLike} from './lng_lat';
  * or an array of numbers in [west, south, east, north] order.
  *
  * @group Geography and Geometry
- * 
+ *
  * @example
  * ```ts
  * let v1 = new maplibregl.LngLatBounds(
@@ -30,7 +30,7 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  * This flexible type is documented as {@link LngLatBoundsLike}.
  *
  * @group Geography and Geometry
- * 
+ *
  * @example
  * ```ts
  * let sw = new maplibregl.LngLat(-73.9876, 40.7661);
