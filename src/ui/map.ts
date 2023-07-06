@@ -1335,6 +1335,7 @@ export class Map extends Camera {
                     return this;
                 }
             }
+            return undefined;
         };
 
         if (this._delegatedListeners && this._delegatedListeners[type]) {
