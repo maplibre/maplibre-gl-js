@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Change building color based on zoom level</title>
+    <meta property="og:description" content="Use the interpolate expression to ease-in the building layer and smoothly fade from one color to the next." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.1.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.1.0/dist/maplibre-gl.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #zoom {
+        display: block;
+        position: relative;
+        margin: 20px auto;
+        width: 50%;
+        height: 40px;
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        text-align: center;
+        color: #fff;
+        background: #ee8a65;
+    }
+</style>
+<div id="map"></div>
+<button id="zoom">Zoom to buildings</button>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/basic/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-90.73414, 14.55524],
+        zoom: 13
+    });
+
+    map.on('load', () => {
+        map.setPaintProperty('building', 'fill-color', [
+            'interpolate',
+            ['exponential', 0.5],
+            ['zoom'],
+            15,
+            '#e2714b',
+            22,
+            '#eee695'
+        ]);
+
+        map.setPaintProperty('building', 'fill-opacity', [
+            'interpolate',
+            ['exponential', 0.5],
+            ['zoom'],
+            15,
+            0,
+            22,
+            1
+        ]);
+    });
+
+    document.getElementById('zoom').addEventListener('click', () => {
+        map.zoomTo(19, {duration: 9000});
+    });
+</script>
+</body>
+</html>

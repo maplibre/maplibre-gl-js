@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a non-interactive map</title>
+    <meta property="og:description" content="Disable interactivity to create a static map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.1.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.1.0/dist/maplibre-gl.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-74.5, 40],
+        zoom: 9,
+        // causes pan & zoom handlers not to be applied, similar to
+        // .dragging.disable() and other handler .disable() funtions in Leaflet.
+        interactive: false
+    });
+</script>
+</body>
+</html>

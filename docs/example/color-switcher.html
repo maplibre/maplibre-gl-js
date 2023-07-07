@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Change a layer's color with buttons</title>
+    <meta property="og:description" content="Use setPaintProperty to change a layer's fill color." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.1.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.1.0/dist/maplibre-gl.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    .map-overlay {
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        position: absolute;
+        width: 200px;
+        top: 0;
+        left: 0;
+        padding: 10px;
+    }
+
+    .map-overlay .map-overlay-inner {
+        background-color: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .map-overlay-inner fieldset {
+        border: none;
+        padding: 0;
+        margin: 0 0 10px;
+    }
+
+    .map-overlay-inner fieldset:last-child {
+        margin: 0;
+    }
+
+    .map-overlay-inner select {
+        width: 100%;
+    }
+
+    .map-overlay-inner label {
+        display: block;
+        font-weight: bold;
+        margin: 0 0 5px;
+    }
+
+    .map-overlay-inner button {
+        display: inline-block;
+        width: 36px;
+        height: 20px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .map-overlay-inner button:focus {
+        outline: none;
+    }
+
+    .map-overlay-inner button:hover {
+        box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div id="map"></div>
+<div class="map-overlay top">
+    <div class="map-overlay-inner">
+        <fieldset>
+            <label>Select layer</label>
+            <select id="layer" name="layer">
+                <option value="water">Water</option>
+                <option value="building-3d">Buildings</option>
+            </select>
+        </fieldset>
+        <fieldset>
+            <label>Choose a color</label>
+            <div id="swatches"></div>
+        </fieldset>
+    </div>
+</div>
+
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [12.338, 45.4385],
+        zoom: 17.4
+    });
+
+    const swatches = document.getElementById('swatches');
+    const layer = document.getElementById('layer');
+    const colors = [
+        '#ffffcc',
+        '#a1dab4',
+        '#41b6c4',
+        '#2c7fb8',
+        '#253494',
+        '#fed976',
+        '#feb24c',
+        '#fd8d3c',
+        '#f03b20',
+        '#bd0026'
+    ];
+
+    colors.forEach((color) => {
+        const swatch = document.createElement('button');
+        swatch.style.backgroundColor = color;
+        swatch.addEventListener('click', () => {
+            map.setPaintProperty(
+                layer.value,
+                layer.value === 'water' ? 'fill-color' : 'fill-extrusion-color',
+                color
+            );
+        });
+        swatches.appendChild(swatch);
+    });
+</script>
+</body>
+</html>
