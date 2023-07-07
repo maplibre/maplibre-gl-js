@@ -160,7 +160,7 @@ jobs:
         with:
           node-version: lts/*
       - run: npm ci
-      - run: docker run --rm -it -v ${PWD}:/docs squidfunk/mkdocs-material build
+      - run: docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
       - run: npm run build-dist
       - run: npm run test-build
         if: success() || failure()
