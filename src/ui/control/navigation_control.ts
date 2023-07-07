@@ -35,7 +35,7 @@ const defaultOptions: NavigationOptions = {
 /**
  * A `NavigationControl` control contains zoom buttons and a compass.
  *
- * @group Controls
+ * @group Markers and Controls
  *
  * @example
  * ```ts

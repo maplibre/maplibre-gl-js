@@ -7,7 +7,7 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * A `TerrainControl` control contains a button for turning the terrain on and off.
  *
- * @group Controls
+ * @group Markers and Controls
  *
  * @example
  * ```ts

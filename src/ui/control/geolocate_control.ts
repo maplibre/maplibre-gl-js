@@ -75,7 +75,7 @@ let noTimeout = false;
  * * disabled - occurs if Geolocation is not available, disabled or denied.
  *
  * These interaction states can't be controlled programmatically, rather they are set based on user interactions.
- * @group Controls
+ * @group Markers and Controls
  *
  * @example
  * ```ts

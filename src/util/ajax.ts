@@ -51,6 +51,9 @@ export type RequestParameters = {
     collectResourceTiming?: boolean;
 };
 
+/**
+ * The response callback used in various places
+ */
 export type ResponseCallback<T> = (
     error?: Error | null,
     data?: T | null,

@@ -17,7 +17,7 @@ type LogoOptions = {
 /**
  * A `LogoControl` is a control that adds the watermark.
  *
- * @group Controls
+ * @group Markers and Controls
  *
  * @example
  * ```ts

@@ -6,7 +6,7 @@ import type {Map} from './map';
  * Adds the map's position to its page's location hash.
  * Passed as an option to the map object.
  *
- * @group Controls
+ * @group Markers and Controls
  */
 export class Hash {
     _map: Map;
