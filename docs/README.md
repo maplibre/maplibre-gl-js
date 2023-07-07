@@ -24,14 +24,14 @@ MapLibre GL JS is a TypeScript library that uses WebGL to render interactive map
 
 This documentation is divided into several sections:
 
-* [**Main**](./API/#main). The Main section holds the following classes
-- `Map` object is the map on your page. It lets you access methods and properties for interacting with the map's style and layers, respond to events, and manipulate the user's perspective with the camera.
-- `MaplibreGL` object is MapLibre GL JS's global properties and options that you might want to access while initializing your map or accessing information about its status.
-* [**Markers and Controls**](./API//#markers-and-controls). This section describes the user interface elements that you can add to your map. The items in this section exist outside of the map's `canvas` element. This consists of `Marker`, `Popup` and all the controls.
-* [**Geography and geometry**](./API/#geography-and-geometry). This section includes general utilities and types that relate to working with and manipulating geographic information or geometries.
-* [**User interaction handlers**](./API/#handlers). The items in this section relate to the ways in which the map responds to user input.
-* [**Sources**](./API/#sources). This section describes the source types MapLibre GL JS can handle besides the ones described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
-* [**Event Related**](./API/#event-related). This section describes the different types of events that MapLibre GL JS can raise.
+* [**Main**](./API/#main) - The Main section holds the following classes
+    * `Map` object is the map on your page. It lets you access methods and properties for interacting with the map's style and layers, respond to events, and manipulate the user's perspective with the camera.
+    * `MaplibreGL` object is MapLibre GL JS's global properties and options that you might want to access while initializing your map or accessing information about its status.
+* [**Markers and Controls**](./API//#markers-and-controls) - This section describes the user interface elements that you can add to your map. The items in this section exist outside of the map's `canvas` element. This consists of `Marker`, `Popup` and all the controls.
+* [**Geography and geometry**](./API/#geography-and-geometry) - This section includes general utilities and types that relate to working with and manipulating geographic information or geometries.
+* [**User interaction handlers**](./API/#handlers) - The items in this section relate to the ways in which the map responds to user input.
+* [**Sources**](./API/#sources) - This section describes the source types MapLibre GL JS can handle besides the ones described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
+* [**Event Related**](./API/#event-related) - This section describes the different types of events that MapLibre GL JS can raise.
 
 Each section describes classes or objects as well as their **properties**, **parameters**, **instance members**, and associated **events**. Many sections also include inline code examples and related resources.
 
@@ -71,15 +71,14 @@ Including it with a `<link>` in the head of the document via the UNPKG CDN is th
 
 Note too that if the CSS isn't available by the first render, as soon as the CSS is provided, the DOM elements that depend on this CSS should recover.
 
-## Dependencies
+## CDN
 
-The dependencies for MapLibre GL JS (`.js` & `.css`) are distributed via [UNPKG.com](https://unpkg.com).  UNPKG can distribute a fixed version, a [semver range](https://semver.org/), a tag, or omit the version/tag entirely to use the `latest` tag.
-
-You can view a listing of all the files in the MapLibre GL JS package by appending a `/` at the end of the MapLibre slug.  This is useful to review other revisions or to review the files at UNPKG or the LICENSE.  See <https://unpkg.com/maplibre-gl/>
+The MapLibre GL JS (`.js` & `.css`) are distributed via [UNPKG.com](https://unpkg.com).
+You can view a listing of all the files in the MapLibre GL JS package by appending a `/` at the end of the MapLibre slug. This is useful to review other revisions or to review the files at UNPKG or the LICENSE. See examples in the following table:
 
 *Examples*
 
 | Use Case  | `.js` | `.css` |
 | :------- | :---: | :----: |
-| `latest` |`https://unpkg.com/maplibre-gl/dist/maplibre-gl.js` | `https://unpkg.com/maplibre-gl/dist/maplibre-gl.css` |
+| `latest` | <https://unpkg.com/maplibre-gl/dist/maplibre-gl.js> | <https://unpkg.com/maplibre-gl/dist/maplibre-gl.css> |
 | Use at least `2.4.x` | <https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.js> | <https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.css> |
