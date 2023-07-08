@@ -37,7 +37,7 @@ ${htmlContent}
 }
 
 function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
-    let indexMarkdown = '# Exmaples \n\n';
+    let indexMarkdown = '# Overview \n\n';
     for (const indexArrayItem of indexArray) {
         indexMarkdown += `
 ## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
@@ -66,7 +66,7 @@ const contentString = generateAPIIntroMarkdown(lines);
 fs.writeFileSync(path.join(typedocConfig.out, 'README.md'), contentString);
 
 // Examples manupilation
-const examplesDocsFolder = path.join('docs', 'example');
+const examplesDocsFolder = path.join('docs', 'examples');
 if (fs.existsSync(examplesDocsFolder)) {
     fs.rmSync(examplesDocsFolder, {recursive: true, force: true});
 }
