@@ -1,5 +1,11 @@
-export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 import type {Map} from '../map';
+
+/**
+ * A position defintion for the control to be placed, can be in one of the corners of the map.
+ * When two or more controls are places in the same location they are stacked toward the center of the map.
+ */
+export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
 /**
  * Interface for interactive controls added to the map. This is a
  * specification for implementers to model: it is not
@@ -10,9 +16,9 @@ import type {Map} from '../map';
  * default control styling, add the `maplibregl-ctrl` class to your control's
  * node.
  *
- * @interface IControl
  * @example
- * // Control implemented as ES6 class
+ * Control implemented as ES6 class
+ * ```ts
  * class HelloWorldControl {
  *     onAdd(map) {
  *         this._map = map;
@@ -43,6 +49,7 @@ import type {Map} from '../map';
  *      this._container.parentNode.removeChild(this._container);
  *      this._map = undefined;
  * };
+ * ```
  */
 export interface IControl {
     /**
@@ -50,12 +57,8 @@ export interface IControl {
      * and resources. This method is called by {@link Map#addControl}
      * internally.
      *
-     * @function
-     * @memberof IControl
-     * @instance
-     * @name onAdd
-     * @param {Map} map the Map this control will be added to
-     * @returns {HTMLElement} The control's container element. This should
+     * @param map - the Map this control will be added to
+     * @returns The control's container element. This should
      * be created by the control and returned by onAdd without being attached
      * to the DOM: the map will insert the control's element into the DOM
      * as necessary.
@@ -66,12 +69,7 @@ export interface IControl {
      * and resources. This method is called by {@link Map#removeControl}
      * internally.
      *
-     * @function
-     * @memberof IControl
-     * @instance
-     * @name onRemove
-     * @param {Map} map the Map this control will be removed from
-     * @returns {undefined} there is no required return value for this method
+     * @param map - the Map this control will be removed from
      */
     onRemove(map: Map): void;
     /**
@@ -80,11 +78,7 @@ export interface IControl {
      * parameter, the value returned by getDefaultPosition will be used as the
      * control's position.
      *
-     * @function
-     * @memberof IControl
-     * @instance
-     * @name getDefaultPosition
-     * @returns {ControlPosition} a control position, one of the values valid in addControl.
+     * @returns a control position, one of the values valid in addControl.
      */
     readonly getDefaultPosition?: () => ControlPosition;
 }

@@ -11,6 +11,9 @@ import type {Framebuffer} from '../../gl/framebuffer';
 import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
+/**
+ * A style layer that defines a heatmap
+ */
 export class HeatmapStyleLayer extends StyleLayer {
 
     heatmapFbo: Framebuffer;

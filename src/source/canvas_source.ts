@@ -10,27 +10,36 @@ import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Evented} from '../util/evented';
 
+/**
+ * Options to add a canvas source type to the map.
+ */
 export type CanvasSourceSpecification = {
+    /**
+     * Source type. Must be `"canvas"`.
+     */
     type: 'canvas';
+    /**
+     * Four geographical coordinates denoting where to place the corners of the canvas, specified in `[longitude, latitude]` pairs.
+     */
     coordinates: [[number, number], [number, number], [number, number], [number, number]];
+    /**
+     * Whether the canvas source is animated. If the canvas is static (i.e. pixels do not need to be re-read on every frame), `animate` should be set to `false` to improve performance.
+     * @defaultValue true
+     */
     animate?: boolean;
+    /**
+     * Canvas source from which to read pixels. Can be a string representing the ID of the canvas element, or the `HTMLCanvasElement` itself.
+     */
     canvas?: string | HTMLCanvasElement;
 };
 
 /**
- * Options to add a canvas source type to the map.
+ * A data source containing the contents of an HTML canvas. See {@link CanvasSourceSpecification} for detailed documentation of options.
  *
- * @typedef {Object} CanvasSourceOptions
- * @property {string} type Source type. Must be `"canvas"`.
- * @property {string|HTMLCanvasElement} canvas Canvas source from which to read pixels. Can be a string representing the ID of the canvas element, or the `HTMLCanvasElement` itself.
- * @property {Array<Array<number>>} coordinates Four geographical coordinates denoting where to place the corners of the canvas, specified in `[longitude, latitude]` pairs.
- * @property {boolean} [animate=true] Whether the canvas source is animated. If the canvas is static (i.e. pixels do not need to be re-read on every frame), `animate` should be set to `false` to improve performance.
- */
-
-/**
- * A data source containing the contents of an HTML canvas. See {@link CanvasSourceOptions} for detailed documentation of options.
+ * @group Sources
  *
  * @example
+ * ```ts
  * // add to map
  * map.addSource('some id', {
  *    type: 'canvas',
@@ -45,7 +54,7 @@ export type CanvasSourceSpecification = {
  * });
  *
  * // update
- * var mySource = map.getSource('some id');
+ * let mySource = map.getSource('some id');
  * mySource.setCoordinates([
  *     [-76.54335737228394, 39.18579907229748],
  *     [-76.52803659439087, 39.1838364847587],
@@ -54,6 +63,7 @@ export type CanvasSourceSpecification = {
  * ]);
  *
  * map.removeSource('some id');  // remove
+ * ```
  */
 export class CanvasSource extends ImageSource {
     options: CanvasSourceSpecification;
@@ -61,12 +71,18 @@ export class CanvasSource extends ImageSource {
     canvas: HTMLCanvasElement;
     width: number;
     height: number;
+    /**
+     * Enables animation. The image will be copied from the canvas to the map on each frame.
+     */
     play: () => void;
+    /**
+     * Disables animation. The map will display a static copy of the canvas image.
+     */
     pause: () => void;
     _playing: boolean;
 
     /**
-     * @private
+     * @hidden
      */
     constructor(id: string, options: CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -92,20 +108,6 @@ export class CanvasSource extends ImageSource {
         this.options = options;
         this.animate = options.animate !== undefined ? options.animate : true;
     }
-
-    /**
-     * Enables animation. The image will be copied from the canvas to the map on each frame.
-     * @method play
-     * @instance
-     * @memberof CanvasSource
-     */
-
-    /**
-     * Disables animation. The map will display a static copy of the canvas image.
-     * @method pause
-     * @instance
-     * @memberof CanvasSource
-     */
 
     load = () => {
         this._loaded = true;
@@ -142,9 +144,9 @@ export class CanvasSource extends ImageSource {
     /**
      * Returns the HTML `canvas` element.
      *
-     * @returns {HTMLCanvasElement} The HTML `canvas` element.
+     * @returns The HTML `canvas` element.
      */
-    getCanvas() {
+    getCanvas(): HTMLCanvasElement {
         return this.canvas;
     }
 
@@ -159,20 +161,6 @@ export class CanvasSource extends ImageSource {
     onRemove() {
         this.pause();
     }
-
-    // /**
-    // * Sets the canvas's coordinates and re-renders the map.
-    // *
-    // * @method setCoordinates
-    // * @instance
-    // * @memberof CanvasSource
-    // * @param {Array<Array<number>>} coordinates Four geographical coordinates,
-    // *   represented as arrays of longitude and latitude numbers, which define the corners of the canvas.
-    // *   The coordinates start at the top left corner of the canvas and proceed in clockwise order.
-    // *   They do not have to represent a rectangle.
-    // * @returns {CanvasSource} this
-    // */
-    // setCoordinates inherited from ImageSource
 
     prepare = () => {
         let resize = false;

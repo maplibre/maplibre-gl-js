@@ -6,15 +6,8 @@ import type {Cancelable} from '../types/cancelable';
 
 /**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
- * @typedef {Object} RequestParameters
- * @property {string} url The URL to be requested.
- * @property {Object} headers The headers to be sent with the request.
- * @property {string} method Request method `'GET' | 'POST' | 'PUT'`.
- * @property {string} body Request body.
- * @property {string} type Response body type to be returned `'string' | 'json' | 'arrayBuffer'`.
- * @property {string} credentials `'same-origin'|'include'` Use 'include' to send cookies with cross-origin requests.
- * @property {boolean} collectResourceTiming If true, Resource Timing API information will be collected for these transformed requests and returned in a resourceTiming property of relevant data events.
  * @example
+ * ```ts
  * // use transformRequest to modify requests that begin with `http://myHost`
  * transformRequest: function(url, resourceType) {
  *  if (resourceType === 'Source' && url.indexOf('http://myHost') > -1) {
@@ -24,19 +17,43 @@ import type {Cancelable} from '../types/cancelable';
  *      credentials: 'include'  // Include cookies for cross-origin requests
  *    }
  *   }
- *  }
- *
+ * }
+ * ```
  */
 export type RequestParameters = {
+    /**
+     * The URL to be requested.
+     */
     url: string;
+    /**
+     * The headers to be sent with the request.
+     */
     headers?: any;
+    /**
+     * Request method `'GET' | 'POST' | 'PUT'`.
+     */
     method?: 'GET' | 'POST' | 'PUT';
+    /**
+     * Request body.
+     */
     body?: string;
+    /**
+     * Response body type to be returned `'string' | 'json' | 'arrayBuffer'`.
+     */
     type?: 'string' | 'json' | 'arrayBuffer' | 'image';
+    /**
+     * `'same-origin'|'include'` Use 'include' to send cookies with cross-origin requests.
+     */
     credentials?: 'same-origin' | 'include';
+    /**
+     * If `true`, Resource Timing API information will be collected for these transformed requests and returned in a resourceTiming property of relevant data events.
+     */
     collectResourceTiming?: boolean;
 };
 
+/**
+ * The response callback used in various places
+ */
 export type ResponseCallback<T> = (
     error?: Error | null,
     data?: T | null,
@@ -46,11 +63,6 @@ export type ResponseCallback<T> = (
 
 /**
  * An error thrown when a HTTP request results in an error response.
- * @extends Error
- * @param {number} status The response's HTTP status code.
- * @param {string} statusText The response's HTTP status text.
- * @param {string} url The request's URL.
- * @param {Blob} body The response's body.
  */
 export class AJAXError extends Error {
     /**
@@ -73,6 +85,12 @@ export class AJAXError extends Error {
      */
     body: Blob;
 
+    /**
+     * @param status - The response's HTTP status code.
+     * @param statusText - The response's HTTP status text.
+     * @param url - The request's URL.
+     * @param body - The response's body.
+     */
     constructor(status: number, statusText: string, url: string, body: Blob) {
         super(`AJAXError: ${statusText} (${status}): ${url}`);
         this.status = status;
@@ -272,7 +290,9 @@ export function sameOrigin(inComingUrl: string) {
     const locationObj = window.location;
     return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
-
+/**
+ * A type used to store the tile's expiration date and cache control definition
+ */
 export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
     const video: HTMLVideoElement = window.document.createElement('video');

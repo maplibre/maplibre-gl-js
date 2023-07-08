@@ -35,19 +35,20 @@ import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {ExpiryData} from '../util/ajax';
 
-export type TileState = // Tile data is in the process of loading.
-'loading' | // Tile data has been loaded. Tile can be rendered.
-'loaded' | // Tile data has been loaded and is being updated. Tile can be rendered.
-'reloading' | // Tile data has been deleted.
-'unloaded' | // Tile data was not loaded because of an error.
-'errored' | 'expired';  /* Tile data was previously loaded, but has expired per its
-                   * HTTP headers and is in the process of refreshing. */
+/**
+ * The tile's state, can be:
+ * - `loading` Tile data is in the process of loading.
+ * - `loaded` Tile data has been loaded. Tile can be rendered.
+ * - `reloading` Tile data has been loaded and is being updated. Tile can be rendered.
+ * - `unloaded` Tile data has been deleted.
+ * - `errored` Tile data was not loaded because of an error.
+ * - `expired` Tile data was previously loaded, but has expired per its HTTP headers and is in the process of refreshing.
+ */
+export type TileState = 'loading' | 'loaded' | 'reloading' | 'unloaded' | 'errored' | 'expired';
 
 /**
  * A tile object is the combination of a Coordinate, which defines
  * its place, as well as a unique ID and data tracking for its content
- *
- * @private
  */
 export class Tile {
     tileID: OverscaledTileID;
@@ -96,9 +97,8 @@ export class Tile {
     rttCoords: {[_:string]: string};
 
     /**
-     * @param {OverscaledTileID} tileID
-     * @param size
-     * @private
+     * @param tileID - the tile ID
+     * @param size - The tile size
      */
     constructor(tileID: OverscaledTileID, size: number) {
         this.tileID = tileID;
@@ -147,11 +147,9 @@ export class Tile {
      * this tile's elementGroups and buffers properties and set loaded
      * to true. If the data is null, like in the case of an empty
      * GeoJSON tile, no-op but still set loaded to true.
-     * @param {Object} data
-     * @param painter
-     * @param justReloaded
-     * @returns {undefined}
-     * @private
+     * @param data - The data from the worker
+     * @param painter - the painter
+     * @param justReloaded - `true` to just reload
      */
     loadVectorData(data: WorkerTileResult, painter: any, justReloaded?: boolean | null) {
         if (this.hasData()) {
@@ -225,8 +223,6 @@ export class Tile {
 
     /**
      * Release any data or WebGL resources referenced by this tile.
-     * @returns {undefined}
-     * @private
      */
     unloadVectorData() {
         for (const id in this.buckets) {

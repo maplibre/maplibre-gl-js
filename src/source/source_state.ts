@@ -12,7 +12,6 @@ export type LayerFeatureStates = {[layer: string]: FeatureStates};
  * between coalesce() events. addFeatureState() and removeFeatureState() also update their counterpart's
  * list of changes, such that coalesce() can apply the proper state changes while agnostic to the order of operations.
  * In deletedStates, all null's denote complete removal of state at that scope
- * @private
 */
 export class SourceFeatureState {
     state: LayerFeatureStates;

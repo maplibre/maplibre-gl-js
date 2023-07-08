@@ -236,7 +236,6 @@ function emitStructArrayLayout(locals) {
 
     output.push(
         ` *
- * @private
  */
 class ${structArrayLayoutClass} extends StructArray {`);
 
@@ -349,7 +348,8 @@ function emitStructArray(locals) {
 
     if (includeStructAccessors && !useComponentGetters) {
         output.push(
-            `class ${structTypeClass} extends Struct {
+            `/** */
+class ${structTypeClass} extends Struct {
     _structArray: ${structArrayClass};`);
 
         for (const {name, member, component} of components) {
@@ -384,9 +384,7 @@ export type ${structTypeClass.replace('Struct', '')} = ${structTypeClass};
     } // end 'if (includeStructAccessors)'
 
     output.push(
-        `/**
- * @private
- */
+        `/** */
 export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
 
     if (useComponentGetters) {
@@ -407,8 +405,7 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
         output.push(
             `    /**
      * Return the ${structTypeClass} at the given location in the array.
-     * @param {number} index The index of the element.
-     * @private
+     * @param index The index of the element.
      */
     get(index: number): ${structTypeClass} {
         return new ${structTypeClass}(this, index);

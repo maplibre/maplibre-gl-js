@@ -20,6 +20,35 @@ import type {
     RasterDEMSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 
+/**
+ * A source containing raster tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
+ *
+ * @group Sources
+ *
+ * @example
+ * ```ts
+ * map.addSource('raster-source', {
+ *     'type': 'raster',
+ *     'tiles': ['https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'],
+ *     'tileSize': 256,
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * map.addSource('wms-test-source', {
+ *      'type': 'raster',
+ * // use the tiles option to specify a WMS tile source URL
+ *      'tiles': [
+ *          'https://img.nj.gov/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&transparent=true&width=256&height=256&layers=Natural2015'
+ *      ],
+ *      'tileSize': 256
+ * });
+ * ```
+ * @see [Add a raster tile source](https://maplibre.org/maplibre-gl-js-docs/example/map-tiles/)
+ * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js-docs/example/wms/)
+ * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js-docs/example/satellite-map/)
+ */
 export class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';
     id: string;

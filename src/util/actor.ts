@@ -10,11 +10,6 @@ import type {Cancelable} from '../types/cancelable';
  * that maintains the relationship between asynchronous tasks and the objects
  * that spin them off - in this case, tasks like parsing parts of styles,
  * owned by the styles
- *
- * @param {WebWorker} target
- * @param {WebWorker} parent
- * @param {string|number} mapId A unique identifier for the Map instance using this Actor.
- * @private
  */
 export class Actor {
     target: any;
@@ -34,6 +29,11 @@ export class Actor {
     invoker: ThrottledInvoker;
     globalScope: any;
 
+    /**
+     * @param target - The target
+     * @param parent - The parent
+     * @param mapId - A unique identifier for the Map instance using this Actor.
+     */
     constructor(target: any, parent: any, mapId?: string) {
         this.target = target;
         this.parent = parent;
@@ -51,9 +51,8 @@ export class Actor {
      * Sends a message from a main-thread map to a Worker or from a Worker back to
      * a main-thread map instance.
      *
-     * @param type The name of the target method to invoke or '[source-type].[source-name].name' for a method on a WorkerSource.
-     * @param targetMapId A particular mapId to which to send this message.
-     * @private
+     * @param type - The name of the target method to invoke or '[source-type].[source-name].name' for a method on a WorkerSource.
+     * @param targetMapId - A particular mapId to which to send this message.
      */
     send(
         type: string,

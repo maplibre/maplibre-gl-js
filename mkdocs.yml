@@ -1,5 +1,5 @@
 site_name: MapLibre GL JS
-site_url: https://harelm.github.io/maplibre-docs-test/ # HM TODO: change this!
+site_url: https://www.maplibre.org/maplibre-gl-js/docs/
 repo_url: https://github.com/maplibre/maplibre-gl-js/
 theme:
   name: 'material'
@@ -7,18 +7,23 @@ theme:
   logo: https://avatars.githubusercontent.com/u/75709127?s=48&v=4
   features:
     - content.code.copy
-  palette: 
-    # Palette toggle for light mode
-    - scheme: default
+    - navigation.tabs
+    - navigation.tabs.sticky
+  palette:
+    - media: "(prefers-color-scheme)"
       toggle:
-        icon: material/brightness-7 
-        name: Switch to dark mode
-
-    # Palette toggle for dark mode
-    - scheme: slate
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
       toggle:
         icon: material/brightness-4
-        name: Switch to light mode
+        name: Switch to system preference
+    - media: "(prefers-color-scheme: light)"
+      scheme: default 
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
@@ -27,3 +32,14 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+
+extra:
+  social:
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/maplibre
+    - icon: fontawesome/brands/github
+      link: https://github.com/maplibre
+    - icon: fontawesome/brands/slack
+      link: https://osmus.slack.com/archives/C01G3D28DAB
+
+copyright: Copyright &copy; 2023 Maplibre

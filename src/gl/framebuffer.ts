@@ -2,6 +2,9 @@ import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value'
 
 import type {Context} from './context';
 
+/**
+ * A framebuffer holder object
+ */
 export class Framebuffer {
     context: Context;
     width: number;

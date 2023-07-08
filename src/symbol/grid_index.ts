@@ -26,6 +26,9 @@ type QueryResult<T> = {
     y2: number;
 };
 
+/**
+ * A key for the grid
+ */
 export type GridKey = {
     overlapMode?: OverlapMode;
 }
@@ -54,8 +57,6 @@ function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
  * at least one cell. As long as the geometries are relatively
  * uniformly distributed across the plane, this greatly reduces
  * the number of comparisons necessary.
- *
- * @private
  */
 export class GridIndex<T extends GridKey> {
     circleKeys: Array<T>;

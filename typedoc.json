@@ -2,8 +2,12 @@
     "$schema": "https://typedoc.org/schema.json",
     "plugin": ["typedoc-plugin-missing-exports", "typedoc-plugin-markdown"],
     "groupOrder": [
-        "Map",
-        "Controls"
+        "Main",
+        "Markers and Controls",
+        "Geography and Geometry",
+        "Handlers",
+        "Sources",
+        "Event Related"
     ],
     "out": "./docs/API",
     "excludeExternals": true,
@@ -17,5 +21,6 @@
     "name": "MapLibre GL JS",
     "githubPages": false,
     "hideInPageTOC": true,
-    "hideBreadcrumbs": true
+    "hideBreadcrumbs": true,
+    "allReflectionsHaveOwnDocument": true
   }

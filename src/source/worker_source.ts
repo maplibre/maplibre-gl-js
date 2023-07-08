@@ -40,6 +40,9 @@ export type WorkerDEMTileParameters = TileParameters & {
     encoding: 'mapbox' | 'terrarium';
 };
 
+/**
+ * The worker tile's result type
+ */
 export type WorkerTileResult = {
     buckets: Array<Bucket>;
     imageAtlas: ImageAtlas;
@@ -71,11 +74,6 @@ export type WorkerDEMTileCallback = (err?: Error | null, result?: DEMData | null
  * `dispatcher.getActor().send('source-type.methodname', params, callback)`.
  *
  * @see {@link Map#addSourceType}
- * @private
- *
- * @class WorkerSource
- * @param actor
- * @param layerIndex
  */
 export interface WorkerSource {
     availableImages: Array<string>;

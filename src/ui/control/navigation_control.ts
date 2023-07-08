@@ -8,9 +8,21 @@ import {generateOneFingerTouchPitchHandler, generateOneFingerTouchRotationHandle
 import type {Map} from '../map';
 import type {IControl} from './control';
 
+/**
+ * The {@link NavigationControl} options object
+ */
 type NavigationOptions = {
+    /**
+     * If `true` the compass button is included.
+     */
     showCompass?: boolean;
+    /**
+     * If `true` the zoom-in and zoom-out buttons are included.
+     */
     showZoom?: boolean;
+    /**
+     * If `true` the pitch is visualized by rotating X-axis of compass.
+     */
     visualizePitch?: boolean;
 };
 
@@ -23,14 +35,13 @@ const defaultOptions: NavigationOptions = {
 /**
  * A `NavigationControl` control contains zoom buttons and a compass.
  *
- * @implements {IControl}
- * @param {NavigationOptions} [options]
- * @param {boolean} [options.showCompass=true] If `true` the compass button is included.
- * @param {boolean} [options.showZoom=true] If `true` the zoom-in and zoom-out buttons are included.
- * @param {boolean} [options.visualizePitch=false] If `true` the pitch is visualized by rotating X-axis of compass.
+ * @group Markers and Controls
+ *
  * @example
- * var nav = new maplibregl.NavigationControl();
+ * ```ts
+ * let nav = new maplibregl.NavigationControl();
  * map.addControl(nav, 'top-left');
+ * ```
  * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js-docs/example/navigation/)
  * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
  */
@@ -44,6 +55,9 @@ export class NavigationControl implements IControl {
     _compassIcon: HTMLElement;
     _handler: MouseRotateWrapper;
 
+    /**
+     * @param options - the control's options
+     */
     constructor(options?: NavigationOptions) {
         this.options = extend({}, defaultOptions, options);
 

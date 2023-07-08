@@ -29,7 +29,7 @@
         type: 'custom',
 
         // method called when the layer is added to the map
-        // https://maplibre.org/maplibre-gl-js-docs/api/properties/#styleimageinterface#onadd
+        // Search for StyleImageInterface in https://maplibre.org/maplibre-gl-js-docs/api/
         onAdd (map, gl) {
         // create GLSL source for vertex shader
             const vertexSource = `#version 300 es
@@ -98,7 +98,6 @@
         },
 
         // method fired on each animation frame
-        // https://maplibre.org/maplibre-gl-js-docs/api/map/#map.event:render
         render (gl, matrix) {
             gl.useProgram(this.program);
             gl.uniformMatrix4fv(

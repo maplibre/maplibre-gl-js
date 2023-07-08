@@ -60,6 +60,9 @@ export class ImagePosition {
     }
 }
 
+/**
+ * A class holding all the images
+ */
 export class ImageAtlas {
     image: RGBAImage;
     iconPositions: {[_: string]: ImagePosition};

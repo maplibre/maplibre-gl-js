@@ -17,7 +17,10 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  * A data source containing video.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-video) for detailed documentation of options.)
  *
+ * @group Sources
+ *
  * @example
+ * ```ts
  * // add to map
  * map.addSource('some id', {
  *    type: 'video',
@@ -34,7 +37,7 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  * });
  *
  * // update
- * var mySource = map.getSource('some id');
+ * let mySource = map.getSource('some id');
  * mySource.setCoordinates([
  *     [-76.54335737228394, 39.18579907229748],
  *     [-76.52803659439087, 39.1838364847587],
@@ -43,6 +46,7 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  * ]);
  *
  * map.removeSource('some id');  // remove
+ * ```
  * @see [Add a video](https://maplibre.org/maplibre-gl-js-docs/example/video-on-a-map/)
  */
 export class VideoSource extends ImageSource {
@@ -51,9 +55,6 @@ export class VideoSource extends ImageSource {
     video: HTMLVideoElement;
     roundZoom: boolean;
 
-    /**
-     * @private
-     */
     constructor(id: string, options: VideoSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
         this.roundZoom = true;
@@ -113,7 +114,6 @@ export class VideoSource extends ImageSource {
 
     /**
      * Sets playback to a timestamp, in seconds.
-     * @private
      */
     seek(seconds: number) {
         if (this.video) {
@@ -127,9 +127,9 @@ export class VideoSource extends ImageSource {
     /**
      * Returns the HTML `video` element.
      *
-     * @returns {HTMLVideoElement} The HTML `video` element.
+     * @returns The HTML `video` element.
      */
-    getVideo() {
+    getVideo(): HTMLVideoElement {
         return this.video;
     }
 
@@ -146,14 +146,9 @@ export class VideoSource extends ImageSource {
     /**
      * Sets the video's coordinates and re-renders the map.
      *
-     * @method setCoordinates
-     * @instance
-     * @memberof VideoSource
-     * @returns {VideoSource} this
+     * @returns `this`
      */
-    // setCoordinates inherited from ImageSource
-
-    prepare = () => {
+    prepare = (): this => {
         if (Object.keys(this.tiles).length === 0 || this.video.readyState < 2) {
             return; // not enough data for current position
         }

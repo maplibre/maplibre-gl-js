@@ -6,6 +6,9 @@ import {Event, Evented} from '../../util/evented';
 import type {Map, GestureOptions} from '../map';
 import type {IControl} from './control';
 
+/**
+ * The {@link FullscreenControl} options
+ */
 type FullscreenOptions = {
     /**
      * `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
@@ -19,31 +22,21 @@ type FullscreenOptions = {
  * The map's `cooperativeGestures` option is temporarily disabled while the map
  * is in fullscreen mode, and is restored when the map exist fullscreen mode.
  *
- * @implements {IControl}
- * @param {FullscreenOptions} [options]
- * @param {HTMLElement} [options.container] `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
+ * @group Markers and Controls
+ * @param options - the full screen control options
  *
  * @example
+ * ```ts
  * map.addControl(new maplibregl.FullscreenControl({container: document.querySelector('body')}));
+ * ```
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
- */
-
-/**
- * Fired when fullscreen mode has started
  *
- * @event fullscreenstart
- * @memberof FullscreenControl
- * @instance
- */
-
-/**
- * Fired when fullscreen mode has ended
+ * ### Events
  *
- * @event fullscreenend
- * @memberof FullscreenControl
- * @instance
+ * @event `fullscreenstart` - Fired when fullscreen mode has started
+ *
+ * @event `fullscreenend` - Fired when fullscreen mode has ended
  */
-
 export class FullscreenControl extends Evented implements IControl {
     _map: Map;
     _controlContainer: HTMLElement;
@@ -76,7 +69,8 @@ export class FullscreenControl extends Evented implements IControl {
         }
     }
 
-    onAdd(map: Map) {
+    /** {@inheritDoc IControl.onAdd} */
+    onAdd(map: Map): HTMLElement {
         this._map = map;
         if (!this._container) this._container = this._map.getContainer();
         this._controlContainer = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
@@ -84,6 +78,7 @@ export class FullscreenControl extends Evented implements IControl {
         return this._controlContainer;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._controlContainer);
         this._map = null;

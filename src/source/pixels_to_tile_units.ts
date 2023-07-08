@@ -12,7 +12,6 @@ import type {OverscaledTileID} from './tile_id';
  * translation by pixelsToTileUnits(30, 6.5) tile units.
  *
  * @returns value in tile units
- * @private
  */
 export function pixelsToTileUnits(
     tile: {

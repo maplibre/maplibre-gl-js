@@ -13,9 +13,10 @@ import type {Actor} from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
+import type {Options, ClusterProperties} from 'supercluster';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
-    workerOptions?: any;
+    workerOptions?: WorkerOptions;
     collectResourceTiming?: boolean;
 }
 
@@ -38,23 +39,28 @@ export type WorkerOptions = {
         linemetrics?: boolean;
         generateId?: boolean;
     };
-    superclusterOptions?: {
-        maxZoom?: number;
-        miniPoints?: number;
-        extent?: number;
-        radius?: number;
-        log?: boolean;
-        generateId?: boolean;
-    };
-    clusterProperties?: any;
+    superclusterOptions?: Options<any, any>;
+    clusterProperties?: ClusterProperties;
     fliter?: any;
     promoteId?: any;
     collectResourceTiming?: boolean;
 }
 
+/**
+ * The cluster options to set
+ */
 export type SetClusterOptions = {
+    /**
+     * Whether or not to cluster
+     */
     cluster?: boolean;
+    /**
+     * The cluster's max zoom
+     */
     clusterMaxZoom?: number;
+    /**
+     * The cluster's radius
+     */
     clusterRadius?: number;
 }
 
@@ -62,13 +68,18 @@ export type SetClusterOptions = {
  * A source containing GeoJSON.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-geojson) for detailed documentation of options.)
  *
+ * @group Sources
+ *
  * @example
+ * ```ts
  * map.addSource('some id', {
  *     type: 'geojson',
  *     data: 'https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_10m_ports.geojson'
  * });
+ * ```
  *
  * @example
+ * ```ts
  * map.addSource('some id', {
  *    type: 'geojson',
  *    data: {
@@ -86,8 +97,10 @@ export type SetClusterOptions = {
  *        }]
  *    }
  * });
+ * ```
  *
  * @example
+ * ```ts
  * map.getSource('some id').setData({
  *   "type": "FeatureCollection",
  *   "features": [{
@@ -99,6 +112,7 @@ export type SetClusterOptions = {
  *       }
  *   }]
  * });
+ * ```
  * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js-docs/example/geojson-markers/)
  * @see [Add a GeoJSON line](https://maplibre.org/maplibre-gl-js-docs/example/geojson-line/)
  * @see [Create a heatmap from points](https://maplibre.org/maplibre-gl-js-docs/example/heatmap/)
@@ -125,7 +139,7 @@ export class GeoJSONSource extends Evented implements Source {
     _removed: boolean;
 
     /**
-     * @private
+     * @hidden
      */
     constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
@@ -204,10 +218,10 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * Sets the GeoJSON data and re-renders the map.
      *
-     * @param {Object|string} data A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
-     * @returns {GeoJSONSource} this
+     * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
+     * @returns `this`
      */
-    setData(data: GeoJSON.GeoJSON | string) {
+    setData(data: GeoJSON.GeoJSON | string): this {
         this._data = data;
         this._updateWorkerData();
 
@@ -226,10 +240,10 @@ export class GeoJSONSource extends Evented implements Source {
      *
      * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
      *
-     * @param {GeoJSONSourceDiff} diff The changes that need to be applied.
-     * @returns {GeoJSONSource} this
+     * @param diff - The changes that need to be applied.
+     * @returns `this`
      */
-    updateData(diff: GeoJSONSourceDiff) {
+    updateData(diff: GeoJSONSourceDiff): this {
         this._updateWorkerData(diff);
 
         return this;
@@ -237,14 +251,15 @@ export class GeoJSONSource extends Evented implements Source {
 
     /**
      * To disable/enable clustering on the source options
-     * @param {SetClusterOptions} options The options to set
-     * @returns {GeoJSONSource} this
+     * @param options - The options to set
+     * @returns `this`
      * @example
+     * ```ts
      * map.getSource('some id').setClusterOptions({cluster: false});
      * map.getSource('some id').setClusterOptions({cluster: false, clusterRadius: 50, clusterMaxZoom: 14});
-     *
+     * ```
      */
-    setClusterOptions(options:SetClusterOptions) {
+    setClusterOptions(options: SetClusterOptions): this {
         this.workerOptions.cluster = options.cluster;
         if (options) {
             if (options.clusterRadius !== undefined) this.workerOptions.superclusterOptions.radius = options.clusterRadius;
@@ -257,11 +272,11 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * For clustered sources, fetches the zoom at which the given cluster expands.
      *
-     * @param clusterId The value of the cluster's `cluster_id` property.
-     * @param callback A callback to be called when the zoom value is retrieved (`(error, zoom) => { ... }`).
-     * @returns {GeoJSONSource} this
+     * @param clusterId - The value of the cluster's `cluster_id` property.
+     * @param callback - A callback to be called when the zoom value is retrieved (`(error, zoom) => { ... }`).
+     * @returns `this`
      */
-    getClusterExpansionZoom(clusterId: number, callback: Callback<number>) {
+    getClusterExpansionZoom(clusterId: number, callback: Callback<number>): this {
         this.actor.send('geojson.getClusterExpansionZoom', {clusterId, source: this.id}, callback);
         return this;
     }
@@ -269,11 +284,11 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * For clustered sources, fetches the children of the given cluster on the next zoom level (as an array of GeoJSON features).
      *
-     * @param clusterId The value of the cluster's `cluster_id` property.
-     * @param callback A callback to be called when the features are retrieved (`(error, features) => { ... }`).
-     * @returns {GeoJSONSource} this
+     * @param clusterId - The value of the cluster's `cluster_id` property.
+     * @param callback - A callback to be called when the features are retrieved (`(error, features) => { ... }`).
+     * @returns `this`
      */
-    getClusterChildren(clusterId: number, callback: Callback<Array<GeoJSON.Feature>>) {
+    getClusterChildren(clusterId: number, callback: Callback<Array<GeoJSON.Feature>>): this {
         this.actor.send('geojson.getClusterChildren', {clusterId, source: this.id}, callback);
         return this;
     }
@@ -281,29 +296,31 @@ export class GeoJSONSource extends Evented implements Source {
     /**
      * For clustered sources, fetches the original points that belong to the cluster (as an array of GeoJSON features).
      *
-     * @param clusterId The value of the cluster's `cluster_id` property.
-     * @param limit The maximum number of features to return.
-     * @param offset The number of features to skip (e.g. for pagination).
-     * @param callback A callback to be called when the features are retrieved (`(error, features) => { ... }`).
-     * @returns {GeoJSONSource} this
+     * @param clusterId - The value of the cluster's `cluster_id` property.
+     * @param limit - The maximum number of features to return.
+     * @param offset - The number of features to skip (e.g. for pagination).
+     * @param callback - A callback to be called when the features are retrieved (`(error, features) => { ... }`).
+     * @returns `this`
      * @example
-     * // Retrieve cluster leaves on click
+     * Retrieve cluster leaves on click
+     * ```ts
      * map.on('click', 'clusters', function(e) {
-     *   var features = map.queryRenderedFeatures(e.point, {
+     *   let features = map.queryRenderedFeatures(e.point, {
      *     layers: ['clusters']
      *   });
      *
-     *   var clusterId = features[0].properties.cluster_id;
-     *   var pointCount = features[0].properties.point_count;
-     *   var clusterSource = map.getSource('clusters');
+     *   let clusterId = features[0].properties.cluster_id;
+     *   let pointCount = features[0].properties.point_count;
+     *   let clusterSource = map.getSource('clusters');
      *
      *   clusterSource.getClusterLeaves(clusterId, pointCount, 0, function(error, features) {
      *     // Print cluster leaves in the console
      *     console.log('Cluster leaves:', error, features);
      *   })
      * });
+     * ```
      */
-    getClusterLeaves(clusterId: number, limit: number, offset: number, callback: Callback<Array<GeoJSON.Feature>>) {
+    getClusterLeaves(clusterId: number, limit: number, offset: number, callback: Callback<Array<GeoJSON.Feature>>): this {
         this.actor.send('geojson.getClusterLeaves', {
             source: this.id,
             clusterId,
@@ -313,10 +330,11 @@ export class GeoJSONSource extends Evented implements Source {
         return this;
     }
 
-    /*
+    /**
      * Responsible for invoking WorkerSource's geojson.loadData target, which
      * handles loading the geojson data and preparing to serve it up as tiles,
      * using geojson-vt or supercluster as appropriate.
+     * @param diff - the diff object
      */
     _updateWorkerData(diff?: GeoJSONSourceDiff) {
         const options = extend({}, this.workerOptions);

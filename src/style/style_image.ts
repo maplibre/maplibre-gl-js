@@ -2,6 +2,9 @@ import {RGBAImage} from '../util/image';
 
 import type {Map} from '../ui/map';
 
+/**
+ * The sprite data
+ */
 export type SpriteOnDemandStyleImage = {
     width: number;
     height: number;
@@ -10,6 +13,9 @@ export type SpriteOnDemandStyleImage = {
     context: CanvasRenderingContext2D;
 };
 
+/**
+ * The style's image metadata
+ */
 export type StyleImageData = {
     data: RGBAImage;
     version?: number;
@@ -18,14 +24,35 @@ export type StyleImageData = {
     spriteData?: SpriteOnDemandStyleImage;
 };
 
+/**
+ * The style's image metadata
+ */
 export type StyleImageMetadata = {
+    /**
+     * The ratio of pixels in the image to physical pixels on the screen
+     */
     pixelRatio: number;
+    /**
+     * Whether the image should be interpreted as an SDF image
+     */
     sdf: boolean;
+    /**
+     * If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched horizontally.
+     */
     stretchX?: Array<[number, number]>;
+    /**
+     * If `icon-text-fit` is used in a layer with this image, this option defines the part(s) of the image that can be stretched vertically.
+     */
     stretchY?: Array<[number, number]>;
+    /**
+     * If `icon-text-fit` is used in a layer with this image, this option defines the part of the image that can be covered by the content in `text-field`.
+     */
     content?: [number, number, number, number];
 };
 
+/**
+ * the style's image, including data and metedata
+ */
 export type StyleImage = StyleImageData & StyleImageMetadata;
 
 /**
@@ -37,11 +64,11 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  * {@link StyleImageInterface#render} method. The method is called every frame and
  * can be used to update the image.
  *
- * @interface StyleImageInterface
  * @see [Add an animated icon to the map.](https://maplibre.org/maplibre-gl-js-docs/example/add-image-animated/)
  *
  * @example
- * var flashingSquare = {
+ * ```ts
+ * let flashingSquare = {
  *     width: 64,
  *     height: 64,
  *     data: new Uint8Array(64 * 64 * 4),
@@ -55,16 +82,16 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  *         this.map.triggerRepaint();
  *
  *         // alternate between black and white based on the time
- *         var value = Math.round(Date.now() / 1000) % 2 === 0  ? 255 : 0;
+ *         let value = Math.round(Date.now() / 1000) % 2 === 0  ? 255 : 0;
  *
  *         // check if image needs to be changed
  *         if (value !== this.previousValue) {
  *             this.previousValue = value;
  *
- *             var bytesPerPixel = 4;
- *             for (var x = 0; x < this.width; x++) {
- *                 for (var y = 0; y < this.height; y++) {
- *                     var offset = (y * this.width + x) * bytesPerPixel;
+ *             let bytesPerPixel = 4;
+ *             for (let x = 0; x < this.width; x++) {
+ *                 for (let y = 0; y < this.height; y++) {
+ *                     let offset = (y * this.width + x) * bytesPerPixel;
  *                     this.data[offset + 0] = value;
  *                     this.data[offset + 1] = value;
  *                     this.data[offset + 2] = value;
@@ -79,20 +106,12 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  *  }
  *
  *  map.addImage('flashing_square', flashingSquare);
+ * ```
  */
 
 export interface StyleImageInterface {
-    /**
-     * @property {number} width
-     */
     width: number;
-    /**
-     * @property {number} height
-     */
     height: number;
-    /**
-     * @property {Uint8Array | Uint8ClampedArray} data
-     */
     data: Uint8Array | Uint8ClampedArray;
     /**
      * This method is called once before every frame where the icon will be used.
@@ -104,31 +123,18 @@ export interface StyleImageInterface {
      * If updates are infrequent it maybe easier to use {@link Map#updateImage} to update
      * the image instead of implementing this method.
      *
-     * @function
-     * @memberof StyleImageInterface
-     * @instance
-     * @name render
-     * @return {boolean} `true` if this method updated the image. `false` if the image was not changed.
+     * @returns `true` if this method updated the image. `false` if the image was not changed.
      */
     render?: () => boolean;
     /**
      * Optional method called when the layer has been added to the Map with {@link Map#addImage}.
      *
-     * @function
-     * @memberof StyleImageInterface
-     * @instance
-     * @name onAdd
-     * @param {Map} map The Map this custom layer was just added to.
+     * @param map - The Map this custom layer was just added to.
      */
     onAdd?: (map: Map, id: string) => void;
     /**
      * Optional method called when the icon is removed from the map with {@link Map#removeImage}.
      * This gives the image a chance to clean up resources and event listeners.
-     *
-     * @function
-     * @memberof StyleImageInterface
-     * @instance
-     * @name onRemove
      */
     onRemove?: () => void;
 }

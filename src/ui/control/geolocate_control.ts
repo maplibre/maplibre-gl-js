@@ -10,11 +10,33 @@ import type {FitBoundsOptions} from '../camera';
 import type {IControl} from './control';
 import {LngLatBounds} from '../../geo/lng_lat_bounds';
 
+/**
+ * The {@link GeolocateControl} options
+ */
 type GeolocateOptions = {
+    /**
+     * A Geolocation API [PositionOptions](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions) object.
+     * @defaultValue `{enableHighAccuracy: false, timeout: 6000}`
+     */
     positionOptions?: PositionOptions;
+    /**
+     * A options object to use when the map is panned and zoomed to the user's location. The default is to use a `maxZoom` of 15 to limit how far the map will zoom in for very accurate locations.
+     */
     fitBoundsOptions?: FitBoundsOptions;
+    /**
+     * If `true` the Geolocate Control becomes a toggle button and when active the map will receive updates to the user's location as it changes.
+     * @defaultValue false
+     */
     trackUserLocation?: boolean;
+    /**
+     * By default, if showUserLocation is `true`, a transparent circle will be drawn around the user location indicating the accuracy (95% confidence level) of the user's location. Set to `false` to disable. Always disabled when showUserLocation is `false`.
+     * @defaultValue true
+     */
     showAccuracyCircle?: boolean;
+    /**
+     * By default a dot will be shown on the map at the user's location. Set to `false` to disable.
+     * @defaultValue true
+     */
     showUserLocation?: boolean;
 };
 
@@ -53,23 +75,123 @@ let noTimeout = false;
  * * disabled - occurs if Geolocation is not available, disabled or denied.
  *
  * These interaction states can't be controlled programmatically, rather they are set based on user interactions.
- *
- * @implements {IControl}
- * @param {GeolocateOptions} [options]
- * @param {PositionOptions} [options.positionOptions={enableHighAccuracy: false, timeout: 6000}] A Geolocation API [PositionOptions](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions) object.
- * @param {FitBoundsOptions} [options.fitBoundsOptions={maxZoom: 15}] A {@link Map#fitBounds} options object to use when the map is panned and zoomed to the user's location. The default is to use a `maxZoom` of 15 to limit how far the map will zoom in for very accurate locations.
- * @param {boolean} [options.trackUserLocation=false] If `true` the Geolocate Control becomes a toggle button and when active the map will receive updates to the user's location as it changes.
- * @param {boolean} [options.showAccuracyCircle=true] By default, if showUserLocation is `true`, a transparent circle will be drawn around the user location indicating the accuracy (95% confidence level) of the user's location. Set to `false` to disable. Always disabled when showUserLocation is `false`.
- * @param {boolean} [options.showUserLocation=true] By default a dot will be shown on the map at the user's location. Set to `false` to disable.
+ * @group Markers and Controls
  *
  * @example
+ * ```ts
  * map.addControl(new maplibregl.GeolocateControl({
  *     positionOptions: {
  *         enableHighAccuracy: true
  *     },
  *     trackUserLocation: true
  * }));
+ * ```
  * @see [Locate the user](https://maplibre.org/maplibre-gl-js-docs/example/locate-user/)
+ *
+ * ### Events
+ *
+ * @event `trackuserlocationend` - Fired when the Geolocate Control changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when trackUserLocation is true. In the background state, the dot on the map will update with location updates but the camera will not.
+ *
+ * @event `trackuserlocationstart` - Fired when the Geolocate Control changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a geolocate event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no geolocate event will follow unless the users's location changes).
+ *
+ * @event `geolocate` - Fired on each Geolocation API position update which returned as success.
+ * `data` - The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
+ *
+ * @event `error` - Fired on each Geolocation API position update which returned as an error.
+ * `data` - The returned [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/PositionError) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
+ *
+ * @event `outofmaxbounds` Fired on each Geolocation API position update which returned as success but user position is out of map maxBounds.
+ * `data` - The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
+ *
+ * @example
+ * ```ts
+ * // Initialize the geolocate control.
+ * let geolocate = new maplibregl.GeolocateControl({
+ *   positionOptions: {
+ *       enableHighAccuracy: true
+ *   },
+ *   trackUserLocation: true
+ * });
+ * // Add the control to the map.
+ * map.addControl(geolocate);
+ * // Set an event listener that fires
+ * // when a trackuserlocationend event occurs.
+ * geolocate.on('trackuserlocationend', function() {
+ *   console.log('A trackuserlocationend event has occurred.')
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Initialize the geolocate control.
+ * let geolocate = new maplibregl.GeolocateControl({
+ *   positionOptions: {
+ *       enableHighAccuracy: true
+ *   },
+ *   trackUserLocation: true
+ * });
+ * // Add the control to the map.
+ * map.addControl(geolocate);
+ * // Set an event listener that fires
+ * // when a trackuserlocationstart event occurs.
+ * geolocate.on('trackuserlocationstart', function() {
+ *   console.log('A trackuserlocationstart event has occurred.')
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Initialize the geolocate control.
+ * let geolocate = new maplibregl.GeolocateControl({
+ *   positionOptions: {
+ *       enableHighAccuracy: true
+ *   },
+ *   trackUserLocation: true
+ * });
+ * // Add the control to the map.
+ * map.addControl(geolocate);
+ * // Set an event listener that fires
+ * // when a geolocate event occurs.
+ * geolocate.on('geolocate', function() {
+ *   console.log('A geolocate event has occurred.')
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Initialize the geolocate control.
+ * let geolocate = new maplibregl.GeolocateControl({
+ *   positionOptions: {
+ *       enableHighAccuracy: true
+ *   },
+ *   trackUserLocation: true
+ * });
+ * // Add the control to the map.
+ * map.addControl(geolocate);
+ * // Set an event listener that fires
+ * // when an error event occurs.
+ * geolocate.on('error', function() {
+ *   console.log('An error event has occurred.')
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Initialize the geolocate control.
+ * let geolocate = new maplibregl.GeolocateControl({
+ *   positionOptions: {
+ *       enableHighAccuracy: true
+ *   },
+ *   trackUserLocation: true
+ * });
+ * // Add the control to the map.
+ * map.addControl(geolocate);
+ * // Set an event listener that fires
+ * // when an outofmaxbounds event occurs.
+ * geolocate.on('outofmaxbounds', function() {
+ *   console.log('An outofmaxbounds event has occurred.')
+ * });
+ * ```
  */
 export class GeolocateControl extends Evented implements IControl {
     _map: Map;
@@ -80,6 +202,22 @@ export class GeolocateControl extends Evented implements IControl {
     _geolocateButton: HTMLButtonElement;
     _geolocationWatchID: number;
     _timeoutId: ReturnType<typeof setTimeout>;
+    /* Geolocate Control Watch States
+     * This is the private state of the control.
+     *
+     * OFF
+     *    off/inactive
+     * WAITING_ACTIVE
+     *    Geolocate Control was clicked but still waiting for Geolocation API response with user location
+     * ACTIVE_LOCK
+     *    Showing the user location as a dot AND tracking the camera to be fixed to their location. If their location changes the map moves to follow.
+     * ACTIVE_ERROR
+     *    There was en error from the Geolocation API while trying to show and track the user location.
+     * BACKGROUND
+     *    Showing the user location as a dot but the camera doesn't follow their location as it changes.
+     * BACKGROUND_ERROR
+     *    There was an error from the Geolocation API while trying to show (but not track) the user location.
+     */
     _watchState: 'OFF' | 'ACTIVE_LOCK' | 'WAITING_ACTIVE' | 'ACTIVE_ERROR' | 'BACKGROUND' | 'BACKGROUND_ERROR';
     _lastKnownPosition: any;
     _userLocationDotMarker: Marker;
@@ -92,6 +230,7 @@ export class GeolocateControl extends Evented implements IControl {
         this.options = extend({}, defaultOptions, options);
     }
 
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
@@ -99,6 +238,7 @@ export class GeolocateControl extends Evented implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         // clear the geolocation watch if exists
         if (this._geolocationWatchID !== undefined) {
@@ -124,9 +264,8 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * Check if the Geolocation API Position is outside the map's maxbounds.
      *
-     * @param {Position} position the Geolocation API Position
-     * @returns {boolean} Returns `true` if position is outside the map's maxbounds, otherwise returns `false`.
-     * @private
+     * @param position - the Geolocation API Position
+     * @returns `true` if position is outside the map's maxbounds, otherwise returns `false`.
      */
     _isOutOfMapMaxBounds(position: GeolocationPosition) {
         const bounds = this._map.getMaxBounds();
@@ -171,8 +310,7 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * When the Geolocation API returns a new location, update the GeolocateControl.
      *
-     * @param {Position} position the Geolocation API Position
-     * @private
+     * @param position - the Geolocation API Position
      */
     _onSuccess = (position: GeolocationPosition) => {
         if (!this._map) {
@@ -239,8 +377,7 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * Update the camera location to center on the current position
      *
-     * @param {Position} position the Geolocation API Position
-     * @private
+     * @param position - the Geolocation API Position
      */
     _updateCamera = (position: GeolocationPosition) => {
         const center = new LngLat(position.coords.longitude, position.coords.latitude);
@@ -257,8 +394,7 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * Update the user location dot Marker to the current position
      *
-     * @param {Position} [position] the Geolocation API Position
-     * @private
+     * @param position - the Geolocation API Position
      */
     _updateMarker = (position?: GeolocationPosition | null) => {
         if (position) {
@@ -373,7 +509,7 @@ export class GeolocateControl extends Evented implements IControl {
         if (this.options.showUserLocation) {
             this._dotElement = DOM.create('div', 'maplibregl-user-location-dot');
 
-            this._userLocationDotMarker = new Marker(this._dotElement);
+            this._userLocationDotMarker = new Marker({element: this._dotElement});
 
             this._circleElement = DOM.create('div', 'maplibregl-user-location-accuracy-circle');
             this._accuracyCircleMarker = new Marker({element: this._circleElement, pitchAlignment: 'map'});
@@ -407,10 +543,11 @@ export class GeolocateControl extends Evented implements IControl {
     /**
      * Programmatically request and move the map to the user's location.
      *
-     * @returns {boolean} Returns `false` if called before control was added to a map, otherwise returns `true`.
+     * @returns `false` if called before control was added to a map, otherwise returns `true`.
      * @example
+     * ```ts
      * // Initialize the geolocate control.
-     * var geolocate = new maplibregl.GeolocateControl({
+     * let geolocate = new maplibregl.GeolocateControl({
      *  positionOptions: {
      *    enableHighAccuracy: true
      *  },
@@ -421,8 +558,9 @@ export class GeolocateControl extends Evented implements IControl {
      * map.on('load', function() {
      *   geolocate.trigger();
      * });
+     * ```
      */
-    trigger() {
+    trigger(): boolean {
         if (!this._setup) {
             warnOnce('Geolocate control triggered before added to a map');
             return false;
@@ -527,142 +665,3 @@ export class GeolocateControl extends Evented implements IControl {
     }
 }
 
-/* Geolocate Control Watch States
- * This is the private state of the control.
- *
- * OFF
- *    off/inactive
- * WAITING_ACTIVE
- *    Geolocate Control was clicked but still waiting for Geolocation API response with user location
- * ACTIVE_LOCK
- *    Showing the user location as a dot AND tracking the camera to be fixed to their location. If their location changes the map moves to follow.
- * ACTIVE_ERROR
- *    There was en error from the Geolocation API while trying to show and track the user location.
- * BACKGROUND
- *    Showing the user location as a dot but the camera doesn't follow their location as it changes.
- * BACKGROUND_ERROR
- *    There was an error from the Geolocation API while trying to show (but not track) the user location.
- */
-
-/**
- * Fired on each Geolocation API position update which returned as success.
- *
- * @event geolocate
- * @memberof GeolocateControl
- * @instance
- * @property {Position} data The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
- * @example
- * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
- *   positionOptions: {
- *       enableHighAccuracy: true
- *   },
- *   trackUserLocation: true
- * });
- * // Add the control to the map.
- * map.addControl(geolocate);
- * // Set an event listener that fires
- * // when a geolocate event occurs.
- * geolocate.on('geolocate', function() {
- *   console.log('A geolocate event has occurred.')
- * });
- *
- */
-
-/**
- * Fired on each Geolocation API position update which returned as an error.
- *
- * @event error
- * @memberof GeolocateControl
- * @instance
- * @property {PositionError} data The returned [PositionError](https://developer.mozilla.org/en-US/docs/Web/API/PositionError) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
- * @example
- * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
- *   positionOptions: {
- *       enableHighAccuracy: true
- *   },
- *   trackUserLocation: true
- * });
- * // Add the control to the map.
- * map.addControl(geolocate);
- * // Set an event listener that fires
- * // when an error event occurs.
- * geolocate.on('error', function() {
- *   console.log('An error event has occurred.')
- * });
- *
- */
-
-/**
- * Fired on each Geolocation API position update which returned as success but user position is out of map maxBounds.
- *
- * @event outofmaxbounds
- * @memberof GeolocateControl
- * @instance
- * @property {Position} data The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
- * @example
- * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
- *   positionOptions: {
- *       enableHighAccuracy: true
- *   },
- *   trackUserLocation: true
- * });
- * // Add the control to the map.
- * map.addControl(geolocate);
- * // Set an event listener that fires
- * // when an outofmaxbounds event occurs.
- * geolocate.on('outofmaxbounds', function() {
- *   console.log('An outofmaxbounds event has occurred.')
- * });
- *
- */
-
-/**
- * Fired when the Geolocate Control changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a geolocate event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no geolocate event will follow unless the users's location changes).
- *
- * @event trackuserlocationstart
- * @memberof GeolocateControl
- * @instance
- * @example
- * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
- *   positionOptions: {
- *       enableHighAccuracy: true
- *   },
- *   trackUserLocation: true
- * });
- * // Add the control to the map.
- * map.addControl(geolocate);
- * // Set an event listener that fires
- * // when a trackuserlocationstart event occurs.
- * geolocate.on('trackuserlocationstart', function() {
- *   console.log('A trackuserlocationstart event has occurred.')
- * });
- *
- */
-
-/**
- * Fired when the Geolocate Control changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when trackUserLocation is true. In the background state, the dot on the map will update with location updates but the camera will not.
- *
- * @event trackuserlocationend
- * @memberof GeolocateControl
- * @instance
- * @example
- * // Initialize the geolocate control.
- * var geolocate = new maplibregl.GeolocateControl({
- *   positionOptions: {
- *       enableHighAccuracy: true
- *   },
- *   trackUserLocation: true
- * });
- * // Add the control to the map.
- * map.addControl(geolocate);
- * // Set an event listener that fires
- * // when a trackuserlocationend event occurs.
- * geolocate.on('trackuserlocationend', function() {
- *   console.log('A trackuserlocationend event has occurred.')
- * });
- *
- */

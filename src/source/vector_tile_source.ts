@@ -22,25 +22,35 @@ export type VectorTileSourceOptions = VectorSourceSpecification & {
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
  *
+ * @group Sources
+ *
  * @example
+ * ```ts
  * map.addSource('some id', {
  *     type: 'vector',
  *     url: 'https://demotiles.maplibre.org/tiles/tiles.json'
  * });
+ * ```
  *
  * @example
+ * ```ts
  * map.addSource('some id', {
  *     type: 'vector',
  *     tiles: ['https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt'],
  *     minzoom: 6,
  *     maxzoom: 14
  * });
+ * ```
  *
  * @example
+ * ```ts
  * map.getSource('some id').setUrl("https://demotiles.maplibre.org/tiles/tiles.json");
+ * ```
  *
  * @example
+ * ```ts
  * map.getSource('some id').setTiles(['https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt']);
+ * ```
  * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/vector-source/)
  * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
  */
@@ -140,10 +150,10 @@ export class VectorTileSource extends Evented implements Source {
     /**
      * Sets the source `tiles` property and re-renders the map.
      *
-     * @param {string[]} tiles An array of one or more tile source URLs, as in the TileJSON spec.
-     * @returns {VectorTileSource} this
+     * @param tiles - An array of one or more tile source URLs, as in the TileJSON spec.
+     * @returns `this`
      */
-    setTiles(tiles: Array<string>) {
+    setTiles(tiles: Array<string>): this {
         this.setSourceProperty(() => {
             this._options.tiles = tiles;
         });
@@ -154,10 +164,10 @@ export class VectorTileSource extends Evented implements Source {
     /**
      * Sets the source `url` property and re-renders the map.
      *
-     * @param {string} url A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
-     * @returns {VectorTileSource} this
+     * @param url - A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
+     * @returns `this`
      */
-    setUrl(url: string) {
+    setUrl(url: string): this {
         this.setSourceProperty(() => {
             this.url = url;
             this._options.url = url;

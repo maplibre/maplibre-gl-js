@@ -3,12 +3,19 @@ import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
 import {Handler} from '../handler_manager';
 
+/**
+ * The `ClickZoomHandler` allows the user to zoom the map at a point by double clicking
+ * It is used by other handlers
+ */
 export class ClickZoomHandler implements Handler {
 
     _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;
 
+    /**
+     * @hidden
+    */
     constructor(map: Map) {
         this._tr = new TransformProvider(map);
         this.reset();

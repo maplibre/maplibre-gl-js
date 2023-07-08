@@ -10,6 +10,9 @@ export type CrossfadeParameters = {
     t: number;
 };
 
+/**
+ * A parameter that can be evaluated to a value
+ */
 export class EvaluationParameters {
     zoom: number;
     now: number;

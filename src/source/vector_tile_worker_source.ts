@@ -25,10 +25,7 @@ export type LoadVectorTileResult = {
 } & ExpiryData;
 
 /**
- * @callback LoadVectorDataCallback
- * @param error
- * @param vectorTile
- * @private
+ * The callback when finished loading vector data
  */
 export type LoadVectorDataCallback = Callback<LoadVectorTileResult>;
 
@@ -36,7 +33,7 @@ export type AbortVectorData = () => void;
 export type LoadVectorData = (params: WorkerTileParameters, callback: LoadVectorDataCallback) => AbortVectorData | void;
 
 /**
- * @private
+ * Loads a vector tile
  */
 function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCallback) {
     const request = getArrayBuffer(params.request, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
@@ -63,8 +60,6 @@ function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCa
  * for data formats that can be parsed/converted into an in-memory VectorTile
  * representation.  To do so, create it with
  * `new VectorTileWorkerSource(actor, styleLayers, customLoadVectorDataFunction)`.
- *
- * @private
  */
 export class VectorTileWorkerSource implements WorkerSource {
     actor: Actor;
@@ -75,11 +70,10 @@ export class VectorTileWorkerSource implements WorkerSource {
     loaded: {[_: string]: WorkerTile};
 
     /**
-     * @param [loadVectorData] Optional method for custom loading of a VectorTile
+     * @param loadVectorData - Optional method for custom loading of a VectorTile
      * object based on parameters passed from the main-thread Source. See
      * {@link VectorTileWorkerSource#loadTile}. The default implementation simply
      * loads the pbf at `params.url`.
-     * @private
      */
     constructor(actor: Actor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadVectorData?: LoadVectorData | null) {
         this.actor = actor;
@@ -94,7 +88,6 @@ export class VectorTileWorkerSource implements WorkerSource {
      * Implements {@link WorkerSource#loadTile}. Delegates to
      * {@link VectorTileWorkerSource#loadVectorData} (which by default expects
      * a `params.url` property) for fetching and producing a VectorTile object.
-     * @private
      */
     loadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
         const uid = params.uid;
@@ -144,7 +137,6 @@ export class VectorTileWorkerSource implements WorkerSource {
 
     /**
      * Implements {@link WorkerSource#reloadTile}.
-     * @private
      */
     reloadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
         const loaded = this.loaded,
@@ -179,9 +171,8 @@ export class VectorTileWorkerSource implements WorkerSource {
     /**
      * Implements {@link WorkerSource#abortTile}.
      *
-     * @param params
-     * @param params.uid The UID for this tile.
-     * @private
+     * @param params - The tile parameters
+     * @param callback - The callback
      */
     abortTile(params: TileParameters, callback: WorkerTileCallback) {
         const loading = this.loading,
@@ -196,9 +187,8 @@ export class VectorTileWorkerSource implements WorkerSource {
     /**
      * Implements {@link WorkerSource#removeTile}.
      *
-     * @param params
-     * @param params.uid The UID for this tile.
-     * @private
+     * @param params - The tile parameters
+     * @param callback - The callback
      */
     removeTile(params: TileParameters, callback: WorkerTileCallback) {
         const loaded = this.loaded,

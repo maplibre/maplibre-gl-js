@@ -25,6 +25,8 @@ const maxScalePerFrame = 2;
 
 /**
  * The `ScrollZoomHandler` allows the user to zoom the map by scrolling.
+ *
+ * @group Handlers
  */
 export class ScrollZoomHandler implements Handler {
     _map: Map;
@@ -61,7 +63,7 @@ export class ScrollZoomHandler implements Handler {
     _wheelZoomRate: number;
 
     /**
-     * @private
+     * @hidden
      */
     constructor(map: Map, triggerRenderFrame: () => void) {
         this._map = map;
@@ -77,10 +79,12 @@ export class ScrollZoomHandler implements Handler {
 
     /**
      * Set the zoom rate of a trackpad
-     * @param {number} [zoomRate=1/100] The rate used to scale trackpad movement to a zoom value.
+     * @param zoomRate - 1/100 The rate used to scale trackpad movement to a zoom value.
      * @example
-     * // Speed up trackpad zoom
+     * Speed up trackpad zoom
+     * ```ts
      * map.scrollZoom.setZoomRate(1/25);
+     * ```
      */
     setZoomRate(zoomRate: number) {
         this._defaultZoomRate = zoomRate;
@@ -88,10 +92,12 @@ export class ScrollZoomHandler implements Handler {
 
     /**
      * Set the zoom rate of a mouse wheel
-     * @param {number} [wheelZoomRate=1/450] The rate used to scale mouse wheel movement to a zoom value.
+     * @param wheelZoomRate - 1/450 The rate used to scale mouse wheel movement to a zoom value.
      * @example
-     * // Slow down zoom of mouse wheel
+     * Slow down zoom of mouse wheel
+     * ```ts
      * map.scrollZoom.setWheelZoomRate(1/600);
+     * ```
      */
     setWheelZoomRate(wheelZoomRate: number) {
         this._wheelZoomRate = wheelZoomRate;
@@ -99,8 +105,7 @@ export class ScrollZoomHandler implements Handler {
 
     /**
      * Returns a Boolean indicating whether the "scroll to zoom" interaction is enabled.
-     *
-     * @returns {boolean} `true` if the "scroll to zoom" interaction is enabled.
+     * @returns `true` if the "scroll to zoom" interaction is enabled.
      */
     isEnabled() {
         return !!this._enabled;
@@ -122,13 +127,12 @@ export class ScrollZoomHandler implements Handler {
     /**
      * Enables the "scroll to zoom" interaction.
      *
-     * @param {AroundCenterOptions} [options] Options object.
-     * @param {string} [options.around] If "center" is passed, map will zoom around the center of map
-     *
+     * @param options - Options object.
      * @example
-     *   map.scrollZoom.enable();
-     * @example
-     *  map.scrollZoom.enable({ around: 'center' })
+     * ```ts
+     * map.scrollZoom.enable();
+     * map.scrollZoom.enable({ around: 'center' })
+     * ```
      */
     enable(options?: AroundCenterOptions | boolean) {
         if (this.isEnabled()) return;
@@ -140,7 +144,9 @@ export class ScrollZoomHandler implements Handler {
      * Disables the "scroll to zoom" interaction.
      *
      * @example
-     *   map.scrollZoom.disable();
+     * ```ts
+     * map.scrollZoom.disable();
+     * ```
      */
     disable() {
         if (!this.isEnabled()) return;

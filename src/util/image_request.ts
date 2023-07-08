@@ -6,6 +6,9 @@ import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker} from './
 import {webpSupported} from './webp_supported';
 import {config} from './config';
 
+/**
+ * The callback that is being called after an image was fetched
+ */
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
 type ImageQueueThrottleControlCallback = () => boolean;
@@ -66,10 +69,10 @@ export namespace ImageRequest {
     /**
      * Install a callback to control when image queue throttling is desired.
      * (e.g. when the map view is moving)
-     * @param {ImageQueueThrottleControlCallback} callback The callback function to install
-     * @returns {number} handle that identifies the installed callback.
+     * @param callback - The callback function to install
+     * @returns handle that identifies the installed callback.
      */
-    export const addThrottleControl = (callback: ImageQueueThrottleControlCallback): number /*callbackHandle*/ => {
+    export const addThrottleControl = (callback: ImageQueueThrottleControlCallback): number => {
         const handle = throttleControlCallbackHandleCounter++;
         throttleControlCallbacks[handle] = callback;
         return handle;
@@ -78,7 +81,7 @@ export namespace ImageRequest {
     /**
      * Remove a previously installed callback by passing in the handle returned
      * by {@link addThrottleControl}.
-     * @param {number} callbackHandle The handle for the callback to remove.
+     * @param callbackHandle - The handle for the callback to remove.
      */
     export const removeThrottleControl = (callbackHandle: number): void => {
         delete throttleControlCallbacks[callbackHandle];
@@ -89,7 +92,7 @@ export namespace ImageRequest {
     /**
      * Check to see if any of the installed callbacks are requesting the queue
      * to be throttled.
-     * @returns {boolean} true if any callback is causing the queue to be throttled.
+     * @returns `true` if any callback is causing the queue to be throttled.
      */
     const isThrottled = (): boolean => {
         const allControlKeys = Object.keys(throttleControlCallbacks);
@@ -107,10 +110,10 @@ export namespace ImageRequest {
 
     /**
      * Request to load an image.
-     * @param {RequestParameters} requestParameters Request parameters.
-     * @param {GetImageCallback} callback Callback to issue when the request completes.
-     * @param {supportImageRefresh} supportImageRefresh true, if the image request need to support refresh based on cache headers.
-     * @returns {Cancelable} Cancelable request.
+     * @param requestParameters - Request parameters.
+     * @param callback - Callback to issue when the request completes.
+     * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
+     * @returns Cancelable request.
      */
     export const getImage = (
         requestParameters: RequestParameters,

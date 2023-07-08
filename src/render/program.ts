@@ -28,6 +28,10 @@ function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> 
     }
     return result;
 }
+
+/**
+ * A webgl program to execute in the GPU space
+ */
 export class Program<Us extends UniformBindings> {
     program: WebGLProgram;
     attributes: {[_: string]: number};

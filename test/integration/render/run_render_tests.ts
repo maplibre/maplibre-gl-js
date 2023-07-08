@@ -25,7 +25,7 @@ type TestData = {
     allowed: number;
     /**
      * Perceptual color difference threshold, number between 0 and 1, smaller is more sensitive
-     * @default 0.1285
+     * @defaultValue 0.1285
      */
     threshold: number;
     ok: boolean;
@@ -116,9 +116,9 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
  * Compares the Unit8Array that was created to the expected file in the file system.
  * It updates testData with the results.
  *
- * @param directory The base directory of the data
- * @param testData The test data
- * @param data The actual image data to compare the expected to
+ * @param directory - The base directory of the data
+ * @param testData - The test data
+ * @param data - The actual image data to compare the expected to
  * @returns nothing as it updates the testData object
  */
 function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
@@ -208,8 +208,8 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 /**
  * Gets all the tests from the file system looking for style.json files.
  *
- * @param options The options
- * @param directory The base directory
+ * @param options - The options
+ * @param directory - The base directory
  * @returns The tests data structure and the styles that were loaded
  */
 function getTestStyles(options: RenderOptions, directory: string, port: number): StyleWithTestData[] {
@@ -256,7 +256,7 @@ const browser = await puppeteer.launch({headless: 'new', args: ['--enable-webgl'
  * It creates the map and applies the operations to create an image
  * and returns it as a Uint8Array
  *
- * @param style The style to use
+ * @param style - The style to use
  * @returns an image byte array promise
  */
 async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): Promise<Uint8Array> {
@@ -461,10 +461,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
         /**
          * Executes the operations in the test data
          *
-         * @param testData The test data to operate upon
-         * @param map The Map
-         * @param operations The operations
-         * @param callback The callback to use when all the operations are executed
+         * @param testData - The test data to operate upon
+         * @param map - The Map
+         * @param operations - The operations
+         * @param callback - The callback to use when all the operations are executed
          */
         async function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[], callback: Function) {
             const operation = operations && operations[0];
@@ -667,9 +667,9 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 /**
  * Prints the progress to the console
  *
- * @param test The current test
- * @param total The total number of tests
- * @param index The current test index
+ * @param test - The current test
+ * @param total - The total number of tests
+ * @param index - The current test index
  */
 function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
@@ -684,8 +684,8 @@ function printProgress(test: TestData, total: number, index: number) {
 /**
  * Prints the summary at the end of the run
  *
- * @param tests all the tests with their resutls
- * @returns
+ * @param tests - all the tests with their resutls
+ * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {
 

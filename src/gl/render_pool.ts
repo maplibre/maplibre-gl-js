@@ -15,7 +15,7 @@ export type PoolObject = {
 export class RenderPool {
     private _objects: Array<PoolObject>;
     /**
-     * @property {Array<number>} _recentlyUsed An index array of recently used pool objects.
+     * An index array of recently used pool objects.
      * Items that are used recently are last in the array
      */
     private _recentlyUsed: Array<number>;

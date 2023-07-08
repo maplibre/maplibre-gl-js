@@ -377,45 +377,66 @@ type IndexToPointCache = { [lineIndex: number]: Point };
  * Since we will use the same vertices for potentially many glyphs, cache the results for this bucket
  * over the course of the render. Each vertex location also potentially has one offset equivalent
  * for us to hold onto. The vertex indices are per-symbol-bucket.
- *
- * @typedef {Object} ProjectionCache
- * @property {IndexToPointCache} projections tile-unit vertices projected into label-plane units
- * @property {IndexToPointCache} offsets label-plane vertices which have been shifted to follow an offset line
  */
 type ProjectionCache = {
+    /**
+     * tile-unit vertices projected into label-plane units
+     */
     projections: IndexToPointCache;
+    /**
+     * label-plane vertices which have been shifted to follow an offset line
+     */
     offsets: IndexToPointCache;
 };
 
 /**
  * Arguments necessary to project a vertex to the label plane
- * @typedef {Object} ProjectionArgs
- * @property {ProjectionCache} projectionCache Used to cache results, save cost if projecting the same vertex multiple times
- * @property {SymbolLineVertexArray} lineVertexArray The array of tile-unit vertices transferred from worker
- * @property {mat4} labelPlaneMatrix Label plane projection matrix
- * @property {Function} getElevation Function to get elevation at a point
- * @property {Point} tileAnchorPoint Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
- * @property {number} distanceFromAnchor Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
- * @property {Point} previousVertex Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
- * @property {number} direction Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
- * @property {number} absOffsetX Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
  */
 type ProjectionArgs = {
+    /**
+     * Used to cache results, save cost if projecting the same vertex multiple times
+     */
     projectionCache: ProjectionCache;
+    /**
+     * The array of tile-unit vertices transferred from worker
+     */
     lineVertexArray: SymbolLineVertexArray;
+    /**
+     * Label plane projection matrix
+     */
     labelPlaneMatrix: mat4;
+    /**
+     * Function to get elevation at a point
+     * @param x - the x coordinate
+     * @param y - the y coordinate
+    */
     getElevation: (x: number, y: number) => number;
+    /**
+     * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+     */
     tileAnchorPoint: Point;
+    /**
+     * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+     */
     distanceFromAnchor: number;
+    /**
+     * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+     */
     previousVertex: Point;
+    /**
+     * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+     */
     direction: number;
+    /**
+     * Only for creating synthetic vertices if vertex would otherwise project behind plane of camera
+     */
     absOffsetX: number;
 };
 
 /**
  * Transform a vertex from tile coordinates to label plane coordinates
- * @param index index of vertex to project
- * @param projectionArgs necessary data to project a vertex
+ * @param index - index of vertex to project
+ * @param projectionArgs - necessary data to project a vertex
  * @returns the vertex projected to the label plane
  */
 function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs): Point {
@@ -442,9 +463,9 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs):
 
 /**
  * Calculate the normal vector for a line segment
- * @param segmentVector will be mutated as a tiny optimization
- * @param offset magnitude of resulting vector
- * @param direction direction of line traversal
+ * @param segmentVector - will be mutated as a tiny optimization
+ * @param offset - magnitude of resulting vector
+ * @param direction - direction of line traversal
  * @returns a normal vector from the segment, with magnitude equal to offset amount
  */
 function transformToOffsetNormal(segmentVector: Point, offset: number, direction: number): Point {
@@ -455,14 +476,14 @@ function transformToOffsetNormal(segmentVector: Point, offset: number, direction
  * Construct offset line segments for the current segment and the next segment, then extend/shrink
  * the segments until they intersect. If the segments are parallel, then they will touch with no modification.
  *
- * @param index Index of the current vertex
- * @param prevToCurrentOffsetNormal Normal vector of the line segment from the previous vertex to the current vertex
- * @param currentVertex Current (non-offset) vertex projected to the label plane
- * @param lineStartIndex Beginning index for the line this label is on
- * @param lineEndIndex End index for the line this label is on
- * @param offsetPreviousVertex The previous vertex projected to the label plane, and then offset along the previous segments normal
- * @param lineOffsetY Magnitude of the offset
- * @param projectionArgs Necessary data for tile-to-label-plane projection
+ * @param index - Index of the current vertex
+ * @param prevToCurrentOffsetNormal - Normal vector of the line segment from the previous vertex to the current vertex
+ * @param currentVertex - Current (non-offset) vertex projected to the label plane
+ * @param lineStartIndex - Beginning index for the line this label is on
+ * @param lineEndIndex - End index for the line this label is on
+ * @param offsetPreviousVertex - The previous vertex projected to the label plane, and then offset along the previous segments normal
+ * @param lineOffsetY - Magnitude of the offset
+ * @param projectionArgs - Necessary data for tile-to-label-plane projection
  * @returns The point at which the current and next line segments intersect, once offset and extended/shrunk to their meeting point
  */
 function findOffsetIntersectionPoint(index: number, prevToCurrentOffsetNormal: Point, currentVertex: Point, lineStartIndex: number, lineEndIndex: number, offsetPreviousVertex: Point, lineOffsetY: number, projectionArgs: ProjectionArgs) {
@@ -492,14 +513,20 @@ function findOffsetIntersectionPoint(index: number, prevToCurrentOffsetNormal: P
 }
 
 /**
- * @typedef {Object} PlacedGlyph
- * @property {Point} point The point at which the glyph should be placed, in label plane coordinates
- * @property {number} angle The angle at which the glyph should be placed
- * @property {Array<Point>} path The label-plane path used to reach this glyph: used only for collision detection
+ * Placed Glyph type
  */
 type PlacedGlyph = {
+    /**
+     * The point at which the glyph should be placed, in label plane coordinates
+     */
     point: Point;
+    /**
+     * The angle at which the glyph should be placed
+     */
     angle: number;
+    /**
+     * The label-plane path used to reach this glyph: used only for collision detection
+     */
     path: Array<Point>;
 };
 

@@ -21,6 +21,8 @@ const defaultOptions = {
  * - `Shift+⇠`: Decrease the rotation by 15 degrees.
  * - `Shift+⇡`: Increase the pitch by 10 degrees.
  * - `Shift+⇣`: Decrease the pitch by 10 degrees.
+ *
+ * @group Handlers
  */
 export class KeyboardHandler implements Handler {
     _tr: TransformProvider;
@@ -32,7 +34,7 @@ export class KeyboardHandler implements Handler {
     _rotationDisabled: boolean;
 
     /**
-    * @private
+    * @hidden
     */
     constructor(map: Map) {
         this._tr = new TransformProvider(map);
@@ -137,7 +139,9 @@ export class KeyboardHandler implements Handler {
      * Enables the "keyboard rotate and zoom" interaction.
      *
      * @example
-     *   map.keyboard.enable();
+     * ```ts
+     * map.keyboard.enable();
+     * ```
      */
     enable() {
         this._enabled = true;
@@ -147,7 +151,9 @@ export class KeyboardHandler implements Handler {
      * Disables the "keyboard rotate and zoom" interaction.
      *
      * @example
-     *   map.keyboard.disable();
+     * ```ts
+     * map.keyboard.disable();
+     * ```
      */
     disable() {
         this._enabled = false;
@@ -158,7 +164,7 @@ export class KeyboardHandler implements Handler {
      * Returns a Boolean indicating whether the "keyboard rotate and zoom"
      * interaction is enabled.
      *
-     * @returns {boolean} `true` if the "keyboard rotate and zoom"
+     * @returns `true` if the "keyboard rotate and zoom"
      * interaction is enabled.
      */
     isEnabled() {
@@ -169,7 +175,7 @@ export class KeyboardHandler implements Handler {
      * Returns true if the handler is enabled and has detected the start of a
      * zoom/rotate gesture.
      *
-     * @returns {boolean} `true` if the handler is enabled and has detected the
+     * @returns `true` if the handler is enabled and has detected the
      * start of a zoom/rotate gesture.
      */
     isActive() {
@@ -181,7 +187,9 @@ export class KeyboardHandler implements Handler {
      * "keyboard zoom" interaction enabled.
      *
      * @example
-     *   map.keyboard.disableRotation();
+     * ```ts
+     * map.keyboard.disableRotation();
+     * ```
      */
     disableRotation() {
         this._rotationDisabled = true;
@@ -191,8 +199,10 @@ export class KeyboardHandler implements Handler {
      * Enables the "keyboard pan/rotate" interaction.
      *
      * @example
-     *   map.keyboard.enable();
-     *   map.keyboard.enableRotation();
+     * ```ts
+     * map.keyboard.enable();
+     * map.keyboard.enableRotation();
+     * ```
      */
     enableRotation() {
         this._rotationDisabled = false;

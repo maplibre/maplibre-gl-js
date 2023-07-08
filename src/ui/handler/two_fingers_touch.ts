@@ -3,10 +3,21 @@ import {DOM} from '../../util/dom';
 import type {Map} from '../map';
 import {Handler} from '../handler_manager';
 
+/**
+ * An options object sent to the enable function of some of the handlers
+ */
 export type AroundCenterOptions = {
+    /**
+     * If "center" is passed, map will zoom around the center of map
+     */
     around: 'center';
 }
 
+/**
+ * The `TwoFingersTouchHandler`s allows the user to zoom, pitch and rotate the map using two fingers
+ *
+ * @group Handlers
+ */
 abstract class TwoFingersTouchHandler implements Handler {
 
     _enabled: boolean;
@@ -16,6 +27,9 @@ abstract class TwoFingersTouchHandler implements Handler {
     _startVector: Point;
     _aroundCenter: boolean;
 
+    /**
+     * @hidden
+     */
     constructor() {
         this.reset();
     }
@@ -74,20 +88,46 @@ abstract class TwoFingersTouchHandler implements Handler {
         this.reset();
     }
 
+    /**
+     * Enables the "drag to pitch" interaction.
+     *
+     * @example
+     * ```ts
+     * map.touchPitch.enable();
+     * ```
+     */
     enable(options?: AroundCenterOptions | boolean | null) {
         this._enabled = true;
         this._aroundCenter = !!options && (options as AroundCenterOptions).around === 'center';
     }
 
+    /**
+     * Disables the "drag to pitch" interaction.
+     *
+     * @example
+     * ```ts
+     * map.touchPitch.disable();
+     * ```
+     */
     disable() {
         this._enabled = false;
         this.reset();
     }
 
+    /**
+     * Returns a Boolean indicating whether the "drag to pitch" interaction is enabled.
+     *
+     * @returns  `true` if the "drag to pitch" interaction is enabled.
+     */
     isEnabled() {
         return this._enabled;
     }
 
+    /**
+     * Returns a Boolean indicating whether the "drag to pitch" interaction is active, i.e. currently being used.
+     *
+     * @returns `true` if the "drag to pitch" interaction is active.
+     */
     isActive() {
         return this._active;
     }
@@ -107,6 +147,11 @@ function getZoomDelta(distance, lastDistance) {
     return Math.log(distance / lastDistance) / Math.LN2;
 }
 
+/**
+ * The `TwoFingersTouchHandler`s allows the user to zoom the map two fingers
+ *
+ * @group Handlers
+ */
 export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
 
     _distance: number;
@@ -142,6 +187,11 @@ function getBearingDelta(a, b) {
     return a.angleWith(b) * 180 / Math.PI;
 }
 
+/**
+ * The `TwoFingersTouchHandler`s allows the user to rotate the map two fingers
+ *
+ * @group Handlers
+ */
 export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
     _minDiameter: number;
 
@@ -200,6 +250,8 @@ const ALLOWED_SINGLE_TOUCH_TIME = 100;
 
 /**
  * The `TwoFingersTouchPitchHandler` allows the user to pitch the map by dragging up and down with two fingers.
+ *
+ * @group Handlers
  */
 export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
 
@@ -284,42 +336,4 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
         const isSameDirection = vectorA.y > 0 === vectorB.y > 0;
         return isVertical(vectorA) && isVertical(vectorB) && isSameDirection;
     }
-
-    /**
-     * Returns a Boolean indicating whether the "drag to pitch" interaction is enabled.
-     *
-     * @memberof TwoFingersTouchPitchHandler
-     * @name isEnabled
-     * @instance
-     * @returns {boolean} `true` if the "drag to pitch" interaction is enabled.
-     */
-
-    /**
-     * Returns a Boolean indicating whether the "drag to pitch" interaction is active, i.e. currently being used.
-     *
-     * @memberof TwoFingersTouchPitchHandler
-     * @name isActive
-     * @instance
-     * @returns {boolean} `true` if the "drag to pitch" interaction is active.
-     */
-
-    /**
-     * Enables the "drag to pitch" interaction.
-     *
-     * @memberof TwoFingersTouchPitchHandler
-     * @name enable
-     * @instance
-     * @example
-     * map.touchPitch.enable();
-     */
-
-    /**
-     * Disables the "drag to pitch" interaction.
-     *
-     * @memberof TwoFingersTouchPitchHandler
-     * @name disable
-     * @instance
-     * @example
-     * map.touchPitch.disable();
-     */
 }

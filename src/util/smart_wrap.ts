@@ -15,8 +15,6 @@ import type {Transform} from '../geo/transform';
  * possible; they should avoid shifting large distances across the screen, even when the
  * map center changes by ±360° due to automatic wrapping, and when about to go off screen,
  * should wrap just enough to avoid doing so.
- *
- * @private
  */
 export function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform): LngLat {
     lngLat = new LngLat(lngLat.lng, lngLat.lat);

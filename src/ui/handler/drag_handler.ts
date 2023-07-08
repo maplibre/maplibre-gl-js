@@ -32,16 +32,36 @@ export interface DragMoveHandler<T extends DragMovementResult, E extends Event> 
     getClickTolerance: () => number;
 }
 
+export type DragMoveHandlerOptions<T, E extends Event> = {
+    /**
+     * If the movement is shorter than this value, consider it a click.
+     */
+    clickTolerance: number;
+    /**
+     * The move function to run on a valid movement.
+     */
+    move: DragMoveFunction<T>;
+    /**
+     * A class used to manage the state of the drag event - start, checking valid moves, end. See the class documentation for more details.
+     */
+    moveStateManager: DragMoveStateManager<E>;
+    /**
+     * A method used to assign the dragStart, dragMove, and dragEnd methods to the relevant event handlers, as well as assigning the contextmenu handler
+     * @param handler - the handler
+     */
+    assignEvents: (handler: DragMoveHandler<T, E>) => void;
+    /**
+     * Should the move start on the "start" event, or should it start on the first valid move.
+     */
+    activateOnStart?: boolean;
+    /**
+     * If true, handler will be enabled during construction
+     */
+    enable?: boolean;
+}
+
 /**
  * A generic class to create handlers for drag events, from both mouse and touch events.
- * @implements {DragMoveHandler<T, E>}
- * @param {Object} options
- * @param {number} options.clickTolerance If the movement is shorter than this value, consider it a click.
- * @param {string} options.move The move function to run on a valid movement.
- * @param {DragMoveStateManager<E>} options.moveStateManager A class used to manage the state of the drag event - start, checking valid moves, end. See the class documentation for more details.
- * @param {function} options.assignEvent A method used to assign the dragStart, dragMove, and dragEnd methods to the relevant event handlers, as well as assigning the contextmenu handler
- * @param {boolean} [options.activateOnStart] Should the move start on the "start" event, or should it start on the first valid move.
- * @param {boolean} [options.enable] If true, handler will be enabled during construction
  */
 export class DragHandler<T extends DragMovementResult, E extends Event> implements DragMoveHandler<T, E> {
     // Event handlers that may be assigned by the implementations of this class
@@ -62,14 +82,7 @@ export class DragHandler<T extends DragMovementResult, E extends Event> implemen
     _lastPoint: Point | null;
     _moveStateManager: DragMoveStateManager<E>;
 
-    constructor(options: {
-        clickTolerance: number;
-        move: DragMoveFunction<T>;
-        moveStateManager: DragMoveStateManager<E>;
-        assignEvents: (handler: DragMoveHandler<T, E>) => void;
-        activateOnStart?: boolean;
-        enable?: boolean;
-    }) {
+    constructor(options: DragMoveHandlerOptions<T, E>) {
         this._enabled = !!options.enable;
         this._moveStateManager = options.moveStateManager;
         this._clickTolerance = options.clickTolerance || 1;
