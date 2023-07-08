@@ -348,7 +348,8 @@ function emitStructArray(locals) {
 
     if (includeStructAccessors && !useComponentGetters) {
         output.push(
-            `class ${structTypeClass} extends Struct {
+            `/** */
+class ${structTypeClass} extends Struct {
     _structArray: ${structArrayClass};`);
 
         for (const {name, member, component} of components) {
@@ -383,8 +384,7 @@ export type ${structTypeClass.replace('Struct', '')} = ${structTypeClass};
     } // end 'if (includeStructAccessors)'
 
     output.push(
-        `/**
- */
+        `/** */
 export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
 
     if (useComponentGetters) {
