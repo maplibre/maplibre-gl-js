@@ -2,6 +2,16 @@
 
 ### ✨ Features and improvements
 
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- _...Add new stuff here..._
+
+## 3.2.0-pre.1
+
+### ✨ Features and improvements
+
 - Change all internal exports to named exports([#2711](https://github.com/maplibre/maplibre-gl-js/pull/2711))
 - Docs generation is now part of this repo([#2733](https://github.com/maplibre/maplibre-gl-js/pull/2733))
 - Add `className` option to Marker constructor ([#2729](https://github.com/maplibre/maplibre-gl-js/pull/2729))
@@ -10,7 +20,6 @@
 - Reduce maxCanvasSize when hitting GL limits to avoid distortions ([#2674](https://github.com/maplibre/maplibre-gl-js/pull/2673))
 - Rewrite all the code comments in TSDocs, introduced a new documentaiton system and moved examples into this repository for better debug options ([#2756](https://github.com/maplibre/maplibre-gl-js/pull/2756))
 - ⚠️ Removed non documented `Marker` constructor parameter ([#2756](https://github.com/maplibre/maplibre-gl-js/pull/2756))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Return undefined instead of throwing from `Style.serialize()` when the style hasn't loaded yet ([#2712](https://github.com/maplibre/maplibre-gl-js/pull/2712)) 
@@ -18,7 +27,6 @@
 - Fix the `tap then drag` zoom gesture detection to abort when the two taps are far away ([#2673](https://github.com/maplibre/maplibre-gl-js/pull/2673))
 - Fix regression - update pixel ratio when devicePixelRatio changes, restoring the v1.x behaviour ([#2706](https://github.com/maplibre/maplibre-gl-js/issues/2706))
 - Fix incorrect elevation calculation [#2772]
-- _...Add new stuff here..._
 
 ## 3.1.0
 
