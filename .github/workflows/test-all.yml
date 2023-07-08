@@ -29,6 +29,8 @@ jobs:
         if: success() || failure()
       - run: npm run typecheck
         if: success() || failure()
+      - run: npm run generate-docs
+      - run: docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
 
   unit-tests:
     name: Unit tests and Coverage

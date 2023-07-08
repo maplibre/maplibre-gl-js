@@ -91,7 +91,7 @@ const focusQuerySelector = [
 /**
  * A popup component.
  *
- * @group Main
+ * @group Markers and Controls
  *
  *
  * @example

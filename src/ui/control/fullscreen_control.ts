@@ -22,7 +22,7 @@ type FullscreenOptions = {
  * The map's `cooperativeGestures` option is temporarily disabled while the map
  * is in fullscreen mode, and is restored when the map exist fullscreen mode.
  *
- * @group Controls
+ * @group Markers and Controls
  * @param options - the full screen control options
  *
  * @example

@@ -78,7 +78,7 @@ type MarkerOptions = {
 /**
  * Creates a marker component
  *
- * @group Main
+ * @group Markers and Controls
  *
  * @example
  * ```ts

@@ -37,32 +37,37 @@ const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
 
-const maplibregl = {
-    Map,
-    NavigationControl,
-    GeolocateControl,
-    AttributionControl,
-    LogoControl,
-    ScaleControl,
-    FullscreenControl,
-    TerrainControl,
-    Popup,
-    Marker,
-    Style,
-    LngLat,
-    LngLatBounds,
-    Point,
-    MercatorCoordinate,
-    Evented,
-    AJAXError,
-    config,
-    CanvasSource,
-    GeoJSONSource,
-    ImageSource,
-    RasterDEMTileSource,
-    RasterTileSource,
-    VectorTileSource,
-    VideoSource,
+/**
+ * `maplibregl` is the global object that allows configurations that are not specific to a map instance
+ *
+ * @group Main
+ */
+class MapLibreGL {
+    static Map = Map;
+    static NavigationControl = NavigationControl;
+    static GeolocateControl = GeolocateControl;
+    static AttributionControl = AttributionControl;
+    static LogoControl = LogoControl;
+    static ScaleControl = ScaleControl;
+    static FullscreenControl = FullscreenControl;
+    static TerrainControl = TerrainControl;
+    static Popup = Popup;
+    static Marker = Marker;
+    static Style = Style;
+    static LngLat = LngLat;
+    static LngLatBounds = LngLatBounds;
+    static Point = Point;
+    static MercatorCoordinate = MercatorCoordinate;
+    static Evented = Evented;
+    static AJAXError = AJAXError;
+    static config = config;
+    static CanvasSource = CanvasSource;
+    static GeoJSONSource = GeoJSONSource;
+    static ImageSource = ImageSource;
+    static RasterDEMTileSource = RasterDEMTileSource;
+    static RasterTileSource = RasterTileSource;
+    static VectorTileSource = VectorTileSource;
+    static VideoSource = VideoSource;
     /**
      * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
      * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
@@ -77,7 +82,7 @@ const maplibregl = {
      * ```
      * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js-docs/example/mapbox-gl-rtl-text/)
      */
-    setRTLTextPlugin,
+    static setRTLTextPlugin = setRTLTextPlugin;
     /**
      * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
      * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
@@ -88,7 +93,7 @@ const maplibregl = {
      * const pluginStatus = maplibregl.getRTLTextPluginStatus();
      * ```
      */
-    getRTLTextPluginStatus,
+    static getRTLTextPluginStatus = getRTLTextPluginStatus;
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
@@ -111,7 +116,7 @@ const maplibregl = {
      * maplibregl.prewarm()
      * ```
      */
-    prewarm,
+    static prewarm = prewarm;
     /**
      * Clears up resources that have previously been created by `maplibregl.prewarm()`.
      * Note that this is typically not necessary. You should only call this function
@@ -123,15 +128,14 @@ const maplibregl = {
      * maplibregl.clearPrewarmedResources()
      * ```
      */
-    clearPrewarmedResources,
-
+    static clearPrewarmedResources = clearPrewarmedResources;
     /**
      * Returns the package version of the library
      * @returns Package version of the library
      */
-    get version(): string {
+    static get version(): string {
         return version;
-    },
+    }
 
     /**
      * Gets and sets the number of web workers instantiated on a page with GL JS maps.
@@ -144,14 +148,13 @@ const maplibregl = {
      * maplibregl.workerCount = 2;
      * ```
      */
-    get workerCount(): number {
+    static get workerCount(): number {
         return WorkerPool.workerCount;
-    },
+    }
 
-    set workerCount(count: number) {
+    static set workerCount(count: number) {
         WorkerPool.workerCount = count;
-    },
-
+    }
     /**
      * Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
      * which affects performance in raster-heavy maps. 16 by default.
@@ -162,21 +165,21 @@ const maplibregl = {
      * maplibregl.maxParallelImageRequests = 10;
      * ```
      */
-    get maxParallelImageRequests(): number {
+    static get maxParallelImageRequests(): number {
         return config.MAX_PARALLEL_IMAGE_REQUESTS;
-    },
+    }
 
-    set maxParallelImageRequests(numRequests: number) {
+    static set maxParallelImageRequests(numRequests: number) {
         config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests;
-    },
+    }
 
-    get workerUrl(): string {
+    static get workerUrl(): string {
         return config.WORKER_URL;
-    },
+    }
 
-    set workerUrl(value: string) {
+    static set workerUrl(value: string) {
         config.WORKER_URL = value;
-    },
+    }
 
     /**
      * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.
@@ -212,9 +215,9 @@ const maplibregl = {
      * });
      * ```
      */
-    addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
+    static addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
         config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
-    },
+    }
 
     /**
      * Removes a previously added protocol
@@ -225,12 +228,12 @@ const maplibregl = {
      * maplibregl.removeProtocol('custom');
      * ```
      */
-    removeProtocol(customProtocol: string) {
+    static removeProtocol(customProtocol: string) {
         delete config.REGISTERED_PROTOCOLS[customProtocol];
     }
-};
+}
 
 //This gets automatically stripped out in production builds.
-Debug.extend(maplibregl, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
+Debug.extend(MapLibreGL, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
 
-export default maplibregl;
+export default MapLibreGL;

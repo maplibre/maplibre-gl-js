@@ -421,9 +421,8 @@ const defaultOptions = {
  * and properties that enable you to programmatically change the map,
  * and fires events as users interact with it.
  *
- * You create a `Map` by specifying a `container` and other options.
- * Then MapLibre GL JS initializes the map on the page and returns your `Map`
- * object.
+ * You create a `Map` by specifying a `container` and other options, see {@link MapOptions} for the full list.
+ * Then MapLibre GL JS initializes the map on the page and returns your `Map` object.
  *
  * @group Main
  *

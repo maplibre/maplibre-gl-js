@@ -35,6 +35,7 @@ export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
  * event action contains a visible portion of the specified layer.
  * The following example can be used for all the events.
  *
+ * @group Event Related
  * @example
  * ```ts
  * // Initialize the map
@@ -133,6 +134,7 @@ export type MapLayerEventType = {
  * When using a `layerId` with {@link Map#on} method, please refer to {@link MapLayerEventType}.
  * The following example can be used for all the events.
  *
+ * @group Event Related
  * @example
  * ```ts
  * // Initialize the map

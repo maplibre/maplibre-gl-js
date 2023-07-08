@@ -22,7 +22,7 @@ type AttributionOptions = {
 
 /**
  * An `AttributionControl` control presents the map's attribution information. By default, the attribution control is expanded (regardless of map width).
- * @group Controls
+ * @group Markers and Controls
  * @example
  * ```ts
  * let map = new maplibregl.Map({attributionControl: false})

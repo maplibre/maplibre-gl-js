@@ -33,7 +33,7 @@ const defaultOptions: ScaleOptions = {
 /**
  * A `ScaleControl` control displays the ratio of a distance on the map to the corresponding distance on the ground.
  *
- * @group Controls
+ * @group Markers and Controls
  *
  * @example
  * ```ts

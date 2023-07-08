@@ -1,6 +1,11 @@
 import type {Cancelable} from '../types/cancelable';
 import type {RequestParameters, ResponseCallback} from './ajax';
 
+/**
+ * This is a global config object used to store the configuration
+ * It is available in the workers as well.
+ * Only serializable data should be stored in it.
+ */
 type Config = {
     MAX_PARALLEL_IMAGE_REQUESTS: number;
     MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME: number;
