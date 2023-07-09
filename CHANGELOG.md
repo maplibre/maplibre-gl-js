@@ -8,7 +8,7 @@
 
 - _...Add new stuff here..._
 
-## 3.2.0-pre.1
+## 3.2.0-pre.2
 
 ### ✨ Features and improvements
 
