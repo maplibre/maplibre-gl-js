@@ -121,7 +121,7 @@
     "shuffle-seed": "^1.1.6",
     "source-map-explorer": "^2.5.3",
     "st": "^3.0.0",
-    "stylelint": "^15.9.0",
+    "stylelint": "^15.10.1",
     "stylelint-config-standard": "^33.0.0",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
