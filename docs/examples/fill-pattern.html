@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a pattern to a polygon</title>
+    <meta property="og:description" content="Use fill-pattern to draw a polygon from a repeating image pattern." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        zoom: 1
+    });
+
+    map.on('load', () => {
+        // Add GeoJSON data
+        map.addSource('source', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'Polygon',
+                    'coordinates': [
+                        [
+                            [-30, -25],
+                            [-30, 35],
+                            [30, 35],
+                            [30, -25],
+                            [-30, -25]
+                        ]
+                    ]
+                }
+            }
+        });
+
+        // Load an image to use as the pattern
+        map.loadImage(
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/64px-Cat_silhouette.svg.png',
+            (err, image) => {
+                // Throw an error if something went wrong
+                if (err) throw err;
+
+                // Declare the image
+                map.addImage('pattern', image);
+
+                // Use it
+                map.addLayer({
+                    'id': 'pattern-layer',
+                    'type': 'fill',
+                    'source': 'source',
+                    'paint': {
+                        'fill-pattern': 'pattern'
+                    }
+                });
+            }
+        );
+    });
+</script>
+</body>
+</html>

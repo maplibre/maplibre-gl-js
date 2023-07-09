@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Fit a map to a bounding box</title>
+    <meta property="og:description" content="Fit the map to a specific area, regardless of the pixel size of the map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #fit {
+        display: block;
+        position: relative;
+        margin: 0px auto;
+        width: 50%;
+        height: 40px;
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        text-align: center;
+        color: #fff;
+        background: #ee8a65;
+    }
+</style>
+<div id="map"></div>
+<br />
+<button id="fit">Fit to Kenya</button>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-74.5, 40],
+        zoom: 9
+    });
+
+    document.getElementById('fit').addEventListener('click', () => {
+        map.fitBounds([
+            [32.958984, -5.353521],
+            [43.50585, 5.615985]
+        ]);
+    });
+</script>
+</body>
+</html>
