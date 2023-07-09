@@ -127,6 +127,7 @@ jobs:
           docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
 
       - name: Publish the docs
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
