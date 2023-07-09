@@ -7,3 +7,6 @@
 *.png binary
 *.mvt binary
 *.pbf binary
+
+*.gltf text eol=lf
+*.bin binary
