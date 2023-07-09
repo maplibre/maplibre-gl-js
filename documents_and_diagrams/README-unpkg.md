@@ -4,7 +4,7 @@ MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com).
 
 > *UNPKG is a fast, global content delivery network for everything on npm.*
 
-These notes on unpkg are tailored for MapLibre GL JS.  For the most up to date documentation be sure to see [maplibre.org/maplibre-gl-js-docs](https://maplibre.org/maplibre-gl-js-docs).  You can see live examples and notes on how to include the JavaScript and CSS files in your project.
+These notes on unpkg are tailored for MapLibre GL JS.  For the most up to date documentation be sure to see [maplibre.org/maplibre-gl-js/docs](https://maplibre.org/maplibre-gl-js/docs).  You can see live examples and notes on how to include the JavaScript and CSS files in your project.
 
 You can also use these unpkg notes to review `CHANGELOG`'s or other revisions of MapLibre GL JS.
 
