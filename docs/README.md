@@ -5,7 +5,7 @@ MapLibre GL JS is a TypeScript library that uses WebGL to render interactive map
 
 ## Quickstart
 
-<iframe src="./example/simple-map.html" width="100%" style="border:none"></iframe>
+<iframe src="./examples/simple-map.html" width="100%" style="border:none"></iframe>
 
 ```html
 <div id="map"></div>
