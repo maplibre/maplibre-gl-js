@@ -39,7 +39,7 @@ Enjoy the map!
 
 Full documentation for this library [is available here](https://maplibre.org/maplibre-gl-js-docs/api/).
 
-Check out the features through [examples](https://maplibre.org/maplibre-gl-js-docs/example/).
+Check out the features through [examples](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
 | Showcases |      |
 | ---- | ---- |
@@ -86,7 +86,7 @@ MapLibre GL JS v1 is completely backward compatible with Mapbox GL JS v1. This c
 
 ```
 
-Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js-docs/example/).
+Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
 Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started/get-started#using-with-a-mapbox-gl-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
 
