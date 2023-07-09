@@ -25,6 +25,8 @@ theme:
         icon: material/brightness-7
         name: Switch to dark mode
 markdown_extensions:
+  - toc:
+      toc_depth: 3
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
