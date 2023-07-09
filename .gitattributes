@@ -9,3 +9,4 @@
 *.pbf binary
 
 *.gltf text eol=lf
+*.bin binary
