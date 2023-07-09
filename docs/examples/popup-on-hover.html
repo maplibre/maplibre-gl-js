@@ -5,8 +5,8 @@
     <meta property="og:description" content="When a user hovers over a custom marker, show a popup containing more information." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.0-pre.2/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.2.0-pre.2/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -30,7 +30,7 @@
 
     map.on('load', () => {
         map.loadImage(
-            'https://maplibre.org/maplibre-gl-js-docs/assets/custom_marker.png',
+            'https://maplibre.org/maplibre-gl-js/docs/assets/custom_marker.png',
             // Add an image to use as a custom marker
             (error, image) => {
                 if (error) throw error;

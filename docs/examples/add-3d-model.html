@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use a custom style layer with three.js to add a 3D model to the map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.0-pre.2/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.2.0-pre.2/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -74,7 +74,7 @@
             // use the three.js GLTF loader to add the 3D model to the three.js scene
             const loader = new THREE.GLTFLoader();
             loader.load(
-                'https://maplibre.org/maplibre-gl-js-docs/assets/34M_17/34M_17.gltf',
+                'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf',
                 (gltf) => {
                     this.scene.add(gltf.scene);
                 }

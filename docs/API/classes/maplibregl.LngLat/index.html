@@ -5406,20 +5406,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/third-party/" class="md-nav__link">
-        Add a third party vector tile source
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../examples/timeline-animation/" class="md-nav__link">
         Create a time slider
       </a>
@@ -5793,9 +5779,9 @@ This flexible type is documented as <a href="../../types/maplibregl.LngLatLike/"
 </span></code></pre></div>
 <p><strong><code>See</code></strong></p>
 <ul>
-<li><a href="https://maplibre.org/maplibre-gl-js-docs/example/mouse-position/">Get coordinates of the mouse pointer</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js-docs/example/popup/">Display a popup</a></li>
-<li><a href="https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/">Create a timeline animation</a></li>
+<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/">Get coordinates of the mouse pointer</a></li>
+<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/popup/">Display a popup</a></li>
+<li><a href="https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/">Create a timeline animation</a></li>
 </ul>
 <h2 id="constructors">Constructors</h2>
 <h3 id="constructor">constructor</h3>
@@ -5823,7 +5809,7 @@ This flexible type is documented as <a href="../../types/maplibregl.LngLatLike/"
 </tbody>
 </table>
 <h4 id="defined-in">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f75a9e64d/src/geo/lng_lat.ts#L61">src/geo/lng_lat.ts:61</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3b5a57fe2/src/geo/lng_lat.ts#L61">src/geo/lng_lat.ts:61</a></p>
 <h2 id="methods">Methods</h2>
 <h3 id="distanceto">distanceTo</h3>
 <p>▸ <strong>distanceTo</strong>(<code>lngLat</code>): <code>number</code></p>
@@ -5855,7 +5841,7 @@ Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky a
 <p><code>number</code></p>
 <p>Distance in meters between the two coordinates.</p>
 <h4 id="defined-in_1">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f75a9e64d/src/geo/lng_lat.ts#L128">src/geo/lng_lat.ts:128</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3b5a57fe2/src/geo/lng_lat.ts#L128">src/geo/lng_lat.ts:128</a></p>
 <hr />
 <h3 id="toarray">toArray</h3>
 <p>▸ <strong>toArray</strong>(): [<code>number</code>, <code>number</code>]</p>
@@ -5868,7 +5854,7 @@ Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky a
 <p>[<code>number</code>, <code>number</code>]</p>
 <p>The coordinates represented as an array of longitude and latitude.</p>
 <h4 id="defined-in_2">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f75a9e64d/src/geo/lng_lat.ts#L97">src/geo/lng_lat.ts:97</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3b5a57fe2/src/geo/lng_lat.ts#L97">src/geo/lng_lat.ts:97</a></p>
 <hr />
 <h3 id="tostring">toString</h3>
 <p>▸ <strong>toString</strong>(): <code>string</code></p>
@@ -5881,7 +5867,7 @@ Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky a
 <p><code>string</code></p>
 <p>The coordinates represented as a string of the format <code>'LngLat(lng, lat)'</code>.</p>
 <h4 id="defined-in_3">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f75a9e64d/src/geo/lng_lat.ts#L111">src/geo/lng_lat.ts:111</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3b5a57fe2/src/geo/lng_lat.ts#L111">src/geo/lng_lat.ts:111</a></p>
 <hr />
 <h3 id="wrap">wrap</h3>
 <p>▸ <strong>wrap</strong>(): <a href="./"><code>LngLat</code></a></p>
@@ -5895,7 +5881,7 @@ Uses the Haversine Formula (from R.W. Sinnott, "Virtues of the Haversine", Sky a
 <p><a href="./"><code>LngLat</code></a></p>
 <p>The wrapped <code>LngLat</code> object.</p>
 <h4 id="defined-in_4">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f75a9e64d/src/geo/lng_lat.ts#L83">src/geo/lng_lat.ts:83</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3b5a57fe2/src/geo/lng_lat.ts#L83">src/geo/lng_lat.ts:83</a></p>
 <hr />
 <h3 id="convert">convert</h3>
 <p>▸ <code>Static</code> <strong>convert</strong>(<code>input</code>): <a href="./"><code>LngLat</code></a></p>
@@ -5928,7 +5914,7 @@ to a <code>LngLat</code> object.</p>
 <p><a href="./"><code>LngLat</code></a></p>
 <p>A new <code>LngLat</code> object, if a conversion occurred, or the original <code>LngLat</code> object.</p>
 <h4 id="defined-in_5">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f75a9e64d/src/geo/lng_lat.ts#L153">src/geo/lng_lat.ts:153</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3b5a57fe2/src/geo/lng_lat.ts#L153">src/geo/lng_lat.ts:153</a></p>
 
 
 

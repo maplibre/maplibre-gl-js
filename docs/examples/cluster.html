@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use MapLibre GL JS' built-in functions to visualize points as clusters." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@3.2.0-pre.1/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.0-pre.2/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.2.0-pre.2/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -31,7 +31,7 @@
             type: 'geojson',
             // Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
             // from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
-            data: 'https://maplibre.org/maplibre-gl-js-docs/assets/earthquakes.geojson',
+            data: 'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
             cluster: true,
             clusterMaxZoom: 14, // Max zoom to cluster points on
             clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)

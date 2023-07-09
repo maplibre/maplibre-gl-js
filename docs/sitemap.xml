@@ -1631,11 +1631,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/third-party/</loc>
-         <lastmod>2023-07-09</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/</loc>
          <lastmod>2023-07-09</lastmod>
          <changefreq>daily</changefreq>
