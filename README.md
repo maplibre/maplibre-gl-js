@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg?style=flat)](LICENSE.txt) [![Version](https://img.shields.io/npm/v/maplibre-gl?style=flat)](https://www.npmjs.com/package/maplibre-gl) [![CI](https://github.com/maplibre/maplibre-gl-js/actions/workflows/ci.yml/badge.svg)](https://github.com/maplibre/maplibre-gl-js/actions/workflows/ci.yml) [![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause) [![codecov](https://codecov.io/gh/maplibre/maplibre-gl-js/branch/main/graph/badge.svg)](https://codecov.io/gh/maplibre/maplibre-gl-js)
 
-**[MapLibre GL JS](https://maplibre.org/maplibre-gl-js-docs/api/)** is an open-source library for publishing maps on your websites or webview based apps. Fast displaying of maps is possible thanks to GPU-accelerated vector tile rendering. 
+**[MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/api/)** is an open-source library for publishing maps on your websites or webview based apps. Fast displaying of maps is possible thanks to GPU-accelerated vector tile rendering. 
 
 It originated as an open-source fork of [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js), before their switch to a non-OSS license in December 2020. The library's initial versions (1.x) were intended to be a drop-in replacement for the Mapbox’s OSS version (1.x) with additional functionality, but have evolved a lot since then.
 
@@ -37,15 +37,15 @@ Enjoy the map!
 
 ## Documentation
 
-Full documentation for this library [is available here](https://maplibre.org/maplibre-gl-js-docs/api/).
+Full documentation for this library [is available here](https://maplibre.org/maplibre-gl-js/docs/api/).
 
 Check out the features through [examples](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
 | Showcases |      |
 | ---- | ---- |
-|![Display a map](https://maplibre.org/maplibre-gl-js-docs/assets/simple-map-800-1427cd84c8c693ead996f81b06e467bb.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/assets/third-party-800-72a3092888152ba26920ec0ba5aeacd0.png)	|
-|![Animate a series of images](https://maplibre.org/maplibre-gl-js-docs/assets/animate-images-800-522ec4f83d7988b2d6f23a0c1d5eb924.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js-docs/assets/heatmap-layer-800-a23e44d9c1238315f191187c5c628719.png)	|
-|![3D buildings](https://maplibre.org/maplibre-gl-js-docs/assets/3d-buildings-800-18cda57800c107d1dee5f269bf7a12f2.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js-docs/assets/visualize-population-density-800-dc0290780f7b2842031bdf1b9347981a.png)	|
+|![Display a map](https://maplibre.org/maplibre-gl-js/docs/assets/simple-map-800-1427cd84c8c693ead996f81b06e467bb.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/assets/third-party-800-72a3092888152ba26920ec0ba5aeacd0.png)	|
+|![Animate a series of images](https://maplibre.org/maplibre-gl-js/docs/assets/animate-images-800-522ec4f83d7988b2d6f23a0c1d5eb924.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js/docs/assets/heatmap-layer-800-a23e44d9c1238315f191187c5c628719.png)	|
+|![3D buildings](https://maplibre.org/maplibre-gl-js/docs/assets/3d-buildings-800-18cda57800c107d1dee5f269bf7a12f2.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js/docs/assets/visualize-population-density-800-dc0290780f7b2842031bdf1b9347981a.png)	|
 
 <br />
 
