@@ -72,7 +72,7 @@ export function mercatorScale(lat: number) {
  * ```ts
  * let nullIsland = new maplibregl.MercatorCoordinate(0.5, 0.5, 0);
  * ```
- * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js-docs/example/custom-style-layer/)
+ * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/custom-style-layer/)
  */
 export class MercatorCoordinate implements IMercatorCoordinate {
     x: number;

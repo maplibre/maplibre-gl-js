@@ -47,7 +47,7 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  *
  * map.removeSource('some id');  // remove
  * ```
- * @see [Add a video](https://maplibre.org/maplibre-gl-js-docs/example/video-on-a-map/)
+ * @see [Add a video](https://maplibre.org/maplibre-gl-js/docs/examples/video-on-a-map/)
  */
 export class VideoSource extends ImageSource {
     options: VideoSourceSpecification;

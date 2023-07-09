@@ -64,7 +64,7 @@ export type StyleImage = StyleImageData & StyleImageMetadata;
  * {@link StyleImageInterface#render} method. The method is called every frame and
  * can be used to update the image.
  *
- * @see [Add an animated icon to the map.](https://maplibre.org/maplibre-gl-js-docs/example/add-image-animated/)
+ * @see [Add an animated icon to the map.](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/)
  *
  * @example
  * ```ts

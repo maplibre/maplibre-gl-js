@@ -30,7 +30,7 @@ import type {ExpiryData} from '../util/ajax';
  *      tileSize: 256
  * });
  * ```
- * @see [3D Terrain](https://maplibre.org/maplibre-gl-js-docs/example/3d-terrain/)
+ * @see [3D Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/)
  */
 export class RasterDEMTileSource extends RasterTileSource implements Source {
     encoding: 'mapbox' | 'terrarium';

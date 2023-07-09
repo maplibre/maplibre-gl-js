@@ -46,9 +46,9 @@ export type LngLatLike = LngLat | {
  * let ll = new maplibregl.LngLat(-123.9749, 40.7736);
  * ll.lng; // = -123.9749
  * ```
- * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js-docs/example/mouse-position/)
- * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
- * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js-docs/example/timeline-animation/)
+ * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
+ * @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
+ * @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
  */
 export class LngLat {
     lng: number;

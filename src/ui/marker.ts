@@ -96,8 +96,8 @@ type MarkerOptions = {
  *   }).setLngLat([30.5, 50.5])
  *   .addTo(map);
  * ```
- * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
- * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
+ * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
+ * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
  *
  * ### Events
  *
@@ -354,7 +354,7 @@ export class Marker extends Evented {
      * // Print the marker's longitude and latitude values in the console
      * console.log('Longitude: ' + lngLat.lng + ', Latitude: ' + lngLat.lat )
      * ```
-     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
+     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
      */
     getLngLat(): LngLat {
         return this._lngLat;
@@ -371,8 +371,8 @@ export class Marker extends Evented {
      *   .setLngLat([-65.017, -16.457])
      *   .addTo(map);
      * ```
-     * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js-docs/example/custom-marker-icons/)
-     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js-docs/example/drag-a-marker/)
+     * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
+     * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
      */
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
@@ -402,7 +402,7 @@ export class Marker extends Evented {
      *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>")) // add popup
      *  .addTo(map);
      * ```
-     * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
+     * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
      */
     setPopup(popup?: Popup | null): this {
         if (this._popup) {

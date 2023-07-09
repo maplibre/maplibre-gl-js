@@ -45,9 +45,9 @@ import type {
  *      'tileSize': 256
  * });
  * ```
- * @see [Add a raster tile source](https://maplibre.org/maplibre-gl-js-docs/example/map-tiles/)
- * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js-docs/example/wms/)
- * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js-docs/example/satellite-map/)
+ * @see [Add a raster tile source](https://maplibre.org/maplibre-gl-js/docs/examples/map-tiles/)
+ * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
+ * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js/docs/examples/satellite-map/)
  */
 export class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';
