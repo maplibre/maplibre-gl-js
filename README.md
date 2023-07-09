@@ -43,9 +43,9 @@ Check out the features through [examples](https://maplibre.org/maplibre-gl-js/do
 
 | Showcases |      |
 | ---- | ---- |
-|![Display a map](https://maplibre.org/maplibre-gl-js/docs/assets/simple-map-800-1427cd84c8c693ead996f81b06e467bb.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/assets/third-party-800-72a3092888152ba26920ec0ba5aeacd0.png)	|
-|![Animate a series of images](https://maplibre.org/maplibre-gl-js/docs/assets/animate-images-800-522ec4f83d7988b2d6f23a0c1d5eb924.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js/docs/assets/heatmap-layer-800-a23e44d9c1238315f191187c5c628719.png)	|
-|![3D buildings](https://maplibre.org/maplibre-gl-js/docs/assets/3d-buildings-800-18cda57800c107d1dee5f269bf7a12f2.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js/docs/assets/visualize-population-density-800-dc0290780f7b2842031bdf1b9347981a.png)	|
+|![Display a map](https://maplibre.org/maplibre-gl-js/docs/assets/simple-map.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/assets/3d-terrain.png)	|
+|![Animate a series of images](https://maplibre.org/maplibre-gl-js/docs/assets/animate-images.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js/docs/assets/heatmap-layer.png)	|
+|![3D buildings](https://maplibre.org/maplibre-gl-js/docs/assets/3d-buildings.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js/docs/assets/visualize-population-density.png)	|
 
 <br />
 
