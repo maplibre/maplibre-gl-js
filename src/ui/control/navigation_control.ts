@@ -42,8 +42,8 @@ const defaultOptions: NavigationOptions = {
  * let nav = new maplibregl.NavigationControl();
  * map.addControl(nav, 'top-left');
  * ```
- * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js-docs/example/navigation/)
- * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
+ * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
+ * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/third-party/)
  */
 export class NavigationControl implements IControl {
     _map: Map;

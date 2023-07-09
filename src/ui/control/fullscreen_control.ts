@@ -29,7 +29,7 @@ type FullscreenOptions = {
  * ```ts
  * map.addControl(new maplibregl.FullscreenControl({container: document.querySelector('body')}));
  * ```
- * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js-docs/example/fullscreen/)
+ * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/fullscreen/)
  *
  * ### Events
  *

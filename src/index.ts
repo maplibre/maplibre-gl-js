@@ -80,7 +80,7 @@ class MapLibreGL {
      * ```ts
      * maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js');
      * ```
-     * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js-docs/example/mapbox-gl-rtl-text/)
+     * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
      */
     static setRTLTextPlugin = setRTLTextPlugin;
     /**

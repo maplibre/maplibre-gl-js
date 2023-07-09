@@ -49,10 +49,10 @@ export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Pa
  *   zoom: 10
  * });
  * ```
- * @see [Set pitch and bearing](https://maplibre.org/maplibre-gl-js-docs/example/set-perspective/)
- * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js-docs/example/jump-to/)
- * @see [Fly to a location](https://maplibre.org/maplibre-gl-js-docs/example/flyto/)
- * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js-docs/example/3d-buildings/)
+ * @see [Set pitch and bearing](https://maplibre.org/maplibre-gl-js/docs/examples/set-perspective/)
+ * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to/)
+ * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
+ * @see [Display buildings in 3D](https://maplibre.org/maplibre-gl-js/docs/examples/3d-buildings/)
  */
 export type CameraOptions = CenterZoomBearing & {
     /**
@@ -336,7 +336,7 @@ export abstract class Camera extends Evented {
      * @event `movestart`
      * @event `moveend`
      * @returns `this`
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
     panBy(offset: PointLike, options?: AnimationOptions, eventData?: any): this {
         offset = Point.convert(offset).mult(-1);
@@ -358,7 +358,7 @@ export abstract class Camera extends Evented {
      * // Specify that the panTo animation should last 5000 milliseconds.
      * map.panTo([-74, 38], {duration: 5000});
      * ```
-     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js-docs/example/live-update-feature/)
+     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
      */
     panTo(lnglat: LngLatLike, options?: AnimationOptions, eventData?: any): this {
         return this.easeTo(extend({
@@ -481,7 +481,7 @@ export abstract class Camera extends Evented {
      * of 90° orients the map so that east is up.
      *
      * @returns The map's current bearing.
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
     getBearing(): number { return this.transform.bearing; }
 
@@ -752,7 +752,7 @@ export abstract class Camera extends Evented {
      *   padding: {top: 10, bottom:25, left: 15, right: 5}
      * });
      * ```
-     * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
+     * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
      */
     fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this {
         return this._fitInternal(
@@ -838,8 +838,8 @@ export abstract class Camera extends Evented {
      *   bearing: 90
      * });
      * ```
-     * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js-docs/example/jump-to/)
-     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js-docs/example/live-update-feature/)
+     * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to/)
+     * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
      */
     jumpTo(options: JumpToOptions, eventData?: any): this {
         this.stop();
@@ -954,7 +954,7 @@ export abstract class Camera extends Evented {
      * @event `zoomend`
      * @event `pitchend`
      * @returns `this`
-     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js-docs/example/game-controls/)
+     * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
     easeTo(options: EaseToOptions & {
         easeId?: string;
@@ -1218,9 +1218,9 @@ export abstract class Camera extends Evented {
      *   }
      * });
      * ```
-     * @see [Fly to a location](https://maplibre.org/maplibre-gl-js-docs/example/flyto/)
-     * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js-docs/example/flyto-options/)
-     * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js-docs/example/scroll-fly-to/)
+     * @see [Fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto/)
+     * @see [Slowly fly to a location](https://maplibre.org/maplibre-gl-js/docs/examples/flyto-options/)
+     * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
      */
     flyTo(options: FlyToOptions, eventData?: any): this {
         // Fall through to jumpTo if user has set prefers-reduced-motion

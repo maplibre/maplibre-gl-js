@@ -135,10 +135,10 @@ const focusQuerySelector = [
  *   .setMaxWidth("300px")
  *   .addTo(map);
  * ```
- * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
- * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
- * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
- * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
+ * @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
+ * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+ * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
+ * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
  *
  * ### Events
  *
@@ -174,10 +174,10 @@ export class Popup extends Evented {
      *   .setHTML("<h1>Null Island</h1>")
      *   .addTo(map);
      * ```
-     * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
-     * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
-     * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
-     * @see [Show polygon information on click](https://maplibre.org/maplibre-gl-js-docs/example/polygon-popup-on-click/)
+     * @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
+     * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+     * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
+     * @see [Show polygon information on click](https://maplibre.org/maplibre-gl-js/docs/examples/polygon-popup-on-click/)
      */
     addTo(map: Map): this {
         if (this._map) this.remove();
@@ -378,10 +378,10 @@ export class Popup extends Evented {
      *   .setHTML("<h1>Hello World!</h1>")
      *   .addTo(map);
      * ```
-     * @see [Display a popup](https://maplibre.org/maplibre-gl-js-docs/example/popup/)
-     * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-hover/)
-     * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js-docs/example/popup-on-click/)
-     * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js-docs/example/set-popup/)
+     * @see [Display a popup](https://maplibre.org/maplibre-gl-js/docs/examples/popup/)
+     * @see [Display a popup on hover](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/)
+     * @see [Display a popup on click](https://maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/)
+     * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
      */
     setHTML(html: string): this {
         const frag = document.createDocumentFragment();

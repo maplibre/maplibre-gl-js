@@ -123,8 +123,8 @@ export class EdgeInsets {
  *   padding: 20
  * });
  * ```
- * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js-docs/example/zoomto-linestring/)
- * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js-docs/example/fitbounds/)
+ * @see [Fit to the bounds of a LineString](https://maplibre.org/maplibre-gl-js/docs/examples/zoomto-linestring/)
+ * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
  */
 export type PaddingOptions = {
     /**
