@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- Remove not working Showcase URLs in README
 
 ## 3.2.0-pre.3
 
