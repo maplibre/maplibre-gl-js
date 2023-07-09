@@ -41,14 +41,6 @@ Full documentation for this library [is available here](https://maplibre.org/map
 
 Check out the features through [examples](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
-| Showcases |      |
-| ---- | ---- |
-|![Display a map](https://maplibre.org/maplibre-gl-js/docs/assets/examples/simple-map.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/assets/examples/3d-terrain.png)	|
-|![Animate a series of images](https://maplibre.org/maplibre-gl-js/docs/assets/examples/animate-images.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js/docs/assets/examples/heatmap-layer.png)	|
-|![3D buildings](https://maplibre.org/maplibre-gl-js/docs/assets/examples/3d-buildings.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js/docs/assets/examples/visualize-population-density.png)	|
-
-<br />
-
 ## Migrating from mapbox-gl to maplibre
 The libraries are very similar but diverge with newer features happening from v2 in both libraries where Mapbox turned proprietary.
 
