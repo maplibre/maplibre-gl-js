@@ -90,6 +90,10 @@ A modular plugin for calculating routes.
 #### maplibre-search-box
 Adds a control for searching for places using Stadia Maps.
 <br/><small>[View on GitHub](https://github.com/stadiamaps/maplibre-search-box)</small>
+
+#### route-snapper
+Draw routes and areas snapped to roads.
+<br/><small>[View on GitHub](https://github.com/dabreegster/route_snapper)</small>
   
 ##  Map Rendering Plugins
 
@@ -170,6 +174,10 @@ Provides an [Elm](https://elm-lang.org) integration.
 #### ember-mapbox-gl
 Provides an [Ember](http://emberjs.com) integration.
 <br/><small>[View on GitHub](https://github.com/kturney/ember-mapbox-gl)</small>
+
+#### svelte-maplibre
+Provides a [Svelte](https://svelte.dev) integration.
+<br/><small>[View on GitHub](https://github.com/dimfeld/svelte-maplibre)</small>
   
 ## Utility Libraries
 
