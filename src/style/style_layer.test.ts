@@ -6,7 +6,7 @@ import {EvaluationParameters} from './evaluation_parameters';
 import {TransitionParameters} from './properties';
 import {BackgroundStyleLayer} from './style_layer/background_style_layer';
 import {SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import { LineStyleLayer } from './style_layer/line_style_layer';
+import {LineStyleLayer} from './style_layer/line_style_layer';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {
@@ -392,7 +392,7 @@ describe('StyleLayer->LineStyleLayer', () => {
                 ]
             }
         }, layer);
-    };
+    }
 
     test('updating with valid line-gradient updates this.gradientVersion', () => {
         const lineLayer = createStyleLayer(createLineLayer()) as LineStyleLayer;
@@ -417,4 +417,4 @@ describe('StyleLayer->LineStyleLayer', () => {
         lineLayer.setPaintProperty('line-gradient', null);
         expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
     });
-})
+});

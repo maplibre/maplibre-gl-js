@@ -66,7 +66,6 @@ export class LineStyleLayer extends StyleLayer {
             } else {
                 this.stepInterpolant = false;
             }
-            
             this.gradientVersion = (this.gradientVersion + 1) % Number.MAX_SAFE_INTEGER;
         }
     }
