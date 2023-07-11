@@ -90,7 +90,7 @@
         });
 
         // add marker to map
-        new maplibregl.Marker(el)
+        new maplibregl.Marker({element: el})
             .setLngLat(marker.geometry.coordinates)
             .addTo(map);
     });

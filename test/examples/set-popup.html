@@ -49,7 +49,7 @@
     el.id = 'marker';
 
     // create the marker
-    new maplibregl.Marker(el)
+    new maplibregl.Marker({element: el})
         .setLngLat(monument)
         .setPopup(popup) // sets a popup on this marker
         .addTo(map);
