@@ -60,9 +60,10 @@ export class LineStyleLayer extends StyleLayer {
 
     _handleSpecialPaintPropertyUpdate(name: string) {
         if (name === 'line-gradient') {
-            if (Object.prototype.hasOwnProperty.call(this.gradientExpression(), '_styleExpression')) {
-                const expression: ZoomConstantExpression<'source'> = this.gradientExpression() as any;
-                this.stepInterpolant = expression._styleExpression.expression instanceof Step;
+            const expression = this.gradientExpression();
+            if (Object.prototype.hasOwnProperty.call(expression, '_styleExpression')) {
+                const zoomConstantExpression = expression as ZoomConstantExpression<'source'>;
+                this.stepInterpolant = zoomConstantExpression._styleExpression.expression instanceof Step;
             } else {
                 this.stepInterpolant = false;
             }
