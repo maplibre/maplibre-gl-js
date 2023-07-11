@@ -2883,7 +2883,7 @@ export class Map extends Camera {
             <div class="maplibregl-mobile-message">${mobileMessage}</div>
         `;
 
-        // Removes cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
+        // Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
         this._cooperativeGesturesScreen.setAttribute('aria-hidden', 'true');
 
         // Add event to canvas container since gesture container is pointer-events: none
