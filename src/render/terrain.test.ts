@@ -11,6 +11,7 @@ import type {DEMData} from '../data/dem_data';
 import {Tile} from '../source/tile';
 import {Painter} from './painter';
 import {mat4} from 'gl-matrix';
+import {LngLat} from '../geo/lng_lat';
 
 describe('Terrain', () => {
     test('pointCoordiate should not return null', () => {
@@ -191,6 +192,32 @@ describe('Terrain', () => {
         expect(mockTerrain.getDEMElevation(null, 0.5, 0)).toBeCloseTo(50);
         expect(mockTerrain.getDEMElevation(null, 0.5, 1)).toBeCloseTo(60);
         expect(mockTerrain.getDEMElevation(null, 0.4, 0.2)).toBeCloseTo(42);
+    });
+
+    test('getElevation with lng less than -180 wraps correctly', () => {
+        let actualIndexArray;
+        let actualVertexArray;
+        const painter = {
+            context: {
+                createIndexBuffer: array => { actualIndexArray = Array.from(array.uint16); },
+                createVertexBuffer: array => { actualVertexArray = Array.from(array.int16); }
+            },
+            width: 1,
+            height: 1,
+        } as any as Painter;
+        const sourceCache = {
+            _source: {maxzoom: 12},
+            _cache: {max: 10}
+        } as any as SourceCache;
+        const terrain = new Terrain(
+            painter,
+            sourceCache,
+            {exaggeration: 1} as any as TerrainSpecification,
+        );
+
+        const OVERSCALETILEID_DOES_NOT_THROW = 4;
+        terrain.getElevation = () => OVERSCALETILEID_DOES_NOT_THROW;
+        expect(terrain.getElevationForLngLat(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
     });
 
 });

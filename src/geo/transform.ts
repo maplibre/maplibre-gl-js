@@ -30,7 +30,6 @@ export class Transform {
     rotationMatrix: mat2;
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
-    cameraToSeaLevelDistance: number;
     mercatorMatrix: mat4;
     projMatrix: mat4;
     invProjMatrix: mat4;
@@ -40,7 +39,6 @@ export class Transform {
     pixelMatrixInverse: mat4;
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
-    freezeElevation: boolean;
     _fov: number;
     _pitch: number;
     _zoom: number;
@@ -57,11 +55,11 @@ export class Transform {
     _constraining: boolean;
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
+    _minElveationForCurrentTile: number;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
         this.maxValidLatitude = 85.051129; // constant
-        this.freezeElevation = false;
 
         this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
         this._minZoom = minZoom || 0;
@@ -84,6 +82,7 @@ export class Transform {
         this._edgeInsets = new EdgeInsets();
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
+        this._minElveationForCurrentTile = 0;
     }
 
     clone(): Transform {
@@ -105,6 +104,7 @@ export class Transform {
         this._pitch = that._pitch;
         this._unmodified = that._unmodified;
         this._edgeInsets = that._edgeInsets.clone();
+        this._minElveationForCurrentTile = that._minElveationForCurrentTile;
         this._calcMatrices();
     }
 
@@ -471,30 +471,6 @@ export class Transform {
     get point(): Point { return this.project(this.center); }
 
     /**
-     * Updates the center-elevation value unless freezeElevation is activated.
-     * @param terrain - the terrain
-     */
-    updateElevation(terrain?: Terrain) {
-        if (this.freezeElevation) return;
-        this.elevation = terrain ? this.getElevation(this._center, terrain) : 0;
-    }
-
-    /**
-     * get the elevation from terrain for the current zoomlevel.
-     * @param lnglat - the location
-     * @param terrain - the terrain
-     * @returns elevation in meters
-     */
-    getElevation(lnglat: LngLat, terrain: Terrain): number {
-        const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
-        const worldSize = (1 << this.tileZoom) * EXTENT;
-        const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
-        const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
-        const tileID = new OverscaledTileID(this.tileZoom, 0, this.tileZoom, tileX, tileY);
-        return terrain.getElevation(tileID, mercX % EXTENT, mercY % EXTENT, EXTENT);
-    }
-
-    /**
      * get the camera position in LngLat and altitudes in meter
      * @returns An object with lngLat & altitude.
      */
@@ -516,7 +492,7 @@ export class Transform {
     recalculateZoom(terrain: Terrain) {
         // find position the camera is looking on
         const center = this.pointLocation(this.centerPoint, terrain);
-        const elevation = this.getElevation(center, terrain);
+        const elevation = terrain.getElevationForLngLat(center, this.tileZoom);
         const deltaElevation = this.elevation - elevation;
         if (!deltaElevation) return;
 
@@ -557,7 +533,7 @@ export class Transform {
      */
     locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return terrain ?
-            this.coordinatePoint(this.locationCoordinate(lnglat), this.getElevation(lnglat, terrain), this.pixelMatrix3D) :
+            this.coordinatePoint(this.locationCoordinate(lnglat), terrain.getElevationForLngLat(lnglat, this.tileZoom), this.pixelMatrix3D) :
             this.coordinatePoint(this.locationCoordinate(lnglat));
     }
 
@@ -827,9 +803,10 @@ export class Transform {
         this.glCoordMatrix = m;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
-        // In case of negative elevation (e.g. the dead see) use the lower plane for calculation
-        this.cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
-        const lowestPlane = this._elevation < 0 ? this.cameraToCenterDistance : this.cameraToSeaLevelDistance;
+        const cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
+        // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
+        const cameraToLowestPointDistance = cameraToSeaLevelDistance - this._minElveationForCurrentTile * this._pixelPerMeter / Math.cos(this._pitch);
+        const lowestPlane = this._minElveationForCurrentTile < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.

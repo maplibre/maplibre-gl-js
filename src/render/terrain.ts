@@ -18,7 +18,7 @@ import {TerrainSourceCache} from '../source/terrain_source_cache';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {earthRadius} from '../geo/lng_lat';
+import {LngLat, earthRadius} from '../geo/lng_lat';
 
 /**
  * A terrain GPU related object
@@ -180,7 +180,22 @@ export class Terrain {
     }
 
     /**
-     * get the Elevation for given coordinate in respect of exaggeration.
+     * Get the elevation for given {@link LngLat} in respect of exaggeration.
+     * @param lnglat - the location
+     * @param zoom - the zoom
+     * @returns the elevation
+     */
+    getElevationForLngLat(lnglat: LngLat, zoom: number) {
+        const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
+        const worldSize = (1 << zoom) * EXTENT;
+        const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
+        const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
+        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
+        return this.getElevation(tileID, mercX % EXTENT, mercY % EXTENT, EXTENT);
+    }
+
+    /**
+     * Get the elevation for given coordinate in respect of exaggeration.
      * @param tileID - the tile id
      * @param x - between 0 .. EXTENT
      * @param y - between 0 .. EXTENT
@@ -391,6 +406,15 @@ export class Terrain {
         return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
 
+    getMinElevationForLngLat(lnglat: LngLat, zoom: number) {
+        const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
+        const worldSize = (1 << zoom) * EXTENT;
+        const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
+        const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
+        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
+        return this.getMinMaxElevation(tileID).minElevation ?? 0;
+    }
+
     /**
      * Get the minimum and maximum elevation contained in a tile. This includes any
      * exaggeration included in the terrain.
@@ -408,5 +432,4 @@ export class Terrain {
         }
         return minMax;
     }
-
 }

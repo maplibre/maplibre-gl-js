@@ -1659,10 +1659,11 @@ describe('#flyTo', () => {
 
     test('check elevation callbacks', done => {
         const camera = createCamera();
+        camera.terrain = {
+            getElevationForLngLat: () => 100
+        }
         camera.transform = {
             elevation: 0,
-            freezeElevation: false,
-            getElevation: () => 100,
             recalculateZoom: () => true
         };
 
@@ -1670,15 +1671,15 @@ describe('#flyTo', () => {
         // expect(camera._elevationCenter).toBe([10, 0]);
         expect(camera._elevationStart).toBe(0);
         expect(camera._elevationTarget).toBe(100);
-        expect(camera.transform.freezeElevation).toBeTruthy();
+        expect(camera._elevationFreeze).toBeTruthy();
 
-        camera.transform.getElevation = () => 200;
+        camera.terrain.getElevationForLngLat = () => 200;
         camera._updateElevation(0.5);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
 
         camera._finalizeElevation();
-        expect(camera.transform.freezeElevation).toBeFalsy();
+        expect(camera._elevationFreeze).toBeFalsy();
 
         done();
     });
@@ -2015,9 +2016,10 @@ describe('queryTerrainElevation', () => {
     test('should return the correct elevation', () => {
         // Set up mock transform and terrain objects
         const transform = new Transform(0, 22, 0, 60, true);
-        transform.getElevation = jest.fn().mockReturnValue(200);
         transform.elevation = 50;
-        const terrain = {} as Terrain;
+        const terrain = {
+            getElevationForLngLat: jest.fn().mockReturnValue(200)
+        } as any as Terrain;
 
         // Set up camera with mock transform and terrain
         camera.transform = transform;
@@ -2029,12 +2031,12 @@ describe('queryTerrainElevation', () => {
         const result = camera.queryTerrainElevation(lngLatLike);
 
         // Check that transform.getElevation was called with the correct arguments
-        expect(transform.getElevation).toHaveBeenCalledWith(
+        expect(terrain.getElevationForLngLat).toHaveBeenCalledWith(
             expect.objectContaining({
                 lng: lngLatLike[0],
                 lat: lngLatLike[1],
             }),
-            terrain
+            transform.tileZoom
         );
 
         // Check that the correct elevation value was returned
