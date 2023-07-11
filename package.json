@@ -53,7 +53,7 @@
     "@types/d3": "^7.4.0",
     "@types/diff": "^5.0.3",
     "@types/earcut": "^2.1.1",
-    "@types/eslint": "^8.40.2",
+    "@types/eslint": "^8.44.0",
     "@types/gl": "^6.0.2",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.2",
