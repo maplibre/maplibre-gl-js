@@ -6,7 +6,6 @@ import {EvaluationParameters} from './evaluation_parameters';
 import {TransitionParameters} from './properties';
 import {BackgroundStyleLayer} from './style_layer/background_style_layer';
 import {SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import {LineStyleLayer} from './style_layer/line_style_layer';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {
@@ -369,52 +368,5 @@ describe('StyleLayer#serialize', () => {
         const layer = createStyleLayer({type: 'fill'} as LayerSpecification);
         // paint is never undefined
         expect(layer.paint).toBeTruthy();
-    });
-});
-
-describe('StyleLayer->LineStyleLayer', () => {
-    function createLineLayer(layer?) {
-        return extend({
-            type: 'line',
-            source: 'line',
-            id: 'line',
-            paint: {
-                'line-color': 'red',
-                'line-width': 14,
-                'line-gradient': [
-                    'interpolate',
-                    ['linear'],
-                    ['line-progress'],
-                    0,
-                    'blue',
-                    1,
-                    'red'
-                ]
-            }
-        }, layer);
-    }
-
-    test('updating with valid line-gradient updates this.gradientVersion', () => {
-        const lineLayer = createStyleLayer(createLineLayer()) as LineStyleLayer;
-        const gradientVersion = lineLayer.gradientVersion;
-
-        lineLayer.setPaintProperty('line-gradient', [
-            'interpolate',
-            ['linear'],
-            ['line-progress'],
-            0,
-            'red',
-            1,
-            'blue'
-        ]);
-        expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
-    });
-
-    test('updating with invalid line-gradient updates this.gradientVersion', () => {
-        const lineLayer = createStyleLayer(createLineLayer()) as LineStyleLayer;
-        const gradientVersion = lineLayer.gradientVersion;
-
-        lineLayer.setPaintProperty('line-gradient', null);
-        expect(lineLayer.gradientVersion).toBeGreaterThan(gradientVersion);
     });
 });
