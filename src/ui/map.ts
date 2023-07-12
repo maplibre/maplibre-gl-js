@@ -505,7 +505,7 @@ export class Map extends Camera {
 
     /**
      * @hidden
-     * image queue throttling handle. To be used later when clean up 
+     * image queue throttling handle. To be used later when clean up
      */
     _imageQueueHandle: number;
 

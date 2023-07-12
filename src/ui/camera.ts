@@ -274,7 +274,7 @@ export abstract class Camera extends Evented {
 
     /**
      * @hidden
-     * Used to track accumulated changes during continuous interaction 
+     * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: Transform;
     /**
