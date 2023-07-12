@@ -2882,6 +2882,10 @@ export class Map extends Camera {
             <div class="maplibregl-desktop-message">${desktopMessage}</div>
             <div class="maplibregl-mobile-message">${mobileMessage}</div>
         `;
+
+        // Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
+        this._cooperativeGesturesScreen.setAttribute('aria-hidden', 'true');
+
         // Add event to canvas container since gesture container is pointer-events: none
         this._canvasContainer.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
 

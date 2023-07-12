@@ -2625,6 +2625,14 @@ describe('Map', () => {
         });
     });
 
+    describe('cooperativeGestures option', () => {
+        test('cooperativeGesture container element is hidden from a11y tree', () => {
+            const map = createMap({cooperativeGestures: true});
+
+            expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen').getAttribute('aria-hidden')).toBeTruthy();
+        });
+    });
+
     describe('getCameraTargetElevation', () => {
         test('Elevation is zero without terrain, and matches any given terrain', () => {
             const map = createMap();
