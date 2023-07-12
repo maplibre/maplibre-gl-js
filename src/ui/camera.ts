@@ -264,7 +264,7 @@ export abstract class Camera extends Evented {
 
     /**
      * holds the geographical coordinate of the target
-     */ 
+     */
     _elevationCenter: LngLat;
     /**
      * holds the targ altitude value, = center elevation of the target.

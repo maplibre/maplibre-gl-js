@@ -406,10 +406,10 @@ describe('transform', () => {
         transform.resize(512, 512);
 
         // expect same values because of no elevation change
-        const terrain = { 
+        const terrain = {
             getElevationForLngLat: () => 200,
             pointCoordinate: () => null
-         };
+        };
         transform.recalculateZoom(terrain as any);
         expect(transform.zoom).toBe(14);
 

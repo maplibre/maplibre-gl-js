@@ -195,25 +195,7 @@ describe('Terrain', () => {
     });
 
     test('getElevation with lng less than -180 wraps correctly', () => {
-        let actualIndexArray;
-        let actualVertexArray;
-        const painter = {
-            context: {
-                createIndexBuffer: array => { actualIndexArray = Array.from(array.uint16); },
-                createVertexBuffer: array => { actualVertexArray = Array.from(array.int16); }
-            },
-            width: 1,
-            height: 1,
-        } as any as Painter;
-        const sourceCache = {
-            _source: {maxzoom: 12},
-            _cache: {max: 10}
-        } as any as SourceCache;
-        const terrain = new Terrain(
-            painter,
-            sourceCache,
-            {exaggeration: 1} as any as TerrainSpecification,
-        );
+        const terrain = new Terrain(null, {} as any, {} as any);
 
         const OVERSCALETILEID_DOES_NOT_THROW = 4;
         terrain.getElevation = () => OVERSCALETILEID_DOES_NOT_THROW;

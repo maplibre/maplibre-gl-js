@@ -1660,8 +1660,9 @@ describe('#flyTo', () => {
     test('check elevation callbacks', done => {
         const camera = createCamera();
         camera.terrain = {
-            getElevationForLngLat: () => 100
-        }
+            getElevationForLngLat: () => 100,
+            getMinElevationForLngLat: () => 200
+        };
         camera.transform = {
             elevation: 0,
             recalculateZoom: () => true
