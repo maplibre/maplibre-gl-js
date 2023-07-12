@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - _...Add new stuff here..._
+- Add `cooperated gestures` example to the doc.([#2860](https://github.com/maplibre/maplibre-gl-js/pull/2860))
 
 ### 🐞 Bug fixes
 
