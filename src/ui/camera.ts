@@ -277,7 +277,8 @@ export abstract class Camera extends Evented {
      * Used to track accumulated changes during continuous interaction 
      */
     _requestedCameraState?: Transform;
-    /**A callback used to defer camera updates or apply arbitrary constraints.
+    /**
+     * A callback used to defer camera updates or apply arbitrary constraints.
      * If specified, this Camera instance can be used as a stateless component in React etc.
      */
     transformCameraUpdate: CameraUpdateTransformFunction | null;
