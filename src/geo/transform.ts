@@ -55,7 +55,7 @@ export class Transform {
     _constraining: boolean;
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
-    _minElveationForCurrentTile: number;
+    _minEleveationForCurrentTile: number;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
@@ -82,7 +82,7 @@ export class Transform {
         this._edgeInsets = new EdgeInsets();
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
-        this._minElveationForCurrentTile = 0;
+        this._minEleveationForCurrentTile = 0;
     }
 
     clone(): Transform {
@@ -104,7 +104,7 @@ export class Transform {
         this._pitch = that._pitch;
         this._unmodified = that._unmodified;
         this._edgeInsets = that._edgeInsets.clone();
-        this._minElveationForCurrentTile = that._minElveationForCurrentTile;
+        this._minEleveationForCurrentTile = that._minEleveationForCurrentTile;
         this._calcMatrices();
     }
 
@@ -805,8 +805,9 @@ export class Transform {
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
-        const cameraToLowestPointDistance = cameraToSeaLevelDistance - this._minElveationForCurrentTile * this._pixelPerMeter / Math.cos(this._pitch);
-        const lowestPlane = this._minElveationForCurrentTile < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
+        const minElevation = Math.min(this.elevation, this._minEleveationForCurrentTile);
+        const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._pixelPerMeter / Math.cos(this._pitch);
+        const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
 
         // Find the distance from the center point [width/2 + offset.x, height/2 + offset.y] to the
         // center top point [width/2 + offset.x, 0] in Z units, using the law of sines.

@@ -1099,7 +1099,7 @@ export abstract class Camera extends Evented {
             this._elevationTarget = elevation;
         }
         this.transform.elevation = interpolates.number(this._elevationStart, this._elevationTarget, k);
-        this.transform._minElveationForCurrentTile = this.terrain.getMinElevationForLngLat(this._elevationCenter, this.transform.tileZoom);
+        this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this._elevationCenter, this.transform.tileZoom);
     }
 
     _finalizeElevation() {
@@ -1494,7 +1494,7 @@ export abstract class Camera extends Evented {
         }
         const elevation = this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this.transform.tileZoom);
         /**
-         * Different zoomlevels with different terrain-tiles the elvation-values are not the same.
+         * Different zoomlevels with different terrain-tiles the elevation-values are not the same.
          * map.transform.elevation variable with the center-altitude.
          * In maplibre the proj-matrix is translated by this value in negative z-direction.
          * So we need to add this value to the elevation to get the correct value.

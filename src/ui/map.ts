@@ -1910,7 +1910,7 @@ export class Map extends Camera {
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.elevation = 0;
-            this.transform._minElveationForCurrentTile = 0;
+            this.transform._minEleveationForCurrentTile = 0;
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -1925,7 +1925,7 @@ export class Map extends Camera {
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.elevation = this.terrain.getElevationForLngLat(this.transform.center, this.transform.tileZoom);
-            this.transform._minElveationForCurrentTile = this.terrain.getMinElevationForLngLat(this.transform.center, this.transform.tileZoom);
+            this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this.transform.center, this.transform.tileZoom);
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
                     this.terrain.sourceCache.freeRtt();
@@ -3092,10 +3092,10 @@ export class Map extends Camera {
             if (!this._elevationFreeze) {
                 this.transform.elevation = this.terrain.getElevationForLngLat(this.transform.center, this.transform.tileZoom);
             }
-            this.transform._minElveationForCurrentTile = this.terrain.getMinElevationForLngLat(this.transform.center, this.transform.tileZoom);
+            this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this.transform.center, this.transform.tileZoom);
         } else {
             this.transform.elevation = 0;
-            this.transform._minElveationForCurrentTile = 0;
+            this.transform._minEleveationForCurrentTile = 0;
         }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
