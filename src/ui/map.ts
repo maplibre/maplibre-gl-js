@@ -412,7 +412,7 @@ const defaultOptions = {
     fadeDuration: 300,
     crossSourceCollisions: true,
     validateStyle: true,
-    /** Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
+    /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096]
 } as CompleteMapOptions;
 
@@ -503,7 +503,10 @@ export class Map extends Camera {
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
-    /** image queue throttling handle. To be used later when clean up */
+    /**
+     * @hidden
+     * image queue throttling handle. To be used later when clean up 
+     */
     _imageQueueHandle: number;
 
     /**
@@ -706,6 +709,7 @@ export class Map extends Camera {
     /**
      * Returns a unique number for this map instance which is used for the MapLoadEvent
      * to make sure we only fire one event per instantiated map object.
+     * @hidden
      * @returns the uniq map ID
      */
     _getMapId() {
@@ -714,6 +718,12 @@ export class Map extends Camera {
 
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
+     *
+     * Events triggered:
+     *
+     * | Event   | Condition                           |
+     * |---------|-------------------------------------|
+     * | `error` | Null, undefined, or invalid control |
      *
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
@@ -753,6 +763,12 @@ export class Map extends Camera {
     /**
      * Removes the control from the map.
      *
+     * Events triggered:
+     *
+     * | Event   | Condition                           |
+     * |---------|-------------------------------------|
+     * | `error` | Null, undefined, or invalid control |
+     *
      * @param control - The {@link IControl} to remove.
      * @returns `this`
      * @example
@@ -791,7 +807,7 @@ export class Map extends Camera {
      * map.hasControl(navigation);
      * ```
      */
-    hasControl(control: IControl) {
+    hasControl(control: IControl): boolean {
         return this._controls.indexOf(control) > -1;
     }
 
@@ -809,6 +825,15 @@ export class Map extends Camera {
      * Checks if the map container size changed and updates the map if it has changed.
      * This method must be called after the map's `container` is resized programmatically
      * or when the map is shown after being initially hidden with CSS.
+     *
+     * Events triggered:
+     *
+     * | Event       |
+     * |-------------|
+     * | `move`      |
+     * | `moveend`   |
+     * | `movestart` |
+     * | `reside`    |
      *
      * @param eventData - Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
      * events that get triggered as a result of resize. This can be useful for differentiating the
@@ -857,9 +882,10 @@ export class Map extends Camera {
         return this;
     }
 
-    /*
+    /**
      * Return the map's pixel ratio eventually scaled down to respect maxCanvasSize.
      * Internally you should use this and not getPixelRatio().
+     * @hidden
      */
     _getClampedPixelRatio(width: number, height: number): number {
         const {0: maxCanvasWidth, 1: maxCanvasHeight} = this._maxCanvasSize;
@@ -958,6 +984,12 @@ export class Map extends Camera {
      * if the map is 512px tall it will not be possible to zoom below zoom 0
      * no matter what the `minZoom` is set to.
      *
+     * Events triggered:
+     *
+     * | Event   | Condition             |
+     * |---------|-----------------------|
+     * | `error` | minZoom out of bounds |
+     *
      * @param minZoom - The minimum zoom level to set (-2 - 24).
      * If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
      * @returns `this`
@@ -996,6 +1028,12 @@ export class Map extends Camera {
      * Sets or clears the map's maximum zoom level.
      * If the map's current zoom level is higher than the new maximum,
      * the map will zoom to the new maximum.
+     *
+     * Events triggered:
+     *
+     * | Event   | Condition             |
+     * |---------|-----------------------|
+     * | `error` | maxZoom out of bounds |
      *
      * @param maxZoom - The maximum zoom level to set.
      * If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
@@ -1036,6 +1074,12 @@ export class Map extends Camera {
      * If the map's current pitch is lower than the new minimum,
      * the map will pitch to the new minimum.
      *
+     * Events triggered:
+     *
+     * | Event   | Condition               |
+     * |---------|-------------------------|
+     * | `error` | minPitch out ouf bounds |
+     *
      * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
      * @returns `this`
@@ -1070,6 +1114,12 @@ export class Map extends Camera {
      * Sets or clears the map's maximum pitch.
      * If the map's current pitch is higher than the new maximum,
      * the map will pitch to the new maximum.
+     *
+     * Events triggered:
+     *
+     * | Event   | Condition               |
+     * |---------|-------------------------|
+     * | `error` | maxPitch out ouf bounds |
      *
      * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
@@ -1287,6 +1337,7 @@ export class Map extends Camera {
     }
 
     /**
+     * @event
      * Adds a listener for events of a specified type, optionally limited to features in a specified style layer.
      * See {@link MapEventType} and {@link MapLayerEventType} for a full list of events and their description.
      *
@@ -1400,6 +1451,7 @@ export class Map extends Camera {
     on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     /**
      * This is an overload of the `on` method that allows to listen to events based on the `layerId`
+     * @event
      * @param type - The type of the event.
      * @param layerIdOrListener - The ID of the layer.
      * @param listener - The listener callback.
@@ -1426,6 +1478,7 @@ export class Map extends Camera {
     /**
      * Adds a listener that will be called only once to a specified event type occurring on features in a specified style layer.
      *
+     * @event
      * @param type - The event type to listen for; one of `'mousedown'`, `'mouseup'`, `'click'`, `'dblclick'`,
      * `'mousemove'`, `'mouseenter'`, `'mouseleave'`, `'mouseover'`, `'mouseout'`, `'contextmenu'`, `'touchstart'`,
      * `'touchend'`, or `'touchcancel'`. `mouseenter` and `mouseover` events are triggered when the cursor enters
@@ -1463,6 +1516,7 @@ export class Map extends Camera {
     /**
      * Removes an event listener for layer-specific events previously added with `Map#on`.
      *
+     * @event
      * @param type - The event type previously used to install the listener.
      * @param layerIdOrListener - The layer ID or listener previously used to install the listener.
      * @param listener - (optional) The function previously installed as a listener.
@@ -1830,11 +1884,16 @@ export class Map extends Camera {
     /**
      * Adds a source to the map's style.
      *
+     * Events triggered:
+     *
+     * | Event                  |
+     * |------------------------|
+     * | `source.add`           |
+     *
      * @param id - The ID of the source to add. Must not conflict with existing sources.
      * @param source - The source object, conforming to the
      * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
      * {@link CanvasSourceSpecification}.
-     * @event `source.add`
      * @returns `this`
      * @example
      * ```ts
@@ -1872,6 +1931,12 @@ export class Map extends Camera {
      * Returns a Boolean indicating whether the source is loaded. Returns `true` if the source with
      * the given ID in the map's style has no outstanding network requests, otherwise `false`.
      *
+     * Events triggered:
+     *
+     * | Event   | Condition              |
+     * |---------|------------------------|
+     * | `error` | No source with this ID |
+     *
      * @param id - The ID of the source to be checked.
      * @returns A Boolean indicating whether the source is loaded.
      * @example
@@ -1890,6 +1955,14 @@ export class Map extends Camera {
 
     /**
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
+     *
+     * Events triggered:
+     *
+     * | Event     | Condition              |
+     * |-----------|------------------------|
+     * | `error`   | Failed to load source  |
+     * | `terrain` | Success loading source |
+     *
      * @param options - Options object.
      * @returns `this`
      * @example
@@ -2036,6 +2109,12 @@ export class Map extends Camera {
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      * A {@link ErrorEvent} event will be fired if there is not enough space in the sprite to add this image.
      *
+     * Events triggered:
+     *
+     * | Event     | Condition                |
+     * |-----------|--------------------------|
+     * | `error`   | Invalid image parameter  |
+     *
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
@@ -2120,6 +2199,12 @@ export class Map extends Camera {
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
      *
+     * Events triggered:
+     *
+     * | Event     | Condition                |
+     * |-----------|--------------------------|
+     * | `error`   | Invalid image parameter  |
+     *
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
@@ -2189,6 +2274,12 @@ export class Map extends Camera {
      * that have been added at runtime using {@link Map#addImage}.
      *
      * @param id - The ID of the image.
+     *
+     * Events triggered:
+     *
+     * | Event     | Condition                |
+     * |-----------|--------------------------|
+     * | `error`   | Invalid image parameter  |
      *
      * @returns A Boolean indicating whether the image exists.
      * @example
@@ -2370,10 +2461,13 @@ export class Map extends Camera {
     /**
      * Removes the layer with the given ID from the map's style.
      *
-     * If no such layer exists, an `error` event is fired.
+     * Events triggered:
+     *
+     * | Event   | Condition            |
+     * |---------|----------------------|
+     * | `error` | No such layer exists |
      *
      * @param id - The ID of the layer to remove
-     * @event `error`
      * @returns `this`
      *
      * @example
@@ -2568,12 +2662,11 @@ export class Map extends Camera {
     }
 
     /**
-     * Adds a sprite to the map's style.
+     * Adds a sprite to the map's style. Fires the `style` event.
      *
      * @param id - The ID of the sprite to add. Must not conflict with existing sprites.
      * @param url - The URL to load the sprite from
      * @param options - Options object.
-     * @event `style`
      * @returns `this`
      * @example
      * ```ts
@@ -2591,10 +2684,9 @@ export class Map extends Camera {
     }
 
     /**
-     * Removes the sprite from the map's style.
+     * Removes the sprite from the map's style. Fires the `style` event.
      *
      * @param id - The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
-     * @event `style`
      * @returns `this`
      * @example
      * ```ts
@@ -2996,6 +3088,7 @@ export class Map extends Camera {
     /**
      * Update this map's style and sources, and re-render the map.
      *
+     * @hidden
      * @param updateStyle - mark the map's style for reprocessing as
      * well as its sources
      * @returns `this`
@@ -3013,6 +3106,7 @@ export class Map extends Camera {
     /**
      * Request that the given callback be executed during the next render
      * frame.  Schedule a render frame if one is not already scheduled.
+     * @hidden
      * @returns An id that can be used to cancel the callback
      */
     _requestRenderFrame(callback: () => void): TaskID {
@@ -3032,6 +3126,7 @@ export class Map extends Camera {
      * - A transition is in progress
      *
      * @param paintStartTimeStamp - The time when the animation frame began executing.
+     * @hidden
      *
      * @returns `this`
      */
