@@ -1960,7 +1960,6 @@ export class Map extends Camera {
      *
      * | Event     | Condition              |
      * |-----------|------------------------|
-     * | `error`   | Failed to load source  |
      * | `terrain` | Success loading source |
      *
      * @param options - Options object.
