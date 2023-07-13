@@ -317,12 +317,7 @@ export abstract class Camera extends Evented {
     /**
      * Sets the map's geographical centerpoint. Equivalent to `jumpTo({center: center})`.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `moveend`    |
+     * Triggers the following events: `movestart` and `moveend`.
      *
      * @param center - The centerpoint to set.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -339,12 +334,7 @@ export abstract class Camera extends Evented {
     /**
      * Pans the map by the specified offset.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `moveend`    |
+     * Triggers the following events: `movestart` and `moveend`.
      *
      * @param offset - `x` and `y` coordinates by which to pan the map.
      * @param options - Options object
@@ -360,12 +350,7 @@ export abstract class Camera extends Evented {
     /**
      * Pans the map to the specified location with an animated transition.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `moveend`    |
+     * Triggers the following events: `movestart` and `moveend`.
      *
      * @param lnglat - The location to pan the map to.
      * @param options - Options describing the destination and animation of the transition.
@@ -399,16 +384,7 @@ export abstract class Camera extends Evented {
     /**
      * Sets the map's zoom level. Equivalent to `jumpTo({zoom: zoom})`.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `zoomstart`  |
-     * | `move`       |
-     * | `zoom`       |
-     * | `moveend`    |
-     * | `zoomend`    |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * @param zoom - The zoom level to set (0-20).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -427,16 +403,7 @@ export abstract class Camera extends Evented {
     /**
      * Zooms the map to the specified zoom level, with an animated transition.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `zoomstart`  |
-     * | `move`       |
-     * | `zoom`       |
-     * | `moveend`    |
-     * | `zoomend`    |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * @param zoom - The zoom level to transition to.
      * @param options - Options object
@@ -462,16 +429,7 @@ export abstract class Camera extends Evented {
     /**
      * Increases the map's zoom level by 1.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `zoomstart`  |
-     * | `move`       |
-     * | `zoom`       |
-     * | `moveend`    |
-     * | `zoomend`    |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -490,16 +448,7 @@ export abstract class Camera extends Evented {
     /**
      * Decreases the map's zoom level by 1.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `zoomstart`  |
-     * | `move`       |
-     * | `zoom`       |
-     * | `moveend`    |
-     * | `zoomend`    |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, and `zoomend`.
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -530,13 +479,7 @@ export abstract class Camera extends Evented {
      *
      * Equivalent to `jumpTo({bearing: bearing})`.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `rotate`     |
-     * | `moveend`    |
+     * Triggers the following events: `movestart`, `moveend`, and `rotate`.
      *
      * @param bearing - The desired bearing.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -564,12 +507,7 @@ export abstract class Camera extends Evented {
      *
      * Equivalent to `jumpTo({padding: padding})`.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `moveend`    |
+     * Triggers the following events: `movestart` and `moveend`.
      *
      * @param padding - The desired padding.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -589,13 +527,7 @@ export abstract class Camera extends Evented {
      * Rotates the map to the specified bearing, with an animated transition. The bearing is the compass direction
      * that is "up"; for example, a bearing of 90° orients the map so that east is up.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `rotate`     |
-     * | `moveend`    |
+     * Triggers the following events: `movestart`, `moveend`, and `rotate`.
      *
      * @param bearing - The desired bearing.
      * @param options - Options object
@@ -611,13 +543,7 @@ export abstract class Camera extends Evented {
     /**
      * Rotates the map so that north is up (0° bearing), with an animated transition.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `rotate`     |
-     * | `moveend`    |
+     * Triggers the following events: `movestart`, `moveend`, and `rotate`.
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -631,17 +557,7 @@ export abstract class Camera extends Evented {
     /**
      * Rotates and pitches the map so that north is up (0° bearing) and pitch is 0°, with an animated transition.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `pitchstart` |
-     * | `move`       |
-     * | `rotate`     |
-     * | `pitch`      |
-     * | `moveend`    |
-     * | `pitchend`   |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `pitchstart`, `pitch`, `pitchend`, and `rotate`.
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -660,13 +576,7 @@ export abstract class Camera extends Evented {
      * Snaps the map so that north is up (0° bearing), if the current bearing is close enough to it (i.e. within the
      * `bearingSnap` threshold).
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `rotate`     |
-     * | `moveend`    |
+     * Triggers the following events: `movestart`, `moveend`, and `rotate`.
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -689,13 +599,7 @@ export abstract class Camera extends Evented {
     /**
      * Sets the map's pitch (tilt). Equivalent to `jumpTo({pitch: pitch})`.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `pitchstart` |
-     * | `moveend`    |
+     * Triggers the following events: `movestart`, `moveend`, `pitchstart`, and `pitchend`.
      *
      * @param pitch - The pitch to set, measured in degrees away from the plane of the screen (0-60).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -821,12 +725,7 @@ export abstract class Camera extends Evented {
      * Pans and zooms the map to contain its visible area within the specified geographical bounds.
      * This function will also reset the map's bearing to 0 if bearing is nonzero.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `moveend`    |
+     * Triggers the following events: `movestart` and `moveend`.
      *
      * @param bounds - Center these bounds in the viewport and use the highest
      * zoom level up to and including `Map#getMaxZoom()` that fits them in the viewport.
@@ -854,17 +753,7 @@ export abstract class Camera extends Evented {
      * once the map is rotated to the specified bearing. To zoom without rotating,
      * pass in the current map bearing.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `zoomstart`  |
-     * | `move`       |
-     * | `zoom`       |
-     * | `rotate`     |
-     * | `moveend`    |
-     * | `zoomend`    |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend` and `rotate`.
      *
      * @param p0 - First point on screen, in pixel coordinates
      * @param p1 - Second point on screen, in pixel coordinates
@@ -911,20 +800,8 @@ export abstract class Camera extends Evented {
      * an animated transition. The map will retain its current values for any
      * details not specified in `options`.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `zoomstart`  |
-     * | `pitchstart` |
-     * | `move`       |
-     * | `zoom`       |
-     * | `rotate`     |
-     * | `pitch`      |
-     * | `moveend`    |
-     * | `zoomend`    |
-     * | `pitchend`   |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
+     * `pitch`, `pitchend`, and `rotate`.
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
@@ -1043,20 +920,8 @@ export abstract class Camera extends Evented {
      * the `reduced motion` accessibility feature enabled in their operating system,
      * unless `options` includes `essential: true`.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `zoomstart`  |
-     * | `pitchstart` |
-     * | `move`       |
-     * | `zoom`       |
-     * | `rotate`     |
-     * | `pitch`      |
-     * | `moveend`    |
-     * | `zoomend`    |
-     * | `pitchend`   |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
+     * `pitch`, `pitchend`, and `rotate`.
      *
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions} and {@link AnimationOptions}.
@@ -1298,20 +1163,8 @@ export abstract class Camera extends Evented {
      * if the user has the `reduced motion` accessibility feature enabled in their operating system,
      * unless 'options' includes `essential: true`.
      *
-     * Events triggered:
-     *
-     * | Event        |
-     * |--------------|
-     * | `movestart`  |
-     * | `zoomstart`  |
-     * | `pitchstart` |
-     * | `move`       |
-     * | `zoom`       |
-     * | `rotate`     |
-     * | `pitch`      |
-     * | `moveend`    |
-     * | `zoomend`    |
-     * | `pitchend`   |
+     * Triggers the following events: `movestart`, `move`, `moveend`, `zoomstart`, `zoom`, `zoomend`, `pitchstart`,
+     * `pitch`, `pitchend`, and `rotate`.
      *
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions}, {@link AnimationOptions},

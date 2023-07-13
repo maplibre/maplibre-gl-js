@@ -719,11 +719,7 @@ export class Map extends Camera {
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
-     * Events triggered:
-     *
-     * | Event   | Condition                           |
-     * |---------|-------------------------------------|
-     * | `error` | Null, undefined, or invalid control |
+     * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
@@ -763,12 +759,8 @@ export class Map extends Camera {
     /**
      * Removes the control from the map.
      *
-     * Events triggered:
-     *
-     * | Event   | Condition                           |
-     * |---------|-------------------------------------|
-     * | `error` | Null, undefined, or invalid control |
-     *
+     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * 
      * @param control - The {@link IControl} to remove.
      * @returns `this`
      * @example
@@ -984,11 +976,7 @@ export class Map extends Camera {
      * if the map is 512px tall it will not be possible to zoom below zoom 0
      * no matter what the `minZoom` is set to.
      *
-     * Events triggered:
-     *
-     * | Event   | Condition             |
-     * |---------|-----------------------|
-     * | `error` | minZoom out of bounds |
+     * A {@link ErrorEvent} event will be fired if minZoom is out of bounds.
      *
      * @param minZoom - The minimum zoom level to set (-2 - 24).
      * If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
@@ -1029,11 +1017,7 @@ export class Map extends Camera {
      * If the map's current zoom level is higher than the new maximum,
      * the map will zoom to the new maximum.
      *
-     * Events triggered:
-     *
-     * | Event   | Condition             |
-     * |---------|-----------------------|
-     * | `error` | maxZoom out of bounds |
+     * A {@link ErrorEvent} event will be fired if minZoom is out of bounds.
      *
      * @param maxZoom - The maximum zoom level to set.
      * If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
@@ -1074,11 +1058,7 @@ export class Map extends Camera {
      * If the map's current pitch is lower than the new minimum,
      * the map will pitch to the new minimum.
      *
-     * Events triggered:
-     *
-     * | Event   | Condition               |
-     * |---------|-------------------------|
-     * | `error` | minPitch out ouf bounds |
+     * A {@link ErrorEvent} event will be fired if minPitch is out of bounds.
      *
      * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
@@ -1115,11 +1095,7 @@ export class Map extends Camera {
      * If the map's current pitch is higher than the new maximum,
      * the map will pitch to the new maximum.
      *
-     * Events triggered:
-     *
-     * | Event   | Condition               |
-     * |---------|-------------------------|
-     * | `error` | maxPitch out ouf bounds |
+     * A {@link ErrorEvent} event will be fired if maxPitch is out of bounds.
      *
      * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
@@ -1931,11 +1907,7 @@ export class Map extends Camera {
      * Returns a Boolean indicating whether the source is loaded. Returns `true` if the source with
      * the given ID in the map's style has no outstanding network requests, otherwise `false`.
      *
-     * Events triggered:
-     *
-     * | Event   | Condition              |
-     * |---------|------------------------|
-     * | `error` | No source with this ID |
+     * A {@link ErrorEvent} event will be fired if there is no source wit the specified ID.
      *
      * @param id - The ID of the source to be checked.
      * @returns A Boolean indicating whether the source is loaded.
@@ -2106,13 +2078,8 @@ export class Map extends Camera {
      * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
-     * A {@link ErrorEvent} event will be fired if there is not enough space in the sprite to add this image.
-     *
-     * Events triggered:
-     *
-     * | Event     | Condition                |
-     * |-----------|--------------------------|
-     * | `error`   | Invalid image parameter  |
+     * 
+     * A {@link ErrorEvent} event will be fired if the image parameter is invalid or there is not enough space in the sprite to add this image.
      *
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -2197,12 +2164,8 @@ export class Map extends Camera {
      * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
-     *
-     * Events triggered:
-     *
-     * | Event     | Condition                |
-     * |-----------|--------------------------|
-     * | `error`   | Invalid image parameter  |
+     * 
+     * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -2272,13 +2235,9 @@ export class Map extends Camera {
      * in the style's original sprite and any images
      * that have been added at runtime using {@link Map#addImage}.
      *
+     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     *
      * @param id - The ID of the image.
-     *
-     * Events triggered:
-     *
-     * | Event     | Condition                |
-     * |-----------|--------------------------|
-     * | `error`   | Invalid image parameter  |
      *
      * @returns A Boolean indicating whether the image exists.
      * @example
@@ -2460,11 +2419,7 @@ export class Map extends Camera {
     /**
      * Removes the layer with the given ID from the map's style.
      *
-     * Events triggered:
-     *
-     * | Event   | Condition            |
-     * |---------|----------------------|
-     * | `error` | No such layer exists |
+     * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
      * @param id - The ID of the layer to remove
      * @returns `this`
