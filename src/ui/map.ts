@@ -760,7 +760,7 @@ export class Map extends Camera {
      * Removes the control from the map.
      *
      * An {@link ErrorEvent} will be fired if the image parameter is invald.
-     * 
+     *
      * @param control - The {@link IControl} to remove.
      * @returns `this`
      * @example
@@ -2078,7 +2078,7 @@ export class Map extends Camera {
      * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
-     * 
+     *
      * A {@link ErrorEvent} event will be fired if the image parameter is invalid or there is not enough space in the sprite to add this image.
      *
      * @param id - The ID of the image.
@@ -2164,7 +2164,7 @@ export class Map extends Camera {
      * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
-     * 
+     *
      * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
      * @param id - The ID of the image.
