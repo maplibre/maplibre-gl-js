@@ -98,13 +98,13 @@ export class Transform {
         this.height = that.height;
         this._center = that._center;
         this._elevation = that._elevation;
+        this._minEleveationForCurrentTile = that._minEleveationForCurrentTile;
         this.zoom = that.zoom;
         this.angle = that.angle;
         this._fov = that._fov;
         this._pitch = that._pitch;
         this._unmodified = that._unmodified;
         this._edgeInsets = that._edgeInsets.clone();
-        this._minEleveationForCurrentTile = that._minEleveationForCurrentTile;
         this._calcMatrices();
     }
 

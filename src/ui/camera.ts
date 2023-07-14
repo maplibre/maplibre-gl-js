@@ -1090,6 +1090,7 @@ export abstract class Camera extends Evented {
     }
 
     _updateElevation(k: number) {
+        this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this._elevationCenter, this.transform.tileZoom);
         const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, this.transform.tileZoom);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
@@ -1099,7 +1100,6 @@ export abstract class Camera extends Evented {
             this._elevationTarget = elevation;
         }
         this.transform.elevation = interpolates.number(this._elevationStart, this._elevationTarget, k);
-        this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this._elevationCenter, this.transform.tileZoom);
     }
 
     _finalizeElevation() {
