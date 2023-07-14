@@ -818,14 +818,7 @@ export class Map extends Camera {
      * This method must be called after the map's `container` is resized programmatically
      * or when the map is shown after being initially hidden with CSS.
      *
-     * Events triggered:
-     *
-     * | Event       |
-     * |-------------|
-     * | `move`      |
-     * | `moveend`   |
-     * | `movestart` |
-     * | `reside`    |
+     * Triggers the following events: `movestart`, `move`, `moveend`, and `resize`.
      *
      * @param eventData - Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
      * events that get triggered as a result of resize. This can be useful for differentiating the
@@ -1862,9 +1855,7 @@ export class Map extends Camera {
      *
      * Events triggered:
      *
-     * | Event                  |
-     * |------------------------|
-     * | `source.add`           |
+     * Triggers the `source.add` event.
      *
      * @param id - The ID of the source to add. Must not conflict with existing sources.
      * @param source - The source object, conforming to the
@@ -1928,11 +1919,7 @@ export class Map extends Camera {
     /**
      * Loads a 3D terrain mesh, based on a "raster-dem" source.
      *
-     * Events triggered:
-     *
-     * | Event     | Condition              |
-     * |-----------|------------------------|
-     * | `terrain` | Success loading source |
+     * Triggers the `terrain` event.
      *
      * @param options - Options object.
      * @returns `this`
