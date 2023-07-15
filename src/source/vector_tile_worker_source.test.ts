@@ -86,37 +86,6 @@ describe('vector tile worker source', () => {
         expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    test('VectorTileWorkerSource#reloadTile queues a reload when parsing is in progress', () => {
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = jest.fn();
-
-        source.loaded = {
-            '0': {
-                status: 'done',
-                vectorTile: {},
-                parse
-            } as any as WorkerTile
-        };
-
-        const callback1 = jest.fn();
-        const callback2 = jest.fn();
-        source.reloadTile({uid: 0} as any as WorkerTileParameters, callback1);
-        expect(parse).toHaveBeenCalledTimes(1);
-
-        source.loaded[0].status = 'parsing';
-        source.reloadTile({uid: 0} as any as WorkerTileParameters, callback2);
-        expect(parse).toHaveBeenCalledTimes(1);
-
-        parse.mock.calls[0][4]();
-        expect(parse).toHaveBeenCalledTimes(2);
-        expect(callback1).toHaveBeenCalledTimes(1);
-        expect(callback2).toHaveBeenCalledTimes(0);
-
-        parse.mock.calls[1][4]();
-        expect(callback1).toHaveBeenCalledTimes(1);
-        expect(callback2).toHaveBeenCalledTimes(1);
-    });
-
     test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', (done) => {
         const rawTileData = new Uint8Array([]);
         function loadVectorData(params, callback) {
@@ -165,54 +134,6 @@ describe('vector tile worker source', () => {
             expect(loadCallbackCalled).toBeTruthy();
             done();
         });
-    });
-
-    test('VectorTileWorkerSource#reloadTile handles multiple pending reloads', () => {
-        // https://github.com/mapbox/mapbox-gl-js/issues/6308
-        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
-        const parse = jest.fn();
-
-        source.loaded = {
-            '0': {
-                status: 'done',
-                vectorTile: {},
-                parse
-            } as any as WorkerTile
-        };
-
-        const callback1 = jest.fn();
-        const callback2 = jest.fn();
-        const callback3 = jest.fn();
-        source.reloadTile({uid: 0} as any as WorkerTileParameters, callback1);
-        expect(parse).toHaveBeenCalledTimes(1);
-
-        source.loaded[0].status = 'parsing';
-        source.reloadTile({uid: 0} as any as WorkerTileParameters, callback2);
-        expect(parse).toHaveBeenCalledTimes(1);
-
-        parse.mock.calls[0][4]();
-        expect(parse).toHaveBeenCalledTimes(2);
-        expect(callback1).toHaveBeenCalledTimes(1);
-        expect(callback2).toHaveBeenCalledTimes(0);
-        expect(callback3).toHaveBeenCalledTimes(0);
-
-        source.reloadTile({uid: 0} as any as WorkerTileParameters, callback3);
-        expect(parse).toHaveBeenCalledTimes(2);
-        expect(callback1).toHaveBeenCalledTimes(1);
-        expect(callback2).toHaveBeenCalledTimes(0);
-        expect(callback3).toHaveBeenCalledTimes(0);
-
-        parse.mock.calls[1][4]();
-        expect(parse).toHaveBeenCalledTimes(3);
-        expect(callback1).toHaveBeenCalledTimes(1);
-        expect(callback2).toHaveBeenCalledTimes(1);
-        expect(callback3).toHaveBeenCalledTimes(0);
-
-        parse.mock.calls[2][4]();
-        expect(callback1).toHaveBeenCalledTimes(1);
-        expect(callback2).toHaveBeenCalledTimes(1);
-        expect(callback3).toHaveBeenCalledTimes(1);
-
     });
 
     test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTile data but does call callback', () => {

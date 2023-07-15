@@ -24,7 +24,7 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import { Cancelable } from '../types/cancelable';
+import {Cancelable} from '../types/cancelable';
 
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -145,7 +145,7 @@ export class WorkerTile {
 
         this.inFlightDependencies.forEach((request) => request?.cancel());
         this.inFlightDependencies = [];
-        
+
         // cancelling seems to be not sufficient, we seems to still manage to get a callback hit, so use a sentinel to drop stale results
         const dependencySentinel = ++this.dependencySentinel;
         if (Object.keys(stacks).length) {
