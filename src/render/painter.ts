@@ -574,7 +574,6 @@ export class Painter {
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
-                name,
                 shaders[name],
                 programConfiguration,
                 programUniforms[name],
