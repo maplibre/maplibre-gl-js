@@ -28,7 +28,7 @@ describe('drawFill', () => {
         const painterMock: Painter = constructMockPainer();
         const layer: FillStyleLayer = constructMockLayer();
 
-        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any, null as any);
+        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
 
         const mockTile = constructMockTile(layer);
