@@ -145,24 +145,14 @@ export class VectorTileWorkerSource implements WorkerSource {
         if (loaded && loaded[uid]) {
             const workerTile = loaded[uid];
             workerTile.showCollisionBoxes = params.showCollisionBoxes;
-
-            const done = (err?: Error, data?: any) => {
-                const reloadCallback = workerTile.reloadCallback;
-                if (reloadCallback) {
-                    delete workerTile.reloadCallback;
-                    workerTile.parse(workerTile.vectorTile, vtSource.layerIndex, this.availableImages, vtSource.actor, reloadCallback);
-                }
-                callback(err, data);
-            };
-
             if (workerTile.status === 'parsing') {
-                workerTile.reloadCallback = done;
+                workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, callback);
             } else if (workerTile.status === 'done') {
                 // if there was no vector tile data on the initial load, don't try and re-parse tile
                 if (workerTile.vectorTile) {
-                    workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, done);
+                    workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, callback);
                 } else {
-                    done();
+                    callback();
                 }
             }
         }

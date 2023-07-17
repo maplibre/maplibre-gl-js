@@ -8,7 +8,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- Fix reloadCallback not firing on VectorTileWorkerSource.reloadTile ([#1874](https://github.com/maplibre/maplibre-gl-js/pull/1874))
 
 ## 3.2.0
 
