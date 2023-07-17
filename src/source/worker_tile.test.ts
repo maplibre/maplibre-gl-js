@@ -99,4 +99,147 @@ describe('worker tile', () => {
             done();
         });
     });
+
+    test('WorkerTile#parse would request all types of dependencies', done => {
+        const tile = createWorkerTile();
+        const layerIndex = new StyleLayerIndex([{
+            id: '1',
+            type: 'fill',
+            source: 'source',
+            'source-layer': 'test',
+            paint: {
+                'fill-pattern': 'hello'
+            }
+        }, {
+            id: 'test',
+            source: 'source',
+            'source-layer': 'test',
+            type: 'symbol',
+            layout: {
+                'icon-image': 'hello',
+                'text-font': ['StandardFont-Bold'],
+                'text-field': '{name}'
+            }
+        }]);
+
+        const data = {
+            layers: {
+                test: {
+                    version: 2,
+                    name: 'test',
+                    extent: 8192,
+                    length: 1,
+                    feature: (featureIndex: number) => ({
+                        extent: 8192,
+                        type: 1,
+                        id: featureIndex,
+                        properties: {
+                            name: 'test'
+                        },
+                        loadGeometry () {
+                            return [[{x: 0, y: 0}]];
+                        }
+                    })
+                }
+            }
+        } as any as VectorTile;
+
+        const send = jest.fn().mockImplementation((type: string, data: unknown, callback: Function) => {
+            setTimeout(() => callback(null,
+                type === 'getImages' ?
+                    {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
+                    {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}}
+            ));
+        });
+
+        const actorMock = {
+            send
+        } as unknown as Actor;
+        tile.parse(data, layerIndex, ['hello'], actorMock, (err, result) => {
+            expect(err).toBeFalsy();
+            expect(result).toBeDefined();
+            expect(send).toHaveBeenCalledTimes(3);
+            expect(send).toHaveBeenCalledWith('getImages', expect.objectContaining({'icons': ['hello'], 'type': 'icons'}), expect.any(Function));
+            expect(send).toHaveBeenCalledWith('getImages', expect.objectContaining({'icons': ['hello'], 'type': 'patterns'}), expect.any(Function));
+            expect(send).toHaveBeenCalledWith('getGlyphs', expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}}), expect.any(Function));
+            done();
+        });
+    });
+
+    test('WorkerTile#parse would cancel and only event once on repeated reparsing', done => {
+        const tile = createWorkerTile();
+        const layerIndex = new StyleLayerIndex([{
+            id: '1',
+            type: 'fill',
+            source: 'source',
+            'source-layer': 'test',
+            paint: {
+                'fill-pattern': 'hello'
+            }
+        }, {
+            id: 'test',
+            source: 'source',
+            'source-layer': 'test',
+            type: 'symbol',
+            layout: {
+                'icon-image': 'hello',
+                'text-font': ['StandardFont-Bold'],
+                'text-field': '{name}'
+            }
+        }]);
+
+        const data = {
+            layers: {
+                test: {
+                    version: 2,
+                    name: 'test',
+                    extent: 8192,
+                    length: 1,
+                    feature: (featureIndex: number) => ({
+                        extent: 8192,
+                        type: 1,
+                        id: featureIndex,
+                        properties: {
+                            name: 'test'
+                        },
+                        loadGeometry () {
+                            return [[{x: 0, y: 0}]];
+                        }
+                    })
+                }
+            }
+        } as any as VectorTile;
+
+        let cancelCount = 0;
+        const send = jest.fn().mockImplementation((type: string, data: unknown, callback: Function) => {
+            const res = setTimeout(() => callback(null,
+                type === 'getImages' ?
+                    {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
+                    {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}}
+            ));
+
+            return {
+                cancel: () => {
+                    cancelCount += 1;
+                    clearTimeout(res);
+                }
+            };
+        });
+
+        const actorMock = {
+            send
+        } as unknown as Actor;
+        tile.parse(data, layerIndex, ['hello'], actorMock, () => done.fail('should not be called'));
+        tile.parse(data, layerIndex, ['hello'], actorMock, () => done.fail('should not be called'));
+        tile.parse(data, layerIndex, ['hello'], actorMock, (err, result) => {
+            expect(err).toBeFalsy();
+            expect(result).toBeDefined();
+            expect(cancelCount).toBe(6);
+            expect(send).toHaveBeenCalledTimes(9);
+            expect(send).toHaveBeenCalledWith('getImages', expect.objectContaining({'icons': ['hello'], 'type': 'icons'}), expect.any(Function));
+            expect(send).toHaveBeenCalledWith('getImages', expect.objectContaining({'icons': ['hello'], 'type': 'patterns'}), expect.any(Function));
+            expect(send).toHaveBeenCalledWith('getGlyphs', expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}}), expect.any(Function));
+            done();
+        });
+    });
 });
