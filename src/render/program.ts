@@ -42,7 +42,6 @@ export class Program<Us extends UniformBindings> {
     failedToCreate: boolean;
 
     constructor(context: Context,
-        name: string,
         source: {
             fragmentSource: string;
             vertexSource: string;
