@@ -1859,7 +1859,7 @@ export class Map extends Camera {
      *
      * @param id - The ID of the source to add. Must not conflict with existing sources.
      * @param source - The source object, conforming to the
-     * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/#sources) or
+     * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/sources) or
      * {@link CanvasSourceSpecification}.
      * @returns `this`
      * @example
@@ -2066,10 +2066,10 @@ export class Map extends Camera {
     /**
      * Add an image to the style. This image can be displayed on the map like any other icon in the style's
      * sprite using the image's ID with
-     * [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
-     * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
-     * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
-     * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
+     * [`icon-image`](https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-image),
+     * [`background-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-background-background-pattern),
+     * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern),
+     * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern).
      *
      * A {@link ErrorEvent} event will be fired if the image parameter is invalid or there is not enough space in the sprite to add this image.
      *
@@ -2152,10 +2152,10 @@ export class Map extends Camera {
     /**
      * Update an existing image in a style. This image can be displayed on the map like any other icon in the style's
      * sprite using the image's ID with
-     * [`icon-image`](https://maplibre.org/maplibre-style-spec/#layout-symbol-icon-image),
-     * [`background-pattern`](https://maplibre.org/maplibre-style-spec/#paint-background-background-pattern),
-     * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/#paint-fill-fill-pattern),
-     * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/#paint-line-line-pattern).
+     * [`icon-image`](https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-image),
+     * [`background-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-background-background-pattern),
+     * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern),
+     * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern).
      *
      * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
@@ -2304,14 +2304,14 @@ export class Map extends Camera {
     }
 
     /**
-     * Adds a [MapLibre style layer](https://maplibre.org/maplibre-style-spec/#layers)
+     * Adds a [MapLibre style layer](https://maplibre.org/maplibre-style-spec/layers)
      * to the map's style.
      *
      * A layer defines how data from a specified source will be styled. Read more about layer types
-     * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#layers).
+     * and available paint and layout properties in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/layers).
      *
      * @param layer - The layer to add,
-     * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-style-spec/#layers) or,
+     * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-style-spec/layers) or,
      * less commonly, the {@link CustomLayerInterface} specification.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
      *
@@ -2447,8 +2447,8 @@ export class Map extends Camera {
 
     /**
      * Sets the zoom extent for the specified style layer. The zoom extent includes the
-     * [minimum zoom level](https://maplibre.org/maplibre-style-spec/#layer-minzoom)
-     * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/#layer-maxzoom))
+     * [minimum zoom level](https://maplibre.org/maplibre-style-spec/layers/#minzoom)
+     * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/layers/#maxzoom))
      * at which the layer will be rendered.
      *
      * Note: For style layers using vector sources, style layers cannot be rendered at zoom levels lower than the
@@ -2679,7 +2679,7 @@ export class Map extends Camera {
     /**
      * Sets the any combination of light values.
      *
-     * @param light - Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/#light).
+     * @param light - Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/light).
      * @param options - Options object.
      * @returns `this`
      *
