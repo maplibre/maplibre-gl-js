@@ -78,26 +78,15 @@ export class Program<Us extends UniformBindings> {
             defines.push('#define TERRAIN3D;');
         }
 
-        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
-        const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
-
-        const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-        if (gl.isContextLost()) {
-            this.failedToCreate = true;
+        const fragmentShader = this.loadShader(gl, defines, shaders.prelude.fragmentSource, source.fragmentSource, gl.FRAGMENT_SHADER);
+        if(this.failedToCreate) {
             return;
         }
-        gl.shaderSource(fragmentShader, fragmentSource);
-        gl.compileShader(fragmentShader);
-        gl.attachShader(this.program, fragmentShader);
 
-        const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-        if (gl.isContextLost()) {
-            this.failedToCreate = true;
+        const vertexShader = this.loadShader(gl, defines, shaders.prelude.vertexSource, source.vertexSource, gl.VERTEX_SHADER);
+        if(this.failedToCreate) {
             return;
         }
-        gl.shaderSource(vertexShader, vertexSource);
-        gl.compileShader(vertexShader);
-        gl.attachShader(this.program, vertexShader);
 
         this.attributes = {};
         const uniformLocations = {};
@@ -128,6 +117,25 @@ export class Program<Us extends UniformBindings> {
         this.fixedUniforms = fixedUniforms(context, uniformLocations);
         this.terrainUniforms = terrainPreludeUniforms(context, uniformLocations);
         this.binderUniforms = configuration ? configuration.getUniforms(context, uniformLocations) : [];
+    }
+
+    loadShader(
+        gl: WebGLRenderingContext | WebGL2RenderingContext,
+        defines: string[],
+        prelude: string,
+        shaderSource: string,
+        shaderType: number
+    ): WebGLShader | null {
+        const source = defines.concat(prelude, shaderSource).join('\n');
+        const shader = gl.createShader(shaderType);
+        if (gl.isContextLost()) {
+            this.failedToCreate = true;
+            return;
+        }
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        gl.attachShader(this.program, shader);
+        return shader;
     }
 
     draw(context: Context,
