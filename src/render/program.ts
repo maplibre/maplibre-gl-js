@@ -79,12 +79,12 @@ export class Program<Us extends UniformBindings> {
         }
 
         const fragmentShader = this.loadShader(gl, defines, shaders.prelude.fragmentSource, source.fragmentSource, gl.FRAGMENT_SHADER);
-        if(this.failedToCreate) {
+        if (this.failedToCreate) {
             return;
         }
 
         const vertexShader = this.loadShader(gl, defines, shaders.prelude.vertexSource, source.vertexSource, gl.VERTEX_SHADER);
-        if(this.failedToCreate) {
+        if (this.failedToCreate) {
             return;
         }
 
