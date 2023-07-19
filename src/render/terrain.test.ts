@@ -194,12 +194,20 @@ describe('Terrain', () => {
         expect(mockTerrain.getDEMElevation(null, 0.4, 0.2)).toBeCloseTo(42);
     });
 
-    test('getElevation with lng less than -180 wraps correctly', () => {
+    test('getElevationForLngLat with lng less than -180 wraps correctly', () => {
         const terrain = new Terrain(null, {} as any, {} as any);
 
         const OVERSCALETILEID_DOES_NOT_THROW = 4;
         terrain.getElevation = () => OVERSCALETILEID_DOES_NOT_THROW;
         expect(terrain.getElevationForLngLat(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
+    });
+
+    test('getMinElevationForLngLat with lng less than -180 wraps correctly', () => {
+        const terrain = new Terrain(null, {} as any, {} as any);
+
+        const OVERSCALETILEID_DOES_NOT_THROW = 4;
+        terrain.getMinMaxElevation = () => ({minElevation: OVERSCALETILEID_DOES_NOT_THROW, maxElevation: 42});
+        expect(terrain.getMinElevationForLngLat(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
     });
 
 });
