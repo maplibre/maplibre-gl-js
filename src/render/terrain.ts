@@ -186,12 +186,8 @@ export class Terrain {
      * @returns the elevation
      */
     getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
-        const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
-        const worldSize = (1 << zoom) * EXTENT;
-        const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
-        const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
-        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
-        return this.getElevation(tileID, mercX % EXTENT, mercY % EXTENT, EXTENT);
+        const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
     }
 
     /**
@@ -407,11 +403,7 @@ export class Terrain {
     }
 
     getMinElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
-        const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
-        const worldSize = (1 << zoom) * EXTENT;
-        const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
-        const tileX = Math.floor(mercX / EXTENT), tileY = Math.floor(mercY / EXTENT);
-        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }
 
@@ -431,5 +423,19 @@ export class Terrain {
             minMax.maxElevation = tile.dem.max * this.exaggeration;
         }
         return minMax;
+    }
+
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID, mercatorX: number, mercatorY: number} {
+        const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
+        const worldSize = (1 << zoom) * EXTENT;
+        const mercatorX = mercatorCoordinate.x * worldSize;
+        const mercatorY = mercatorCoordinate.y * worldSize;
+        const tileX = Math.floor(mercatorX / EXTENT), tileY = Math.floor(mercatorY / EXTENT);
+        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
+        return {
+            tileID,
+            mercatorX,
+            mercatorY
+        }
     }
 }
