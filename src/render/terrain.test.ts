@@ -11,6 +11,7 @@ import type {DEMData} from '../data/dem_data';
 import {Tile} from '../source/tile';
 import {Painter} from './painter';
 import {mat4} from 'gl-matrix';
+import {LngLat} from '../geo/lng_lat';
 
 describe('Terrain', () => {
     test('pointCoordiate should not return null', () => {
@@ -191,6 +192,22 @@ describe('Terrain', () => {
         expect(mockTerrain.getDEMElevation(null, 0.5, 0)).toBeCloseTo(50);
         expect(mockTerrain.getDEMElevation(null, 0.5, 1)).toBeCloseTo(60);
         expect(mockTerrain.getDEMElevation(null, 0.4, 0.2)).toBeCloseTo(42);
+    });
+
+    test('getElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
+        const terrain = new Terrain(null, {} as any, {} as any);
+
+        const OVERSCALETILEID_DOES_NOT_THROW = 4;
+        terrain.getElevation = () => OVERSCALETILEID_DOES_NOT_THROW;
+        expect(terrain.getElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
+    });
+
+    test('getMinTileElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
+        const terrain = new Terrain(null, {} as any, {} as any);
+
+        const OVERSCALETILEID_DOES_NOT_THROW = 4;
+        terrain.getMinMaxElevation = () => ({minElevation: OVERSCALETILEID_DOES_NOT_THROW, maxElevation: 42});
+        expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
     });
 
 });

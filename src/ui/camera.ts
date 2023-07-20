@@ -262,16 +262,29 @@ export abstract class Camera extends Evented {
     _onEaseEnd: (easeId?: string) => void;
     _easeFrameId: TaskID;
 
-    // holds the geographical coordinate of the target
+    /**
+     * @hidden
+     * holds the geographical coordinate of the target
+     */
     _elevationCenter: LngLat;
-    // holds the targ altitude value, = center elevation of the target.
-    // This value may changes during flight, because new terrain-tiles loads during flight.
+    /**
+     * @hidden
+     * holds the targ altitude value, = center elevation of the target.
+     * This value may changes during flight, because new terrain-tiles loads during flight.
+     */
     _elevationTarget: number;
-    // holds the start altitude value, = center elevation before animation begins
-    // this value will recalculated during flight in respect of changing _elevationTarget values,
-    // so the linear interpolation between start and target keeps smooth and without jumps.
+    /**
+     * @hidden
+     * holds the start altitude value, = center elevation before animation begins
+     * this value will recalculated during flight in respect of changing _elevationTarget values,
+     * so the linear interpolation between start and target keeps smooth and without jumps.
+     */
     _elevationStart: number;
-
+    /**
+     * @hidden
+     * Saves the current state of the elevation freeze - this is used during map movement to prevent "rocky" camera movement.
+     */
+    _elevationFreeze: boolean;
     /**
      * @hidden
      * Used to track accumulated changes during continuous interaction
@@ -1049,12 +1062,13 @@ export abstract class Camera extends Evented {
     _prepareElevation(center: LngLat) {
         this._elevationCenter = center;
         this._elevationStart = this.transform.elevation;
-        this._elevationTarget = this.transform.getElevation(center, this.terrain);
-        this.transform.freezeElevation = true;
+        this._elevationTarget = this.terrain.getElevationForLngLatZoom(center, this.transform.tileZoom);
+        this._elevationFreeze = true;
     }
 
     _updateElevation(k: number) {
-        const elevation = this.transform.getElevation(this._elevationCenter, this.terrain);
+        this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
+        const elevation = this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -1066,7 +1080,7 @@ export abstract class Camera extends Evented {
     }
 
     _finalizeElevation() {
-        this.transform.freezeElevation = false;
+        this._elevationFreeze = false;
         this.transform.recalculateZoom(this.terrain);
     }
 
@@ -1450,9 +1464,9 @@ export abstract class Camera extends Evented {
         if (!this.terrain) {
             return null;
         }
-        const elevation = this.transform.getElevation(LngLat.convert(lngLatLike), this.terrain);
+        const elevation = this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
         /**
-         * Different zoomlevels with different terrain-tiles the elvation-values are not the same.
+         * Different zoomlevels with different terrain-tiles the elevation-values are not the same.
          * map.transform.elevation variable with the center-altitude.
          * In maplibre the proj-matrix is translated by this value in negative z-direction.
          * So we need to add this value to the elevation to get the correct value.

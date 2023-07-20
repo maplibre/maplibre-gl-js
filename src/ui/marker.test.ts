@@ -800,7 +800,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         map.terrain = {
-            getElevation: () => 0
+            getElevationForLngLatZoom: () => 0
         } as any as Terrain;
 
         marker.setOffset([10, 10]);

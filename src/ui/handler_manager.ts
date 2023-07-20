@@ -504,10 +504,10 @@ export class HandlerManager {
                 (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
                 // When starting to drag or move, flag it and register moveend to clear flagging
                 this._terrainMovement = true;
-                tr.freezeElevation = true;
+                this._map._elevationFreeze = true;
                 tr.setLocationAtPoint(loc, around);
                 this._map.once('moveend', () => {
-                    tr.freezeElevation = false;
+                    this._map._elevationFreeze = false;
                     this._terrainMovement = false;
                     tr.recalculateZoom(map.terrain);
                 });

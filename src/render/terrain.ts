@@ -18,7 +18,7 @@ import {TerrainSourceCache} from '../source/terrain_source_cache';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {earthRadius} from '../geo/lng_lat';
+import {LngLat, earthRadius} from '../geo/lng_lat';
 
 /**
  * A terrain GPU related object
@@ -180,7 +180,18 @@ export class Terrain {
     }
 
     /**
-     * get the Elevation for given coordinate in respect of exaggeration.
+     * Get the elevation for given {@link LngLat} in respect of exaggeration.
+     * @param lnglat - the location
+     * @param zoom - the zoom
+     * @returns the elevation
+     */
+    getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
+    }
+
+    /**
+     * Get the elevation for given coordinate in respect of exaggeration.
      * @param tileID - the tile id
      * @param x - between 0 .. EXTENT
      * @param y - between 0 .. EXTENT
@@ -391,6 +402,11 @@ export class Terrain {
         return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
 
+    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.getMinMaxElevation(tileID).minElevation ?? 0;
+    }
+
     /**
      * Get the minimum and maximum elevation contained in a tile. This includes any
      * exaggeration included in the terrain.
@@ -409,4 +425,17 @@ export class Terrain {
         return minMax;
     }
 
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; mercatorX: number; mercatorY: number} {
+        const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
+        const worldSize = (1 << zoom) * EXTENT;
+        const mercatorX = mercatorCoordinate.x * worldSize;
+        const mercatorY = mercatorCoordinate.y * worldSize;
+        const tileX = Math.floor(mercatorX / EXTENT), tileY = Math.floor(mercatorY / EXTENT);
+        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
+        return {
+            tileID,
+            mercatorX,
+            mercatorY
+        };
+    }
 }
