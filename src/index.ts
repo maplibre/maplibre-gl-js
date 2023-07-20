@@ -15,6 +15,7 @@ import {LngLatBounds} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
+import {DOM} from './util/dom';
 import {config} from './util/config';
 import {Debug} from './util/debug';
 import {isSafari} from './util/util';
@@ -59,6 +60,7 @@ class MapLibreGL {
     static Point = Point;
     static MercatorCoordinate = MercatorCoordinate;
     static Evented = Evented;
+    static DOM = DOM;
     static AJAXError = AJAXError;
     static config = config;
     static CanvasSource = CanvasSource;
