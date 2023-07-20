@@ -297,6 +297,8 @@ export class Marker extends Evented {
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
         map.on('moveend', this._update);
+        map.on('terrain', this._update);
+  
         this.setDraggable(this._draggable);
         this._update();
 
@@ -504,7 +506,13 @@ export class Marker extends Evented {
         return this;
     }
 
-    _update = (e?: { type: 'move' | 'moveend' }) => {
+    _update = (e?: { type: 'move' | 'moveend' | 'terrain' }) => {
+        if(e?.type === 'terrain') {
+          setTimeout(() => {
+            this._update();
+          }, 100);
+        }
+
         if (!this._map) return;
 
         if (this._map.transform.renderWorldCopies) {
