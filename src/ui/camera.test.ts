@@ -1661,7 +1661,7 @@ describe('#flyTo', () => {
         const camera = createCamera();
         camera.terrain = {
             getElevationForLngLatZoom: () => 100,
-            getMinElevationForLngLatZoom: () => 200
+            getMinTileElevationForLngLatZoom: () => 200
         };
         camera.transform = {
             elevation: 0,

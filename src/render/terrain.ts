@@ -402,7 +402,7 @@ export class Terrain {
         return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
 
-    getMinElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
         const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
         return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }

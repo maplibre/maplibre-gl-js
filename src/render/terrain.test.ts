@@ -202,12 +202,12 @@ describe('Terrain', () => {
         expect(terrain.getElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
     });
 
-    test('getMinElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
+    test('getMinTileElevationForLngLatZoom with lng less than -180 wraps correctly', () => {
         const terrain = new Terrain(null, {} as any, {} as any);
 
         const OVERSCALETILEID_DOES_NOT_THROW = 4;
         terrain.getMinMaxElevation = () => ({minElevation: OVERSCALETILEID_DOES_NOT_THROW, maxElevation: 42});
-        expect(terrain.getMinElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
+        expect(terrain.getMinTileElevationForLngLatZoom(new LngLat(-183, 40), 0)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
     });
 
 });
