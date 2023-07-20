@@ -43,17 +43,6 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.encoding = options.encoding || 'mapbox';
     }
 
-    serialize() {
-        return {
-            type: 'raster-dem',
-            url: this.url,
-            tileSize: this.tileSize,
-            tiles: this.tiles,
-            bounds: this.bounds,
-            encoding: this.encoding
-        };
-    }
-
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this), this.map._refreshExpiredTiles);
