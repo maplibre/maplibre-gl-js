@@ -425,7 +425,7 @@ export class Terrain {
         return minMax;
     }
 
-    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID, mercatorX: number, mercatorY: number} {
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; mercatorX: number; mercatorY: number} {
         const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
         const worldSize = (1 << zoom) * EXTENT;
         const mercatorX = mercatorCoordinate.x * worldSize;
@@ -436,6 +436,6 @@ export class Terrain {
             tileID,
             mercatorX,
             mercatorY
-        }
+        };
     }
 }

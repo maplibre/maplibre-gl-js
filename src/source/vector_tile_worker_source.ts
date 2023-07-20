@@ -139,9 +139,8 @@ export class VectorTileWorkerSource implements WorkerSource {
      * Implements {@link WorkerSource#reloadTile}.
      */
     reloadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
-        const loaded = this.loaded,
-            uid = params.uid,
-            vtSource = this;
+        const loaded = this.loaded;
+        const uid = params.uid;
         if (loaded && loaded[uid]) {
             const workerTile = loaded[uid];
             workerTile.showCollisionBoxes = params.showCollisionBoxes;
