@@ -492,7 +492,7 @@ export class Transform {
     recalculateZoom(terrain: Terrain) {
         // find position the camera is looking on
         const center = this.pointLocation(this.centerPoint, terrain);
-        const elevation = terrain.getElevationForLngLat(center, this.tileZoom);
+        const elevation = terrain.getElevationForLngLatZoom(center, this.tileZoom);
         const deltaElevation = this.elevation - elevation;
         if (!deltaElevation) return;
 
@@ -533,7 +533,7 @@ export class Transform {
      */
     locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return terrain ?
-            this.coordinatePoint(this.locationCoordinate(lnglat), terrain.getElevationForLngLat(lnglat, this.tileZoom), this.pixelMatrix3D) :
+            this.coordinatePoint(this.locationCoordinate(lnglat), terrain.getElevationForLngLatZoom(lnglat, this.tileZoom), this.pixelMatrix3D) :
             this.coordinatePoint(this.locationCoordinate(lnglat));
     }
 

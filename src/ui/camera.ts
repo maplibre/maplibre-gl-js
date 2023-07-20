@@ -1062,13 +1062,13 @@ export abstract class Camera extends Evented {
     _prepareElevation(center: LngLat) {
         this._elevationCenter = center;
         this._elevationStart = this.transform.elevation;
-        this._elevationTarget = this.terrain.getElevationForLngLat(center, this.transform.tileZoom);
+        this._elevationTarget = this.terrain.getElevationForLngLatZoom(center, this.transform.tileZoom);
         this._elevationFreeze = true;
     }
 
     _updateElevation(k: number) {
-        this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this._elevationCenter, this.transform.tileZoom);
-        const elevation = this.terrain.getElevationForLngLat(this._elevationCenter, this.transform.tileZoom);
+        this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
+        const elevation = this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
             const pitch1 = this._elevationTarget - this._elevationStart;
@@ -1464,7 +1464,7 @@ export abstract class Camera extends Evented {
         if (!this.terrain) {
             return null;
         }
-        const elevation = this.terrain.getElevationForLngLat(LngLat.convert(lngLatLike), this.transform.tileZoom);
+        const elevation = this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
         /**
          * Different zoomlevels with different terrain-tiles the elevation-values are not the same.
          * map.transform.elevation variable with the center-altitude.

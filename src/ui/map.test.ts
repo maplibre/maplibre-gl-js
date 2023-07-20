@@ -2661,7 +2661,7 @@ describe('Map', () => {
             const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200);
 
             const terrainStub = {} as Terrain;
-            terrainStub.getElevationForLngLat = mockedGetElevation;
+            terrainStub.getElevationForLngLatZoom = mockedGetElevation;
             map.terrain = terrainStub;
 
             // distance between lng x and lng x+1 is 111.2km at same lat
@@ -2678,7 +2678,7 @@ describe('Map', () => {
             const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200 * 3);
 
             const terrainStub = {} as Terrain;
-            terrainStub.getElevationForLngLat = mockedGetElevation;
+            terrainStub.getElevationForLngLatZoom = mockedGetElevation;
             map.terrain = terrainStub;
             // distance between lng x and lng x+1 is 111.2km at same lat
             // (elevation difference of cam and center) / 2 = grounddistance =>
@@ -2695,7 +2695,7 @@ describe('Map', () => {
             const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200 / 2);
 
             const terrainStub = {} as Terrain;
-            terrainStub.getElevationForLngLat = mockedGetElevation;
+            terrainStub.getElevationForLngLatZoom = mockedGetElevation;
             map.terrain = terrainStub;
 
             // distance between lng x and lng x+1 is 111.2km at same lat
@@ -2713,7 +2713,7 @@ describe('Map', () => {
             const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 1000);
 
             const terrainStub = {} as Terrain;
-            terrainStub.getElevationForLngLat = mockedGetElevation;
+            terrainStub.getElevationForLngLatZoom = mockedGetElevation;
             map.terrain = terrainStub;
 
             const expectedZoom = Math.log2(map.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map.transform.tileSize);

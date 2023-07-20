@@ -805,7 +805,7 @@ export class Map extends Camera {
 
     calculateCameraOptionsFromTo(from: LngLat, altitudeFrom: number, to: LngLat, altitudeTo?: number): CameraOptions {
         if (altitudeTo == null && this.terrain) {
-            altitudeTo = this.terrain.getElevationForLngLat(to, this.transform.tileZoom);
+            altitudeTo = this.terrain.getElevationForLngLatZoom(to, this.transform.tileZoom);
         }
         return super.calculateCameraOptionsFromTo(from, altitudeFrom, to, altitudeTo);
     }
@@ -1955,15 +1955,15 @@ export class Map extends Camera {
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
-            this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this.transform.center, this.transform.tileZoom);
-            this.transform.elevation = this.terrain.getElevationForLngLat(this.transform.center, this.transform.tileZoom);
+            this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+            this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
                     this.terrain.sourceCache.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
-                        this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this.transform.center, this.transform.tileZoom);
-                        this.transform.elevation = this.terrain.getElevationForLngLat(this.transform.center, this.transform.tileZoom);
+                        this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+                        this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
@@ -3130,9 +3130,9 @@ export class Map extends Camera {
         // update terrain stuff
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
-            this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLat(this.transform.center, this.transform.tileZoom);
+            this.transform._minEleveationForCurrentTile = this.terrain.getMinElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             if (!this._elevationFreeze) {
-                this.transform.elevation = this.terrain.getElevationForLngLat(this.transform.center, this.transform.tileZoom);
+                this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             }
         } else {
             this.transform._minEleveationForCurrentTile = 0;

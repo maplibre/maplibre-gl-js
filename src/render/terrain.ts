@@ -185,7 +185,7 @@ export class Terrain {
      * @param zoom - the zoom
      * @returns the elevation
      */
-    getElevationForLngLat(lnglat: LngLat, zoom: number) {
+    getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
         const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
         const worldSize = (1 << zoom) * EXTENT;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;
@@ -406,7 +406,7 @@ export class Terrain {
         return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
     }
 
-    getMinElevationForLngLat(lnglat: LngLat, zoom: number) {
+    getMinElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
         const merc = MercatorCoordinate.fromLngLat(lnglat.wrap());
         const worldSize = (1 << zoom) * EXTENT;
         const mercX = merc.x * worldSize, mercY = merc.y * worldSize;

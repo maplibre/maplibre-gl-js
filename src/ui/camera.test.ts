@@ -2032,7 +2032,7 @@ describe('queryTerrainElevation', () => {
         const result = camera.queryTerrainElevation(lngLatLike);
 
         // Check that transform.getElevation was called with the correct arguments
-        expect(terrain.getElevationForLngLat).toHaveBeenCalledWith(
+        expect(terrain.getElevationForLngLatZoom).toHaveBeenCalledWith(
             expect.objectContaining({
                 lng: lngLatLike[0],
                 lat: lngLatLike[1],
