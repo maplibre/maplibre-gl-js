@@ -407,14 +407,14 @@ describe('transform', () => {
 
         // expect same values because of no elevation change
         const terrain = {
-            getElevationForLngLat: () => 200,
+            getElevationForLngLatZoom: () => 200,
             pointCoordinate: () => null
         };
         transform.recalculateZoom(terrain as any);
         expect(transform.zoom).toBe(14);
 
         // expect new zoom because of elevation change
-        terrain.getElevationForLngLat = () => 400;
+        terrain.getElevationForLngLatZoom = () => 400;
         transform.recalculateZoom(terrain as any);
         expect(transform.zoom).toBe(14.127997275621933);
         expect(transform.elevation).toBe(400);
@@ -423,7 +423,7 @@ describe('transform', () => {
         expect(transform._center.lat).toBe(50.00000000000017);
 
         // expect new zoom because of elevation change to point below sea level
-        terrain.getElevationForLngLat = () => -200;
+        terrain.getElevationForLngLatZoom = () => -200;
         transform.recalculateZoom(terrain as any);
         expect(transform.zoom).toBe(13.773740316343467);
         expect(transform.elevation).toBe(-200);

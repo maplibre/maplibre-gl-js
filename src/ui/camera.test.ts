@@ -1660,8 +1660,8 @@ describe('#flyTo', () => {
     test('check elevation callbacks', done => {
         const camera = createCamera();
         camera.terrain = {
-            getElevationForLngLat: () => 100,
-            getMinElevationForLngLat: () => 200
+            getElevationForLngLatZoom: () => 100,
+            getMinElevationForLngLatZoom: () => 200
         };
         camera.transform = {
             elevation: 0,
@@ -1674,7 +1674,7 @@ describe('#flyTo', () => {
         expect(camera._elevationTarget).toBe(100);
         expect(camera._elevationFreeze).toBeTruthy();
 
-        camera.terrain.getElevationForLngLat = () => 200;
+        camera.terrain.getElevationForLngLatZoom = () => 200;
         camera._updateElevation(0.5);
         expect(camera._elevationStart).toBe(-100);
         expect(camera._elevationTarget).toBe(200);
@@ -2019,7 +2019,7 @@ describe('queryTerrainElevation', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.elevation = 50;
         const terrain = {
-            getElevationForLngLat: jest.fn().mockReturnValue(200)
+            getElevationForLngLatZoom: jest.fn().mockReturnValue(200)
         } as any as Terrain;
 
         // Set up camera with mock transform and terrain
