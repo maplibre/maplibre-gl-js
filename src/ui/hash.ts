@@ -133,6 +133,5 @@ export class Hash {
     /**
      * Mobile Safari doesn't allow updating the hash more than 100 times per 30 seconds.
      */
-    _updateHash = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
-
+    _updateHash: () => ReturnType<typeof setTimeout> = throttle(this._updateHashUnthrottled, 30 * 1000 / 100);
 }
