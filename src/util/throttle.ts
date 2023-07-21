@@ -1,15 +1,15 @@
 /**
  * Throttle the given function to run at most every `period` milliseconds.
  */
-export function throttle(fn: () => void, time: number): () => ReturnType<typeof setTimeout> {
+export function throttle(fn: () => void, time: number): () => ReturnType<Window['setTimeout']> {
     let pending = false;
-    let timerId: ReturnType<typeof setTimeout> = null;
+    let timerId: ReturnType<Window['setTimeout']> = null;
 
     const later = () => {
         timerId = null;
         if (pending) {
             fn();
-            timerId = setTimeout(later, time);
+            timerId = window.setTimeout(later, time);
             pending = false;
         }
     };
