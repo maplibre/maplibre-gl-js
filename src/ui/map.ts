@@ -1460,13 +1460,13 @@ export class Map extends Camera {
      * @param listener - The function to be called when the event is fired.
      * @returns `this` if listener is provided, promise otherwise to allow easier usage of async/await
      */
-    once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
     once<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener?: (ev: MapLayerEventType[T] & Object) => void,
     ): this | Promise<MapLayerEventType[T] & Object>;
     once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
+    once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
     once(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
 
         if (listener === undefined) {
@@ -1491,13 +1491,13 @@ export class Map extends Camera {
      * @param listener - (optional) The function previously installed as a listener.
      * @returns `this`
      */
-    off(type: keyof MapEventType | string, listener: Listener): this;
     off<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
     off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    off(type: keyof MapEventType | string, listener: Listener): this;
     off(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.off(type, layerIdOrListener as Listener);

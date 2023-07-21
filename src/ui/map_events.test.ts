@@ -4,6 +4,14 @@ import {createMap, beforeMapTest} from '../util/test/util';
 import {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {MapLayerEventType, MapLibreEvent} from './events';
 
+type IsAny<T> =
+  unknown extends T ? T extends {} ? T : never : never;
+
+type NotAny<T> =
+  T extends IsAny<T> ? never : T;
+
+function assertNotAny<T>(_x: NotAny<T>) { }
+
 beforeEach(() => {
     beforeMapTest();
 });
@@ -175,6 +183,7 @@ describe('map events', () => {
 
         const spy = jest.fn();
         map.on('mousemove', (event) => {
+            assertNotAny(event);
             const {lng, lat} = event.lngLat;
             spy({lng, lat});
         });
@@ -277,6 +286,7 @@ describe('map events', () => {
 
         const spy = jest.fn();
         map.off('mousemove', (event) => {
+            assertNotAny(event);
             const {lng, lat} = event.lngLat;
             spy({lng, lat});
         });
@@ -305,6 +315,7 @@ describe('map events', () => {
 
         const spy = jest.fn();
         map.once('mousemove', (event) => {
+            assertNotAny(event);
             const {lng, lat} = event.lngLat;
             spy({lng, lat});
         });
