@@ -1411,13 +1411,13 @@ export class Map extends Camera {
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
      */
-    on(type: keyof MapEventType | string, listener: Listener): this;
     on<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): Map;
     on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    on(type: keyof MapEventType | string, listener: Listener): this;
     /**
      * This is an overload of the `on` method that allows to listen to events based on the `layerId`
      * @event

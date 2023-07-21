@@ -170,6 +170,19 @@ describe('map events', () => {
         expect(handler.onMove).toHaveBeenCalledTimes(1);
     });
 
+    test('Map#on allows a listener to infer the event type ', () => {
+        const map = createMap();
+
+        const spy = jest.fn();
+        map.on('mousemove', (event) => {
+            const {lng, lat} = event.lngLat;
+            spy({lng, lat});
+        });
+
+        simulate.mousemove(map.getCanvas());
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
     test('Map#off removes a delegated event listener', () => {
         const map = createMap();
 
@@ -242,6 +255,62 @@ describe('map events', () => {
 
         expect(spyA).toHaveBeenCalledTimes(1);
         expect(spyB).not.toHaveBeenCalled();
+    });
+
+    test('Map#off calls an event listener with no type arguments, defaulting to \'unknown\' originalEvent type', () => {
+        const map = createMap();
+
+        const handler = {
+            onMove: function onMove(_event: MapLibreEvent) {}
+        };
+
+        jest.spyOn(handler, 'onMove');
+
+        map.off('move', (event) => handler.onMove(event));
+        map.jumpTo({center: {lng: 10, lat: 10}});
+
+        expect(handler.onMove).toHaveBeenCalledTimes(0);
+    });
+
+    test('Map#off allows a listener to infer the event type ', () => {
+        const map = createMap();
+
+        const spy = jest.fn();
+        map.off('mousemove', (event) => {
+            const {lng, lat} = event.lngLat;
+            spy({lng, lat});
+        });
+
+        simulate.mousemove(map.getCanvas());
+        expect(spy).toHaveBeenCalledTimes(0);
+    });
+
+    test('Map#once calls an event listener with no type arguments, defaulting to \'unknown\' originalEvent type', () => {
+        const map = createMap();
+
+        const handler = {
+            onMoveOnce: function onMoveOnce(_event: MapLibreEvent) {}
+        };
+
+        jest.spyOn(handler, 'onMoveOnce');
+
+        map.once('move', (event) => handler.onMoveOnce(event));
+        map.jumpTo({center: {lng: 10, lat: 10}});
+
+        expect(handler.onMoveOnce).toHaveBeenCalledTimes(1);
+    });
+
+    test('Map#once allows a listener to infer the event type ', () => {
+        const map = createMap();
+
+        const spy = jest.fn();
+        map.once('mousemove', (event) => {
+            const {lng, lat} = event.lngLat;
+            spy({lng, lat});
+        });
+
+        simulate.mousemove(map.getCanvas());
+        expect(spy).toHaveBeenCalledTimes(1);
     });
 
     (['mouseenter', 'mouseover'] as (keyof MapLayerEventType)[]).forEach((event) => {
