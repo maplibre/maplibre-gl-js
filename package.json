@@ -175,7 +175,7 @@
     "benchmark": "npm run tsnode test/bench/run-benchmarks.ts",
     "gl-stats": "npm run tsnode test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
-    "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json",
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.typecheck.json",
     "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
   },
   "files": [

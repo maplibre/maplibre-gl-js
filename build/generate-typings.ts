@@ -8,7 +8,7 @@ if (!fs.existsSync('dist')) {
 
 console.log('Starting bundling types');
 const outputFile = './dist/maplibre-gl.d.ts';
-childProcess.execSync(`dts-bundle-generator --umd-module-name=maplibregl -o ${outputFile} ./src/index.ts`);
+childProcess.execSync(`dts-bundle-generator --umd-module-name=maplibregl -o ${outputFile} ./src/index.ts  --project tsconfig.typings.json`);
 let types = fs.readFileSync(outputFile, 'utf8');
 // Classes are not exported but should be since this is exported as UMD - fixing...
 types = types.replace(/declare class/g, 'export declare class');
