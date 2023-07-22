@@ -150,4 +150,18 @@ describe('RasterTileSource', () => {
         });
         server.respond();
     });
+
+    it('serializes options', () => {
+        const source = createSource({
+            tiles: ['http://localhost:2900/raster-dem/{z}/{x}/{y}.png'],
+            minzoom: 2,
+            maxzoom: 10
+        });
+        expect(source.serialize()).toStrictEqual({
+            type: 'raster-dem',
+            tiles: ['http://localhost:2900/raster-dem/{z}/{x}/{y}.png'],
+            minzoom: 2,
+            maxzoom: 10
+        });
+    });
 });

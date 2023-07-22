@@ -10,6 +10,7 @@
 
 - Incorrect distance field of view calculation for negative elevation, fixed by storing min elevation for the tile in view ([#1655](https://github.com/maplibre/maplibre-gl-js/issues/1655), [#2858](https://github.com/maplibre/maplibre-gl-js/pull/2858))
 - Fix reloadCallback not firing on VectorTileWorkerSource.reloadTile ([#1874](https://github.com/maplibre/maplibre-gl-js/pull/1874))
+- Fix RasterDEMTileSource not serializing its options correctly ([#2895](https://github.com/maplibre/maplibre-gl-js/pull/2895))
 - _...Add new stuff here..._
 
 ## 3.2.0
