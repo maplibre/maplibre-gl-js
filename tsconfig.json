@@ -22,7 +22,8 @@
     ],
     "types": [
       "geojson",
-      "offscreencanvas"
+      "offscreencanvas",
+      "jest"
     ]
   },
   "ts-node": {
@@ -45,8 +46,6 @@
     "dist",
     "build/rollup",
     "test/bench/rollup",
-    "test/bench/**/*generated*",
-    "**/*.test.ts",
-    "src/util/test/**/*"
+    "test/bench/**/*generated*"
   ]
 }
