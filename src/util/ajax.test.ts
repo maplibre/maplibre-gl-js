@@ -44,24 +44,29 @@ describe('ajax', () => {
         server.respond();
     });
 
-    test('getJSON set request parameters', (done) => {
-        setupFetchMock();
+    [
+        {functionName: 'getJSON', targetFunction: getJSON},
+        {functionName: 'getArrayBuffer', targetFunction: getArrayBuffer}
+    ].forEach(({targetFunction, functionName}) => {
+        test(`${functionName} set correct request parameters`, (done) => {
+            setupFetchMock();
 
-        jest.spyOn(global, 'fetch').mockImplementation((requestInfo: Request) => {
-            expect(requestInfo.url).toBe('http://example.com/test-params.json');
-            expect(requestInfo.cache).toBe('force-cache');
-            expect(requestInfo.method).toBe('GET');
-            expect(requestInfo.headers.get('Authorization')).toBe('Bearer 123');
-            expect(requestInfo.body).toBeUndefined();
+            jest.spyOn(global, 'fetch').mockImplementation((requestInfo: Request) => {
+                expect(requestInfo.url).toBe('http://example.com/test-params.json');
+                expect(requestInfo.cache).toBe('force-cache');
+                expect(requestInfo.method).toBe('GET');
+                expect(requestInfo.headers.get('Authorization')).toBe('Bearer 123');
+                expect(requestInfo.body).toBeUndefined();
 
-            done();
+                done();
 
-            return Promise.resolve(<Response>{
-                json: () => null,
+                return Promise.resolve(<Response>{
+                    json: () => null,
+                });
             });
-        });
 
-        getJSON({url: 'http://example.com/test-params.json', fetchCache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {});
+            targetFunction({url: 'http://example.com/test-params.json', fetchCache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {});
+        });
     });
 
     test('getJSON', done => {
