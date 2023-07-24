@@ -7,6 +7,7 @@ import {
 } from './ajax';
 
 import {fakeServer, FakeServer} from 'nise';
+import {setupFetchMock} from './test/mock_fetch';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
@@ -41,6 +42,26 @@ describe('ajax', () => {
             done();
         });
         server.respond();
+    });
+
+    test('getJSON set request parameters', (done) => {
+        setupFetchMock();
+
+        jest.spyOn(global, 'fetch').mockImplementation((requestInfo: Request) => {
+            expect(requestInfo.url).toBe('http://example.com/test-params.json');
+            expect(requestInfo.cache).toBe('force-cache');
+            expect(requestInfo.method).toBe('GET');
+            expect(requestInfo.headers.get('Authorization')).toBe('Bearer 123');
+            expect(requestInfo.body).toBeUndefined();
+
+            done();
+
+            return Promise.resolve(<Response>{
+                json: () => null,
+            });
+        });
+
+        getJSON({url: 'http://example.com/test-params.json', fetchCache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {});
     });
 
     test('getJSON', done => {
