@@ -1367,8 +1367,8 @@ export class Map extends Camera {
      * when the cursor enters a visible portion of the specified layer from outside that layer or outside the map canvas.
      * @param layer - The ID of a style layer or a listener if no ID is provided. Event will only be triggered if its location
      * is within a visible feature in this layer. The event will have a `features` property containing
-     * an array of the matching features. If `layerIdOrListener` is not supplied, the event will not have a `features` property.
-     * Please note that many event types are not compatible with the optional `layerIdOrListener` parameter.
+     * an array of the matching features. If `layer` is not supplied, the event will not have a `features` property.
+     * Please note that many event types are not compatible with the optional `layer` parameter.
      * @param listener - The function to be called when the event is fired.
      * @returns `this`
      * @example
@@ -1411,21 +1411,27 @@ export class Map extends Camera {
      * @see [Create a hover effect](https://maplibre.org/maplibre-gl-js/docs/examples/hover-styles/)
      * @see [Create a draggable marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/)
      */
-    on(type: keyof MapEventType | string, listener: Listener): this;
     on<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): Map;
-    on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     /**
-     * This is an overload of the `on` method that allows to listen to events based on the `layerId`
+     * Overload of the `on` method that allows to listen to events without specifying a layer.
      * @event
      * @param type - The type of the event.
-     * @param layerIdOrListener - The ID of the layer.
      * @param listener - The listener callback.
      * @returns `this`
      */
+    on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    /**
+     * Overload of the `on` method that allows to listen to events without specifying a layer.
+     * @event
+     * @param type - The type of the event.
+     * @param listener - The listener callback.
+     * @returns `this`
+     */
+    on(type: keyof MapEventType | string, listener: Listener): this;
     on(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.on(type, layerIdOrListener as Listener);
@@ -1445,7 +1451,7 @@ export class Map extends Camera {
     }
 
     /**
-     * Adds a listener that will be called only once to a specified event type occurring on features in a specified style layer.
+     * Adds a listener that will be called only once to a specified event type, optionally limited to features in a specified style layer.
      *
      * @event
      * @param type - The event type to listen for; one of `'mousedown'`, `'mouseup'`, `'click'`, `'dblclick'`,
@@ -1460,13 +1466,27 @@ export class Map extends Camera {
      * @param listener - The function to be called when the event is fired.
      * @returns `this` if listener is provided, promise otherwise to allow easier usage of async/await
      */
-    once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
     once<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener?: (ev: MapLayerEventType[T] & Object) => void,
     ): this | Promise<MapLayerEventType[T] & Object>;
+    /**
+     * Overload of the `once` method that allows to listen to events without specifying a layer.
+     * @event
+     * @param type - The type of the event.
+     * @param listener - The listener callback.
+     * @returns `this`
+     */
     once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
+    /**
+     * Overload of the `once` method that allows to listen to events without specifying a layer.
+     * @event
+     * @param type - The type of the event.
+     * @param listener - The listener callback.
+     * @returns `this`
+     */
+    once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
     once(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
 
         if (listener === undefined) {
@@ -1483,21 +1503,35 @@ export class Map extends Camera {
     }
 
     /**
-     * Removes an event listener for layer-specific events previously added with `Map#on`.
+     * Removes an event listener for events previously added with `Map#on`.
      *
      * @event
      * @param type - The event type previously used to install the listener.
-     * @param layerIdOrListener - The layer ID or listener previously used to install the listener.
-     * @param listener - (optional) The function previously installed as a listener.
+     * @param layer - The layer ID or listener previously used to install the listener.
+     * @param listener - The function previously installed as a listener.
      * @returns `this`
      */
-    off(type: keyof MapEventType | string, listener: Listener): this;
     off<T extends keyof MapLayerEventType>(
         type: T,
         layer: string,
         listener: (ev: MapLayerEventType[T] & Object) => void,
     ): this;
+    /**
+     * Overload of the `off` method that allows to listen to events without specifying a layer.
+     * @event
+     * @param type - The type of the event.
+     * @param listener - The function previously installed as a listener.
+     * @returns `this`
+     */
     off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
+    /**
+     * Overload of the `off` method that allows to listen to events without specifying a layer.
+     * @event
+     * @param type - The type of the event.
+     * @param listener - The function previously installed as a listener.
+     * @returns `this`
+     */
+    off(type: keyof MapEventType | string, listener: Listener): this;
     off(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
         if (listener === undefined) {
             return super.off(type, layerIdOrListener as Listener);
