@@ -1,0 +1,82 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Even though text-overlap is set to true, all four possible anchor positions are used to avoid unnecessary overlap",
+      "height": 128,
+      "width": 128
+    }
+  },
+  "center": [ 0, 0 ],
+  "zoom": 0,
+  "sources": {
+    "point": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-field": "x",
+        "text-size": 20,
+        "text-justify": "auto",
+        "text-allow-overlap": true,
+        "text-variable-anchor-offset": [
+          "left",   [0.7, 0],
+          "right",  [-0.7, 0],
+          "top",    [0, 0.5],
+          "bottom", [0, -0.5]
+        ],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      }
+    },
+    {
+      "id": "anchor",
+      "type": "circle",
+      "source": "point",
+      "paint" :{
+        "circle-radius": 2
+      }
+    }
+  ]
+}
