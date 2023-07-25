@@ -170,4 +170,17 @@ describe('RasterTileSource', () => {
         expect((server.requests.pop() as any).aborted).toBe(true);
     });
 
+    it('serializes options', () => {
+        const source = createSource({
+            tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png'],
+            minzoom: 2,
+            maxzoom: 10
+        });
+        expect(source.serialize()).toStrictEqual({
+            type: 'raster',
+            tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png'],
+            minzoom: 2,
+            maxzoom: 10
+        });
+    });
 });
