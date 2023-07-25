@@ -84,8 +84,9 @@ export function performSymbolLayout(args: {
     args.bucket.compareText = {};
     args.bucket.iconsNeedLinear = false;
 
-    const layout = args.bucket.layers[0].layout;
-    const unevaluatedLayoutValues = args.bucket.layers[0]._unevaluatedLayout._values;
+    const layer = args.bucket.layers[0];
+    const layout = layer.layout;
+    const unevaluatedLayoutValues = layer._unevaluatedLayout._values;
 
     const sizes: Sizes = {
         // Filled in below, if *SizeData.kind is 'composite'
@@ -135,7 +136,7 @@ export function performSymbolLayout(args: {
             const spacingIfAllowed = allowsLetterSpacing(unformattedText) ? spacing : 0;
 
             const textAnchor = layout.get('text-anchor').evaluate(feature, {}, args.canonical);
-            const variableAnchorOffset = getTextVariableAnchorOffset(layout, feature, args.canonical);
+            const variableAnchorOffset = getTextVariableAnchorOffset(layer, feature, args.canonical);
 
             if (!variableAnchorOffset) {
                 const radialOffset = layout.get('text-radial-offset').evaluate(feature, {}, args.canonical);
@@ -684,7 +685,7 @@ function addSymbol(bucket: SymbolBucket,
         bucket.addToSortKeyRanges(bucket.symbolInstances.length, feature.sortKey as number);
     }
 
-    const variableAnchorOffset = getTextVariableAnchorOffset(layer.layout, feature, canonical);
+    const variableAnchorOffset = getTextVariableAnchorOffset(layer, feature, canonical);
     const [textAnchorOffsetStartIndex, textAnchorOffsetEndIndex] = addTextVariableAnchorOffsets(bucket.textAnchorOffsets, variableAnchorOffset);
 
     bucket.symbolInstances.emplaceBack(

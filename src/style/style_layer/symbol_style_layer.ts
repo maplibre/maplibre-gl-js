@@ -301,7 +301,9 @@ export function evaluateVariableOffset(anchor: TextAnchor, offset: [number, numb
 }
 
 // Helper to support both text-variable-anchor and text-variable-anchor-offset. Offset values converted from EMs to PXs
-export function getTextVariableAnchorOffset(layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>, feature: SymbolFeature, canonical: CanonicalTileID): VariableAnchorOffsetCollection | null {
+export function getTextVariableAnchorOffset(layer: SymbolStyleLayer, feature: SymbolFeature, canonical: CanonicalTileID): VariableAnchorOffsetCollection | null {
+    const layout = layer.layout;
+
     // If style specifies text-variable-anchor-offset, just return it
     const variableAnchorOffset = layout.get('text-variable-anchor-offset')?.evaluate(feature, {}, canonical);
 
@@ -331,10 +333,12 @@ export function getTextVariableAnchorOffset(layout: PossiblyEvaluated<SymbolLayo
 
     if (variableAnchor) {
         let textOffset: [number, number];
-        const radialOffset = layout.get('text-radial-offset').evaluate(feature, {}, canonical);
+        const unevaluatedLayout = layer._unevaluatedLayout;
 
-        if (radialOffset) {
-            textOffset = [radialOffset * ONE_EM, INVALID_TEXT_OFFSET];
+        // The style spec says don't use `text-offset` and `text-radial-offset` together
+        // but doesn't actually specify what happens if you use both. We go with the radial offset.
+        if (unevaluatedLayout.getValue('text-radial-offset') !== undefined) {
+            textOffset = [layout.get('text-radial-offset').evaluate(feature, {}, canonical) * ONE_EM, INVALID_TEXT_OFFSET];
         } else {
             textOffset = layout.get('text-offset').evaluate(feature, {}, canonical).map(t => t * ONE_EM) as [number, number];
         }
