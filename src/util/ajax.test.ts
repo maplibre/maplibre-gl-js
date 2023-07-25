@@ -7,7 +7,7 @@ import {
 } from './ajax';
 
 import {fakeServer, FakeServer} from 'nise';
-import {RequestMock, setupFetchMock} from './test/mock_fetch';
+import {destroyFetchMock, RequestMock, setupFetchMock} from './test/mock_fetch';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
@@ -26,6 +26,7 @@ describe('ajax', () => {
     });
     afterEach(() => {
         server.restore();
+        destroyFetchMock();
     });
 
     test('getArrayBuffer set correct request parameters', (done) => {

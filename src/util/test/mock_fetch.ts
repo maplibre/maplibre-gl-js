@@ -22,7 +22,23 @@ class AbortControllerMock {
     public abort() {}
 }
 
-export function setupFetchMock(): jest.Mock<Promise<Response>, [input: RequestInfo | URL, init?: RequestInit], any> {
+export type FetchMock = jest.Mock<Promise<Response>, [input: RequestInfo | URL, init?: RequestInit], any>;
+
+let _AbortController: typeof AbortController;
+let _Request: typeof Request;
+let _fetch: typeof fetch;
+
+export function destroyFetchMock(): void {
+    global.AbortController = _AbortController ?? global.AbortController;
+    global.Request = _Request ?? global.Request;
+    global.fetch = _fetch ?? global.fetch;
+}
+
+export function setupFetchMock(): FetchMock {
+    _AbortController = _AbortController ?? global.AbortController;
+    _Request = _Request ?? global.Request;
+    _fetch = _fetch ?? global.fetch;
+
     const fetchMock = jest.fn(async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> => {
         return <Response>{
             json: async () => null,
