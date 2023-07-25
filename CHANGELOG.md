@@ -2,10 +2,19 @@
 
 ### ✨ Features and improvements
 
-- Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
-- Add `cooperated gestures` example to the doc.([#2860](https://github.com/maplibre/maplibre-gl-js/pull/2860))
 - Add `cache` parameter to [`RequestParameters`](https://maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.RequestParameters/) ([#2910](https://github.com/maplibre/maplibre-gl-js/pull/2910))
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- _...Add new stuff here..._
+
+## 3.2.1
+
+### ✨ Features and improvements
+
+- Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
+- Add `cooperated gestures` example to the doc.([#2860](https://github.com/maplibre/maplibre-gl-js/pull/2860))
 
 ### 🐞 Bug fixes
 
@@ -13,7 +22,6 @@
 - Fix reloadCallback not firing on VectorTileWorkerSource.reloadTile ([#1874](https://github.com/maplibre/maplibre-gl-js/pull/1874))
 - Fix RasterDEMTileSource not serializing its options correctly ([#2895](https://github.com/maplibre/maplibre-gl-js/pull/2895))
 - Remove node and jest from dist type checking, fix map event and other typing problems ([#2898](https://github.com/maplibre/maplibre-gl-js/pull/2898))
-- _...Add new stuff here..._
 
 ## 3.2.0
 
