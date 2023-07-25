@@ -7,7 +7,7 @@ import {
 } from './ajax';
 
 import {fakeServer, FakeServer} from 'nise';
-import {fetchMock, RequestMock, setupFetchMock} from './test/mock_fetch';
+import {RequestMock, setupFetchMock} from './test/mock_fetch';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
