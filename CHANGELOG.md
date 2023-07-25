@@ -4,7 +4,7 @@
 
 - Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
 - Add `cooperated gestures` example to the doc.([#2860](https://github.com/maplibre/maplibre-gl-js/pull/2860))
-- Add `fetchCache` to [`RequestParameters`](https://maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.RequestParameters/)
+- Add `cache` parameter to [`RequestParameters`](https://maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.RequestParameters/) ([#2910](https://github.com/maplibre/maplibre-gl-js/pull/2910))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

@@ -7,7 +7,7 @@ import {
 } from './ajax';
 
 import {fakeServer, FakeServer} from 'nise';
-import {setupFetchMock} from './test/mock_fetch';
+import {fetchMock, RequestMock, setupFetchMock} from './test/mock_fetch';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
@@ -28,6 +28,18 @@ describe('ajax', () => {
         server.restore();
     });
 
+    test('getArrayBuffer set correct request parameters', (done) => {
+        const fetch = setupFetchMock();
+
+        getArrayBuffer({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {
+            expect(fetch).toHaveBeenCalledTimes(1);
+            expect(fetch).toHaveBeenCalledWith(expect.objectContaining({url: 'http://example.com/test-params.json', method: 'GET', cache: 'force-cache'}));
+            expect((fetch.mock.calls[0][0] as RequestMock).headers.get('Authorization')).toBe('Bearer 123');
+
+            done();
+        });
+    });
+
     test('getArrayBuffer, 404', done => {
         server.respondWith(request => {
             request.respond(404, undefined, '404 Not Found');
@@ -44,28 +56,15 @@ describe('ajax', () => {
         server.respond();
     });
 
-    [
-        {functionName: 'getJSON', targetFunction: getJSON},
-        {functionName: 'getArrayBuffer', targetFunction: getArrayBuffer}
-    ].forEach(({targetFunction, functionName}) => {
-        test(`${functionName} set correct request parameters`, (done) => {
-            setupFetchMock();
+    test('getJSON set correct request parameters', (done) => {
+        const fetch = setupFetchMock();
 
-            jest.spyOn(global, 'fetch').mockImplementation((requestInfo: Request) => {
-                expect(requestInfo.url).toBe('http://example.com/test-params.json');
-                expect(requestInfo.cache).toBe('force-cache');
-                expect(requestInfo.method).toBe('GET');
-                expect(requestInfo.headers.get('Authorization')).toBe('Bearer 123');
-                expect(requestInfo.body).toBeUndefined();
+        getJSON({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {
+            expect(fetch).toHaveBeenCalledTimes(1);
+            expect(fetch).toHaveBeenCalledWith(expect.objectContaining({url: 'http://example.com/test-params.json', method: 'GET', cache: 'force-cache'}));
+            expect((fetch.mock.calls[0][0] as RequestMock).headers.get('Authorization')).toBe('Bearer 123');
 
-                done();
-
-                return Promise.resolve(<Response>{
-                    json: () => null,
-                });
-            });
-
-            targetFunction({url: 'http://example.com/test-params.json', fetchCache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {});
+            done();
         });
     });
 

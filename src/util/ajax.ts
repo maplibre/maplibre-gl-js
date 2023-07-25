@@ -52,7 +52,7 @@ export type RequestParameters = {
     /**
      * Parameters supported only by browser fetch API. Property of the Request interface contains the cache mode of the request. It controls how the request will interact with the browser's HTTP cache. (https://developer.mozilla.org/en-US/docs/Web/API/Request/cache)
      */
-    fetchCache?: RequestCache;
+    cache?: RequestCache;
 };
 
 /**
@@ -127,7 +127,7 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         body: requestParameters.body,
         credentials: requestParameters.credentials,
         headers: requestParameters.headers,
-        cache: requestParameters.fetchCache,
+        cache: requestParameters.cache,
         referrer: getReferrer(),
         signal: controller.signal
     });
