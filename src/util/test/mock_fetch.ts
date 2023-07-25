@@ -19,7 +19,7 @@ export class RequestMock implements Partial<Request> {
 class AbortControllerMock {
     public signal: AbortSignal;
 
-    public abort() {}
+    public abort(): void {}
 }
 
 export type FetchMock = jest.Mock<Promise<Response>, [input: RequestInfo | URL, init?: RequestInit], any>;
@@ -40,11 +40,7 @@ export function setupFetchMock(): FetchMock {
     _fetch = _fetch ?? global.fetch;
 
     const fetchMock = jest.fn(async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> => {
-        return <Response>{
-            json: async () => null,
-            arrayBuffer: async () => null,
-            text: async () => null,
-        };
+        return <Response>{};
     });
 
     global.AbortController = AbortControllerMock;
