@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Add `cache` parameter to [`RequestParameters`](https://maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.RequestParameters/) ([#2910](https://github.com/maplibre/maplibre-gl-js/pull/2910))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
