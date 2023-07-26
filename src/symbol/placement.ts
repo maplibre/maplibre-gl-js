@@ -20,10 +20,9 @@ import {SymbolBucket, CollisionArrays, SingleCollisionBox} from '../data/bucket/
 import type {CollisionBoxArray, CollisionVertexArray, SymbolInstance, TextAnchorOffset} from '../data/array_types.g';
 import type {FeatureIndex} from '../data/feature_index';
 import type {OverscaledTileID} from '../source/tile_id';
-import type {TextAnchor} from '../style/style_layer/symbol_style_layer';
 import {Terrain} from '../render/terrain';
 import {warnOnce} from '../util/util';
-import {TextAnchorEnum} from '../style/style_layer/symbol_style_layer';
+import {TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 
 class OpacityState {
     opacity: number;

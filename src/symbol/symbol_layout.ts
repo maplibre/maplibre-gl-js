@@ -23,15 +23,16 @@ import type {CollisionBoxArray, TextAnchorOffsetArray} from '../data/array_types
 import type {SymbolFeature} from '../data/bucket/symbol_bucket';
 import type {StyleImage} from '../style/style_image';
 import type {StyleGlyph} from '../style/style_glyph';
-import type {SymbolStyleLayer, TextAnchor} from '../style/style_layer/symbol_style_layer';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import type {ImagePosition} from '../render/image_atlas';
 import type {GlyphPosition} from '../render/glyph_atlas';
 import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 
 import Point from '@mapbox/point-geometry';
 import murmur3 from 'murmurhash-js';
-import {evaluateVariableOffset, getIconPadding, getTextVariableAnchorOffset, INVALID_TEXT_OFFSET, SymbolPadding, TextAnchorEnum} from '../style/style_layer/symbol_style_layer';
+import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
 import {VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
+import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:

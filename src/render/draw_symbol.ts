@@ -23,7 +23,7 @@ import {
 
 import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
-import type {SymbolStyleLayer, TextAnchor} from '../style/style_layer/symbol_style_layer';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
 import type {Texture} from '../render/texture';
 import type {OverscaledTileID} from '../source/tile_id';
@@ -36,6 +36,7 @@ import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Transform} from '../geo/transform';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
+import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
