@@ -1,7 +1,7 @@
-import {EvaluationParameters} from "../evaluation_parameters";
-import {ZoomHistory} from "../zoom_history";
-import {SymbolStyleLayer} from "./symbol_style_layer";
-import {INVALID_TEXT_OFFSET, evaluateVariableOffset, getTextVariableAnchorOffset} from "./variable_text_anchor";
+import {EvaluationParameters} from '../evaluation_parameters';
+import {ZoomHistory} from '../zoom_history';
+import {SymbolStyleLayer} from './symbol_style_layer';
+import {INVALID_TEXT_OFFSET, evaluateVariableOffset, getTextVariableAnchorOffset} from './variable_text_anchor';
 
 describe('evaluateVariableOffset', () => {
     test('fromRadialOffset', () => {
