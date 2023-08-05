@@ -50,6 +50,7 @@ export interface Property<T, R> {
 }
 
 /**
+ * @hidden
  *  `PropertyValue` represents the value part of a property key-value unit. It's used to represent both
  *  paint and layout property values, and regardless of whether or not their property supports data-driven
  *  expressions.
