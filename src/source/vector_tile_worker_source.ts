@@ -24,6 +24,12 @@ export type LoadVectorTileResult = {
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
+type FetchingState = {
+    rawTileData: ArrayBuffer;
+    cacheControl: ExpiryData;
+    resourceTiming: any;
+}
+
 /**
  * The callback when finished loading vector data
  */
@@ -52,12 +58,6 @@ function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCa
         request.cancel();
         callback();
     };
-}
-
-interface FetchingState {
-    rawTileData: ArrayBuffer;
-    cacheControl: ExpiryData;
-    resourceTiming: any;
 }
 
 /**

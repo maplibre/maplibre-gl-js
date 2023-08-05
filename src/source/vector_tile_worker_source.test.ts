@@ -6,7 +6,7 @@ import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, FakeServer} from 'nise';
 import {Actor} from '../util/actor';
-import {TileParameters, WorkerTileParameters} from './worker_source';
+import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance} from '../util/test/util';
 
@@ -161,6 +161,56 @@ describe('vector tile worker source', () => {
             expect(res).toBeDefined();
             expect(res.rawTileData).toBeDefined();
             expect(res.rawTileData).toStrictEqual(rawTileData);
+            done();
+        });
+    });
+
+    test('VectorTileWorkerSource#loadTile reparses tile if reloadTile is called during reparsing', (done) => {
+        const rawTileData = new Uint8Array([]);
+        function loadVectorData(params, callback) {
+            return callback(null, {
+                vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
+                rawData: rawTileData
+            });
+        }
+
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': 'test',
+            type: 'fill'
+        }]);
+
+        const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
+
+        const parseWorkerTileMock = jest
+            .spyOn(WorkerTile.prototype, 'parse')
+            .mockImplementation(function(data, layerIndex, availableImages, actor, callback) {
+                this.status = 'parsing';
+                window.setTimeout(() => callback(null, {} as WorkerTileResult), 10);
+            });
+
+        let loadCallbackCalled = false;
+        source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'}
+        } as any as WorkerTileParameters, (err, res) => {
+            expect(err).toBeFalsy();
+            expect(res).toBeDefined();
+            loadCallbackCalled = true;
+        });
+
+        source.reloadTile({
+            source: 'source',
+            uid: '0',
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+        } as any as WorkerTileParameters, (err, res) => {
+            expect(err).toBeFalsy();
+            expect(res).toBeDefined();
+            expect(parseWorkerTileMock).toHaveBeenCalledTimes(2);
+            expect(loadCallbackCalled).toBeTruthy();
             done();
         });
     });
