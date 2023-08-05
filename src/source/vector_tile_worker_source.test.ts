@@ -6,7 +6,7 @@ import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, FakeServer} from 'nise';
 import {Actor} from '../util/actor';
-import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
+import {TileParameters, WorkerTileParameters} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance} from '../util/test/util';
 
