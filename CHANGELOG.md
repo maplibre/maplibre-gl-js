@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 
+- VectorTileWorkerSource: fix reload for original's load parse would not pass the rawTileData and meta. ([#2941](https://github.com/maplibre/maplibre-gl-js/pull/2941))
 - _...Add new stuff here..._
 
 ## 3.2.1

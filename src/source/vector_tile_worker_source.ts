@@ -24,6 +24,12 @@ export type LoadVectorTileResult = {
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
+type FetchingState = {
+    rawTileData: ArrayBuffer;
+    cacheControl: ExpiryData;
+    resourceTiming: any;
+}
+
 /**
  * The callback when finished loading vector data
  */
@@ -66,6 +72,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     layerIndex: StyleLayerIndex;
     availableImages: Array<string>;
     loadVectorData: LoadVectorData;
+    fetching: {[_: string]: FetchingState };
     loading: {[_: string]: WorkerTile};
     loaded: {[_: string]: WorkerTile};
 
@@ -80,6 +87,7 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
         this.loadVectorData = loadVectorData || loadVectorTile;
+        this.fetching = {};
         this.loading = {};
         this.loaded = {};
     }
@@ -124,6 +132,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = response.vectorTile;
             workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, (err, result) => {
+                delete this.fetching[uid];
                 if (err || !result) return callback(err);
 
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
@@ -132,6 +141,8 @@ export class VectorTileWorkerSource implements WorkerSource {
 
             this.loaded = this.loaded || {};
             this.loaded[uid] = workerTile;
+            // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
+            this.fetching[uid] = {rawTileData, cacheControl, resourceTiming};
         }) as AbortVectorData;
     }
 
@@ -145,7 +156,21 @@ export class VectorTileWorkerSource implements WorkerSource {
             const workerTile = loaded[uid];
             workerTile.showCollisionBoxes = params.showCollisionBoxes;
             if (workerTile.status === 'parsing') {
-                workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, callback);
+                workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, (err, result) => {
+                    if (err || !result) return callback(err, result);
+
+                    // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
+                    let parseResult;
+                    if (this.fetching[uid]) {
+                        const {rawTileData, cacheControl, resourceTiming} = this.fetching[uid];
+                        delete this.fetching[uid];
+                        parseResult = extend({rawTileData: rawTileData.slice(0)}, result, cacheControl, resourceTiming);
+                    } else {
+                        parseResult = result;
+                    }
+
+                    callback(null, parseResult);
+                });
             } else if (workerTile.status === 'done') {
                 // if there was no vector tile data on the initial load, don't try and re-parse tile
                 if (workerTile.vectorTile) {
