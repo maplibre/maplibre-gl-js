@@ -132,6 +132,7 @@ export class VectorTileWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = response.vectorTile;
             workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, (err, result) => {
+                delete this.fetching[uid];
                 if (err || !result) return callback(err);
 
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
