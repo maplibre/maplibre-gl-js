@@ -3,6 +3,7 @@
 import type {Transferable} from '../types/transferable';
 
 /**
+ * @hidden
  * A view type size
  */
 const viewTypes = {
@@ -16,11 +17,12 @@ const viewTypes = {
 };
 
 /**
+ * @hidden
  * A view type size
  */
 export type ViewType = keyof typeof viewTypes;
 
-/** */
+/** @hidden */
 class Struct {
     _pos1: number;
     _pos2: number;
@@ -48,6 +50,7 @@ const DEFAULT_CAPACITY = 128;
 const RESIZE_MULTIPLIER = 5;
 
 /**
+ * @hidden
  * A struct array memeber
  */
 export type StructArrayMember = {
@@ -72,6 +75,7 @@ export type SerializedStructArray = {
 };
 
 /**
+ * @hidden
  * `StructArray` provides an abstraction over `ArrayBuffer` and `TypedArray`
  * making it behave like an array of typed structs.
  *

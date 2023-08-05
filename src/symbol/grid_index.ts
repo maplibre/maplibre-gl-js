@@ -48,6 +48,7 @@ function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
 }
 
 /**
+ * @hidden
  * GridIndex is a data structure for testing the intersection of
  * circles and rectangles in a 2d plane.
  * It is optimized for rapid insertion and querying.

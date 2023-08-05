@@ -35,6 +35,7 @@ function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
 }
 
 /**
+ * @hidden
  * Circles are represented by two triangles.
  *
  * Each corner has a pos that is the center of the circle and an extrusion

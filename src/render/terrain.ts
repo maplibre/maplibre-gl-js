@@ -21,6 +21,7 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat, earthRadius} from '../geo/lng_lat';
 
 /**
+ * @hidden
  * A terrain GPU related object
  */
 export type TerrainData = {
@@ -36,6 +37,7 @@ export type TerrainData = {
 }
 
 /**
+ * @hidden
  * A terrain mesh object
  */
 export type TerrainMesh = {
@@ -45,6 +47,7 @@ export type TerrainMesh = {
 }
 
 /**
+ * @hidden
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
  *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates

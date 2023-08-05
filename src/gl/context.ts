@@ -24,6 +24,7 @@ type ClearArgs = {
 };
 
 /**
+ * @hidden
  * A webgl wrapper class to allow injection, mocking and abstaction
  */
 export class Context {

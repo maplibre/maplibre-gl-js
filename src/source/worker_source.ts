@@ -41,6 +41,7 @@ export type WorkerDEMTileParameters = TileParameters & {
 };
 
 /**
+ * @hidden
  * The worker tile's result type
  */
 export type WorkerTileResult = {

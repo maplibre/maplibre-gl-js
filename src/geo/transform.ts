@@ -14,6 +14,7 @@ import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
 
 /**
+ * @hidden
  * A single transform, generally used for a single tile to be
  * scaled, rotated, and zoomed.
  */

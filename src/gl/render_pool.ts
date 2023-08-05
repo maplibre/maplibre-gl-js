@@ -10,7 +10,8 @@ export type PoolObject = {
     inUse: boolean;
 };
 /**
- * RenderPool a resource pool for textures and framebuffers
+ * @hidden
+ * `RenderPool` is a resource pool for textures and framebuffers
  */
 export class RenderPool {
     private _objects: Array<PoolObject>;

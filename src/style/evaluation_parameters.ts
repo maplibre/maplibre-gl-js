@@ -11,6 +11,7 @@ export type CrossfadeParameters = {
 };
 
 /**
+ * @hidden
  * A parameter that can be evaluated to a value
  */
 export class EvaluationParameters {

@@ -25,6 +25,7 @@ import {Terrain} from '../render/terrain';
 import {config} from '../util/config';
 
 /**
+ * @hidden
  * `SourceCache` is responsible for
  *
  *  - creating an instance of `Source`

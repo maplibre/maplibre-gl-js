@@ -30,6 +30,7 @@ function getTokenizedAttributesAndUniforms(array: Array<string>): Array<string> 
 }
 
 /**
+ * @hidden
  * A webgl program to execute in the GPU space
  */
 export class Program<Us extends UniformBindings> {

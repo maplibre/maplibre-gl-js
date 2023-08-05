@@ -8,6 +8,7 @@ import type {SourceCache} from '../source/source_cache';
 import {Terrain} from '../render/terrain';
 
 /**
+ * @hidden
  * This class is a helper for the Terrain-class, it:
  *   - loads raster-dem tiles
  *   - manages all renderToTexture tiles.
