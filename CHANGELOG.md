@@ -7,6 +7,7 @@
 
 ### 🐞 Bug fixes
 
+- Properly check ImageBitmap ([#2942](https://github.com/maplibre/maplibre-gl-js/pull/2942), [#2940](https://github.com/maplibre/maplibre-gl-js/issues/2940))
 - _...Add new stuff here..._
 
 ## 3.2.1
