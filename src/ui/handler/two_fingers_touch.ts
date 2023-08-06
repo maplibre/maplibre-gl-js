@@ -27,9 +27,7 @@ abstract class TwoFingersTouchHandler implements Handler {
     _startVector: Point;
     _aroundCenter: boolean;
 
-    /**
-     * @hidden
-     */
+    /** @internal */
     constructor() {
         this.reset();
     }

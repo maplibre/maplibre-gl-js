@@ -2,7 +2,7 @@ import type {Cancelable} from '../types/cancelable';
 import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolAction} from './ajax';
 import type {Callback} from '../types/callback';
 
-import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker} from './util';
+import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
 import {webpSupported} from './webp_supported';
 import {config} from './config';
 
@@ -202,7 +202,7 @@ export namespace ImageRequest {
         expires?: string | null): void => {
         if (err) {
             callback(err);
-        } else if (data instanceof HTMLImageElement || data instanceof ImageBitmap) {
+        } else if (data instanceof HTMLImageElement || isImageBitmap(data)) {
             // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
             // If HtmlImageElement is used to get image then response type will be HTMLImageElement
             callback(null, data);

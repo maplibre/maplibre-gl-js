@@ -4,6 +4,7 @@ import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../d
 import type {Context} from '../gl/context';
 
 /**
+ * @internal
  * an index buffer class
  */
 export class IndexBuffer {
