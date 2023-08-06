@@ -5,7 +5,7 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {Context} from '../gl/context';
 
 /**
- * @hidden
+ * @internal
  * A vertex array object used to pass data to the webgl code
  */
 export class VertexArrayObject {

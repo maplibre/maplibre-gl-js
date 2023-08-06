@@ -41,9 +41,7 @@ export class DragPanHandler {
     _touchPan: TouchPanHandler;
     _inertiaOptions: DragPanOptions | boolean;
 
-    /**
-     * @hidden
-    */
+    /** @internal */
     constructor(el: HTMLElement, mousePan: MousePanHandler, touchPan: TouchPanHandler) {
         this._el = el;
         this._mousePan = mousePan;

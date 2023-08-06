@@ -109,9 +109,7 @@ export class ImageSource extends Evented implements Source {
     _loaded: boolean;
     _request: Cancelable;
 
-    /**
-     * @hidden
-     */
+    /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
@@ -317,7 +315,7 @@ export class ImageSource extends Evented implements Source {
  * Given a list of coordinates, get their center as a coordinate.
  *
  * @returns centerpoint
- * @hidden
+ * @internal
  */
 export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
     let minX = Infinity;

@@ -2,11 +2,10 @@ import {OverscaledTileID} from './tile_id';
 import type {Tile} from './tile';
 
 /**
- * @hidden
+ * @internal
  * A [least-recently-used cache](http://en.wikipedia.org/wiki/Cache_algorithms)
  * with hash lookup made possible by keeping a list of keys in parallel to
  * an array of dictionary of values
- *
  */
 export class TileCache {
     max: number;

@@ -227,7 +227,7 @@ function emitStructArrayLayout(locals) {
 
     output.push(
         `/**
- * @hidden
+ * @internal
  * Implementation of the StructArray layout:`);
 
     for (const member of members) {
@@ -349,7 +349,7 @@ function emitStructArray(locals) {
 
     if (includeStructAccessors && !useComponentGetters) {
         output.push(
-            `/** @hidden */
+            `/** @internal */
 class ${structTypeClass} extends Struct {
     _structArray: ${structArrayClass};`);
 
@@ -385,7 +385,7 @@ export type ${structTypeClass.replace('Struct', '')} = ${structTypeClass};
     } // end 'if (includeStructAccessors)'
 
     output.push(
-        `/** @hidden */
+        `/** @internal */
 export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
 
     if (useComponentGetters) {

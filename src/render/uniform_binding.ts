@@ -11,7 +11,7 @@ export type UniformValues<Us extends {}> = $ObjMap<Us, <V>(u: Uniform<V>) => V>;
 export type UniformLocations = {[_: string]: WebGLUniformLocation};
 
 /**
- * @hidden
+ * @internal
  * A base uniform abstract class
  */
 abstract class Uniform<T> {
@@ -151,7 +151,7 @@ export {
 };
 
 /**
- * @hidden
+ * @internal
  * A uniform bindings
  */
 export type UniformBindings = {[_: string]: Uniform<any>};

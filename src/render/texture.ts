@@ -16,7 +16,7 @@ type DataTextureImage = RGBAImage | AlphaImage | EmptyImage;
 export type TextureImage = TexImageSource | DataTextureImage;
 
 /**
- * @hidden
+ * @internal
  * A `Texture` GL related object
  */
 export class Texture {

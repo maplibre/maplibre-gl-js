@@ -393,7 +393,7 @@ class CrossFadedCompositeBinder implements AttributeBinder {
 }
 
 /**
- * @hidden
+ * @internal
  * ProgramConfiguration contains the logic for binding style layer properties and tile
  * layer feature data into GL program uniforms and vertex attributes.
  *

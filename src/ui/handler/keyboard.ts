@@ -33,9 +33,7 @@ export class KeyboardHandler implements Handler {
     _pitchStep: number;
     _rotationDisabled: boolean;
 
-    /**
-    * @hidden
-    */
+    /** @internal */
     constructor(map: Map) {
         this._tr = new TransformProvider(map);
         const stepOptions = defaultOptions;

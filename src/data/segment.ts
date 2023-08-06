@@ -6,7 +6,7 @@ import type {VertexArrayObject} from '../render/vertex_array_object';
 import type {StructArray} from '../util/struct_array';
 
 /**
- * @hidden
+ * @internal
  * A single segment of a vector
  */
 export type Segment = {
@@ -19,7 +19,7 @@ export type Segment = {
 };
 
 /**
- * @hidden
+ * @internal
  * Used for calculations on vector segments
  */
 export class SegmentVector {

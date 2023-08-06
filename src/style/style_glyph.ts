@@ -12,7 +12,7 @@ export type GlyphMetrics = {
 };
 
 /**
- * @hidden
+ * @internal
  * A style glyph type
  */
 export type StyleGlyph = {

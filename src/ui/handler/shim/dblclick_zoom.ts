@@ -12,9 +12,7 @@ export class DoubleClickZoomHandler {
     _clickZoom: ClickZoomHandler;
     _tapZoom: TapZoomHandler;
 
-    /**
-     * @hidden
-    */
+    /** @internal */
     constructor(clickZoom: ClickZoomHandler, TapZoom: TapZoomHandler) {
         this._clickZoom = clickZoom;
         this._tapZoom = TapZoom;

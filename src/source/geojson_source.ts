@@ -138,9 +138,7 @@ export class GeoJSONSource extends Evented implements Source {
     _collectResourceTiming: boolean;
     _removed: boolean;
 
-    /**
-     * @hidden
-     */
+    /** @internal */
     constructor(id: string, options: GeoJSONSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
 

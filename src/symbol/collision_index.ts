@@ -33,7 +33,7 @@ export type FeatureKey = {
 };
 
 /**
- * @hidden
+ * @internal
  * A collision index used to prevent symbols from overlapping. It keep tracks of
  * where previous symbols have been placed and is used to check if a new
  * symbol overlaps with any previously added symbols.

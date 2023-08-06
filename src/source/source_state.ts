@@ -6,7 +6,7 @@ export type FeatureStates = {[featureId: string]: FeatureState};
 export type LayerFeatureStates = {[layer: string]: FeatureStates};
 
 /**
- * @hidden
+ * @internal
  * SourceFeatureState manages the state and pending changes
  * to features in a source, separated by source layer.
  * stateChanges and deletedStates batch all changes to the tile (updates and removes, respectively)

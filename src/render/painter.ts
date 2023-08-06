@@ -61,7 +61,7 @@ type PainterOptions = {
 };
 
 /**
- * @hidden
+ * @internal
  * Initialize a new painter object.
  */
 export class Painter {

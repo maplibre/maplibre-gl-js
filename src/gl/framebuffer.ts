@@ -3,7 +3,7 @@ import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value'
 import type {Context} from './context';
 
 /**
- * @hidden
+ * @internal
  * A framebuffer holder object
  */
 export class Framebuffer {

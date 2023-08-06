@@ -82,8 +82,8 @@ function copyImage(srcImg: any, dstImg: any, srcPt: Point2D, dstPt: Point2D, siz
 }
 
 /**
+ * @internal
  * An image with alpha color value
- * @hidden
  */
 export class AlphaImage {
     width: number;

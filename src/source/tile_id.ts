@@ -64,7 +64,7 @@ export class CanonicalTileID implements ICanonicalTileID {
 }
 
 /**
- * @hidden
+ * @internal
  * An unwrapped tile identifier
  */
 export class UnwrappedTileID {

@@ -21,7 +21,7 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
 };
 
 /**
- * @hidden
+ * @internal
  * A helper class to help define what should be rendered to texture and how
  */
 export class RenderToTexture {

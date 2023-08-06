@@ -25,9 +25,7 @@ export class BoxZoomHandler implements Handler {
     _box: HTMLElement;
     _clickTolerance: number;
 
-    /**
-     * @hidden
-     */
+    /** @internal */
     constructor(map: Map, options: {
         clickTolerance: number;
     }) {

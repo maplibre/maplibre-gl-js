@@ -61,7 +61,7 @@ export class ImagePosition {
 }
 
 /**
- * @hidden
+ * @internal
  * A class holding all the images
  */
 export class ImageAtlas {
