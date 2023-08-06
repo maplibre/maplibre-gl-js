@@ -2,15 +2,23 @@
 
 ### ✨ Features and improvements
 
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- _...Add new stuff here..._
+
+## 3.2.2
+
+### ✨ Features and improvements
+
 - Add `cache` parameter to [`RequestParameters`](https://maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.RequestParameters/) ([#2910](https://github.com/maplibre/maplibre-gl-js/pull/2910))
 - Removed some classed from the docs to better define the public API ([#2945](https://github.com/maplibre/maplibre-gl-js/pull/2945))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
 - Properly check ImageBitmap ([#2942](https://github.com/maplibre/maplibre-gl-js/pull/2942), [#2940](https://github.com/maplibre/maplibre-gl-js/issues/2940))
 - VectorTileWorkerSource: fix reload for original's load parse would not pass the rawTileData and meta. ([#2941](https://github.com/maplibre/maplibre-gl-js/pull/2941))
-- _...Add new stuff here..._
 
 ## 3.2.1
 
