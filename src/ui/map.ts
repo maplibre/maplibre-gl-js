@@ -3091,7 +3091,7 @@ export class Map extends Camera {
      * @internal
      * Request that the given callback be executed during the next render
      * frame.  Schedule a render frame if one is not already scheduled.
-     * 
+     *
      * @returns An id that can be used to cancel the callback
      */
     _requestRenderFrame(callback: () => void): TaskID {
