@@ -263,30 +263,30 @@ export abstract class Camera extends Evented {
     _easeFrameId: TaskID;
 
     /**
-     * @hidden
+     * @internal
      * holds the geographical coordinate of the target
      */
     _elevationCenter: LngLat;
     /**
-     * @hidden
+     * @internal
      * holds the targ altitude value, = center elevation of the target.
      * This value may changes during flight, because new terrain-tiles loads during flight.
      */
     _elevationTarget: number;
     /**
-     * @hidden
+     * @internal
      * holds the start altitude value, = center elevation before animation begins
      * this value will recalculated during flight in respect of changing _elevationTarget values,
      * so the linear interpolation between start and target keeps smooth and without jumps.
      */
     _elevationStart: number;
     /**
-     * @hidden
+     * @internal
      * Saves the current state of the elevation freeze - this is used during map movement to prevent "rocky" camera movement.
      */
     _elevationFreeze: boolean;
     /**
-     * @hidden
+     * @internal
      * Used to track accumulated changes during continuous interaction
      */
     _requestedCameraState?: Transform;
@@ -645,6 +645,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
+     * @internal
      * Calculate the center of these two points in the viewport and use
      * the highest zoom level up to and including `Map#getMaxZoom()` that fits
      * the points in the viewport at the specified bearing.
@@ -654,7 +655,6 @@ export abstract class Camera extends Evented {
      * @param options - the camera options
      * @returns If map is able to fit to provided bounds, returns `center`, `zoom`, and `bearing`.
      *      If map is unable to fit, method will warn and return undefined.
-     * @hidden
      * @example
      * ```ts
      * let p0 = [-79, 43];
@@ -1085,11 +1085,11 @@ export abstract class Camera extends Evented {
     }
 
     /**
+     * @internal
      * Called when the camera is about to be manipulated.
      * If `transformCameraUpdate` is specified, a copy of the current transform is created to track the accumulated changes.
      * This underlying transform represents the "desired state" proposed by input handlers / animations / UI controls.
      * It may differ from the state used for rendering (`this.transform`).
-     * @hidden
      * @returns Transform to apply changes to
      */
     _getTransformForUpdate(): Transform {
@@ -1102,8 +1102,8 @@ export abstract class Camera extends Evented {
     }
 
     /**
+     * @internal
      * Called after the camera is done being manipulated.
-     * @hidden
      * @param tr - the requested camera end state
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */

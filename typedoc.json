@@ -11,6 +11,7 @@
     ],
     "out": "./docs/API",
     "excludeExternals": true,
+    "excludeInternal": true,
     "excludeNotDocumented": true,
     "internalModule": "maplibregl",
     "entryPoints": ["./src/index.ts"],

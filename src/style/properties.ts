@@ -22,6 +22,7 @@ export type CrossFaded<T> = {
 };
 
 /**
+ * @internal
  *  Implementations of the `Property` interface:
  *
  *  * Hold metadata about a property that's independent of any specific value: stuff like the type of the value,
@@ -49,6 +50,7 @@ export interface Property<T, R> {
 }
 
 /**
+ * @internal
  *  `PropertyValue` represents the value part of a property key-value unit. It's used to represent both
  *  paint and layout property values, and regardless of whether or not their property supports data-driven
  *  expressions.
@@ -95,6 +97,7 @@ export type TransitionParameters = {
 };
 
 /**
+ * @internal
  * Paint properties are _transitionable_: they can change in a fluid manner, interpolating or cross-fading between
  * old and new value. The duration of the transition, and the delay before it begins, is configurable.
  *
@@ -125,6 +128,7 @@ class TransitionablePropertyValue<T, R> {
 }
 
 /**
+ * @internal
  * `Transitionable` stores a map of all (property name, `TransitionablePropertyValue`) pairs for paint properties of a
  * given layer type. It can calculate the `TransitioningPropertyValue`s for all of them at once, producing a
  * `Transitioning` instance for the same set of properties.
@@ -196,6 +200,7 @@ export class Transitionable<Props> {
 }
 
 /**
+ * @internal
  * `TransitioningPropertyValue` implements the first of two intermediate steps in the evaluation chain of a paint
  * property value. In this step, transitions between old and new values are handled: as long as the transition is in
  * progress, `TransitioningPropertyValue` maintains a reference to the prior value, and interpolates between it and
@@ -256,6 +261,7 @@ class TransitioningPropertyValue<T, R> {
 }
 
 /**
+ * @internal
  * `Transitioning` stores a map of all (property name, `TransitioningPropertyValue`) pairs for paint properties of a
  * given layer type. It can calculate the possibly-evaluated values for all of them at once, producing a
  * `PossiblyEvaluated` instance for the same set of properties.
@@ -370,6 +376,7 @@ type PossiblyEvaluatedValue<T> = {
 } | SourceExpression | CompositeExpression;
 
 /**
+ * @internal
  * `PossiblyEvaluatedPropertyValue` is used for data-driven paint and layout property values. It holds a
  * `PossiblyEvaluatedValue` and the `GlobalProperties` that were used to generate it. You're not allowed to supply
  * a different set of `GlobalProperties` when performing the final evaluation because they would be ignored in the
@@ -409,6 +416,7 @@ export class PossiblyEvaluatedPropertyValue<T> {
 }
 
 /**
+ * @internal
  * `PossiblyEvaluated` stores a map of all (property name, `R`) pairs for paint or layout properties of a
  * given layer type.
  */
@@ -427,6 +435,7 @@ export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
 }
 
 /**
+ * @internal
  * An implementation of `Property` for properties that do not permit data-driven (source or composite) expressions.
  * This restriction allows us to declare statically that the result of possibly evaluating this kind of property
  * is in fact always the scalar type `T`, and can be used without further evaluating the value on a per-feature basis.
@@ -455,6 +464,7 @@ export class DataConstantProperty<T> implements Property<T, T> {
 }
 
 /**
+ * @internal
  * An implementation of `Property` for properties that permit data-driven (source or composite) expressions.
  * The result of possibly evaluating this kind of property is `PossiblyEvaluatedPropertyValue<T>`; obtaining
  * a scalar value `T` requires further evaluation on a per-feature basis.
@@ -529,6 +539,7 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
 }
 
 /**
+ * @internal
  * An implementation of `Property` for  data driven `line-pattern` which are transitioned by cross-fading
  * rather than interpolation.
  */
@@ -594,6 +605,7 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
     }
 }
 /**
+ * @internal
  * An implementation of `Property` for `*-pattern` and `line-dasharray`, which are transitioned by cross-fading
  * rather than interpolation.
  */
@@ -635,6 +647,7 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
 }
 
 /**
+ * @internal
  * An implementation of `Property` for `heatmap-color` and `line-gradient`. Interpolation is a no-op, and
  * evaluation returns a boolean value in order to indicate its presence, but the real
  * evaluation happens in StyleLayer classes.
@@ -660,6 +673,7 @@ export class ColorRampProperty implements Property<Color, boolean> {
 }
 
 /**
+ * @internal
  * `Properties` holds objects containing default values for the layout or paint property set of a given
  * layer type. These objects are immutable, and they are used as the prototypes for the `_values` members of
  * `Transitionable`, `Transitioning`, `Layout`, and `PossiblyEvaluated`. This allows these classes to avoid

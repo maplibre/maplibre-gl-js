@@ -20,9 +20,7 @@ export class DragRotateHandler {
     _mousePitch: MousePitchHandler;
     _pitchWithRotate: boolean;
 
-    /**
-     * @hidden
-    */
+    /** @internal */
     constructor(options: DragRotateHandlerOptions, mouseRotate: MouseRotateHandler, mousePitch: MousePitchHandler) {
         this._pitchWithRotate = options.pitchWithRotate;
         this._mouseRotate = mouseRotate;

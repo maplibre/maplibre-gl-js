@@ -13,9 +13,7 @@ export class ClickZoomHandler implements Handler {
     _enabled: boolean;
     _active: boolean;
 
-    /**
-     * @hidden
-    */
+    /** @internal */
     constructor(map: Map) {
         this._tr = new TransformProvider(map);
         this.reset();

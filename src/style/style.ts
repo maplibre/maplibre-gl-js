@@ -562,6 +562,7 @@ export class Style extends Evented {
     }
 
     /**
+     * @internal
      * Apply queued style updates in a batch and recalculate zoom-dependent paint properties.
      */
     update(parameters: EvaluationParameters) {
