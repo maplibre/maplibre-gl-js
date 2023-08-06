@@ -2,1677 +2,1252 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/plugins/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/style-spec/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/default/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.AJAXError/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Actor/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.AlphaImage/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.AttributionControl/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.BoxZoomHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CanonicalTileID/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CanvasSource/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CircleBucket/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CircleStyleLayer/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.ClickZoomHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CollisionBoxArray/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CollisionBoxStruct/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CollisionIndex/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.ColorRampProperty/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Context/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CrossFadedDataDrivenProperty/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.CrossFadedProperty/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.DataConstantProperty/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.DataDrivenProperty/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Dispatcher/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.DoubleClickZoomHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.DragPanHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.DragRotateHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.EdgeInsets/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.EvaluationParameters/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Event/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Evented/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.FeatureIndex/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.FeatureIndexArray/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.FeatureIndexStruct/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Framebuffer/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.FullscreenControl/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.GeoJSONFeature/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.GeoJSONSource/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.GeolocateControl/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.GlyphOffsetArray/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.GridIndex/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Hash/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.HeatmapStyleLayer/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.ImageAtlas/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.ImageSource/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.IndexBuffer/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.KeyboardHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Layout/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.LineAtlas/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.LineBucket/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.LngLat/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.LngLatBounds/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.LogoControl/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Map/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.MapMouseEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.MapTouchEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.MapWheelEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Marker/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.MercatorCoordinate/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.NavigationControl/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.OverscaledTileID/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Painter/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.PlacedSymbolArray/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.PlacedSymbolStruct/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Popup/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.PossiblyEvaluated/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.PossiblyEvaluatedPropertyValue/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Program/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.ProgramConfiguration/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Properties/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.PropertyValue/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.RGBAImage/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.RasterDEMTileSource/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.RasterTileSource/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.RenderPool/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.RenderToTexture/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.ScaleControl/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.ScrollZoomHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.SegmentVector/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.SourceCache/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.SourceFeatureState/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Struct/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArray/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout1f4/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout1ui2/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout1ul2ui8/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout1ul4/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout2f8/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout2i2ui3ul3ui2f3ub1ul1i48/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout2i4/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout2i4i12/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout2i4ub8/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout2ub2f12/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout2ui4/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout3f12/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout3i6/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout3ui6/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout4i4ui4i24/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout4i8/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout6i1ul2ui20/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StructArrayLayout8i15ui1ul4f68/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Style/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.StyleLayer/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.SymbolBucket/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.SymbolInstanceArray/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.SymbolInstanceStruct/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.SymbolLineVertexArray/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Terrain/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TerrainControl/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TerrainSourceCache/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Texture/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.ThrottledInvoker/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Tile/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TileCache/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Transform/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TransformProvider/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Transitionable/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TransitionablePropertyValue/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Transitioning/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TransitioningPropertyValue/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TwoFingersTouchHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TwoFingersTouchPitchHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TwoFingersTouchRotateHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TwoFingersTouchZoomHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.TwoFingersTouchZoomRotateHandler/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.Uniform/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.UnwrappedTileID/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.VectorTileSource/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.VertexArrayObject/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.VertexBuffer/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.VideoSource/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/classes/maplibregl.WorkerPool/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/enums/maplibregl.ResourceType/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/maplibregl.AttributeBinder/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/maplibregl.Bucket/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/maplibregl.CustomLayerInterface/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/maplibregl.Handler/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/maplibregl.IControl/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/maplibregl.Property/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/maplibregl.Source/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/interfaces/maplibregl.StyleImageInterface/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/modules/maplibregl/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Alignment/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.AnimationOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.AroundCenterOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.AttributionOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Callback/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.CameraForBoundsOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.CameraOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.CameraUpdateTransformFunction/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Cancelable/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.CanvasSourceSpecification/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.CenterZoomBearing/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Config/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.ControlPosition/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Coordinates/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.CrossFaded/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.CustomRenderMethod/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.DashEntry/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.DistributiveKeys/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.DistributiveOmit/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.DragPanOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.ErrorCallback/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.ExpiryData/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.FeatureIdentifier/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.FitBoundsOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.FlyToOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.FullscreenOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GeoJSONFeatureDiff/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GeoJSONFeatureId/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GeoJSONSourceDiff/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GeolocateOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GestureOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GetImageCallback/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GlyphMetrics/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GlyphPosition/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GlyphPositions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.GridKey/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.HandlerResult/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.JumpToOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Listener/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.LngLatBoundsLike/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.LngLatLike/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.LogoOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapContextEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapDataEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapEventType/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapGeoJSONFeature/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapLayerEventType/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapLayerMouseEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapLayerTouchEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapLibreEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapLibreZoomEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapSourceDataEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapSourceDataType/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapStyleDataEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapStyleImageMissingEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MapTerrainEvent/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.MarkerOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.NavigationOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Offset/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.OverlapMode/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.PaddingOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.PointLike/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.PositionAnchor/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.PossiblyEvaluatedValue/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.QueryRenderedFeaturesOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.QuerySourceFeatureOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Rect/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.RequestParameters/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.RequestTransformFunction/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.RequireAtLeastOne/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.ResponseCallback/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.ScaleOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Segment/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.SerializedStructArray/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.SetClusterOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.SourceClass/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.SourceStatics/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.SpriteOnDemandStyleImage/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.StructArrayMember/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.StyleGlyph/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.StyleImage/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.StyleImageData/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.StyleImageMetadata/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.StyleOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.StyleSetterOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.StyleSwapOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.SymbolQuad/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.TerrainData/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.TerrainMesh/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.TileState/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Transferable/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.TransformStyleFunction/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.UniformBindings/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.Unit/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.UpdateImageOptions/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.ViewType/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.WorkerTileResult/</loc>
-         <lastmod>2023-07-24</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://www.maplibre.org/maplibre-gl-js/docs/API/variables/maplibregl.viewTypes/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/3d-buildings/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/3d-extrusion-floorplan/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-babylon/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-3d-model/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-a-marker/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-image-generated/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-image-missing-generated/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-image-stretchable/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/add-image/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-a-line/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-camera-around-point/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-images/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-marker/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-route/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/attribution-position/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/camera-animation/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/canvas-source/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/center-on-symbol/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/change-building-color-based-on-zoom-level/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/check-for-support/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/cluster-html/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/cluster/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/color-switcher/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/contour-lines/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/cooperated-gestures/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/custom-style-layer/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/data-driven-lines/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/disable-rotation/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/disable-scroll-zoom/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/drag-a-point/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/fallback-image/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/fill-pattern/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/filter-markers-by-input/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/filter-markers/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/fitbounds/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/flyto-options/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/flyto/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/fullscreen/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/game-controls/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/geocoder/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/geojson-layer-in-stack/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/geojson-line/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/geojson-markers/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/geojson-polygon/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/heatmap-layer/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/hover-styles/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/interactive-false/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/jump-to/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/language-switch/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/line-across-180th-meridian/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/line-gradient/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/live-geojson/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/local-geojson-experimental/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/local-geojson/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/local-ideographs/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/locate-user/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/map-tiles/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-draw/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/measure/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/mouse-position/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/multiple-geometries/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/navigation/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/offset-vanishing-point-with-padding/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/polygon-popup-on-click/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/popup-on-click/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/popup-on-hover/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/popup/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/queryrenderedfeatures/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/restrict-bounds/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/satellite-map/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/set-perspective/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/set-popup/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/simple-map/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/toggle-interaction-handlers/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/variable-label-placement/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/vector-source/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/video-on-a-map/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/wms/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://www.maplibre.org/maplibre-gl-js/docs/examples/zoomto-linestring/</loc>
-         <lastmod>2023-07-24</lastmod>
+         <lastmod>2023-08-06</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
