@@ -13,7 +13,6 @@ import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
 import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
 import ONE_EM from '../symbol/one_em';
-import {evaluateVariableOffset, TextAnchor} from '../symbol/symbol_layout';
 
 import {
     SymbolIconUniformsType,
@@ -37,6 +36,7 @@ import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Transform} from '../geo/transform';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
+import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -65,11 +65,11 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
     // Disable the stencil test so that labels aren't clipped to tile boundaries.
     const stencilMode = StencilMode.disabled;
     const colorMode = painter.colorModeForRenderPass();
-    const variablePlacement = layer.layout.get('text-variable-anchor');
+    const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
     //Compute variable-offsets before painting since icons and text data positioning
     //depend on each other in this case.
-    if (variablePlacement) {
+    if (hasVariablePlacement) {
         updateVariableAnchors(coords, painter, layer, sourceCache,
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
@@ -117,10 +117,9 @@ function calculateVariableRenderShift(
     const {horizontalAlign, verticalAlign} = getAnchorAlignment(anchor);
     const shiftX = -(horizontalAlign - 0.5) * width;
     const shiftY = -(verticalAlign - 0.5) * height;
-    const variableOffset = evaluateVariableOffset(anchor, textOffset);
     return new Point(
-        (shiftX / textBoxScale + variableOffset[0]) * renderTextSize,
-        (shiftY / textBoxScale + variableOffset[1]) * renderTextSize
+        (shiftX / textBoxScale + textOffset[0]) * renderTextSize,
+        (shiftY / textBoxScale + textOffset[1]) * renderTextSize
     );
 }
 
@@ -281,7 +280,7 @@ function drawLayerSymbols(
 
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
 
-    const variablePlacement = layer.layout.get('text-variable-anchor');
+    const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
     const tileRenderState: Array<SymbolTileRenderState> = [];
 
@@ -332,7 +331,7 @@ function drawLayerSymbols(
         const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
         const glCoordMatrix = symbolProjection.getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
-        const hasVariableAnchors = variablePlacement && bucket.hasTextData();
+        const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
             hasVariableAnchors &&
             bucket.hasIconData();
@@ -344,7 +343,7 @@ function drawLayerSymbols(
         }
 
         const matrix = painter.translatePosMatrix(coord.posMatrix, tile, translate, translateAnchor),
-            uLabelPlaneMatrix = (alongLine || (isText && variablePlacement) || updateTextFitIcon) ? identityMat4 : labelPlaneMatrix,
+            uLabelPlaneMatrix = (alongLine || (isText && hasVariablePlacement) || updateTextFitIcon) ? identityMat4 : labelPlaneMatrix,
             uglCoordMatrix = painter.translatePosMatrix(glCoordMatrix, tile, translate, translateAnchor, true);
 
         const hasHalo = isSDF && layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(1) !== 0;

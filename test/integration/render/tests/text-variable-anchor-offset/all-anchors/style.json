@@ -1,0 +1,122 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "All 8 anchor positions specified, custom offsets to distinguish top-left and bottom-right",
+      "height": 128,
+      "width": 128
+    }
+  },
+  "center": [ 0, 0 ],
+  "zoom": 0,
+  "sources": {
+    "point": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [ 0, 0 ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "point",
+      "layout": {
+        "text-field": "x",
+        "text-size": 20,
+        "text-justify": "auto",
+        "text-variable-anchor-offset": [
+            "center",       [0, 0],
+            "top",          [0, 1],
+            "bottom",       [0, -1],
+            "left",         [1, 0],
+            "right",        [-1, 0],
+            "top-left",     [1, 1],
+            "top-right",    [-0.5, 1],
+            "bottom-left",  [0.5, -1],
+            "bottom-right", [-1, -1]
+        ],
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ]
+      }
+    },
+    {
+      "id": "anchor",
+      "type": "circle",
+      "source": "point",
+      "paint" :{
+        "circle-color": "#f00",
+        "circle-radius": 4
+      }
+    }
+  ]
+}
