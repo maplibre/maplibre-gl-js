@@ -81,9 +81,7 @@ export class CanvasSource extends ImageSource {
     pause: () => void;
     _playing: boolean;
 
-    /**
-     * @hidden
-     */
+    /** @internal */
     constructor(id: string, options: CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
 

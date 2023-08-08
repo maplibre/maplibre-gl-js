@@ -75,9 +75,8 @@ export const PerformanceUtils = {
 };
 
 /**
+ * @internal
  * Safe wrapper for the performance resource timing API in web workers with graceful degradation
- *
- * @hidden
  */
 export class RequestPerformance {
     _marks: {

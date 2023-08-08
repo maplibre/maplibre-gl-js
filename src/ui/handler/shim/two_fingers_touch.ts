@@ -19,9 +19,7 @@ export class TwoFingersTouchZoomRotateHandler {
     _rotationDisabled: boolean;
     _enabled: boolean;
 
-    /**
-     * @hidden
-    */
+    /** @internal */
     constructor(el: HTMLElement, touchZoom: TwoFingersTouchZoomHandler, touchRotate: TwoFingersTouchRotateHandler, tapDragZoom: TapDragZoomHandler) {
         this._el = el;
         this._touchZoom = touchZoom;

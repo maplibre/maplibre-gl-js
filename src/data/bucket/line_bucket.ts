@@ -82,6 +82,7 @@ type GradientTexture = {
 };
 
 /**
+ * @internal
  * Line bucket class
  */
 export class LineBucket implements Bucket {

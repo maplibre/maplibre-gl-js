@@ -90,6 +90,85 @@ describe('vector tile worker source', () => {
         const rawTileData = new Uint8Array([]);
         function loadVectorData(params, callback) {
             return callback(null, {
+                vectorTile: {
+                    layers: {
+                        test: {
+                            version: 2,
+                            name: 'test',
+                            extent: 8192,
+                            length: 1,
+                            feature: (featureIndex: number) => ({
+                                extent: 8192,
+                                type: 1,
+                                id: featureIndex,
+                                properties: {
+                                    name: 'test'
+                                },
+                                loadGeometry () {
+                                    return [[{x: 0, y: 0}]];
+                                }
+                            })
+                        }
+                    }
+                } as any as vt.VectorTile,
+                rawData: rawTileData
+            });
+        }
+
+        const layerIndex = new StyleLayerIndex([{
+            id: 'test',
+            source: 'source',
+            'source-layer': 'test',
+            type: 'symbol',
+            layout: {
+                'icon-image': 'hello',
+                'text-font': ['StandardFont-Bold'],
+                'text-field': '{name}'
+            }
+        }]);
+
+        const send = jest.fn().mockImplementation((type: string, data: unknown, callback: Function) => {
+            const res = setTimeout(() => callback(null,
+                type === 'getImages' ?
+                    {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
+                    {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}}
+            ));
+
+            return {
+                cancel: () => clearTimeout(res)
+            };
+        });
+
+        const actor = {
+            send
+        } as unknown as Actor;
+        const source = new VectorTileWorkerSource(actor, layerIndex, ['hello'], loadVectorData);
+        source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'}
+        } as any as WorkerTileParameters, () => {
+            done.fail('should not be called');
+        });
+
+        source.reloadTile({
+            source: 'source',
+            uid: '0',
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+        } as any as WorkerTileParameters, (err, res) => {
+            expect(err).toBeFalsy();
+            expect(res).toBeDefined();
+            expect(res.rawTileData).toBeDefined();
+            expect(res.rawTileData).toStrictEqual(rawTileData);
+            done();
+        });
+    });
+
+    test('VectorTileWorkerSource#loadTile reparses tile if reloadTile is called during reparsing', (done) => {
+        const rawTileData = new Uint8Array([]);
+        function loadVectorData(params, callback) {
+            return callback(null, {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
             });

@@ -277,6 +277,7 @@ class CollisionBuffers {
 register('CollisionBuffers', CollisionBuffers);
 
 /**
+ * @internal
  * Unlike other buckets, which simply implement #addFeature with type-specific
  * logic for (essentially) triangulating feature geometries, SymbolBucket
  * requires specialized behavior:

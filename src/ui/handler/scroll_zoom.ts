@@ -62,9 +62,7 @@ export class ScrollZoomHandler implements Handler {
     _defaultZoomRate: number;
     _wheelZoomRate: number;
 
-    /**
-     * @hidden
-     */
+    /** @internal */
     constructor(map: Map, triggerRenderFrame: () => void) {
         this._map = map;
         this._tr = new TransformProvider(map);
