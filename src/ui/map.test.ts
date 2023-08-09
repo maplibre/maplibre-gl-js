@@ -6,7 +6,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {GeoJSONSourceSpecification, LayerSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -673,6 +673,19 @@ describe('Map', () => {
             const map = createMap({deleteStyle: true});
             const source = createStyleSource();
             map.addSource('fill', source);
+        });
+
+        test('a layer can be added with a source specification', () => {
+            const map = createMap();
+            const source: GeoJSONSourceSpecification = {
+                type: 'geojson',
+                data: {type: 'Point', coordinates: [0, 0]}
+            };
+            map.addLayer({
+                id: 'foo',
+                type: 'symbol',
+                source
+            });
         });
 
         test('returns the style with added source and layer', done => {

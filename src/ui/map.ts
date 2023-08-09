@@ -2418,7 +2418,7 @@ export class Map extends Camera {
      * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
      * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
      */
-    addLayer(layer: (LayerSpecification & {source?: string | SourceSpecification}) | CustomLayerInterface, beforeId?: string) {
+    addLayer(layer: LayerSpecification | (Omit<LayerSpecification, 'source'> & {source: SourceSpecification}) | CustomLayerInterface, beforeId?: string) {
         this._lazyInitEmptyStyle();
         this.style.addLayer(layer, beforeId);
         return this._update(true);
