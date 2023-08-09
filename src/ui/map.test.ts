@@ -676,7 +676,7 @@ describe('Map', () => {
         });
 
         test('a layer can be added with a source specification', () => {
-            const map = createMap();
+            const map = createMap({deleteStyle: true});
             const source: GeoJSONSourceSpecification = {
                 type: 'geojson',
                 data: {type: 'Point', coordinates: [0, 0]}
