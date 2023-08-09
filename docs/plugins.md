@@ -94,7 +94,11 @@ Adds a control for searching for places using Stadia Maps.
 #### route-snapper
 Draw routes and areas snapped to roads.
 <br/><small>[View on GitHub](https://github.com/dabreegster/route_snapper)</small>
-  
+
+#### svelte-maplibre-components
+A set of maplibre plugins to integrate with svelte/sveltekit. The respository consists of various useful plugins such as export plugin, legend plugin, measure plugin, attribute table plugin, tour plugin, etc.
+<br/><small>[View on GitHub](https://github.com/watergis/svelte-maplibre-components)</small>
+
 ##  Map Rendering Plugins
 
 #### mapbox-gl-language
@@ -178,7 +182,11 @@ Provides an [Ember](http://emberjs.com) integration.
 #### svelte-maplibre
 Provides a [Svelte](https://svelte.dev) integration.
 <br/><small>[View on GitHub](https://github.com/dimfeld/svelte-maplibre)</small>
-  
+
+#### sveltekit-maplibre-boilerplate
+A preconfigured template repository to easily start developing a maplibre application in svelte/sveltekit.
+<br/><small>[View on GitHub](https://github.com/watergis/sveltekit-maplibre-boilerplate)</small>
+
 ## Utility Libraries
 
 #### turf
