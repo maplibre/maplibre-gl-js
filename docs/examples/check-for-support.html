@@ -5,8 +5,8 @@
     <meta property="og:description" content="Check for MapLibre GL browser support." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.2.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@3.2.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.3.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.3.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -20,8 +20,11 @@
         if (window.WebGLRenderingContext) {
             const canvas = document.createElement('canvas');
             try {
-                const context =
-              canvas.getContext('webgl2') || canvas.getContext('webgl');
+                // Note that { failIfMajorPerformanceCaveat: true } can be passed as a second argument
+                // to canvas.getContext(), causing the check to fail if hardware rendering is not available. See
+                // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+                // for more details.
+                const context = canvas.getContext('webgl2') || canvas.getContext('webgl');
                 if (context && typeof context.getParameter == 'function') {
                     return true;
                 }
