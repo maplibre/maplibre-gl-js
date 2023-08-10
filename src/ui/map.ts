@@ -35,7 +35,6 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapDataEvent} from './events';
-import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
 import type {PointLike} from './camera';
 import type {ScrollZoomHandler} from './handler/scroll_zoom';
@@ -51,7 +50,6 @@ import {defaultLocale} from './default_locale';
 import type {TaskID} from '../util/task_queue';
 import type {Cancelable} from '../types/cancelable';
 import type {
-    LayerSpecification,
     FilterSpecification,
     StyleSpecification,
     LightSpecification,
