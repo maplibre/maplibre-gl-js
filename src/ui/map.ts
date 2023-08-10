@@ -2475,7 +2475,7 @@ export class Map extends Camera {
      * @see [Filter symbols by toggling a list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers/)
      * @see [Filter symbols by text input](https://maplibre.org/maplibre-gl-js/docs/examples/filter-markers-by-input/)
      */
-    getLayer(id: string): StyleLayer {
+    getLayer(id: string): StyleLayer | undefined {
         return this.style.getLayer(id);
     }
 

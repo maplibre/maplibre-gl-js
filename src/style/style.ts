@@ -1000,7 +1000,7 @@ export class Style extends Evented {
      * @param id - id of the desired layer
      * @returns a layer, if one with the given `id` exists
      */
-    getLayer(id: string): StyleLayer {
+    getLayer(id: string): StyleLayer | undefined {
         return this._layers[id];
     }
 
