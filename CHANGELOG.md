@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- Correct declared return type of `Map.getLayer()` and `Style.getLayer()` to be `StyleLayer | undefined` to match the documentation.
 
 ## 3.3.0
 
