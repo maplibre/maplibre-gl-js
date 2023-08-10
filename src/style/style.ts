@@ -192,6 +192,12 @@ export type StyleSwapOptions = {
 }
 
 /**
+ * Specifies a layer to be added to a {@link Style}. In addition to a standard {@link LayerSpecification}
+ * or a {@link CustomLayerInterface}, a {@link LayerSpecification} with an embedded {@link SourceSpecification} can also be provided.
+ */
+export type AddLayerObject = LayerSpecification | (Omit<LayerSpecification, 'source'> & {source: SourceSpecification}) | CustomLayerInterface;
+
+/**
  * The Style base class
  */
 export class Style extends Evented {
@@ -848,7 +854,7 @@ export class Style extends Evented {
      * @param options - Style setter options.
      * @returns `this`.
      */
-    addLayer(layerObject: LayerSpecification | (Omit<LayerSpecification, 'source'> & {source: SourceSpecification}) | CustomLayerInterface, before?: string, options: StyleSetterOptions = {}): this {
+    addLayer(layerObject: AddLayerObject, before?: string, options: StyleSetterOptions = {}): this {
         this._checkLoaded();
 
         const id = layerObject.id;

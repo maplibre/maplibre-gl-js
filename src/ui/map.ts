@@ -33,7 +33,7 @@ import {StyleLayer} from '../style/style_layer';
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
-import type {FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
+import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapDataEvent} from './events';
 import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
@@ -2346,7 +2346,7 @@ export class Map extends Camera {
      *
      * @param layer - The layer to add,
      * conforming to either the MapLibre Style Specification's [layer definition](https://maplibre.org/maplibre-style-spec/layers) or,
-     * less commonly, the {@link CustomLayerInterface} specification.
+     * less commonly, the {@link CustomLayerInterface} specification. Can also be a layer definition with an embedded source definition.
      * The MapLibre Style Specification's layer definition is appropriate for most layers.
      *
      * @param beforeId - The ID of an existing layer to insert the new layer before,
@@ -2418,7 +2418,7 @@ export class Map extends Camera {
      * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
      * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
      */
-    addLayer(layer: LayerSpecification | (Omit<LayerSpecification, 'source'> & {source: SourceSpecification}) | CustomLayerInterface, beforeId?: string) {
+    addLayer(layer: AddLayerObject, beforeId?: string) {
         this._lazyInitEmptyStyle();
         this.style.addLayer(layer, beforeId);
         return this._update(true);
