@@ -48,6 +48,10 @@ import type {VideoSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
  * map.removeSource('some id');  // remove
  * ```
  * @see [Add a video](https://maplibre.org/maplibre-gl-js/docs/examples/video-on-a-map/)
+ *
+ * Note that when rendered as a raster layer, the layer's `raster-fade-duration` property will cause the video to fade in.
+ * This happens when playback is started, paused and resumed, or when the video's coordinates are updated. To avoid this behavior,
+ * set the layer's `raster-fade-duration` property to `0`.
  */
 export class VideoSource extends ImageSource {
     options: VideoSourceSpecification;
