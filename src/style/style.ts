@@ -192,6 +192,12 @@ export type StyleSwapOptions = {
 }
 
 /**
+ * Specifies a layer to be added to a {@link Style}. In addition to a standard {@link LayerSpecification}
+ * or a {@link CustomLayerInterface}, a {@link LayerSpecification} with an embedded {@link SourceSpecification} can also be provided.
+ */
+export type AddLayerObject = LayerSpecification | (Omit<LayerSpecification, 'source'> & {source: SourceSpecification}) | CustomLayerInterface;
+
+/**
  * The Style base class
  */
 export class Style extends Evented {
@@ -848,7 +854,7 @@ export class Style extends Evented {
      * @param options - Style setter options.
      * @returns `this`.
      */
-    addLayer(layerObject: LayerSpecification | CustomLayerInterface, before?: string, options: StyleSetterOptions = {}): this {
+    addLayer(layerObject: AddLayerObject, before?: string, options: StyleSetterOptions = {}): this {
         this._checkLoaded();
 
         const id = layerObject.id;
@@ -858,7 +864,7 @@ export class Style extends Evented {
             return;
         }
 
-        let layer;
+        let layer: ReturnType<typeof createStyleLayer>;
         if (layerObject.type === 'custom') {
 
             if (emitValidationErrors(this, validateCustomStyleLayer(layerObject))) return;
@@ -866,17 +872,17 @@ export class Style extends Evented {
             layer = createStyleLayer(layerObject);
 
         } else {
-            if (typeof (layerObject as any).source === 'object') {
-                this.addSource(id, (layerObject as any).source);
+            if ('source' in layerObject && typeof layerObject.source === 'object') {
+                this.addSource(id, layerObject.source);
                 layerObject = clone(layerObject);
-                layerObject = (extend(layerObject, {source: id}) as any);
+                layerObject = extend(layerObject, {source: id});
             }
 
             // this layer is not in the style.layers array, so we pass an impossible array index
             if (this._validate(validateStyle.layer,
                 `layers.${id}`, layerObject, {arrayIndex: -1}, options)) return;
 
-            layer = createStyleLayer(layerObject);
+            layer = createStyleLayer(layerObject as LayerSpecification | CustomLayerInterface);
             this._validateLayer(layer);
 
             layer.setEventedParent(this, {layer: {id}});
