@@ -414,16 +414,6 @@ const defaultOptions = {
     maxCanvasSize: [4096, 4096]
 } as CompleteMapOptions;
 
-function throttleResizeObserver(func: ResizeObserverCallback, delay: number): ResizeObserverCallback {
-    let timer: ReturnType<typeof setTimeout>;
-    return function(...args) {
-        if (timer) {
-            clearTimeout(timer);
-        }
-        timer = setTimeout(() => func.apply(this, args), delay);
-    };
-}
-
 /**
  * The `Map` object represents the map on your page. It exposes methods
  * and properties that enable you to programmatically change the map,

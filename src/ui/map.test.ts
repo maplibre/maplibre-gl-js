@@ -861,21 +861,30 @@ describe('Map', () => {
 
             const map = createMap();
 
-            const spyA = jest.spyOn(map, '_update');
-            const spyB = jest.spyOn(map, 'resize');
+            const updateSpy = jest.spyOn(map, '_update');
+            const resizeSpy = jest.spyOn(map, 'resize');
 
             // The initial "observe" event fired by ResizeObserver should be captured/muted
             // in the map constructor
 
             observerCallback();
-            expect(spyA).not.toHaveBeenCalled();
-            expect(spyB).not.toHaveBeenCalled();
+            expect(updateSpy).not.toHaveBeenCalled();
+            expect(resizeSpy).not.toHaveBeenCalled();
 
-            // Following "observe" events should fire a resize / _update
+            // The next "observe" event should fire a resize / _update
 
             observerCallback();
-            expect(spyA).toHaveBeenCalled();
-            expect(spyB).toHaveBeenCalled();
+            expect(updateSpy).toHaveBeenCalled();
+            expect(resizeSpy).toHaveBeenCalledTimes(1);
+
+            // Additional "observe" events should be debounced
+            observerCallback();
+            observerCallback();
+            observerCallback();
+            observerCallback();
+            expect(resizeSpy).toHaveBeenCalledTimes(1);
+            await new Promise((resolve) => { setTimeout(resolve, 50); });
+            expect(resizeSpy).toHaveBeenCalledTimes(2);
         });
 
         test('width and height correctly rounded', () => {
