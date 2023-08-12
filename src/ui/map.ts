@@ -648,19 +648,33 @@ export class Map extends Camera {
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
             let initialResizeEventCaptured = false;
-            let resizeDebounceTimer: ReturnType<typeof setTimeout>;
+            let resizeDebounceTimerId: ReturnType<typeof setTimeout> | null = null;
             const resizeDebounceTime = 30;
+            const shouldResize = () => this._trackResize && !this._removed;
             this._resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
                 if (!initialResizeEventCaptured) {
                     initialResizeEventCaptured = true;
                     return;
                 }
 
-                if (resizeDebounceTimer) {
-                    clearTimeout(resizeDebounceTimer);
+                // Debounce resize call, but with leading edge call invoked immediately
+                let resizedImmediately = false;
+                if (resizeDebounceTimerId) {
+                    clearTimeout(resizeDebounceTimerId);
+                } else if (shouldResize()) {
+                    resizedImmediately = true;
+                    this.resize(entries)._update();
+                    resizeDebounceTimerId = setTimeout(() => {
+                        resizeDebounceTimerId = null;
+                    }, resizeDebounceTime);
                 }
-                if (this._trackResize && !this._removed) {
-                    resizeDebounceTimer = setTimeout(() => this.resize(entries)._update(), resizeDebounceTime);
+                if (!resizedImmediately && shouldResize()) {
+                    resizeDebounceTimerId = setTimeout(() => {
+                        if (shouldResize()) {
+                            this.resize(entries)._update();
+                        }
+                        resizeDebounceTimerId = null;
+                    }, resizeDebounceTime);
                 }
             });
             this._resizeObserver.observe(this._container);
