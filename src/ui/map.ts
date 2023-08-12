@@ -414,6 +414,16 @@ const defaultOptions = {
     maxCanvasSize: [4096, 4096]
 } as CompleteMapOptions;
 
+function throttleResizeObserver(func: ResizeObserverCallback, delay: number): ResizeObserverCallback {
+    let timer: ReturnType<typeof setTimeout>;
+    return function(...args) {
+        if (timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
 /**
  * The `Map` object represents the map on your page. It exposes methods
  * and properties that enable you to programmatically change the map,
@@ -638,14 +648,19 @@ export class Map extends Camera {
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
             let initialResizeEventCaptured = false;
-            this._resizeObserver = new ResizeObserver((entries) => {
+            let resizeDebounceTimer: ReturnType<typeof setTimeout>;
+            const resizeDebounceTime = 30;
+            this._resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
                 if (!initialResizeEventCaptured) {
                     initialResizeEventCaptured = true;
                     return;
                 }
 
-                if (this._trackResize) {
-                    this.resize(entries)._update();
+                if (resizeDebounceTimer) {
+                    clearTimeout(resizeDebounceTimer);
+                }
+                if (this._trackResize && !this._removed) {
+                    resizeDebounceTimer = setTimeout(() => this.resize(entries)._update(), resizeDebounceTime);
                 }
             });
             this._resizeObserver.observe(this._container);
