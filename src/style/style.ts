@@ -210,6 +210,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    sky: Sky;
 
     _request: Cancelable;
     _spriteRequest: Cancelable;
@@ -369,6 +370,8 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
+
+        if (this.stylesheet.sky) this.setSky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain);
 
@@ -635,6 +638,7 @@ export class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
+        if (this.sky) this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -1432,6 +1436,29 @@ export class Style extends Evented {
 
         this.light.setLight(lightOptions, options);
         this.light.updateTransitions(parameters);
+        if (this.sky) this.sky.updateTransitions(parameters);
+    }
+
+    getSky() {
+        return this.sky && this.sky.getSky();
+    }
+
+    setSky(skyOptions?: SkySpecification) {
+        this._checkLoaded();
+
+        if (!skyOptions) {
+            this.sky = null;
+        } else {
+            if (this.sky) this.sky.setSky(skyOptions);
+            else this.sky = new Sky(this.map.painter.context, skyOptions);
+            this.sky.updateTransitions({
+                now: browser.now(),
+                transition: extend({
+                    duration: 300,
+                    delay: 0
+                }, this.stylesheet.transition)
+            });
+        }
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
@@ -1462,6 +1489,11 @@ export class Style extends Evented {
             const layer: StyleLayer = this._layers[layerId];
             layer.setEventedParent(null);
         }
+
+        if (this.sky && this.sky.hasTransition()) {
+            return true;
+        }
+
         for (const id in this.sourceCaches) {
             const sourceCache = this.sourceCaches[id];
             sourceCache.setEventedParent(null);
