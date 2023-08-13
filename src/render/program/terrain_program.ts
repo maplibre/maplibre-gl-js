@@ -54,7 +54,6 @@ const terrainPreludeUniforms = (context: Context, locations: UniformLocations): 
 const terrainUniforms = (context: Context, locations: UniformLocations): TerrainUniformsType => ({
     'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_texture': new Uniform1i(context, locations.u_texture),
-    'u_ele_delta': new Uniform1f(context, locations.u_ele_delta)
     'u_ele_delta': new Uniform1f(context, locations.u_ele_delta),
     'u_fog_matrix': new UniformMatrix4f(context, locations.u_fog_matrix),
     'u_fog_color': new UniformColor(context, locations.u_fog_color),

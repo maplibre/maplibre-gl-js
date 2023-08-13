@@ -14,7 +14,7 @@ void main() {
     float ele_delta = a_pos3d.z == 1.0 ? u_ele_delta : 0.0;
     v_texture_pos = a_pos3d.xy / extent;
     gl_Position = u_matrix * vec4(a_pos3d.xy, ele - ele_delta, 1.0);
-    v_depth = gl_Position.z / gl_Position.w;	
+    v_depth = gl_Position.z / gl_Position.w;
     vec4 pos = u_fog_matrix * vec4(a_pos3d.xy, ele, 1.0);
     v_fog_depth = pos.z / pos.w * 0.5 + 0.5;
 
