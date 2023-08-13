@@ -1,5 +1,5 @@
 import type {VectorTileFeature} from '@mapbox/vector-tile';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LayerSpecification} from '@acalcutt/maplibre-gl-style-spec';
 
 /**
  * A helper for type to omit a property from a type

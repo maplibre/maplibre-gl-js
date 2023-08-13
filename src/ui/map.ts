@@ -56,7 +56,7 @@ import type {
     SourceSpecification,
     TerrainSpecification,
     SkySpecification
-} from '@maplibre/maplibre-gl-style-spec';
+} from '@acalcutt/maplibre-gl-style-spec';
 
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';

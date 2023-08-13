@@ -1,5 +1,5 @@
 import {extend, warnOnce, clamp, wrap, defaultEasing, pick} from '../util/util';
-import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import {interpolates} from '@acalcutt/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';

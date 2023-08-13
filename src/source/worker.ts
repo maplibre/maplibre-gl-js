@@ -17,7 +17,7 @@ import type {
 
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {Callback} from '../types/callback';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LayerSpecification} from '@acalcutt/maplibre-gl-style-spec';
 import type {PluginState} from './rtl_text_plugin';
 
 /**
