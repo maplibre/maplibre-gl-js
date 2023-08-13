@@ -56,7 +56,11 @@ import symbolTextAndIconVert from './symbol_text_and_icon.vertex.glsl.g';
 import terrainDepthFrag from './terrain_depth.fragment.glsl.g';
 import terrainCoordsFrag from './terrain_coords.fragment.glsl.g';
 import terrainFrag from './terrain.fragment.glsl.g';
+import terrainDepthVert from './terrain_depth.vertex.glsl.g';
+import terrainCoordsVert from './terrain_coords.vertex.glsl.g';
 import terrainVert from './terrain.vertex.glsl.g';
+import skyFrag from './sky.fragment.glsl.g';
+import skyVert from './sky.vertex.glsl.g';
 
 export const shaders = {
     prelude: compile(preludeFrag, preludeVert),
@@ -86,8 +90,9 @@ export const shaders = {
     symbolSDF: compile(symbolSDFFrag, symbolSDFVert),
     symbolTextAndIcon: compile(symbolTextAndIconFrag, symbolTextAndIconVert),
     terrain: compile(terrainFrag, terrainVert),
-    terrainDepth: compile(terrainDepthFrag, terrainVert),
-    terrainCoords: compile(terrainCoordsFrag, terrainVert)
+    terrainDepth: compile(terrainDepthFrag, terrainDepthVert),
+    terrainCoords: compile(terrainCoordsFrag, terrainCoordsVert),
+    sky: compile(skyFrag, skyVert)
 };
 
 // Expand #pragmas to #ifdefs.

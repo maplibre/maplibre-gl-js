@@ -85,11 +85,11 @@ uniform highp sampler2D u_depth;
 
 // methods for pack/unpack depth value to texture rgba
 // https://stackoverflow.com/questions/34963366/encode-floating-point-data-in-a-rgba-texture
-const highp vec4 bitSh = vec4(256. * 256. * 256., 256. * 256., 256., 1.);
-const highp vec4 bitShifts = vec4(1.) / bitSh;
+const highp vec4 bitSh = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
+const highp vec4 bitShifts = vec4(1.0) / bitSh;
 
 highp float unpack(highp vec4 color) {
-   return dot(color , bitShifts);
+   return dot(color, bitShifts);
 }
 
 // calculate the opacity behind terrain, returns a value between 0 and 1.

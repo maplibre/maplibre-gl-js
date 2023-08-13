@@ -33,6 +33,7 @@ export class Transform {
     cameraToCenterDistance: number;
     mercatorMatrix: mat4;
     projMatrix: mat4;
+    fogMatrix: mat4;
     invProjMatrix: mat4;
     alignedProjMatrix: mat4;
     pixelMatrix: mat4;
@@ -56,6 +57,7 @@ export class Transform {
     _constraining: boolean;
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
+    _fogMatrixCache: {[_: string]: mat4};
     _minEleveationForCurrentTile: number;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
@@ -83,6 +85,7 @@ export class Transform {
         this._edgeInsets = new EdgeInsets();
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
+        this._fogMatrixCache = {};
         this._minEleveationForCurrentTile = 0;
     }
 
@@ -673,6 +676,17 @@ export class Transform {
         }
     }
 
+    calculateTileMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
+        const canonical = unwrappedTileID.canonical;
+        const scale = this.worldSize / this.zoomScale(canonical.z);
+        const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
+
+        const worldMatrix = mat4.identity(new Float64Array(16) as any);
+        mat4.translate(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
+        mat4.scale(worldMatrix, worldMatrix, [scale / EXTENT, scale / EXTENT, 1]);
+        return worldMatrix;
+    }
+
     /**
      * Calculate the posMatrix that, given a tile coordinate, would be used to display the tile on a map.
      * @param unwrappedTileID - the tile ID
@@ -684,16 +698,29 @@ export class Transform {
             return cache[posMatrixKey];
         }
 
-        const canonical = unwrappedTileID.canonical;
-        const scale = this.worldSize / this.zoomScale(canonical.z);
-        const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
-
-        const posMatrix = mat4.identity(new Float64Array(16) as any);
-        mat4.translate(posMatrix, posMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
-        mat4.scale(posMatrix, posMatrix, [scale / EXTENT, scale / EXTENT, 1]);
+        const posMatrix = this.calculateTileMatrix(unwrappedTileID);
         mat4.multiply(posMatrix, aligned ? this.alignedProjMatrix : this.projMatrix, posMatrix);
 
         cache[posMatrixKey] = new Float32Array(posMatrix);
+        return cache[posMatrixKey];
+    }
+
+    /**
+     * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
+     * @param {UnwrappedTileID} unwrappedTileID;
+     * @private
+     */
+    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
+        const posMatrixKey = unwrappedTileID.key;
+        const cache = this._fogMatrixCache;
+        if (cache[posMatrixKey]) {
+            return cache[posMatrixKey];
+        }
+
+        const fogMatrix = this.calculateTileMatrix(unwrappedTileID);
+        mat4.multiply(fogMatrix, this.fogMatrix, fogMatrix);
+
+        cache[posMatrixKey] = new Float32Array(fogMatrix);
         return cache[posMatrixKey];
     }
 
@@ -867,6 +894,20 @@ export class Transform {
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([] as any, m);
 
+        // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
+        // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
+        this.fogMatrix = new Float64Array(16) as any;
+        mat4.perspective(this.fogMatrix, this._fov, this.width / this.height, this.cameraToSeaLevelDistance, farZ);
+        this.fogMatrix[8] = -offset.x * 2 / this.width;
+        this.fogMatrix[9] = offset.y * 2 / this.height;
+        mat4.scale(this.fogMatrix, this.fogMatrix, [1, -1, 1]);
+        mat4.translate(this.fogMatrix, this.fogMatrix, [0, 0, -this.cameraToCenterDistance]);
+        mat4.rotateX(this.fogMatrix, this.fogMatrix, this._pitch);
+        mat4.rotateZ(this.fogMatrix, this.fogMatrix, this.angle);
+        mat4.translate(this.fogMatrix, this.fogMatrix, [-x, -y, 0]);
+        mat4.scale(this.fogMatrix, this.fogMatrix, [1, 1, this._pixelPerMeter]);
+        mat4.translate(this.fogMatrix, this.fogMatrix, [0, 0, -this.elevation]); // elevate camera over terrain
+
         // matrix for conversion from location to screen coordinates in 2D
         this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
@@ -891,6 +932,7 @@ export class Transform {
 
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
+        this._fogMatrixCache = {};
     }
 
     maxPitchScaleFactor() {
