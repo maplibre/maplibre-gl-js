@@ -47,7 +47,7 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
-import {drawSky} from './draw_sky';
+import drawSky from './draw_sky';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
