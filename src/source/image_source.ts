@@ -19,7 +19,7 @@ import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
-} from '@acalcutt/maplibre-gl-style-spec';
+} from '@maplibre/maplibre-gl-style-spec';
 import {Cancelable} from '../types/cancelable';
 
 /**

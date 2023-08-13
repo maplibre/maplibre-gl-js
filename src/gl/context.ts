@@ -14,7 +14,7 @@ import type {
     StructArray,
     StructArrayMember
 } from '../util/struct_array';
-import type {Color} from '@acalcutt/maplibre-gl-style-spec';
+import type {Color} from '@maplibre/maplibre-gl-style-spec';
 import {isWebGL2} from './webgl2';
 
 type ClearArgs = {

@@ -18,7 +18,7 @@ import type {Cancelable} from '../types/cancelable';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
-} from '@acalcutt/maplibre-gl-style-spec';
+} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * A source containing raster tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)

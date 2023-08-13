@@ -4,7 +4,7 @@ import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {IndexBuffer} from '../gl/index_buffer';
 import {SegmentVector} from '../data/segment';
 import type {Context} from  '../gl/context';
-import {Color, latest as styleSpec, StylePropertySpecification, SkySpecification} from '@acalcutt/maplibre-gl-style-spec';
+import {Color, latest as styleSpec, StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {DataConstantProperty, PossiblyEvaluated, Properties, Transitionable, Transitioning, TransitionParameters} from './properties';
 import {Evented} from '../util/evented';
 import {validateStyle, validateSky, emitValidationErrors} from './validate_style';

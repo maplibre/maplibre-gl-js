@@ -1,4 +1,4 @@
-import {Color} from '@acalcutt/maplibre-gl-style-spec';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 import type {BlendFuncType, ColorMaskType} from './types';
 
