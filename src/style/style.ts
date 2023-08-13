@@ -61,7 +61,7 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
-import {Sky} from './sky';
+import Sky from './sky';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',

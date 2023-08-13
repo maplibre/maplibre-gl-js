@@ -3,7 +3,7 @@ import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {skyUniformValues} from './program/sky_program';
 import type {Painter} from './painter';
-import {Sky} from '../style/sky';
+import Sky from '../style/sky';
 
 export default drawSky;
 
