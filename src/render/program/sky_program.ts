@@ -1,8 +1,8 @@
 import {UniformColor, Uniform1f} from '../uniform_binding';
-import type Context from '../../gl/context';
+import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import Transform from '../../geo/transform';
-import Sky from '../../style/sky';
+import {Transform} from '../../geo/transform';
+import {Sky} from '../../style/sky';
 
 export type SkyUniformsType = {
     'u_sky_color': UniformColor;

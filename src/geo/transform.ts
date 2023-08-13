@@ -707,7 +707,7 @@ export class Transform {
 
     /**
      * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
-     * @param {UnwrappedTileID} unwrappedTileID;
+     * @param unwrappedTileID - the tile ID
      * @private
      */
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {

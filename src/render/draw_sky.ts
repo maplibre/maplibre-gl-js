@@ -1,9 +1,9 @@
-import StencilMode from '../gl/stencil_mode';
-import DepthMode from '../gl/depth_mode';
-import CullFaceMode from '../gl/cull_face_mode';
+import {StencilMode} from '../gl/stencil_mode';
+import {DepthMode} from '../gl/depth_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
 import {skyUniformValues} from './program/sky_program';
-import type Painter from './painter';
-import Sky from '../style/sky';
+import type {Painter} from './painter';
+import {Sky} from '../style/sky';
 
 export default drawSky;
 

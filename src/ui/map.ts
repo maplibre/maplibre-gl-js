@@ -56,7 +56,7 @@ import type {
     SourceSpecification,
     TerrainSpecification,
     SkySpecification
-} from '@acalcutt/maplibre-gl-style-spec';
+} from '@maplibre/maplibre-gl-style-spec';
 
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
@@ -2738,12 +2738,13 @@ export class Map extends Camera {
 
     /**
      * Loads a Sky onto the map.
-     * @param sky Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sky).
-     * @param {Object} [options] Options object.
-     * @param {boolean} [options.validate=true] Whether to check if the filter conforms to the MapLibre GL Style Specification. Disabling validation is a performance optimization that should only be used if you have previously validated the values you will be passing to this function.
-     * @returns {Map} `this`
+     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sky).
+     * @param options - Options object.
+     * @returns `this`
      * @example
+     * ```ts
      * map.setSky({ 'sky-color': '#00f' });
+     * ```
      */
     setSky(sky: SkySpecification) {
         this._lazyInitEmptyStyle();
@@ -2754,7 +2755,7 @@ export class Map extends Camera {
     /**
      * Returns the value of the sky object.
      *
-     * @returns {Object} sky Sky properties of the style.
+     * @returns sky - Sky properties of the style.
      */
     getSky() {
         return this.style.getSky();

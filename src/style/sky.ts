@@ -1,17 +1,14 @@
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import posAttributes from '../data/pos_attributes';
-import VertexBuffer from '../gl/vertex_buffer';
-import IndexBuffer from '../gl/index_buffer';
-import SegmentVector from '../data/segment';
-import Context from '../gl/context';
-import {SkySpecification} from '../style-spec/types.g';
-import {Color, StylePropertySpecification} from '../style-spec/style-spec';
+import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {IndexBuffer} from '../gl/index_buffer';
+import {SegmentVector} from '../data/segment';
+import type {Context} from  '../gl/context';
+import {Color, latest as styleSpec, StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {DataConstantProperty, PossiblyEvaluated, Properties, Transitionable, Transitioning, TransitionParameters} from './properties';
-import styleSpec from '../style-spec/reference/latest';
 import {Evented} from '../util/evented';
-import validateSky from '../style-spec/validate/validate_sky';
-import EvaluationParameters from './evaluation_parameters';
-import {emitValidationErrors, validateStyle} from './validate_style';
+import {validateStyle, validateSky, emitValidationErrors} from './validate_style';
+import {EvaluationParameters} from './evaluation_parameters';
 import {extend} from '../util/util';
 
 type Props = {

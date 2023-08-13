@@ -8,8 +8,8 @@ import {
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../../render/uniform_binding';
 import {mat4} from 'gl-matrix';
-import Sky from '../../style/sky';
-import Color from '../../style-spec/util/color';
+import {Sky} from '../../style/sky';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
 
 export type TerrainPreludeUniformsType = {
     'u_depth': Uniform1i;
