@@ -639,12 +639,12 @@ export class Map extends Camera {
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
             let initialResizeEventCaptured = false;
-            const throttledResizeCallback = throttle((entries) => {
+            const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
                 if (this._trackResize && !this._removed) {
                     this.resize(entries)._update();
                 }
             }, 50);
-            this._resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+            this._resizeObserver = new ResizeObserver((entries) => {
                 if (!initialResizeEventCaptured) {
                     initialResizeEventCaptured = true;
                     return;
