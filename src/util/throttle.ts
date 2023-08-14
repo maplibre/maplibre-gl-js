@@ -1,7 +1,7 @@
 /**
  * Throttle the given function to run at most every `period` milliseconds.
  */
-export function throttle<T extends (...args: any) => any>(fn: T, time: number): (...args: Parameters<T>) => ReturnType<typeof setTimeout> {
+export function throttle<T extends (...args: any) => void>(fn: T, time: number): (...args: Parameters<T>) => ReturnType<typeof setTimeout> {
     let pending = false;
     let timerId: ReturnType<typeof setTimeout> = null;
     let lastCallContext = null;
