@@ -25,6 +25,7 @@ import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
 import {TaskQueue} from '../util/task_queue';
+import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
 import {Source, SourceClass} from '../source/source';
@@ -638,15 +639,17 @@ export class Map extends Camera {
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
             let initialResizeEventCaptured = false;
+            const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
+                if (this._trackResize && !this._removed) {
+                    this.resize(entries)._update();
+                }
+            }, 50);
             this._resizeObserver = new ResizeObserver((entries) => {
                 if (!initialResizeEventCaptured) {
                     initialResizeEventCaptured = true;
                     return;
                 }
-
-                if (this._trackResize) {
-                    this.resize(entries)._update();
-                }
+                throttledResizeCallback(entries);
             });
             this._resizeObserver.observe(this._container);
         }
