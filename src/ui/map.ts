@@ -1963,13 +1963,13 @@ export class Map extends Camera {
      * map.setTerrain({ source: 'terrain' });
      * ```
      */
-    setTerrain(options: TerrainSpecification): this {
+    setTerrain(options?: TerrainSpecification): this {
         this.style._checkLoaded();
 
         // clear event handlers
         if (this._terrainDataCallback) this.style.off('data', this._terrainDataCallback);
 
-        if (!options) {
+        if (options === undefined) {
             // remove terrain
             if (this.terrain) this.terrain.sourceCache.destruct();
             this.terrain = null;
