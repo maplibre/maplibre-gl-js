@@ -10,6 +10,7 @@
 - Correct type of `Map.addLayer()` and `Style.addLayer()` to allow adding a layer with an embedded source, matching the documentation ([#2966](https://github.com/maplibre/maplibre-gl-js/pull/2966))
 - Throttle map resizes from ResizeObserver to reduce flicker ([#2986](https://github.com/maplibre/maplibre-gl-js/pull/2986))
 - Correct function `Map.setTerrain(options: TerrainSpecification): Map` to be `Map.setTerrain(options?: TerrainSpecification): Map`
+- _...Add new stuff here..._
 
 ## 3.3.0
 
