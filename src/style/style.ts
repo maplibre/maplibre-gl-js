@@ -368,7 +368,7 @@ export class Style extends Evented {
 
         this.light = new Light(this.stylesheet.light);
 
-        this.map.setTerrain(this.stylesheet.terrain);
+        this.map.setTerrain(this.stylesheet.terrain ?? null);
 
         this.fire(new Event('data', {dataType: 'style'}));
         this.fire(new Event('style.load'));
