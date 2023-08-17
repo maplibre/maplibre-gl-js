@@ -1963,7 +1963,7 @@ export class Map extends Camera {
      * map.setTerrain({ source: 'terrain' });
      * ```
      */
-    setTerrain(options?: TerrainSpecification | null): this {
+    setTerrain(options: TerrainSpecification | null): this {
         this.style._checkLoaded();
 
         // clear event handlers
