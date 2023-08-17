@@ -27,18 +27,46 @@ Examples are written as regular html files in `test/examples`. Each example shou
 
 Every example **must** have an accompanying image.
 
-1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assests/examples/`. Commit the image.
+1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`. Commit the image.
 
 For some examples, `npm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assests/examples/` folder.
 
-To regenerate all images, run `npm run generate-images`. Note that this doesn't support interaction and examples that require manual interaction (e.g. popups) will need to be manually redone afterward. This feature is experimental and may crash before sucessfully generating all examples.
+To regenerate all images, run `npm run generate-images`. Note that this doesn't support interaction and examples that require manual interaction (e.g. popups) will need to be manually redone afterward. This feature is experimental and may crash before successfully generating all examples.
 
 ## Running the Documentation Server Locally
+
+
+Ensure that you can run `docker` commands without `sudo`:
+
+```bash
+sudo groupadd docker
+sudo usermod -aG docker ${USER}
+```
+
+Log out and back in to ensure user lists are refreshed. You can verify with the following command:
+
+```bash
+docker run hello-world
+```
+
+Then ensure that you have an up-to-date build (double check if this is necessary):
+
+
+```bash
+npm run build-prod
+npm run build-css
+```
+
+
+Generate the docs files:
+```bash
+npm run generate-docs
+```
 
 To start a documentation server locally, run:
 
 ```bash
-docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
+npm run start-docs
 ```
 
 The command will print the URL you can use to view the documentation.

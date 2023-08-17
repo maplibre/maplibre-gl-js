@@ -162,6 +162,10 @@ npm run build-css
 
 Once those commands finish, you will have a standalone build at `dist/maplibre-gl.js` and `dist/maplibre-gl.css`
 
+## Testing changes and Writing Documentation
+
+See [`documents_and_diagrams/README.md`](./documents_and_diagrams/README.md)
+
 ## Writing & Running Tests
 
 See [`test/README.md`](./test/README.md).
