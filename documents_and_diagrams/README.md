@@ -1,5 +1,35 @@
 This folder contains developer documentation for MapLibre GL JS. Put any diagrams you reference in the [diagrams](./diagrams) folder. If you use PlantUML, put the source code in `diagrams/*.plantuml` files and run `npm run build-diagrams` to generate SVG versions of them. There is also a [Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=jebbs.plantuml) for previewing them while you edit.
 
+## Setting up Docker access
+
+If you're on Linux, before you can run the docs you need to give your user permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
+
+## Running the Documentation Server Locally
+
+To start a documentation server locally, first, ensure that you have an up-to-date build:
+
+```bash
+npm run build-prod
+npm run build-css
+```
+
+
+Then generate the docs files:
+
+```bash
+npm run generate-docs
+```
+
+Finally, run:
+
+```bash
+npm run start-docs
+```
+
+Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them.
+
+The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
+
 ## Writing API Documentation
 
 API documentation is written as [TSDoc comments](https://tsdoc.org/) and processed with [typedoc](https://typedoc.org/)
@@ -32,36 +62,6 @@ When you create a new example, you **must** make an accompanying image.
 For some examples, `npm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assests/examples/` folder.
 
 To regenerate all images, run `npm run generate-images`. Note that this doesn't support interaction and examples that require manual interaction (e.g. popups) will need to be manually redone afterward. This feature is experimental and may crash before successfully generating all examples.
-
-## Setting up Docker access
-
-If you're on Linux, before you can run the docs you need to give your user permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
-
-## Running the Documentation Server Locally
-
-To start a documentation server locally, first, ensure that you have an up-to-date build:
-
-```bash
-npm run build-prod
-npm run build-css
-```
-
-
-Then generate the docs files:
-
-```bash
-npm run generate-docs
-```
-
-Finally, run:
-
-```bash
-npm run start-docs
-```
-
-Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them.
-
-The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
 ## Committing and Publishing Documentation
 
