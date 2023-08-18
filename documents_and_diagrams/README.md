@@ -33,10 +33,9 @@ For some examples, `npm run generate-images` does not generate an ideal image. I
 
 To regenerate all images, run `npm run generate-images`. Note that this doesn't support interaction and examples that require manual interaction (e.g. popups) will need to be manually redone afterward. This feature is experimental and may crash before successfully generating all examples.
 
-## Running the Documentation Server Locally
+## Setting up Docker access
 
-
-Ensure that you can run `docker` commands without `sudo`:
+Before you can run the docs, you need to ensure that you can run `docker` commands without `sudo`:
 
 ```bash
 sudo groupadd docker
@@ -49,8 +48,9 @@ Log out and back in to ensure user lists are refreshed. You can verify with the 
 docker run hello-world
 ```
 
-Then ensure that you have an up-to-date build (double check if this is necessary):
+## Running the Documentation Server Locally
 
+Then ensure that you have an up-to-date build:
 
 ```bash
 npm run build-prod
@@ -59,6 +59,7 @@ npm run build-css
 
 
 Generate the docs files:
+
 ```bash
 npm run generate-docs
 ```
