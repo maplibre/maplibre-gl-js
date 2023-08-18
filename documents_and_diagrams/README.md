@@ -25,7 +25,7 @@ Examples are written as regular html files in `test/examples`. Each example shou
 * `title`: A short title for the example in **sentence case** as a **verb phrase**.
 * `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
 
-Every example **must** have an accompanying image.
+When you create a new example, you **must** make an accompanying image.
 
 1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`. Commit the image.
 
@@ -50,7 +50,7 @@ docker run hello-world
 
 ## Running the Documentation Server Locally
 
-Then ensure that you have an up-to-date build:
+To start a documentation server locally, first, ensure that you have an up-to-date build:
 
 ```bash
 npm run build-prod
@@ -58,19 +58,17 @@ npm run build-css
 ```
 
 
-Generate the docs files:
+Then generate the docs files:
 
 ```bash
 npm run generate-docs
 ```
 
-To start a documentation server locally, run:
+Finally, run:
 
 ```bash
 npm run start-docs
 ```
-
-The command will print the URL you can use to view the documentation.
 
 The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
