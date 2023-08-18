@@ -35,18 +35,7 @@ To regenerate all images, run `npm run generate-images`. Note that this doesn't 
 
 ## Setting up Docker access
 
-Before you can run the docs, you need to ensure that you can run `docker` commands without `sudo`:
-
-```bash
-sudo groupadd docker
-sudo usermod -aG docker ${USER}
-```
-
-Log out and back in to ensure user lists are refreshed. You can verify with the following command:
-
-```bash
-docker run hello-world
-```
+If you're on Linux, before you can run the docs you need to give your user permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
 
 ## Running the Documentation Server Locally
 
@@ -69,6 +58,8 @@ Finally, run:
 ```bash
 npm run start-docs
 ```
+
+Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them.
 
 The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
