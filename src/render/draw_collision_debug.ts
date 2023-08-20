@@ -1,21 +1,19 @@
-import type Painter from './painter';
-import type SourceCache from '../source/source_cache';
-import type StyleLayer from '../style/style_layer';
+import type {Painter} from './painter';
+import type {SourceCache} from '../source/source_cache';
+import type {StyleLayer} from '../style/style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
-import type SymbolBucket from '../data/bucket/symbol_bucket';
-import DepthMode from '../gl/depth_mode';
-import StencilMode from '../gl/stencil_mode';
-import CullFaceMode from '../gl/cull_face_mode';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket';
+import {DepthMode} from '../gl/depth_mode';
+import {StencilMode} from '../gl/stencil_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
 import {collisionUniformValues, collisionCircleUniformValues} from './program/collision_program';
 
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g';
 import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
-import SegmentVector from '../data/segment';
+import {SegmentVector} from '../data/segment';
 import {mat4} from 'gl-matrix';
-import VertexBuffer from '../gl/vertex_buffer';
-import IndexBuffer from '../gl/index_buffer';
-
-export default drawCollisionDebug;
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {IndexBuffer} from '../gl/index_buffer';
 
 type TileBatch = {
     circleArray: Array<number>;
@@ -27,7 +25,7 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, translate: [number, number], translateAnchor: 'map' | 'viewport', isText: boolean) {
+export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, translate: [number, number], translateAnchor: 'map' | 'viewport', isText: boolean) {
     const context = painter.context;
     const gl = context.gl;
     const program = painter.useProgram('collisionBox');

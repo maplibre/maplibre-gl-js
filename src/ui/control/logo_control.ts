@@ -1,22 +1,30 @@
-import DOM from '../../util/dom';
-import {bindAll} from '../../util/util';
+import {DOM} from '../../util/dom';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 
+/**
+ * The {@link LogoControl} options object
+ */
 type LogoOptions = {
+    /**
+     * If `true`, force a compact logo.
+     * If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
+     */
     compact?: boolean;
 };
 
 /**
  * A `LogoControl` is a control that adds the watermark.
  *
- * @implements {IControl}
- * @param {Object} [options]
- * @param {boolean} [options.compact] If `true`, force a compact logo. If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
+ * @group Markers and Controls
+ *
+ * @example
+ * ```ts
+ * map.addControl(new maplibregl.LogoControl({compact: false}));
+ * ```
  **/
-
-class LogoControl implements IControl {
+export class LogoControl implements IControl {
     options: LogoOptions;
     _map: Map;
     _compact: boolean;
@@ -24,16 +32,13 @@ class LogoControl implements IControl {
 
     constructor(options: LogoOptions = {}) {
         this.options = options;
-
-        bindAll([
-            '_updateCompact'
-        ], this);
     }
 
     getDefaultPosition(): ControlPosition {
         return 'bottom-left';
     }
 
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options && this.options.compact;
@@ -53,6 +58,7 @@ class LogoControl implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._container);
         this._map.off('resize', this._updateCompact);
@@ -60,7 +66,7 @@ class LogoControl implements IControl {
         this._compact = undefined;
     }
 
-    _updateCompact() {
+    _updateCompact = () => {
         const containerChildren = this._container.children;
         if (containerChildren.length) {
             const anchor = containerChildren[0];
@@ -72,8 +78,6 @@ class LogoControl implements IControl {
                 anchor.classList.remove('maplibregl-compact');
             }
         }
-    }
+    };
 
 }
-
-export default LogoControl;

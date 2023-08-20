@@ -1,9 +1,9 @@
 import {fakeServer, FakeServer} from 'nise';
-import RasterDEMTileSource from './raster_dem_tile_source';
+import {RasterDEMTileSource} from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
-import Dispatcher from '../util/dispatcher';
-import Tile from './tile';
+import {Dispatcher} from '../util/dispatcher';
+import {Tile} from './tile';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
@@ -149,5 +149,19 @@ describe('RasterTileSource', () => {
             }
         });
         server.respond();
+    });
+
+    it('serializes options', () => {
+        const source = createSource({
+            tiles: ['http://localhost:2900/raster-dem/{z}/{x}/{y}.png'],
+            minzoom: 2,
+            maxzoom: 10
+        });
+        expect(source.serialize()).toStrictEqual({
+            type: 'raster-dem',
+            tiles: ['http://localhost:2900/raster-dem/{z}/{x}/{y}.png'],
+            minzoom: 2,
+            maxzoom: 10
+        });
     });
 });

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
-import loadSprite from './load_sprite';
+import {loadSprite} from './load_sprite';
 import {fakeXhr} from 'nise';
 import * as util from '../util/util';
 

@@ -1,10 +1,10 @@
-import Tile from './tile';
+import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import GeoJSONSource, {GeoJSONSourceOptions} from './geojson_source';
-import Transform from '../geo/transform';
-import LngLat from '../geo/lng_lat';
+import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
+import {Transform} from '../geo/transform';
+import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
-import Dispatcher from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
 import {RequestManager} from '../util/request_manager';
 
 const wrapDispatcher = (dispatcher) => {

@@ -1,4 +1,4 @@
-import TransferableGridIndex from './transferable_grid_index';
+import {TransferableGridIndex} from './transferable_grid_index';
 
 describe('TransferableGridIndex', () => {
 

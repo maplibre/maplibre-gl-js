@@ -1,9 +1,8 @@
-import Actor from '../util/actor';
-
-import StyleLayerIndex from '../style/style_layer_index';
-import VectorTileWorkerSource from './vector_tile_worker_source';
-import RasterDEMTileWorkerSource from './raster_dem_tile_worker_source';
-import GeoJSONWorkerSource from './geojson_worker_source';
+import {Actor} from '../util/actor';
+import {StyleLayerIndex} from '../style/style_layer_index';
+import {VectorTileWorkerSource} from './vector_tile_worker_source';
+import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
+import {GeoJSONWorkerSource} from './geojson_worker_source';
 import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
 import {isWorker} from '../util/util';
 
@@ -22,7 +21,7 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PluginState} from './rtl_text_plugin';
 
 /**
- * @private
+ * The Worker class responsidble for background thread related execution
  */
 export default class Worker {
     self: WorkerGlobalScopeInterface;
@@ -174,7 +173,6 @@ export default class Worker {
      * Load a {@link WorkerSource} script at params.url.  The script is run
      * (using importScripts) with `registerWorkerSource` in scope, which is a
      * function taking `(name, workerSourceObject)`.
-     *  @private
      */
     loadWorkerSource(map: string, params: {
         url: string;

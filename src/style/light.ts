@@ -9,7 +9,7 @@ import {
 } from './validate_style';
 
 import type {StylePropertySpecification, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type EvaluationParameters from './evaluation_parameters';
+import type {EvaluationParameters} from './evaluation_parameters';
 import type {StyleSetterOptions} from '../style/style';
 import {Properties, Transitionable, Transitioning, PossiblyEvaluated, DataConstantProperty} from './properties';
 
@@ -69,7 +69,7 @@ let lightProperties: Properties<Props>;
 /*
  * Represents the light used to light extruded features.
  */
-class Light extends Evented {
+export class Light extends Evented {
     _transitionable: Transitionable<Props>;
     _transitioning: Transitioning<Props>;
     properties: PossiblyEvaluated<Props, PropsPossiblyEvaluated>;
@@ -87,7 +87,7 @@ class Light extends Evented {
         this._transitioning = this._transitionable.untransitioned();
     }
 
-    getLight() {
+    getLight(): LightSpecification {
         return this._transitionable.serialize();
     }
 
@@ -133,5 +133,3 @@ class Light extends Evented {
         })));
     }
 }
-
-export default Light;

@@ -1,7 +1,7 @@
-import LngLat from '../geo/lng_lat';
+import {LngLat} from '../geo/lng_lat';
 
 import type Point from '@mapbox/point-geometry';
-import type Transform from '../geo/transform';
+import type {Transform} from '../geo/transform';
 
 /**
  * Given a LngLat, prior projected position, and a transform, return a new LngLat shifted
@@ -15,10 +15,8 @@ import type Transform from '../geo/transform';
  * possible; they should avoid shifting large distances across the screen, even when the
  * map center changes by ±360° due to automatic wrapping, and when about to go off screen,
  * should wrap just enough to avoid doing so.
- *
- * @private
  */
-export default function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform): LngLat {
+export function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform): LngLat {
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
 
     // First, try shifting one world in either direction, and see if either is closer to the

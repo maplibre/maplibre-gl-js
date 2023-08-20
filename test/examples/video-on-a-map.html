@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a video</title>
+    <meta property="og:description" content="Display a video on top of a satellite raster baselayer." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const videoStyle = {
+        'version': 8,
+        'sources': {
+            'satellite': {
+                'type': 'raster',
+                'url':
+                'https://api.maptiler.com/tiles/satellite/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                'tileSize': 256
+            },
+            'video': {
+                'type': 'video',
+                'urls': [
+                    'https://static-assets.mapbox.com/mapbox-gl-js/drone.mp4',
+                    'https://static-assets.mapbox.com/mapbox-gl-js/drone.webm'
+                ],
+                'coordinates': [
+                    [-122.51596391201019, 37.56238816766053],
+                    [-122.51467645168304, 37.56410183312965],
+                    [-122.51309394836426, 37.563391708549425],
+                    [-122.51423120498657, 37.56161849366671]
+                ]
+            }
+        },
+        'layers': [
+            {
+                'id': 'background',
+                'type': 'background',
+                'paint': {
+                    'background-color': 'rgb(4,7,14)'
+                }
+            },
+            {
+                'id': 'satellite',
+                'type': 'raster',
+                'source': 'satellite'
+            },
+            {
+                'id': 'video',
+                'type': 'raster',
+                'source': 'video'
+            }
+        ]
+    };
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        minZoom: 14,
+        zoom: 17,
+        center: [-122.514426, 37.562984],
+        bearing: -96,
+        style: videoStyle
+    });
+
+    let playingVideo = true;
+
+    map.on('click', () => {
+        playingVideo = !playingVideo;
+
+        if (playingVideo) map.getSource('video').play();
+        else map.getSource('video').pause();
+    });
+</script>
+</body>
+</html>

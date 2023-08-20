@@ -95,7 +95,7 @@ function evaluateFixture(fixture) {
     return result;
 }
 
-function evaluateExpression (fixture: ExpressionFixture, expression, compilationResult) {
+function evaluateExpression(fixture: ExpressionFixture, expression, compilationResult) {
 
     let availableImages;
     let canonical;
@@ -109,7 +109,7 @@ function evaluateExpression (fixture: ExpressionFixture, expression, compilation
         return;
     }
 
-    const evaluationResult = [];
+    const evaluationResult: any[] = [];
 
     expression = expression.value;
     const type = expression._styleExpression.expression.type; // :scream:

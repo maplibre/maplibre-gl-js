@@ -1,15 +1,17 @@
-import Painter from './painter';
-import Tile from '../source/tile';
+import {Painter} from './painter';
+import {Tile} from '../source/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawTerrain} from './draw_terrain';
-import Style from '../style/style';
-import Terrain from './terrain';
-import RenderPool from '../gl/render_pool';
-import Texture from './texture';
-import type StyleLayer from '../style/style_layer';
+import {Style} from '../style/style';
+import {Terrain} from './terrain';
+import {RenderPool} from '../gl/render_pool';
+import {Texture} from './texture';
+import type {StyleLayer} from '../style/style_layer';
 
-// lookup table which layers should rendered to texture
+/**
+ * lookup table which layers should rendered to texture
+ */
 const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
     background: true,
     fill: true,
@@ -19,30 +21,45 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
 };
 
 /**
- * RenderToTexture
+ * @internal
+ * A helper class to help define what should be rendered to texture and how
  */
-export default class RenderToTexture {
+export class RenderToTexture {
     painter: Painter;
     terrain: Terrain;
     pool: RenderPool;
-    // coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
-    // e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
+    /**
+     * coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
+     * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
+     */
     _coordsDescendingInv: {[_: string]: {[_:string]: Array<OverscaledTileID>}};
-    // create a string representation of all to tiles rendered to render-to-texture tiles
-    // this string representation is used to check if tile should be re-rendered.
+    /**
+     * create a string representation of all to tiles rendered to render-to-texture tiles
+     * this string representation is used to check if tile should be re-rendered.
+     */
     _coordsDescendingInvStr: {[_: string]: {[_:string]: string}};
-    // store for render-stacks
-    // a render stack is a set of layers which should be rendered into one texture
-    // every stylesheet can have multiple stacks. A new stack is created if layers which should
-    // not rendered to texture sit inbetween layers which should rendered to texture. e.g. hillshading or symbols
+    /**
+     * store for render-stacks
+     * a render stack is a set of layers which should be rendered into one texture
+     * every stylesheet can have multiple stacks. A new stack is created if layers which should
+     * not rendered to texture sit inbetween layers which should rendered to texture. e.g. hillshading or symbols
+     */
     _stacks: Array<Array<string>>;
-    // remember the previous processed layer to check if a new stack is needed
+    /**
+     * remember the previous processed layer to check if a new stack is needed
+     */
     _prevType: string;
-    // a list of tiles that can potentially rendered
+    /**
+     * a list of tiles that can potentially rendered
+     */
     _renderableTiles: Array<Tile>;
-    // a list of tiles that should be rendered to screen in the next render-call
+    /**
+     * a list of tiles that should be rendered to screen in the next render-call
+     */
     _rttTiles: Array<Tile>;
-    // a list of all layer-ids which should be rendered
+    /**
+     * a list of all layer-ids which should be rendered
+     */
     _renderableLayerIds: Array<string>;
 
     constructor(painter: Painter, terrain: Terrain) {
@@ -108,8 +125,8 @@ export default class RenderToTexture {
      * Because of the stylesheet possibility to mixing render-to-texture layers
      * and 'live'-layers (f.e. symbols) it is necessary to create more stacks. For example
      * a symbol-layer is in between of fill-layers.
-     * @param {StyleLayer} layer the layer to render
-     * @returns {boolean} if true layer is rendered to texture, otherwise false
+     * @param layer - the layer to render
+     * @returns if true layer is rendered to texture, otherwise false
      */
     renderLayer(layer: StyleLayer): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;

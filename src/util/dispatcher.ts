@@ -1,15 +1,13 @@
 import {asyncAll} from './util';
-import Actor from './actor';
+import {Actor} from './actor';
 
-import type WorkerPool from './worker_pool';
-
+import type {WorkerPool} from './worker_pool';
+import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
 /**
  * Responsible for sending messages from a {@link Source} to an associated
  * {@link WorkerSource}.
- *
- * @private
  */
-class Dispatcher {
+export class Dispatcher {
     workerPool: WorkerPool;
     actors: Array<Actor>;
     currentActor: number;
@@ -37,7 +35,6 @@ class Dispatcher {
 
     /**
      * Broadcast a message to all Workers.
-     * @private
      */
     broadcast(type: string, data: unknown, cb?: (...args: any[]) => any) {
         cb = cb || function () {};
@@ -63,5 +60,3 @@ class Dispatcher {
 }
 
 Dispatcher.Actor = Actor;
-
-export default Dispatcher;

@@ -1,18 +1,18 @@
 import {extend, pick} from '../util/util';
 
-import ImageRequest from '../util/image_request';
+import {ImageRequest} from '../util/image_request';
 
 import {ResourceType} from '../util/request_manager';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import loadTileJSON from './load_tilejson';
-import TileBounds from './tile_bounds';
-import Texture from '../render/texture';
+import {loadTileJson} from './load_tilejson';
+import {TileBounds} from './tile_bounds';
+import {Texture} from '../render/texture';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import type {
@@ -20,7 +20,36 @@ import type {
     RasterDEMSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 
-class RasterTileSource extends Evented implements Source {
+/**
+ * A source containing raster tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
+ *
+ * @group Sources
+ *
+ * @example
+ * ```ts
+ * map.addSource('raster-source', {
+ *     'type': 'raster',
+ *     'tiles': ['https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'],
+ *     'tileSize': 256,
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * map.addSource('wms-test-source', {
+ *      'type': 'raster',
+ * // use the tiles option to specify a WMS tile source URL
+ *      'tiles': [
+ *          'https://img.nj.gov/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&transparent=true&width=256&height=256&layers=Natural2015'
+ *      ],
+ *      'tileSize': 256
+ * });
+ * ```
+ * @see [Add a raster tile source](https://maplibre.org/maplibre-gl-js/docs/examples/map-tiles/)
+ * @see [Add a WMS source](https://maplibre.org/maplibre-gl-js/docs/examples/wms/)
+ * @see [Display a satellite map](https://maplibre.org/maplibre-gl-js/docs/examples/satellite-map/)
+ */
+export class RasterTileSource extends Evented implements Source {
     type: 'raster' | 'raster-dem';
     id: string;
     minzoom: number;
@@ -61,7 +90,7 @@ class RasterTileSource extends Evented implements Source {
     load() {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
-        this._tileJSONRequest = loadTileJSON(this._options, this.map._requestManager, (err, tileJSON) => {
+        this._tileJSONRequest = loadTileJson(this._options, this.map._requestManager, (err, tileJSON) => {
             this._tileJSONRequest = null;
             this._loaded = true;
             if (err) {
@@ -155,5 +184,3 @@ class RasterTileSource extends Evented implements Source {
         return false;
     }
 }
-
-export default RasterTileSource;

@@ -2,10 +2,13 @@ import type {Cancelable} from '../types/cancelable';
 import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolAction} from './ajax';
 import type {Callback} from '../types/callback';
 
-import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker} from './util';
-import webpSupported from './webp_supported';
-import config from './config';
+import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
+import {webpSupported} from './webp_supported';
+import {config} from './config';
 
+/**
+ * The callback that is being called after an image was fetched
+ */
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
 type ImageQueueThrottleControlCallback = () => boolean;
@@ -46,7 +49,7 @@ type HTMLImageElementWithPriority = HTMLImageElement &
  * use a lambda function to determine when the queue should be throttled (e.g. when isMoving())
  * and manually calling {@link processQueue} in the render loop.
  */
-namespace ImageRequest {
+export namespace ImageRequest {
     let imageRequestQueue : ImageRequestQueueItem[];
     let currentParallelImageRequests:number;
 
@@ -66,10 +69,10 @@ namespace ImageRequest {
     /**
      * Install a callback to control when image queue throttling is desired.
      * (e.g. when the map view is moving)
-     * @param {ImageQueueThrottleControlCallback} callback The callback function to install
-     * @returns {number} handle that identifies the installed callback.
+     * @param callback - The callback function to install
+     * @returns handle that identifies the installed callback.
      */
-    export const addThrottleControl = (callback: ImageQueueThrottleControlCallback): number /*callbackHandle*/ => {
+    export const addThrottleControl = (callback: ImageQueueThrottleControlCallback): number => {
         const handle = throttleControlCallbackHandleCounter++;
         throttleControlCallbacks[handle] = callback;
         return handle;
@@ -78,7 +81,7 @@ namespace ImageRequest {
     /**
      * Remove a previously installed callback by passing in the handle returned
      * by {@link addThrottleControl}.
-     * @param {number} callbackHandle The handle for the callback to remove.
+     * @param callbackHandle - The handle for the callback to remove.
      */
     export const removeThrottleControl = (callbackHandle: number): void => {
         delete throttleControlCallbacks[callbackHandle];
@@ -89,7 +92,7 @@ namespace ImageRequest {
     /**
      * Check to see if any of the installed callbacks are requesting the queue
      * to be throttled.
-     * @returns {boolean} true if any callback is causing the queue to be throttled.
+     * @returns `true` if any callback is causing the queue to be throttled.
      */
     const isThrottled = (): boolean => {
         const allControlKeys = Object.keys(throttleControlCallbacks);
@@ -107,10 +110,10 @@ namespace ImageRequest {
 
     /**
      * Request to load an image.
-     * @param {RequestParameters} requestParameters Request parameters.
-     * @param {GetImageCallback} callback Callback to issue when the request completes.
-     * @param {supportImageRefresh} supportImageRefresh true, if the image request need to support refresh based on cache headers.
-     * @returns {Cancelable} Cancelable request.
+     * @param requestParameters - Request parameters.
+     * @param callback - Callback to issue when the request completes.
+     * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
+     * @returns Cancelable request.
      */
     export const getImage = (
         requestParameters: RequestParameters,
@@ -199,7 +202,7 @@ namespace ImageRequest {
         expires?: string | null): void => {
         if (err) {
             callback(err);
-        } else if (data instanceof HTMLImageElement || data instanceof ImageBitmap) {
+        } else if (data instanceof HTMLImageElement || isImageBitmap(data)) {
             // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
             // If HtmlImageElement is used to get image then response type will be HTMLImageElement
             callback(null, data);
@@ -283,5 +286,3 @@ namespace ImageRequest {
 }
 
 ImageRequest.resetRequestQueue();
-
-export default ImageRequest;

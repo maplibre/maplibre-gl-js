@@ -1,9 +1,9 @@
-import RasterTileSource from './raster_tile_source';
+import {RasterTileSource} from './raster_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
-import Dispatcher from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
 import {fakeServer, FakeServer} from 'nise';
-import Tile from './tile';
+import {Tile} from './tile';
 import {stubAjaxGetImage} from '../util/test/util';
 
 function createSource(options, transformCallback?) {
@@ -170,4 +170,17 @@ describe('RasterTileSource', () => {
         expect((server.requests.pop() as any).aborted).toBe(true);
     });
 
+    it('serializes options', () => {
+        const source = createSource({
+            tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png'],
+            minzoom: 2,
+            maxzoom: 10
+        });
+        expect(source.serialize()).toStrictEqual({
+            type: 'raster',
+            tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png'],
+            minzoom: 2,
+            maxzoom: 10
+        });
+    });
 });

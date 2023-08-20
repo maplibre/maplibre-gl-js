@@ -1,25 +1,22 @@
-export default checkMaxAngle;
-
 import type Point from '@mapbox/point-geometry';
-import type Anchor from './anchor';
+import type {Anchor} from './anchor';
 
 /**
  * Labels placed around really sharp angles aren't readable. Check if any
  * part of the potential label has a combined angle that is too big.
  *
- * @param line
- * @param anchor The point on the line around which the label is anchored.
- * @param labelLength The length of the label in geometry units.
- * @param windowSize The check fails if the combined angles within a part of the line that is `windowSize` long is too big.
- * @param maxAngle The maximum combined angle that any window along the label is allowed to have.
+ * @param line - The line to check
+ * @param anchor - The point on the line around which the label is anchored.
+ * @param labelLength - The length of the label in geometry units.
+ * @param windowSize - The check fails if the combined angles within a part of the line that is `windowSize` long is too big.
+ * @param maxAngle - The maximum combined angle that any window along the label is allowed to have.
  *
- * @returns {boolean} whether the label should be placed
- * @private
+ * @returns whether the label should be placed
  */
-function checkMaxAngle(line: Array<Point>, anchor: Anchor, labelLength: number, windowSize: number, maxAngle: number) {
+export function checkMaxAngle(line: Array<Point>, anchor: Anchor, labelLength: number, windowSize: number, maxAngle: number) {
 
-    // horizontal labels always pass
-    if (anchor.segment === undefined) return true;
+    // horizontal labels and labels with length 0 always pass
+    if (anchor.segment === undefined || labelLength === 0) return true;
 
     let p = anchor;
     let index = anchor.segment + 1;

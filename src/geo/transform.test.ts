@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
-import Transform from './transform';
-import LngLat from './lng_lat';
+import {Transform} from './transform';
+import {LngLat} from './lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
-import type Terrain from '../render/terrain';
+import type {Terrain} from '../render/terrain';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -406,13 +406,16 @@ describe('transform', () => {
         transform.resize(512, 512);
 
         // expect same values because of no elevation change
-        transform.getElevation = () => 200;
-        transform.recalculateZoom(null);
+        const terrain = {
+            getElevationForLngLatZoom: () => 200,
+            pointCoordinate: () => null
+        };
+        transform.recalculateZoom(terrain as any);
         expect(transform.zoom).toBe(14);
 
         // expect new zoom because of elevation change
-        transform.getElevation = () => 400;
-        transform.recalculateZoom(null);
+        terrain.getElevationForLngLatZoom = () => 400;
+        transform.recalculateZoom(terrain as any);
         expect(transform.zoom).toBe(14.127997275621933);
         expect(transform.elevation).toBe(400);
 
@@ -420,8 +423,8 @@ describe('transform', () => {
         expect(transform._center.lat).toBe(50.00000000000017);
 
         // expect new zoom because of elevation change to point below sea level
-        transform.getElevation = () => -200;
-        transform.recalculateZoom(null);
+        terrain.getElevationForLngLatZoom = () => -200;
+        transform.recalculateZoom(terrain as any);
         expect(transform.zoom).toBe(13.773740316343467);
         expect(transform.elevation).toBe(-200);
     });
@@ -458,14 +461,4 @@ describe('transform', () => {
         expect(top).toBeCloseTo(79.1823898251593, 10);
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
     });
-
-    test('getElevation with lng less than -180 wraps correctly', () => {
-        const OVERSCALETILEID_DOES_NOT_THROW = 4;
-        const terrain = {
-            getElevation: () => OVERSCALETILEID_DOES_NOT_THROW
-        } as any as Terrain;
-        const transform = new Transform(0, 22, 0, 85, true);
-        expect(transform.getElevation(new LngLat(-183, 40), terrain)).toBe(OVERSCALETILEID_DOES_NOT_THROW);
-    });
-
 });

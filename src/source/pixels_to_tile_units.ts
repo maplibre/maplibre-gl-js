@@ -1,4 +1,4 @@
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 
 import type {OverscaledTileID} from './tile_id';
 
@@ -12,9 +12,8 @@ import type {OverscaledTileID} from './tile_id';
  * translation by pixelsToTileUnits(30, 6.5) tile units.
  *
  * @returns value in tile units
- * @private
  */
-export default function pixelsToTileUnits(
+export function pixelsToTileUnits(
     tile: {
         tileID: OverscaledTileID;
         tileSize: number;

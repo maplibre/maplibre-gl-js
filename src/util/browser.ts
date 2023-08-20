@@ -8,10 +8,8 @@ let linkEl;
 
 let reducedMotionQuery: MediaQueryList;
 
-/**
- * @private
- */
-const exported = {
+/** */
+export const browser = {
     /**
      * Provides a function that outputs milliseconds: either performance.now()
      * or a fallback to Date.now()
@@ -23,12 +21,12 @@ const exported = {
         return {cancel: () => cancelAnimationFrame(frame)};
     },
 
-    getImageData(img: CanvasImageSource, padding: number = 0): ImageData {
+    getImageData(img:  HTMLImageElement | ImageBitmap, padding: number = 0): ImageData {
         const context = this.getImageCanvasContext(img);
         return context.getImageData(-padding, -padding, img.width as number + 2 * padding, img.height as number + 2 * padding);
     },
 
-    getImageCanvasContext(img: CanvasImageSource): CanvasRenderingContext2D {
+    getImageCanvasContext(img: HTMLImageElement | ImageBitmap): CanvasRenderingContext2D {
         const canvas = window.document.createElement('canvas') as HTMLCanvasElement;
         const context = canvas.getContext('2d', {willReadFrequently: true});
         if (!context) {
@@ -58,5 +56,3 @@ const exported = {
         return reducedMotionQuery.matches;
     },
 };
-
-export default exported;

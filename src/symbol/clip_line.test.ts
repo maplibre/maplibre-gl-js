@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import clipLine from './clip_line';
+import {clipLine} from './clip_line';
 
 describe('clipLines', () => {
 

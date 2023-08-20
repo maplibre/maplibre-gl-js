@@ -14,8 +14,6 @@ export type ColorRampParams = {
 /**
  * Given an expression that should evaluate to a color ramp,
  * return a RGBA image representing that ramp expression.
- *
- * @private
  */
 export function renderColorRamp(params: ColorRampParams): RGBAImage {
     const evaluationGlobals = {};

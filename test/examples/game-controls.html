@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Navigate the map with game-like controls</title>
+    <meta property="og:description" content="Use the keyboard's arrow keys to move around the map with game-like controls." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-87.6298, 41.8781],
+        zoom: 17,
+        bearing: -12,
+        pitch: 60,
+        interactive: false
+    });
+
+    // pixels the map pans when the up or down arrow is clicked
+    const deltaDistance = 100;
+
+    // degrees the map rotates when the left or right arrow is clicked
+    const deltaDegrees = 25;
+
+    function easing(t) {
+        return t * (2 - t);
+    }
+
+    map.on('load', () => {
+        map.getCanvas().focus();
+
+        map.getCanvas().addEventListener(
+            'keydown',
+            (e) => {
+                e.preventDefault();
+                if (e.which === 38) {
+                    // up
+                    map.panBy([0, -deltaDistance], {
+                        easing
+                    });
+                } else if (e.which === 40) {
+                    // down
+                    map.panBy([0, deltaDistance], {
+                        easing
+                    });
+                } else if (e.which === 37) {
+                    // left
+                    map.easeTo({
+                        bearing: map.getBearing() - deltaDegrees,
+                        easing
+                    });
+                } else if (e.which === 39) {
+                    // right
+                    map.easeTo({
+                        bearing: map.getBearing() + deltaDegrees,
+                        easing
+                    });
+                }
+            },
+            true
+        );
+    });
+</script>
+</body>
+</html>

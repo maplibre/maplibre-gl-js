@@ -1,13 +1,14 @@
 import {OverscaledTileID} from './tile_id';
-import Tile from './tile';
-import EXTENT from '../data/extent';
+import {Tile} from './tile';
+import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
-import type Transform from '../geo/transform';
-import type SourceCache from '../source/source_cache';
-import Terrain from '../render/terrain';
+import type {Transform} from '../geo/transform';
+import type {SourceCache} from '../source/source_cache';
+import {Terrain} from '../render/terrain';
 
 /**
+ * @internal
  * This class is a helper for the Terrain-class, it:
  *   - loads raster-dem tiles
  *   - manages all renderToTexture tiles.
@@ -15,23 +16,38 @@ import Terrain from '../render/terrain';
  *   - finds all necessary renderToTexture tiles for a OverscaledTileID area
  *   - finds the corresponding raster-dem tile for OverscaledTileID
  */
-
-export default class TerrainSourceCache extends Evented {
-    // source-cache for the raster-dem source.
+export class TerrainSourceCache extends Evented {
+    /**
+     * source-cache for the raster-dem source.
+     */
     sourceCache: SourceCache;
-    // stores all render-to-texture tiles.
+    /**
+     * stores all render-to-texture tiles.
+     */
     _tiles: {[_: string]: Tile};
-    // contains a list of tileID-keys for the current scene. (only for performance)
+    /**
+     * contains a list of tileID-keys for the current scene. (only for performance)
+     */
     _renderableTilesKeys: Array<string>;
-    // raster-dem-tile for a TileID cache.
+    /**
+     * raster-dem-tile for a TileID cache.
+     */
     _sourceTileCache: {[_: string]: string};
-    // minimum zoomlevel to render the terrain.
+    /**
+     * minimum zoomlevel to render the terrain.
+     */
     minzoom: number;
-    // maximum zoomlevel to render the terrain.
+    /**
+     * maximum zoomlevel to render the terrain.
+     */
     maxzoom: number;
-    // render-to-texture tileSize in scene.
+    /**
+     * render-to-texture tileSize in scene.
+     */
     tileSize: number;
-    // raster-dem tiles will load for performance the actualZoom - deltaZoom zoom-level.
+    /**
+     * raster-dem tiles will load for performance the actualZoom - deltaZoom zoom-level.
+     */
     deltaZoom: number;
 
     constructor(sourceCache: SourceCache) {
@@ -55,8 +71,8 @@ export default class TerrainSourceCache extends Evented {
 
     /**
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
-     * @param {Transform} transform - the operation to do
-     * @param {Terrain} terrain - the terrain
+     * @param transform - the operation to do
+     * @param terrain - the terrain
      */
     update(transform: Transform, terrain: Terrain): void {
         // load raster-dem tiles for the current scene.
@@ -87,7 +103,7 @@ export default class TerrainSourceCache extends Evented {
 
     /**
      * Free render to texture cache
-     * @param {TileID} tileID optional, free only corresponding to tileID.
+     * @param tileID - optional, free only corresponding to tileID.
      */
     freeRtt(tileID?: OverscaledTileID) {
         for (const key in this._tiles) {
@@ -99,7 +115,7 @@ export default class TerrainSourceCache extends Evented {
 
     /**
      * get a list of tiles, which are loaded and should be rendered in the current scene
-     * @returns {Array<Tile>} the renderable tiles
+     * @returns the renderable tiles
      */
     getRenderableTiles(): Array<Tile> {
         return this._renderableTilesKeys.map(key => this.getTileByID(key));
@@ -108,7 +124,7 @@ export default class TerrainSourceCache extends Evented {
     /**
      * get terrain tile by the TileID key
      * @param id - the tile id
-     * @returns {Tile} - the tile
+     * @returns the tile
      */
     getTileByID(id: string): Tile {
         return this._tiles[id];
@@ -116,8 +132,8 @@ export default class TerrainSourceCache extends Evented {
 
     /**
      * Searches for the corresponding current renderable terrain-tiles
-     * @param {OverscaledTileID} tileID - the tile to look for
-     * @returns {Record<string, OverscaledTileID>} - the tiles that were found
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
      */
     getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords = {};
@@ -156,9 +172,9 @@ export default class TerrainSourceCache extends Evented {
 
     /**
      * find the covering raster-dem tile
-     * @param {OverscaledTileID} tileID - the tile to look for
-     * @param {boolean} searchForDEM Optinal parameter to search for (parent) souretiles with loaded dem.
-     * @returns {Tile} - the tile
+     * @param tileID - the tile to look for
+     * @param searchForDEM - Optinal parameter to search for (parent) souretiles with loaded dem.
+     * @returns the tile
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {
         const source = this.sourceCache._source;
@@ -178,8 +194,8 @@ export default class TerrainSourceCache extends Evented {
 
     /**
      * get a list of tiles, loaded after a spezific time. This is used to update depth & coords framebuffers.
-     * @param {Date} time - the time
-     * @returns {Array<Tile>} - the relevant tiles
+     * @param time - the time
+     * @returns the relevant tiles
      */
     tilesAfterTime(time = Date.now()): Array<Tile> {
         return Object.values(this._tiles).filter(t => t.timeAdded >= time);

@@ -7,10 +7,10 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import localizeURLs from '../lib/localize-urls';
+import {localizeURLs} from '../lib/localize-urls';
 import maplibregl from '../../../src/index';
-import type CanvasSource from '../../../src/source/canvas_source';
-import type Map from '../../../src/ui/map';
+import type {CanvasSource} from '../../../src/source/canvas_source';
+import type {Map} from '../../../src/ui/map';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
 import puppeteer, {Page} from 'puppeteer';
@@ -25,7 +25,7 @@ type TestData = {
     allowed: number;
     /**
      * Perceptual color difference threshold, number between 0 and 1, smaller is more sensitive
-     * @default 0.1285
+     * @defaultValue 0.1285
      */
     threshold: number;
     ok: boolean;
@@ -50,6 +50,9 @@ type TestData = {
     error: Error;
     maxPitch: number;
     continuesRepaint: boolean;
+    // Crop PNG results if they're too large
+    reportWidth: number;
+    reportHeight: number;
 
     // base64-encoded content of the PNG results
     actual: string;
@@ -113,9 +116,9 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
  * Compares the Unit8Array that was created to the expected file in the file system.
  * It updates testData with the results.
  *
- * @param directory The base directory of the data
- * @param testData The test data
- * @param data The actual image data to compare the expected to
+ * @param directory - The base directory of the data
+ * @param testData - The test data
+ * @param data - The actual image data to compare the expected to
  * @returns nothing as it updates the testData object
  */
 function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
@@ -133,8 +136,8 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
     const actualPath = path.join(dir, 'actual.png');
     const diffPath = path.join(dir, 'diff.png');
 
-    const width = Math.floor(testData.width * testData.pixelRatio);
-    const height = Math.floor(testData.height * testData.pixelRatio);
+    const width = Math.floor(testData.reportWidth ?? testData.width * testData.pixelRatio);
+    const height = Math.floor(testData.reportHeight ?? testData.height * testData.pixelRatio);
     const actualImg = new PNG({width, height});
 
     // PNG data must be unassociated (not premultiplied)
@@ -205,8 +208,8 @@ function compareRenderResults(directory: string, testData: TestData, data: Uint8
 /**
  * Gets all the tests from the file system looking for style.json files.
  *
- * @param options The options
- * @param directory The base directory
+ * @param options - The options
+ * @param directory - The base directory
  * @returns The tests data structure and the styles that were loaded
  */
 function getTestStyles(options: RenderOptions, directory: string, port: number): StyleWithTestData[] {
@@ -253,7 +256,7 @@ const browser = await puppeteer.launch({headless: 'new', args: ['--enable-webgl'
  * It creates the map and applies the operations to create an image
  * and returns it as a Uint8Array
  *
- * @param style The style to use
+ * @param style - The style to use
  * @returns an image byte array promise
  */
 async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): Promise<Uint8Array> {
@@ -458,10 +461,10 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
         /**
          * Executes the operations in the test data
          *
-         * @param testData The test data to operate upon
-         * @param map The Map
-         * @param operations The operations
-         * @param callback The callback to use when all the operations are executed
+         * @param testData - The test data to operate upon
+         * @param map - The Map
+         * @param operations - The operations
+         * @param callback - The callback to use when all the operations are executed
          */
         async function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[], callback: Function) {
             const operation = operations && operations[0];
@@ -602,7 +605,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 skew: options.skew || [0, 0],
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
-                crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
+                crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
+                maxCanvasSize: [8192, 8192]
             });
 
             // Configure the map to never stop the render loop
@@ -626,8 +630,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
                 applyOperations(options, map as any, options.operations, () => {
                     const viewport = gl.getParameter(gl.VIEWPORT);
-                    const w = viewport[2];
-                    const h = viewport[3];
+                    const w = options.reportWidth ?? viewport[2];
+                    const h = options.reportHeight ?? viewport[3];
 
                     const data = new Uint8Array(w * h * 4);
                     gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
@@ -663,9 +667,9 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 /**
  * Prints the progress to the console
  *
- * @param test The current test
- * @param total The total number of tests
- * @param index The current test index
+ * @param test - The current test
+ * @param total - The total number of tests
+ * @param index - The current test index
  */
 function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
@@ -680,8 +684,8 @@ function printProgress(test: TestData, total: number, index: number) {
 /**
  * Prints the summary at the end of the run
  *
- * @param tests all the tests with their resutls
- * @returns
+ * @param tests - all the tests with their resutls
+ * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {
 

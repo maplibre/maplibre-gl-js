@@ -1,26 +1,26 @@
-import Map, {MapOptions} from './map';
+import {Map, MapOptions} from './map';
 import {createMap, setErrorWebGlContext, beforeMapTest} from '../util/test/util';
-import LngLat from '../geo/lng_lat';
-import Tile from '../source/tile';
+import {LngLat} from '../geo/lng_lat';
+import {Tile} from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
 import {Event, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {GeoJSONSourceSpecification, LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import {IControl} from './control/control';
-import EvaluationParameters from '../style/evaluation_parameters';
+import {EvaluationParameters} from '../style/evaluation_parameters';
 import {fakeServer, FakeServer} from 'nise';
 import {CameraOptions} from './camera';
-import Terrain, {} from '../render/terrain';
+import {Terrain} from '../render/terrain';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import Transform from '../geo/transform';
+import {Transform} from '../geo/transform';
 import {StyleImageInterface} from '../style/style_image';
-import Style from '../style/style';
+import {Style} from '../style/style';
 import {MapSourceDataEvent} from './events';
-import config from '../util/config';
+import {config} from '../util/config';
 
 function createStyleSource() {
     return {
@@ -600,6 +600,13 @@ describe('Map', () => {
     });
 
     describe('#getStyle', () => {
+        test('returns undefined if the style has not loaded yet', done => {
+            const style = createStyle();
+            const map = createMap({style});
+            expect(map.getStyle()).toBeUndefined();
+            done();
+        });
+
         test('returns the style', done => {
             const style = createStyle();
             const map = createMap({style});
@@ -666,6 +673,19 @@ describe('Map', () => {
             const map = createMap({deleteStyle: true});
             const source = createStyleSource();
             map.addSource('fill', source);
+        });
+
+        test('a layer can be added with an embedded source specification', () => {
+            const map = createMap({deleteStyle: true});
+            const source: GeoJSONSourceSpecification = {
+                type: 'geojson',
+                data: {type: 'Point', coordinates: [0, 0]}
+            };
+            map.addLayer({
+                id: 'foo',
+                type: 'symbol',
+                source
+            });
         });
 
         test('returns the style with added source and layer', done => {
@@ -841,23 +861,45 @@ describe('Map', () => {
 
             const map = createMap();
 
-            const spyA = jest.spyOn(map, '_update');
-            const spyB = jest.spyOn(map, 'resize');
+            const updateSpy = jest.spyOn(map, '_update');
+            const resizeSpy = jest.spyOn(map, 'resize');
 
             // The initial "observe" event fired by ResizeObserver should be captured/muted
             // in the map constructor
 
             observerCallback();
-            expect(spyA).not.toHaveBeenCalled();
-            expect(spyB).not.toHaveBeenCalled();
+            expect(updateSpy).not.toHaveBeenCalled();
+            expect(resizeSpy).not.toHaveBeenCalled();
 
-            // Following "observe" events should fire a resize / _update
+            // The next "observe" event should fire a resize / _update
 
             observerCallback();
-            expect(spyA).toHaveBeenCalled();
-            expect(spyB).toHaveBeenCalled();
+            expect(updateSpy).toHaveBeenCalled();
+            expect(resizeSpy).toHaveBeenCalledTimes(1);
+
+            // Additional "observe" events should be throttled
+            observerCallback();
+            observerCallback();
+            observerCallback();
+            observerCallback();
+            expect(resizeSpy).toHaveBeenCalledTimes(1);
+            await new Promise((resolve) => { setTimeout(resolve, 100); });
+            expect(resizeSpy).toHaveBeenCalledTimes(2);
         });
 
+        test('width and height correctly rounded', () => {
+            const map = createMap();
+            const container = map.getContainer();
+
+            Object.defineProperty(container, 'clientWidth', {value: 250.6});
+            Object.defineProperty(container, 'clientHeight', {value: 250.6});
+            map.resize();
+
+            expect(map.getCanvas().width).toBe(250);
+            expect(map.getCanvas().height).toBe(250);
+            expect(map.painter.width).toBe(250);
+            expect(map.painter.height).toBe(250);
+        });
     });
 
     describe('#getBounds', () => {
@@ -2488,6 +2530,14 @@ describe('Map', () => {
         expect(map.getPixelRatio()).toBe(devicePixelRatio);
     });
 
+    test('pixel ratio by default reflects devicePixelRatio changes', () => {
+        global.devicePixelRatio = 0.25;
+        const map = createMap();
+        expect(map.getPixelRatio()).toBe(0.25);
+        global.devicePixelRatio = 1;
+        expect(map.getPixelRatio()).toBe(1);
+    });
+
     test('canvas has the expected size', () => {
         const container = window.document.createElement('div');
         Object.defineProperty(container, 'clientWidth', {value: 512});
@@ -2597,15 +2647,20 @@ describe('Map', () => {
         });
     });
 
+    describe('cooperativeGestures option', () => {
+        test('cooperativeGesture container element is hidden from a11y tree', () => {
+            const map = createMap({cooperativeGestures: true});
+
+            expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen').getAttribute('aria-hidden')).toBeTruthy();
+        });
+    });
+
     describe('getCameraTargetElevation', () => {
         test('Elevation is zero without terrain, and matches any given terrain', () => {
             const map = createMap();
             expect(map.getCameraTargetElevation()).toBe(0);
 
-            const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 2000);
-
             const terrainStub = {} as Terrain;
-            terrainStub.getElevation = mockedGetElevation;
             map.terrain = terrainStub;
 
             const transform = new Transform(0, 22, 0, 60, true);
@@ -2613,7 +2668,7 @@ describe('Map', () => {
             transform.center = new LngLat(10.0, 50.0);
             transform.zoom = 14;
             transform.resize(512, 512);
-            transform.updateElevation(map.terrain);
+            transform.elevation = 2000;
             map.transform = transform;
 
             expect(map.getCameraTargetElevation()).toBe(2000);
@@ -2625,10 +2680,10 @@ describe('Map', () => {
         test('pitch 90 with terrain', () => {
             const map = createMap();
 
-            const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 111200);
+            const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200);
 
             const terrainStub = {} as Terrain;
-            terrainStub.getElevation = mockedGetElevation;
+            terrainStub.getElevationForLngLatZoom = mockedGetElevation;
             map.terrain = terrainStub;
 
             // distance between lng x and lng x+1 is 111.2km at same lat
@@ -2642,10 +2697,10 @@ describe('Map', () => {
         test('pitch 153.435 with terrain', () => {
             const map = createMap();
 
-            const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 111200 * 3);
+            const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200 * 3);
 
             const terrainStub = {} as Terrain;
-            terrainStub.getElevation = mockedGetElevation;
+            terrainStub.getElevationForLngLatZoom = mockedGetElevation;
             map.terrain = terrainStub;
             // distance between lng x and lng x+1 is 111.2km at same lat
             // (elevation difference of cam and center) / 2 = grounddistance =>
@@ -2659,10 +2714,10 @@ describe('Map', () => {
         test('pitch 63 with terrain', () => {
             const map = createMap();
 
-            const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 111200 / 2);
+            const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 111200 / 2);
 
             const terrainStub = {} as Terrain;
-            terrainStub.getElevation = mockedGetElevation;
+            terrainStub.getElevationForLngLatZoom = mockedGetElevation;
             map.terrain = terrainStub;
 
             // distance between lng x and lng x+1 is 111.2km at same lat
@@ -2677,10 +2732,10 @@ describe('Map', () => {
         test('zoom distance 1000', () => {
             const map = createMap();
 
-            const mockedGetElevation = jest.fn((_tileID: OverscaledTileID, _x: number, _y: number, _extent?: number) => 1000);
+            const mockedGetElevation = jest.fn((_lngLat: LngLat, _zoom: number) => 1000);
 
             const terrainStub = {} as Terrain;
-            terrainStub.getElevation = mockedGetElevation;
+            terrainStub.getElevationForLngLatZoom = mockedGetElevation;
             map.terrain = terrainStub;
 
             const expectedZoom = Math.log2(map.transform.cameraToCenterDistance / mercatorZfromAltitude(1000, 0) / map.transform.tileSize);
@@ -2720,7 +2775,9 @@ describe('Map', () => {
             expect(cameraOptions).toBeDefined();
             expect(mockedGetElevation.mock.calls).toHaveLength(0);
         });
+    });
 
+    describe('webgl errors', () => {
         test('WebGL error while creating map', () => {
             setErrorWebGlContext();
             try {
@@ -2735,6 +2792,65 @@ describe('Map', () => {
                 expect(errorMessageObject.statusMessage).toBe('mocked webglcontextcreationerror message');
             }
 
+        });
+        test('Hit WebGL max drawing buffer limit', () => {
+            // Simulate a device with MAX_TEXTURE_SIZE=16834 and max rendering area of ~32Mpx
+            const container = window.document.createElement('div');
+            Object.defineProperty(container, 'clientWidth', {value: 8000});
+            Object.defineProperty(container, 'clientHeight', {value: 4500});
+            const map = createMap({container, maxCanvasSize: [16834, 16834], pixelRatio: 1});
+            jest.spyOn(map.painter.context.gl, 'drawingBufferWidth', 'get').mockReturnValue(7536);
+            jest.spyOn(map.painter.context.gl, 'drawingBufferHeight', 'get').mockReturnValue(4239);
+            map.resize();
+            expect(map.getCanvas().width).toBe(7536);
+            expect(map.getCanvas().height).toBe(4239);
+            // Check if maxCanvasSize is updated
+            expect(map._maxCanvasSize).toEqual([7536, 4239]);
+        });
+    });
+
+    describe('Max Canvas Size option', () => {
+        test('maxCanvasSize width = height', () => {
+            const container = window.document.createElement('div');
+            Object.defineProperty(container, 'clientWidth', {value: 2048});
+            Object.defineProperty(container, 'clientHeight', {value: 2048});
+            const map = createMap({container, maxCanvasSize: [8192, 8192], pixelRatio: 5});
+            map.resize();
+            expect(map.getCanvas().width).toBe(8192);
+            expect(map.getCanvas().height).toBe(8192);
+        });
+
+        test('maxCanvasSize width != height', () => {
+            const container = window.document.createElement('div');
+            Object.defineProperty(container, 'clientWidth', {value: 1024});
+            Object.defineProperty(container, 'clientHeight', {value: 2048});
+            const map = createMap({container, maxCanvasSize: [8192, 4096], pixelRatio: 3});
+            map.resize();
+            expect(map.getCanvas().width).toBe(2048);
+            expect(map.getCanvas().height).toBe(4096);
+        });
+
+        test('maxCanvasSize below clientWidth and clientHeigth', () => {
+            const container = window.document.createElement('div');
+            Object.defineProperty(container, 'clientWidth', {value: 12834});
+            Object.defineProperty(container, 'clientHeight', {value: 9000});
+            const map = createMap({container, maxCanvasSize: [4096, 8192], pixelRatio: 1});
+            map.resize();
+            expect(map.getCanvas().width).toBe(4096);
+            expect(map.getCanvas().height).toBe(2872);
+        });
+
+        test('maxCanvasSize with setPixelRatio', () => {
+            const container = window.document.createElement('div');
+            Object.defineProperty(container, 'clientWidth', {value: 2048});
+            Object.defineProperty(container, 'clientHeight', {value: 2048});
+            const map = createMap({container, maxCanvasSize: [3072, 3072], pixelRatio: 1.25});
+            map.resize();
+            expect(map.getCanvas().width).toBe(2560);
+            expect(map.getCanvas().height).toBe(2560);
+            map.setPixelRatio(2);
+            expect(map.getCanvas().width).toBe(3072);
+            expect(map.getCanvas().height).toBe(3072);
         });
     });
 

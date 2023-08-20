@@ -1,13 +1,27 @@
-import DOM from '../../util/dom';
-import {extend, bindAll} from '../../util/util';
+import {DOM} from '../../util/dom';
+import {extend} from '../../util/util';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
 
+/**
+ * The unit type for length to use for the {@link ScaleControl}
+ */
 export type Unit = 'imperial' | 'metric' | 'nautical';
 
+/**
+ * The {@link ScaleControl} options object
+ */
 type ScaleOptions = {
+    /**
+     * The maximum length of the scale control in pixels.
+     * @defaultValue 100
+     */
     maxWidth?: number;
+    /**
+     * Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
+     * @defaultValue 'metric'
+     */
     unit?: Unit;
 };
 
@@ -19,41 +33,37 @@ const defaultOptions: ScaleOptions = {
 /**
  * A `ScaleControl` control displays the ratio of a distance on the map to the corresponding distance on the ground.
  *
- * @implements {IControl}
- * @param {Object} [options]
- * @param {number} [options.maxWidth='100'] The maximum length of the scale control in pixels.
- * @param {string} [options.unit='metric'] Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
+ * @group Markers and Controls
+ *
  * @example
- * var scale = new maplibregl.ScaleControl({
+ * ```ts
+ * let scale = new maplibregl.ScaleControl({
  *     maxWidth: 80,
  *     unit: 'imperial'
  * });
  * map.addControl(scale);
  *
  * scale.setUnit('metric');
+ * ```
  */
-class ScaleControl implements IControl {
+export class ScaleControl implements IControl {
     _map: Map;
     _container: HTMLElement;
     options: ScaleOptions;
 
     constructor(options: ScaleOptions) {
         this.options = extend({}, defaultOptions, options);
-
-        bindAll([
-            '_onMove',
-            'setUnit'
-        ], this);
     }
 
     getDefaultPosition(): ControlPosition {
         return 'bottom-left';
     }
 
-    _onMove() {
+    _onMove = () => {
         updateScale(this._map, this._container, this.options);
-    }
+    };
 
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-scale', map.getContainer());
@@ -64,6 +74,7 @@ class ScaleControl implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._container);
         this._map.off('move', this._onMove);
@@ -73,15 +84,13 @@ class ScaleControl implements IControl {
     /**
      * Set the scale's unit of the distance
      *
-     * @param unit Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
+     * @param unit - Unit of the distance (`'imperial'`, `'metric'` or `'nautical'`).
      */
-    setUnit(unit: Unit) {
+    setUnit = (unit: Unit) => {
         this.options.unit = unit;
         updateScale(this._map, this._container, this.options);
-    }
+    };
 }
-
-export default ScaleControl;
 
 function updateScale(map, container, options) {
     // A horizontal scale is imagined to be present at center of the map

@@ -4,9 +4,6 @@ import packageJson from '../../package.json' assert {type: 'json'};
 const minBundle = fs.readFileSync('dist/maplibre-gl.js', 'utf8');
 
 describe('test min build', () => {
-    test('production build removes asserts', () => {
-        expect(minBundle.includes('canary debug run')).toBeFalsy();
-    });
 
     test('trims package.json assets', () => {
     // confirm that the entire package.json isn't present by asserting
@@ -39,7 +36,7 @@ describe('test min build', () => {
         const decreaseQuota = 4096;
 
         // feel free to update this value after you've checked that it has changed on purpose :-)
-        const expectedBytes = 760877;
+        const expectedBytes = 767657;
 
         expect(actualBytes - expectedBytes).toBeLessThan(increaseQuota);
         expect(expectedBytes - actualBytes).toBeLessThan(decreaseQuota);

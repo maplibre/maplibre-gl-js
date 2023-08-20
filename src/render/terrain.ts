@@ -1,26 +1,29 @@
 
-import Tile from '../source/tile';
+import {Tile} from '../source/tile';
 import {mat4, vec2} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dAttributes from '../data/pos3d_attributes';
-import SegmentVector from '../data/segment';
-import VertexBuffer from '../gl/vertex_buffer';
-import IndexBuffer from '../gl/index_buffer';
-import Painter from './painter';
-import Texture from '../render/texture';
-import type Framebuffer from '../gl/framebuffer';
+import {SegmentVector} from '../data/segment';
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {IndexBuffer} from '../gl/index_buffer';
+import {Painter} from './painter';
+import {Texture} from '../render/texture';
+import type {Framebuffer} from '../gl/framebuffer';
 import Point from '@mapbox/point-geometry';
-import MercatorCoordinate from '../geo/mercator_coordinate';
-import TerrainSourceCache from '../source/terrain_source_cache';
-import SourceCache from '../source/source_cache';
-import EXTENT from '../data/extent';
-import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {TerrainSourceCache} from '../source/terrain_source_cache';
+import {SourceCache} from '../source/source_cache';
+import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {earthRadius} from '../geo/lng_lat';
+import {LngLat, earthRadius} from '../geo/lng_lat';
 
+/**
+ * @internal
+ * A terrain GPU related object
+ */
 export type TerrainData = {
     'u_depth': number;
     'u_terrain': number;
@@ -33,6 +36,10 @@ export type TerrainData = {
     tile: Tile;
 }
 
+/**
+ * @internal
+ * A terrain mesh object
+ */
 export type TerrainMesh = {
     indexBuffer: IndexBuffer;
     vertexBuffer: VertexBuffer;
@@ -40,6 +47,7 @@ export type TerrainMesh = {
 }
 
 /**
+ * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
  *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
@@ -66,44 +74,69 @@ export type TerrainMesh = {
  *         cache of the last 150 newest rendered tiles.
  *
  */
-
-export default class Terrain {
-    // The style this terrain crresponds to
+export class Terrain {
+    /**
+     * The style this terrain crresponds to
+     */
     painter: Painter;
-    // the sourcecache this terrain is based on
+    /**
+     * the sourcecache this terrain is based on
+     */
     sourceCache: TerrainSourceCache;
-    // the TerrainSpecification object passed to this instance
+    /**
+     * the TerrainSpecification object passed to this instance
+     */
     options: TerrainSpecification;
-    // define the meshSize per tile.
+    /**
+     * define the meshSize per tile.
+     */
     meshSize: number;
-    // multiplicator for the elevation. Used to make terrain more "extreme".
+    /**
+     * multiplicator for the elevation. Used to make terrain more "extreme".
+     */
     exaggeration: number;
-    // to not see pixels in the render-to-texture tiles it is good to render them bigger
-    // this number is the multiplicator (must be a power of 2) for the current tileSize.
-    // So to get good results with not too much memory footprint a value of 2 should be fine.
+    /**
+     * to not see pixels in the render-to-texture tiles it is good to render them bigger
+     * this number is the multiplicator (must be a power of 2) for the current tileSize.
+     * So to get good results with not too much memory footprint a value of 2 should be fine.
+     */
     qualityFactor: number;
-    // holds the framebuffer object in size of the screen to render the coords & depth into a texture.
+    /**
+     * holds the framebuffer object in size of the screen to render the coords & depth into a texture.
+     */
     _fbo: Framebuffer;
     _fboCoordsTexture: Texture;
     _fboDepthTexture: Texture;
     _emptyDepthTexture: Texture;
-    // GL Objects for the terrain-mesh
-    // The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
+    /**
+     * GL Objects for the terrain-mesh
+     * The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
+     */
     _mesh: TerrainMesh;
-    // coords index contains a list of tileID.keys. This index is used to identify
-    // the tile via the alpha-cannel in the coords-texture.
-    // As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
+    /**
+     * coords index contains a list of tileID.keys. This index is used to identify
+     * the tile via the alpha-cannel in the coords-texture.
+     * As the alpha-channel has 1 Byte a max of 255 tiles can rendered without an error.
+     */
     coordsIndex: Array<string>;
-    // tile-coords encoded in the rgb channel, _coordsIndex is in the alpha-channel.
+    /**
+     * tile-coords encoded in the rgb channel, _coordsIndex is in the alpha-channel.
+     */
     _coordsTexture: Texture;
-    // accuracy of the coords. 2 * tileSize should be enoughth.
+    /**
+     * accuracy of the coords. 2 * tileSize should be enoughth.
+     */
     _coordsTextureSize: number;
-    // variables for an empty dem texture, which is used while the raster-dem tile is loading.
+    /**
+     * variables for an empty dem texture, which is used while the raster-dem tile is loading.
+     */
     _emptyDemUnpack: number[];
     _emptyDemTexture: Texture;
     _emptyDemMatrix: mat4;
-    // as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
-    // matrices to transform from vector-tile coords to raster-dem-tile coords.
+    /**
+     * as of overzooming of raster-dem tiles in high zoomlevels, this cache contains
+     * matrices to transform from vector-tile coords to raster-dem-tile coords.
+     */
     _demMatrixCache: {[_: string]: { matrix: mat4; coord: OverscaledTileID }};
 
     constructor(painter: Painter, sourceCache: SourceCache, options: TerrainSpecification) {
@@ -120,36 +153,53 @@ export default class Terrain {
 
     /**
      * get the elevation-value from original dem-data for a given tile-coordinate
-     * @param {OverscaledTileID} tileID - the tile to get elevation for
-     * @param {number} x between 0 .. EXTENT
-     * @param {number} y between 0 .. EXTENT
-     * @param {number} extent optional, default 8192
-     * @returns {number} - the elevation
+     * @param tileID - the tile to get elevation for
+     * @param x - between 0 .. EXTENT
+     * @param y - between 0 .. EXTENT
+     * @param extent - optional, default 8192
+     * @returns the elevation
      */
     getDEMElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         if (!(x >= 0 && x < extent && y >= 0 && y < extent)) return 0;
-        let elevation = 0;
         const terrain = this.getTerrainData(tileID);
-        if (terrain.tile && terrain.tile.dem) {
-            const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
-            const coord = [pos[0] * terrain.tile.dem.dim, pos[1] * terrain.tile.dem.dim];
-            const c = [Math.floor(coord[0]), Math.floor(coord[1])];
-            const tl = terrain.tile.dem.get(c[0], c[1]);
-            const tr = terrain.tile.dem.get(c[0], c[1] + 1);
-            const bl = terrain.tile.dem.get(c[0] + 1, c[1]);
-            const br = terrain.tile.dem.get(c[0] + 1, c[1] + 1);
-            elevation = interpolates.number(interpolates.number(tl, tr, coord[0] - c[0]), interpolates.number(bl, br, coord[0] - c[0]), coord[1] - c[1]);
-        }
-        return elevation;
+        const dem = terrain.tile?.dem;
+        if (!dem)
+            return 0;
+
+        const pos = vec2.transformMat4([] as any, [x / extent * EXTENT, y / extent * EXTENT], terrain.u_terrain_matrix);
+        const coord = [pos[0] * dem.dim, pos[1] * dem.dim];
+
+        // bilinear interpolation
+        const cx = Math.floor(coord[0]),
+            cy = Math.floor(coord[1]),
+            tx = coord[0] - cx,
+            ty = coord[1] - cy;
+        return (
+            dem.get(cx, cy) * (1 - tx) * (1 - ty) +
+            dem.get(cx + 1, cy) * (tx) * (1 - ty) +
+            dem.get(cx, cy + 1) * (1 - tx) * (ty) +
+            dem.get(cx + 1, cy + 1) * (tx) * (ty)
+        );
     }
 
     /**
-     * get the Elevation for given coordinate in respect of exaggeration.
-     * @param {OverscaledTileID} tileID - the tile id
-     * @param {number} x between 0 .. EXTENT
-     * @param {number} y between 0 .. EXTENT
-     * @param {number} extent optional, default 8192
-     * @returns {number} - the elevation
+     * Get the elevation for given {@link LngLat} in respect of exaggeration.
+     * @param lnglat - the location
+     * @param zoom - the zoom
+     * @returns the elevation
+     */
+    getElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        const {tileID, mercatorX, mercatorY} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.getElevation(tileID, mercatorX % EXTENT, mercatorY % EXTENT, EXTENT);
+    }
+
+    /**
+     * Get the elevation for given coordinate in respect of exaggeration.
+     * @param tileID - the tile id
+     * @param x - between 0 .. EXTENT
+     * @param y - between 0 .. EXTENT
+     * @param extent - optional, default 8192
+     * @returns the elevation
      */
     getElevation(tileID: OverscaledTileID, x: number, y: number, extent: number = EXTENT): number {
         return this.getDEMElevation(tileID, x, y, extent) * this.exaggeration;
@@ -157,8 +207,8 @@ export default class Terrain {
 
     /**
      * returns a Terrain Object for a tile. Unless the tile corresponds to data (e.g. tile is loading), return a flat dem object
-     * @param {OverscaledTileID} tileID - the tile to get the terrain for
-     * @returns {TerrainData} the terrain data to use in the program
+     * @param tileID - the tile to get the terrain for
+     * @returns the terrain data to use in the program
      */
     getTerrainData(tileID: OverscaledTileID): TerrainData {
         // create empty DEM Objects, which will used while raster-dem tiles are loading.
@@ -213,8 +263,8 @@ export default class Terrain {
 
     /**
      * get a framebuffer as big as the map-div, which will be used to render depth & coords into a texture
-     * @param {string} texture - the texture
-     * @returns {Framebuffer} the frame buffer
+     * @param texture - the texture
+     * @returns the frame buffer
      */
     getFramebuffer(texture: string): Framebuffer {
         const painter = this.painter;
@@ -252,7 +302,7 @@ export default class Terrain {
      *   - 4 higher bits for x
      *   - 4 higher bits for y
      *   - 8 bits for coordsIndex (1 .. 255) (= number of terraintile), is later setted in draw_terrain uniform value
-     * @returns {Texture} - the texture
+     * @returns the texture
      */
     getCoordsTexture(): Texture {
         const context = this.painter.context;
@@ -273,8 +323,8 @@ export default class Terrain {
 
     /**
      * Reads a pixel from the coords-framebuffer and translate this to mercator.
-     * @param {Point} p Screen-Coordinate
-     * @returns {MercatorCoordinate} mercator coordinate for a screen pixel
+     * @param p - Screen-Coordinate
+     * @returns mercator coordinate for a screen pixel
      */
     pointCoordinate(p: Point): MercatorCoordinate {
         const rgba = new Uint8Array(4);
@@ -300,7 +350,7 @@ export default class Terrain {
 
     /**
      * create a regular mesh which will be used by all terrain-tiles
-     * @returns {TerrainMesh} - the created regular mesh
+     * @returns the created regular mesh
      */
     getTerrainMesh(): TerrainMesh {
         if (this._mesh) return this._mesh;
@@ -347,20 +397,25 @@ export default class Terrain {
     /**
      * Calculates a height of the frame around the terrain-mesh to avoid stiching between
      * tile boundaries in different zoomlevels.
-     * @param zoom current zoomlevel
+     * @param zoom - current zoomlevel
      * @returns the elevation delta in meters
      */
-    getMeshFrameDelta(zoom: number) {
+    getMeshFrameDelta(zoom: number): number {
         // divide by 5 is evaluated by trial & error to get a frame in the right height
         return 2 * Math.PI * earthRadius / Math.pow(2, zoom) / 5;
+    }
+
+    getMinTileElevationForLngLatZoom(lnglat: LngLat, zoom: number) {
+        const {tileID} = this._getOverscaledTileIDFromLngLatZoom(lnglat, zoom);
+        return this.getMinMaxElevation(tileID).minElevation ?? 0;
     }
 
     /**
      * Get the minimum and maximum elevation contained in a tile. This includes any
      * exaggeration included in the terrain.
      *
-     * @param tileID Id of the tile to be used as a source for the min/max elevation
-     * @returns {Object} Minimum and maximum elevation found in the tile, including the terrain's
+     * @param tileID - ID of the tile to be used as a source for the min/max elevation
+     * @returns the minimum and maximum elevation found in the tile, including the terrain's
      * exaggeration
      */
     getMinMaxElevation(tileID: OverscaledTileID): {minElevation: number | null; maxElevation: number | null} {
@@ -373,4 +428,17 @@ export default class Terrain {
         return minMax;
     }
 
+    _getOverscaledTileIDFromLngLatZoom(lnglat: LngLat, zoom: number): { tileID: OverscaledTileID; mercatorX: number; mercatorY: number} {
+        const mercatorCoordinate = MercatorCoordinate.fromLngLat(lnglat.wrap());
+        const worldSize = (1 << zoom) * EXTENT;
+        const mercatorX = mercatorCoordinate.x * worldSize;
+        const mercatorY = mercatorCoordinate.y * worldSize;
+        const tileX = Math.floor(mercatorX / EXTENT), tileY = Math.floor(mercatorY / EXTENT);
+        const tileID = new OverscaledTileID(zoom, 0, zoom, tileX, tileY);
+        return {
+            tileID,
+            mercatorX,
+            mercatorY
+        };
+    }
 }

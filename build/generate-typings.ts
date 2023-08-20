@@ -14,5 +14,5 @@ let types = fs.readFileSync(outputFile, 'utf8');
 types = types.replace(/declare class/g, 'export declare class');
 fs.writeFileSync(outputFile, types);
 
-console.log('Finifhed bundling types for maplibre-gl ');
+console.log('Finished bundling types for MapLibre GL JS');
 

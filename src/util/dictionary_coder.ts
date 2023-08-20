@@ -1,5 +1,4 @@
-
-class DictionaryCoder {
+export class DictionaryCoder {
     _stringToNumber: {[_: string]: number};
     _numberToString: Array<string>;
 
@@ -22,5 +21,3 @@ class DictionaryCoder {
         return this._numberToString[n];
     }
 }
-
-export default DictionaryCoder;

@@ -1,6 +1,6 @@
 /* eslint-disable new-cap */
 
-import isChar from './is_char_in_unicode_block';
+import {unicodeBlockLookup as isChar} from './is_char_in_unicode_block';
 
 export function allowsIdeographicBreaking(chars: string) {
     for (const char of chars) {
@@ -81,7 +81,6 @@ export function charAllowsIdeographicBreaking(char: number) {
  * adjacent characters can be rotated. For example, a Chinese character is
  * always drawn upright. An uprightly oriented character causes an adjacent
  * “neutral” character to be drawn upright as well.
- * @private
  */
 export function charHasUprightVerticalOrientation(char: number) {
     if (char === 0x02EA /* modifier letter yin departing tone mark */ ||
@@ -169,7 +168,6 @@ export function charHasUprightVerticalOrientation(char: number) {
  * fraction ½ is drawn upright among Chinese characters but rotated among Latin
  * letters. A neutrally oriented character does not influence whether an
  * adjacent character is drawn upright or rotated.
- * @private
  */
 export function charHasNeutralVerticalOrientation(char: number) {
     if (isChar['Latin-1 Supplement'](char)) {
@@ -260,7 +258,6 @@ export function charHasNeutralVerticalOrientation(char: number) {
  * oriented vertically, even if both adjacent characters are upright. For
  * example, a Latin letter is drawn rotated along a vertical line. A rotated
  * character causes an adjacent “neutral” character to be drawn rotated as well.
- * @private
  */
 export function charHasRotatedVerticalOrientation(char: number) {
     return !(charHasUprightVerticalOrientation(char) ||

@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-export default class DOM {
+export class DOM {
     private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
 
     private static userSelect: string;

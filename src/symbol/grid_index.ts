@@ -26,6 +26,9 @@ type QueryResult<T> = {
     y2: number;
 };
 
+/**
+ * A key for the grid
+ */
 export type GridKey = {
     overlapMode?: OverlapMode;
 }
@@ -45,6 +48,7 @@ function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
 }
 
 /**
+ * @internal
  * GridIndex is a data structure for testing the intersection of
  * circles and rectangles in a 2d plane.
  * It is optimized for rapid insertion and querying.
@@ -54,10 +58,8 @@ function overlapAllowed(overlapA: OverlapMode, overlapB: OverlapMode): boolean {
  * at least one cell. As long as the geometries are relatively
  * uniformly distributed across the plane, this greatly reduces
  * the number of comparisons necessary.
- *
- * @private
  */
-class GridIndex<T extends GridKey> {
+export class GridIndex<T extends GridKey> {
     circleKeys: Array<T>;
     boxKeys: Array<T>;
     boxCells: Array<Array<number>>;
@@ -410,5 +412,3 @@ class GridIndex<T extends GridKey> {
         return (dx * dx + dy * dy <= (radius * radius));
     }
 }
-
-export default GridIndex;

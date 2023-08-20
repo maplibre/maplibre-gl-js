@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Change the case of labels</title>
+    <meta property="og:description" content="Use the upcase and downcase expressions to change the case of labels." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL', // stylesheet location
+        center: [-116.231, 43.604], // starting position [lng, lat]
+        zoom: 11 // starting zoom
+    });
+
+    map.on('load', () => {
+        // data from opendata.cityofboise.org/
+        map.addSource('off-leash-areas', {
+            'type': 'geojson',
+            'data':
+                'https://maplibre.org/maplibre-gl-js/docs/assets/boise.geojson'
+        });
+        map.addLayer({
+            'id': 'off-leash-areas',
+            'type': 'symbol',
+            'source': 'off-leash-areas',
+            'layout': {
+                'icon-image': 'dog-park-11',
+                'text-field': [
+                    'format',
+                    ['upcase', ['get', 'FacilityName']],
+                    {'font-scale': 0.8},
+                    '\n',
+                    {},
+                    ['downcase', ['get', 'Comments']],
+                    {'font-scale': 0.6}
+                ],
+                'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+                'text-offset': [0, 0.6],
+                'text-anchor': 'top'
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,10 +1,10 @@
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
-import Marker from './marker';
-import Popup from './popup';
-import LngLat from '../geo/lng_lat';
+import {Marker} from './marker';
+import {Popup} from './popup';
+import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
-import type Terrain from '../render/terrain';
+import type {Terrain} from '../render/terrain';
 
 function createMap(options = {}) {
     const container = window.document.createElement('div');
@@ -85,6 +85,37 @@ describe('marker', () => {
         expect(map.getCanvasContainer().querySelectorAll('.maplibregl-marker')).toHaveLength(1);
 
         map.remove();
+    });
+
+    test('Marker adds classes from className option, methods for class manipulations works properly', () => {
+        const map = createMap();
+        const marker = new Marker({className: 'some classes'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        const markerElement = marker.getElement();
+        expect(markerElement.classList.contains('some')).toBeTruthy();
+        expect(markerElement.classList.contains('classes')).toBeTruthy();
+
+        marker.addClassName('addedClass');
+        expect(markerElement.classList.contains('addedClass')).toBeTruthy();
+
+        marker.removeClassName('addedClass');
+        expect(!markerElement.classList.contains('addedClass')).toBeTruthy();
+
+        marker.toggleClassName('toggle');
+        expect(markerElement.classList.contains('toggle')).toBeTruthy();
+
+        marker.toggleClassName('toggle');
+        expect(!markerElement.classList.contains('toggle')).toBeTruthy();
+
+        expect(() => marker.addClassName('should throw exception')).toThrow(window.DOMException);
+        expect(() => marker.removeClassName('should throw exception')).toThrow(window.DOMException);
+        expect(() => marker.toggleClassName('should throw exception')).toThrow(window.DOMException);
+
+        expect(() => marker.addClassName('')).toThrow(window.DOMException);
+        expect(() => marker.removeClassName('')).toThrow(window.DOMException);
+        expect(() => marker.toggleClassName('')).toThrow(window.DOMException);
     });
 
     test('Marker provides LngLat accessors', () => {
@@ -230,17 +261,6 @@ describe('marker', () => {
         expect(marker.getElement().style.transform).toMatch(/translate\(-50%,0\)/);
 
         map.remove();
-    });
-
-    test('Marker accepts backward-compatible constructor parameters', () => {
-        const element = window.document.createElement('div');
-
-        const m1 = new Marker(element);
-        expect(m1.getElement()).toBe(element);
-
-        const m2 = new Marker(element, {offset: [1, 2]});
-        expect(m2.getElement()).toBe(element);
-        expect(m2.getOffset().equals(new Point(1, 2))).toBeTruthy();
     });
 
     test('Popup offsets around default Marker', () => {
@@ -780,7 +800,7 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         map.terrain = {
-            getElevation: () => 0
+            getElevationForLngLatZoom: () => 0
         } as any as Terrain;
 
         marker.setOffset([10, 10]);

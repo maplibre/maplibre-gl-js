@@ -2,17 +2,17 @@ import {LineLayoutArray, LineExtLayoutArray} from '../array_types.g';
 
 import {members as layoutAttributes} from './line_attributes';
 import {members as layoutAttributesExt} from './line_attributes_ext';
-import SegmentVector from '../segment';
+import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
-import EXTENT from '../extent';
+import {EXTENT} from '../extent';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
 import {register} from '../../util/web_worker_transfer';
 import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
-import loadGeometry from '../load_geometry';
-import toEvaluationFeature from '../evaluation_feature';
-import EvaluationParameters from '../../style/evaluation_parameters';
+import {loadGeometry} from '../load_geometry';
+import {toEvaluationFeature} from '../evaluation_feature';
+import {EvaluationParameters} from '../../style/evaluation_parameters';
 
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
@@ -22,14 +22,14 @@ import type {
     IndexedFeature,
     PopulateParameters
 } from '../bucket';
-import type LineStyleLayer from '../../style/style_layer/line_style_layer';
+import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
 import type Point from '@mapbox/point-geometry';
 import type {Segment} from '../segment';
 import {RGBAImage} from '../../util/image';
-import type Context from '../../gl/context';
-import type Texture from '../../render/texture';
-import type IndexBuffer from '../../gl/index_buffer';
-import type VertexBuffer from '../../gl/vertex_buffer';
+import type {Context} from '../../gl/context';
+import type {Texture} from '../../render/texture';
+import type {IndexBuffer} from '../../gl/index_buffer';
+import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
@@ -82,9 +82,10 @@ type GradientTexture = {
 };
 
 /**
- * @private
+ * @internal
+ * Line bucket class
  */
-class LineBucket implements Bucket {
+export class LineBucket implements Bucket {
     distance: number;
     totalDistance: number;
     maxLineLength: number;
@@ -503,13 +504,12 @@ class LineBucket implements Bucket {
     /**
      * Add two vertices to the buffers.
      *
-     * @param p the line vertex to add buffer vertices for
-     * @param normal vertex normal
-     * @param endLeft extrude to shift the left vertex along the line
-     * @param endRight extrude to shift the left vertex along the line
-     * @param segment the segment object to add the vertex to
-     * @param round whether this is a round cap
-     * @private
+     * @param p - the line vertex to add buffer vertices for
+     * @param normal - vertex normal
+     * @param endLeft - extrude to shift the left vertex along the line
+     * @param endRight - extrude to shift the left vertex along the line
+     * @param segment - the segment object to add the vertex to
+     * @param round - whether this is a round cap
      */
     addCurrentVertex(p: Point, normal: Point, endLeft: number, endRight: number, segment: Segment, round: boolean = false) {
         // left and right extrude vectors, perpendicularly shifted by endLeft/endRight
@@ -590,5 +590,3 @@ class LineBucket implements Bucket {
 }
 
 register('LineBucket', LineBucket, {omit: ['layers', 'patternFeatures']});
-
-export default LineBucket;

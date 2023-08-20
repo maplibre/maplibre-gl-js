@@ -1,7 +1,7 @@
-import Style from './style';
-import SourceCache from '../source/source_cache';
-import StyleLayer from './style_layer';
-import Transform from '../geo/transform';
+import {Style} from './style';
+import {SourceCache} from '../source/source_cache';
+import {StyleLayer} from './style_layer';
+import {Transform} from '../geo/transform';
 import {extend} from '../util/util';
 import {RequestManager} from '../util/request_manager';
 import {Event, Evented} from '../util/evented';
@@ -11,14 +11,14 @@ import {
     clearRTLTextPlugin,
     evented as rtlTextPluginEvented
 } from '../source/rtl_text_plugin';
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
 import {fakeXhr, fakeServer} from 'nise';
 
-import EvaluationParameters from './evaluation_parameters';
+import {EvaluationParameters} from './evaluation_parameters';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {SourceClass} from '../source/source';
-import GeoJSONSource from '../source/geojson_source';
+import {GeoJSONSource} from '../source/geojson_source';
 
 function createStyleJSON(properties?) {
     return extend({
@@ -224,6 +224,16 @@ describe('Style#loadURL', () => {
 });
 
 describe('Style#loadJSON', () => {
+    test('serialize() returns undefined until style is loaded', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        expect(style.serialize()).toBeUndefined();
+        style.on('style.load', () => {
+            expect(style.serialize()).toEqual(createStyleJSON());
+            done();
+        });
+    });
+
     test('fires "dataloading" (synchronously)', () => {
         const style = new Style(getStubMap());
         const spy = jest.fn();
@@ -2496,13 +2506,6 @@ describe('Style#query*Features', () => {
 });
 
 describe('Style#addSourceType', () => {
-    const _types = {'existing' () {}};
-
-    jest.spyOn(Style, 'getSourceType').mockImplementation(name => _types[name]);
-    jest.spyOn(Style, 'setSourceType').mockImplementation((name, create) => {
-        _types[name] = create;
-    });
-
     test('adds factory function', done => {
         const style = new Style(getStubMap());
         const sourceType = function () {} as any as SourceClass;
@@ -2514,8 +2517,9 @@ describe('Style#addSourceType', () => {
             }
         };
 
-        style.addSourceType('foo', sourceType, () => {
-            expect(_types['foo']).toBe(sourceType);
+        style.addSourceType('foo', sourceType, (arg1, arg2) => {
+            expect(arg1).toBeNull();
+            expect(arg2).toBeNull();
             done();
         });
     });
@@ -2525,9 +2529,8 @@ describe('Style#addSourceType', () => {
         const sourceType = function () {} as any as SourceClass;
         sourceType.workerSourceURL = 'worker-source.js' as any as URL;
 
-        style.dispatcher.broadcast = function (type, params) {
+        style.dispatcher.broadcast = (type, params) => {
             if (type === 'loadWorkerSource') {
-                expect(_types['bar']).toBe(sourceType);
                 expect(params['name']).toBe('bar');
                 expect(params['url']).toBe('worker-source.js');
                 done();
@@ -2540,7 +2543,7 @@ describe('Style#addSourceType', () => {
     test('refuses to add new type over existing name', done => {
         const style = new Style(getStubMap());
         const sourceType = function () {} as any as SourceClass;
-        style.addSourceType('existing', sourceType, (err) => {
+        style.addSourceType('canvas', sourceType, (err) => {
             expect(err).toBeTruthy();
             done();
         });

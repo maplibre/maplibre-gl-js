@@ -1,4 +1,4 @@
-import Hash from './hash';
+import {Hash} from './hash';
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
 
 describe('hash', () => {

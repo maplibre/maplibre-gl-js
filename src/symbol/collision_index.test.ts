@@ -1,7 +1,7 @@
-import CollisionIndex from './collision_index';
+import {CollisionIndex} from './collision_index';
 import {mat4} from 'gl-matrix';
 
-import Transform from '../geo/transform';
+import {Transform} from '../geo/transform';
 
 describe('CollisionIndex', () => {
 

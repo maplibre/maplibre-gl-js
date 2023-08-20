@@ -1,23 +1,32 @@
 import {warnOnce} from '../util/util';
 
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 
 /**
+ * A dash entry
+ */
+type DashEntry = {
+    y: number;
+    height: number;
+    width: number;
+}
+
+/**
+ * @internal
  * A LineAtlas lets us reuse rendered dashed lines
  * by writing many of them to a texture and then fetching their positions
- * using .getDash.
+ * using {@link LineAtlas#getDash}.
  *
- * @param {number} width
- * @param {number} height
- * @private
+ * @param width - the width
+ * @param height - the height
  */
-class LineAtlas {
+export class LineAtlas {
     width: number;
     height: number;
     nextRow: number;
     bytes: number;
     data: Uint8Array;
-    dashEntry: {[_: string]: any};
+    dashEntry: {[_: string]: DashEntry};
     dirty: boolean;
     texture: WebGLTexture;
 
@@ -34,10 +43,9 @@ class LineAtlas {
     /**
      * Get or create a dash line pattern.
      *
-     * @param {Array<number>} dasharray
-     * @param {boolean} round whether to add circle caps in between dash segments
-     * @returns {Object} position of dash texture in { y, height, width }
-     * @private
+     * @param dasharray - the key (represented by numbers) to get the dash texture
+     * @param round - whether to add circle caps in between dash segments
+     * @returns position of dash texture in {@link DashEntry}
      */
     getDash(dasharray: Array<number>, round: boolean) {
         const key = dasharray.join(',') + String(round);
@@ -148,7 +156,7 @@ class LineAtlas {
         }
     }
 
-    addDash(dasharray: Array<number>, round: boolean) {
+    addDash(dasharray: Array<number>, round: boolean): DashEntry {
         const n = round ? 7 : 0;
         const height = 2 * n + 1;
 
@@ -204,5 +212,3 @@ class LineAtlas {
         }
     }
 }
-
-export default LineAtlas;

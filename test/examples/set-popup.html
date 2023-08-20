@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Attach a popup to a marker instance</title>
+    <meta property="og:description" content="Attach a popup to a marker and display it on click." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #marker {
+        background-image: url('https://maplibre.org/maplibre-gl-js/docs/assets/washington-monument.jpg');
+        background-size: cover;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .maplibregl-popup {
+        max-width: 200px;
+    }
+</style>
+
+<div id="map"></div>
+
+<script>
+    const monument = [-77.0353, 38.8895];
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: monument,
+        zoom: 15
+    });
+
+    // create the popup
+    const popup = new maplibregl.Popup({offset: 25}).setText(
+        'Construction on the Washington Monument began in 1848.'
+    );
+
+    // create DOM element for the marker
+    const el = document.createElement('div');
+    el.id = 'marker';
+
+    // create the marker
+    new maplibregl.Marker({element: el})
+        .setLngLat(monument)
+        .setPopup(popup) // sets a popup on this marker
+        .addTo(map);
+</script>
+</body>
+</html>

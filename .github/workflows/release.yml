@@ -121,6 +121,20 @@ jobs:
           destination_dir: benchmarks/${{ steps.prepare_release.outputs.version_tag }}
           commit_message: 'deploy: ${{ steps.prepare_release.outputs.version_tag }}'
 
+      - name: Build the Docs
+        run: |
+          npm run generate-docs
+          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
+
+      - name: Publish the docs
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site
+          destination_dir: docs
+          commit_message: 'deploy docs: ${{ steps.prepare_release.outputs.version_tag }}'
+
       - name: Clean up
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
         run: |

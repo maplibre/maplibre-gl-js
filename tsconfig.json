@@ -21,15 +21,19 @@
       "DOM.Iterable"
     ],
     "types": [
-      "node",
-      "jest",
       "geojson",
-      "offscreencanvas"
+      "offscreencanvas",
+      "jest"
     ]
   },
   "ts-node": {
     "experimentalSpecifierResolution": "node",
-    "esm": true
+    "esm": true,
+    "compilerOptions": {
+      "types": [
+        "node"
+      ]
+    }
   },
   "include": [
     "rollup.config.*",
@@ -40,6 +44,8 @@
   "exclude": [
     "node_modules",
     "dist",
-    "test/bench/**/*generated*",
+    "build/rollup",
+    "test/bench/rollup",
+    "test/bench/**/*generated*"
   ]
 }

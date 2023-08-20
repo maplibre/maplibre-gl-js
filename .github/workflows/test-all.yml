@@ -25,12 +25,12 @@ jobs:
         if: success() || failure()
       - run: npm run lint-css
         if: success() || failure()
-      - run: npm run lint-docs
-        if: success() || failure()
       - run: npm run generate-typings
         if: success() || failure()
       - run: npm run typecheck
         if: success() || failure()
+      - run: npm run generate-docs
+      - run: docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
 
   unit-tests:
     name: Unit tests and Coverage

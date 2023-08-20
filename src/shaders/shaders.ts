@@ -58,7 +58,7 @@ import terrainCoordsFrag from './terrain_coords.fragment.glsl.g';
 import terrainFrag from './terrain.fragment.glsl.g';
 import terrainVert from './terrain.vertex.glsl.g';
 
-const shaders = {
+export const shaders = {
     prelude: compile(preludeFrag, preludeVert),
     background: compile(backgroundFrag, backgroundVert),
     backgroundPattern: compile(backgroundPatternFrag, backgroundPatternVert),
@@ -90,14 +90,12 @@ const shaders = {
     terrainCoords: compile(terrainCoordsFrag, terrainVert)
 };
 
-export default shaders;
-
 // Expand #pragmas to #ifdefs.
 
 function compile(fragmentSource, vertexSource) {
     const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
-    const staticAttributes = vertexSource.match(/(attribute|in) ([\w]+) ([\w]+)/g);
+    const staticAttributes = vertexSource.match(/attribute ([\w]+) ([\w]+)/g);
     const fragmentUniforms = fragmentSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const vertexUniforms = vertexSource.match(/uniform ([\w]+) ([\w]+)([\s]*)([\w]*)/g);
     const staticUniforms = vertexUniforms ? vertexUniforms.concat(fragmentUniforms) : fragmentUniforms;
@@ -109,7 +107,7 @@ function compile(fragmentSource, vertexSource) {
         if (operation === 'define') {
             return `
 #ifndef HAS_UNIFORM_u_${name}
-in ${precision} ${type} ${name};
+varying ${precision} ${type} ${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif
@@ -132,8 +130,8 @@ uniform ${precision} ${type} u_${name};
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-in ${precision} ${attrType} a_${name};
-out ${precision} ${type} ${name};
+attribute ${precision} ${attrType} a_${name};
+varying ${precision} ${type} ${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif
@@ -163,7 +161,7 @@ uniform ${precision} ${type} u_${name};
                 return `
 #ifndef HAS_UNIFORM_u_${name}
 uniform lowp float u_${name}_t;
-in ${precision} ${attrType} a_${name};
+attribute ${precision} ${attrType} a_${name};
 #else
 uniform ${precision} ${type} u_${name};
 #endif

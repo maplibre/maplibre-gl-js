@@ -1,9 +1,13 @@
 
 import type {StructArray} from '../util/struct_array';
 import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type';
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 
-class IndexBuffer {
+/**
+ * @internal
+ * an index buffer class
+ */
+export class IndexBuffer {
     context: Context;
     buffer: WebGLBuffer;
     dynamicDraw: boolean;
@@ -49,5 +53,3 @@ class IndexBuffer {
         }
     }
 }
-
-export default IndexBuffer;

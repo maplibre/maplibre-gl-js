@@ -3,7 +3,7 @@
 
 type UnicodeBlockLookup = {[key: string]: (char: number) => boolean};
 
-const unicodeBlockLookup: UnicodeBlockLookup = {
+export const unicodeBlockLookup: UnicodeBlockLookup = {
     // 'Basic Latin': (char) => char >= 0x0000 && char <= 0x007F,
     'Latin-1 Supplement': (char) => char >= 0x0080 && char <= 0x00FF,
     // 'Latin Extended-A': (char) => char >= 0x0100 && char <= 0x017F,
@@ -305,5 +305,3 @@ const unicodeBlockLookup: UnicodeBlockLookup = {
     // 'Supplementary Private Use Area-A': (char) => char >= 0xF0000 && char <= 0xFFFFF,
     // 'Supplementary Private Use Area-B': (char) => char >= 0x100000 && char <= 0x10FFFF,
 };
-
-export default unicodeBlockLookup;

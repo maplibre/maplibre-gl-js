@@ -5,7 +5,7 @@ import {register} from '../util/web_worker_transfer';
 
 // This is an internal expression class. It is only used in GL JS and
 // has GL JS dependencies which can break the standalone style-spec module
-export default class FormatSectionOverride<T> implements Expression {
+export class FormatSectionOverride<T> implements Expression {
     type: Type;
     defaultValue: PossiblyEvaluatedPropertyValue<T>;
 

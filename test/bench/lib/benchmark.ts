@@ -34,7 +34,7 @@ class Benchmark {
 
     /**
      * The minimum number of measurements affects how many statistical observations can be made on the benchmark e.g,
-     * 210 measurement samples => 20 observations for regression because the sum of 1 to 20 = 210. See regression() in statistics.ts.
+     * 210 measurement `samples => 20` observations for regression because the sum of 1 to 20 = 210. See regression() in statistics.ts.
      * The minimum number of measurements also affects the runtime: more measurements means a longer running beanchmark.
      */
     public minimumMeasurements = 210;

@@ -1,6 +1,6 @@
-import {bindAll, isWorker, isSafari} from './util';
+import {isWorker, isSafari} from './util';
 import {serialize, deserialize} from './web_worker_transfer';
-import ThrottledInvoker from './throttled_invoker';
+import {ThrottledInvoker} from './throttled_invoker';
 
 import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
@@ -10,16 +10,11 @@ import type {Cancelable} from '../types/cancelable';
  * that maintains the relationship between asynchronous tasks and the objects
  * that spin them off - in this case, tasks like parsing parts of styles,
  * owned by the styles
- *
- * @param {WebWorker} target
- * @param {WebWorker} parent
- * @param {string|number} mapId A unique identifier for the Map instance using this Actor.
- * @private
  */
-class Actor {
+export class Actor {
     target: any;
     parent: any;
-    mapId: number;
+    mapId: string | null;
     callbacks: {
         number: any;
     };
@@ -34,7 +29,12 @@ class Actor {
     invoker: ThrottledInvoker;
     globalScope: any;
 
-    constructor(target: any, parent: any, mapId?: number | null) {
+    /**
+     * @param target - The target
+     * @param parent - The parent
+     * @param mapId - A unique identifier for the Map instance using this Actor.
+     */
+    constructor(target: any, parent: any, mapId?: string) {
         this.target = target;
         this.parent = parent;
         this.mapId = mapId;
@@ -42,7 +42,6 @@ class Actor {
         this.tasks = {} as { number: any };
         this.taskQueue = [];
         this.cancelCallbacks = {} as { number: Cancelable };
-        bindAll(['receive', 'process'], this);
         this.invoker = new ThrottledInvoker(this.process);
         this.target.addEventListener('message', this.receive, false);
         this.globalScope = isWorker() ? target : window;
@@ -52,9 +51,8 @@ class Actor {
      * Sends a message from a main-thread map to a Worker or from a Worker back to
      * a main-thread map instance.
      *
-     * @param type The name of the target method to invoke or '[source-type].[source-name].name' for a method on a WorkerSource.
-     * @param targetMapId A particular mapId to which to send this message.
-     * @private
+     * @param type - The name of the target method to invoke or '[source-type].[source-name].name' for a method on a WorkerSource.
+     * @param targetMapId - A particular mapId to which to send this message.
      */
     send(
         type: string,
@@ -97,9 +95,16 @@ class Actor {
         };
     }
 
-    receive(message: any) {
-        const data = message.data,
-            id = data.id;
+    receive = (message: {
+        data: {
+            id: number;
+            type: string;
+            data: unknown;
+            targetMapId?: string | null;
+            mustQueue: boolean;
+        };}) => {
+        const data = message.data;
+        const id = data.id;
 
         if (!id) {
             return;
@@ -136,9 +141,9 @@ class Actor {
                 this.processTask(id, data);
             }
         }
-    }
+    };
 
-    process() {
+    process = () => {
         if (!this.taskQueue.length) {
             return;
         }
@@ -157,7 +162,7 @@ class Actor {
         }
 
         this.processTask(id, task);
-    }
+    };
 
     processTask(id: number, task: any) {
         if (task.type === '<response>') {
@@ -217,5 +222,3 @@ class Actor {
         this.target.removeEventListener('message', this.receive, false);
     }
 }
-
-export default Actor;

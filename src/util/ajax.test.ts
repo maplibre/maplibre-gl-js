@@ -7,6 +7,7 @@ import {
 } from './ajax';
 
 import {fakeServer, FakeServer} from 'nise';
+import {destroyFetchMock, FetchMock, RequestMock, setupFetchMock} from './test/mock_fetch';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
@@ -140,5 +141,37 @@ describe('ajax', () => {
 
         // edge case
         expect(sameOrigin('://foo')).toBe(true);
+    });
+
+    describe('requests parameters', () => {
+        let fetch: FetchMock;
+
+        beforeEach(() => {
+            fetch = setupFetchMock();
+        });
+
+        afterEach(() => {
+            destroyFetchMock();
+        });
+
+        test('should be provided to fetch API in getArrayBuffer function', (done) => {
+            getArrayBuffer({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {
+                expect(fetch).toHaveBeenCalledTimes(1);
+                expect(fetch).toHaveBeenCalledWith(expect.objectContaining({url: 'http://example.com/test-params.json', method: 'GET', cache: 'force-cache'}));
+                expect((fetch.mock.calls[0][0] as RequestMock).headers.get('Authorization')).toBe('Bearer 123');
+
+                done();
+            });
+        });
+
+        test('should be provided to fetch API in getJSON function', (done) => {
+            getJSON({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {
+                expect(fetch).toHaveBeenCalledTimes(1);
+                expect(fetch).toHaveBeenCalledWith(expect.objectContaining({url: 'http://example.com/test-params.json', method: 'GET', cache: 'force-cache'}));
+                expect((fetch.mock.calls[0][0] as RequestMock).headers.get('Authorization')).toBe('Bearer 123');
+
+                done();
+            });
+        });
     });
 });

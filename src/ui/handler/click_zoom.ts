@@ -1,13 +1,19 @@
 import type Point from '@mapbox/point-geometry';
-import type Map from '../map';
-import TransformProvider from './transform-provider';
+import type {Map} from '../map';
+import {TransformProvider} from './transform-provider';
+import {Handler} from '../handler_manager';
 
-export default class ClickZoomHandler {
+/**
+ * The `ClickZoomHandler` allows the user to zoom the map at a point by double clicking
+ * It is used by other handlers
+ */
+export class ClickZoomHandler implements Handler {
 
     _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;
 
+    /** @internal */
     constructor(map: Map) {
         this._tr = new TransformProvider(map);
         this.reset();

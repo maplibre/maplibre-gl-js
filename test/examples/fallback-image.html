@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Use a fallback image</title>
+    <meta property="og:description" content="Use a coalesce expression to display another image when a requested image is not available." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-77, 38.75],
+        zoom: 5
+    });
+    map.on('load', () => {
+        map.addSource('points', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [
+                                -77.03238901390978, 38.913188059745586
+                            ]
+                        },
+                        'properties': {
+                            'title': 'Washington DC',
+                            'icon': 'monument'
+                        }
+                    },
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [-79.9959, 40.4406]
+                        },
+                        'properties': {
+                            'title': 'Pittsburgh',
+                            'icon': 'bridges'
+                        }
+                    },
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [-76.2859, 36.8508]
+                        },
+                        'properties': {
+                            'title': 'Norfolk',
+                            'icon': 'harbor'
+                        }
+                    }
+                ]
+            }
+        });
+        map.addLayer({
+            'id': 'points',
+            'type': 'symbol',
+            'source': 'points',
+            'layout': {
+                'icon-image': [
+                    'coalesce',
+                    ['image', ['concat', ['get', 'icon'], '_15']],
+                    ['image', 'marker_15']
+                ],
+                'text-field': ['get', 'title'],
+                'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+                'text-offset': [0, 0.6],
+                'text-anchor': 'top'
+            }
+        });
+    });
+</script>
+</body>
+</html>

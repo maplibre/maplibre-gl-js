@@ -1,27 +1,27 @@
 import Point from '@mapbox/point-geometry';
-import loadGeometry from './load_geometry';
-import toEvaluationFeature from './evaluation_feature';
-import EXTENT from './extent';
+import {loadGeometry} from './load_geometry';
+import {toEvaluationFeature} from './evaluation_feature';
+import {EXTENT} from './extent';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
-import TransferableGridIndex from '../util/transferable_grid_index';
-import DictionaryCoder from '../util/dictionary_coder';
+import {TransferableGridIndex} from '../util/transferable_grid_index';
+import {DictionaryCoder} from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import GeoJSONFeature from '../util/vectortile_to_geojson';
+import {GeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {arraysIntersect, mapObject, extend} from '../util/util';
 import {OverscaledTileID} from '../source/tile_id';
 import {register} from '../util/web_worker_transfer';
-import EvaluationParameters from '../style/evaluation_parameters';
-import SourceFeatureState from '../source/source_state';
+import {EvaluationParameters} from '../style/evaluation_parameters';
+import {SourceFeatureState} from '../source/source_state';
 import {polygonIntersectsBox} from '../util/intersection_tests';
 import {PossiblyEvaluated} from '../style/properties';
 import {FeatureIndexArray} from './array_types.g';
 import {mat4} from 'gl-matrix';
 
-import type StyleLayer from '../style/style_layer';
+import type {StyleLayer} from '../style/style_layer';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type Transform from '../geo/transform';
+import type {Transform} from '../geo/transform';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 type QueryParameters = {
@@ -39,7 +39,11 @@ type QueryParameters = {
     };
 };
 
-class FeatureIndex {
+/**
+ * @internal
+ * An in memory index class to allow fast interaction with features
+ */
+export class FeatureIndex {
     tileID: OverscaledTileID;
     x: number;
     y: number;
@@ -307,8 +311,6 @@ register(
     FeatureIndex,
     {omit: ['rawTileData', 'sourceLayerCoder']}
 );
-
-export default FeatureIndex;
 
 function evaluateProperties(serializedProperties, styleLayerProperties, feature, featureState, availableImages) {
     return mapObject(serializedProperties, (property, key) => {

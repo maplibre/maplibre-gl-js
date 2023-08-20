@@ -1,5 +1,5 @@
-import Context from './context';
-import RenderPool from './render_pool';
+import {Context} from './context';
+import {RenderPool} from './render_pool';
 import gl from 'gl';
 
 describe('render pool', () => {

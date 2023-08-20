@@ -30,6 +30,12 @@ export function setupMockWebGLContext(webglContext: any) {
         }
     });
 
+    // Update drawingBufferWidth and drawingBufferHeigth when viewport changes
+    webglContext.viewport = jest.fn((x, y, width, height) => {
+        webglContext.drawingBufferWidth = width;
+        webglContext.drawingBufferHeight = height;
+    });
+
     // Define the properties on the WebGL context
     Object.defineProperty(webglContext, 'bindVertexArray', {
         get() {
@@ -73,7 +79,10 @@ export function setWebGlContext() {
     const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
 
     function imitateWebGlGetContext(type, attributes) {
-        if (type === 'webgl2' || type === 'webgl') {
+        if (type === 'webgl2') {
+            return null;
+        }
+        if (type === 'webgl') {
             if (!this._webGLContext) {
                 this._webGLContext = gl(this.width, this.height, attributes);
                 if (!this._webGLContext) {

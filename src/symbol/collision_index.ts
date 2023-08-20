@@ -1,15 +1,15 @@
 import Point from '@mapbox/point-geometry';
-import clipLine from './clip_line';
-import PathInterpolator from './path_interpolator';
+import {clipLine} from './clip_line';
+import {PathInterpolator} from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
-import GridIndex from './grid_index';
+import {GridIndex} from './grid_index';
 import {mat4, vec4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
 import * as projection from '../symbol/projection';
 
-import type Transform from '../geo/transform';
+import type {Transform} from '../geo/transform';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
@@ -33,6 +33,7 @@ export type FeatureKey = {
 };
 
 /**
+ * @internal
  * A collision index used to prevent symbols from overlapping. It keep tracks of
  * where previous symbols have been placed and is used to check if a new
  * symbol overlaps with any previously added symbols.
@@ -41,10 +42,8 @@ export type FeatureKey = {
  * there's room for a symbol, then insertCollisionBox/Circles actually puts the
  * symbol in the index. The two step process allows paired symbols to be inserted
  * together even if they overlap.
- *
- * @private
  */
-class CollisionIndex {
+export class CollisionIndex {
     grid: GridIndex<FeatureKey>;
     ignoredGrid: GridIndex<FeatureKey>;
     transform: Transform;
@@ -282,8 +281,6 @@ class CollisionIndex {
      * Because the geometries in the CollisionIndex are an approximation of the shape of
      * symbols on the map, we use the CollisionIndex to look up the symbol part of
      * `queryRenderedFeatures`.
-     *
-     * @private
      */
     queryRenderedSymbols(viewportQueryGeometry: Array<Point>) {
         if (viewportQueryGeometry.length === 0 || (this.grid.keysLength() === 0 && this.ignoredGrid.keysLength() === 0)) {
@@ -402,5 +399,3 @@ class CollisionIndex {
         return m;
     }
 }
-
-export default CollisionIndex;

@@ -2,11 +2,11 @@ import Point from '@mapbox/point-geometry';
 
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 
-import type Anchor from './anchor';
+import type {Anchor} from './anchor';
 import type {PositionedIcon, Shaping} from './shaping';
 import {SHAPING_DEFAULT_OFFSET} from './shaping';
 import {IMAGE_PADDING} from '../render/image_atlas';
-import type SymbolStyleLayer from '../style/style_layer/symbol_style_layer';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 import type {StyleImage} from '../style/style_image';
 import ONE_EM from './one_em';
@@ -17,13 +17,11 @@ import {Rect} from '../render/glyph_atlas';
  *
  * The zoom range the glyph can be shown is defined by minScale and maxScale.
  *
- * @param tl The offset of the top left corner from the anchor.
- * @param tr The offset of the top right corner from the anchor.
- * @param bl The offset of the bottom left corner from the anchor.
- * @param br The offset of the bottom right corner from the anchor.
- * @param tex The texture coordinates.
- *
- * @private
+ * @param tl - The offset of the top left corner from the anchor.
+ * @param tr - The offset of the top right corner from the anchor.
+ * @param bl - The offset of the bottom left corner from the anchor.
+ * @param br - The offset of the bottom right corner from the anchor.
+ * @param tex - The texture coordinates.
  */
 export type SymbolQuad = {
     tl: Point;
@@ -53,7 +51,6 @@ const border = IMAGE_PADDING;
 
 /**
  * Create the quads used for rendering an icon.
- * @private
  */
 export function getIconQuads(
     shapedIcon: PositionedIcon,
@@ -217,7 +214,6 @@ function getPxOffset(fixedOffset, fixedSize, stretchOffset, stretchSize) {
 
 /**
  * Create the quads used for rendering a text label.
- * @private
  */
 export function getGlyphQuads(
     anchor: Anchor,

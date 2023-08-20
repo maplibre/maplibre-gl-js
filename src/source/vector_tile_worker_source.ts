@@ -2,7 +2,7 @@ import {ExpiryData, getArrayBuffer} from '../util/ajax';
 
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import WorkerTile from './worker_tile';
+import {WorkerTile} from './worker_tile';
 import {extend} from '../util/util';
 import {RequestPerformance} from '../util/performance';
 
@@ -13,8 +13,8 @@ import type {
     TileParameters
 } from '../source/worker_source';
 
-import type Actor from '../util/actor';
-import type StyleLayerIndex from '../style/style_layer_index';
+import type {Actor} from '../util/actor';
+import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {Callback} from '../types/callback';
 import type {VectorTile} from '@mapbox/vector-tile';
 
@@ -24,11 +24,14 @@ export type LoadVectorTileResult = {
     resourceTiming?: Array<PerformanceResourceTiming>;
 } & ExpiryData;
 
+type FetchingState = {
+    rawTileData: ArrayBuffer;
+    cacheControl: ExpiryData;
+    resourceTiming: any;
+}
+
 /**
- * @callback LoadVectorDataCallback
- * @param error
- * @param vectorTile
- * @private
+ * The callback when finished loading vector data
  */
 export type LoadVectorDataCallback = Callback<LoadVectorTileResult>;
 
@@ -36,7 +39,7 @@ export type AbortVectorData = () => void;
 export type LoadVectorData = (params: WorkerTileParameters, callback: LoadVectorDataCallback) => AbortVectorData | void;
 
 /**
- * @private
+ * Loads a vector tile
  */
 function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCallback) {
     const request = getArrayBuffer(params.request, (err?: Error | null, data?: ArrayBuffer | null, cacheControl?: string | null, expires?: string | null) => {
@@ -63,29 +66,28 @@ function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCa
  * for data formats that can be parsed/converted into an in-memory VectorTile
  * representation.  To do so, create it with
  * `new VectorTileWorkerSource(actor, styleLayers, customLoadVectorDataFunction)`.
- *
- * @private
  */
-class VectorTileWorkerSource implements WorkerSource {
+export class VectorTileWorkerSource implements WorkerSource {
     actor: Actor;
     layerIndex: StyleLayerIndex;
     availableImages: Array<string>;
     loadVectorData: LoadVectorData;
+    fetching: {[_: string]: FetchingState };
     loading: {[_: string]: WorkerTile};
     loaded: {[_: string]: WorkerTile};
 
     /**
-     * @param [loadVectorData] Optional method for custom loading of a VectorTile
+     * @param loadVectorData - Optional method for custom loading of a VectorTile
      * object based on parameters passed from the main-thread Source. See
      * {@link VectorTileWorkerSource#loadTile}. The default implementation simply
      * loads the pbf at `params.url`.
-     * @private
      */
     constructor(actor: Actor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadVectorData?: LoadVectorData | null) {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
         this.loadVectorData = loadVectorData || loadVectorTile;
+        this.fetching = {};
         this.loading = {};
         this.loaded = {};
     }
@@ -94,7 +96,6 @@ class VectorTileWorkerSource implements WorkerSource {
      * Implements {@link WorkerSource#loadTile}. Delegates to
      * {@link VectorTileWorkerSource#loadVectorData} (which by default expects
      * a `params.url` property) for fetching and producing a VectorTile object.
-     * @private
      */
     loadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
         const uid = params.uid;
@@ -116,7 +117,7 @@ class VectorTileWorkerSource implements WorkerSource {
             }
 
             const rawTileData = response.rawData;
-            const cacheControl = {} as {expires: any; cacheControl: any};
+            const cacheControl = {} as ExpiryData;
             if (response.expires) cacheControl.expires = response.expires;
             if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
 
@@ -131,6 +132,7 @@ class VectorTileWorkerSource implements WorkerSource {
 
             workerTile.vectorTile = response.vectorTile;
             workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, (err, result) => {
+                delete this.fetching[uid];
                 if (err || !result) return callback(err);
 
                 // Transferring a copy of rawTileData because the worker needs to retain its copy.
@@ -139,38 +141,42 @@ class VectorTileWorkerSource implements WorkerSource {
 
             this.loaded = this.loaded || {};
             this.loaded[uid] = workerTile;
+            // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
+            this.fetching[uid] = {rawTileData, cacheControl, resourceTiming};
         }) as AbortVectorData;
     }
 
     /**
      * Implements {@link WorkerSource#reloadTile}.
-     * @private
      */
     reloadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
-        const loaded = this.loaded,
-            uid = params.uid,
-            vtSource = this;
+        const loaded = this.loaded;
+        const uid = params.uid;
         if (loaded && loaded[uid]) {
             const workerTile = loaded[uid];
             workerTile.showCollisionBoxes = params.showCollisionBoxes;
-
-            const done = (err?: Error, data?: any) => {
-                const reloadCallback = workerTile.reloadCallback;
-                if (reloadCallback) {
-                    delete workerTile.reloadCallback;
-                    workerTile.parse(workerTile.vectorTile, vtSource.layerIndex, this.availableImages, vtSource.actor, reloadCallback);
-                }
-                callback(err, data);
-            };
-
             if (workerTile.status === 'parsing') {
-                workerTile.reloadCallback = done;
+                workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, (err, result) => {
+                    if (err || !result) return callback(err, result);
+
+                    // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
+                    let parseResult;
+                    if (this.fetching[uid]) {
+                        const {rawTileData, cacheControl, resourceTiming} = this.fetching[uid];
+                        delete this.fetching[uid];
+                        parseResult = extend({rawTileData: rawTileData.slice(0)}, result, cacheControl, resourceTiming);
+                    } else {
+                        parseResult = result;
+                    }
+
+                    callback(null, parseResult);
+                });
             } else if (workerTile.status === 'done') {
                 // if there was no vector tile data on the initial load, don't try and re-parse tile
                 if (workerTile.vectorTile) {
-                    workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, done);
+                    workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, callback);
                 } else {
-                    done();
+                    callback();
                 }
             }
         }
@@ -179,9 +185,8 @@ class VectorTileWorkerSource implements WorkerSource {
     /**
      * Implements {@link WorkerSource#abortTile}.
      *
-     * @param params
-     * @param params.uid The UID for this tile.
-     * @private
+     * @param params - The tile parameters
+     * @param callback - The callback
      */
     abortTile(params: TileParameters, callback: WorkerTileCallback) {
         const loading = this.loading,
@@ -196,9 +201,8 @@ class VectorTileWorkerSource implements WorkerSource {
     /**
      * Implements {@link WorkerSource#removeTile}.
      *
-     * @param params
-     * @param params.uid The UID for this tile.
-     * @private
+     * @param params - The tile parameters
+     * @param callback - The callback
      */
     removeTile(params: TileParameters, callback: WorkerTileCallback) {
         const loaded = this.loaded,
@@ -209,5 +213,3 @@ class VectorTileWorkerSource implements WorkerSource {
         callback();
     }
 }
-
-export default VectorTileWorkerSource;
