@@ -1,6 +1,6 @@
 ### MapLibre GL JS Documentation
 
-This directory contains the source for the [MapLibre GL JS docs](https://maplibre.org/maplibre-gl-js/docs/)hosted on the MapLibre site.
+This directory contains the source for the [MapLibre GL JS docs](https://maplibre.org/maplibre-gl-js/docs/) hosted on the MapLibre site.
 
 Besides this README, each other `.md` file in this directory corresponds to a site page. Each is converted into an `.html` file by [MkDocs](https://www.mkdocs.org/).
 ## Setting up Docker access
