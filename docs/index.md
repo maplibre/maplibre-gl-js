@@ -47,12 +47,6 @@ child-src blob: ;
 img-src data: blob: ;
 ```
 
-Requesting styles from Mapbox or other services will require additional directives. For Mapbox, you can use this `connect-src` directive:
-
-```
-connect-src https://*.tiles.mapbox.com https://api.mapbox.com https://events.mapbox.com
-```
-
 For strict CSP environments without `worker-src blob: ; child-src blob:` enabled, there's a separate MapLibre GL JS bundle (`maplibre-gl-csp.js` and `maplibre-gl-csp-worker.js`) which requires setting the path to the worker manually:
 
 
