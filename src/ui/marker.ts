@@ -297,6 +297,7 @@ export class Marker extends Evented {
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
         map.on('moveend', this._update);
+        map.on('data', this._update);
         this.setDraggable(this._draggable);
         this._update();
 
@@ -504,12 +505,34 @@ export class Marker extends Evented {
         return this;
     }
 
-    _update = (e?: { type: 'move' | 'moveend' }) => {
+    _update = (e?: { type: 'move' | 'moveend' | 'data' }) => {
         if (!this._map) return;
 
         if (this._map.transform.renderWorldCopies) {
             this._lngLat = smartWrap(this._lngLat, this._pos, this._map.transform);
         }
+
+        // if (e.type === 'data') {
+        //     console.log('Data event', e);
+        // }
+
+        // if (e?.type === 'terrain') {
+        //     this._map.once('render', this._update);
+        // }
+
+        // if (e.type === 'terrain') {
+        //     console.log('%cEvent type terrain detected', 'background: #FAEBD7');
+        //     // console.log('terrain object', this._map.terrain);
+        //     // setTimeout(() => console.log('terrain object', this._map.terrain), 1000);
+        //     console.log('Position', this._pos);
+        // }
+
+        // if (e.type === 'moveend') {
+        //     console.log('%cEvent type moveend detected', 'background: #7FFFD4');
+        //     // console.log('terrain object', this._map.terrain);
+        //     console.log('Position', this._pos);
+
+        // }
 
         this._pos = this._map.project(this._lngLat)._add(this._offset);
 
