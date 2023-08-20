@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Enable cooperative gestures with a specific language</title>
-    <meta property="og:description" content="Enable cooperative gestures with a specific language." />
+    <title>Cooperative gestures</title>
+    <meta property="og:description" content="Enable cooperative gestures with a specific language. See how it behaves in fullscreen mode." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -28,6 +28,7 @@
         },
         zoom: 9
     });
+    map.addControl(new maplibregl.FullscreenControl());
 </script>
 </body>
 </html>
