@@ -164,7 +164,7 @@ Once those commands finish, you will have a standalone build at `dist/maplibre-g
 
 ## Testing changes and Writing Documentation
 
-See [`documents_and_diagrams/README.md`](./documents_and_diagrams/README.md)
+See [`docs/README.md`](./docs/README.md)
 
 ## Writing & Running Tests
 
