@@ -127,6 +127,9 @@ cd maplibre-gl-js &&
 npm install
 ```
 
+Before you can [run the docs](./docs/README.md), you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
+
+
 ### Windows
 
 Consider using WSL and follow the above Linux guide or follow the next steps
