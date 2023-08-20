@@ -383,7 +383,7 @@ export class Painter {
 
             // update coords/depth-framebuffer on camera movement, or tile reloading
             const newTiles = this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
-            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
+            if (this.terrainFacilitator.dirty || this.isCameraMatrixChangedByTerrain() || newTiles.length) {
                 mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
                 this.terrainFacilitator.renderTime = Date.now();
                 this.terrainFacilitator.dirty = false;
@@ -638,5 +638,11 @@ export class Painter {
     overLimit() {
         const {drawingBufferWidth, drawingBufferHeight} = this.context.gl;
         return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
+    }
+
+    isCameraMatrixChangedByTerrain() {
+        const result = !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix);
+        if (result) this.terrainFacilitator.dirty = true;
+        return result;
     }
 }

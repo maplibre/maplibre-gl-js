@@ -509,6 +509,13 @@ export class Map extends Camera {
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
+     * Max/Min pitch of Transform may changed by current camera position above terrain
+     * These value are used for reset based on MapOptions
+     */
+    _minPitch: number;
+    _maxPitch: number;
+
+    /**
      * @internal
      * image queue throttling handle. To be used later when clean up
      */
@@ -586,6 +593,9 @@ export class Map extends Camera {
 
         const transform = new Transform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
         super(transform, {bearingSnap: options.bearingSnap});
+
+        this._minPitch = options.minPitch;
+        this._maxPitch = options.maxPitch;
 
         this._interactive = options.interactive;
         this._cooperativeGestures = options.cooperativeGestures;
@@ -3182,6 +3192,19 @@ export class Map extends Camera {
         }
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
+
+        // check if projMatrix has been changed
+        if (this.terrain && this.painter.isCameraMatrixChangedByTerrain()) {
+            const result = this.checkTerrainCollision();
+            if (result.maxPitch) {
+                // If camera is too closed/inside terrain, constrain the pitch
+                this.setMaxPitch(Math.min(this._maxPitch, result.maxPitch));
+                this.setMinPitch(Math.min(this._minPitch, result.maxPitch));
+            } else {
+                this.setMaxPitch(this._maxPitch);
+                this.setMinPitch(this._minPitch);
+            }
+        }
 
         // Actually draw
         this.painter.render(this.style, {
