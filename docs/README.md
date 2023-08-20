@@ -1,84 +1,82 @@
-# Introduction
+This folder contains developer documentation for MapLibre GL JS. Put any diagrams you reference in the [diagrams](./diagrams) folder. If you use PlantUML, put the source code in `diagrams/*.plantuml` files and run `npm run build-diagrams` to generate SVG versions of them. There is also a [Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=jebbs.plantuml) for previewing them while you edit.
 
-MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser. The customization of the map comply with the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec). It is part of the [MapLibre ecosystem](https://github.com/maplibre), with a pendant for Mobile, Desktop, Servers called [MapLibre Native](https://maplibre.org/projects/maplibre-native/).
+## Setting up Docker access
 
+If you're on Linux, before you can run the docs you need to give your user permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
 
-## Quickstart
+## Running the Documentation Server Locally
 
-<iframe src="./examples/simple-map.html" width="100%" style="border:none"></iframe>
+To start a documentation server locally, first, ensure that you have an up-to-date build:
 
-```html
-<div id="map"></div>
-<script>
-    var map = new maplibregl.Map({
-        container: 'map', // container id
-        style: 'https://demotiles.maplibre.org/style.json', // style URL
-        center: [0, 0], // starting position [lng, lat]
-        zoom: 1 // starting zoom
-    });
-</script>
+```bash
+npm run build-prod
+npm run build-css
 ```
 
 
-## Reading this documentation
+Then generate the docs files:
 
-This documentation is divided into several sections:
-
-* [**Main**](./API/#main) - The Main section holds the following classes
-    * [`Map`](./API/classes/maplibregl.Map/) object is the map on your page. It lets you access methods and properties for interacting with the map's style and layers, respond to events, and manipulate the user's perspective with the camera.
-    * [`MaplibreGL`](./API/classes/default/) object is MapLibre GL JS's global properties and options that you might want to access while initializing your map or accessing information about its status.
-* [**Markers and Controls**](./API/#markers-and-controls) - This section describes the user interface elements that you can add to your map. The items in this section exist outside of the map's `canvas` element. This consists of `Marker`, `Popup` and all the controls.
-* [**Geography and geometry**](./API/#geography-and-geometry) - This section includes general utilities and types that relate to working with and manipulating geographic information or geometries.
-* [**User interaction handlers**](./API/#handlers) - The items in this section relate to the ways in which the map responds to user input.
-* [**Sources**](./API/#sources) - This section describes the source types MapLibre GL JS can handle besides the ones described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
-* [**Event Related**](./API/#event-related) - This section describes the different types of events that MapLibre GL JS can raise.
-
-Each section describes classes or objects as well as their **properties**, **parameters**, **instance members**, and associated **events**. Many sections also include inline code examples and related resources.
-
-In the examples, we use vector tiles our [Demo tiles repository](https://github.com/maplibre/demotiles) and from [MapTiler](https://maptiler.com). Get your own API key if you want to use MapTiler data in your project.
-
-## CSP Directives
-
-As a mitigation for Cross-Site Scripting and other types of web security vulnerabilities, you may use a [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/Security/CSP) to specify security policies for your website. If you do, MapLibre GL JS requires the following CSP directives:
-
-```
-worker-src blob: ;
-child-src blob: ;
-img-src data: blob: ;
+```bash
+npm run generate-docs
 ```
 
-Requesting styles from Mapbox or other services will require additional directives. For Mapbox, you can use this `connect-src` directive:
+Finally, run:
 
-```
-connect-src https://*.tiles.mapbox.com https://api.mapbox.com https://events.mapbox.com
-```
-
-For strict CSP environments without `worker-src blob: ; child-src blob:` enabled, there's a separate MapLibre GL JS bundle (`maplibre-gl-csp.js` and `maplibre-gl-csp-worker.js`) which requires setting the path to the worker manually:
-
-
-```html
-<script>
-maplibregl.workerUrl = "${urls.js().replace('.js', '-csp-worker.js')}";
-...
-</script>
+```bash
+npm run start-docs
 ```
 
-## MapLibre CSS
+Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them.
 
-The CSS referenced in the Quickstart is used to style DOM elements created by MapLibre code. Without the CSS, elements like Popups and Markers won't work.
+The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
-Including it with a `<link>` in the head of the document via the UNPKG CDN is the simplest and easiest way to provide the CSS, but it is also bundled in the MapLibre module, meaning that if you have a bundler that can handle CSS, you can import the CSS from `maplibre-gl/dist/maplibre-gl.css`.
+## Writing API Documentation
 
-Note too that if the CSS isn't available by the first render, as soon as the CSS is provided, the DOM elements that depend on this CSS should recover.
+API documentation is written as [TSDoc comments](https://tsdoc.org/) and processed with [typedoc](https://typedoc.org/)
 
-## CDN
+* Classes, methods, events, and anything else in the public interface must be documented with TSDoc comments, and the typescript `public` can be used to indicate that it's public API.
+* The `@internal` tag can be used to indicate that a class, method, or event is not part of the public interface and should not be documented.
+* Methods implementing an interface need an `{@inheritDoc reference}` in order to inherit the documentation from the interface.
+* Use `@group` to indicate to which group to send a specific class, these groups are defined in `typedoc.json` file and are important for the API documentation intro file.
+* Text within TSDoc comments may use markdown formatting. Code identifiers must be surrounded by \`backticks\`.
+* Documentation must be written in grammatically correct sentences ending with periods.
+* Documentation must specify measurement units when applicable.
+* Documentation descriptions must contain more information than what is obvious from the identifier and JSDoc metadata.
+* Class descriptions should describe what the class *is*, or what its instances *are*. They do not document the constructor, but the class. They should begin with either a complete sentence or a phrase that would complete a sentence beginning with "A `T` is..." or "The `T` class is..." Examples: "Lists are ordered indexed dense collections." "A class used for asynchronous computations."
+* Function descriptions should begin with a third person singular present tense verb, as if completing a sentence beginning with "This function..." If the primary purpose of the function is to return a value, the description should begin with "Returns..." Examples: "Returns the layer with the specified id." "Sets the map's center point."
+* `@param`, and `@returns` descriptions should be capitalized and end with a period. They should begin as if completing a sentence beginning with "This is..." or "This..."
+* Functions that do not return a value (return `void`), should not have a `@returns` annotation.
+* Member descriptions should document what a member represents or gets and sets. They should also indicate whether the member is read-only.
+* Event descriptions should begin with "Fired when..." and so should describe when the event fires. Event entries should clearly document any data passed to the handler, with a link to MDN documentation of native Event objects when applicable.
 
-The MapLibre GL JS (`.js` & `.css`) are distributed via [UNPKG.com](https://unpkg.com).
-You can view a listing of all the files in the MapLibre GL JS package by appending a `/` at the end of the MapLibre slug. This is useful to review other revisions or to review the files at UNPKG or the LICENSE. See examples in the following table:
+## Writing Examples
 
-*Examples*
+Examples are written as regular html files in `test/examples`. Each example should have a title and a og:description.
+* `title`: A short title for the example in **sentence case** as a **verb phrase**.
+* `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
 
-| Use Case  | `.js` | `.css` |
-| :------- | :---: | :----: |
-| `latest` | <https://unpkg.com/maplibre-gl/dist/maplibre-gl.js> | <https://unpkg.com/maplibre-gl/dist/maplibre-gl.css> |
-| Use at least `2.4.x` | <https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.js> | <https://unpkg.com/maplibre-gl@^2.4/dist/maplibre-gl.css> |
+When you create a new example, you **must** make an accompanying image.
+
+1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`. Commit the image.
+
+For some examples, `npm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assests/examples/` folder.
+
+To regenerate all images, run `npm run generate-images`. Note that this doesn't support interaction and examples that require manual interaction (e.g. popups) will need to be manually redone afterward. This feature is experimental and may crash before successfully generating all examples.
+
+## Committing and Publishing Documentation
+
+When a new MapLibre GL JS release goes out the documentation will be released with it.
+
+To update or add a new example, PR the relevant changes to this repo. The example will be live once a new version will be released. If this example uses a version of GL JS that isn't yet released, the PR should not be merged until the release is out.
+
+## How does all this work?
+
+It uses 3 tools:
+1. [TypeDoc](https://typedoc.org/) cli
+2. [MkDocs material](https://squidfunk.github.io/mkdocs-material/)
+3. `generate-docs.ts` script
+
+The TypeDoc CLI convert is used to generate markdown files of the API from the TSDoc comments and places the output in API folder of the docs.
+The `generate-docs.ts` does some manipulation of this API output and also uses the examples html files from the test folder to generate markdown of the examples index file and all the examples markdown files.
+Other markdown from the docs folder are used as is.
+[MkDocs](https://www.mkdocs.org/) is used to build the documentation site for production and server it in debug. It has a live reload and the markdown files can be looked at in order to understand why things are shown as they do.
