@@ -1,8 +1,8 @@
 ### MapLibre GL JS Documentation
 
-This directory contains the source for the MapLibre docs hosted at [https://maplibre.org/maplibre-gl-js/docs/](https://maplibre.org/maplibre-gl-js/docs/).
+This directory contains the source for the [MapLibre GL JS docs](https://maplibre.org/maplibre-gl-js/docs/)hosted on the MapLibre site.
 
-Besides this README, each other file in this directory corresponds to a site page after processing by [MkDocs](https://www.mkdocs.org/).
+Besides this README, each other `.md` file in this directory corresponds to a site page. Each is converted into an `.html` file by [MkDocs](https://www.mkdocs.org/).
 ## Setting up Docker access
 
 If you're on Linux, before you can run the docs you need to give your user permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
