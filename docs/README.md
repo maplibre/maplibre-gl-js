@@ -1,5 +1,8 @@
-This folder contains developer documentation for MapLibre GL JS. Put any diagrams you reference in the [diagrams](./diagrams) folder. If you use PlantUML, put the source code in `diagrams/*.plantuml` files and run `npm run build-diagrams` to generate SVG versions of them. There is also a [Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=jebbs.plantuml) for previewing them while you edit.
+### MapLibre GL JS Documentation
 
+This directory contains the source for the MapLibre docs hosted at [https://maplibre.org/maplibre-gl-js/docs/](https://maplibre.org/maplibre-gl-js/docs/).
+
+Besides this README, each other file in this directory corresponds to a site page after processing by [MkDocs](https://www.mkdocs.org/).
 ## Setting up Docker access
 
 If you're on Linux, before you can run the docs you need to give your user permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).

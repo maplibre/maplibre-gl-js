@@ -174,6 +174,10 @@ See [`test/README.md`](./test/README.md).
 
 See [`test/bench/README.md`](./test/bench/README.md).
 
+## Further guides
+
+See [`developer-guides`](./developer-guides) directory for guides on the release process and tile lifecycle.
+
 ## Code Conventions
 
 * We use [`error` events](https://www.mapbox.com/mapbox-gl-js/api/#Map.event:error) to report user errors.
