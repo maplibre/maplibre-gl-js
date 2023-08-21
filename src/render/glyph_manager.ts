@@ -180,6 +180,10 @@ export class GlyphManager {
             return;
         }
 
+        // Client-generated glyphs are rendered at 2x texture scale,
+        // because CJK glyphs are more detailed than others.
+        const texScale = 2;
+
         let tinySDF = entry.tinySDF;
         if (!tinySDF) {
             let fontWeight = '400';
@@ -191,9 +195,9 @@ export class GlyphManager {
                 fontWeight = '200';
             }
             tinySDF = entry.tinySDF = new GlyphManager.TinySDF({
-                fontSize: 24,
-                buffer: 3,
-                radius: 8,
+                fontSize: 24 * texScale,
+                buffer: 3 * texScale,
+                radius: 8 * texScale,
                 cutoff: 0.25,
                 fontFamily,
                 fontWeight
@@ -215,17 +219,20 @@ export class GlyphManager {
          * To approximately align TinySDF glyphs with server-provided glyphs, we use this baseline adjustment
          * factor calibrated to be in between DIN Pro and Arial Unicode (but closer to Arial Unicode)
          */
-        const topAdjustment = 27;
+        const topAdjustment = 27.5;
+
+        const leftAdjustment = 0.5;
 
         return {
             id,
-            bitmap: new AlphaImage({width: char.width || 30, height: char.height || 30}, char.data),
+            bitmap: new AlphaImage({width: char.width || 30 * texScale, height: char.height || 30 * texScale}, char.data),
             metrics: {
-                width: char.glyphWidth || 24,
-                height: char.glyphHeight || 24,
-                left: char.glyphLeft || 0,
-                top: char.glyphTop - topAdjustment || -8,
-                advance: char.glyphAdvance || 24
+                width: char.glyphWidth / texScale || 24,
+                height: char.glyphHeight / texScale || 24,
+                left: (char.glyphLeft / texScale + leftAdjustment) || 0,
+                top: char.glyphTop / texScale - topAdjustment || -8,
+                advance: char.glyphAdvance / texScale || 24,
+                texScale
             }
         };
     }
