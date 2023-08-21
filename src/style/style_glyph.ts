@@ -2,7 +2,7 @@ import type {AlphaImage} from '../util/image';
 
 /**
  * The glyph's metrices
- * texScale = 1 for a texture at 24pt, 2 = 48pt, etc
+ * textureScale = 1 for a texture at 24pt, 2 = 48pt, etc
  */
 export type GlyphMetrics = {
     width: number;
@@ -10,7 +10,7 @@ export type GlyphMetrics = {
     left: number;
     top: number;
     advance: number;
-    texScale: number;
+    textureScale: number;
 };
 
 /**

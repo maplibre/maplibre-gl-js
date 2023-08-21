@@ -182,7 +182,7 @@ export class GlyphManager {
 
         // Client-generated glyphs are rendered at 2x texture scale,
         // because CJK glyphs are more detailed than others.
-        const texScale = 2;
+        const textureScale = 2;
 
         let tinySDF = entry.tinySDF;
         if (!tinySDF) {
@@ -195,9 +195,9 @@ export class GlyphManager {
                 fontWeight = '200';
             }
             tinySDF = entry.tinySDF = new GlyphManager.TinySDF({
-                fontSize: 24 * texScale,
-                buffer: 3 * texScale,
-                radius: 8 * texScale,
+                fontSize: 24 * textureScale,
+                buffer: 3 * textureScale,
+                radius: 8 * textureScale,
                 cutoff: 0.25,
                 fontFamily,
                 fontWeight
@@ -225,14 +225,14 @@ export class GlyphManager {
 
         return {
             id,
-            bitmap: new AlphaImage({width: char.width || 30 * texScale, height: char.height || 30 * texScale}, char.data),
+            bitmap: new AlphaImage({width: char.width || 30 * textureScale, height: char.height || 30 * textureScale}, char.data),
             metrics: {
-                width: char.glyphWidth / texScale || 24,
-                height: char.glyphHeight / texScale || 24,
-                left: (char.glyphLeft / texScale + leftAdjustment) || 0,
-                top: char.glyphTop / texScale - topAdjustment || -8,
-                advance: char.glyphAdvance / texScale || 24,
-                texScale
+                width: char.glyphWidth / textureScale || 24,
+                height: char.glyphHeight / textureScale || 24,
+                left: (char.glyphLeft / textureScale + leftAdjustment) || 0,
+                top: char.glyphTop / textureScale - topAdjustment || -8,
+                advance: char.glyphAdvance / textureScale || 24,
+                textureScale
             }
         };
     }
