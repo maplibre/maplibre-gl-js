@@ -2018,8 +2018,8 @@ export class Map extends Camera {
      * map.getTerrain(); // { source: 'terrain' };
      * ```
      */
-    getTerrain(): TerrainSpecification {
-        return this.terrain && this.terrain.options;
+    getTerrain(): TerrainSpecification | null {
+        return this.terrain?.options ?? null;
     }
 
     /**

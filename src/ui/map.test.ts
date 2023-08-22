@@ -2591,6 +2591,13 @@ describe('Map', () => {
         });
     });
 
+    describe('#getTerrain', () => {
+        test('returns null when not set', () => {
+            const map = createMap();
+            expect(map.getTerrain()).toBeNull();
+        });
+    });
+
     describe('#setCooperativeGestures', () => {
         test('returns self', () => {
             const map = createMap();
