@@ -30,7 +30,7 @@
                 .then(r => r.text())
                 .then(text => {
                     // Takes the two random numbers between 0 and 1 and converts them to degrees
-                    let coordinates = text.split('\n').map(l => (Number(l) * 180) - 90);
+                    const coordinates = text.split('\n').map(l => (Number(l) * 180) - 90);
                     const json = {
                         type: 'Feature',
                         geometry: {
@@ -46,7 +46,7 @@
                         center: json.geometry.coordinates,
                         speed: 0.5
                     });
-                })
+                });
         }, 2000);
 
         // Set initial location at (0,0).
@@ -54,7 +54,7 @@
             type: 'Feature',
             geometry: {
                 type: 'Point',
-                coordinates: [0,0]
+                coordinates: [0, 0]
             }
         }});
         map.addLayer({
