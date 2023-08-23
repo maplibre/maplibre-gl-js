@@ -3,7 +3,7 @@
 /// This package.json ensures that node imports from outside see them as such
 // https://nodejs.org/api/packages.html#type
 
-import { writeFile, mkdir } from "node:fs/promises"
+import { writeFile, mkdir, copyFile } from "node:fs/promises"
 
 async function ensureDist() {
   const dist = new URL("../dist/", import.meta.url);
@@ -18,4 +18,9 @@ await writeFile(
     type: "commonjs",
     deprecated: "Please install maplibre-gl from parent directory instead",
   })
+)
+
+await copyFile(
+  "./LICENSE.txt",
+  new URL("LICENSE.txt", await ensureDist())
 )
