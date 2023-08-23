@@ -232,7 +232,7 @@ export class GlyphManager {
                 left: (char.glyphLeft / textureScale + leftAdjustment) || 0,
                 top: char.glyphTop / textureScale - topAdjustment || -8,
                 advance: char.glyphAdvance / textureScale || 24,
-                textureScale
+                isDoubleResolution: true
             }
         };
     }

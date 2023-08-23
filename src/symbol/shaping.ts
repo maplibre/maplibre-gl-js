@@ -680,8 +680,7 @@ function shapeLines(shaping: Shaping,
                     height: size[1],
                     left: IMAGE_PADDING,
                     top: -GLYPH_PBF_BORDER,
-                    advance: vertical ? size[1] : size[0],
-                    textureScale: 1};
+                    advance: vertical ? size[1] : size[0]};
 
                 // Difference between one EM and an image size.
                 // Aligns bottom of an image to a baseline level.

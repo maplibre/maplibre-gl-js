@@ -20,7 +20,7 @@ function readFontstack(tag: number, glyphs: Array<StyleGlyph>, pbf: Protobuf) {
                 width: width + 2 * border,
                 height: height + 2 * border
             }, bitmap),
-            metrics: {width, height, left, top, advance, textureScale: 1}
+            metrics: {width, height, left, top, advance}
         });
     }
 }
