@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Copy LICENSE.txt to dist folder so it's included in 3rdpartylicenses.txt by webpack ([#3021](https://github.com/maplibre/maplibre-gl-js/pull/3021))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
