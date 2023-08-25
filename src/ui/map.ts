@@ -3197,7 +3197,7 @@ export class Map extends Camera {
         if (this.terrain && this.painter.isCameraMatrixChangedByTerrain()) {
             const result = this.checkTerrainCollision();
             if (result.maxPitch) {
-                // If camera is too closed/inside terrain, constrain the pitch
+                // If camera is too close to or inside terrain, constrain the pitch
                 this.setMaxPitch(Math.min(this._maxPitch, result.maxPitch));
                 this.setMinPitch(Math.min(this._minPitch, result.maxPitch));
             } else {
