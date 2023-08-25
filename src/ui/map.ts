@@ -509,7 +509,7 @@ export class Map extends Camera {
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
-     * Max/Min pitch of Transform may changed by current camera position above terrain
+     * Max/Min pitch of Transform may be changed by current camera position above terrain.
      * These value are used for reset based on MapOptions
      */
     _minPitch: number;
