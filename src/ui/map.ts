@@ -512,8 +512,8 @@ export class Map extends Camera {
      * Max/Min pitch of Transform may be changed by current camera position above terrain.
      * These value are used for reset based on MapOptions
      */
-    _minPitch: number;
-    _maxPitch: number;
+    _minPitchFromOptions: number;
+    _maxPitchFromOptions: number;
 
     /**
      * @internal
@@ -594,8 +594,8 @@ export class Map extends Camera {
         const transform = new Transform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
         super(transform, {bearingSnap: options.bearingSnap});
 
-        this._minPitch = options.minPitch;
-        this._maxPitch = options.maxPitch;
+        this._minPitchFromOptions = options.minPitch;
+        this._maxPitchFromOptions = options.maxPitch;
 
         this._interactive = options.interactive;
         this._cooperativeGestures = options.cooperativeGestures;
@@ -3198,11 +3198,11 @@ export class Map extends Camera {
             const result = this.checkTerrainCollision();
             if (result.maxPitch) {
                 // If camera is too close to or inside terrain, constrain the pitch
-                this.setMaxPitch(Math.min(this._maxPitch, result.maxPitch));
-                this.setMinPitch(Math.min(this._minPitch, result.maxPitch));
+                this.setMaxPitch(Math.min(this._maxPitchFromOptions, result.maxPitch));
+                this.setMinPitch(Math.min(this._minPitchFromOptions, result.maxPitch));
             } else {
-                this.setMaxPitch(this._maxPitch);
-                this.setMinPitch(this._minPitch);
+                this.setMaxPitch(this._maxPitchFromOptions);
+                this.setMinPitch(this._minPitchFromOptions);
             }
         }
 
