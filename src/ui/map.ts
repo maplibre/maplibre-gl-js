@@ -3457,7 +3457,7 @@ export class Map extends Camera {
         const camera = this.transform.getCameraPosition();
         const cameraAltitude = camera.altitude;
         const minAllowedAltitude = this.terrain.getElevationForLngLatZoom(camera.lngLat, this.getZoom()) + buffer;
-        const maxPitch = camera.altitude < minAllowedAltitude ? this.transform.maxPitchForCameraAltitude(minAllowedAltitude) : null;
+        const maxPitch = camera.altitude < minAllowedAltitude ? this.transform.getPitchForCameraAltitude(minAllowedAltitude) : null;
         return {cameraAltitude, minAllowedAltitude, maxPitch};
     }
 }

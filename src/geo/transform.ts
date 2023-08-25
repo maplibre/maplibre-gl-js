@@ -484,8 +484,13 @@ export class Transform {
         return {lngLat, altitude: altitude + this.elevation};
     }
 
-    // check that camera is always over terrain
-    maxPitchForCameraAltitude(altitude: number) {
+    /**
+     * When center of the map and camera position are both given, changing altitude of camera gets different pitch.     
+     * This method returns pitch value by altitude of camera.
+     * @param altitude - Camera altitude in meters
+     * @returns The maximum pitch that camera is not inside terrain when altitude is specifed
+     */
+    getPitchForCameraAltitude(altitude: number) {
         const pitch =  Math.acos((altitude - this._elevation) * this._pixelPerMeter / this.cameraToCenterDistance) / Math.PI * 180;
         return isNaN(pitch) ? null : pitch;
     }
