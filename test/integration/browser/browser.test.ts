@@ -15,6 +15,7 @@ let server: Server;
 let browser: Browser;
 let page: Page;
 let map: any;
+let maplibregl: any;
 
 describe('Browser tests', () => {
 
@@ -233,6 +234,82 @@ describe('Browser tests', () => {
         // At least one platform should be identical
         expect(minDiff).toBe(0);
 
+    }, 20000);
+
+    test('Marker: correct position', async () => {
+        const markerScreenPosition = await page.evaluate(() => {
+            const markerMapPosition = [11.40, 47.30];
+            const marker = new maplibregl.Marker()
+                .setLngLat(markerMapPosition)
+                .addTo(map);
+
+            map.setPitch(52);
+            map.fitBounds(
+                [
+                    [markerMapPosition[0], markerMapPosition[1] + 0.02],
+                    [markerMapPosition[0], markerMapPosition[1] - 0.01]
+                ]
+                , {duration: 0}
+            );
+
+            map.setStyle({
+                version: 8,
+                sources: {
+                    osm: {
+                        type: 'raster',
+                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tileSize: 256,
+                        attribution: '&copy; OpenStreetMap Contributors',
+                        maxzoom: 19
+                    },
+                    // Use a different source for terrain and hillshade layers, to improve render quality
+                    terrainSource: {
+                        type: 'raster-dem',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tileSize: 256
+                    },
+                    hillshadeSource: {
+                        type: 'raster-dem',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tileSize: 256
+                    }
+                },
+                layers: [
+                    {
+                        id: 'osm',
+                        type: 'raster',
+                        source: 'osm'
+                    },
+                    {
+                        id: 'hills',
+                        type: 'hillshade',
+                        source: 'hillshadeSource',
+                        layout: {visibility: 'visible'},
+                        paint: {'hillshade-shadow-color': '#473B24'}
+                    }
+                ],
+                terrain: {
+                    source: 'terrainSource',
+                    exaggeration: 1
+                }
+            });
+
+            return new Promise<any>((resolve) => {
+                map.once('idle', () => {
+                    map.setTerrain({source: 'terrainSource'});
+                    map.once('idle', () => {
+                        const markerBounding = marker.getElement().getBoundingClientRect();
+                        resolve({
+                            x: markerBounding.x,
+                            y: markerBounding.y
+                        });
+                    });
+                });
+            });
+        });
+
+        expect(markerScreenPosition.x).toBeCloseTo(386.5);
+        expect(markerScreenPosition.y).toBeCloseTo(378.1);
     }, 20000);
 
     afterEach(async() => {
