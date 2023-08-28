@@ -66,7 +66,7 @@
     "@types/offscreencanvas": "^2019.7.0",
     "@types/pixelmatch": "^5.2.4",
     "@types/pngjs": "^6.0.1",
-    "@types/react": "^18.2.20",
+    "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
     "@types/request": "^2.48.8",
     "@types/shuffle-seed": "^1.1.0",
