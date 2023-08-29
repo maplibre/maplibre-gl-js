@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use realtime GeoJSON data streams to move a symbol on your map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.3.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@3.3.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -23,31 +23,40 @@
         zoom: 0
     });
 
-    const url = 'https://wanderdrone.appspot.com/';
     map.on('load', () => {
-        const request = new XMLHttpRequest();
         window.setInterval(() => {
-            // make a GET request to parse the GeoJSON at the url
-            request.open('GET', url, true);
-            request.onload = function () {
-                if (this.status >= 200 && this.status < 400) {
-                    // retrieve the JSON from the response
-                    const json = JSON.parse(this.response);
-
-                    // update the drone symbol's location on the map
+            // Make a GET request to get two random numbers
+            fetch('https://www.random.org/decimal-fractions/?num=2&dec=10&col=1&format=plain&rnd=new')
+                .then(r => r.text())
+                .then(text => {
+                    // Takes the two random numbers between 0 and 1 and converts them to degrees
+                    const coordinates = text.split('\n').map(l => (Number(l) * 180) - 90);
+                    const json = {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates
+                        }
+                    };
+                    // Update the drone symbol's location on the map
                     map.getSource('drone').setData(json);
 
-                    // fly the map to the drone's current location
+                    // Fly the map to the drone's current location
                     map.flyTo({
                         center: json.geometry.coordinates,
                         speed: 0.5
                     });
-                }
-            };
-            request.send();
+                });
         }, 2000);
 
-        map.addSource('drone', {type: 'geojson', data: url});
+        // Set initial location at (0,0).
+        map.addSource('drone', {type: 'geojson', data: {
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [0, 0]
+            }
+        }});
         map.addLayer({
             'id': 'drone',
             'type': 'symbol',
