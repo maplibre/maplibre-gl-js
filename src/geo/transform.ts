@@ -485,7 +485,7 @@ export class Transform {
     }
 
     /**
-     * When center of the map and camera position are both given, changing altitude of camera gets different pitch.     
+     * When center of the map and camera position are both given, changing altitude of camera gets different pitch.
      * This method returns pitch value by altitude of camera.
      * @param altitude - Camera altitude in meters
      * @returns The maximum pitch that camera is not inside terrain when altitude is specifed
