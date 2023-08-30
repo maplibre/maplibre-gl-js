@@ -9,7 +9,7 @@ const sharedConfig = {
     },
     // any tests that operate on dist files shouldn't compile them again.
     transformIgnorePatterns: ['<rootDir>/dist'],
-    modulePathIgnorePatterns : ['<rootDir>/dist'],
+    modulePathIgnorePatterns: ['<rootDir>/dist']
 } as Partial<Config>;
 
 const config: Config = {
