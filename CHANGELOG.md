@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix unit test warning about duplicate module names ([#3049](https://github.com/maplibre/maplibre-gl-js/pull/3049))
 - _...Add new stuff here..._
 
 ## 3.3.1
