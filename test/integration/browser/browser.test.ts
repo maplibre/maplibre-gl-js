@@ -65,6 +65,26 @@ describe('Browser tests', () => {
         expect(firstFiredEvent).toBe('load');
     }, 20000);
 
+    test('Should continue zooming from last mouse position after scroll and flyto, see #2709', async () => {
+        const finalZoom = await page.evaluate(() => {
+            return new Promise<void>((resolve, _reject) => {
+                map.once('zoom', () => {
+                    map.flyTo({
+                        zoom: 9
+                    });
+                    setTimeout(() => {
+                        map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                        map.once('idle', () => {
+                            resolve(map.getZoom());
+                        });
+                    }, 1000);
+                });
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+            });
+        });
+        expect(finalZoom).toBeGreaterThan(2);
+    }, 20000);
+
     test('Drag to the left', async () => {
 
         const canvas = await page.$('.maplibregl-canvas');

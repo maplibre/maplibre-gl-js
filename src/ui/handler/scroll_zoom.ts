@@ -256,6 +256,7 @@ export class ScrollZoomHandler implements Handler {
 
         // if we've had scroll events since the last render frame, consume the
         // accumulated delta, and update the target zoom level accordingly
+        console.log(`fr, ${this._delta} ${this._targetZoom}`);
         if (this._delta !== 0) {
             // For trackpad events and single mouse wheel ticks, use the default zoom rate
             const zoomRate = (this._type === 'wheel' && Math.abs(this._delta) > wheelZoomDelta) ? this._wheelZoomRate : this._defaultZoomRate;
@@ -351,5 +352,11 @@ export class ScrollZoomHandler implements Handler {
 
     reset() {
         this._active = false;
+        this._zooming = false;
+        delete this._targetZoom;
+        if (this._finishTimeout) {
+            clearTimeout(this._finishTimeout);
+            delete this._finishTimeout;
+        }
     }
 }
