@@ -67,7 +67,7 @@ describe('Browser tests', () => {
 
     test('Should continue zooming from last mouse position after scroll and flyto, see #2709', async () => {
         const finalZoom = await page.evaluate(() => {
-            return new Promise<void>((resolve, _reject) => {
+            return new Promise<number>((resolve, _reject) => {
                 map.once('zoom', () => {
                     map.flyTo({
                         zoom: 9
