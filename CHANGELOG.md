@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 
 - Fixed Interrupting a scroll zoom causes the next scroll zoom to return to the prior zoom level by reseting scroll handler state properly ([#2709](https://github.com/maplibre/maplibre-gl-js/issues/2709), [#3051](https://github.com/maplibre/maplibre-gl-js/pull/305))
+- Fix unit test warning about duplicate module names ([#3049](https://github.com/maplibre/maplibre-gl-js/pull/3049))
 - _...Add new stuff here..._
 
 ## 3.3.1
