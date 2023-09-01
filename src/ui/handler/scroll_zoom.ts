@@ -351,5 +351,11 @@ export class ScrollZoomHandler implements Handler {
 
     reset() {
         this._active = false;
+        this._zooming = false;
+        delete this._targetZoom;
+        if (this._finishTimeout) {
+            clearTimeout(this._finishTimeout);
+            delete this._finishTimeout;
+        }
     }
 }
