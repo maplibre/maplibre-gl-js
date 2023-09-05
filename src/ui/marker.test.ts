@@ -811,4 +811,29 @@ describe('marker', () => {
 
         map.remove();
     });
+
+    test('Marker after the terrain event must listen to the render event till is fully loaded', async () => {
+        const map = createMap();
+
+        new Marker()
+            .setLngLat([1, 1])
+            .addTo(map);
+
+        expect(map._oneTimeListeners.render).toBeUndefined();
+
+        map.fire('terrain');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+
+        map.fire('render');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+
+        map.fire('render');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+
+        // await idle to be fully loaded
+        await map.once('idle');
+        map.fire('render');
+        expect(map._oneTimeListeners.render).toHaveLength(0);
+        map.remove();
+    });
 });
