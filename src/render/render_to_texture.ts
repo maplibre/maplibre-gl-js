@@ -1,6 +1,6 @@
 import {Painter} from './painter';
 import {Tile} from '../source/tile';
-import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {Color} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawTerrain} from './draw_terrain';
 import {Style} from '../style/style';

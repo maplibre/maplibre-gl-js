@@ -16,7 +16,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeXhr, fakeServer} from 'nise';
 
 import {EvaluationParameters} from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {SourceClass} from '../source/source';
 import {GeoJSONSource} from '../source/geojson_source';
 

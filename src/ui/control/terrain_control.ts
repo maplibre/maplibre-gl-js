@@ -2,7 +2,7 @@ import {DOM} from '../../util/dom';
 
 import type {Map} from '../map';
 import type {IControl} from './control';
-import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {TerrainSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 /**
  * A `TerrainControl` control contains a button for turning the terrain on and off.

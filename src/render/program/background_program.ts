@@ -11,7 +11,7 @@ import {extend} from '../../util/util';
 import type {Painter} from '../painter';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {Context} from '../../gl/context';
-import type {Color, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import type {Color, ResolvedImage} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {CrossFaded} from '../../style/properties';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {OverscaledTileID} from '../../source/tile_id';

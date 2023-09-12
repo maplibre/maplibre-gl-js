@@ -7,7 +7,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
-import {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {SourceSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 /**
  * An event from the mouse relevant to a specific layer.

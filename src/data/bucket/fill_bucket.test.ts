@@ -7,7 +7,7 @@ import Point from '@mapbox/point-geometry';
 import {SegmentVector} from '../segment';
 import {FillBucket} from './fill_bucket';
 import {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {ZoomHistory} from '../../style/zoom_history';
 import {BucketFeature, BucketParameters} from '../bucket';

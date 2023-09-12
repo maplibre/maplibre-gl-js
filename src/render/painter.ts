@@ -19,7 +19,7 @@ import {ColorMode} from '../gl/color_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {Texture} from './texture';
 import {clippingMaskUniformValues} from './program/clipping_mask_program';
-import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {Color} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {drawSymbols} from './draw_symbol';
 import {drawCircles} from './draw_circle';
 import {drawHeatmap} from './draw_heatmap';
@@ -45,7 +45,7 @@ import type {GlyphManager} from './glyph_manager';
 import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
-import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import type {ResolvedImage} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';

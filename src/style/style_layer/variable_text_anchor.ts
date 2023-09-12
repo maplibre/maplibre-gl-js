@@ -1,4 +1,4 @@
-import {VariableAnchorOffsetCollection, VariableAnchorOffsetCollectionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {VariableAnchorOffsetCollection, VariableAnchorOffsetCollectionSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {SymbolFeature} from '../../data/bucket/symbol_bucket';
 import {CanonicalTileID} from '../../source/tile_id';
 import ONE_EM from '../../symbol/one_em';

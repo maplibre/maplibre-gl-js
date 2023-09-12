@@ -3,7 +3,7 @@ import {LngLatBounds} from './lng_lat_bounds';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
-import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import {interpolates} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {EXTENT} from '../data/extent';
 import {vec3, vec4, mat4, mat2, vec2} from 'gl-matrix';
 import {Aabb, Frustum} from '../util/primitives';

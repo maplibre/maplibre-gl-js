@@ -12,7 +12,7 @@ import type {ZoomHistory} from '../style/zoom_history';
 import type {Map} from '../ui/map';
 import {Transform} from '../geo/transform';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
-import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {SymbolLayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {Style} from '../style/style';
 
 jest.mock('./painter');

@@ -12,7 +12,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {VectorSourceSpecification, PromoteIdSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;

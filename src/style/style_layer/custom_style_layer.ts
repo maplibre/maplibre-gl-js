@@ -1,7 +1,7 @@
 import {StyleLayer} from '../style_layer';
 import type {Map} from '../../ui/map';
 import {mat4} from 'gl-matrix';
-import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 /**
  * @param gl - The map's gl context.

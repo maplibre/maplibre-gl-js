@@ -1,7 +1,7 @@
 import {RGBAImage} from './image';
 import {isPowerOfTwo} from './util';
 
-import type {StylePropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+import type {StylePropertyExpression} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 export type ColorRampParams = {
     expression: StylePropertyExpression;

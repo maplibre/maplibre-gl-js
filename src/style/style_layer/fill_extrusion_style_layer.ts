@@ -7,7 +7,7 @@ import properties, {FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extru
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
-import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {FeatureState, LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
 import type {Transform} from '../../geo/transform';

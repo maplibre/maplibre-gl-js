@@ -2,7 +2,7 @@ import {DOM} from '../../util/dom';
 
 import {defaultEasing, bezier} from '../../util/util';
 import {browser} from '../../util/browser';
-import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import {interpolates} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat';
 import {TransformProvider} from './transform-provider';
 

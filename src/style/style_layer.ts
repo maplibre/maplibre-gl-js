@@ -1,6 +1,6 @@
 import {filterObject} from '../util/util';
 
-import {latest as styleSpec, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec, supportsPropertyExpression} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {
     validateStyle,
     validateLayoutProperty,
@@ -14,7 +14,7 @@ import type {Bucket} from '../data/bucket';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureFilter, FeatureState,
     LayerSpecification,
-    FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
+    FilterSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties';
 import {EvaluationParameters} from './evaluation_parameters';
 import type {CrossfadeParameters} from './evaluation_parameters';

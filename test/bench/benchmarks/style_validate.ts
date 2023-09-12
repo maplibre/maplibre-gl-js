@@ -1,6 +1,6 @@
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {StyleSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import Benchmark from '../lib/benchmark';
-import {validateStyleMin} from '@maplibre/maplibre-gl-style-spec';
+import {validateStyleMin} from '@globalfishingwatch/maplibre-gl-style-spec';
 import fetchStyle from '../lib/fetch_style';
 
 export default class StyleValidate extends Benchmark {

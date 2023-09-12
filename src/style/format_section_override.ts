@@ -1,5 +1,5 @@
-import type {Expression, EvaluationContext, Type, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
-import {NullType} from '@maplibre/maplibre-gl-style-spec';
+import type {Expression, EvaluationContext, Type, ZoomConstantExpression} from '@globalfishingwatch/maplibre-gl-style-spec';
+import {NullType} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {PossiblyEvaluatedPropertyValue} from './properties';
 import {register} from '../util/web_worker_transfer';
 

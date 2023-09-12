@@ -31,7 +31,7 @@ import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 import Point from '@mapbox/point-geometry';
 import murmur3 from 'murmurhash-js';
 import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
-import {VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
+import {VariableAnchorOffsetCollection} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and

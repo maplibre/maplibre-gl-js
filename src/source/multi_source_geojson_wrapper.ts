@@ -2,7 +2,7 @@ import type {VectorTileLayer, VectorTile} from '@mapbox/vector-tile';
 import {GeoJSONWrapper, GeojsonWrapperOptions} from './geojson_wrapper';
 import {EXTENT} from '../data/extent';
 
-class MultiSourceLayerGeoJSONWrapper implements VectorTile {
+export class MultiSourceLayerGeoJSONWrapper implements VectorTile {
     layers: {[_: string]: VectorTileLayer};
     constructor(sourceLayers, options: GeojsonWrapperOptions) {
         const {extent = EXTENT} = options || {};

@@ -1,4 +1,4 @@
-import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {Color} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {isWebGL2} from './webgl2';
 
 import type {Context} from './context';

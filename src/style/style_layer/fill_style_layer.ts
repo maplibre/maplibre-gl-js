@@ -6,7 +6,7 @@ import {translateDistance, translate} from '../query_utils';
 import properties, {FillLayoutPropsPossiblyEvaluated, FillPaintPropsPossiblyEvaluated} from './fill_style_layer_properties.g';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
 
-import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {FeatureState, LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
 import type Point from '@mapbox/point-geometry';
 import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g';

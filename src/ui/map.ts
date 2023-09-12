@@ -56,7 +56,7 @@ import type {
     LightSpecification,
     SourceSpecification,
     TerrainSpecification
-} from '@maplibre/maplibre-gl-style-spec';
+} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';

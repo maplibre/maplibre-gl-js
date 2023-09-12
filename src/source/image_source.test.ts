@@ -11,7 +11,7 @@ import {OverscaledTileID} from './tile_id';
 import {VertexBuffer} from '../gl/vertex_buffer';
 import {SegmentVector} from '../data/segment';
 import {Texture} from '../render/texture';
-import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {ImageSourceSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 function createSource(options) {
     options = extend({

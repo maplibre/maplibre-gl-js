@@ -12,7 +12,7 @@ import type {CrossFaded} from '../../style/properties';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {UniformValues} from '../uniform_binding';
 import type {Tile} from '../../source/tile';
-import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import type {ResolvedImage} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 type BackgroundPatternUniformsType = {
     'u_image': Uniform1i;

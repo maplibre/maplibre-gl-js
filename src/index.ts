@@ -35,7 +35,7 @@ import {VideoSource} from './source/video_source';
 
 const version = packageJSON.version;
 
-export type * from '@maplibre/maplibre-gl-style-spec';
+export type * from '@globalfishingwatch/maplibre-gl-style-spec';
 
 /**
  * `maplibregl` is the global object that allows configurations that are not specific to a map instance

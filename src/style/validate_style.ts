@@ -1,4 +1,4 @@
-import {validateStyleMin} from '@maplibre/maplibre-gl-style-spec';
+import {validateStyleMin} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {ErrorEvent} from '../util/evented';
 
 import type {Evented} from '../util/evented';

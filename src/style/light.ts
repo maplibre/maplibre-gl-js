@@ -1,4 +1,4 @@
-import {interpolates, Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {interpolates, Color, latest as styleSpec} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 import {extend, sphericalToCartesian} from '../util/util';
 import {Evented} from '../util/evented';
@@ -8,7 +8,7 @@ import {
     emitValidationErrors
 } from './validate_style';
 
-import type {StylePropertySpecification, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {StylePropertySpecification, LightSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {StyleSetterOptions} from '../style/style';
 import {Properties, Transitionable, Transitioning, PossiblyEvaluated, DataConstantProperty} from './properties';

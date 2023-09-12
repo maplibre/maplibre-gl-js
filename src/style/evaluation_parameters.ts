@@ -2,7 +2,7 @@ import {ZoomHistory} from './zoom_history';
 import {isStringInSupportedScript} from '../util/script_detection';
 import {plugin as rtlTextPlugin} from '../source/rtl_text_plugin';
 
-import type {TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {TransitionSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 export type CrossfadeParameters = {
     fromScale: number;

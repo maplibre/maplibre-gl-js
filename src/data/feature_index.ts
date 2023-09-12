@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {loadGeometry} from './load_geometry';
 import {toEvaluationFeature} from './evaluation_feature';
 import {EXTENT} from './extent';
-import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
+import {featureFilter} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {TransferableGridIndex} from '../util/transferable_grid_index';
 import {DictionaryCoder} from '../util/dictionary_coder';
 import vt from '@mapbox/vector-tile';
@@ -20,7 +20,7 @@ import {FeatureIndexArray} from './array_types.g';
 import {mat4} from 'gl-matrix';
 
 import type {StyleLayer} from '../style/style_layer';
-import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {Transform} from '../geo/transform';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 

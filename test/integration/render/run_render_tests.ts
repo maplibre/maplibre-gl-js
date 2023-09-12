@@ -11,7 +11,7 @@ import {localizeURLs} from '../lib/localize-urls';
 import maplibregl from '../../../src/index';
 import type {CanvasSource} from '../../../src/source/canvas_source';
 import type {Map} from '../../../src/ui/map';
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {StyleSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
 import puppeteer, {Page} from 'puppeteer';
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -309,7 +309,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 }`;
 
                 const fragmentSource = `#version 300 es
-                
+
                 out highp vec4 fragColor;
                 void main() {
                     fragColor = vec4(1.0, 0.0, 0.0, 1.0);

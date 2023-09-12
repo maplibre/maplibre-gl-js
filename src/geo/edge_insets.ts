@@ -1,4 +1,4 @@
-import {interpolates} from '@maplibre/maplibre-gl-style-spec';
+import {interpolates} from '@globalfishingwatch/maplibre-gl-style-spec';
 import Point from '@mapbox/point-geometry';
 import {clamp} from '../util/util';
 

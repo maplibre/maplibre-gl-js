@@ -4,7 +4,7 @@ import {globSync} from 'glob';
 import {createPropertyExpression,
     isFunction,
     convertFunction,
-    toString} from '@maplibre/maplibre-gl-style-spec';
+    toString} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {CanonicalTileID} from '../../../src/source/tile_id';
 import {getGeometry} from './lib/geometry';
 import {stringify} from './lib/util';

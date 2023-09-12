@@ -1,6 +1,6 @@
 import {TransferableGridIndex} from './transferable_grid_index';
 import {Color, CompoundExpression, expressions, ResolvedImage, StylePropertyFunction,
-    StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
+    StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 import {AJAXError} from './ajax';
 

@@ -1,4 +1,4 @@
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {StyleSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 export default function fetchStyle(value: string | StyleSpecification): Promise<StyleSpecification> {
     return typeof value === 'string' ?

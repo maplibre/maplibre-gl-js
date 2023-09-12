@@ -4,7 +4,7 @@ import properties, {BackgroundPaintPropsPossiblyEvaluated} from './background_st
 import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
 
 import type {BackgroundPaintProps} from './background_style_layer_properties.g';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 export class BackgroundStyleLayer extends StyleLayer {
     _transitionablePaint: Transitionable<BackgroundPaintProps>;

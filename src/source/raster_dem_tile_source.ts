@@ -13,7 +13,7 @@ import type {Source} from './source';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
-import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {RasterDEMSourceSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {ExpiryData} from '../util/ajax';
 
 /**

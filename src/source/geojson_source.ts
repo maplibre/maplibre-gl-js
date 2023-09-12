@@ -11,7 +11,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {Actor} from '../util/actor';
 import type {Callback} from '../types/callback';
-import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {Options, ClusterProperties} from 'supercluster';
 

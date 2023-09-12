@@ -4,7 +4,7 @@ import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import {SegmentVector} from '../data/segment';
 import {Texture} from '../render/texture';
 import {Event, ErrorEvent} from '../util/evented';
-import {ValidationError} from '@maplibre/maplibre-gl-style-spec';
+import {ValidationError} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';

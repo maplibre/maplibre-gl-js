@@ -5,7 +5,7 @@ import {interpolates, Color, StylePropertySpecification, normalizePropertyExpres
     StylePropertyExpression,
     SourceExpression,
     CompositeExpression, TransitionSpecification,
-    PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
+    PropertyValueSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
 import {EvaluationParameters} from './evaluation_parameters';
 

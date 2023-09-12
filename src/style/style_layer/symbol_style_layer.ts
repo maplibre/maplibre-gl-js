@@ -22,12 +22,12 @@ import {
     typeOf,
     Formatted,
     FormatExpression,
-    Literal} from '@maplibre/maplibre-gl-style-spec';
+    Literal} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 import type {BucketParameters} from '../../data/bucket';
 import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
 import type {EvaluationParameters} from '../evaluation_parameters';
-import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {Expression, Feature, SourceExpression, LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {CanonicalTileID} from '../../source/tile_id';
 import {FormatSectionOverride} from '../format_section_override';
 

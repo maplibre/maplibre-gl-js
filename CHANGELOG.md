@@ -672,7 +672,7 @@ Everything from the four previous pre-releases:
 - ** Breaking Change: ** Rename css classes ([#83](https://github.com/maplibre/maplibre-gl-js/issues/83))
 - Added custom protocol support to allow overriding ajax calls ([#29](https://github.com/maplibre/maplibre-gl-js/issues/29))
 - Added setTransformRequest to map ([#159](https://github.com/maplibre/maplibre-gl-js/pull/159))
-- Publish @maplibre/maplibre-gl-style-spec v14.0.0 on NPM ([#149](https://github.com/maplibre/maplibre-gl-js/pull/149))
+- Publish @globalfishingwatch/maplibre-gl-style-spec v14.0.0 on NPM ([#149](https://github.com/maplibre/maplibre-gl-js/pull/149))
 - Replace link to mapbox on LogoControl by link to maplibre ([#151](https://github.com/maplibre/maplibre-gl-js/pull/151))
 - Migrate style spec files from mapbox to maplibre ([#147](https://github.com/maplibre/maplibre-gl-js/pull/147))
 - Publish the MapLibre style spec in NPM ([#140](https://github.com/maplibre/maplibre-gl-js/pull/140))

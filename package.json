@@ -1,7 +1,7 @@
 {
   "name": "@globalfishingwatch/maplibre-gl",
   "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
-  "version": "3.3.1",
+  "version": "3.3.1-gfw.1",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -16,7 +16,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@globalfishingwatch/fourwings-aggregate": "4.2.1",
+    "@globalfishingwatch/fourwings-aggregate": "4.3.0",
+    "@globalfishingwatch/maplibre-gl-style-spec": "^19.3.1",
     "@mapbox/geojson-rewind": "^0.5.2",
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
     "@mapbox/point-geometry": "^0.1.0",
@@ -80,6 +81,7 @@
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
     "address": "^1.2.2",
+    "assert": "2.1.0",
     "benchmark": "^2.1.4",
     "canvas": "^2.11.2",
     "cssnano": "^6.0.1",
@@ -159,10 +161,8 @@
     "build-dist": "run-p --print-label generate-typings build-dev build-prod build-csp build-csp-dev build-css",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
-    "build": "run-s build-prod-min build-prod build-csp build-dev build-css build-benchmarks generate-typings build-style-spec",
+    "build": "run-s build-prod build-csp build-dev build-css build-benchmarks generate-typings",
     "build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
-    "watch-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production --watch",
-    "build-prod-min": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production,MINIFY:true",
     "build-csp": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts",
     "build-csp-dev": "rollup --configPlugin @rollup/plugin-typescript -c rollup.config.csp.ts --environment BUILD:dev",
     "build-css": "postcss -o dist/maplibre-gl.css src/css/maplibre-gl.css",

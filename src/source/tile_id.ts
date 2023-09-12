@@ -4,7 +4,7 @@ import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
-import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
+import {ICanonicalTileID, IMercatorCoordinate} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 /**
  * A canonical way to define a tile ID

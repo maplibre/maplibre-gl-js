@@ -17,7 +17,7 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {TerrainSourceCache} from '../source/terrain_source_cache';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
-import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {TerrainSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import {LngLat, earthRadius} from '../geo/lng_lat';
 
 /**

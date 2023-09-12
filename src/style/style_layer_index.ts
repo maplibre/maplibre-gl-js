@@ -1,10 +1,10 @@
 import {StyleLayer} from './style_layer';
 import {createStyleLayer} from './create_style_layer';
 
-import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
+import {featureFilter, groupByLayout} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 import type {TypedStyleLayer} from './style_layer/typed_style_layer';
-import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};
 export type Family<Layer extends TypedStyleLayer> = Array<Layer>;
