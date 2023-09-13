@@ -9,8 +9,8 @@ import {extend} from '../../util/util';
 import {EvaluationParameters} from '../evaluation_parameters';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
 
-import {Step} from '@maplibre/maplibre-gl-style-spec';
-import type {FeatureState, ZoomConstantExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
+import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
 import type {Transform} from '../../geo/transform';
@@ -61,10 +61,8 @@ export class LineStyleLayer extends StyleLayer {
     _handleSpecialPaintPropertyUpdate(name: string) {
         if (name === 'line-gradient') {
             const expression = this.gradientExpression();
-            if (expression._styleExpression) {
-                // presence of ._styleExpression implies expression is a ZoonConstantExpression
-                const zoomConstantExpression = expression as ZoomConstantExpression<'source'>;
-                this.stepInterpolant = zoomConstantExpression._styleExpression.expression instanceof Step;
+            if (isZoomExpression(expression)) {
+                this.stepInterpolant = expression._styleExpression.expression instanceof Step;
             } else {
                 this.stepInterpolant = false;
             }
