@@ -20,21 +20,48 @@ export class DEMData {
     dim: number;
     min: number;
     max: number;
-    encoding: 'mapbox' | 'terrarium';
+    redMix: number;
+    greenMix: number;
+    blueMix: number;
+    baseMix: number;
 
     // RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
     // and dim is calculated as stride - 2.
-    constructor(uid: string, data: RGBAImage, encoding: 'mapbox' | 'terrarium') {
+    constructor(uid: string, data: RGBAImage, encoding: 'mapbox' | 'terrarium' | 'custom', redMix = 1.0, greenMix = 1.0, blueMix = 1.0, baseMix = 0.0) {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
-        if (encoding && encoding !== 'mapbox' && encoding !== 'terrarium') {
-            warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox" and "terrarium".`);
+        if (encoding && !['mapbox', 'terrarium', 'custom'].includes(encoding)) {
+            warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox", "terrarium" and "custom".`);
             return;
         }
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
         this.data = new Uint32Array(data.data.buffer);
-        this.encoding = encoding || 'mapbox';
+        switch (encoding) {
+            case 'terrarium':
+                // unpacking formula for mapzen terrarium:
+                // https://aws.amazon.com/public-datasets/terrain/
+                this.redMix = 256.0;
+                this.greenMix = 1.0;
+                this.blueMix = 1.0 / 256.0;
+                this.baseMix = 32768.0;
+                break;
+            case 'custom':
+                this.redMix = redMix;
+                this.greenMix = greenMix;
+                this.blueMix = blueMix;
+                this.baseMix = baseMix;
+                break;
+            case 'mapbox':
+            default:
+                // unpacking formula for mapbox.terrain-rgb:
+                // https://www.mapbox.com/help/access-elevation-data/#mapbox-terrain-rgb
+                this.redMix = 6553.6;
+                this.greenMix = 25.6;
+                this.blueMix = 0.1;
+                this.baseMix = 10000.0;
+                break;
+        }
 
         // in order to avoid flashing seams between tiles, here we are initially populating a 1px border of pixels around the image
         // with the data of the nearest pixel from the image. this data is eventually replaced when the tile's neighboring
@@ -70,12 +97,11 @@ export class DEMData {
     get(x: number, y: number) {
         const pixels = new Uint8Array(this.data.buffer);
         const index = this._idx(x, y) * 4;
-        const unpack = this.encoding === 'terrarium' ? this._unpackTerrarium : this._unpackMapbox;
-        return unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
+        return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
     }
 
     getUnpackVector() {
-        return this.encoding === 'terrarium' ? [256.0, 1.0, 1.0 / 256.0, 32768.0] : [6553.6, 25.6, 0.1, 10000.0];
+        return [this.redMix, this.greenMix, this.blueMix, this.baseMix];
     }
 
     _idx(x: number, y: number) {
@@ -83,16 +109,8 @@ export class DEMData {
         return (y + 1) * this.stride + (x + 1);
     }
 
-    _unpackMapbox(r: number, g: number, b: number) {
-        // unpacking formula for mapbox.terrain-rgb:
-        // https://www.mapbox.com/help/access-elevation-data/#mapbox-terrain-rgb
-        return ((r * 256 * 256 + g * 256.0 + b) / 10.0 - 10000.0);
-    }
-
-    _unpackTerrarium(r: number, g: number, b: number) {
-        // unpacking formula for mapzen terrarium:
-        // https://aws.amazon.com/public-datasets/terrain/
-        return ((r * 256 + g + b / 256) - 32768.0);
+    unpack(r: number, g: number, b: number) {
+        return (r * this.redMix + g * this.greenMix + b * this.blueMix - this.baseMix);
     }
 
     getPixels() {

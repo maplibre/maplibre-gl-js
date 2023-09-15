@@ -33,7 +33,11 @@ import type {ExpiryData} from '../util/ajax';
  * @see [3D Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/)
  */
 export class RasterDEMTileSource extends RasterTileSource implements Source {
-    encoding: 'mapbox' | 'terrarium';
+    encoding: 'mapbox' | 'terrarium' | 'custom';
+    redMix?: number;
+    greenMix?: number;
+    blueMix?: number;
+    baseMix?: number;
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -67,7 +71,11 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     coord: tile.tileID,
                     source: this.id,
                     rawImageData,
-                    encoding: this.encoding
+                    encoding: this.encoding,
+                    redMix: this.redMix,
+                    greenMix: this.greenMix,
+                    blueMix: this.blueMix,
+                    baseMix: this.baseMix
                 };
 
                 if (!tile.actor || tile.state === 'expired') {
