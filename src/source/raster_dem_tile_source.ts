@@ -45,6 +45,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.maxzoom = 22;
         this._options = extend({type: 'raster-dem'}, options);
         this.encoding = options.encoding || 'mapbox';
+        this.redMix = options.redMix;
+        this.greenMix = options.greenMix;
+        this.blueMix = options.blueMix;
+        this.baseMix = options.baseMix;
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
