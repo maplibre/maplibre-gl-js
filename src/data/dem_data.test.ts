@@ -150,7 +150,7 @@ describe('DEMData#backfillBorder with encoding', () => {
     });
 });
 
-function testSerialization(dem0: DEMData, redMix: number, greenMix: number, blueMix: number, baseMix: number) {
+function testSerialization(dem0: DEMData, redFactor: number, greenFactor: number, blueFactor: number, baseShift: number) {
     return () => {
         const serialized = serialize(dem0);
 
@@ -171,10 +171,10 @@ function testSerialization(dem0: DEMData, redMix: number, greenMix: number, blue
             dim: 4,
             stride: 6,
             data: dem0.data,
-            redMix,
-            greenMix,
-            blueMix,
-            baseMix,
+            redFactor,
+            greenFactor,
+            blueFactor,
+            baseShift,
             max,
             min,
         });

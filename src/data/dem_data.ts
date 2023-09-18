@@ -20,14 +20,14 @@ export class DEMData {
     dim: number;
     min: number;
     max: number;
-    redMix: number;
-    greenMix: number;
-    blueMix: number;
-    baseMix: number;
+    redFactor: number;
+    greenFactor: number;
+    blueFactor: number;
+    baseShift: number;
 
     // RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
     // and dim is calculated as stride - 2.
-    constructor(uid: string, data: RGBAImage, encoding: 'mapbox' | 'terrarium' | 'custom', redMix = 1.0, greenMix = 1.0, blueMix = 1.0, baseMix = 0.0) {
+    constructor(uid: string, data: RGBAImage, encoding: 'mapbox' | 'terrarium' | 'custom', redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0) {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
         if (encoding && !['mapbox', 'terrarium', 'custom'].includes(encoding)) {
@@ -41,25 +41,25 @@ export class DEMData {
             case 'terrarium':
                 // unpacking formula for mapzen terrarium:
                 // https://aws.amazon.com/public-datasets/terrain/
-                this.redMix = 256.0;
-                this.greenMix = 1.0;
-                this.blueMix = 1.0 / 256.0;
-                this.baseMix = 32768.0;
+                this.redFactor = 256.0;
+                this.greenFactor = 1.0;
+                this.blueFactor = 1.0 / 256.0;
+                this.baseShift = 32768.0;
                 break;
             case 'custom':
-                this.redMix = redMix;
-                this.greenMix = greenMix;
-                this.blueMix = blueMix;
-                this.baseMix = baseMix;
+                this.redFactor = redFactor;
+                this.greenFactor = greenFactor;
+                this.blueFactor = blueFactor;
+                this.baseShift = baseShift;
                 break;
             case 'mapbox':
             default:
                 // unpacking formula for mapbox.terrain-rgb:
                 // https://www.mapbox.com/help/access-elevation-data/#mapbox-terrain-rgb
-                this.redMix = 6553.6;
-                this.greenMix = 25.6;
-                this.blueMix = 0.1;
-                this.baseMix = 10000.0;
+                this.redFactor = 6553.6;
+                this.greenFactor = 25.6;
+                this.blueFactor = 0.1;
+                this.baseShift = 10000.0;
                 break;
         }
 
@@ -101,7 +101,7 @@ export class DEMData {
     }
 
     getUnpackVector() {
-        return [this.redMix, this.greenMix, this.blueMix, this.baseMix];
+        return [this.redFactor, this.greenFactor, this.blueFactor, this.baseShift];
     }
 
     _idx(x: number, y: number) {
@@ -110,7 +110,7 @@ export class DEMData {
     }
 
     unpack(r: number, g: number, b: number) {
-        return (r * this.redMix + g * this.greenMix + b * this.blueMix - this.baseMix);
+        return (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
     }
 
     getPixels() {

@@ -34,10 +34,10 @@ import type {ExpiryData} from '../util/ajax';
  */
 export class RasterDEMTileSource extends RasterTileSource implements Source {
     encoding: 'mapbox' | 'terrarium' | 'custom';
-    redMix?: number;
-    greenMix?: number;
-    blueMix?: number;
-    baseMix?: number;
+    redFactor?: number;
+    greenFactor?: number;
+    blueFactor?: number;
+    baseShift?: number;
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -45,10 +45,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.maxzoom = 22;
         this._options = extend({type: 'raster-dem'}, options);
         this.encoding = options.encoding || 'mapbox';
-        this.redMix = options.redMix;
-        this.greenMix = options.greenMix;
-        this.blueMix = options.blueMix;
-        this.baseMix = options.baseMix;
+        this.redFactor = options.redFactor;
+        this.greenFactor = options.greenFactor;
+        this.blueFactor = options.blueFactor;
+        this.baseShift = options.baseShift;
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
@@ -76,10 +76,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     source: this.id,
                     rawImageData,
                     encoding: this.encoding,
-                    redMix: this.redMix,
-                    greenMix: this.greenMix,
-                    blueMix: this.blueMix,
-                    baseMix: this.baseMix
+                    redFactor: this.redFactor,
+                    greenFactor: this.greenFactor,
+                    blueFactor: this.blueFactor,
+                    baseShift: this.baseShift
                 };
 
                 if (!tile.actor || tile.state === 'expired') {

@@ -38,10 +38,10 @@ export type WorkerDEMTileParameters = TileParameters & {
     };
     rawImageData: RGBAImage | ImageBitmap;
     encoding: 'mapbox' | 'terrarium' | 'custom';
-    redMix: number;
-    greenMix: number;
-    blueMix: number;
-    baseMix: number;
+    redFactor: number;
+    greenFactor: number;
+    blueFactor: number;
+    baseShift: number;
 };
 
 /**
