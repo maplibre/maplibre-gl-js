@@ -13,6 +13,9 @@ import {register} from '../util/web_worker_transfer';
 // surrounding pixel values to compute the slope at that pixel, and we cannot accurately calculate the slope at pixels on a
 // tile's edge without backfilling from neighboring tiles.
 
+
+export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom'
+
 export class DEMData {
     uid: string;
     data: Uint32Array;
@@ -27,7 +30,7 @@ export class DEMData {
 
     // RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
     // and dim is calculated as stride - 2.
-    constructor(uid: string, data: RGBAImage, encoding: 'mapbox' | 'terrarium' | 'custom', redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0) {
+    constructor(uid: string, data: RGBAImage, encoding: DEMEncoding, redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0) {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
         if (encoding && !['mapbox', 'terrarium', 'custom'].includes(encoding)) {

@@ -15,6 +15,7 @@ import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ExpiryData} from '../util/ajax';
+import { DEMEncoding } from '../data/dem_data';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -33,7 +34,7 @@ import type {ExpiryData} from '../util/ajax';
  * @see [3D Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/)
  */
 export class RasterDEMTileSource extends RasterTileSource implements Source {
-    encoding: 'mapbox' | 'terrarium' | 'custom';
+    encoding: DEMEncoding;
     redFactor?: number;
     greenFactor?: number;
     blueFactor?: number;
