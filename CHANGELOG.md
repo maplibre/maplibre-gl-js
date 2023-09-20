@@ -11,6 +11,7 @@
 - Correct marker position when switching between 2D and 3D view ([#2996](https://github.com/maplibre/maplibre-gl-js/pull/2996))
 - Fix error thrown when unsetting line-gradient [#2683]
 - Update raster tile end points in documentation
+- Avoiding inertia animation on Mac when reduced motion is on ([#3068](https://github.com/maplibre/maplibre-gl-js/pull/3068))
 - _...Add new stuff here..._
 
 ## 3.3.1

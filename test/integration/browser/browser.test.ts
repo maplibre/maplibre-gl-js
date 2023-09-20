@@ -87,23 +87,36 @@ describe('Browser tests', () => {
     }, 20000);
 
     test('Drag to the left', async () => {
-
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
 
-        // Perform drag action, wait a bit the end to avoid the momentum mode.
-        await page.mouse.move(canvasBB!.x, canvasBB!.y);
-        await page.mouse.down();
-        await page.mouse.move(100, 0);
-        await new Promise(r => setTimeout(r, 200));
-        await page.mouse.up();
+        const dragToLeft = async () => {
+            await page.mouse.move(canvasBB!.x, canvasBB!.y);
+            await page.mouse.down();
+            await page.mouse.move(100, 0, {
+                steps: 10
+            });
+            await page.mouse.up();
+            await new Promise(r => setTimeout(r, 200));
 
-        const center = await page.evaluate(() => {
-            return map.getCenter();
-        });
+            return page.evaluate(() => {
+                return map.getCenter();
+            });
+        };
 
-        expect(center.lng).toBeCloseTo(-35.15625, 4);
-        expect(center.lat).toBeCloseTo(0, 7);
+        await page.emulateMediaFeatures([
+            {name: 'prefers-reduced-motion', value: 'reduce'},
+        ]);
+        const centerWithoutInertia = await dragToLeft();
+        expect(centerWithoutInertia.lng).toBeCloseTo(-35.15625, 4);
+        expect(centerWithoutInertia.lat).toBeCloseTo(0, 7);
+
+        await page.emulateMediaFeatures([
+            {name: 'prefers-reduced-motion', value: 'reduce'},
+        ]);
+        const centerWithInertia = await dragToLeft();
+        expect(centerWithInertia.lng).toBeLessThan(-60);
+        expect(centerWithInertia.lat).toBeCloseTo(0, 7);
     }, 20000);
 
     test('Resize viewport (page)', async () => {
