@@ -17,6 +17,7 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {extend} from '../util/util';
+import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
@@ -583,7 +584,7 @@ export class HandlerManager {
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 
-            if (inertialEase) {
+            if (inertialEase && (inertialEase.essential || !browser.prefersReducedMotion)) {
                 if (shouldSnapToNorth(inertialEase.bearing || this._map.getBearing())) {
                     inertialEase.bearing = 0;
                 }

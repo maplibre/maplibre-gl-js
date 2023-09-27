@@ -29,7 +29,7 @@ import type {
  * ```ts
  * map.addSource('raster-source', {
  *     'type': 'raster',
- *     'tiles': ['https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'],
+ *     'tiles': ['https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg'],
  *     'tileSize': 256,
  * });
  * ```
