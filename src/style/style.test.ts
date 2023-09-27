@@ -215,7 +215,7 @@ describe('Style#loadURL', () => {
         const style = new Style(getStubMap());
         style.loadURL('style.json');
         style._remove();
-        expect(server.lastRequest.aborted).toBe(true);
+        expect((server.lastRequest as any).aborted).toBe(true);
     });
 });
 

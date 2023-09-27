@@ -117,7 +117,6 @@ describe('loadSprite', () => {
                 done();
                 last = true;
             }
-            
         });
 
         server.respond();

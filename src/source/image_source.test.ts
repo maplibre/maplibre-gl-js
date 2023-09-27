@@ -45,7 +45,7 @@ class StubMap extends Evented {
 
 describe('ImageSource', () => {
     stubAjaxGetImage(undefined);
-    let server: FakeServer; 
+    let server: FakeServer;
 
     beforeEach(() => {
         global.fetch = null;
