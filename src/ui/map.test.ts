@@ -288,6 +288,25 @@ describe('Map', () => {
 
         });
 
+        test('setStyle back to the first style should work', done => {
+            const map = createMap({style: {version: 8 as const, sources: {}, layers: [
+                {id: 'background', type: 'background', paint: {'background-color': 'red'}},
+            ]}});
+            map.setStyle({version: 8 as const, sources: {}, layers: [
+                {id: 'background', type: 'background', paint: {'background-color': 'blue'}},
+            ]});
+
+            map.once('style.load', () => {
+                map.setStyle({version: 8 as const, sources: {}, layers: [
+                    {id: 'background', type: 'background', paint: {'background-color': 'red'}},
+                ]});
+
+                const serializedStyle =  map.style.serialize();
+                expect(serializedStyle.layers[0].paint['background-color']).toEqual('red');
+                done();
+            });
+        });
+
         test('style transform overrides unmodified map transform', done => {
             const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
             map.transform.lngRange = [-120, 140];
