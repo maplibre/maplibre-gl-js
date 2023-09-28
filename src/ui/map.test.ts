@@ -297,12 +297,10 @@ describe('Map', () => {
             ]};
             const map = createMap({style: redStyle});
             map.setStyle(blueStyle);
-
             map.once('style.load', () => {
                 map.setStyle(redStyle);
-
                 const serializedStyle =  map.style.serialize();
-                expect(serializedStyle.layers[0].paint['background-color']).toEqual('red');
+                expect(serializedStyle.layers[0].paint['background-color']).toBe('red');
                 done();
             });
         });
