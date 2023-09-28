@@ -289,17 +289,17 @@ describe('Map', () => {
         });
 
         test('setStyle back to the first style should work', done => {
-            const map = createMap({style: {version: 8 as const, sources: {}, layers: [
-                {id: 'background', type: 'background', paint: {'background-color': 'red'}},
-            ]}});
-            map.setStyle({version: 8 as const, sources: {}, layers: [
-                {id: 'background', type: 'background', paint: {'background-color': 'blue'}},
-            ]});
+            const redStyle = {version: 8 as const, sources: {}, layers: [
+                {id: 'background', type: 'background' as const, paint: {'background-color': 'red'}},
+            ]};
+            const blueStyle = {version: 8 as const, sources: {}, layers: [
+                {id: 'background', type: 'background' as const, paint: {'background-color': 'blue'}},
+            ]};
+            const map = createMap({style: redStyle});
+            map.setStyle(blueStyle);
 
             map.once('style.load', () => {
-                map.setStyle({version: 8 as const, sources: {}, layers: [
-                    {id: 'background', type: 'background', paint: {'background-color': 'red'}},
-                ]});
+                map.setStyle(redStyle);
 
                 const serializedStyle =  map.style.serialize();
                 expect(serializedStyle.layers[0].paint['background-color']).toEqual('red');
