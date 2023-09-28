@@ -7,13 +7,13 @@ import {Transform} from '../../geo/transform';
 /**
  * @param gl - The map's gl context.
  * @param matrix - The map's camera matrix. It projects spherical mercator
- * @param transform - The map's transform object. It contains properties and methods used to calculate
- * the map's matrix transformations.
  * coordinates to gl coordinates. The spherical mercator coordinate `[0, 0]` represents the
  * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
  * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
  * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
  * can be used to project a `LngLat` to a mercator coordinate.
+ * @param transform - The map's transform object. It contains properties and methods used to calculate
+ * the map's matrix transformations.
  */
 type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4, transform: Transform) => void;
 
