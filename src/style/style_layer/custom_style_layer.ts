@@ -11,8 +11,9 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
  * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
  * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
  * can be used to project a `LngLat` to a mercator coordinate.
+ * @param args - Argument object. Properties are farZ, nearZ, projMatrix.
  */
-type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4) => void;
+type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4, args: { farZ: number; nearZ: number; projMatrix: mat4 }) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
