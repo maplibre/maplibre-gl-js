@@ -57,6 +57,8 @@ export class Transform {
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
     _minEleveationForCurrentTile: number;
+    _farZ: number;
+    _nearZ: number;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
@@ -827,7 +829,7 @@ export class Transform {
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        const farZ = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
+        this._farZ = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -836,11 +838,11 @@ export class Transform {
         // Smaller values worked well for mapbox-gl-js but deckgl was encountering precision issues
         // when rendering it's layers using custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
-        const nearZ = this.height / 50;
+        this._nearZ = this.height / 50;
 
         // matrix for conversion from location to GL coordinates (-1 .. 1)
         m = new Float64Array(16) as any;
-        mat4.perspective(m, this._fov, this.width / this.height, nearZ, farZ);
+        mat4.perspective(m, this._fov, this.width / this.height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
         m[8] = -offset.x * 2 / this.width;

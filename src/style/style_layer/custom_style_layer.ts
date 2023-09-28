@@ -2,17 +2,20 @@ import {StyleLayer} from '../style_layer';
 import type {Map} from '../../ui/map';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Transform} from '../../geo/transform';
 
 /**
  * @param gl - The map's gl context.
  * @param matrix - The map's camera matrix. It projects spherical mercator
+ * @param transform - The map's transform object. It contains properties and methods used to calculate
+ * the map's matrix transformations.
  * coordinates to gl coordinates. The spherical mercator coordinate `[0, 0]` represents the
  * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
  * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
  * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
  * can be used to project a `LngLat` to a mercator coordinate.
  */
-type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4) => void;
+type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4, transform: Transform) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
