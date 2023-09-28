@@ -12,6 +12,7 @@
 - Fix error thrown when unsetting line-gradient [#2683]
 - Update raster tile end points in documentation
 - Avoiding inertia animation on Mac when reduced motion is on ([#3068](https://github.com/maplibre/maplibre-gl-js/pull/3068))
+- setStyle changes were not updating the style cache, keeping the first style loaded so the first style wouldn't be repainted ([#3101](https://github.com/maplibre/maplibre-gl-js/issues/3101)).
 - _...Add new stuff here..._
 
 ## 3.3.1
