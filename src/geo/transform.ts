@@ -33,6 +33,7 @@ export class Transform {
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
     mercatorMatrix: mat4;
+    projectionMatrix: mat4;
     modelViewProjectionMatrix: mat4;
     invModelViewProjectionMatrix: mat4;
     alignedModelViewProjectionMatrix: mat4;
@@ -60,6 +61,8 @@ export class Transform {
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
     _fogMatrixCache: {[_: string]: mat4};
+    _farZ: number;
+    _nearZ: number;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
@@ -897,7 +900,7 @@ export class Transform {
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        const farZ = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
+        this._farZ = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -906,15 +909,16 @@ export class Transform {
         // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
         // when rendering custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
-        const nearZ = this.height / 50;
+        this._nearZ = this.height / 50;
 
         // matrix for conversion from location to clip space(-1 .. 1)
         m = new Float64Array(16) as any;
-        mat4.perspective(m, this._fov, this.width / this.height, nearZ, farZ);
+        mat4.perspective(m, this._fov, this.width / this.height, this._nearZ, this._farZ);
 
         // Apply center of perspective offset
         m[8] = -offset.x * 2 / this.width;
         m[9] = offset.y * 2 / this.height;
+        this.projectionMatrix = mat4.clone(m);
 
         mat4.scale(m, m, [1, -1, 1]);
         mat4.translate(m, m, [0, 0, -this.cameraToCenterDistance]);
@@ -940,7 +944,7 @@ export class Transform {
         // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
         // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
         this.fogMatrix = new Float64Array(16) as any;
-        mat4.perspective(this.fogMatrix, this._fov, this.width / this.height, cameraToSeaLevelDistance, farZ);
+        mat4.perspective(this.fogMatrix, this._fov, this.width / this.height, cameraToSeaLevelDistance, this._farZ);
         this.fogMatrix[8] = -offset.x * 2 / this.width;
         this.fogMatrix[9] = offset.y * 2 / this.height;
         mat4.scale(this.fogMatrix, this.fogMatrix, [1, -1, 1]);
