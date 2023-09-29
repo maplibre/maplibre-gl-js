@@ -8,7 +8,7 @@ import pixelmatch from 'pixelmatch';
 import {PNG} from 'pngjs';
 import type {AddressInfo} from 'net';
 import type {Map} from '../../../src/ui/map';
-import type {default as MapLibreGL} from '../../../src/index'
+import type {default as MapLibreGL} from '../../../src/index';
 
 const testWidth = 800;
 const testHeight = 600;
