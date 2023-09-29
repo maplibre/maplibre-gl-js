@@ -134,7 +134,7 @@ export function stubAjaxGetImage(createImageBitmap) {
 }
 
 /**
- * This should be used in test that use nice since the internal buffer returned from a file is not an instance of ArrayBuffer for some reason.
+ * This should be used in test that use nise since the internal buffer returned from a file is not an instance of ArrayBuffer for some reason.
  * @param data - the data read from a file, for example by `fs.readFileSync(...)`
  * @returns a copy of the data in the file in `ArrayBuffer` format
  */
