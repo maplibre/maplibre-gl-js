@@ -46,12 +46,25 @@ function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCa
         if (err) {
             callback(err);
         } else if (data) {
-            callback(null, {
-                vectorTile: new vt.VectorTile(new Protobuf(data)),
-                rawData: data,
-                cacheControl,
-                expires
-            });
+            try {
+                const vectorTile = new vt.VectorTile(new Protobuf(data));
+                callback(null, {
+                    vectorTile,
+                    rawData: data,
+                    cacheControl,
+                    expires
+                });
+            } catch (ex) {
+                const bytes = new Uint8Array(data);
+                const isGzipped = bytes[0] === 0x1f && bytes[1] === 0x8b;
+                let errorMessage = `Unable to parse the tile at ${params.request.url}, `;
+                if (isGzipped) {
+                    errorMessage += 'please make sure the data is not gzipped and that you have configured the relevant header in the server';
+                } else {
+                    errorMessage += `got error: ${ex.messge}`;
+                }
+                callback(new Error(errorMessage));
+            }
         }
     });
     return () => {

@@ -1,4 +1,4 @@
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 import {Source} from './source';
 import {VectorTileSource} from './vector_tile_source';
 import {Tile} from './tile';

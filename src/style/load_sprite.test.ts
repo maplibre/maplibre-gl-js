@@ -2,18 +2,25 @@ import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
 import {loadSprite} from './load_sprite';
-import {fakeXhr} from 'nise';
+import {type FakeServer, fakeServer} from 'nise';
 import * as util from '../util/util';
+import {bufferToArrayBuffer} from '../util/test/util';
 
 describe('loadSprite', () => {
-    jest.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation((data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) => {
-        createImageBitmap(new ImageData(1024, 824)).then((imgBitmap) => {
-            callback(null, imgBitmap);
-        }).catch((e) => {
-            callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
+
+    let server: FakeServer;
+
+    beforeEach(() => {
+        jest.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation((data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) => {
+            createImageBitmap(new ImageData(1024, 824)).then((imgBitmap) => {
+                callback(null, imgBitmap);
+            }).catch((e) => {
+                callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
+            });
         });
+        global.fetch = null;
+        server = fakeServer.create();
     });
-    global.fetch = null;
 
     test('backwards compatibility: single string is treated as a URL for the default sprite', done => {
         const transform = jest.fn().mockImplementation((url, type) => {
@@ -22,8 +29,8 @@ describe('loadSprite', () => {
 
         const manager = new RequestManager(transform);
 
-        const requests = [];
-        fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png'))));
 
         loadSprite('http://localhost:9966/test/unit/assets/sprite1', manager, 1, (err, result) => {
             expect(err).toBeFalsy();
@@ -43,15 +50,10 @@ describe('loadSprite', () => {
             done();
         });
 
-        expect(requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
-        requests[0].setStatus(200);
-        requests[0].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json'));
-        requests[0].onload();
+        server.respond();
 
-        expect(requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
-        requests[1].setStatus(200);
-        requests[1].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png')).buffer;
-        requests[1].onload();
+        expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
+        expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
     });
 
     test('array of objects support', done => {
@@ -61,8 +63,10 @@ describe('loadSprite', () => {
 
         const manager = new RequestManager(transform);
 
-        const requests = [];
-        fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png'))));
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite2.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite2.json')).toString());
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite2.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite2.png'))));
 
         loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}, {id: 'sprite2', url: 'http://localhost:9966/test/unit/assets/sprite2'}], manager, 1, (err, result) => {
             expect(err).toBeFalsy();
@@ -90,25 +94,11 @@ describe('loadSprite', () => {
             done();
         });
 
-        expect(requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
-        requests[0].setStatus(200);
-        requests[0].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json'));
-        requests[0].onload();
-
-        expect(requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
-        requests[1].setStatus(200);
-        requests[1].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png')).buffer;
-        requests[1].onload();
-
-        expect(requests[2].url).toBe('http://localhost:9966/test/unit/assets/sprite2.json');
-        requests[2].setStatus(200);
-        requests[2].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite2.json'));
-        requests[2].onload();
-
-        expect(requests[3].url).toBe('http://localhost:9966/test/unit/assets/sprite2.png');
-        requests[3].setStatus(200);
-        requests[3].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite2.png')).buffer;
-        requests[3].onload();
+        server.respond();
+        expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
+        expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
+        expect(server.requests[2].url).toBe('http://localhost:9966/test/unit/assets/sprite2.json');
+        expect(server.requests[3].url).toBe('http://localhost:9966/test/unit/assets/sprite2.png');
     });
 
     test('error in callback', done => {
@@ -118,20 +108,19 @@ describe('loadSprite', () => {
 
         const manager = new RequestManager(transform);
 
-        const requests = [];
-        fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
-
+        server.respondWith((xhr) => xhr.respond(500));
+        let last = false;
         loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}], manager, 1, (err, result) => {
             expect(err).toBeTruthy();
             expect(result).toBeUndefined();
-
-            done();
+            if (!last) {
+                done();
+                last = true;
+            }
         });
 
-        expect(requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
-        requests[0].setStatus(500);
-        requests[0].response = undefined;
-        requests[0].onload();
+        server.respond();
+        expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
     });
 
     test('request canceling', done => {
@@ -141,30 +130,24 @@ describe('loadSprite', () => {
 
         const manager = new RequestManager(transform);
 
-        const requests = [];
-        fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png'))));
 
         const cancelable = loadSprite([{id: 'sprite1', url: 'http://localhost:9966/test/unit/assets/sprite1'}], manager, 1, () => {});
 
         setTimeout(() => {
             cancelable.cancel();
 
-            expect(requests[0].aborted).toBeTruthy();
-            expect(requests[1].aborted).toBeTruthy();
+            expect((server.requests[0] as any).aborted).toBeTruthy();
+            expect((server.requests[1] as any).aborted).toBeTruthy();
 
             done();
         });
 
         setTimeout(() => {
-            expect(requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
-            requests[0].setStatus(200);
-            requests[0].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json'));
-            requests[0].onload();
-
-            expect(requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
-            requests[1].setStatus(200);
-            requests[1].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png')).buffer;
-            requests[1].onload();
+            server.respond();
+            expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
+            expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
         }, 10);
     });
 
@@ -175,8 +158,8 @@ describe('loadSprite', () => {
 
         const manager = new RequestManager(transform);
 
-        const requests = [];
-        fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { requests.push(req); };
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1@2x.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1@2x.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png'))));
 
         loadSprite('http://localhost:9966/test/unit/assets/sprite1', manager, 2, (err, result) => {
             expect(err).toBeFalsy();
@@ -196,14 +179,8 @@ describe('loadSprite', () => {
             done();
         });
 
-        expect(requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.json');
-        requests[0].setStatus(200);
-        requests[0].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json'));
-        requests[0].onload();
-
-        expect(requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.png');
-        requests[1].setStatus(200);
-        requests[1].response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png')).buffer;
-        requests[1].onload();
+        server.respond();
+        expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.json');
+        expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1@2x.png');
     });
 });
