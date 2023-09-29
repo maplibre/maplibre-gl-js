@@ -1,15 +1,14 @@
 import type {AlphaImage} from '../util/image';
 
-/**
- * The glyph's metrices
- * isDoubleResolution = true for 48px textures
- */
 export type GlyphMetrics = {
     width: number;
     height: number;
     left: number;
     top: number;
     advance: number;
+    /**
+     * isDoubleResolution = true for 48px textures
+     */
     isDoubleResolution?: boolean;
 };
 
