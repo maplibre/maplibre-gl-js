@@ -9,7 +9,7 @@ jobs:
   upload_benchmarks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js 18 x64
         uses: actions/setup-node@v3.6.0
