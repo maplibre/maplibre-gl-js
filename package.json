@@ -89,7 +89,7 @@
     "eslint-plugin-jest": "^27.4.2",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-tsdoc": "0.2.17",
-    "expect": "^29.6.4",
+    "expect": "^29.7.0",
     "gl": "^6.0.2",
     "glob": "^10.3.4",
     "is-builtin-module": "^3.2.1",
