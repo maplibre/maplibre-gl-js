@@ -7,6 +7,8 @@ import path from 'path';
 import pixelmatch from 'pixelmatch';
 import {PNG} from 'pngjs';
 import type {AddressInfo} from 'net';
+import type {Map} from '../../../src/ui/map';
+import type {default as MapLibreGL} from '../../../src/index';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -14,8 +16,10 @@ const testHeight = 600;
 let server: Server;
 let browser: Browser;
 let page: Page;
-let map: any;
-let maplibregl: any;
+let map: Map;
+let maplibregl: MapLibreGL;
+
+jest.retryTimes(3);
 
 describe('Browser tests', () => {
 

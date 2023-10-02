@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Improve error message when a tile can't be loaded ([#3130](https://github.com/maplibre/maplibre-gl-js/pull/3130))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

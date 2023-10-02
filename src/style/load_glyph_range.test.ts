@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
 import {loadGlyphRange} from './load_glyph_range';
-import {fakeXhr} from 'nise';
+import {fakeServer} from 'nise';
+import {bufferToArrayBuffer} from '../util/test/util';
 
 test('loadGlyphRange', done => {
     global.fetch = null;
@@ -13,8 +14,8 @@ test('loadGlyphRange', done => {
 
     const manager = new RequestManager(transform);
 
-    let request;
-    fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { request = req; };
+    const server = fakeServer.create();
+    server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
 
     loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
         expect(err).toBeFalsy();
@@ -35,9 +36,6 @@ test('loadGlyphRange', done => {
         }
         done();
     });
-
-    expect(request.url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
-    request.setStatus(200);
-    request.response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'));
-    request.onload();
+    server.respond();
+    expect(server.requests[0].url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
 });
