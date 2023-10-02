@@ -2,6 +2,8 @@
 
 ### ✨ Features and improvements
 
+- Improve error message when a tile can't be loaded ([#3130](https://github.com/maplibre/maplibre-gl-js/pull/3130))
+- Locally rendered glyphs are double resolution (48px), greatly improving sharpness of CJK text. ([#2990](https://github.com/maplibre/maplibre-gl-js/issues/2990), [#3006](https://github.com/maplibre/maplibre-gl-js/pull/3006))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
