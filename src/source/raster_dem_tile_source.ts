@@ -7,7 +7,7 @@ import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
 import {OverscaledTileID} from './tile_id';
 import {RasterTileSource} from './raster_tile_source';
 // ensure DEMData is registered for worker transfer on main thread:
-import '../data/dem_data';
+import {DEMEncoding} from '../data/dem_data';
 
 import type {Source} from './source';
 import type {Dispatcher} from '../util/dispatcher';
@@ -15,7 +15,6 @@ import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ExpiryData} from '../util/ajax';
-import { DEMEncoding } from '../data/dem_data';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)

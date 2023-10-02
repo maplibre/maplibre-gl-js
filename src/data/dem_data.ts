@@ -13,7 +13,6 @@ import {register} from '../util/web_worker_transfer';
 // surrounding pixel values to compute the slope at that pixel, and we cannot accurately calculate the slope at pixels on a
 // tile's edge without backfilling from neighboring tiles.
 
-
 export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom'
 
 export class DEMData {
