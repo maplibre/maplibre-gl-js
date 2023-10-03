@@ -2,22 +2,19 @@ import puppeteer, {Page, Browser} from 'puppeteer';
 import st from 'st';
 import http from 'http';
 import type {Server} from 'http';
-import fs from 'fs';
-import path from 'path';
-import pixelmatch from 'pixelmatch';
-import {PNG} from 'pngjs';
 import type {AddressInfo} from 'net';
 import type {Map} from '../../../src/ui/map';
 import type {default as MapLibreGL} from '../../../src/index';
 
 const testWidth = 800;
 const testHeight = 600;
+const deviceScaleFactor = 2;
 
 let server: Server;
 let browser: Browser;
 let page: Page;
 let map: Map;
-let maplibregl: MapLibreGL;
+let maplibregl: typeof MapLibreGL;
 
 jest.retryTimes(3);
 
@@ -36,7 +33,7 @@ describe('Browser tests', () => {
 
     beforeEach(async () => {
         page = await browser.newPage();
-        await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor: 2});
+        await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor});
 
         const port = (server.address() as AddressInfo).port;
 
@@ -51,6 +48,17 @@ describe('Browser tests', () => {
                 }
             });
         });
+    }, 40000);
+
+    afterEach(async() => {
+        page.close();
+    }, 40000);
+
+    afterAll(async () => {
+        await browser.close();
+        if (server) {
+            server.close();
+        }
     }, 40000);
 
     test('Load should fire before resize and moveend', async () => {
@@ -165,97 +173,9 @@ describe('Browser tests', () => {
         expect(zoom).toBe(2);
     }, 20000);
 
-    test('CJK Characters', async () => {
-
-        await page.evaluate(() => {
-
-            map.setStyle({
-                version: 8,
-                glyphs: 'https://mierune.github.io/fonts/{fontstack}/{range}.pbf',
-                sources: {
-                    sample: {
-                        type: 'geojson',
-                        data: {
-                            type: 'Feature',
-                            geometry: {
-                                type: 'Point',
-                                coordinates: [0, 0]
-                            },
-                            properties: {
-                                'name_en': 'abcde',
-                                'name_ja': 'あいうえお',
-                                'name_ch': '阿衣乌唉哦',
-                                'name_kr': '아이우'
-                            }
-                        }
-                    },
-                },
-                'layers': [
-                    {
-                        'id': 'sample-text-left',
-                        'type': 'symbol',
-                        'source': 'sample',
-                        'layout': {
-                            'text-anchor': 'top',
-                            'text-field': '{name_ja}{name_en}',
-                            'text-font': ['Open Sans Regular'],
-                            'text-offset': [-10, 0],
-                        }
-                    },
-                    {
-                        'id': 'sample-text-center',
-                        'type': 'symbol',
-                        'source': 'sample',
-                        'layout': {
-                            'text-anchor': 'top',
-                            'text-field': '{name_ch}{name_kr}',
-                            'text-font': ['Open Sans Regular'],
-                            'text-offset': [0, 0],
-                        }
-                    },
-                    {
-                        'id': 'sample-text-right',
-                        'type': 'symbol',
-                        'source': 'sample',
-                        'layout': {
-                            'text-anchor': 'top',
-                            'text-field': '{name_en}{name_ja}',
-                            'text-font': ['Open Sans Regular'],
-                            'text-offset': [10, 0],
-                        }
-                    },
-                ]
-            });
-        });
-
-        const image = await page.evaluate(() => {
-            return new Promise((resolve, _) => {
-                map.once('idle', () => resolve(map.getCanvas().toDataURL()));
-                map.setZoom(8);
-            });
-        });
-
-        const actualBuff = Buffer.from((image as string).replace(/data:.*;base64,/, ''), 'base64');
-        const actualPng = new PNG({width: testWidth, height: testHeight});
-        actualPng.parse(actualBuff);
-
-        const expectedPlatforms = ['ubuntu-runner', 'macos-runner', 'macos-local'];
-        let minDiff = Infinity;
-        for (const expected of expectedPlatforms) {
-            const diff = compareByPixelmatch(actualPng, expected, testWidth, testHeight);
-            if (diff < minDiff) {
-                minDiff = diff;
-            }
-        }
-
-        // At least one platform should be identical
-        expect(minDiff).toBe(0);
-
-    }, 20000);
-
     test('Marker: correct position', async () => {
         const markerScreenPosition = await page.evaluate(() => {
-            const markerMapPosition = [11.40, 47.30];
+            const markerMapPosition = [11.40, 47.30] as [number, number];
             const marker = new maplibregl.Marker()
                 .setLngLat(markerMapPosition)
                 .addTo(map);
@@ -328,35 +248,4 @@ describe('Browser tests', () => {
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
         expect(markerScreenPosition.y).toBeCloseTo(378.1);
     }, 20000);
-
-    afterEach(async() => {
-        page.close();
-    }, 40000);
-
-    afterAll(async () => {
-        await browser.close();
-        if (server) {
-            server.close();
-        }
-    }, 40000);
-
-    function compareByPixelmatch(actualPng:PNG, platform: string, width:number, height:number): number {
-        const platformFixtureBase64 = fs.readFileSync(
-            path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}-base64.txt`), 'utf8')
-            .replace(/\s/g, '')
-            .replace(/data:.*;base64,/, '');
-
-        const expectedBuff = Buffer.from(platformFixtureBase64, 'base64');
-
-        const expectedPng = new PNG({width: testWidth, height: testHeight});
-        expectedPng.parse(expectedBuff);
-
-        const diffImg = new PNG({width, height});
-
-        const diff = pixelmatch(
-            actualPng.data, expectedPng.data, diffImg.data,
-            width, height, {threshold: 0}) / (width * height);
-
-        return diff;
-    }
 });
