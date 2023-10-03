@@ -255,7 +255,7 @@ describe('Browser tests', () => {
         const actualPng = PNG.sync.read(actualBuff);
 
         let minDiff = Infinity;
-        for (const expected of ['macos-local']) {
+        for (const expected of ['macos-local', 'ubuntu']) {
             const diff = compareByPixelmatch(actualPng, expected, testWidth * deviceScaleFactor, testHeight * deviceScaleFactor);
             if (diff < minDiff) {
                 minDiff = diff;
