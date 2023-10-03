@@ -53,7 +53,7 @@
     "@types/cssnano": "^5.0.0",
     "@types/d3": "^7.4.1",
     "@types/diff": "^5.0.5",
-    "@types/earcut": "^2.1.1",
+    "@types/earcut": "^2.1.2",
     "@types/eslint": "^8.44.3",
     "@types/gl": "^6.0.3",
     "@types/glob": "^8.1.0",
