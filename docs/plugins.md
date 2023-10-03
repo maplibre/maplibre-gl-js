@@ -55,10 +55,6 @@ Adds a control that shows a legend generated from the map style.
 Make multiple tile layers transparent.
 <br/><small>[View on GitHub](https://github.com/dayjournal/maplibre-gl-opacity)</small>
     
-#### mapbox-gl-style-switcher
-Adds a control to switch between styles.
-<br/><small>[View on GitHub](https://github.com/el/style-switcher)</small>
-    
 #### mapboxgl-minimap
 Adds a control to show a miniature overview of the current map.
 <br/><small>[View on GitHub](https://github.com/aesqe/mapboxgl-minimap)</small>
