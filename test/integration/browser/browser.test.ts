@@ -31,7 +31,7 @@ describe('Browser tests', () => {
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
-        browser = await puppeteer.launch({headless: false});
+        browser = await puppeteer.launch({headless: 'new'});
 
     }, 40000);
 
@@ -346,14 +346,15 @@ describe('Browser tests', () => {
     function compareByPixelmatch(actualPng: PNG, platform: string, width: number, height: number): number {
         const pathToFile = path.join(__dirname, `fixtures/cjk-expected-image/${platform}.png`);
         const expectedPng = PNG.sync.read(fs.readFileSync(pathToFile));
-        //if (process.env.UPDATE) {
+        if (process.env.UPDATE) {
             fs.writeFileSync(pathToFile, PNG.sync.write(expectedPng));
-        //}
+        }
         const diffImg = new PNG({width, height});
 
         const diff = pixelmatch(
             actualPng.data, expectedPng.data, diffImg.data,
             width, height, {threshold: 0}) / (width * height);
+
         return diff;
     }
 });
