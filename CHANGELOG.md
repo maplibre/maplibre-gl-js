@@ -13,6 +13,7 @@
 - Fix error thrown when unsetting line-gradient [#2683]
 - Update raster tile end points in documentation
 - Avoiding inertia animation on Mac when reduced motion is on ([#3068](https://github.com/maplibre/maplibre-gl-js/pull/3068))
+- 3d buildings example doesn't work as expected ([#3165](https://github.com/maplibre/maplibre-gl-js/pull/3165))
 - _...Add new stuff here..._
 
 ## 3.3.1
