@@ -112,7 +112,9 @@ export class DEMData {
     }
 
     unpack(r: number, g: number, b: number) {
-        return (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
+        const value = (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
+        const significantDigits = 5;
+        return Math.round(value * Math.pow(10, significantDigits) / Math.pow(10, significantDigits));
     }
 
     getPixels() {

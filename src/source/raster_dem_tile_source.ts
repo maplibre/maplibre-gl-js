@@ -7,7 +7,8 @@ import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
 import {OverscaledTileID} from './tile_id';
 import {RasterTileSource} from './raster_tile_source';
 // ensure DEMData is registered for worker transfer on main thread:
-import {DEMEncoding} from '../data/dem_data';
+import '../data/dem_data';
+import type {DEMEncoding} from '../data/dem_data';
 
 import type {Source} from './source';
 import type {Dispatcher} from '../util/dispatcher';
