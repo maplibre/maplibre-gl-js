@@ -19,7 +19,6 @@
         "terrain": {
           "type": "raster-dem",
           "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
-          "format":"png",
           "minzoom": 7,
           "maxzoom": 12,
           "tileSize": 256

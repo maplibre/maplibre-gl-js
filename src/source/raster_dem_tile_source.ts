@@ -8,6 +8,7 @@ import {OverscaledTileID} from './tile_id';
 import {RasterTileSource} from './raster_tile_source';
 // ensure DEMData is registered for worker transfer on main thread:
 import '../data/dem_data';
+import type {DEMEncoding} from '../data/dem_data';
 
 import type {Source} from './source';
 import type {Dispatcher} from '../util/dispatcher';
@@ -33,7 +34,11 @@ import type {ExpiryData} from '../util/ajax';
  * @see [3D Terrain](https://maplibre.org/maplibre-gl-js/docs/examples/3d-terrain/)
  */
 export class RasterDEMTileSource extends RasterTileSource implements Source {
-    encoding: 'mapbox' | 'terrarium';
+    encoding: DEMEncoding;
+    redFactor?: number;
+    greenFactor?: number;
+    blueFactor?: number;
+    baseShift?: number;
 
     constructor(id: string, options: RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super(id, options, dispatcher, eventedParent);
@@ -41,6 +46,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.maxzoom = 22;
         this._options = extend({type: 'raster-dem'}, options);
         this.encoding = options.encoding || 'mapbox';
+        this.redFactor = options.redFactor;
+        this.greenFactor = options.greenFactor;
+        this.blueFactor = options.blueFactor;
+        this.baseShift = options.baseShift;
     }
 
     loadTile(tile: Tile, callback: Callback<void>) {
@@ -67,7 +76,11 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     coord: tile.tileID,
                     source: this.id,
                     rawImageData,
-                    encoding: this.encoding
+                    encoding: this.encoding,
+                    redFactor: this.redFactor,
+                    greenFactor: this.greenFactor,
+                    blueFactor: this.blueFactor,
+                    baseShift: this.baseShift
                 };
 
                 if (!tile.actor || tile.state === 'expired') {
