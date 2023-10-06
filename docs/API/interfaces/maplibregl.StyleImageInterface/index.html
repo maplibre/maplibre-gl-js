@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.5">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.4">
     
     
       
@@ -26,10 +26,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.0e669242.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.bd3936ea.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.85d0ee34.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
       
       
 
@@ -421,15 +421,20 @@
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    
       
-        
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
         
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -475,14 +480,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
         
+          
           <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
             
   
@@ -1597,14 +1604,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
         
+          
           <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
             
   
@@ -1661,14 +1670,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" checked>
         
+          
           <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
             
   
@@ -1917,14 +1928,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
         
+          
           <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
             
   
@@ -1979,14 +1992,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
         
+          
           <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
             
   
@@ -3848,15 +3863,20 @@
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    
+    
       
-        
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
         
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -5845,7 +5865,7 @@
 implementers to model: it is not an exported method or class.</p>
 <p>Images implementing this interface can be redrawn for every frame. They can be used to animate
 icons and patterns or make them respond to user input. Style images can implement a
-<a href="./#render">render</a> method. The method is called every frame and
+<a href="./#render">StyleImageInterface#render</a> method. The method is called every frame and
 can be used to update the image.</p>
 <p><strong><code>See</code></strong></p>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/">Add an animated icon to the map.</a></p>
@@ -5894,7 +5914,7 @@ can be used to update the image.</p>
 <p>• <code>Optional</code> <strong>onAdd</strong>: (<code>map</code>: <a href="../../classes/maplibregl.Map/"><code>Map</code></a>, <code>id</code>: <code>string</code>) =&gt; <code>void</code></p>
 <h4 id="type-declaration">Type declaration</h4>
 <p>▸ (<code>map</code>, <code>id</code>): <code>void</code></p>
-<p>Optional method called when the layer has been added to the Map with <a href="../../classes/maplibregl.Map/#addimage">addImage</a>.</p>
+<p>Optional method called when the layer has been added to the Map with <a href="../../classes/maplibregl.Map/#addimage">Map#addImage</a>.</p>
 <h5 id="parameters">Parameters</h5>
 <table>
 <thead>
@@ -5920,18 +5940,18 @@ can be used to update the image.</p>
 <h5 id="returns">Returns</h5>
 <p><code>void</code></p>
 <h4 id="defined-in">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/2fa582c90/src/style/style_image.ts#L134">src/style/style_image.ts:134</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/28af6749a/src/style/style_image.ts#L134">src/style/style_image.ts:134</a></p>
 <hr />
 <h3 id="onremove">onRemove</h3>
 <p>• <code>Optional</code> <strong>onRemove</strong>: () =&gt; <code>void</code></p>
 <h4 id="type-declaration_1">Type declaration</h4>
 <p>▸ (): <code>void</code></p>
-<p>Optional method called when the icon is removed from the map with <a href="../../classes/maplibregl.Map/#removeimage">removeImage</a>.
+<p>Optional method called when the icon is removed from the map with <a href="../../classes/maplibregl.Map/#removeimage">Map#removeImage</a>.
 This gives the image a chance to clean up resources and event listeners.</p>
 <h5 id="returns_1">Returns</h5>
 <p><code>void</code></p>
 <h4 id="defined-in_1">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/2fa582c90/src/style/style_image.ts#L139">src/style/style_image.ts:139</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/28af6749a/src/style/style_image.ts#L139">src/style/style_image.ts:139</a></p>
 <hr />
 <h3 id="render">render</h3>
 <p>• <code>Optional</code> <strong>render</strong>: () =&gt; <code>boolean</code></p>
@@ -5941,13 +5961,13 @@ This gives the image a chance to clean up resources and event listeners.</p>
 The method can optionally update the image's <code>data</code> member with a new image.</p>
 <p>If the method updates the image it must return <code>true</code> to commit the change.
 If the method returns <code>false</code> or nothing the image is assumed to not have changed.</p>
-<p>If updates are infrequent it maybe easier to use <a href="../../classes/maplibregl.Map/#updateimage">updateImage</a> to update
+<p>If updates are infrequent it maybe easier to use <a href="../../classes/maplibregl.Map/#updateimage">Map#updateImage</a> to update
 the image instead of implementing this method.</p>
 <h5 id="returns_2">Returns</h5>
 <p><code>boolean</code></p>
 <p><code>true</code> if this method updated the image. <code>false</code> if the image was not changed.</p>
 <h4 id="defined-in_2">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/2fa582c90/src/style/style_image.ts#L128">src/style/style_image.ts:128</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/28af6749a/src/style/style_image.ts#L128">src/style/style_image.ts:128</a></p>
 
 
 
@@ -6026,10 +6046,11 @@ the image instead of implementing this method.</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.78eede0e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.94c44541.min.js"></script>
       
     
   </body>
