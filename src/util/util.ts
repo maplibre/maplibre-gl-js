@@ -517,3 +517,60 @@ export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | n
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
 }
+
+/**
+ * Reads pixels from an ImageBitmap/Image/canvas using webcodec VideoFrame API.
+ *
+ * @param data - image, imagebitmap, or canvas to parse
+ * @returns a promise containing the parsed RGBA pixel values of the image
+ */
+export async function readImageUsingVideoFrame(image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas, x: number, y: number, width: number, height: number): Promise<Uint8ClampedArray> {
+    if (typeof VideoFrame !== 'undefined') {
+        const start = performance.now();
+        const outsideFrame = x < 0 || y < 0 || width + x > image.width || height + y > image.height;
+        const frame = new VideoFrame(image, {timestamp: 0});
+        try {
+            if (frame && frame.format?.startsWith('BGR') || frame.format?.startsWith('RGB')) {
+                console.log(frame.format);
+                const swapBR = frame.format?.startsWith('BGR');
+                const options = outsideFrame ? {} : {rect: {x, y, width, height}};
+                const size = frame.allocationSize(options);
+                const rawResult = new Uint8ClampedArray(size);
+                await frame.copyTo(rawResult, options);
+                let result = rawResult;
+                if (outsideFrame) {
+                    result = new Uint8ClampedArray(width * height * 4);
+                    const sourceRowOffset = Math.max(x, 0) * 4;
+                    const destRowOffset = Math.max(-x, 0) * 4;
+                    const rowLength = Math.min(x + width, image.width) * 4 - sourceRowOffset;
+                    for (let destRow = 0; destRow < height; destRow++) {
+                        const sourceRow = destRow + y;
+                        if (sourceRow >= 0 && sourceRow < image.height) {
+                            const sourceOffset = sourceRow * image.width * 4 + sourceRowOffset;
+                            const destOffset = destRow * width * 4 + destRowOffset;
+                            result.set(
+                                rawResult.subarray(sourceOffset, sourceOffset + rowLength),
+                                destOffset
+                            );
+                            if (swapBR) {
+                                // swap red and blue channels
+                                const end = destOffset + rowLength;
+                                for (let i = destOffset; i < end; i += 4) {
+                                    const tmp = result[i];
+                                    result[i] = result[i + 2];
+                                    result[i + 2] = tmp;
+                                }
+                            }
+                        }
+                    }
+                }
+                return result;
+            }
+        } catch (e) {
+            return undefined;
+        } finally {
+            frame.close();
+            console.log(performance.now() - start);
+        }
+    }
+}

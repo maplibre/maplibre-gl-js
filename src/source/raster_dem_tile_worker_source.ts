@@ -6,7 +6,8 @@ import type {
     WorkerDEMTileCallback,
     TileParameters
 } from './worker_source';
-import {isImageBitmap} from '../util/util';
+import {isImageBitmap, readImageUsingVideoFrame} from '../util/util';
+import {offscreenCanvasMangled} from '../util/offscreen_canvas_mangled';
 
 export class RasterDEMTileWorkerSource {
     actor: Actor;
@@ -18,17 +19,22 @@ export class RasterDEMTileWorkerSource {
         this.loaded = {};
     }
 
-    loadTile(params: WorkerDEMTileParameters, callback: WorkerDEMTileCallback) {
+    async loadTile(params: WorkerDEMTileParameters, callback: WorkerDEMTileCallback) {
         const {uid, encoding, rawImageData, redFactor, greenFactor, blueFactor, baseShift} = params;
         // Main thread will transfer ImageBitmap if offscreen decode with OffscreenCanvas is supported, else it will transfer an already decoded image.
-        const imagePixels = isImageBitmap(rawImageData) ? this.getImageData(rawImageData) : rawImageData as RGBAImage;
+        const imagePixels = isImageBitmap(rawImageData) ? await this.getImageData(rawImageData) : rawImageData as RGBAImage;
         const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
         this.loaded = this.loaded || {};
         this.loaded[uid] = dem;
         callback(null, dem);
     }
 
-    getImageData(imgBitmap: ImageBitmap): RGBAImage {
+    async getImageData(imgBitmap: ImageBitmap): Promise<RGBAImage> {
+        if (true || offscreenCanvasMangled()) {
+            const parsed = await readImageUsingVideoFrame(imgBitmap, -1, -1, imgBitmap.width + 2, imgBitmap.height + 2);
+            if (parsed) return new RGBAImage({width: imgBitmap.width + 2, height: imgBitmap.height + 2}, parsed);
+        }
+
         // Lazily initialize OffscreenCanvas
         if (!this.offscreenCanvas || !this.offscreenCanvasContext) {
             // Dem tiles are typically 256x256
