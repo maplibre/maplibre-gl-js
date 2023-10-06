@@ -100,6 +100,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: lts/*
+      - name: install CJK fonts for local ideographs render tests
+        run: sudo apt install fonts-noto-cjk
       - run: npm ci
       - name: Start display server
         if: runner.os == 'Linux'
