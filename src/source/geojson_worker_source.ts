@@ -75,16 +75,16 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
     loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void {
         const canonical = params.tileID.canonical;
-    
+
         if (!this._geoJSONIndex) {
             return callback(null, null);  // we couldn't load the file
         }
-    
+
         const geoJSONTile = this._geoJSONIndex.getTile(canonical.z, canonical.x, canonical.y);
         if (!geoJSONTile) {
             return callback(null, null); // nothing in the given tile
         }
-    
+
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features);
         // Encode the geojson-vt tile into binary vector tile form.  This
         // is a convenience that allows `FeatureIndex` to operate the same way
@@ -94,7 +94,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
             pbf = new Uint8Array(pbf);
         }
-    
+
         callback(null, {
             vectorTile: geojsonWrapper,
             rawData: pbf.buffer

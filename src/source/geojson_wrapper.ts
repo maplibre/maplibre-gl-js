@@ -13,7 +13,7 @@ class FeatureWrapper implements VectorTileFeature {
     _feature: Feature;
 
     extent: number;
-    type: Feature["type"];
+    type: Feature['type'];
     id: number;
     properties: {[_: string]: string | number | boolean};
 
