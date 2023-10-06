@@ -55,6 +55,7 @@
     "@types/diff": "^5.0.5",
     "@types/earcut": "^2.1.2",
     "@types/eslint": "^8.44.3",
+    "@types/geojson-vt": "^3.2.1",
     "@types/gl": "^6.0.3",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.3",
