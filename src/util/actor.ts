@@ -213,13 +213,13 @@ export class Actor {
                 if (task.error) {
                     callback(deserialize(task.error));
                 } else {
-                    callback(null, deserialize(task.data));
+                    callback(null, ...(deserialize(task.data) as any[]));
                 }
             }
         } else {
             let completed = false;
             const buffers: Array<Transferable> = [];
-            const done = task.hasCallback ? (err: Error, data?: any) => {
+            const done = task.hasCallback ? (err: Error, ...data: any[]) => {
                 completed = true;
                 delete this.cancelCallbacks[id];
                 const responseMessage: MessageData = {
