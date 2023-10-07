@@ -2,6 +2,7 @@
     "version": 8,
     "metadata": {
         "test": {
+            "pixelRatio": 2,
             "localIdeographFontFamily": "sans-serif",
             "width": 800,
             "height": 600
