@@ -6,7 +6,7 @@ import {
     sameOrigin
 } from './ajax';
 
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 import {destroyFetchMock, FetchMock, RequestMock, setupFetchMock} from './test/mock_fetch';
 
 function readAsText(blob) {

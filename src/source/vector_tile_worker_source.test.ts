@@ -4,7 +4,7 @@ import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
 import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 import {Actor} from '../util/actor';
 import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
@@ -232,6 +232,50 @@ describe('vector tile worker source', () => {
         expect(parse).not.toHaveBeenCalled();
         expect(callback).toHaveBeenCalledTimes(1);
 
+    });
+
+    test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        const parse = jest.fn();
+        const callback = jest.fn();
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, 'something...');
+        });
+
+        source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'}
+        } as any as WorkerTileParameters, callback);
+
+        server.respond();
+
+        expect(parse).not.toHaveBeenCalled();
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback.mock.calls[0][0].message).toContain('Unable to parse the tile at');
+    });
+
+    test('VectorTileWorkerSource#returns a good error message when failing to parse a gzipped tile', () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        const parse = jest.fn();
+        const callback = jest.fn();
+
+        server.respondWith(new Uint8Array([0x1f, 0x8b]).buffer);
+
+        source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'}
+        } as any as WorkerTileParameters, callback);
+
+        server.respond();
+
+        expect(parse).not.toHaveBeenCalled();
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback.mock.calls[0][0].message).toContain('gzipped');
     });
 
     test('VectorTileWorkerSource provides resource timing information', done => {
