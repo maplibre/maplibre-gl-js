@@ -535,12 +535,13 @@ export function readImageUsingVideoFrame(
         const frame = new VideoFrame(image, {timestamp: 0});
         const format = frame?.format;
         if (!format || (!format.startsWith('BGR') && !format.startsWith('RGB'))) {
+            frame.close();
             callback();
         } else {
             const swapBR = format.startsWith('BGR');
             /*
                 Offset is the byte offset in the dest image that the first pixel appears at
-                and stride is the number of bytes to the start of the next row
+                and stride is the number of bytes to the start of the next row:
                 ┌───────────┐
                 │  dest     │
                 │       ┌───┼───────┐
