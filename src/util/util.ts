@@ -524,47 +524,56 @@ export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | n
  * @param data - image, imagebitmap, or canvas to parse
  * @returns a promise containing the parsed RGBA pixel values of the image, or undefined if an error occurred
  */
-export async function readImageUsingVideoFrame(image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas, x: number, y: number, width: number, height: number): Promise<Uint8ClampedArray> {
-    if (typeof VideoFrame !== 'undefined') {
+export function readImageUsingVideoFrame(
+    image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
+    x: number, y: number, width: number, height: number,
+    callback: Callback<Uint8ClampedArray>
+) {
+    if (typeof VideoFrame === 'undefined') {
+        callback();
+    } else {
         const frame = new VideoFrame(image, {timestamp: 0});
-        try {
-            if (frame && frame.format?.startsWith('BGR') || frame.format?.startsWith('RGB')) {
-                const swapBR = frame.format?.startsWith('BGR');
-                /*
+        const format = frame?.format;
+        if (!format || (!format.startsWith('BGR') && !format.startsWith('RGB'))) {
+            callback();
+        } else {
+            const swapBR = format.startsWith('BGR');
+            /*
                 Offset is the byte offset in the dest image that the first pixel appears at
                 and stride is the number of bytes to the start of the next row
-                ┌────────┐
-                │dest    │
-                │    ┌───┼────┐
-                │off>│▓▓▓│    │
-                │str>│▓▓▓│    │
-                └────┼───┘    │
-                     │source  │
-                     └────────┘
+                ┌───────────┐
+                │  dest     │
+                │       ┌───┼───────┐
+                │offset>│▓▓▓│ source│
+                │       │▓▓▓│       │
+                │       └───┼───────┘
+                │stride <---│
+                │------>    │
+                └───────────┘
                 These handle when the destination image overhangs the bounds of the source image,
                 similar to canvas.getImageData(-1, -1, width+2, height+2)
                 */
-                const destRowOffset = Math.max(-x, 0) * 4;
-                const firstSourceRow = Math.max(0, y);
-                const firstDestRow = firstSourceRow - y;
-                const offset = firstDestRow * width * 4 + destRowOffset;
-                const stride = width * 4;
-                const result = new Uint8ClampedArray(width * height * 4);
+            const destRowOffset = Math.max(-x, 0) * 4;
+            const firstSourceRow = Math.max(0, y);
+            const firstDestRow = firstSourceRow - y;
+            const offset = firstDestRow * width * 4 + destRowOffset;
+            const stride = width * 4;
+            const result = new Uint8ClampedArray(width * height * 4);
 
-                // rect selects the subset of the source image that should get copied over to the dest rectangle
-                const sourceLeft = Math.max(0, x);
-                const sourceTop = Math.max(0, y);
-                const sourceRight = Math.min(image.width, x + width);
-                const sourceBottom = Math.min(image.height, y + height);
-                await frame.copyTo(result, {
-                    rect: {
-                        x: sourceLeft,
-                        y: sourceTop,
-                        width: sourceRight - sourceLeft,
-                        height: sourceBottom - sourceTop
-                    },
-                    layout: [{offset, stride}]
-                });
+            // rect selects the subset of the source image that should get copied over to the dest rectangle
+            const sourceLeft = Math.max(0, x);
+            const sourceTop = Math.max(0, y);
+            const sourceRight = Math.min(image.width, x + width);
+            const sourceBottom = Math.min(image.height, y + height);
+            frame.copyTo(result, {
+                rect: {
+                    x: sourceLeft,
+                    y: sourceTop,
+                    width: sourceRight - sourceLeft,
+                    height: sourceBottom - sourceTop
+                },
+                layout: [{offset, stride}]
+            }).then(() => {
                 if (swapBR) {
                     for (let i = 0; i < result.length; i += 4) {
                         const tmp = result[i];
@@ -572,12 +581,9 @@ export async function readImageUsingVideoFrame(image: HTMLImageElement | HTMLCan
                         result[i + 2] = tmp;
                     }
                 }
-                return result;
-            }
-        } catch (e) {
-            return undefined;
-        } finally {
-            frame.close();
+                callback(null, result);
+            }).catch(e => callback(e)).finally(() => frame.close());
         }
+
     }
 }

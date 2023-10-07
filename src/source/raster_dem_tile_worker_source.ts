@@ -8,48 +8,68 @@ import type {
 } from './worker_source';
 import {isImageBitmap, readImageUsingVideoFrame} from '../util/util';
 import {offscreenCanvasMangled} from '../util/offscreen_canvas_mangled';
+import {Callback} from '../types/callback';
+
+let offscreenCanvas: OffscreenCanvas;
+let offscreenCanvasContext: OffscreenCanvasRenderingContext2D;
 
 export class RasterDEMTileWorkerSource {
     actor: Actor;
     loaded: {[_: string]: DEMData};
-    offscreenCanvas: OffscreenCanvas;
-    offscreenCanvasContext: OffscreenCanvasRenderingContext2D;
 
     constructor() {
         this.loaded = {};
     }
 
-    async loadTile(params: WorkerDEMTileParameters, callback: WorkerDEMTileCallback) {
+    loadTile(params: WorkerDEMTileParameters, callback: WorkerDEMTileCallback) {
         const {uid, encoding, rawImageData, redFactor, greenFactor, blueFactor, baseShift} = params;
         // Main thread will transfer ImageBitmap if offscreen decode with OffscreenCanvas is supported, else it will transfer an already decoded image.
-        const imagePixels = isImageBitmap(rawImageData) ? await this.getImageData(rawImageData) : rawImageData as RGBAImage;
-        const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
-        this.loaded = this.loaded || {};
-        this.loaded[uid] = dem;
-        callback(null, dem);
+        const finish = (err: Error, imagePixels: RGBAImage) => {
+            if (err) {
+                callback(err);
+            } else {
+                const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
+                this.loaded = this.loaded || {};
+                this.loaded[uid] = dem;
+                callback(null, dem);
+            }
+        };
+        if (isImageBitmap(rawImageData)) {
+            this.getImageData(rawImageData, finish);
+        } else {
+            finish(null, rawImageData as RGBAImage);
+        }
     }
 
-    async getImageData(imgBitmap: ImageBitmap): Promise<RGBAImage> {
+    getImageData(imgBitmap: ImageBitmap, callback: Callback<RGBAImage>) {
+        const width = imgBitmap.width;
+        const height = imgBitmap.height;
         if (offscreenCanvasMangled()) {
-            const parsed = await readImageUsingVideoFrame(imgBitmap, -1, -1, imgBitmap.width + 2, imgBitmap.height + 2);
-            if (parsed) return new RGBAImage({width: imgBitmap.width + 2, height: imgBitmap.height + 2}, parsed);
+            readImageUsingVideoFrame(imgBitmap, -1, -1, width + 2, height + 2, (err, parsed) => {
+                if (err) fallback();
+                else callback(null,  new RGBAImage({width: width + 2, height: height + 2}, parsed));
+            });
+        } else {
+            fallback();
         }
 
-        // Lazily initialize OffscreenCanvas
-        if (!this.offscreenCanvas || !this.offscreenCanvasContext) {
+        function fallback() {
+            // Lazily initialize OffscreenCanvas
+            if (!offscreenCanvas || !offscreenCanvasContext) {
             // Dem tiles are typically 256x256
-            this.offscreenCanvas = new OffscreenCanvas(imgBitmap.width, imgBitmap.height);
-            this.offscreenCanvasContext = this.offscreenCanvas.getContext('2d', {willReadFrequently: true});
+                offscreenCanvas = new OffscreenCanvas(width, height);
+                offscreenCanvasContext = offscreenCanvas.getContext('2d', {willReadFrequently: true});
+            }
+
+            offscreenCanvas.width = width;
+            offscreenCanvas.height = height;
+
+            offscreenCanvasContext.drawImage(imgBitmap, 0, 0, width, height);
+            // Insert an additional 1px padding around the image to allow backfilling for neighboring data.
+            const imgData = offscreenCanvasContext.getImageData(-1, -1, width + 2, height + 2);
+            offscreenCanvasContext.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+            callback(null, new RGBAImage({width: imgData.width, height: imgData.height}, imgData.data));
         }
-
-        this.offscreenCanvas.width = imgBitmap.width;
-        this.offscreenCanvas.height = imgBitmap.height;
-
-        this.offscreenCanvasContext.drawImage(imgBitmap, 0, 0, imgBitmap.width, imgBitmap.height);
-        // Insert an additional 1px padding around the image to allow backfilling for neighboring data.
-        const imgData = this.offscreenCanvasContext.getImageData(-1, -1, imgBitmap.width + 2, imgBitmap.height + 2);
-        this.offscreenCanvasContext.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
-        return new RGBAImage({width: imgData.width, height: imgData.height}, imgData.data);
     }
 
     removeTile(params: TileParameters) {

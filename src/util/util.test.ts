@@ -1,5 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {arraysIntersect, asyncAll, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageUsingVideoFrame, uniqueId, wrap} from './util';
+import {promisify} from 'util';
 
 describe('util', () => {
     expect(easeCubicInOut(0)).toBe(0);
@@ -353,12 +354,16 @@ describe('util readImageUsingVideoFrame', () => {
         get format() {
             return format;
         },
-        copyTo: jest.fn(buf => buf.set(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]))),
+        copyTo: jest.fn(buf => {
+            buf.set(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]).subarray(0, buf.length));
+            return Promise.resolve();
+        }),
         close: jest.fn(),
     };
     (window as any).VideoFrame = jest.fn(() => frame);
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 2;
+    const readImageUsingVideoFramePromise = promisify(readImageUsingVideoFrame);
 
     beforeEach(() => {
         format = 'RGBA';
@@ -368,7 +373,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     test('copy RGB', async () => {
         format = 'RGBA';
-        const result = await readImageUsingVideoFrame(canvas, 0, 0, 2, 2);
+        const result = await readImageUsingVideoFramePromise(canvas, 0, 0, 2, 2);
         expect(result).toHaveLength(4 * 4);
         expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
             layout: [{offset: 0, stride: 8}],
@@ -383,7 +388,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     test('flip BRG', async () => {
         format = 'BGRX';
-        const result = await readImageUsingVideoFrame(canvas, 0, 0, 2, 2);
+        const result = await readImageUsingVideoFramePromise(canvas, 0, 0, 2, 2);
         expect(result).toEqual(new Uint8ClampedArray([
             3, 2, 1, 4, 7, 6, 5, 8,
             11, 10, 9, 12, 15, 14, 13, 16
@@ -393,7 +398,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     test('ignore bad format', async () => {
         format = 'OTHER';
-        const result = await readImageUsingVideoFrame(canvas, 0, 0, 2, 2);
+        const result = await readImageUsingVideoFramePromise(canvas, 0, 0, 2, 2);
         expect(result).toBeUndefined();
         expect(frame.close).toHaveBeenCalledTimes(1);
     });
@@ -405,7 +410,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('full rectangle', async () => {
-            await readImageUsingVideoFrame(canvas, 0, 0, 3, 3);
+            await readImageUsingVideoFramePromise(canvas, 0, 0, 3, 3);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 0, stride: 12}],
                 rect: {x: 0, y: 0, width: 3, height: 3}
@@ -413,7 +418,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('top left', async () => {
-            await readImageUsingVideoFrame(canvas, 0, 0, 2, 2);
+            await readImageUsingVideoFramePromise(canvas, 0, 0, 2, 2);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 0, stride: 8}],
                 rect: {x: 0, y: 0, width: 2, height: 2}
@@ -421,7 +426,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('top right', async () => {
-            await readImageUsingVideoFrame(canvas, 1, 0, 2, 2);
+            await readImageUsingVideoFramePromise(canvas, 1, 0, 2, 2);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 0, stride: 8}],
                 rect: {x: 1, y: 0, width: 2, height: 2}
@@ -429,7 +434,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('bottom left', async () => {
-            await readImageUsingVideoFrame(canvas, 0, 1, 2, 2);
+            await readImageUsingVideoFramePromise(canvas, 0, 1, 2, 2);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 0, stride: 8}],
                 rect: {x: 0, y: 1, width: 2, height: 2}
@@ -437,7 +442,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('bottom right', async () => {
-            await readImageUsingVideoFrame(canvas, 1, 1, 2, 2);
+            await readImageUsingVideoFramePromise(canvas, 1, 1, 2, 2);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 0, stride: 8}],
                 rect: {x: 1, y: 1, width: 2, height: 2}
@@ -445,7 +450,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('middle', async () => {
-            await readImageUsingVideoFrame(canvas, 1, 1, 1, 1);
+            await readImageUsingVideoFramePromise(canvas, 1, 1, 1, 1);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 0, stride: 4}],
                 rect: {x: 1, y: 1, width: 1, height: 1}
@@ -453,7 +458,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('extend past on all sides', async () => {
-            await readImageUsingVideoFrame(canvas, -1, -1, 5, 5);
+            await readImageUsingVideoFramePromise(canvas, -1, -1, 5, 5);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 4 * 5 + 4, stride: 4 * 5}],
                 rect: {x: 0, y: 0, width: 3, height: 3}
@@ -461,7 +466,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('overhang top left', async () => {
-            await readImageUsingVideoFrame(canvas, -1, -1, 2, 2);
+            await readImageUsingVideoFramePromise(canvas, -1, -1, 2, 2);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 4 * 2 + 4, stride: 4 * 2}],
                 rect: {x: 0, y: 0, width: 1, height: 1}
@@ -469,7 +474,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('overhang top right', async () => {
-            await readImageUsingVideoFrame(canvas, 2, -1, 2, 2);
+            await readImageUsingVideoFramePromise(canvas, 2, -1, 2, 2);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 4 * 2, stride: 4 * 2}],
                 rect: {x: 2, y: 0, width: 1, height: 1}
@@ -477,7 +482,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('overhang bottom left', async () => {
-            await readImageUsingVideoFrame(canvas, -1, 2, 2, 2);
+            await readImageUsingVideoFramePromise(canvas, -1, 2, 2, 2);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 4, stride: 4 * 2}],
                 rect: {x: 0, y: 2, width: 1, height: 1}
@@ -485,7 +490,7 @@ describe('util readImageUsingVideoFrame', () => {
         });
 
         test('overhang bottom right', async () => {
-            await readImageUsingVideoFrame(canvas, 2, 2, 2, 2);
+            await readImageUsingVideoFramePromise(canvas, 2, 2, 2, 2);
             expect(frame.copyTo).toHaveBeenCalledWith(expect.anything(), {
                 layout: [{offset: 0, stride: 4 * 2}],
                 rect: {x: 2, y: 2, width: 1, height: 1}
