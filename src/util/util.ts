@@ -575,7 +575,6 @@ export async function readImageUsingVideoFrame(image: HTMLImageElement | HTMLCan
                 return result;
             }
         } catch (e) {
-            console.error(e);
             return undefined;
         } finally {
             frame.close();
