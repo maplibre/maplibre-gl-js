@@ -30,7 +30,7 @@ export class RasterDEMTileWorkerSource {
     }
 
     async getImageData(imgBitmap: ImageBitmap): Promise<RGBAImage> {
-        if (true || offscreenCanvasMangled()) {
+        if (offscreenCanvasMangled()) {
             const parsed = await readImageUsingVideoFrame(imgBitmap, -1, -1, imgBitmap.width + 2, imgBitmap.height + 2);
             if (parsed) return new RGBAImage({width: imgBitmap.width + 2, height: imgBitmap.height + 2}, parsed);
         }
