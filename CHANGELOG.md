@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 
 - Fix Raster DEM decoding in safari private browsing mode ([#3185](https://github.com/maplibre/maplibre-gl-js/pull/3185))
+- _...Add new stuff here..._
 
 ## 3.4.0
 
