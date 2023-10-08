@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix setStyle->style.setState didn't reset _serializedLayers ([#3133](https://github.com/maplibre/maplibre-gl-js/pull/3133)).
 - _...Add new stuff here..._
 
 ## 3.4.0

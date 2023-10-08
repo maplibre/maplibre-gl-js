@@ -725,6 +725,9 @@ export class Style extends Evented {
 
         this.stylesheet = nextState;
 
+        // reset serialization field, to be populated only when needed
+        this._serializedLayers = null;
+
         return true;
     }
 
