@@ -39,86 +39,90 @@ if (argv.compare !== true && argv.compare !== undefined) { // handle --compare w
 
 console.log(`Starting headless chrome at: ${url.toString()}`);
 
-const browser = await puppeteer.launch({headless: 'new'});
+async function main() {
+    const browser = await puppeteer.launch({headless: 'new'});
 
-try {
+    try {
 
-    const webPage = await browser.newPage();
-    await webPage.setDefaultTimeout(0);
-    await webPage.setViewport({width: 1280, height: 1024});
+        const webPage = await browser.newPage();
+        await webPage.setDefaultTimeout(0);
+        await webPage.setViewport({width: 1280, height: 1024});
 
-    url.hash = 'NONE';
-    await webPage.goto(url.toString());
-
-    // @ts-ignore
-    await webPage.waitForFunction(() => window.maplibreglBenchmarkFinished);
-    // @ts-ignore
-    const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
-    // @ts-ignore
-    const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
-
-    const toRun = argv._.length > 0 ? argv._ : allNames;
-    toRun.sort();
-
-    const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
-    const timeWidth = Math.max(...versions.map(v => v.length), 16);
-
-    console.log(''.padStart(nameWidth), ...versions.map(v =>  `${v.padStart(timeWidth)} `));
-
-    const merger = new PDFMerger();
-    for (const name of toRun) {
-        process.stdout.write(name.padStart(nameWidth));
-
-        url.hash = name;
+        url.hash = 'NONE';
         await webPage.goto(url.toString());
-        await webPage.reload();
 
-        await webPage.waitForFunction(
-            // @ts-ignore
-            () => window.maplibreglBenchmarkFinished,
-            {
-                polling: 200,
-                timeout: 0
-            }
-        );
         // @ts-ignore
-        const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
-        const output = versions.map((v) => {
-            if (v && results[v]) {
-                const trimmedMean = results[v].summary?.trimmedMean;
-                const regression = results[v].regression;
-                const result = formatTime(trimmedMean).padStart(timeWidth) + formatRegression(regression);
-                return result;
-            } else {
-                return ''.padStart(timeWidth + 1);
+        await webPage.waitForFunction(() => window.maplibreglBenchmarkFinished);
+        // @ts-ignore
+        const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
+        // @ts-ignore
+        const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
+
+        const toRun = argv._.length > 0 ? argv._ : allNames;
+        toRun.sort();
+
+        const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
+        const timeWidth = Math.max(...versions.map(v => v.length), 16);
+
+        console.log(''.padStart(nameWidth), ...versions.map(v =>  `${v.padStart(timeWidth)} `));
+
+        const merger = new PDFMerger();
+        for (const name of toRun) {
+            process.stdout.write(name.padStart(nameWidth));
+
+            url.hash = name;
+            await webPage.goto(url.toString());
+            await webPage.reload();
+
+            await webPage.waitForFunction(
+                // @ts-ignore
+                () => window.maplibreglBenchmarkFinished,
+                {
+                    polling: 200,
+                    timeout: 0
+                }
+            );
+            // @ts-ignore
+            const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
+            const output = versions.map((v) => {
+                if (v && results[v]) {
+                    const trimmedMean = results[v].summary?.trimmedMean;
+                    const regression = results[v].regression;
+                    const result = formatTime(trimmedMean).padStart(timeWidth) + formatRegression(regression);
+                    return result;
+                } else {
+                    return ''.padStart(timeWidth + 1);
+                }
+            });
+            if (versions.length === 2) {
+                const [main, current] = versions;
+                const delta = results[current]?.summary?.trimmedMean - results[main]?.summary?.trimmedMean;
+                output.push(((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15));
             }
-        });
-        if (versions.length === 2) {
-            const [main, current] = versions;
-            const delta = results[current]?.summary?.trimmedMean - results[main]?.summary?.trimmedMean;
-            output.push(((delta > 0 ? '+' : '') + formatTime(delta)).padStart(15));
+            console.log(...output);
+
+            await merger.add(await webPage.pdf({
+                format: 'a4',
+                path: `${dir}/${name}.pdf`,
+                printBackground: true,
+                margin: {
+                    top: '1cm',
+                    bottom: '1cm',
+                    left: '1cm',
+                    right: '1cm'
+                }
+            }));
         }
-        console.log(...output);
 
-        await merger.add(await webPage.pdf({
-            format: 'a4',
-            path: `${dir}/${name}.pdf`,
-            printBackground: true,
-            margin: {
-                top: '1cm',
-                bottom: '1cm',
-                left: '1cm',
-                right: '1cm'
-            }
-        }));
+        await merger.save(`${dir}/all.pdf`);
+    } catch (error) {
+        console.log(error);
+        if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
+            console.log('Could not connect to server. Please run \'npm run start-bench\'.');
+        }
+    } finally {
+        await browser.close();
     }
-
-    await merger.save(`${dir}/all.pdf`);
-} catch (error) {
-    console.log(error);
-    if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
-        console.log('Could not connect to server. Please run \'npm run start-bench\'.');
-    }
-} finally {
-    await browser.close();
 }
+
+main().catch(console.error);
