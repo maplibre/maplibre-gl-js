@@ -20,29 +20,33 @@ function waitForConsole(page) {
     });
 }
 
-const browser = await puppeteer.launch({
-    headless: 'new'
-});
-try {
+async function main() {
+    const browser = await puppeteer.launch({
+        headless: 'new'
+    });
+    try {
 
-    const page = await browser.newPage();
-    await page.setViewport({width: 600, height: 600, deviceScaleFactor: 2});
+        const page = await browser.newPage();
+        await page.setViewport({width: 600, height: 600, deviceScaleFactor: 2});
 
-    console.log('collecting stats...');
-    await page.setContent(benchHTML);
+        console.log('collecting stats...');
+        await page.setContent(benchHTML);
 
-    // @ts-ignore
-    const stats = JSON.parse(await waitForConsole(page));
-    stats['bundle_size'] = maplibreGLJSSrc.length + maplibreGLCSSSrc.length;
-    stats['bundle_size_gz'] = zlib.gzipSync(maplibreGLJSSrc).length + zlib.gzipSync(maplibreGLCSSSrc).length;
-    stats.dt = execSync('git show --no-patch --no-notes --pretty=\'%cI\' HEAD').toString().substring(0, 19);
-    stats.commit = execSync('git rev-parse --short HEAD').toString().trim();
-    stats.message = execSync('git show -s --format=%s HEAD').toString().trim();
-    console.log(JSON.stringify(stats, null, 2));
+        // @ts-ignore
+        const stats = JSON.parse(await waitForConsole(page));
+        stats['bundle_size'] = maplibreGLJSSrc.length + maplibreGLCSSSrc.length;
+        stats['bundle_size_gz'] = zlib.gzipSync(maplibreGLJSSrc).length + zlib.gzipSync(maplibreGLCSSSrc).length;
+        stats.dt = execSync('git show --no-patch --no-notes --pretty=\'%cI\' HEAD').toString().substring(0, 19);
+        stats.commit = execSync('git rev-parse --short HEAD').toString().trim();
+        stats.message = execSync('git show -s --format=%s HEAD').toString().trim();
+        console.log(JSON.stringify(stats, null, 2));
 
-    fs.writeFileSync('data.json.gz', zlib.gzipSync(JSON.stringify(stats)));
+        fs.writeFileSync('data.json.gz', zlib.gzipSync(JSON.stringify(stats)));
 
-    await page.close();
-} finally {
-    await browser.close();
+        await page.close();
+    } finally {
+        await browser.close();
+    }
 }
+
+main().catch(console.error);
