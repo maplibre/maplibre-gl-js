@@ -2,10 +2,10 @@ import {offscreenCanvasSupported} from './offscreen_canvas_supported';
 
 let manglesOffscreenCanvas: boolean;
 
-export function offscreenCanvasMangled(): boolean {
+export function isOffscreenCanvasDistorted(): boolean {
     if (manglesOffscreenCanvas == null) {
         manglesOffscreenCanvas = false;
-        // browser can mangle canvas#getImageData results when enhanced privacy protectsion are enabled (see #85)
+        // browser can mangle canvas#getImageData results when enhanced privacy protectsion are enabled (see #3185)
         if (offscreenCanvasSupported()) {
             const size = 5;
             const canvas = new OffscreenCanvas(size, size);

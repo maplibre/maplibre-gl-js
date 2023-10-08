@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, asyncAll, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageUsingVideoFrame, uniqueId, wrap} from './util';
-import {promisify} from 'util';
+import {arraysIntersect, asyncAll, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap} from './util';
+import {Canvas} from 'canvas';
 
 describe('util', () => {
     expect(easeCubicInOut(0)).toBe(0);
@@ -397,8 +397,7 @@ describe('util readImageUsingVideoFrame', () => {
 
     test('ignore bad format', async () => {
         format = 'OTHER';
-        const result = await readImageUsingVideoFrame(canvas, 0, 0, 2, 2);
-        expect(result).toBeUndefined();
+        await expect(readImageUsingVideoFrame(canvas, 0, 0, 2, 2)).rejects.toThrow();
         expect(frame.close).toHaveBeenCalledTimes(1);
     });
 
@@ -495,5 +494,25 @@ describe('util readImageUsingVideoFrame', () => {
                 rect: {x: 2, y: 2, width: 1, height: 1}
             });
         });
+    });
+});
+
+describe('util readImageDataUsingOffscreenCanvas', () => {
+    test('reads pixels from image', async () => {
+        (window as any).OffscreenCanvas = Canvas;
+        const image = new Canvas(2, 2);
+        const context = image.getContext('2d');
+        context.fillStyle = 'rgb(10,0,0)';
+        context.fillRect(0, 0, 1, 1);
+        context.fillStyle = 'rgb(0,20,0)';
+        context.fillRect(1, 0, 1, 1);
+        context.fillStyle = 'rgb(0,0,30)';
+        context.fillRect(0, 1, 1, 1);
+        context.fillStyle = 'rgb(40,40,40)';
+        context.fillRect(1, 1, 1, 1);
+        expect([...await readImageDataUsingOffscreenCanvas(image as any, 0, 0, 2, 2)]).toEqual([
+            10, 0, 0, 255, 0, 20, 0, 255,
+            0, 0, 30, 255, 40, 40, 40, 255,
+        ]);
     });
 });

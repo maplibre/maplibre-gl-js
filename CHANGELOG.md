@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- Fix Raster DEM decoding in safari private browsing mode ([#3185](https://github.com/maplibre/maplibre-gl-js/pull/3185))
 
 ## 3.4.0
 
@@ -24,7 +24,6 @@
 - Update raster tile end points in documentation
 - Avoiding inertia animation on Mac when reduced motion is on ([#3068](https://github.com/maplibre/maplibre-gl-js/pull/3068))
 - 3d buildings example doesn't work as expected ([#3165](https://github.com/maplibre/maplibre-gl-js/pull/3165))
-- Fix Raster DEM decoding in safari private browsing mode ([#3185](https://github.com/maplibre/maplibre-gl-js/pull/3185))
 - _...Add new stuff here..._
 
 ## 3.3.1
