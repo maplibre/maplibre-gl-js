@@ -12,7 +12,6 @@ let offscreenCanvasDistorted: boolean;
 export function isOffscreenCanvasDistorted(): boolean {
     if (offscreenCanvasDistorted == null) {
         offscreenCanvasDistorted = false;
-        // browser can mangle canvas#getImageData results when enhanced privacy protectsion are enabled (see #3185)
         if (offscreenCanvasSupported()) {
             const size = 5;
             const canvas = new OffscreenCanvas(size, size);
