@@ -2,7 +2,7 @@ import Point from '@mapbox/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
 import type {Callback} from '../types/callback';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
-import {Size} from './image';
+import type {Size} from './image';
 
 /**
  * Given a value `t` that varies between 0 and 1, return

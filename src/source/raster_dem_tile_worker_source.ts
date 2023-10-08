@@ -6,7 +6,7 @@ import type {
     WorkerDEMTileCallback,
     TileParameters
 } from './worker_source';
-import {getImageData, isImageBitmap} from '../util/util';
+import {getImageData} from '../util/util';
 
 export class RasterDEMTileWorkerSource {
     actor: Actor;
@@ -21,9 +21,8 @@ export class RasterDEMTileWorkerSource {
         // Main thread will transfer ImageBitmap if offscreen decode with OffscreenCanvas is supported, else it will transfer an already decoded image.
         const width = rawImageData.width + 2;
         const height = rawImageData.height + 2;
-        const imagePixels = isImageBitmap(rawImageData) ?
-            new RGBAImage({width, height}, await getImageData(rawImageData, -1, -1, width, height)) :
-            rawImageData as RGBAImage;
+        const imagePixels = rawImageData instanceof RGBAImage ? rawImageData :
+            new RGBAImage({width, height}, await getImageData(rawImageData, -1, -1, width, height));
         const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
         this.loaded = this.loaded || {};
         this.loaded[uid] = dem;
