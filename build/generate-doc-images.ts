@@ -6,17 +6,7 @@ import packageJson from '../package.json' assert { type: 'json' };
 const exampleName = process.argv[2];
 const examplePath = path.resolve('test', 'examples');
 
-const browser = await puppeteer.launch({headless: exampleName === 'all'});
-
-const page = await browser.newPage();
-// set viewport and double deviceScaleFactor to get a closer shot of the map
-await page.setViewport({
-    width: 600,
-    height: 250,
-    deviceScaleFactor: 2
-});
-
-async function createImage(exampleName) {
+async function createImage(page, exampleName) {
     // get the example contents
     const html = fs.readFileSync(path.resolve(examplePath, `${exampleName}.html`), 'utf-8');
 
@@ -56,18 +46,32 @@ async function createImage(exampleName) {
         });
 }
 
-if (exampleName === 'all') {
-    const allFiles = fs.readdirSync(examplePath).filter(f => f.endsWith('html'));
-    console.log(`Generating ${allFiles.length} images.`);
-    for (const file of allFiles) {
-        await createImage(file);
+async function main() {
+    const browser = await puppeteer.launch({headless: exampleName === 'all'});
+
+    const page = await browser.newPage();
+    // set viewport and double deviceScaleFactor to get a closer shot of the map
+    await page.setViewport({
+        width: 600,
+        height: 250,
+        deviceScaleFactor: 2
+    });
+
+    if (exampleName === 'all') {
+        const allFiles = fs.readdirSync(examplePath).filter(f => f.endsWith('html'));
+        console.log(`Generating ${allFiles.length} images.`);
+        for (const file of allFiles) {
+            await createImage(page, file);
+        }
+    } else if (exampleName) {
+        await createImage(page, exampleName);
+    } else {
+        throw new Error(
+            '\n  Usage: npm run generate-images <file-name|all>\nExample: npm run generate-images 3d-buildings'
+        );
     }
-} else if (exampleName) {
-    await createImage(exampleName);
-} else {
-    throw new Error(
-        '\n  Usage: npm run generate-images <file-name|all>\nExample: npm run generate-images 3d-buildings'
-    );
+
+    await browser.close();
 }
 
-await browser.close();
+main().catch(console.error);

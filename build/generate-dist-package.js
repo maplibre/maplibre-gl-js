@@ -11,16 +11,20 @@ async function ensureDist() {
   return dist
 }
 
-await writeFile(
-  new URL("package.json", await ensureDist()),
-  JSON.stringify({
-    name: "maplibre-gl",
-    type: "commonjs",
-    deprecated: "Please install maplibre-gl from parent directory instead",
-  })
-)
+async function main() {
+  await writeFile(
+    new URL("package.json", await ensureDist()),
+    JSON.stringify({
+      name: "maplibre-gl",
+      type: "commonjs",
+      deprecated: "Please install maplibre-gl from parent directory instead",
+    })
+  )
 
-await copyFile(
-  "./LICENSE.txt",
-  new URL("LICENSE.txt", await ensureDist())
-)
+  await copyFile(
+    "./LICENSE.txt",
+    new URL("LICENSE.txt", await ensureDist())
+  )
+}
+
+main().catch(console.error);
