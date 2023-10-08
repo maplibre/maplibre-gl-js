@@ -1,10 +1,10 @@
 import {offscreenCanvasSupported} from './offscreen_canvas_supported';
 
-let manglesOffscreenCanvas: boolean;
+let offscreenCanvasDistorted: boolean;
 
 export function isOffscreenCanvasDistorted(): boolean {
-    if (manglesOffscreenCanvas == null) {
-        manglesOffscreenCanvas = false;
+    if (offscreenCanvasDistorted == null) {
+        offscreenCanvasDistorted = false;
         // browser can mangle canvas#getImageData results when enhanced privacy protectsion are enabled (see #3185)
         if (offscreenCanvasSupported()) {
             const size = 5;
@@ -19,7 +19,7 @@ export function isOffscreenCanvasDistorted(): boolean {
                 const data = context.getImageData(0, 0, size, size).data;
                 for (let i = 0; i < size * size * 4; i++) {
                     if (i % 4 !== 3 && data[i] !== i) {
-                        manglesOffscreenCanvas = true;
+                        offscreenCanvasDistorted = true;
                         break;
                     }
                 }
@@ -27,5 +27,5 @@ export function isOffscreenCanvasDistorted(): boolean {
         }
     }
 
-    return manglesOffscreenCanvas || false;
+    return offscreenCanvasDistorted || false;
 }

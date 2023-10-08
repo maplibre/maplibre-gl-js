@@ -545,7 +545,7 @@ export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | n
  * @param y - top-left y coordinate to read from the image
  * @param width - width of the rectangle to read from the image
  * @param height - height of the rectangle to read from the image
- * @returns the
+ * @returns the layout and rect options to pass into VideoFrame API
  */
 function computeVideoFrameParameters(image: Size, x: number, y: number, width: number, height: number): VideoFrameCopyToOptions {
     const destRowOffset = Math.max(-x, 0) * 4;
@@ -554,7 +554,6 @@ function computeVideoFrameParameters(image: Size, x: number, y: number, width: n
     const offset = firstDestRow * width * 4 + destRowOffset;
     const stride = width * 4;
 
-    // rect selects the subset of the source image that should get copied over to the dest rectangle
     const sourceLeft = Math.max(0, x);
     const sourceTop = Math.max(0, y);
     const sourceRight = Math.min(image.width, x + width);
