@@ -639,7 +639,7 @@ export function readImageDataUsingOffscreenCanvas(
 
     offscreenCanvasContext.drawImage(imgBitmap, 0, 0, origWidth, origHeight);
     const imgData = offscreenCanvasContext.getImageData(x, y, width, height);
-    offscreenCanvasContext.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+    offscreenCanvasContext.clearRect(0, 0, origWidth, origHeight);
     return imgData.data;
 }
 

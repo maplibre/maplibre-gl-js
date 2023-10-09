@@ -94,8 +94,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
         async function readImageImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
             if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
+                const width = img.width + 2;
+                const height = img.height + 2;
                 try {
-                    return new RGBAImage({width: img.width + 2, height: img.height + 2}, await readImageUsingVideoFrame(img, -1, -1, img.width + 2, img.height + 2));
+                    return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
                 } catch (e) {
                     // fall-back to browser canvas decoding
                 }
