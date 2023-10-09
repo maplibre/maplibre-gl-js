@@ -18,7 +18,6 @@ export class RasterDEMTileWorkerSource {
 
     async loadTile(params: WorkerDEMTileParameters, callback: WorkerDEMTileCallback) {
         const {uid, encoding, rawImageData, redFactor, greenFactor, blueFactor, baseShift} = params;
-        // Main thread will transfer ImageBitmap if offscreen decode with OffscreenCanvas is supported, else it will transfer an already decoded image.
         const width = rawImageData.width + 2;
         const height = rawImageData.height + 2;
         const imagePixels: RGBAImage = isImageBitmap(rawImageData) ?

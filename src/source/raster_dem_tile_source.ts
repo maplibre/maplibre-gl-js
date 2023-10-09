@@ -72,7 +72,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 delete img.cacheControl;
                 delete img.expires;
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
-                const rawImageData = transfer ? img : await readImageImageNow(img);
+                const rawImageData = transfer ? img : await readImageNow(img);
                 const params = {
                     uid: tile.uid,
                     coord: tile.tileID,
@@ -92,7 +92,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             }
         }
 
-        async function readImageImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
+        async function readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
             if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
                 const width = img.width + 2;
                 const height = img.height + 2;
