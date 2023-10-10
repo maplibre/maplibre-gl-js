@@ -1,6 +1,6 @@
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
-import {extend, isImageBitmap} from '../util/util';
+import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util';
 import {Evented} from '../util/evented';
 import {browser} from '../util/browser';
 import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
@@ -16,6 +16,8 @@ import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {ExpiryData} from '../util/ajax';
+import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
+import {RGBAImage} from '../util/image';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -54,10 +56,9 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this), this.map._refreshExpiredTiles);
-
+        const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
-        function imageLoaded(err: Error, img: (HTMLImageElement | ImageBitmap) & ExpiryData) {
+        tile.request = ImageRequest.getImage(request, async (err: Error, img: (HTMLImageElement | ImageBitmap), expiry: ExpiryData) => {
             delete tile.request;
             if (tile.aborted) {
                 tile.state = 'unloaded';
@@ -66,11 +67,9 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.state = 'errored';
                 callback(err);
             } else if (img) {
-                if (this.map._refreshExpiredTiles) tile.setExpiryData(img);
-                delete img.cacheControl;
-                delete img.expires;
+                if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
-                const rawImageData = transfer ? img : browser.getImageData(img, 1);
+                const rawImageData = transfer ? img : await readImageNow(img);
                 const params = {
                     uid: tile.uid,
                     coord: tile.tileID,
@@ -85,9 +84,22 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
-                    tile.actor.send('loadDEMTile', params, done.bind(this));
+                    tile.actor.send('loadDEMTile', params, done);
                 }
             }
+        }, this.map._refreshExpiredTiles);
+
+        async function readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
+            if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
+                const width = img.width + 2;
+                const height = img.height + 2;
+                try {
+                    return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
+                } catch (e) {
+                    // fall-back to browser canvas decoding
+                }
+            }
+            return browser.getImageData(img, 1);
         }
 
         function done(err, data) {

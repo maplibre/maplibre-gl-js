@@ -6,7 +6,8 @@
 
 ### 🐞 Bug fixes
 
-- Fix setStyle->style.setState didn't reset _serializedLayers ([#3133](https://github.com/maplibre/maplibre-gl-js/pull/3133)).
+- Fix setStyle->style.setState didn't reset \_serializedLayers ([#3133](https://github.com/maplibre/maplibre-gl-js/pull/3133)).
+- Fix Raster DEM decoding in safari private browsing mode ([#3185](https://github.com/maplibre/maplibre-gl-js/pull/3185))
 - _...Add new stuff here..._
 
 ## 3.4.0
