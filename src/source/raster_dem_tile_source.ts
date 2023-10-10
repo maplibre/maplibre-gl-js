@@ -56,10 +56,9 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), imageLoaded.bind(this), this.map._refreshExpiredTiles);
-
+        const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
-        async function imageLoaded(err: Error, img: (HTMLImageElement | ImageBitmap) & ExpiryData) {
+        tile.request = ImageRequest.getImage(request, async (err: Error, img: (HTMLImageElement | ImageBitmap), expiry: ExpiryData) => {
             delete tile.request;
             if (tile.aborted) {
                 tile.state = 'unloaded';
@@ -68,9 +67,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 tile.state = 'errored';
                 callback(err);
             } else if (img) {
-                if (this.map._refreshExpiredTiles) tile.setExpiryData(img);
-                delete img.cacheControl;
-                delete img.expires;
+                if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
                 const rawImageData = transfer ? img : await readImageNow(img);
                 const params = {
@@ -87,10 +84,10 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
-                    tile.actor.send('loadDEMTile', params, done.bind(this));
+                    tile.actor.send('loadDEMTile', params, done);
                 }
             }
-        }
+        }, this.map._refreshExpiredTiles);
 
         async function readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
             if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
