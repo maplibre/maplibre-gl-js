@@ -63,6 +63,32 @@ describe('Actor', () => {
         });
     });
 
+    test('calls the callback with the correct number of arguments', done => {
+        setTestWorker(class MockWorker {
+            self: any;
+            actor: Actor;
+            constructor(self) {
+                this.self = self;
+                this.actor = new Actor(self, this);
+            }
+            test(mapId, params, callback) {
+                setTimeout(callback, 0, null, '1st param', '2nd param', '3rd param');
+            }
+        });
+
+        const worker = workerFactory();
+
+        const m = new Actor(worker, {}, '1');
+
+        m.send('test', {value: 1729}, (err, param1, param2, param3) => {
+            expect(err).toBeFalsy();
+            expect(param1).toBe('1st param');
+            expect(param2).toBe('2nd param');
+            expect(param3).toBe('3rd param');
+            done();
+        });
+    });
+
     test('targets worker-initiated messages to correct map instance', done => {
         let workerActor;
 
