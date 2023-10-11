@@ -124,6 +124,20 @@ export class RasterTileSource extends Evented implements Source {
         }
     }
 
+    /**
+     * Sets the source `tiles` property and re-renders the map.
+     *
+     * @param tiles - An array of one or more tile source URLs, as in the raster tiles spec (See the [Style Specification](https://maplibre.org/maplibre-style-spec/)
+     * @returns `this`
+     */
+    setTiles(tiles: Array<string>): this {
+        this._options.tiles = tiles;
+        this.onRemove();
+        this.load();
+
+        return this;
+    }
+
     serialize() {
         return extend({}, this._options);
     }
