@@ -2,14 +2,22 @@
 
 ### ✨ Features and improvements
 
-- Locally rendered glyphs are double resolution (48px), greatly improving sharpness of CJK text. ([#2990](https://github.com/maplibre/maplibre-gl-js/issues/2990), [#3006](https://github.com/maplibre/maplibre-gl-js/pull/3006))
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+
+- _...Add new stuff here..._
+
+## 3.4.1
+
+### ✨ Features and improvements
+
+- Locally rendered glyphs are double resolution (48px), greatly improving sharpness of CJK text. ([#2990](https://github.com/maplibre/maplibre-gl-js/issues/2990), [#3006](https://github.com/maplibre/maplibre-gl-js/pull/3006))
 
 ### 🐞 Bug fixes
 
 - Fix setStyle->style.setState didn't reset \_serializedLayers ([#3133](https://github.com/maplibre/maplibre-gl-js/pull/3133)).
 - Fix Raster DEM decoding in safari private browsing mode ([#3185](https://github.com/maplibre/maplibre-gl-js/pull/3185))
-- _...Add new stuff here..._
 
 ## 3.4.0
 
