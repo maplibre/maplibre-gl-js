@@ -5,8 +5,7 @@
             "pixelRatio": 2,
             "localIdeographFontFamily": "sans-serif",
             "width": 800,
-            "height": 600,
-            "allowed": 0
+            "height": 600
         }
     },
     "zoom": 8,
@@ -38,7 +37,8 @@
                 "text-anchor": "top",
                 "text-field": "{name_ja}{name_en}",
                 "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-                "text-offset": [-10, 0]
+                "text-size": 30,
+                "text-offset": [0, -2]
             }
         },
         {
@@ -49,6 +49,7 @@
                 "text-anchor": "top",
                 "text-field": "{name_ch}{name_kr}",
                 "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-size": 30,
                 "text-offset": [0, 0]
             }
         },
@@ -60,7 +61,8 @@
                 "text-anchor": "top",
                 "text-field": "{name_en}{name_ja}",
                 "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-                "text-offset": [10, 0]
+                "text-size": 30,
+                "text-offset": [0, 2]
             }
         }
     ]
