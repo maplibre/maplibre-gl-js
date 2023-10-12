@@ -248,4 +248,65 @@ describe('Browser tests', () => {
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
         expect(markerScreenPosition.y).toBeCloseTo(378.1);
     }, 20000);
+
+    test('Expired Tile Reload', async() => {
+        const callCountByUrl = await page.evaluate(() => {
+            const CACHE_SECS = 1;
+            const TILES_URL = 'https://demotiles.maplibre.org/tiles/:z/:x/:y.pbf';
+
+            const callCountByUrl: Record<string, number> = {};
+
+            maplibregl.addProtocol('cust', ({url}, callback) => {
+                const [x, y, z] = url.split('//')[1].split('-');
+
+                callCountByUrl[url] = (callCountByUrl[url] ?? 0) + 1;
+
+                const cacheControl = `no-store,max-age=${CACHE_SECS}`;
+                const expires = new Date(Date.now() + CACHE_SECS * 1000).toUTCString();
+
+                const abortController = new AbortController();
+
+                const tileUrl = TILES_URL.replace(':z', z).replace(':x', x).replace(':y', y);
+
+                fetch(tileUrl, {
+                    signal: abortController.signal,
+                })
+                    .then((response) => response.arrayBuffer())
+                    .then((data) => {
+                        callback(undefined, data, cacheControl, expires);
+                    })
+                    .catch((err) => {
+                        callback(err);
+                    });
+
+                return {
+                    cancel: () => {
+                        abortController.abort();
+                    },
+                };
+            });
+
+            return new Promise<Record<string, number>>((resolve, reject) => {
+                map.addSource('cust', {
+                    type: 'vector',
+                    tiles: ['cust://{x}-{y}-{z}'],
+                });
+
+                map.addLayer({
+                    id: 'cust',
+                    type: 'circle',
+                    source: 'cust',
+                    'source-layer': 'centroids',
+                });
+
+                setTimeout(() => {
+                    resolve(callCountByUrl);
+                }, 5000);
+            });
+        });
+
+        for (const [, count] of  Object.entries(callCountByUrl)) {
+            expect(count).toBeGreaterThan(1);
+        }
+    }, 20000);
 });
