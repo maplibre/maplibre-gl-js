@@ -131,7 +131,7 @@ export class RasterTileSource extends Evented implements Source {
      * @returns `this`
      */
     setTiles(tiles: Array<string>): this {
-        this._options.tiles = tiles;
+        this.tiles = tiles;
         this.onRemove();
         this.load();
 

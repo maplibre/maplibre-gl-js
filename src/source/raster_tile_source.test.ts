@@ -170,7 +170,7 @@ describe('RasterTileSource', () => {
 
         source.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                expect(source._options.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
+                expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
             }
         });
     });
