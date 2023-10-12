@@ -12,8 +12,7 @@
 
 ### ✨ Features and improvements
 
-- Add setTiles method to RasterTileSource to dynamically update existing tile
-  sources. ([3208](https://github.com/maplibre/maplibre-gl-js/pull/3208))
+- Add setTiles method to RasterTileSource to dynamically update existing tile sources. ([3208](https://github.com/maplibre/maplibre-gl-js/pull/3208))
 
 ## 3.4.1
 
