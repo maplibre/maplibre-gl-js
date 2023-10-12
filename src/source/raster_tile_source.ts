@@ -124,6 +124,16 @@ export class RasterTileSource extends Evented implements Source {
         }
     }
 
+    setSourceProperty(callback: Function) {
+        if (this._tileJSONRequest) {
+            this._tileJSONRequest.cancel();
+        }
+
+        callback();
+
+        this.load();
+    }
+
     /**
      * Sets the source `tiles` property and re-renders the map.
      *
@@ -131,9 +141,9 @@ export class RasterTileSource extends Evented implements Source {
      * @returns `this`
      */
     setTiles(tiles: Array<string>): this {
-        this.tiles = tiles;
-        this.onRemove();
-        this.load();
+        this.setSourceProperty(() => {
+            this._options.tiles = tiles;
+        });
 
         return this;
     }
