@@ -286,7 +286,7 @@ describe('Browser tests', () => {
                 };
             });
 
-            return new Promise<Record<string, number>>((resolve, reject) => {
+            return new Promise<Record<string, number>>((resolve) => {
                 map.addSource('cust', {
                     type: 'vector',
                     tiles: ['cust://{x}-{y}-{z}'],
