@@ -5,7 +5,7 @@
 ### 🐞 Bug fixes
 
 - _...Add new stuff here..._
-- Fix actor passing only the first 2 arguments to callbacks
+- Fixed actor passing only the first 2 arguments to callbacks ([#3130](https://github.com/maplibre/maplibre-gl-js/pull/3196))
 
 ## 3.5.2
 
