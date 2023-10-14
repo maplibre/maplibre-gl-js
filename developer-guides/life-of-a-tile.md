@@ -49,7 +49,7 @@ sequenceDiagram
   participant source
   participant ajax
   participant glyph manager
-  box rgb(250,250,250) worker
+  box rgba(128,128,128,0.1) worker
     participant worker
     participant worker_source
     participant worker_tile
