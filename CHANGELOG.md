@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Convert plantuml diagrams to mermaid ([3217](https://github.com/maplibre/maplibre-gl-js/pull/3217))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
