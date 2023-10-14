@@ -25,7 +25,7 @@ sequenceDiagram
     camera->>map: fire move event
     map->>map: _render()
 
-    user->>DOM: resize, pan,\nclick, scroll,\n...
+    user->>DOM: resize, pan,<br>click, scroll,<br>...
     DOM->>handler_manager: DOM events
     handler_manager->>handler: forward event
     handler-->>handler_manager: HandlerResult
@@ -108,8 +108,8 @@ sequenceDiagram
   source-->>source_cache: Tile
   source_cache-->>source_cache: _backfillDEM()<br/>copy 1px buffer<br/>from neigboring tiles
   source->>source: fire('data', {<br/>dataType: 'source'<br>})
-  source->>source_cache:
-  source_cache->map:
+  source->>source_cache:<br>
+  source_cache->map:<br>
   map->map: fire('sourcedata')
   map->map: render new frame
 ```
@@ -163,7 +163,7 @@ sequenceDiagram
 
     map->>style: update(transform)
     style->>layer: recalculate()
-    layer->>layer: recompute\npaint\nproperties
+    layer->>layer: recompute<br>paint properties
     map->>source_cache: update(transform)
     source_cache->>source_cache: fetch new tiles
     map->>painter: render(style)
