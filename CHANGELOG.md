@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Convert plantuml diagrams to mermaid ([#3217](https://github.com/maplibre/maplibre-gl-js/pull/3217))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -12,7 +13,7 @@
 
 ### ✨ Features and improvements
 
-- Add setTiles method to RasterTileSource to dynamically update existing tile sources. ([3208](https://github.com/maplibre/maplibre-gl-js/pull/3208))
+- Add setTiles method to RasterTileSource to dynamically update existing tile sources. ([#3208](https://github.com/maplibre/maplibre-gl-js/pull/3208))
 
 ## 3.4.1
 
