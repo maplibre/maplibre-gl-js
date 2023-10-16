@@ -16,12 +16,12 @@ export interface WorkerSourceProvider {
     getWorkerSource(mapId: string, sourceType: string, sourceName: string): WorkerSource;
 }
 
-export type MessageType = '<response>' | '<cancel>' | 
-    'geojson.getClusterExpansionZoom' | 'geojson.getClusterChildren' | 'geojson.getClusterLeaves' | 'geojson.loadData' |
-    'removeSource' | 'loadWorkerSource' | 'loadDEMTile' | 'removeDEMTile' | 
-    'removeTile' | 'reloadTile' | 'abortTile' | 'loadTile' | 'getTile' |
-    'getGlyphs' | 'getImages' | 'setImages' |
-    'syncRTLPluginState' | 'setReferrer' | 'setLayers' | 'updateLayers';
+export type MessageType = '<response>' | '<cancel>' |
+'geojson.getClusterExpansionZoom' | 'geojson.getClusterChildren' | 'geojson.getClusterLeaves' | 'geojson.loadData' |
+'removeSource' | 'loadWorkerSource' | 'loadDEMTile' | 'removeDEMTile' |
+'removeTile' | 'reloadTile' | 'abortTile' | 'loadTile' | 'getTile' |
+'getGlyphs' | 'getImages' | 'setImages' |
+'syncRTLPluginState' | 'setReferrer' | 'setLayers' | 'updateLayers';
 
 export type MessageData = {
     id: string;
@@ -48,11 +48,11 @@ export class Actor {
     target: ActorTarget;
     parent: WorkerSourceProvider;
     mapId: string | null;
-    callbacks: { [x: number]: Function;};
+    callbacks: { [x: number]: Function};
     name: string;
-    tasks: { [x: number]: MessageData; }
+    tasks: { [x: number]: MessageData };
     taskQueue: Array<string>;
-    cancelCallbacks: { [x: number]: () => void; };
+    cancelCallbacks: { [x: number]: () => void };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
 
@@ -211,7 +211,7 @@ export class Actor {
                     sourceMapId: this.mapId,
                     error: err ? serialize(err) : null,
                     data: serialize(data)
-                }
+                };
                 this.target.postMessage(responseMessage);
             } : (_) => {
                 completed = true;
