@@ -1,5 +1,5 @@
 import {asyncAll} from './util';
-import {Actor} from './actor';
+import {Actor, MessageType} from './actor';
 
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
@@ -36,7 +36,7 @@ export class Dispatcher {
     /**
      * Broadcast a message to all Workers.
      */
-    broadcast(type: string, data: unknown, cb?: (...args: any[]) => any) {
+    broadcast(type: MessageType, data: unknown, cb?: (...args: any[]) => any) {
         cb = cb || function () {};
         asyncAll(this.actors, (actor, done) => {
             actor.send(type, data, done);
