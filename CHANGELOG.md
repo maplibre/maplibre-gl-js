@@ -8,6 +8,11 @@
 ### 🐞 Bug fixes
 
 - _...Add new stuff here..._
+## 3.5.1
+
+### 🐞 Bug fixes
+- Fix regression introduced in 3.5.0, related to async/await ([#3228](https://github.com/maplibre/maplibre-gl-js/pull/3228))
+
 
 ## 3.5.0
 
