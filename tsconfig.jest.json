@@ -1,7 +1,6 @@
 {
-  "extends":"./tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    
-    "target": "ES2019",
+    "target": "ES2019"
   }
 }
