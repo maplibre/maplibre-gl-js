@@ -11,7 +11,7 @@
 ## 3.5.1
 
 ### 🐞 Bug fixes
-- Fixes issue with await / async, by compiling to ES2016 ([#3228](https://github.com/maplibre/maplibre-gl-js/pull/3228))
+- By compiling the bundle to ES2016, this fixed a regression related to await / async introduced in 3.5.0 ([#3228](https://github.com/maplibre/maplibre-gl-js/pull/3228))
 
 
 ## 3.5.0
