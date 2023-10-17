@@ -38,10 +38,16 @@
   },
   "include": [
     "rollup.config.*",
-    "src/**/*"
+    "src/**/*",
+    "test/bench/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "build/rollup",
+    "test/bench/rollup",
+    "test/bench/run-benchmarks.ts",
+    "test/bench/gl-stats.ts"  ,
+    "test/bench/**/*generated*"
   ]
 }
