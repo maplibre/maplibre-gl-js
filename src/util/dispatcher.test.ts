@@ -1,3 +1,4 @@
+import {Actor} from './actor';
 import {Dispatcher} from './dispatcher';
 import {workerFactory} from './web_worker';
 import {WorkerPool} from './worker_pool';
@@ -16,7 +17,7 @@ describe('Dispatcher', () => {
             }
         } as any as WorkerPool;
 
-        const dispatcher = new Dispatcher(workerPool, {}, mapId);
+        const dispatcher = new Dispatcher(workerPool, {} as any, mapId);
         expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
         dispatcher.remove();
         expect(dispatcher.actors).toHaveLength(0);
@@ -41,7 +42,7 @@ describe('Dispatcher', () => {
             }
         } as any as WorkerPool;
 
-        let dispatcher = new Dispatcher(workerPool, {}, mapId);
+        let dispatcher = new Dispatcher(workerPool, {} as any, mapId);
         expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
 
         // Remove dispatcher, but map is not disposed (During style change)
@@ -50,7 +51,7 @@ describe('Dispatcher', () => {
         expect(releaseCalled).toHaveLength(0);
 
         // Create new instance of dispatcher
-        dispatcher = new Dispatcher(workerPool, {}, mapId);
+        dispatcher = new Dispatcher(workerPool, {} as any, mapId);
         expect(dispatcher.actors.map((actor) => { return actor.target; })).toEqual(workers);
         dispatcher.remove(true); // mapRemoved = true
         expect(dispatcher.actors).toHaveLength(0);
@@ -61,14 +62,12 @@ describe('Dispatcher', () => {
     test('#remove destroys actors', () => {
         const actorsRemoved = [];
         const mapId = 1;
-        function Actor() {
-            this.remove = function() { actorsRemoved.push(this); };
-        }
-        jest.spyOn(Dispatcher, 'Actor').mockImplementation(Actor as any);
+        const spy = jest.fn().mockImplementation(() => { actorsRemoved.push(this); });
+        Actor.prototype.remove = spy;
         WorkerPool.workerCount = 4;
 
         const workerPool = new WorkerPool();
-        const dispatcher = new Dispatcher(workerPool, {}, mapId);
+        const dispatcher = new Dispatcher(workerPool, {} as any, mapId);
         dispatcher.remove();
         expect(actorsRemoved).toHaveLength(4);
     });

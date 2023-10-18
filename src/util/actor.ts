@@ -5,6 +5,9 @@ import {ThrottledInvoker} from './throttled_invoker';
 import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
 import type {WorkerSource} from '../source/worker_source';
+import type {OverscaledTileID} from '../source/tile_id';
+import type {Callback} from '../types/callback';
+import type {StyleGlyph} from '../style/style_glyph';
 
 export interface ActorTarget {
     addEventListener: typeof window.addEventListener;
@@ -14,7 +17,18 @@ export interface ActorTarget {
 }
 
 export interface WorkerSourceProvider {
-    getWorkerSource(mapId: string, sourceType: string, sourceName: string): WorkerSource;
+    getWorkerSource(mapId: string | number, sourceType: string, sourceName: string): WorkerSource;
+}
+
+export interface GlyphsProvider {
+    getGlyphs(mapId: string, params: {
+        stacks: {[_: string]: Array<number>};
+        source: string;
+        tileID: OverscaledTileID;
+        type: string;
+    },
+        callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
+    );
 }
 
 export type MessageType = '<response>' | '<cancel>' |
@@ -28,11 +42,11 @@ export type MessageData = {
     id: string;
     type: MessageType;
     data?: Serialized;
-    targetMapId?: string | null;
+    targetMapId?: string | number | null;
     mustQueue?: boolean;
     error?: Serialized | null;
     hasCallback?: boolean;
-    sourceMapId: string | null;
+    sourceMapId: string | number | null;
 }
 
 export type Message = {
@@ -47,8 +61,8 @@ export type Message = {
  */
 export class Actor {
     target: ActorTarget;
-    parent: WorkerSourceProvider;
-    mapId: string | null;
+    parent: WorkerSourceProvider | GlyphsProvider;
+    mapId: string | number | null;
     callbacks: { [x: number]: Function};
     name: string;
     tasks: { [x: number]: MessageData };
@@ -62,7 +76,7 @@ export class Actor {
      * @param parent - The parent
      * @param mapId - A unique identifier for the Map instance using this Actor.
      */
-    constructor(target: ActorTarget, parent: WorkerSourceProvider, mapId?: string) {
+    constructor(target: ActorTarget, parent: WorkerSourceProvider | GlyphsProvider, mapId?: string | number) {
         this.target = target;
         this.parent = parent;
         this.mapId = mapId;
@@ -225,7 +239,7 @@ export class Actor {
             if (this.parent[task.type]) {
                 // task.type == 'loadTile', 'removeTile', etc.
                 callback = this.parent[task.type](task.sourceMapId, params, done);
-            } else if (this.parent.getWorkerSource) {
+            } else if ('getWorkerSource' in this.parent) {
                 // task.type == sourcetype.method
                 const keys = task.type.split('.');
                 const scope = this.parent.getWorkerSource(task.sourceMapId, keys[0], (params as any).source);
