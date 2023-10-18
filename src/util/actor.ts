@@ -1,7 +1,8 @@
-import {isWorker, isSafari} from './util';
+import {isWorker} from './util';
 import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
+import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
 import type {WorkerSource} from '../source/worker_source';
 
@@ -96,7 +97,7 @@ export class Actor {
         if (callback) {
             this.callbacks[id] = callback;
         }
-
+        const buffers: Array<Transferable> = [];
         const message: MessageData = {
             id,
             type,
@@ -104,10 +105,10 @@ export class Actor {
             targetMapId,
             mustQueue,
             sourceMapId: this.mapId,
-            data: serialize(data)
+            data: serialize(data, buffers)
         };
-        const options: WindowPostMessageOptions = isSafari(this.globalScope) ? undefined : {transfer: []};
-        this.target.postMessage(message, options);
+
+        this.target.postMessage(message, {transfer: buffers});
         return {
             cancel: () => {
                 if (callback) {
@@ -203,7 +204,7 @@ export class Actor {
             }
         } else {
             let completed = false;
-            const options: WindowPostMessageOptions = isSafari(this.globalScope) ? undefined : {transfer: []};
+            const buffers: Array<Transferable> = [];
             const done = task.hasCallback ? (err: Error, data?: any) => {
                 completed = true;
                 delete this.cancelCallbacks[id];
@@ -212,9 +213,9 @@ export class Actor {
                     type: '<response>',
                     sourceMapId: this.mapId,
                     error: err ? serialize(err) : null,
-                    data: serialize(data)
+                    data: serialize(data, buffers)
                 };
-                this.target.postMessage(responseMessage, options);
+                this.target.postMessage(responseMessage, {transfer: buffers});
             } : (_) => {
                 completed = true;
             };
