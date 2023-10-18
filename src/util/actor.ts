@@ -203,6 +203,7 @@ export class Actor {
             }
         } else {
             let completed = false;
+            const options: WindowPostMessageOptions = isSafari(this.globalScope) ? undefined : {transfer: []};
             const done = task.hasCallback ? (err: Error, data?: any) => {
                 completed = true;
                 delete this.cancelCallbacks[id];
@@ -213,7 +214,6 @@ export class Actor {
                     error: err ? serialize(err) : null,
                     data: serialize(data)
                 };
-                const options: WindowPostMessageOptions = isSafari(this.globalScope) ? undefined : {transfer: []};
                 this.target.postMessage(responseMessage, options);
             } : (_) => {
                 completed = true;
