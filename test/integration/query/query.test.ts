@@ -13,6 +13,8 @@ import type {AddressInfo} from 'node:net';
 import {localizeURLs} from '../lib/localize-urls';
 import {globSync} from 'glob';
 
+jest.retryTimes(3);
+
 function performQueryOnFixture(fixture)  {
 
     return new Promise((resolve, _reject) => {

@@ -2563,6 +2563,7 @@ export class Map extends Camera {
      * @param name - The name of the paint property to set.
      * @param value - The value of the paint property to set.
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
+     * Pass `null` to unset the existing value.
      * @param options - Options object.
      * @returns `this`
      * @example

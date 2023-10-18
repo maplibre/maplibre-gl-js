@@ -1,6 +1,8 @@
 import Point from '@mapbox/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
 import type {Callback} from '../types/callback';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
+import type {Size} from './image';
 
 /**
  * Given a value `t` that varies between 0 and 1, return
@@ -516,4 +518,152 @@ export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | n
     img.onerror = () => callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
+}
+
+/**
+ * Computes the webcodecs VideoFrame API options to select a rectangle out of
+ * an image and write it into the destination rectangle.
+ *
+ * Rect (x/y/width/height) select the overlapping rectangle from the source image
+ * and layout (offset/stride) write that overlapping rectangle to the correct place
+ * in the destination image.
+ *
+ * Offset is the byte offset in the dest image that the first pixel appears at
+ * and stride is the number of bytes to the start of the next row:
+ * ┌───────────┐
+ * │  dest     │
+ * │       ┌───┼───────┐
+ * │offset→│▓▓▓│ source│
+ * │       │▓▓▓│       │
+ * │       └───┼───────┘
+ * │stride ⇠╌╌╌│
+ * │╌╌╌╌╌╌→    │
+ * └───────────┘
+ *
+ * @param image - source image containing a width and height attribute
+ * @param x - top-left x coordinate to read from the image
+ * @param y - top-left y coordinate to read from the image
+ * @param width - width of the rectangle to read from the image
+ * @param height - height of the rectangle to read from the image
+ * @returns the layout and rect options to pass into VideoFrame API
+ */
+function computeVideoFrameParameters(image: Size, x: number, y: number, width: number, height: number): VideoFrameCopyToOptions {
+    const destRowOffset = Math.max(-x, 0) * 4;
+    const firstSourceRow = Math.max(0, y);
+    const firstDestRow = firstSourceRow - y;
+    const offset = firstDestRow * width * 4 + destRowOffset;
+    const stride = width * 4;
+
+    const sourceLeft = Math.max(0, x);
+    const sourceTop = Math.max(0, y);
+    const sourceRight = Math.min(image.width, x + width);
+    const sourceBottom = Math.min(image.height, y + height);
+    return {
+        rect: {
+            x: sourceLeft,
+            y: sourceTop,
+            width: sourceRight - sourceLeft,
+            height: sourceBottom - sourceTop
+        },
+        layout: [{offset, stride}]
+    };
+}
+
+/**
+ * Reads pixels from an ImageBitmap/Image/canvas using webcodec VideoFrame API.
+ *
+ * @param data - image, imagebitmap, or canvas to parse
+ * @param x - top-left x coordinate to read from the image
+ * @param y - top-left y coordinate to read from the image
+ * @param width - width of the rectangle to read from the image
+ * @param height - height of the rectangle to read from the image
+ * @returns a promise containing the parsed RGBA pixel values of the image, or the error if an error occurred
+ */
+export async function readImageUsingVideoFrame(
+    image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
+    x: number, y: number, width: number, height: number
+): Promise<Uint8ClampedArray> {
+    if (typeof VideoFrame === 'undefined') {
+        throw new Error('VideoFrame not supported');
+    }
+    const frame = new VideoFrame(image, {timestamp: 0});
+    try {
+        const format = frame?.format;
+        if (!format || !(format.startsWith('BGR') || format.startsWith('RGB'))) {
+            throw new Error(`Unrecognized format ${format}`);
+        }
+        const swapBR = format.startsWith('BGR');
+        const result = new Uint8ClampedArray(width * height * 4);
+        await frame.copyTo(result, computeVideoFrameParameters(image, x, y, width, height));
+        if (swapBR) {
+            for (let i = 0; i < result.length; i += 4) {
+                const tmp = result[i];
+                result[i] = result[i + 2];
+                result[i + 2] = tmp;
+            }
+        }
+        return result;
+    } finally {
+        frame.close();
+    }
+}
+
+let offscreenCanvas: OffscreenCanvas;
+let offscreenCanvasContext: OffscreenCanvasRenderingContext2D;
+
+/**
+ * Reads pixels from an ImageBitmap/Image/canvas using OffscreenCanvas
+ *
+ * @param data - image, imagebitmap, or canvas to parse
+ * @param x - top-left x coordinate to read from the image
+ * @param y - top-left y coordinate to read from the image
+ * @param width - width of the rectangle to read from the image
+ * @param height - height of the rectangle to read from the image
+ * @returns a promise containing the parsed RGBA pixel values of the image, or the error if an error occurred
+ */
+export function readImageDataUsingOffscreenCanvas(
+    imgBitmap: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
+    x: number, y: number, width: number, height: number
+): Uint8ClampedArray {
+    const origWidth = imgBitmap.width;
+    const origHeight = imgBitmap.height;
+    // Lazily initialize OffscreenCanvas
+    if (!offscreenCanvas || !offscreenCanvasContext) {
+        // Dem tiles are typically 256x256
+        offscreenCanvas = new OffscreenCanvas(origWidth, origHeight);
+        offscreenCanvasContext = offscreenCanvas.getContext('2d', {willReadFrequently: true});
+    }
+
+    offscreenCanvas.width = origWidth;
+    offscreenCanvas.height = origHeight;
+
+    offscreenCanvasContext.drawImage(imgBitmap, 0, 0, origWidth, origHeight);
+    const imgData = offscreenCanvasContext.getImageData(x, y, width, height);
+    offscreenCanvasContext.clearRect(0, 0, origWidth, origHeight);
+    return imgData.data;
+}
+
+/**
+ * Reads RGBA pixels from an preferring OffscreenCanvas, but falling back to VideoFrame if supported and
+ * the browser is mangling OffscreenCanvas getImageData results.
+ *
+ * @param data - image, imagebitmap, or canvas to parse
+ * @param x - top-left x coordinate to read from the image
+ * @param y - top-left y coordinate to read from the image
+ * @param width - width of the rectangle to read from the image
+ * @param height - height of the rectangle to read from the image
+ * @returns a promise containing the parsed RGBA pixel values of the image
+ */
+export async function getImageData(
+    image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
+    x: number, y: number, width: number, height: number
+): Promise<Uint8ClampedArray> {
+    if (isOffscreenCanvasDistorted()) {
+        try {
+            return await readImageUsingVideoFrame(image, x, y, width, height);
+        } catch (e) {
+            // fall back to OffscreenCanvas
+        }
+    }
+    return readImageDataUsingOffscreenCanvas(image, x, y, width, height);
 }

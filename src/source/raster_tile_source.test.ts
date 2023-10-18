@@ -2,7 +2,7 @@ import {RasterTileSource} from './raster_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
 import {Dispatcher} from '../util/dispatcher';
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 import {Tile} from './tile';
 import {stubAjaxGetImage} from '../util/test/util';
 
@@ -162,6 +162,17 @@ describe('RasterTileSource', () => {
             }
         });
         server.respond();
+    });
+
+    test('supports updating tiles', () => {
+        const source = createSource({url: '/source.json'});
+        source.setTiles(['http://example.com/{z}/{x}/{y}.png?updated=true']);
+
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
+            }
+        });
     });
 
     test('cancels TileJSON request if removed', () => {

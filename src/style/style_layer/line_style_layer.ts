@@ -9,8 +9,8 @@ import {extend} from '../../util/util';
 import {EvaluationParameters} from '../evaluation_parameters';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
 
-import {Step} from '@globalfishingwatch/maplibre-gl-style-spec';
-import type {FeatureState, ZoomConstantExpression, LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
+import {isZoomExpression, Step} from '@globalfishingwatch/maplibre-gl-style-spec';
+import type {FeatureState, LayerSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
 import type {Transform} from '../../geo/transform';
@@ -60,8 +60,12 @@ export class LineStyleLayer extends StyleLayer {
 
     _handleSpecialPaintPropertyUpdate(name: string) {
         if (name === 'line-gradient') {
-            const expression: ZoomConstantExpression<'source'> = (this._transitionablePaint._values['line-gradient'].value.expression as any);
-            this.stepInterpolant = expression._styleExpression.expression instanceof Step;
+            const expression = this.gradientExpression();
+            if (isZoomExpression(expression)) {
+                this.stepInterpolant = expression._styleExpression.expression instanceof Step;
+            } else {
+                this.stepInterpolant = false;
+            }
             this.gradientVersion = (this.gradientVersion + 1) % Number.MAX_SAFE_INTEGER;
         }
     }

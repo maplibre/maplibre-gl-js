@@ -29,7 +29,7 @@ import type {
  * ```ts
  * map.addSource('raster-source', {
  *     'type': 'raster',
- *     'tiles': ['https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg'],
+ *     'tiles': ['https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg'],
  *     'tileSize': 256,
  * });
  * ```
@@ -122,6 +122,30 @@ export class RasterTileSource extends Evented implements Source {
             this._tileJSONRequest.cancel();
             this._tileJSONRequest = null;
         }
+    }
+
+    setSourceProperty(callback: Function) {
+        if (this._tileJSONRequest) {
+            this._tileJSONRequest.cancel();
+        }
+
+        callback();
+
+        this.load();
+    }
+
+    /**
+     * Sets the source `tiles` property and re-renders the map.
+     *
+     * @param tiles - An array of one or more tile source URLs, as in the raster tiles spec (See the [Style Specification](https://maplibre.org/maplibre-style-spec/)
+     * @returns `this`
+     */
+    setTiles(tiles: Array<string>): this {
+        this.setSourceProperty(() => {
+            this._options.tiles = tiles;
+        });
+
+        return this;
     }
 
     serialize() {

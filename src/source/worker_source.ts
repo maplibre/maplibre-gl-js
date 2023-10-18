@@ -6,7 +6,7 @@ import type {OverscaledTileID} from './tile_id';
 import type {Bucket} from '../data/bucket';
 import type {FeatureIndex} from '../data/feature_index';
 import type {CollisionBoxArray} from '../data/array_types.g';
-import type {DEMData} from '../data/dem_data';
+import type {DEMData, DEMEncoding} from '../data/dem_data';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '@globalfishingwatch/maplibre-gl-style-spec';
@@ -37,7 +37,11 @@ export type WorkerDEMTileParameters = TileParameters & {
         w: number;
     };
     rawImageData: RGBAImage | ImageBitmap;
-    encoding: 'mapbox' | 'terrarium';
+    encoding: DEMEncoding;
+    redFactor: number;
+    greenFactor: number;
+    blueFactor: number;
+    baseShift: number;
 };
 
 /**
