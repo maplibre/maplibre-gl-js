@@ -1,4 +1,4 @@
-import {isWorker} from './util';
+import {isWorker, isSafari} from './util';
 import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
@@ -106,7 +106,8 @@ export class Actor {
             sourceMapId: this.mapId,
             data: serialize(data)
         };
-        this.target.postMessage(message);
+        const options: WindowPostMessageOptions = isSafari(this.globalScope) ? undefined : {transfer: []};
+        this.target.postMessage(message, options);
         return {
             cancel: () => {
                 if (callback) {
@@ -212,7 +213,8 @@ export class Actor {
                     error: err ? serialize(err) : null,
                     data: serialize(data)
                 };
-                this.target.postMessage(responseMessage);
+                const options: WindowPostMessageOptions = isSafari(this.globalScope) ? undefined : {transfer: []};
+                this.target.postMessage(responseMessage, options);
             } : (_) => {
                 completed = true;
             };
