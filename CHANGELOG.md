@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Convert plantuml diagrams to mermaid ([#3217](https://github.com/maplibre/maplibre-gl-js/pull/3217))
+- Improve buffer transfer in Safari after Safari fixed a memory leak bug ([#3225](https://github.com/maplibre/maplibre-gl-js/pull/3225))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
