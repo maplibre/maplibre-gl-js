@@ -1,7 +1,7 @@
 import {workerFactory} from './web_worker';
-import type {WorkerInterface} from './web_worker';
 import {browser} from './browser';
 import {isSafari} from './util';
+import {ActorTarget} from './actor';
 
 export const PRELOAD_POOL_ID = 'mapboxgl_preloaded_worker_pool';
 
@@ -14,13 +14,13 @@ export class WorkerPool {
     active: {
         [_ in number | string]: boolean;
     };
-    workers: Array<WorkerInterface>;
+    workers: Array<ActorTarget>;
 
     constructor() {
         this.active = {};
     }
 
-    acquire(mapId: number | string): Array<WorkerInterface> {
+    acquire(mapId: number | string): Array<ActorTarget> {
         if (!this.workers) {
             // Lazily look up the value of mapboxgl.workerCount so that
             // client code has had a chance to set it.
