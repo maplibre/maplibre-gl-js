@@ -1,8 +1,9 @@
 import {asyncAll} from './util';
-import {Actor, GlyphsProvider, MessageType} from './actor';
+import {Actor, GlyphsProvider} from './actor';
 
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
+import type {MessageType} from './actor_messages';
 /**
  * Responsible for sending messages from a {@link Source} to an associated
  * {@link WorkerSource}.

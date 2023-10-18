@@ -3,7 +3,6 @@ import {RGBAImage} from '../util/image';
 import type {Actor} from '../util/actor';
 import type {
     WorkerDEMTileParameters,
-    WorkerDEMTileCallback,
     TileParameters
 } from './worker_source';
 import {getImageData, isImageBitmap} from '../util/util';
@@ -16,7 +15,7 @@ export class RasterDEMTileWorkerSource {
         this.loaded = {};
     }
 
-    async loadTile(params: WorkerDEMTileParameters, callback: WorkerDEMTileCallback) {
+    async loadTile(params: WorkerDEMTileParameters): Promise<DEMData | null> {
         const {uid, encoding, rawImageData, redFactor, greenFactor, blueFactor, baseShift} = params;
         const width = rawImageData.width + 2;
         const height = rawImageData.height + 2;
@@ -26,7 +25,7 @@ export class RasterDEMTileWorkerSource {
         const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
         this.loaded = this.loaded || {};
         this.loaded[uid] = dem;
-        callback(null, dem);
+        return dem;
     }
 
     removeTile(params: TileParameters) {

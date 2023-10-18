@@ -8,6 +8,7 @@ import type {WorkerSource} from '../source/worker_source';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {Callback} from '../types/callback';
 import type {StyleGlyph} from '../style/style_glyph';
+import type {AsyncMessage, MessageType} from './actor_messages';
 
 export interface ActorTarget {
     addEventListener: typeof window.addEventListener;
@@ -30,13 +31,6 @@ export interface GlyphsProvider {
         callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
     );
 }
-
-export type MessageType = '<response>' | '<cancel>' |
-'geojson.getClusterExpansionZoom' | 'geojson.getClusterChildren' | 'geojson.getClusterLeaves' | 'geojson.loadData' |
-'removeSource' | 'loadWorkerSource' | 'loadDEMTile' | 'removeDEMTile' |
-'removeTile' | 'reloadTile' | 'abortTile' | 'loadTile' | 'getTile' |
-'getGlyphs' | 'getImages' | 'setImages' |
-'syncRTLPluginState' | 'setReferrer' | 'setLayers' | 'updateLayers';
 
 export type MessageData = {
     id: string;
@@ -70,6 +64,7 @@ export class Actor {
     cancelCallbacks: { [x: number]: () => void };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
+    messageHandlers: { [x in MessageType]?: (...args: any[]) => any };
 
     /**
      * @param target - The target
@@ -84,9 +79,26 @@ export class Actor {
         this.tasks = {};
         this.taskQueue = [];
         this.cancelCallbacks = {};
+        this.messageHandlers = {};
         this.invoker = new ThrottledInvoker(this.process);
         this.target.addEventListener('message', this.receive, false);
         this.globalScope = isWorker() ? target : window;
+    }
+
+    registerMessageHandler(type: MessageType, handler: (...args: any[]) => any) {
+        this.messageHandlers[type] = handler;
+    }
+
+    sendAsync<T extends AsyncMessage<any>>(message: T): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.send(message.type, message.data, (err: Error, data: any) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(data);
+                }
+            }, message.targetMapId, message.mustQueue);
+        });
     }
 
     /**
@@ -100,7 +112,7 @@ export class Actor {
         type: MessageType,
         data: unknown,
         callback?: Function | null,
-        targetMapId?: string | null,
+        targetMapId?: string | number | null,
         mustQueue: boolean = false
     ): Cancelable {
         // We're using a string ID instead of numbers because they are being used as object keys
@@ -236,7 +248,11 @@ export class Actor {
 
             let callback: Cancelable = null;
             const params = deserialize(task.data);
-            if (this.parent[task.type]) {
+            if (this.messageHandlers[task.type]) {
+                callback = this.messageHandlers[task.type](task.sourceMapId, params)
+                    .then((data) => done(null, data))
+                    .catch((err) => done(err, null));
+            } else if (this.parent[task.type]) {
                 // task.type == 'loadTile', 'removeTile', etc.
                 callback = this.parent[task.type](task.sourceMapId, params, done);
             } else if ('getWorkerSource' in this.parent) {

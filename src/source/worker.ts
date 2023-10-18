@@ -11,7 +11,6 @@ import type {
     WorkerTileParameters,
     WorkerDEMTileParameters,
     WorkerTileCallback,
-    WorkerDEMTileCallback,
     TileParameters
 } from '../source/worker_source';
 
@@ -85,6 +84,10 @@ export default class Worker {
             globalRTLTextPlugin['processBidirectionalText'] = rtlTextPlugin.processBidirectionalText;
             globalRTLTextPlugin['processStyledBidirectionalText'] = rtlTextPlugin.processStyledBidirectionalText;
         };
+
+        this.actor.registerMessageHandler('loadDEMTile', (mapId: string, params: WorkerDEMTileParameters) => {
+            return this.getDEMWorkerSource(mapId, params.source).loadTile(params);
+        });
     }
 
     setReferrer(mapID: string, referrer: string) {
@@ -119,10 +122,6 @@ export default class Worker {
         type: string;
     }, callback: WorkerTileCallback) {
         this.getWorkerSource(mapId, params.type, params.source).loadTile(params, callback);
-    }
-
-    loadDEMTile(mapId: string, params: WorkerDEMTileParameters, callback: WorkerDEMTileCallback) {
-        this.getDEMWorkerSource(mapId, params.source).loadTile(params, callback);
     }
 
     reloadTile(mapId: string, params: WorkerTileParameters & {

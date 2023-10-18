@@ -18,6 +18,7 @@ import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spe
 import type {ExpiryData} from '../util/ajax';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
 import {RGBAImage} from '../util/image';
+import {LoadDEMTileMessage} from '../util/actor_messages';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -84,7 +85,18 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
-                    tile.actor.send('loadDEMTile', params, done);
+                    try {
+                        const data = await tile.actor.sendAsync<LoadDEMTileMessage>({type: 'loadDEMTile', data: params});
+                        // HM TODO: find a way to fix this linting errors
+                        tile.dem = data; // eslint-disable-line require-atomic-updates
+                        tile.needsHillshadePrepare = true; // eslint-disable-line require-atomic-updates
+                        tile.needsTerrainPrepare = true; // eslint-disable-line require-atomic-updates
+                        tile.state = 'loaded'; // eslint-disable-line require-atomic-updates
+                        callback(null);
+                    } catch (err) {
+                        tile.state = 'errored'; // eslint-disable-line require-atomic-updates
+                        callback(err);
+                    }
                 }
             }
         }, this.map._refreshExpiredTiles);
@@ -100,21 +112,6 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 }
             }
             return browser.getImageData(img, 1);
-        }
-
-        function done(err, data) {
-            if (err) {
-                tile.state = 'errored';
-                callback(err);
-            }
-
-            if (data) {
-                tile.dem = data;
-                tile.needsHillshadePrepare = true;
-                tile.needsTerrainPrepare = true;
-                tile.state = 'loaded';
-                callback(null);
-            }
         }
     }
 
