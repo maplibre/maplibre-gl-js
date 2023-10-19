@@ -8,6 +8,7 @@
 
 ### 🐞 Bug fixes
 
+- Add terrain property to map style object ([#3234](https://github.com/maplibre/maplibre-gl-js/pull/3234))
 - _...Add new stuff here..._
 ## 3.5.1
 
