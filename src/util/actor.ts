@@ -91,7 +91,7 @@ export class Actor {
 
     sendAsync(message: ActorMessage, abortController?: AbortController): Promise<any> {
         return new Promise((resolve, reject) => {
-            let cancelable = this.send(message.type, message.data, (err: Error, data: any) => {
+            const cancelable = this.send(message.type, message.data, (err: Error, data: any) => {
                 if (err) {
                     reject(err);
                 } else {

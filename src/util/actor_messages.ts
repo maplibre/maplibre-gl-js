@@ -1,5 +1,4 @@
 import type {WorkerDEMTileParameters} from '../source/worker_source';
-import type {RGBAImage} from './image';
 
 export type MessageType = '<response>' | '<cancel>' |
 'geojson.getClusterExpansionZoom' | 'geojson.getClusterChildren' | 'geojson.getClusterLeaves' | 'geojson.loadData' |
