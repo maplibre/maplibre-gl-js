@@ -656,7 +656,7 @@ export class Map extends Camera {
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
 
-        if (this._cooperativeGestures) {
+        if (this._cooperativeGestures && options.scrollZoom) {
             this._setupCooperativeGestures();
         }
 

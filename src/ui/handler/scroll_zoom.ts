@@ -149,6 +149,7 @@ export class ScrollZoomHandler implements Handler {
     disable() {
         if (!this.isEnabled()) return;
         this._enabled = false;
+        this._map._destroyCooperativeGestures();
     }
 
     wheel(e: WheelEvent) {
