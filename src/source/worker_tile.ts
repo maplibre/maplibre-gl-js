@@ -28,7 +28,7 @@ import {Cancelable} from '../types/cancelable';
 
 export class WorkerTile {
     tileID: OverscaledTileID;
-    uid: string;
+    uid: string | number;
     zoom: number;
     pixelRatio: number;
     tileSize: number;

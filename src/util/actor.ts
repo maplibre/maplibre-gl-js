@@ -8,7 +8,7 @@ import type {WorkerSource} from '../source/worker_source';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {Callback} from '../types/callback';
 import type {StyleGlyph} from '../style/style_glyph';
-import type {AsyncMessage, MessageType} from './actor_messages';
+import type {ActorMessage, MessageType} from './actor_messages';
 
 export interface ActorTarget {
     addEventListener: typeof window.addEventListener;
@@ -89,15 +89,21 @@ export class Actor {
         this.messageHandlers[type] = handler;
     }
 
-    sendAsync<T extends AsyncMessage<any>>(message: T): Promise<any> {
+    sendAsync(message: ActorMessage, abortController?: AbortController): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.send(message.type, message.data, (err: Error, data: any) => {
+            let cancelable = this.send(message.type, message.data, (err: Error, data: any) => {
                 if (err) {
                     reject(err);
                 } else {
                     resolve(data);
                 }
             }, message.targetMapId, message.mustQueue);
+            if (abortController) {
+                abortController.signal.addEventListener('abort', () => {
+                    cancelable.cancel();
+                    reject(new DOMException('Request is aborted', 'AbortError'));
+                }, {once: true});
+            }
         });
     }
 

@@ -1,5 +1,4 @@
-import type {DEMEncoding} from '../data/dem_data';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {WorkerDEMTileParameters} from '../source/worker_source';
 import type {RGBAImage} from './image';
 
 export type MessageType = '<response>' | '<cancel>' |
@@ -9,24 +8,14 @@ export type MessageType = '<response>' | '<cancel>' |
 'getGlyphs' | 'getImages' | 'setImages' |
 'syncRTLPluginState' | 'setReferrer' | 'setLayers' | 'updateLayers';
 
-export type AsyncMessage<T> = {
+type AsyncMessage<T> = {
     type: MessageType;
     data: T;
     targetMapId?: string | number | null;
     mustQueue?: boolean;
     sourceMapId?: string | number | null;
-}
+};
 
-export type LoadDEMTileData = {
-    uid: number;
-    coord: OverscaledTileID;
-    source: string;
-    rawImageData: ImageBitmap | RGBAImage | ImageData;
-    encoding: DEMEncoding;
-    redFactor: number;
-    greenFactor: number;
-    blueFactor: number;
-    baseShift: number;
-}
+type LoadDEMTileMessage = AsyncMessage<WorkerDEMTileParameters> & { type: 'loadDEMTile' };
 
-export type LoadDEMTileMessage = AsyncMessage<LoadDEMTileData> & { type: 'loadDEMTile' };
+export type ActorMessage = LoadDEMTileMessage; // | ...

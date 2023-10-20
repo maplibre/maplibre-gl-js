@@ -18,7 +18,6 @@ import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spe
 import type {ExpiryData} from '../util/ajax';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
 import {RGBAImage} from '../util/image';
-import {LoadDEMTileMessage} from '../util/actor_messages';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -70,10 +69,9 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             } else if (img) {
                 if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
-                const rawImageData = transfer ? img : await readImageNow(img);
+                const rawImageData = transfer ? img : await readImageNow(img) as RGBAImage;
                 const params = {
                     uid: tile.uid,
-                    coord: tile.tileID,
                     source: this.id,
                     rawImageData,
                     encoding: this.encoding,
@@ -86,7 +84,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
                     try {
-                        const data = await tile.actor.sendAsync<LoadDEMTileMessage>({type: 'loadDEMTile', data: params});
+                        const data = await tile.actor.sendAsync({type: 'loadDEMTile', data: params});
                         // HM TODO: find a way to fix this linting errors
                         tile.dem = data; // eslint-disable-line require-atomic-updates
                         tile.needsHillshadePrepare = true; // eslint-disable-line require-atomic-updates

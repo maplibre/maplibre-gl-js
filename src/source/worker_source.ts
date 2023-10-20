@@ -13,7 +13,7 @@ import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type TileParameters = {
     source: string;
-    uid: string;
+    uid: string | number;
 };
 
 export type WorkerTileParameters = TileParameters & {
@@ -30,12 +30,6 @@ export type WorkerTileParameters = TileParameters & {
 };
 
 export type WorkerDEMTileParameters = TileParameters & {
-    coord: {
-        z: number;
-        x: number;
-        y: number;
-        w: number;
-    };
     rawImageData: RGBAImage | ImageBitmap;
     encoding: DEMEncoding;
     redFactor: number;
