@@ -136,6 +136,7 @@ export class ScrollZoomHandler implements Handler {
         if (this.isEnabled()) return;
         this._enabled = true;
         this._aroundCenter = !!options && (options as AroundCenterOptions).around === 'center';
+        this._map._setupCooperativeGestures();
     }
 
     /**
