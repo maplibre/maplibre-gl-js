@@ -1489,6 +1489,7 @@ describe('Map', () => {
                 map.style.dispatcher.broadcast = function (key, value: any) {
                     expect(key).toBe('updateLayers');
                     expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
+                    return Promise.resolve({} as any);
                 };
 
                 map.setLayoutProperty('symbol', 'text-transform', 'lowercase');

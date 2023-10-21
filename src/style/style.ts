@@ -60,6 +60,7 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {OverscaledTileID} from '../source/tile_id';
+import type {GetImagesParamerters} from '../util/actor_messages';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -268,24 +269,24 @@ export class Style extends Evented {
                 pluginStatus: event.pluginStatus,
                 pluginURL: event.pluginURL
             };
-            self.dispatcher.broadcast('syncRTLPluginState', state, (err, results) => {
-                triggerPluginCompletionEvent(err);
-                if (results) {
-                    const allComplete = results.every((elem) => elem);
-                    if (allComplete) {
-                        for (const id in self.sourceCaches) {
-                            const sourceType = self.sourceCaches[id].getSource().type;
-                            if (sourceType === 'vector' || sourceType === 'geojson') {
-                                // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
-                                // They also load more quickly, so they're more likely to have already displaying tiles
-                                // that would be unnecessarily booted by the plugin load event
-                                self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
-                            }
-                        }
+            self.dispatcher.broadcast('syncRTLPluginState', state).then((results) => {
+                if (!results) {
+                    return;
+                }
+                const allComplete = results.every((elem) => elem);
+                if (!allComplete) {
+                    return;
+                }
+                for (const id in self.sourceCaches) {
+                    const sourceType = self.sourceCaches[id].getSource().type;
+                    if (sourceType === 'vector' || sourceType === 'geojson') {
+                        // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
+                        // They also load more quickly, so they're more likely to have already displaying tiles
+                        // that would be unnecessarily booted by the plugin load event
+                        self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
                     }
                 }
-
-            });
+            }).catch((err) => triggerPluginCompletionEvent(err));
         });
 
         this.on('data', (event) => {
@@ -1400,10 +1401,7 @@ export class Style extends Evented {
             return callback(null, null);
         }
 
-        this.dispatcher.broadcast('loadWorkerSource', {
-            name,
-            url: SourceType.workerSourceURL
-        }, callback);
+        this.dispatcher.broadcast('loadWorkerSource', SourceType.workerSourceURL.toString()).then(() => callback()).catch(callback);
     }
 
     getLight() {
@@ -1574,12 +1572,7 @@ export class Style extends Evented {
 
     getImages(
         mapId: string,
-        params: {
-            icons: Array<string>;
-            source: string;
-            tileID: OverscaledTileID;
-            type: string;
-        },
+        params: GetImagesParamerters,
         callback: Callback<{[_: string]: StyleImage}>
     ) {
         this.imageManager.getImages(params.icons, callback);

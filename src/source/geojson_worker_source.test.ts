@@ -46,17 +46,15 @@ describe('reloadTile', () => {
         };
 
         function addData(callback) {
-            source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err) => {
-                expect(err).toBeNull();
-                callback();
-            });
+            source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters)
+                .then(() => callback())
+                .catch(() => expect(false).toBeTruthy());
         }
 
         function reloadTile(callback) {
-            source.reloadTile(tileParams as any as WorkerTileParameters, (err, data) => {
-                expect(err).toBeNull();
+            source.reloadTile(tileParams as any as WorkerTileParameters).then((data) => {
                 return callback(data);
-            });
+            }).catch(() => expect(false).toBeTruthy());
         }
 
         addData(() => {
@@ -139,11 +137,11 @@ describe('resourceTiming', () => {
             return {cancel: () => {}};
         });
 
-        source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters, (err, result) => {
-            expect(err).toBeNull();
-            expect(result.resourceTiming.testSource).toEqual([exampleResourceTiming]);
-            done();
-        });
+        source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters)
+            .then((result) => {
+                expect(result.resourceTiming.testSource).toEqual([exampleResourceTiming]);
+                done();
+            }).catch(() => expect(false).toBeTruthy());
     });
 
     test('loadData - url (resourceTiming fallback method)', done => {
@@ -174,24 +172,24 @@ describe('resourceTiming', () => {
             return {cancel: () => {}};
         });
 
-        source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters, (err, result) => {
-            expect(err).toBeNull();
-            expect(result.resourceTiming.testSource).toEqual(
-                [{'duration': 250, 'entryType': 'measure', 'name': 'http://localhost/nonexistent', 'startTime': 100}]
-            );
-            done();
-        });
+        source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters)
+            .then((result) => {
+                expect(result.resourceTiming.testSource).toEqual(
+                    [{'duration': 250, 'entryType': 'measure', 'name': 'http://localhost/nonexistent', 'startTime': 100}]
+                );
+                done();
+            }).catch(() => expect(false).toBeTruthy());
     });
 
     test('loadData - data', done => {
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        source.loadData({source: 'testSource', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
-            expect(err).toBeNull();
-            expect(result.resourceTiming).toBeUndefined();
-            done();
-        });
+        source.loadData({source: 'testSource', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters)
+            .then((result) => {
+                expect(result.resourceTiming).toBeUndefined();
+                done();
+            }).catch(() => expect(false).toBeTruthy());
     });
 
 });
@@ -259,58 +257,54 @@ describe('loadData', () => {
         const worker = createWorker();
         let firstCallbackHasRun = false;
 
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
-            expect(err).toBeNull();
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters).then((result) => {
             expect(result && result.abandoned).toBeTruthy();
             firstCallbackHasRun = true;
-        });
+        }).catch(() => expect(false).toBeTruthy());
 
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
-            expect(err).toBeNull();
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters).then((result) => {
             expect(result && result.abandoned).toBeFalsy();
             expect(firstCallbackHasRun).toBeTruthy();
             done();
-        });
+        }).catch(() => expect(false).toBeTruthy());
     });
 
     test('removeSource aborts callbacks', done => {
         const worker = createWorker();
         let loadDataCallbackHasRun = false;
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, result) => {
-            expect(err).toBeNull();
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters).then((result) => {
             expect(result && result.abandoned).toBeTruthy();
             loadDataCallbackHasRun = true;
-        });
+        }).catch(() => expect(false).toBeTruthy());
 
-        worker.removeSource({source: 'source1'}, (err) => {
-            expect(err).toBeFalsy();
-            expect(loadDataCallbackHasRun).toBeTruthy();
-            done();
-        });
+        worker.removeSource({source: 'source1', type: 'type'}).then(() => {
+            // Allow promsie to resolve
+            setTimeout(() => {
+                expect(loadDataCallbackHasRun).toBeTruthy();
+                done();
+            }, 0);
+        }).catch(() => expect(false).toBeTruthy());
     });
 
     test('loadData with geojson creates an non-updateable source', done => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters, (err, _result) => {
-            expect(err).toBeNull();
-            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters, (err, _result) => {
+        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters).then(() => {
+            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters).catch((err) => {
                 expect(err).toBeDefined();
                 done();
-            });
+            }).catch(() => expect(false).toBeTruthy());
         });
     });
 
     test('loadData with geojson creates an updateable source', done => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters, (err, _result) => {
-            expect(err).toBeNull();
-            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters, (err, _result) => {
-                expect(err).toBeNull();
+        worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters).then(() => {
+            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters).then(() => {
                 done();
-            });
-        });
+            }).catch(() => expect(false).toBeTruthy());
+        }).catch(() => expect(false).toBeTruthy());
     });
 
     test('loadData with geojson network call creates an updateable source', done => {
@@ -320,13 +314,11 @@ describe('loadData', () => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(updateableGeoJson));
         });
 
-        worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters, (err, _result) => {
-            expect(err).toBeNull();
-            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters, (err, _result) => {
-                expect(err).toBeNull();
+        worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters).then(() => {
+            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters).then(() => {
                 done();
-            });
-        });
+            }).catch(() => expect(false).toBeTruthy());
+        }).catch(() => expect(false).toBeTruthy());
 
         server.respond();
     });
@@ -338,13 +330,14 @@ describe('loadData', () => {
             request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(geoJson));
         });
 
-        worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters, (err, _result) => {
-            expect(err).toBeNull();
-            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters, (err, _result) => {
-                expect(err).toBeDefined();
-                done();
-            });
-        });
+        worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters).then(() => {
+            worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters)
+                .then(() => expect(false).toBeTruthy())
+                .catch((err) => {
+                    expect(err).toBeDefined();
+                    done();
+                });
+        }).catch(() => expect(false).toBeTruthy());
 
         server.respond();
     });
@@ -352,18 +345,16 @@ describe('loadData', () => {
     test('loadData with diff updates', done => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
-        worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters, (err, _result) => {
-            expect(err).toBeNull();
+        worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters).then(() => {
             worker.loadData({source: 'source1', dataDiff: {
                 add: [{
                     type: 'Feature',
                     id: 'update_point',
                     geometry: {type: 'Point', coordinates: [0, 0]},
                     properties: {}
-                }]}} as LoadGeoJSONParameters, (err, _result) => {
-                expect(err).toBeNull();
+                }]}} as LoadGeoJSONParameters).then(() => {
                 done();
-            });
-        });
+            }).catch(() => expect(false).toBeTruthy());
+        }).catch(() => expect(false).toBeTruthy());
     });
 });

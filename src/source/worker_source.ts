@@ -10,17 +10,19 @@ import type {DEMEncoding} from '../data/dem_data';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {RemoveSourceParams as RemoveSourceParameters} from '../util/actor_messages';
 
 export type TileParameters = {
+    type: string;
     source: string;
     uid: string | number;
 };
 
 export type WorkerTileParameters = TileParameters & {
     tileID: OverscaledTileID;
-    request: RequestParameters;
+    request?: RequestParameters;
     zoom: number;
-    maxZoom: number;
+    maxZoom?: number;
     tileSize: number;
     promoteId: PromoteIdSpecification;
     pixelRatio: number;
@@ -62,6 +64,7 @@ export type WorkerTileResult = {
     glyphPositions?: GlyphPositions | null;
 };
 
+// HM TODO: remove this type?
 export type WorkerTileCallback = (error?: Error | null, result?: WorkerTileResult | null) => void;
 
 /**
@@ -83,29 +86,24 @@ export interface WorkerSource {
      * back to the main thread for rendering.  Should call the callback with:
      * `{ buckets, featureIndex, collisionIndex, rawTileData}`.
      */
-    loadTile(params: WorkerTileParameters, callback: WorkerTileCallback): void;
+    loadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
     /**
      * Re-parses a tile that has already been loaded.  Yields the same data as
      * {@link WorkerSource#loadTile}.
      */
-    reloadTile(params: WorkerTileParameters, callback: WorkerTileCallback): void;
+    reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult>;
     /**
      * Aborts loading a tile that is in progress.
      */
-    abortTile(params: TileParameters, callback: WorkerTileCallback): void;
+    abortTile(params: TileParameters): Promise<void>;
     /**
      * Removes this tile from any local caches.
      */
-    removeTile(params: TileParameters, callback: WorkerTileCallback): void;
+    removeTile(params: TileParameters): Promise<void>;
     /**
      * Tells the WorkerSource to abort in-progress tasks and release resources.
      * The foreground Source is responsible for ensuring that 'removeSource' is
      * the last message sent to the WorkerSource.
      */
-    removeSource?: (
-        params: {
-            source: string;
-        },
-        callback: WorkerTileCallback
-    ) => void;
+    removeSource?: (params: RemoveSourceParameters) => Promise<void>;
 }

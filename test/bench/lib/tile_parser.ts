@@ -130,6 +130,7 @@ export default class TileParser {
         returnDependencies?: boolean
     ): Promise<WorkerTileResult> {
         const workerTile = new WorkerTile({
+            type: 'benchmark',
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
             tileSize: 512,
@@ -145,14 +146,6 @@ export default class TileParser {
 
         const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
 
-        return new Promise((resolve, reject) => {
-            workerTile.parse(vectorTile, this.layerIndex, [], ((this.actor as any)), (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        return workerTile.parse(vectorTile, this.layerIndex, [], ((this.actor as any)));
     }
 }

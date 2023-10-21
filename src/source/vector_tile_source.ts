@@ -204,16 +204,24 @@ export class VectorTileSource extends Evented implements Source {
 
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getActor();
-            tile.request = tile.actor.send('loadTile', params, done.bind(this));
+            tile.abortController = new AbortController();
+            tile.actor.sendAsync({type: 'loadTile', data: params}, tile.abortController)
+            // HM TODO: improve this
+                .then(data => done(null, data))
+                .catch(err => done(err, null));
         } else if (tile.state === 'loading') {
             // schedule tile reloading after it has been loaded
             tile.reloadCallback = callback;
         } else {
-            tile.request = tile.actor.send('reloadTile', params, done.bind(this));
+            tile.abortController = new AbortController();
+            tile.actor.sendAsync({type: 'reloadTile', data: params}, tile.abortController)
+            // HM TODO: improve this
+                .then(data => done(null, data))
+                .catch(err => done(err, null));
         }
 
-        function done(err, data) {
-            delete tile.request;
+        const done = (err, data) => {
+            delete tile.abortController;
 
             if (tile.aborted)
                 return callback(null);
@@ -234,23 +242,23 @@ export class VectorTileSource extends Evented implements Source {
                 this.loadTile(tile, tile.reloadCallback);
                 tile.reloadCallback = null;
             }
-        }
+        };
     }
 
     abortTile(tile: Tile) {
-        if (tile.request) {
-            tile.request.cancel();
-            delete tile.request;
+        if (tile.abortController) {
+            tile.abortController.abort();
+            delete tile.abortController;
         }
         if (tile.actor) {
-            tile.actor.send('abortTile', {uid: tile.uid, type: this.type, source: this.id}, undefined);
+            tile.actor.sendAsync({type: 'abortTile', data: {uid: tile.uid, type: this.type, source: this.id}});
         }
     }
 
     unloadTile(tile: Tile) {
         tile.unloadVectorData();
         if (tile.actor) {
-            tile.actor.send('removeTile', {uid: tile.uid, type: this.type, source: this.id}, undefined);
+            tile.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
         }
     }
 

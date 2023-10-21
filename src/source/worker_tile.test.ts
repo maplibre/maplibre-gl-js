@@ -35,11 +35,10 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        tile.parse(createWrapper(), layerIndex, [], {} as Actor, (err, result) => {
-            expect(err).toBeFalsy();
+        tile.parse(createWrapper(), layerIndex, [], {} as Actor).then((result) => {
             expect(result.buckets[0]).toBeTruthy();
             done();
-        });
+        }).catch(done.fail);
     });
 
     test('WorkerTile#parse skips hidden layers', done => {
@@ -51,11 +50,10 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        tile.parse(createWrapper(), layerIndex, [], {} as Actor, (err, result) => {
-            expect(err).toBeFalsy();
+        tile.parse(createWrapper(), layerIndex, [], {} as Actor).then((result) => {
             expect(result.buckets).toHaveLength(0);
             done();
-        });
+        }).catch(done.fail);
     });
 
     test('WorkerTile#parse skips layers without a corresponding source layer', done => {
@@ -67,11 +65,10 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        tile.parse({layers: {}}, layerIndex, [], {} as Actor, (err, result) => {
-            expect(err).toBeFalsy();
+        tile.parse({layers: {}}, layerIndex, [], {} as Actor).then((result) => {
             expect(result.buckets).toHaveLength(0);
             done();
-        });
+        }).catch(done.fail);
     });
 
     test('WorkerTile#parse warns once when encountering a v1 vector tile layer', done => {
@@ -93,11 +90,10 @@ describe('worker tile', () => {
         const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
         const tile = createWorkerTile();
-        tile.parse(data, layerIndex, [], {} as Actor, (err) => {
-            expect(err).toBeFalsy();
+        tile.parse(data, layerIndex, [], {} as Actor).then(() => {
             expect(spy.mock.calls[0][0]).toMatch(/does not use vector tile spec v2/);
             done();
-        });
+        }).catch(done.fail);
     });
 
     test('WorkerTile#parse would request all types of dependencies', done => {
@@ -155,15 +151,14 @@ describe('worker tile', () => {
         const actorMock = {
             send
         } as unknown as Actor;
-        tile.parse(data, layerIndex, ['hello'], actorMock, (err, result) => {
-            expect(err).toBeFalsy();
+        tile.parse(data, layerIndex, ['hello'], actorMock).then((result) => {
             expect(result).toBeDefined();
             expect(send).toHaveBeenCalledTimes(3);
             expect(send).toHaveBeenCalledWith('getImages', expect.objectContaining({'icons': ['hello'], 'type': 'icons'}), expect.any(Function));
             expect(send).toHaveBeenCalledWith('getImages', expect.objectContaining({'icons': ['hello'], 'type': 'patterns'}), expect.any(Function));
             expect(send).toHaveBeenCalledWith('getGlyphs', expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}}), expect.any(Function));
             done();
-        });
+        }).catch(done.fail);
     });
 
     test('WorkerTile#parse would cancel and only event once on repeated reparsing', done => {
@@ -229,10 +224,9 @@ describe('worker tile', () => {
         const actorMock = {
             send
         } as unknown as Actor;
-        tile.parse(data, layerIndex, ['hello'], actorMock, () => done.fail('should not be called'));
-        tile.parse(data, layerIndex, ['hello'], actorMock, () => done.fail('should not be called'));
-        tile.parse(data, layerIndex, ['hello'], actorMock, (err, result) => {
-            expect(err).toBeFalsy();
+        tile.parse(data, layerIndex, ['hello'], actorMock).then(() => done.fail('should not be called'));
+        tile.parse(data, layerIndex, ['hello'], actorMock).then(() => done.fail('should not be called'));
+        tile.parse(data, layerIndex, ['hello'], actorMock).then((result) => {
             expect(result).toBeDefined();
             expect(cancelCount).toBe(6);
             expect(send).toHaveBeenCalledTimes(9);
@@ -240,6 +234,6 @@ describe('worker tile', () => {
             expect(send).toHaveBeenCalledWith('getImages', expect.objectContaining({'icons': ['hello'], 'type': 'patterns'}), expect.any(Function));
             expect(send).toHaveBeenCalledWith('getGlyphs', expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}}), expect.any(Function));
             done();
-        });
+        }).catch(done.fail);
     });
 });

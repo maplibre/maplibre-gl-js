@@ -11,7 +11,7 @@ import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 
 import type {
     WorkerTileParameters,
-    WorkerTileCallback,
+    WorkerTileResult,
 } from '../source/worker_source';
 
 import type {Actor} from '../util/actor';
@@ -19,9 +19,9 @@ import type {StyleLayerIndex} from '../style/style_layer_index';
 
 import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
-import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
+import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
@@ -87,10 +87,7 @@ function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataC
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
  */
 export class GeoJSONWorkerSource extends VectorTileWorkerSource {
-    _pendingCallback: Callback<{
-        resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
-        abandoned?: boolean;
-    }>;
+    _pendingPromise: (value: GeoJSONWorkerSourceLoadDataResult) => void;
     _pendingRequest: Cancelable;
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
@@ -122,29 +119,29 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @param params - the parameters
      * @param callback - the callback for completion or error
      */
-    loadData(params: LoadGeoJSONParameters, callback: Callback<{
-        resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
-        abandoned?: boolean;
-    }>) {
+    loadData(params: LoadGeoJSONParameters): Promise<GeoJSONWorkerSourceLoadDataResult> {
         this._pendingRequest?.cancel();
-        if (this._pendingCallback) {
+        if (this._pendingPromise) {
             // Tell the foreground the previous call has been abandoned
-            this._pendingCallback(null, {abandoned: true});
+            this._pendingPromise({abandoned: true});
         }
+        return new Promise<GeoJSONWorkerSourceLoadDataResult>((resolve, reject) => {
+            const perf = (params && params.request && params.request.collectResourceTiming) ?
+                new RequestPerformance(params.request) : false;
 
-        const perf = (params && params.request && params.request.collectResourceTiming) ?
-            new RequestPerformance(params.request) : false;
+            this._pendingPromise = resolve;
+            this._pendingRequest = this.loadGeoJSON(params, (err?: Error | null, data?: any | null) => {
+                delete this._pendingPromise;
+                delete this._pendingRequest;
 
-        this._pendingCallback = callback;
-        this._pendingRequest = this.loadGeoJSON(params, (err?: Error | null, data?: any | null) => {
-            delete this._pendingCallback;
-            delete this._pendingRequest;
-
-            if (err || !data) {
-                return callback(err);
-            } else if (typeof data !== 'object') {
-                return callback(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
-            } else {
+                if (err || !data) {
+                    reject(err);
+                    return;
+                }
+                if (typeof data !== 'object') {
+                    reject(new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`));
+                    return;
+                }
                 rewind(data, true);
 
                 try {
@@ -161,12 +158,13 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
                         new Supercluster(getSuperclusterOptions(params)).load(data.features) :
                         geojsonvt(data, params.geojsonVtOptions);
                 } catch (err) {
-                    return callback(err);
+                    reject(err);
+                    return;
                 }
 
                 this.loaded = {};
 
-                const result = {} as { resourceTiming: any };
+                const result = {} as { resourceTiming: {[_: string]: Array<PerformanceResourceTiming>} };
                 if (perf) {
                     const resourceTimingData = perf.finish();
                     // it's necessary to eval the result of getEntriesByName() here via parse/stringify
@@ -176,8 +174,8 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
                         result.resourceTiming[params.source] = JSON.parse(JSON.stringify(resourceTimingData));
                     }
                 }
-                callback(null, result);
-            }
+                resolve(result);
+            });
         });
     }
 
@@ -190,14 +188,14 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     * @param params - the parameters
     * @param callback - the callback for completion or error
     */
-    reloadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
+    reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const loaded = this.loaded,
             uid = params.uid;
 
         if (loaded && loaded[uid]) {
-            return super.reloadTile(params, callback);
+            return super.reloadTile(params);
         } else {
-            return this.loadTile(params, callback);
+            return this.loadTile(params);
         }
     }
 
@@ -250,46 +248,27 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         return {cancel: () => {}};
     };
 
-    removeSource(params: {
-        source: string;
-    }, callback: WorkerTileCallback) {
-        if (this._pendingCallback) {
+    async removeSource(_params: RemoveSourceParams): Promise<void> {
+        if (this._pendingPromise) {
             // Don't leak callbacks
-            this._pendingCallback(null, {abandoned: true});
-        }
-        callback();
-    }
-
-    getClusterExpansionZoom(params: {
-        clusterId: number;
-    }, callback: Callback<number>) {
-        try {
-            callback(null, this._geoJSONIndex.getClusterExpansionZoom(params.clusterId));
-        } catch (e) {
-            callback(e);
+            this._pendingPromise({abandoned: true});
         }
     }
 
-    getClusterChildren(params: {
-        clusterId: number;
-    }, callback: Callback<Array<GeoJSON.Feature>>) {
-        try {
-            callback(null, this._geoJSONIndex.getChildren(params.clusterId));
-        } catch (e) {
-            callback(e);
-        }
+    getClusterExpansionZoom(params: ClusterIDAndSource): number {
+        return this._geoJSONIndex.getClusterExpansionZoom(params.clusterId);
+    }
+
+    getClusterChildren(params: ClusterIDAndSource): Array<GeoJSON.Feature> {
+        return this._geoJSONIndex.getChildren(params.clusterId);
     }
 
     getClusterLeaves(params: {
         clusterId: number;
         limit: number;
         offset: number;
-    }, callback: Callback<Array<GeoJSON.Feature>>) {
-        try {
-            callback(null, this._geoJSONIndex.getLeaves(params.clusterId, params.limit, params.offset));
-        } catch (e) {
-            callback(e);
-        }
+    }): Array<GeoJSON.Feature> {
+        return this._geoJSONIndex.getLeaves(params.clusterId, params.limit, params.offset);
     }
 }
 

@@ -5,10 +5,7 @@ import {ThrottledInvoker} from './throttled_invoker';
 import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
 import type {WorkerSource} from '../source/worker_source';
-import type {OverscaledTileID} from '../source/tile_id';
-import type {Callback} from '../types/callback';
-import type {StyleGlyph} from '../style/style_glyph';
-import type {ActorMessage, MessageType} from './actor_messages';
+import type {AsyncMessage, MessageType, RequestObjectMap, ResponseObjectMap} from './actor_messages';
 
 export interface ActorTarget {
     addEventListener: typeof window.addEventListener;
@@ -19,17 +16,6 @@ export interface ActorTarget {
 
 export interface WorkerSourceProvider {
     getWorkerSource(mapId: string | number, sourceType: string, sourceName: string): WorkerSource;
-}
-
-export interface GlyphsProvider {
-    getGlyphs(mapId: string, params: {
-        stacks: {[_: string]: Array<number>};
-        source: string;
-        tileID: OverscaledTileID;
-        type: string;
-    },
-        callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
-    );
 }
 
 export type MessageData = {
@@ -55,7 +41,6 @@ export type Message = {
  */
 export class Actor {
     target: ActorTarget;
-    parent: WorkerSourceProvider | GlyphsProvider;
     mapId: string | number | null;
     callbacks: { [x: number]: Function};
     name: string;
@@ -71,9 +56,8 @@ export class Actor {
      * @param parent - The parent
      * @param mapId - A unique identifier for the Map instance using this Actor.
      */
-    constructor(target: ActorTarget, parent: WorkerSourceProvider | GlyphsProvider, mapId?: string | number) {
+    constructor(target: ActorTarget, mapId?: string | number) {
         this.target = target;
-        this.parent = parent;
         this.mapId = mapId;
         this.callbacks = {};
         this.tasks = {};
@@ -85,11 +69,11 @@ export class Actor {
         this.globalScope = isWorker() ? target : window;
     }
 
-    registerMessageHandler(type: MessageType, handler: (...args: any[]) => any) {
+    registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string, params: RequestObjectMap[T]) => Promise<ResponseObjectMap[T]>) {
         this.messageHandlers[type] = handler;
     }
 
-    sendAsync(message: ActorMessage, abortController?: AbortController): Promise<any> {
+    sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<ResponseObjectMap[T]> {
         return new Promise((resolve, reject) => {
             const cancelable = this.send(message.type, message.data, (err: Error, data: any) => {
                 if (err) {
@@ -258,16 +242,19 @@ export class Actor {
                 callback = this.messageHandlers[task.type](task.sourceMapId, params)
                     .then((data) => done(null, data))
                     .catch((err) => done(err, null));
-            } else if (this.parent[task.type]) {
-                // task.type == 'loadTile', 'removeTile', etc.
-                callback = this.parent[task.type](task.sourceMapId, params, done);
-            } else if ('getWorkerSource' in this.parent) {
-                // task.type == sourcetype.method
-                const keys = task.type.split('.');
-                const scope = this.parent.getWorkerSource(task.sourceMapId, keys[0], (params as any).source);
-                callback = scope[keys[1]](params, done);
+            // HM TODO: remove this calls
+            //} else if (this.parent[task.type]) {
+            //    // task.type == 'loadTile', 'removeTile', etc.
+            //    console.log(`Using parent for: ${task.type}`);
+            //    callback = this.parent[task.type](task.sourceMapId, params, done);
+            //} else if ('getWorkerSource' in this.parent) {
+            //    // task.type == sourcetype.method
+            //    const keys = task.type.split('.');
+            //    const scope = this.parent.getWorkerSource(task.sourceMapId, keys[0], (params as any).source);
+            //    callback = scope[keys[1]](params, done);
             } else {
                 // No function was found.
+                console.log(`Could not find handler for ${task.type}`);
                 done(new Error(`Could not find function ${task.type}`));
             }
 

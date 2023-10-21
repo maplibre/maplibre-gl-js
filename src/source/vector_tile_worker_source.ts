@@ -9,8 +9,8 @@ import {RequestPerformance} from '../util/performance';
 import type {
     WorkerSource,
     WorkerTileParameters,
-    WorkerTileCallback,
-    TileParameters
+    TileParameters,
+    WorkerTileResult
 } from '../source/worker_source';
 
 import type {Actor} from '../util/actor';
@@ -110,7 +110,7 @@ export class VectorTileWorkerSource implements WorkerSource {
      * {@link VectorTileWorkerSource#loadVectorData} (which by default expects
      * a `params.url` property) for fetching and producing a VectorTile object.
      */
-    loadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
+    loadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const uid = params.uid;
 
         if (!this.loading)
@@ -120,60 +120,63 @@ export class VectorTileWorkerSource implements WorkerSource {
             new RequestPerformance(params.request) : false;
 
         const workerTile = this.loading[uid] = new WorkerTile(params);
-        workerTile.abort = this.loadVectorData(params, (err, response) => {
-            delete this.loading[uid];
 
-            if (err || !response) {
-                workerTile.status = 'done';
+        return new Promise((resolve, reject) => {
+            workerTile.abort = this.loadVectorData(params, (err, response) => {
+                delete this.loading[uid];
+
+                if (err || !response) {
+                    workerTile.status = 'done';
+                    this.loaded[uid] = workerTile;
+                    reject(err);
+                    return;
+                }
+                const rawTileData = response.rawData;
+                const cacheControl = {} as ExpiryData;
+                if (response.expires) cacheControl.expires = response.expires;
+                if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
+
+                const resourceTiming = {} as {resourceTiming: any};
+                if (perf) {
+                    const resourceTimingData = perf.finish();
+                    // it's necessary to eval the result of getEntriesByName() here via parse/stringify
+                    // late evaluation in the main thread causes TypeError: illegal invocation
+                    if (resourceTimingData)
+                        resourceTiming.resourceTiming = JSON.parse(JSON.stringify(resourceTimingData));
+                }
+
+                workerTile.vectorTile = response.vectorTile;
+                workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor).then((result) => {
+                    // Transferring a copy of rawTileData because the worker needs to retain its copy.
+                    resolve(extend({rawTileData: rawTileData.slice(0)}, result, cacheControl, resourceTiming));
+                }).catch(reject).finally(() => {
+                    delete this.fetching[uid];
+                });
+
+                this.loaded = this.loaded || {};
                 this.loaded[uid] = workerTile;
-                return callback(err);
-            }
-
-            const rawTileData = response.rawData;
-            const cacheControl = {} as ExpiryData;
-            if (response.expires) cacheControl.expires = response.expires;
-            if (response.cacheControl) cacheControl.cacheControl = response.cacheControl;
-
-            const resourceTiming = {} as {resourceTiming: any};
-            if (perf) {
-                const resourceTimingData = perf.finish();
-                // it's necessary to eval the result of getEntriesByName() here via parse/stringify
-                // late evaluation in the main thread causes TypeError: illegal invocation
-                if (resourceTimingData)
-                    resourceTiming.resourceTiming = JSON.parse(JSON.stringify(resourceTimingData));
-            }
-
-            workerTile.vectorTile = response.vectorTile;
-            workerTile.parse(response.vectorTile, this.layerIndex, this.availableImages, this.actor, (err, result) => {
-                delete this.fetching[uid];
-                if (err || !result) return callback(err);
-
-                // Transferring a copy of rawTileData because the worker needs to retain its copy.
-                callback(null, extend({rawTileData: rawTileData.slice(0)}, result, cacheControl, resourceTiming));
-            });
-
-            this.loaded = this.loaded || {};
-            this.loaded[uid] = workerTile;
-            // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
-            this.fetching[uid] = {rawTileData, cacheControl, resourceTiming};
-        }) as AbortVectorData;
+                // keep the original fetching state so that reload tile can pick it up if the original parse is cancelled by reloads' parse
+                this.fetching[uid] = {rawTileData, cacheControl, resourceTiming};
+            }) as AbortVectorData;
+        });
     }
 
     /**
      * Implements {@link WorkerSource#reloadTile}.
      */
-    reloadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
-        const loaded = this.loaded;
-        const uid = params.uid;
-        if (loaded && loaded[uid]) {
-            const workerTile = loaded[uid];
+    reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
+        return new Promise((resolve, reject) => {
+            const uid = params.uid;
+            if (!this.loaded || !this.loaded[uid]) {
+                reject(new Error('should not be trying to reload a tile that was never loaded or has been removed'));
+                return;
+            }
+            const workerTile = this.loaded[uid];
             workerTile.showCollisionBoxes = params.showCollisionBoxes;
             if (workerTile.status === 'parsing') {
-                workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, (err, result) => {
-                    if (err || !result) return callback(err, result);
-
+                workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor).then(result => {
                     // if we have cancelled the original parse, make sure to pass the rawTileData from the original fetch
-                    let parseResult;
+                    let parseResult: WorkerTileResult;
                     if (this.fetching[uid]) {
                         const {rawTileData, cacheControl, resourceTiming} = this.fetching[uid];
                         delete this.fetching[uid];
@@ -181,18 +184,22 @@ export class VectorTileWorkerSource implements WorkerSource {
                     } else {
                         parseResult = result;
                     }
+                    resolve(parseResult);
 
-                    callback(null, parseResult);
-                });
-            } else if (workerTile.status === 'done') {
-                // if there was no vector tile data on the initial load, don't try and re-parse tile
-                if (workerTile.vectorTile) {
-                    workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor, callback);
-                } else {
-                    callback();
-                }
+                }).catch(reject);
+                return;
             }
-        }
+            if (workerTile.status === 'done') {
+                // if there was no vector tile data on the initial load, don't try and re-parse tile
+                if (!workerTile.vectorTile) {
+                    // HM TODO: what does this mean?
+                    resolve(null);
+                    return;
+                }
+                workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor).then(resolve).catch(reject);
+
+            }
+        });
     }
 
     /**
@@ -201,14 +208,13 @@ export class VectorTileWorkerSource implements WorkerSource {
      * @param params - The tile parameters
      * @param callback - The callback
      */
-    abortTile(params: TileParameters, callback: WorkerTileCallback) {
-        const loading = this.loading,
-            uid = params.uid;
+    async abortTile(params: TileParameters): Promise<void> {
+        const loading = this.loading;
+        const uid = params.uid;
         if (loading && loading[uid] && loading[uid].abort) {
             loading[uid].abort();
             delete loading[uid];
         }
-        callback();
     }
 
     /**
@@ -217,12 +223,9 @@ export class VectorTileWorkerSource implements WorkerSource {
      * @param params - The tile parameters
      * @param callback - The callback
      */
-    removeTile(params: TileParameters, callback: WorkerTileCallback) {
-        const loaded = this.loaded,
-            uid = params.uid;
-        if (loaded && loaded[uid]) {
-            delete loaded[uid];
+    async removeTile(params: TileParameters): Promise<void> {
+        if (this.loaded && this.loaded[params.uid]) {
+            delete this.loaded[params.uid];
         }
-        callback();
     }
 }

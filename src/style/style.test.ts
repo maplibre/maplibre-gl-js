@@ -150,13 +150,12 @@ describe('Style', () => {
             clearRTLTextPlugin();
             server.respondWith('/plugin.js', 'doesn\'t matter');
             const _broadcast = style.dispatcher.broadcast;
-            style.dispatcher.broadcast = function (type, state, callback) {
+            style.dispatcher.broadcast = function (type, state) {
                 if (type === 'syncRTLPluginState') {
                     // Mock a response from four workers saying they've loaded the plugin
-                    callback(undefined, [true, true, true, true]);
-                } else {
-                    _broadcast(type, state, callback);
+                    return Promise.resolve([true, true, true, true]) as any;
                 }
+                return _broadcast(type, state);
             };
             setRTLTextPlugin('/plugin.js', (error) => {
                 expect(error).toBeUndefined();
@@ -562,9 +561,10 @@ describe('Style#_load', () => {
         });
 
         const _broadcastSpyOn = jest.spyOn(style.dispatcher, 'broadcast')
-            .mockImplementation((type: string, data) => {
+            .mockImplementation((type, data) => {
                 dispatchType = type;
                 dispatchData = data;
+                return Promise.resolve({} as any);
             });
 
         style._load(styleSpec, {});
@@ -687,6 +687,7 @@ describe('Style#update', () => {
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
                 expect(value['removedIds']).toEqual(['second']);
                 done();
+                return Promise.resolve({} as any);
             };
 
             style.update({} as EvaluationParameters);
@@ -1971,6 +1972,7 @@ describe('Style#setFilter', () => {
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toEqual(['==', 'id', 1]);
                 done();
+                return Promise.resolve({} as any);
             };
 
             style.setFilter('symbol', ['==', 'id', 1]);
@@ -2009,6 +2011,7 @@ describe('Style#setFilter', () => {
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toEqual(['==', 'id', 2]);
                 done();
+                return Promise.resolve({} as any);
             };
             filter[2] = 2;
             style.setFilter('symbol', filter);
@@ -2068,6 +2071,7 @@ describe('Style#setFilter', () => {
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toBe('notafilter');
                 done();
+                return Promise.resolve({} as any);
             };
 
             style.setFilter('symbol', 'notafilter' as any as FilterSpecification, {validate: false});
@@ -2107,6 +2111,7 @@ describe('Style#setLayerZoomRange', () => {
                 expect(key).toBe('updateLayers');
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['symbol']);
                 done();
+                return Promise.resolve({} as any);
             };
             style.setLayerZoomRange('symbol', 5, 12);
             expect(style.getLayer('symbol').minzoom).toBe(5);
@@ -2485,6 +2490,7 @@ describe('Style#addSourceType', () => {
             if (type === 'loadWorkerSource') {
                 done('test failed');
             }
+            return Promise.resolve({} as any);
         };
 
         style.addSourceType('foo', sourceType, (arg1, arg2) => {
@@ -2504,6 +2510,7 @@ describe('Style#addSourceType', () => {
                 expect(params['name']).toBe('bar');
                 expect(params['url']).toBe('worker-source.js');
                 done();
+                return Promise.resolve({} as any);
             }
         };
 

@@ -31,21 +31,20 @@ describe('Actor', () => {
             actor: Actor;
             constructor(self) {
                 this.self = self;
-                this.actor = new Actor(self, this);
+                this.actor = new Actor(self);
+                this.actor.registerMessageHandler('setImages', (_mapId, _params) => {
+                    return Promise.resolve();
+                });
             }
-            getTile(mapId, params, callback) {
-                setTimeout(callback, 0, null, params);
-            }
-            getWorkerSource() { return null; }
         });
 
         const worker = workerFactory();
 
-        const m1 = new Actor(worker, {} as any, '1');
-        const m2 = new Actor(worker, {} as any, '2');
+        const m1 = new Actor(worker, '1');
+        const m2 = new Actor(worker, '2');
 
         let callbackCount = 0;
-        m1.send('getTile', {value: 1729}, (err, response) => {
+        m1.send('setImages', {value: 1729}, (err, response) => {
             expect(err).toBeFalsy();
             expect(response).toEqual({value: 1729});
             callbackCount++;
@@ -53,7 +52,7 @@ describe('Actor', () => {
                 done();
             }
         });
-        m2.send('getTile', {value: 4104}, (err, response) => {
+        m2.send('setImages', {value: 4104}, (err, response) => {
             expect(err).toBeFalsy();
             expect(response).toEqual({value: 4104});
             callbackCount++;
@@ -63,7 +62,7 @@ describe('Actor', () => {
         });
     });
 
-    test('targets worker-initiated messages to correct map instance', done => {
+    test('targets worker-initiated messages to correct map instance', () => {
         let workerActor;
 
         setTestWorker(class MockWorker {
@@ -71,21 +70,15 @@ describe('Actor', () => {
             actor: Actor;
             constructor(self) {
                 this.self = self;
-                this.actor = workerActor = new Actor(self, this);
+                this.actor = workerActor = new Actor(self);
             }
             getWorkerSource() { return null; }
         });
 
         const worker = workerFactory();
 
-        new Actor(worker, {
-            test () { done(); }
-        } as any, '1');
-        new Actor(worker, {
-            test () {
-                done('test failed');
-            }
-        } as any, '2');
+        new Actor(worker, '1');
+        new Actor(worker, '2');
 
         workerActor.send('test', {}, () => {}, '1');
     });
@@ -99,7 +92,7 @@ describe('Actor', () => {
                 expect([type, callback, useCapture]).toEqual(this._addEventListenerArgs);
                 done();
             }
-        } as ActorTarget, {} as any, null);
+        } as ActorTarget, null);
         actor.remove();
     });
 

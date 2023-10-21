@@ -71,6 +71,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
                 const rawImageData = transfer ? img : await readImageNow(img) as RGBAImage;
                 const params = {
+                    type: this.type,
                     uid: tile.uid,
                     source: this.id,
                     rawImageData,
@@ -154,7 +155,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
         tile.state = 'unloaded';
         if (tile.actor) {
-            tile.actor.send('removeDEMTile', {uid: tile.uid, source: this.id});
+            tile.actor.sendAsync({type: 'removeDEMTile', data: {type: this.type, uid: tile.uid, source: this.id}});
         }
     }
 }

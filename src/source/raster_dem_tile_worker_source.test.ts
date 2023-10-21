@@ -27,7 +27,8 @@ describe('removeTile', () => {
 
         source.removeTile({
             source: 'source',
-            uid: '0'
+            uid: '0',
+            type: 'raster-dem',
         });
 
         expect(source.loaded).toEqual({});
