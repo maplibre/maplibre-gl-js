@@ -24,6 +24,7 @@ import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateab
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 
 export type LoadGeoJSONParameters = {
+    type: 'geojson';
     request?: RequestParameters;
     /**
      * Literal GeoJSON data. Must be provided if `request.url` is not.

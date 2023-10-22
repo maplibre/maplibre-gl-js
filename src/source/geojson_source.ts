@@ -275,7 +275,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns `this`
      */
     getClusterExpansionZoom(clusterId: number, callback: Callback<number>): this {
-        this.actor.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {clusterId, source: this.id}})
+        this.actor.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {type: this.type, clusterId, source: this.id}})
             .then((v) => callback(null, v))
             .catch((e) => callback(e));
         return this;
@@ -289,7 +289,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns `this`
      */
     getClusterChildren(clusterId: number, callback: Callback<Array<GeoJSON.Feature>>): this {
-        this.actor.sendAsync({type: 'geojson.getClusterChildren', data: {clusterId, source: this.id}})
+        this.actor.sendAsync({type: 'geojson.getClusterChildren', data: {type: this.type, clusterId, source: this.id}})
             .then((v) => callback(null, v))
             .catch((e) => callback(e));
         return this;
@@ -324,6 +324,7 @@ export class GeoJSONSource extends Evented implements Source {
      */
     getClusterLeaves(clusterId: number, limit: number, offset: number, callback: Callback<Array<GeoJSON.Feature>>): this {
         this.actor.sendAsync({type: 'geojson.getClusterLeaves', data: {
+            type: this.type,
             source: this.id,
             clusterId,
             limit,
