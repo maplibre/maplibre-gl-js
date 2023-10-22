@@ -33,7 +33,7 @@ export class ScrollZoomHandler implements Handler {
     _cooperativeGesturesScreen: HTMLElement;
     _cooperativeGestures: boolean | GestureOptions;
     _tr: TransformProvider;
-    _metaKey: keyof MouseEvent;
+    _metaKey: keyof MouseEvent = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
     _el: HTMLElement;
     _enabled: boolean;
     _active: boolean;
@@ -69,7 +69,6 @@ export class ScrollZoomHandler implements Handler {
     constructor(map: Map, triggerRenderFrame: () => void) {
         this._map = map;
         this._tr = new TransformProvider(map);
-        this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._el = map.getCanvasContainer();
         this._triggerRenderFrame = triggerRenderFrame;
 
