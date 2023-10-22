@@ -450,15 +450,12 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
-
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
     _cooperativeGestures: boolean | GestureOptions;
-    _cooperativeGesturesScreen: HTMLElement;
-    _metaKey: keyof MouseEvent;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -583,7 +580,6 @@ export class Map extends Camera {
 
         this._interactive = options.interactive;
         this._cooperativeGestures = options.cooperativeGestures;
-        this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._maxTileCacheSize = options.maxTileCacheSize;
         this._maxTileCacheZoomLevels = options.maxTileCacheZoomLevels;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
@@ -656,8 +652,8 @@ export class Map extends Camera {
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
 
-        if (this._cooperativeGestures && options.scrollZoom) {
-            this._setupCooperativeGestures();
+        if (this._cooperativeGestures) {
+            this.scrollZoom.setupCooperativeGestures();
         }
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
@@ -1176,9 +1172,9 @@ export class Map extends Camera {
     setCooperativeGestures(gestureOptions?: GestureOptions | boolean | null): Map {
         this._cooperativeGestures = gestureOptions;
         if (this._cooperativeGestures) {
-            this._setupCooperativeGestures();
+            this.scrollZoom.setupCooperativeGestures();
         } else {
-            this._destroyCooperativeGestures();
+            this.scrollZoom.destroyCooperativeGestures();
         }
 
         return this;
@@ -2940,39 +2936,6 @@ export class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _cooperativeGesturesOnWheel = (event: WheelEvent) => {
-        this._onCooperativeGesture(event, event[this._metaKey], 1);
-    };
-
-    _setupCooperativeGestures() {
-        const container = this._container;
-        this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
-        if (navigator.platform.indexOf('Mac') === 0) {
-            desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
-        }
-        const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
-        this._cooperativeGesturesScreen.innerHTML = `
-            <div class="maplibregl-desktop-message">${desktopMessage}</div>
-            <div class="maplibregl-mobile-message">${mobileMessage}</div>
-        `;
-
-        // Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
-        this._cooperativeGesturesScreen.setAttribute('aria-hidden', 'true');
-
-        // Add event to canvas container since gesture container is pointer-events: none
-        this._canvasContainer.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-
-        // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
-        this._canvasContainer.classList.add('maplibregl-cooperative-gestures');
-    }
-
-    _destroyCooperativeGestures() {
-        DOM.remove(this._cooperativeGesturesScreen);
-        this._canvasContainer.removeEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-        this._canvasContainer.classList.remove('maplibregl-cooperative-gestures');
-    }
-
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = Math.floor(pixelRatio * width);
@@ -3046,17 +3009,6 @@ export class Map extends Camera {
         this._container.scrollLeft = 0;
         return false;
     };
-
-    _onCooperativeGesture(event: any, metaPress, touches) {
-        if (!metaPress && touches < 2) {
-            // Alert user how to scroll/pan
-            this._cooperativeGesturesScreen.classList.add('maplibregl-show');
-            setTimeout(() => {
-                this._cooperativeGesturesScreen.classList.remove('maplibregl-show');
-            }, 100);
-        }
-        return false;
-    }
 
     /**
      * Returns a Boolean indicating whether the map is fully loaded.
@@ -3286,7 +3238,7 @@ export class Map extends Camera {
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
         if (this._cooperativeGestures) {
-            this._destroyCooperativeGestures();
+            this.scrollZoom.destroyCooperativeGestures();
         }
         this._container.classList.remove('maplibregl-map');
 

@@ -6,7 +6,7 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat';
 import {TransformProvider} from './transform-provider';
 
-import type {Map} from '../map';
+import type {GestureOptions, Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 import type {AroundCenterOptions} from './two_fingers_touch';
 import {Handler} from '../handler_manager';
@@ -30,7 +30,11 @@ const maxScalePerFrame = 2;
  */
 export class ScrollZoomHandler implements Handler {
     _map: Map;
+    _cooperativeGesturesScreen: HTMLElement;
+    _cooperativeGestures: boolean | GestureOptions;
     _tr: TransformProvider;
+    _metaKey: keyof MouseEvent;
+    //canvasContainer
     _el: HTMLElement;
     _enabled: boolean;
     _active: boolean;
@@ -66,6 +70,7 @@ export class ScrollZoomHandler implements Handler {
     constructor(map: Map, triggerRenderFrame: () => void) {
         this._map = map;
         this._tr = new TransformProvider(map);
+        this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._el = map.getCanvasContainer();
         this._triggerRenderFrame = triggerRenderFrame;
 
@@ -136,7 +141,9 @@ export class ScrollZoomHandler implements Handler {
         if (this.isEnabled()) return;
         this._enabled = true;
         this._aroundCenter = !!options && (options as AroundCenterOptions).around === 'center';
-        this._map._setupCooperativeGestures();
+        if (this._map.getCooperativeGestures()) {
+            this.setupCooperativeGestures();
+        }
     }
 
     /**
@@ -150,13 +157,15 @@ export class ScrollZoomHandler implements Handler {
     disable() {
         if (!this.isEnabled()) return;
         this._enabled = false;
-        this._map._destroyCooperativeGestures();
+        if (this._map.getCooperativeGestures()) {
+            this.destroyCooperativeGestures();
+        }
     }
 
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
         if (this._map._cooperativeGestures) {
-            if (e[this._map._metaKey]) {
+            if (e[this._metaKey]) {
                 e.preventDefault();
             } else {
                 return;
@@ -359,5 +368,49 @@ export class ScrollZoomHandler implements Handler {
             clearTimeout(this._finishTimeout);
             delete this._finishTimeout;
         }
+    }
+
+    setupCooperativeGestures() {
+        this._cooperativeGestures = this._map.getCooperativeGestures();
+        this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', this._map._container);
+        let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
+        if (navigator.platform.indexOf('Mac') === 0) {
+            desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
+        }
+        const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
+        this._cooperativeGesturesScreen.innerHTML = `
+            <div class="maplibregl-desktop-message">${desktopMessage}</div>
+            <div class="maplibregl-mobile-message">${mobileMessage}</div>
+        `;
+
+        // Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
+        this._cooperativeGesturesScreen.setAttribute('aria-hidden', 'true');
+
+        // Add event to canvas container since gesture container is pointer-events: none
+        this._el.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
+
+        // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
+        this._el.classList.add('maplibregl-cooperative-gestures');
+    }
+
+    destroyCooperativeGestures() {
+        DOM.remove(this._cooperativeGesturesScreen);
+        this._el.removeEventListener('wheel', this._cooperativeGesturesOnWheel, false);
+        this._el.classList.remove('maplibregl-cooperative-gestures');
+    }
+
+    _cooperativeGesturesOnWheel = (event: WheelEvent) => {
+        this._onCooperativeGesture(event, event[this._metaKey], 1);
+    };
+
+    _onCooperativeGesture(event: any, metaPress, touches) {
+        if (!metaPress && touches < 2) {
+            // Alert user how to scroll/pan
+            this._cooperativeGesturesScreen.classList.add('maplibregl-show');
+            setTimeout(() => {
+                this._cooperativeGesturesScreen.classList.remove('maplibregl-show');
+            }, 100);
+        }
+        return false;
     }
 }

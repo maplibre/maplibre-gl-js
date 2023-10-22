@@ -46,7 +46,7 @@ export class TouchPanHandler implements Handler {
         if (this._map._cooperativeGestures) {
             if (this._minTouches === 2 && mapTouches.length < 2 && !this._cancelCooperativeMessage) {
                 // If coop gesture enabled, show panning info to user
-                this._map._onCooperativeGesture(e, false, mapTouches.length);
+                this._map.scrollZoom._onCooperativeGesture(e, false, mapTouches.length);
             } else if (!this._cancelCooperativeMessage) {
                 // If user is successfully navigating, we don't need this warning until the touch resets
                 this._cancelCooperativeMessage = true;
