@@ -725,6 +725,9 @@ export class Style extends Evented {
 
         this.stylesheet = nextState;
 
+        // reset serialization field, to be populated only when needed
+        this._serializedLayers = null;
+
         return true;
     }
 
@@ -1212,6 +1215,7 @@ export class Style extends Evented {
 
         const sources = mapObject(this.sourceCaches, (source) => source.serialize());
         const layers = this._serializeByIds(this._order);
+        const terrain = this.map.getTerrain() || undefined;
         const myStyleSheet = this.stylesheet;
 
         return filterObject({
@@ -1227,7 +1231,8 @@ export class Style extends Evented {
             glyphs: myStyleSheet.glyphs,
             transition: myStyleSheet.transition,
             sources,
-            layers
+            layers,
+            terrain
         },
         (value) => { return value !== undefined; });
     }

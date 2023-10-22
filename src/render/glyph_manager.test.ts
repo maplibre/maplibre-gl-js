@@ -95,13 +95,13 @@ describe('GlyphManager', () => {
         manager.getGlyphs({'Arial Unicode MS': [0x3005]}, (err, glyphs) => {
             expect(err).toBeFalsy();
             expect(glyphs['Arial Unicode MS'][0x3005]).not.toBeNull();
-            //Request char from Katakana range (te)
+            //Request char from Katakana range (te テ)
             manager.getGlyphs({'Arial Unicode MS': [0x30C6]}, (err, glyphs) => {
                 expect(err).toBeFalsy();
                 const glyph = glyphs['Arial Unicode MS'][0x30c6];
                 //Ensure that te is locally generated.
-                expect(glyph.bitmap.height).toBe(6);
-                expect(glyph.bitmap.width).toBe(6);
+                expect(glyph.bitmap.height).toBe(12);
+                expect(glyph.bitmap.width).toBe(12);
                 done();
             });
         });
@@ -110,9 +110,10 @@ describe('GlyphManager', () => {
     test('GlyphManager generates CJK PBF locally', done => {
         const manager = createGlyphManager('sans-serif');
 
+        // character 平
         manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            expect(glyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(1);
+            expect(glyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(0.5);
             done();
         });
     });
@@ -120,10 +121,10 @@ describe('GlyphManager', () => {
     test('GlyphManager generates Katakana PBF locally', done => {
         const manager = createGlyphManager('sans-serif');
 
-        // Katakana letter te
+        // Katakana letter te テ
         manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(1);
+            expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(0.5);
             done();
         });
     });
@@ -131,10 +132,10 @@ describe('GlyphManager', () => {
     test('GlyphManager generates Hiragana PBF locally', done => {
         const manager = createGlyphManager('sans-serif');
 
-        //Hiragana letter te
+        //Hiragana letter te て
         manager.getGlyphs({'Arial Unicode MS': [0x3066]}, (err, glyphs) => {
             expect(err).toBeFalsy();
-            expect(glyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(1);
+            expect(glyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(0.5);
             done();
         });
     });
@@ -143,7 +144,7 @@ describe('GlyphManager', () => {
 
         const manager = createGlyphManager('sans-serif');
         const drawSpy = GlyphManager.TinySDF.prototype.draw = jest.fn().mockImplementation(() => {
-            return {data: new Uint8ClampedArray(900)} as any;
+            return {data: new Uint8ClampedArray(60 * 60)} as any;
         });
 
         // Katakana letter te

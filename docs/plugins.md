@@ -166,7 +166,10 @@ Provides an [AngularJS](https://angularjs.org/) directive.
 #### ngx-maplibre-gl
 Provides an [Angular](https://angular.io/) integration.
 <br/><small>[View on GitHub](https://github.com/maplibre/ngx-maplibre-gl)</small>
-    
+
+#### vue-maplibre-gl
+Provide a [VueJS](https://vuejs.org/) integration.
+<br/><small>[View on GitHub](https://github.com/razorness/vue-maplibre-gl)</small>
 #### elm-mapbox
 Provides an [Elm](https://elm-lang.org) integration.
 <br/><small>[View on GitHub](https://package.elm-lang.org/packages/gampleman/elm-mapbox/latest/)</small>

@@ -172,10 +172,9 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
 
         if (!klass.serialize) {
             for (const key in input) {
-                // any cast due to https://github.com/facebook/flow/issues/5393
-                if (!(input as any).hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
+                if (!input.hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
                 if (registry[name].omit.indexOf(key) >= 0) continue;
-                const property = (input as any)[key];
+                const property = input[key];
                 properties[key] = registry[name].shallow.indexOf(key) >= 0 ?
                     property :
                     serialize(property, transferables);
@@ -184,7 +183,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
                 properties.message = input.message;
             }
         } else {
-            if (transferables && properties as any === transferables[transferables.length - 1]) {
+            if (transferables && properties === transferables[transferables.length - 1]) {
                 throw new Error('statically serialized object won\'t survive transfer of $name property');
             }
         }
@@ -226,7 +225,7 @@ export function deserialize(input: Serialized): unknown {
     }
 
     if (typeof input === 'object') {
-        const name = (input as any).$name || 'Object';
+        const name = input.$name || 'Object';
         if (!registry[name]) {
             throw new Error(`can't deserialize unregistered class ${name}`);
         }

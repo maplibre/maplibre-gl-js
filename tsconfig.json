@@ -14,7 +14,7 @@
     "skipLibCheck": false,
     "sourceMap": true,
     "strict": false,
-    "target": "ES2019",
+    "target": "ES2016",
     "lib": [
       "ESNext",
       "DOM",
@@ -30,6 +30,7 @@
     "experimentalSpecifierResolution": "node",
     "esm": true,
     "compilerOptions": {
+      "target": "es2019",
       "types": [
         "node"
       ]
@@ -38,14 +39,15 @@
   "include": [
     "rollup.config.*",
     "src/**/*",
-    "test/bench/**/*",
-    "build/**/*"
+    "test/bench/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "build/rollup",
     "test/bench/rollup",
+    "test/bench/run-benchmarks.ts",
+    "test/bench/gl-stats.ts"  ,
     "test/bench/**/*generated*"
   ]
 }

@@ -1,5 +1,5 @@
 import {asyncAll} from './util';
-import {Actor} from './actor';
+import {Actor, GlyphsProvider, MessageType} from './actor';
 
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
@@ -11,14 +11,9 @@ export class Dispatcher {
     workerPool: WorkerPool;
     actors: Array<Actor>;
     currentActor: number;
-    id: number;
+    id: string | number;
 
-    // exposed to allow stubbing in unit tests
-    static Actor: {
-        new (...args: any): Actor;
-    };
-
-    constructor(workerPool: WorkerPool, parent: any, mapId: number) {
+    constructor(workerPool: WorkerPool, parent: GlyphsProvider, mapId: string | number) {
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
@@ -26,7 +21,7 @@ export class Dispatcher {
         const workers = this.workerPool.acquire(mapId);
         for (let i = 0; i < workers.length; i++) {
             const worker = workers[i];
-            const actor = new Dispatcher.Actor(worker, parent, mapId);
+            const actor = new Actor(worker, parent, mapId);
             actor.name = `Worker ${i}`;
             this.actors.push(actor);
         }
@@ -36,7 +31,7 @@ export class Dispatcher {
     /**
      * Broadcast a message to all Workers.
      */
-    broadcast(type: string, data: unknown, cb?: (...args: any[]) => any) {
+    broadcast(type: MessageType, data: unknown, cb?: (...args: any[]) => any) {
         cb = cb || function () {};
         asyncAll(this.actors, (actor, done) => {
             actor.send(type, data, done);
@@ -58,5 +53,3 @@ export class Dispatcher {
         if (mapRemoved) this.workerPool.release(this.id);
     }
 }
-
-Dispatcher.Actor = Actor;
