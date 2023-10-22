@@ -1,5 +1,5 @@
 import {config} from './config';
-
+import type {default as MaplibreWorker} from '../source/worker';
 import type {WorkerSource} from '../source/worker_source';
 
 export interface WorkerGlobalScopeInterface {
@@ -11,6 +11,7 @@ export interface WorkerGlobalScopeInterface {
         }
     ) => void;
     registerRTLTextPlugin: (_: any) => void;
+    worker: MaplibreWorker;
 }
 
 export function workerFactory() {

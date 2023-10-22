@@ -8,6 +8,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     target: MessageBus;
     registerWorkerSource: any;
     registerRTLTextPlugin: any;
+    worker: any;
 
     constructor(addListeners: Array<EventListener>, postListeners: Array<EventListener>) {
         this.addListeners = addListeners;

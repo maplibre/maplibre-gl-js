@@ -66,7 +66,7 @@ export class Actor {
         this.messageHandlers = {};
         this.invoker = new ThrottledInvoker(this.process);
         this.target.addEventListener('message', this.receive, false);
-        this.globalScope = isWorker() ? target : window;
+        this.globalScope = isWorker(self) ? target : window;
     }
 
     registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string, params: RequestObjectMap[T]) => Promise<ResponseObjectMap[T]>) {
@@ -165,7 +165,7 @@ export class Actor {
                 cancel();
             }
         } else {
-            if (isWorker() || data.mustQueue) {
+            if (isWorker(self) || data.mustQueue) {
                 // In workers, store the tasks that we need to process before actually processing them. This
                 // is necessary because we want to keep receiving messages, and in particular,
                 // <cancel> messages. Some tasks may take a while in the worker thread, so before

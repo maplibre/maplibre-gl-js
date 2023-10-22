@@ -3,6 +3,7 @@ import UnitBezier from '@mapbox/unitbezier';
 import type {Callback} from '../types/callback';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
+import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
  * Given a value `t` that varies between 0 and 1, return
@@ -384,7 +385,7 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
  *
  * @returns `true` if the when run in the web-worker context.
  */
-export function isWorker(): boolean {
+export function isWorker(self: any): self is WorkerGlobalScopeInterface {
     // @ts-ignore
     return typeof WorkerGlobalScope !== 'undefined' && typeof self !== 'undefined' && self instanceof WorkerGlobalScope;
 }

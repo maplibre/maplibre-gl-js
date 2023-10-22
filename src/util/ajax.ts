@@ -109,9 +109,9 @@ export class AJAXError extends Error {
 // to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge, IE),
 // and we will set an empty referrer. Otherwise, we're using the document's URL.
 /* global self */
-export const getReferrer = isWorker() ?
-    () => (self as any).worker && (self as any).worker.referrer :
-    () => (window.location.protocol === 'blob:' ? window.parent : window).location.href;
+export const getReferrer = () => isWorker(self) 
+        ? self.worker && self.worker.referrer 
+        : (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
 export const getProtocolAction = url => config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf('://'))];
 
@@ -244,10 +244,10 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
     // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
     //   this case we unconditionally use XHR on the current thread since referrers don't matter.
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
-            return (self as any).worker.actor.send('getResource', requestParameters, callback);
+        if (isWorker(self) && self.worker && self.worker.actor) {
+            return self.worker.actor.send('getResource', requestParameters, callback);
         }
-        if (!isWorker()) {
+        if (!isWorker(self)) {
             const action = getProtocolAction(requestParameters.url) || makeFetchRequest;
             return action(requestParameters, callback);
         }
@@ -256,7 +256,7 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
             return makeFetchRequest(requestParameters, callback);
         }
-        if (isWorker() && (self as any).worker && (self as any).worker.actor) {
+        if (isWorker(self) && self.worker && self.worker.actor) {
             const queueOnMainThread = true;
             return (self as any).worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
         }

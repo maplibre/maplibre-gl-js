@@ -64,9 +64,6 @@ export type WorkerTileResult = {
     glyphPositions?: GlyphPositions | null;
 };
 
-// HM TODO: remove this type?
-export type WorkerTileCallback = (error?: Error | null, result?: WorkerTileResult | null) => void;
-
 /**
  * May be implemented by custom source types to provide code that can be run on
  * the WebWorkers. In addition to providing a custom

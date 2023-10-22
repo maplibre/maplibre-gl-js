@@ -177,7 +177,7 @@ export namespace ImageRequest {
         //      let makeRequest handle it.
         // - HtmlImageElement request automatically adds accept header for all the browser supported images
         const canUseHTMLImageElement = supportImageRefresh === false &&
-            !isWorker() &&
+            !isWorker(self) &&
             !getProtocolAction(requestParameters.url) &&
             (!requestParameters.headers ||
                 Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === 'accept', true));
