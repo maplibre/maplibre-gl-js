@@ -236,8 +236,6 @@ export class Style extends Evented {
     placement: Placement;
     z: number;
 
-    static registerForPluginStateChange: typeof registerForPluginStateChange;
-
     constructor(map: Map, options: StyleOptions = {}) {
         super();
 
@@ -263,29 +261,31 @@ export class Style extends Evented {
         this.dispatcher.broadcast('setReferrer', getReferrer());
 
         const self = this;
-        this._rtlTextPluginCallback = Style.registerForPluginStateChange((event) => {
+        this._rtlTextPluginCallback = registerForPluginStateChange((event) => {
             const state = {
                 pluginStatus: event.pluginStatus,
                 pluginURL: event.pluginURL
             };
-            self.dispatcher.broadcast('syncRTLPluginState', state).then((results) => {
-                if (!results) {
-                    return;
-                }
-                const allComplete = results.every((elem) => elem);
-                if (!allComplete) {
-                    return;
-                }
-                for (const id in self.sourceCaches) {
-                    const sourceType = self.sourceCaches[id].getSource().type;
-                    if (sourceType === 'vector' || sourceType === 'geojson') {
-                        // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
-                        // They also load more quickly, so they're more likely to have already displaying tiles
-                        // that would be unnecessarily booted by the plugin load event
-                        self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
+            self.dispatcher.broadcast('syncRTLPluginState', state)
+                .then((results) => {
+                    triggerPluginCompletionEvent(null);
+                    if (!results) {
+                        return;
                     }
-                }
-            }).catch((err) => triggerPluginCompletionEvent(err));
+                    const allComplete = results.every((elem) => elem);
+                    if (!allComplete) {
+                        return;
+                    }
+                    for (const id in self.sourceCaches) {
+                        const sourceType = self.sourceCaches[id].getSource().type;
+                        if (sourceType === 'vector' || sourceType === 'geojson') {
+                            // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
+                            // They also load more quickly, so they're more likely to have already displaying tiles
+                            // that would be unnecessarily booted by the plugin load event
+                            self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
+                        }
+                    }
+                }).catch((err) => triggerPluginCompletionEvent(err));
         });
 
         this.on('data', (event) => {
@@ -1714,5 +1714,3 @@ export class Style extends Evented {
         }
     }
 }
-
-Style.registerForPluginStateChange = registerForPluginStateChange;

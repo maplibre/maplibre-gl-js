@@ -181,7 +181,7 @@ export class Actor {
                 this.processTask(id, data);
             }
         }
-    }
+    };
 
     process = () => {
         if (!this.taskQueue.length) {

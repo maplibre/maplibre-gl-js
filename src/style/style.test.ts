@@ -96,10 +96,8 @@ describe('Style', () => {
     test('registers plugin state change listener', () => {
         clearRTLTextPlugin();
 
-        jest.spyOn(Style, 'registerForPluginStateChange');
         const style = new Style(getStubMap());
         const mockStyleDispatcherBroadcast = jest.spyOn(style.dispatcher, 'broadcast');
-        expect(Style.registerForPluginStateChange).toHaveBeenCalledTimes(1);
 
         setRTLTextPlugin('/plugin.js', undefined);
         expect(mockStyleDispatcherBroadcast.mock.calls[0][0]).toBe('syncRTLPluginState');

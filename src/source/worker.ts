@@ -170,7 +170,7 @@ export default class Worker {
         }
     }
 
-    private async _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
+    private _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
         globalRTLTextPlugin.setState(state);
         const pluginURL = globalRTLTextPlugin.getPluginURL();
         if (
@@ -181,7 +181,7 @@ export default class Worker {
             this.self.importScripts(pluginURL);
             const complete = globalRTLTextPlugin.isParsed();
             if (complete) {
-                return true;
+                return Promise.resolve(complete);
             }
             throw new Error(`RTL Text Plugin failed to import scripts from ${pluginURL}`);
         }
