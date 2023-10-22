@@ -5,7 +5,6 @@ import {
 import {SourceCache} from './source_cache';
 import {Transform} from '../geo/transform';
 import Point from '@mapbox/point-geometry';
-import {Dispatcher} from '../util/dispatcher';
 
 describe('QueryFeatures#rendered', () => {
     test('returns empty object if source returns no tiles', () => {
@@ -23,12 +22,8 @@ describe('QueryFeatures#source', () => {
             type: 'geojson',
             data: {type: 'FeatureCollection', features: []}
         }, {
-            getActor() {
-                return {
-                    send(type, params, callback) { return callback(); }
-                };
-            }
-        } as any as Dispatcher);
+            getActor() {}
+        } as any);
         const result = querySourceFeatures(sourceCache, {});
         expect(result).toEqual([]);
     });

@@ -65,7 +65,7 @@ export class Actor {
         this.cancelCallbacks = {};
         this.messageHandlers = {};
         this.invoker = new ThrottledInvoker(this.process);
-        this.target.addEventListener('message', (message) => this.receive(message), false);
+        this.target.addEventListener('message', this.receive, false);
         this.globalScope = isWorker(self) ? target : window;
     }
 
@@ -142,7 +142,7 @@ export class Actor {
         };
     }
 
-    receive(message: Message) {
+    receive = (message: Message) => {
         const data = message.data;
         const id = data.id;
 

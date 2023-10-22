@@ -350,11 +350,12 @@ export class GeoJSONSource extends Evented implements Source {
         } else {
             options.data = JSON.stringify(this._data);
         }
-
+        options.type = this.type;
         this._pendingLoads++;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         let result;
         try {
+            // HM TODO: improve types!!
             result = await this.actor.sendAsync({type: 'geojson.loadData', data: options});
             this._pendingLoads--;
             if (this._removed || result.abandoned) {
