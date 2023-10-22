@@ -34,7 +34,6 @@ export class ScrollZoomHandler implements Handler {
     _cooperativeGestures: boolean | GestureOptions;
     _tr: TransformProvider;
     _metaKey: keyof MouseEvent;
-    //canvasContainer
     _el: HTMLElement;
     _enabled: boolean;
     _active: boolean;
@@ -141,9 +140,7 @@ export class ScrollZoomHandler implements Handler {
         if (this.isEnabled()) return;
         this._enabled = true;
         this._aroundCenter = !!options && (options as AroundCenterOptions).around === 'center';
-        if (this._map.getCooperativeGestures()) {
-            this.setupCooperativeGestures();
-        }
+        if (this._map.getCooperativeGestures()) this.setupCooperativeGestures();
     }
 
     /**
@@ -157,9 +154,7 @@ export class ScrollZoomHandler implements Handler {
     disable() {
         if (!this.isEnabled()) return;
         this._enabled = false;
-        if (this._map.getCooperativeGestures()) {
-            this.destroyCooperativeGestures();
-        }
+        if (this._map.getCooperativeGestures()) this.destroyCooperativeGestures();
     }
 
     wheel(e: WheelEvent) {
@@ -372,7 +367,7 @@ export class ScrollZoomHandler implements Handler {
 
     setupCooperativeGestures() {
         this._cooperativeGestures = this._map.getCooperativeGestures();
-        this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', this._map._container);
+        this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', this._map.getContainer());
         let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
         if (navigator.platform.indexOf('Mac') === 0) {
             desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
