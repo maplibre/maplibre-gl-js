@@ -177,7 +177,7 @@ describe('vector tile worker source', () => {
 
         const parseWorkerTileMock = jest
             .spyOn(WorkerTile.prototype, 'parse')
-            .mockImplementation(function(data, layerIndex, availableImages, actor) {
+            .mockImplementation(function(_data, _layerIndex, _availableImages, _actor) {
                 this.status = 'parsing';
                 return new Promise((resolve) => {
                     setTimeout(() => resolve({} as WorkerTileResult), 10);

@@ -65,7 +65,7 @@ export class Actor {
         this.cancelCallbacks = {};
         this.messageHandlers = {};
         this.invoker = new ThrottledInvoker(this.process);
-        this.target.addEventListener('message', this.receive, false);
+        this.target.addEventListener('message', (message) => this.receive(message), false);
         this.globalScope = isWorker(self) ? target : window;
     }
 
@@ -142,7 +142,7 @@ export class Actor {
         };
     }
 
-    receive = (message: Message) => {
+    receive(message: Message) {
         const data = message.data;
         const id = data.id;
 
@@ -181,7 +181,7 @@ export class Actor {
                 this.processTask(id, data);
             }
         }
-    };
+    }
 
     process = () => {
         if (!this.taskQueue.length) {
@@ -219,10 +219,10 @@ export class Actor {
                 }
             }
         } else {
-            let completed = false;
+            //let completed = false;
             const buffers: Array<Transferable> = [];
             const done = task.hasCallback ? (err: Error, data?: any) => {
-                completed = true;
+                //completed = true;
                 delete this.cancelCallbacks[id];
                 const responseMessage: MessageData = {
                     id,
@@ -233,7 +233,7 @@ export class Actor {
                 };
                 this.target.postMessage(responseMessage, {transfer: buffers});
             } : (_) => {
-                completed = true;
+                //completed = true;
             };
 
             const params = deserialize(task.data) as any;

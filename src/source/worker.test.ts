@@ -52,7 +52,6 @@ describe('Worker register RTLTextPlugin', () => {
         server.respond();
     });
 
-    
     test('isolates different instances\' data', () => {
         worker.actor.messageHandlers['setLayers']('0', [
             {id: 'one', type: 'circle'} as LayerSpecification

@@ -53,7 +53,6 @@ describe('Actor', () => {
         await Promise.all([p1, p2]);
     });
 
-
     test('#remove unbinds event listener', done => {
         const actor = new Actor({
             addEventListener(type, callback, useCapture) {
