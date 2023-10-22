@@ -111,7 +111,7 @@ export function getMockDispatcher() {
     const wrapDispatcher = getWrapDispatcher();
 
     const mockDispatcher = wrapDispatcher({
-        send() {}
+        sendAsync() { return Promise.resolve({}); },
     });
 
     return mockDispatcher;

@@ -148,10 +148,11 @@ describe('VectorTileSource', () => {
             });
 
             source.dispatcher = getWrapDispatcher()({
-                send(type, params) {
-                    expect(type).toBe('loadTile');
-                    expect(expectedURL).toBe(params.request.url);
+                sendAsync(messaage) {
+                    expect(messaage.type).toBe('loadTile');
+                    expect(expectedURL).toBe(messaage.data.request.url);
                     done();
+                    return Promise.resolve({});
                 }
             });
 
@@ -195,10 +196,9 @@ describe('VectorTileSource', () => {
         });
         const events = [];
         source.dispatcher = getWrapDispatcher()({
-            send(type, params, cb) {
-                events.push(type);
-                if (cb) setTimeout(cb, 0);
-                return 1;
+            sendAsync(message) {
+                events.push(message.type);
+                return Promise.resolve({});
             }
         });
 
@@ -285,15 +285,14 @@ describe('VectorTileSource', () => {
             collectResourceTiming: true
         });
         source.dispatcher = getWrapDispatcher()({
-            send(type, params, cb) {
-                expect(params.request.collectResourceTiming).toBeTruthy();
-                setTimeout(cb, 0);
+            sendAsync(message) {
+                expect(message.data.request.collectResourceTiming).toBeTruthy();
                 done();
 
                 // do nothing for cache size check dispatch
                 source.dispatcher = getMockDispatcher();
 
-                return 1;
+                return Promise.resolve({});
             }
         });
 
