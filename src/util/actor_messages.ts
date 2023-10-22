@@ -24,6 +24,7 @@ export type AsyncMessage<T extends MessageType> = {
 };
 
 export type ClusterIDAndSource = {
+    type: 'geojson';
     clusterId: number;
     source: string;
 };
@@ -80,9 +81,9 @@ export type RequestObjectMap = {
     'abortTile': TileParameters;
     'removeDEMTile': TileParameters;
     'getResource': RequestParameters;
-    'error': void;
-    '<cancel>': void;
-    '<response>': void;
+    'error': any;
+    '<cancel>': any;
+    '<response>': any;
 }
 
 export type ResponseObjectMap = {

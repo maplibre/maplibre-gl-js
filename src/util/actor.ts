@@ -49,7 +49,7 @@ export class Actor {
     cancelCallbacks: { [x: number]: () => void };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
-    messageHandlers: { [x in MessageType]?: (...args: any[]) => any };
+    messageHandlers: { [x in MessageType]?: (mapId: string | number, params: RequestObjectMap[x]) => Promise<ResponseObjectMap[x]> };
 
     /**
      * @param target - The target
@@ -69,7 +69,7 @@ export class Actor {
         this.globalScope = isWorker(self) ? target : window;
     }
 
-    registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string, params: RequestObjectMap[T]) => Promise<ResponseObjectMap[T]>) {
+    registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string | number, params: RequestObjectMap[T]) => Promise<ResponseObjectMap[T]>) {
         this.messageHandlers[type] = handler;
     }
 
@@ -236,10 +236,9 @@ export class Actor {
                 completed = true;
             };
 
-            let callback: Cancelable = null;
-            const params = deserialize(task.data);
+            const params = deserialize(task.data) as any;
             if (this.messageHandlers[task.type]) {
-                callback = this.messageHandlers[task.type](task.sourceMapId, params)
+                this.messageHandlers[task.type](task.sourceMapId, params)
                     .then((data) => done(null, data))
                     .catch((err) => done(err, null));
             } else {
@@ -247,10 +246,11 @@ export class Actor {
                 done(new Error(`Could not find function ${task.type}`));
             }
 
-            if (!completed && callback && callback.cancel) {
-                // Allows canceling the task as long as it hasn't been completed yet.
-                this.cancelCallbacks[id] = callback.cancel;
-            }
+            // HM TODO: I'm not sure this is possible...
+            //if (!completed && callback && callback.cancel) {
+            //    // Allows canceling the task as long as it hasn't been completed yet.
+            //    this.cancelCallbacks[id] = callback.cancel;
+            //}
         }
     }
 

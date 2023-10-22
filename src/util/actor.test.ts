@@ -43,10 +43,10 @@ describe('Actor', () => {
         const m1 = new Actor(worker, '1');
         const m2 = new Actor(worker, '2');
 
-        const p1 = m1.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {source: '', clusterId: 1729}}).then((response) => {
+        const p1 = m1.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 1729}}).then((response) => {
             expect(response).toBe(1729);
         }).catch(() => expect(false).toBeTruthy());
-        const p2 = m2.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {source: '', clusterId: 4104}}).then((response) => {
+        const p2 = m2.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 4104}}).then((response) => {
             expect(response).toBe(4104);
         }).catch(() => expect(false).toBeTruthy());
 

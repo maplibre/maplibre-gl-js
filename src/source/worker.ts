@@ -55,6 +55,7 @@ export default class Worker {
         // [mapId][sourceType][sourceName] => worker source instance
         this.workerSources = {};
         this.demWorkerSources = {};
+        this.externalWorkerSourceTypes = {};
 
         this.self.registerWorkerSource = (name: string, WorkerSource: {
             new (...args: any): WorkerSource;
@@ -88,19 +89,19 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler('geojson.getClusterExpansionZoom', async (mapId: string, params: ClusterIDAndSource) => {
-            return (this._getWorkerSource(mapId, 'geojson', params.source) as GeoJSONWorkerSource).getClusterExpansionZoom(params);
+            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterExpansionZoom(params);
         });
 
         this.actor.registerMessageHandler('geojson.getClusterChildren', async (mapId: string, params: ClusterIDAndSource) => {
-            return (this._getWorkerSource(mapId, 'geojson', params.source) as GeoJSONWorkerSource).getClusterChildren(params);
+            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterChildren(params);
         });
 
         this.actor.registerMessageHandler('geojson.getClusterLeaves', async (mapId: string, params: GetClusterLeavesParams) => {
-            return (this._getWorkerSource(mapId, 'geojson', params.source) as GeoJSONWorkerSource).getClusterLeaves(params);
+            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterLeaves(params);
         });
 
         this.actor.registerMessageHandler('geojson.loadData', (mapId: string, params: LoadGeoJSONParameters) => {
-            return (this._getWorkerSource(mapId, 'geojson', params.source) as GeoJSONWorkerSource).loadData(params);
+            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).loadData(params);
         });
 
         this.actor.registerMessageHandler('loadTile', (mapId: string, params: WorkerTileParameters) => {
