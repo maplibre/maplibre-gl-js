@@ -98,9 +98,9 @@ export class Actor {
      * @param type - The name of the target method to invoke or '[source-type].[source-name].name' for a method on a WorkerSource.
      * @param targetMapId - A particular mapId to which to send this message.
      */
-    send(
-        type: MessageType,
-        data: unknown,
+    send<T extends MessageType>(
+        type: T,
+        data: RequestObjectMap[T],
         callback?: Function | null,
         targetMapId?: string | number | null,
         mustQueue: boolean = false
@@ -242,19 +242,8 @@ export class Actor {
                 callback = this.messageHandlers[task.type](task.sourceMapId, params)
                     .then((data) => done(null, data))
                     .catch((err) => done(err, null));
-            // HM TODO: remove this calls
-            //} else if (this.parent[task.type]) {
-            //    // task.type == 'loadTile', 'removeTile', etc.
-            //    console.log(`Using parent for: ${task.type}`);
-            //    callback = this.parent[task.type](task.sourceMapId, params, done);
-            //} else if ('getWorkerSource' in this.parent) {
-            //    // task.type == sourcetype.method
-            //    const keys = task.type.split('.');
-            //    const scope = this.parent.getWorkerSource(task.sourceMapId, keys[0], (params as any).source);
-            //    callback = scope[keys[1]](params, done);
             } else {
                 // No function was found.
-                console.log(`Could not find handler for ${task.type}`);
                 done(new Error(`Could not find function ${task.type}`));
             }
 

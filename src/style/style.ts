@@ -59,8 +59,7 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
-import type {OverscaledTileID} from '../source/tile_id';
-import type {GetImagesParamerters} from '../util/actor_messages';
+import type {GetGlyhsParamerters, GetImagesParamerters} from '../util/actor_messages';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -1593,15 +1592,7 @@ export class Style extends Evented {
         }
     }
 
-    getGlyphs(
-        mapId: string,
-        params: {
-            stacks: {[_: string]: Array<number>};
-            source: string;
-            tileID: OverscaledTileID;
-            type: string;
-        },
-        callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
+    getGlyphs(mapId: string, params: GetGlyhsParamerters, callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
     ) {
         this.glyphManager.getGlyphs(params.stacks, callback);
         const sourceCache = this.sourceCaches[params.source];

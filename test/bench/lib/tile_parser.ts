@@ -57,6 +57,7 @@ export default class TileParser {
     icons: any;
     glyphs: any;
     style: Style;
+    // HM TODO: properly type this and replace to async
     actor: {
         send: Function;
     };

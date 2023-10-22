@@ -25,15 +25,15 @@ describe('Actor', () => {
         global.Worker = originalWorker;
     });
 
-    test('forwards responses to correct callback', done => {
+    test('forwards responses to correct handler', async () => {
         setTestWorker(class MockWorker {
             self: any;
             actor: Actor;
             constructor(self) {
                 this.self = self;
                 this.actor = new Actor(self);
-                this.actor.registerMessageHandler('setImages', (_mapId, _params) => {
-                    return Promise.resolve();
+                this.actor.registerMessageHandler('geojson.getClusterExpansionZoom', (_mapId, params) => {
+                    return Promise.resolve(params.clusterId);
                 });
             }
         });
@@ -43,52 +43,23 @@ describe('Actor', () => {
         const m1 = new Actor(worker, '1');
         const m2 = new Actor(worker, '2');
 
-        let callbackCount = 0;
-        m1.send('setImages', {value: 1729}, (err, response) => {
-            expect(err).toBeFalsy();
-            expect(response).toEqual({value: 1729});
-            callbackCount++;
-            if (callbackCount === 2) {
-                done();
-            }
-        });
-        m2.send('setImages', {value: 4104}, (err, response) => {
-            expect(err).toBeFalsy();
-            expect(response).toEqual({value: 4104});
-            callbackCount++;
-            if (callbackCount === 2) {
-                done();
-            }
-        });
+        const p1 = m1.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {source: '', clusterId: 1729}}).then((response) => {
+            expect(response).toBe(1729);
+        }).catch(() => expect(false).toBeTruthy());
+        const p2 = m2.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {source: '', clusterId: 4104}}).then((response) => {
+            expect(response).toBe(4104);
+        }).catch(() => expect(false).toBeTruthy());
+
+        await Promise.all([p1, p2]);
     });
 
-    test('targets worker-initiated messages to correct map instance', () => {
-        let workerActor;
-
-        setTestWorker(class MockWorker {
-            self: any;
-            actor: Actor;
-            constructor(self) {
-                this.self = self;
-                this.actor = workerActor = new Actor(self);
-            }
-            getWorkerSource() { return null; }
-        });
-
-        const worker = workerFactory();
-
-        new Actor(worker, '1');
-        new Actor(worker, '2');
-
-        workerActor.send('test', {}, () => {}, '1');
-    });
 
     test('#remove unbinds event listener', done => {
         const actor = new Actor({
-            addEventListener (type, callback, useCapture) {
+            addEventListener(type, callback, useCapture) {
                 this._addEventListenerArgs = [type, callback, useCapture];
             },
-            removeEventListener (type, callback, useCapture) {
+            removeEventListener(type, callback, useCapture) {
                 expect([type, callback, useCapture]).toEqual(this._addEventListenerArgs);
                 done();
             }

@@ -151,7 +151,7 @@ export class WorkerTile {
             const dependencySentinel = ++this.dependencySentinel;
             if (Object.keys(stacks).length) {
                 // HM TODO: improve this to be async
-                this.inFlightDependencies.push(actor.send('getGlyphs', {uid: this.uid, stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}, (err, result) => {
+                this.inFlightDependencies.push(actor.send('getGlyphs', {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}, (err, result) => {
                     if (dependencySentinel !== this.dependencySentinel) {
                         return;
                     }

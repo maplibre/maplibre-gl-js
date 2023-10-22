@@ -52,6 +52,13 @@ export type GetImagesParamerters = {
     type: string;
 }
 
+export type GetGlyhsParamerters = {
+    type: string;
+    stacks: {[_: string]: Array<number>};
+    source: string;
+    tileID: OverscaledTileID;
+}
+
 export type RequestObjectMap = {
     'loadDEMTile': WorkerDEMTileParameters;
     'geojson.getClusterExpansionZoom': ClusterIDAndSource;
@@ -60,7 +67,7 @@ export type RequestObjectMap = {
     'geojson.loadData': LoadGeoJSONParameters;
     'loadTile': WorkerTileParameters;
     'reloadTile': WorkerTileParameters;
-    'getGlyphs': void;
+    'getGlyphs': GetGlyhsParamerters;
     'getImages': GetImagesParamerters;
     'setImages': string[];
     'setLayers': Array<LayerSpecification>;
