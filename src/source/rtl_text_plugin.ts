@@ -62,7 +62,7 @@ export const clearRTLTextPlugin = () => {
     _completionCallback = null;
 };
 
-export const setRTLTextPlugin = (url: string, callback: ErrorCallback, deferred: boolean = false) => {
+export const setRTLTextPlugin = (url: string, callback?: ErrorCallback, deferred: boolean = false) => {
     if (pluginStatus === status.deferred || pluginStatus === status.loading || pluginStatus === status.loaded) {
         throw new Error('setRTLTextPlugin cannot be called multiple times.');
     }

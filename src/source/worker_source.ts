@@ -11,6 +11,8 @@ import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {RemoveSourceParams as RemoveSourceParameters} from '../util/actor_messages';
+import type {IActor} from '../util/actor';
+import type {StyleLayerIndex} from '../style/style_layer_index';
 
 export type TileParameters = {
     type: string;
@@ -65,18 +67,19 @@ export type WorkerTileResult = {
 };
 
 /**
- * May be implemented by custom source types to provide code that can be run on
- * the WebWorkers. In addition to providing a custom
- * {@link WorkerSource#loadTile}, any other methods attached to a `WorkerSource`
- * implementation may also be targeted by the {@link Source} via
- * `dispatcher.getActor().send('source-type.methodname', params, callback)`.
- *
+ * This is how the @see {@link WorkerSource} constructor should look like.
+ */
+export interface WorkerSourceConstructor {
+    new (actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>): WorkerSource;
+}
+
+/**
+ * `WorkerSource` should be implemented by custom source types to provide code that can be run on the WebWorkers.
+ * Each of the methods has a relevant event that triggers it from the main thread with the relevant parameters.
  * @see {@link Map#addSourceType}
  */
 export interface WorkerSource {
     availableImages: Array<string>;
-    // Disabled due to https://github.com/facebook/flow/issues/5208
-    // constructor(actor: Actor, layerIndex: StyleLayerIndex): WorkerSource;
 
     /**
      * Loads a tile from the given params and parse it into buckets ready to send

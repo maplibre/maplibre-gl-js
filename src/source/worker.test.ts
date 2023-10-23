@@ -5,11 +5,11 @@ import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
-import {Actor, ActorTarget} from '../util/actor';
+import {ActorTarget, IActor} from '../util/actor';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];
-    constructor(private actor: Actor) {}
+    constructor(private actor: IActor) {}
     loadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
         return this.actor.sendAsync({type: 'loadTile', data: {} as any});
     }
@@ -70,8 +70,8 @@ describe('Worker register RTLTextPlugin', () => {
         const extenalSourceName = 'test';
 
         worker.actor.sendAsync = (message) => {
-            expect(message.type).toBe('main thread task');
-            expect(message.sourceMapId).toBe('999');
+            expect(message.type).toBe('loadTile');
+            expect(message.targetMapId).toBe('999');
             done();
             return Promise.resolve({} as any);
         };

@@ -8,6 +8,7 @@ import {isWorker} from '../util/util';
 
 import type {
     WorkerSource,
+    WorkerSourceConstructor,
     WorkerTileParameters,
     WorkerDEMTileParameters,
     TileParameters
@@ -26,11 +27,13 @@ export default class Worker {
     actor: Actor;
     layerIndexes: {[_: string]: StyleLayerIndex};
     availableImages: {[_: string]: Array<string>};
-    externalWorkerSourceTypes: {
-        [_: string]: {
-            new (...args: any): WorkerSource;
-        };
-    };
+    externalWorkerSourceTypes: { [_: string]: WorkerSourceConstructor };
+    /**
+     * This holds a cache for the already created worker source instances.
+     * The cache is build with the following hierarchy:
+     * [mapId][sourceType][sourceName]: worker source instance
+     * sourceType can be 'vector' for example
+     */
     workerSources: {
         [_: string]: {
             [_: string]: {
@@ -38,6 +41,12 @@ export default class Worker {
             };
         };
     };
+    /**
+     * This holds a cache for the already created DEM worker source instances.
+     * The cache is build with the following hierarchy:
+     * [mapId][sourceType]: DEM worker source instance
+     * sourceType can be 'raster-dem' for example
+     */
     demWorkerSources: {
         [_: string]: {
             [_: string]: RasterDEMTileWorkerSource;
@@ -52,14 +61,11 @@ export default class Worker {
         this.layerIndexes = {};
         this.availableImages = {};
 
-        // [mapId][sourceType][sourceName] => worker source instance
         this.workerSources = {};
         this.demWorkerSources = {};
         this.externalWorkerSourceTypes = {};
 
-        this.self.registerWorkerSource = (name: string, WorkerSource: {
-            new (...args: any): WorkerSource;
-        }) => {
+        this.self.registerWorkerSource = (name: string, WorkerSource: WorkerSourceConstructor) => {
             if (this.externalWorkerSourceTypes[name]) {
                 throw new Error(`Worker source with name "${name}" already registered.`);
             }
