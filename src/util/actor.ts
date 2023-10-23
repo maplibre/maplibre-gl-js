@@ -4,8 +4,7 @@ import {ThrottledInvoker} from './throttled_invoker';
 
 import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
-import type {WorkerSource} from '../source/worker_source';
-import type {AsyncMessage, MessageType, RequestObjectMap, ResponseObjectMap} from './actor_messages';
+import type {AsyncMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
 
 export interface ActorTarget {
     addEventListener: typeof window.addEventListener;
@@ -14,13 +13,9 @@ export interface ActorTarget {
     terminate?: () => void;
 }
 
-export interface WorkerSourceProvider {
-    getWorkerSource(mapId: string | number, sourceType: string, sourceName: string): WorkerSource;
-}
-
 export type MessageData = {
     id: string;
-    type: MessageType;
+    type: MessageType | '<cancel>' | '<response>';
     data?: Serialized;
     targetMapId?: string | number | null;
     mustQueue?: boolean;
@@ -49,7 +44,7 @@ export class Actor {
     cancelCallbacks: { [x: number]: () => void };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
-    messageHandlers: { [x in MessageType]?: (mapId: string | number, params: RequestObjectMap[x]) => Promise<ResponseObjectMap[x]> };
+    messageHandlers: { [x in MessageType]?: (mapId: string | number, params: RequestResponseMessageMap[x][0]) => Promise<RequestResponseMessageMap[x][1]> };
 
     /**
      * @param target - The target
@@ -69,11 +64,11 @@ export class Actor {
         this.globalScope = isWorker(self) ? target : window;
     }
 
-    registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string | number, params: RequestObjectMap[T]) => Promise<ResponseObjectMap[T]>) {
+    registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string | number, params: RequestResponseMessageMap[T][0]) => Promise<RequestResponseMessageMap[T][1]>) {
         this.messageHandlers[type] = handler;
     }
 
-    sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<ResponseObjectMap[T]> {
+    sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
         return new Promise((resolve, reject) => {
             const cancelable = this.send(message.type, message.data, (err: Error, data: any) => {
                 if (err) {
@@ -100,7 +95,7 @@ export class Actor {
      */
     send<T extends MessageType>(
         type: T,
-        data: RequestObjectMap[T],
+        data: RequestResponseMessageMap[T][0],
         callback?: Function | null,
         targetMapId?: string | number | null,
         mustQueue: boolean = false

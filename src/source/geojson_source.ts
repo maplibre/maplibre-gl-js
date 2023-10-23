@@ -258,7 +258,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns `this`
      */
     getClusterExpansionZoom(clusterId: number, callback: Callback<number>): this {
-        this.actor.sendAsync({type: 'geojson.getClusterExpansionZoom', data: {type: this.type, clusterId, source: this.id}})
+        this.actor.sendAsync({type: 'getClusterExpansionZoom', data: {type: this.type, clusterId, source: this.id}})
             .then((v) => callback(null, v))
             .catch((e) => callback(e));
         return this;
@@ -272,7 +272,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns `this`
      */
     getClusterChildren(clusterId: number, callback: Callback<Array<GeoJSON.Feature>>): this {
-        this.actor.sendAsync({type: 'geojson.getClusterChildren', data: {type: this.type, clusterId, source: this.id}})
+        this.actor.sendAsync({type: 'getClusterChildren', data: {type: this.type, clusterId, source: this.id}})
             .then((v) => callback(null, v))
             .catch((e) => callback(e));
         return this;
@@ -306,7 +306,7 @@ export class GeoJSONSource extends Evented implements Source {
      * ```
      */
     getClusterLeaves(clusterId: number, limit: number, offset: number, callback: Callback<Array<GeoJSON.Feature>>): this {
-        this.actor.sendAsync({type: 'geojson.getClusterLeaves', data: {
+        this.actor.sendAsync({type: 'getClusterLeaves', data: {
             type: this.type,
             source: this.id,
             clusterId,
@@ -337,7 +337,7 @@ export class GeoJSONSource extends Evented implements Source {
         this._pendingLoads++;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         try {
-            const result = await this.actor.sendAsync({type: 'geojson.loadData', data: options});
+            const result = await this.actor.sendAsync({type: 'loadData', data: options});
             this._pendingLoads--;
             if (this._removed || result.abandoned) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));

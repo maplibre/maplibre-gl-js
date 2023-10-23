@@ -2,7 +2,7 @@ import {Actor} from './actor';
 
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
-import type {MessageType, RequestObjectMap, ResponseObjectMap} from './actor_messages';
+import type {MessageType, RequestResponseMessageMap} from './actor_messages';
 /**
  * Responsible for sending messages from a {@link Source} to an associated
  * {@link WorkerSource}.
@@ -65,8 +65,8 @@ export class Dispatcher {
     /**
      * Broadcast a message to all Workers.
      */
-    broadcast<T extends MessageType>(type: T, data: RequestObjectMap[T]): Promise<ResponseObjectMap[T][]> {
-        const promises: Promise<ResponseObjectMap[T]>[] = [];
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<RequestResponseMessageMap[T][1][]> {
+        const promises: Promise<RequestResponseMessageMap[T][1]>[] = [];
         for (const actor of this.actors) {
             promises.push(actor.sendAsync({type, data}));
         }

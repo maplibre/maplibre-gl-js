@@ -8,8 +8,7 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {RequestParameters} from './ajax';
 
-export type MessageType = '<response>' | '<cancel>' |
-'geojson.getClusterExpansionZoom' | 'geojson.getClusterChildren' | 'geojson.getClusterLeaves' | 'geojson.loadData' |
+export type MessageType = 'getClusterExpansionZoom' | 'getClusterChildren' | 'getClusterLeaves' | 'loadData' |
 'removeSource' | 'loadWorkerSource' | 'loadDEMTile' | 'removeDEMTile' |
 'removeTile' | 'reloadTile' | 'abortTile' | 'loadTile' |
 'getGlyphs' | 'getImages' | 'setImages' | 'getResource' |
@@ -17,7 +16,7 @@ export type MessageType = '<response>' | '<cancel>' |
 
 export type AsyncMessage<T extends MessageType> = {
     type: T;
-    data: RequestObjectMap[T];
+    data: RequestResponseMessageMap[T][0];
     targetMapId?: string | number | null;
     mustQueue?: boolean;
     sourceMapId?: string | number | null;
@@ -60,54 +59,25 @@ export type GetGlyhsParamerters = {
     tileID: OverscaledTileID;
 }
 
-export type RequestObjectMap = {
-    'loadDEMTile': WorkerDEMTileParameters;
-    'geojson.getClusterExpansionZoom': ClusterIDAndSource;
-    'geojson.getClusterChildren': ClusterIDAndSource;
-    'geojson.getClusterLeaves': GetClusterLeavesParams;
-    'geojson.loadData': LoadGeoJSONParameters;
-    'loadTile': WorkerTileParameters;
-    'reloadTile': WorkerTileParameters;
-    'getGlyphs': GetGlyhsParamerters;
-    'getImages': GetImagesParamerters;
-    'setImages': string[];
-    'setLayers': Array<LayerSpecification>;
-    'updateLayers': UpdateLayersParamaeters;
-    'syncRTLPluginState': PluginState;
-    'setReferrer': string;
-    'removeSource': RemoveSourceParams;
-    'loadWorkerSource': string;
-    'removeTile': TileParameters;
-    'abortTile': TileParameters;
-    'removeDEMTile': TileParameters;
-    'getResource': RequestParameters;
-    'error': any;
-    '<cancel>': any;
-    '<response>': any;
-}
-
-export type ResponseObjectMap = {
-    'loadDEMTile': DEMData;
-    'geojson.getClusterExpansionZoom': number;
-    'geojson.getClusterChildren': Array<GeoJSON.Feature>;
-    'geojson.getClusterLeaves': Array<GeoJSON.Feature>;
-    'geojson.loadData': GeoJSONWorkerSourceLoadDataResult;
-    'loadTile': WorkerTileResult;
-    'reloadTile': WorkerTileResult;
-    'getGlyphs': {[_: string]: {[_: number]: StyleGlyph}};
-    'getImages': {[_: string]: StyleImage};
-    'setImages': void;
-    'setLayers': void;
-    'updateLayers': void;
-    'syncRTLPluginState': boolean;
-    'setReferrer': void;
-    'removeSource': void;
-    'loadWorkerSource': void;
-    'removeTile': void;
-    'abortTile': void;
-    'removeDEMTile': void;
-    'getResource': any;
-    'error': Error;
-    '<cancel>': void;
-    '<response>': void;
+export type RequestResponseMessageMap = {
+    'loadDEMTile': [WorkerDEMTileParameters, DEMData];
+    'getClusterExpansionZoom': [ClusterIDAndSource, number];
+    'getClusterChildren': [ClusterIDAndSource, Array<GeoJSON.Feature>];
+    'getClusterLeaves': [GetClusterLeavesParams, Array<GeoJSON.Feature>];
+    'loadData': [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
+    'loadTile': [WorkerTileParameters, WorkerTileResult];
+    'reloadTile': [WorkerTileParameters, WorkerTileResult];
+    'getGlyphs': [GetGlyhsParamerters, {[_: string]: {[_: number]: StyleGlyph}}];
+    'getImages': [GetImagesParamerters, {[_: string]: StyleImage}];
+    'setImages': [string[], void];
+    'setLayers': [Array<LayerSpecification>, void];
+    'updateLayers': [UpdateLayersParamaeters, void];
+    'syncRTLPluginState': [PluginState, boolean];
+    'setReferrer': [string, void];
+    'removeSource': [RemoveSourceParams, void];
+    'loadWorkerSource': [string, void];
+    'removeTile': [TileParameters, void];
+    'abortTile': [TileParameters, void];
+    'removeDEMTile': [TileParameters, void];
+    'getResource': [RequestParameters, any];
 }

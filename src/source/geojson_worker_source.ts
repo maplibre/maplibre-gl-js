@@ -29,7 +29,7 @@ export type GeoJSONWorkerOptions = {
     geojsonVtOptions?: GeoJSONVTOptions;
     superclusterOptions?: SuperclusterOptions<any, any>;
     clusterProperties?: ClusterProperties;
-    fliter?: Array<unknown>;
+    filter?: Array<unknown>;
     promoteId?: string;
     collectResourceTiming?: boolean;
 }

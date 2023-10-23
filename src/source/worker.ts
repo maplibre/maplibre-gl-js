@@ -88,19 +88,19 @@ export default class Worker {
             this._getDEMWorkerSource(mapId, params.source).removeTile(params);
         });
 
-        this.actor.registerMessageHandler('geojson.getClusterExpansionZoom', async (mapId: string, params: ClusterIDAndSource) => {
+        this.actor.registerMessageHandler('getClusterExpansionZoom', async (mapId: string, params: ClusterIDAndSource) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterExpansionZoom(params);
         });
 
-        this.actor.registerMessageHandler('geojson.getClusterChildren', async (mapId: string, params: ClusterIDAndSource) => {
+        this.actor.registerMessageHandler('getClusterChildren', async (mapId: string, params: ClusterIDAndSource) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterChildren(params);
         });
 
-        this.actor.registerMessageHandler('geojson.getClusterLeaves', async (mapId: string, params: GetClusterLeavesParams) => {
+        this.actor.registerMessageHandler('getClusterLeaves', async (mapId: string, params: GetClusterLeavesParams) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterLeaves(params);
         });
 
-        this.actor.registerMessageHandler('geojson.loadData', (mapId: string, params: LoadGeoJSONParameters) => {
+        this.actor.registerMessageHandler('loadData', (mapId: string, params: LoadGeoJSONParameters) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).loadData(params);
         });
 

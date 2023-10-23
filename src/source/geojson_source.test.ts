@@ -112,7 +112,7 @@ describe('GeoJSONSource#setData', () => {
         } as any;
         source.actor.sendAsync = (message) => {
             return new Promise((resolve) => {
-                if (message.type === 'geojson.loadData') {
+                if (message.type === 'loadData') {
                     expect((message.data as any).request.collectResourceTiming).toBeTruthy();
                     setTimeout(() => resolve({} as any), 0);
                     done();
@@ -194,7 +194,7 @@ describe('GeoJSONSource#update', () => {
     test('sends initial loadData request to dispatcher', done => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                expect(message.type).toBe('geojson.loadData');
+                expect(message.type).toBe('loadData');
                 done();
                 return Promise.resolve({});
             }
@@ -206,7 +206,7 @@ describe('GeoJSONSource#update', () => {
     test('forwards geojson-vt options with worker request', done => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                expect(message.type).toBe('geojson.loadData');
+                expect(message.type).toBe('loadData');
                 expect(message.data.geojsonVtOptions).toEqual({
                     extent: 8192,
                     maxZoom: 10,
@@ -232,7 +232,7 @@ describe('GeoJSONSource#update', () => {
     test('forwards Supercluster options with worker request', done => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                expect(message.type).toBe('geojson.loadData');
+                expect(message.type).toBe('loadData');
                 expect(message.data.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
@@ -260,7 +260,7 @@ describe('GeoJSONSource#update', () => {
         // test setCluster function on GeoJSONSource
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                expect(message.type).toBe('geojson.loadData');
+                expect(message.type).toBe('loadData');
                 expect(message.data.cluster).toBe(true);
                 expect(message.data.superclusterOptions.radius).toBe(80);
                 expect(message.data.superclusterOptions.maxZoom).toBe(16);
@@ -281,7 +281,7 @@ describe('GeoJSONSource#update', () => {
     test('forwards Supercluster options with worker request, ignore max zoom of source', done => {
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                expect(message.type).toBe('geojson.loadData');
+                expect(message.type).toBe('loadData');
                 expect(message.data.superclusterOptions).toEqual({
                     maxZoom: 12,
                     minPoints: 3,
@@ -377,7 +377,7 @@ describe('GeoJSONSource#update', () => {
         let expectedLoadDataCalls = 2;
         const mockDispatcher = wrapDispatcher({
             sendAsync(message) {
-                if (message.type === 'geojson.loadData' && --expectedLoadDataCalls <= 0) {
+                if (message.type === 'loadData' && --expectedLoadDataCalls <= 0) {
                     done();
                 }
                 return new Promise((resolve) => setTimeout(() => resolve({}), 0));
