@@ -23,7 +23,18 @@ import type {Cancelable} from '../types/cancelable';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 
-export type LoadGeoJSONParameters = {
+export type GeoJSONWorkerOptions = {
+    source?: string;
+    cluster?: boolean;
+    geojsonVtOptions?: GeoJSONVTOptions;
+    superclusterOptions?: SuperclusterOptions<any, any>;
+    clusterProperties?: ClusterProperties;
+    fliter?: Array<unknown>;
+    promoteId?: string;
+    collectResourceTiming?: boolean;
+}
+
+export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     type: 'geojson';
     request?: RequestParameters;
     /**
@@ -31,13 +42,6 @@ export type LoadGeoJSONParameters = {
      */
     data?: string;
     dataDiff?: GeoJSONSourceDiff;
-    source: string;
-    cluster: boolean;
-    superclusterOptions?: SuperclusterOptions<any, any>;
-    geojsonVtOptions?: GeoJSONVTOptions;
-    clusterProperties?: ClusterProperties;
-    filter?: Array<unknown>;
-    promoteId?: string;
 };
 
 export type LoadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>) => Cancelable;

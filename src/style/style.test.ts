@@ -85,7 +85,6 @@ let mockConsoleError;
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
-    // HM TODO: figure out why the rtl plugin returns an error, when it didn't return before.
     mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
 });
 

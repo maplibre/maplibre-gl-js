@@ -13,10 +13,10 @@ import type {Actor} from '../util/actor';
 import type {Callback} from '../types/callback';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
-import type {Options, ClusterProperties} from 'supercluster';
+import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
-    workerOptions?: WorkerOptions;
+    workerOptions?: GeoJSONWorkerOptions;
     collectResourceTiming?: boolean;
 }
 
@@ -27,23 +27,6 @@ export type GeoJsonSourceOptions = {
     clusterRadius?: number;
     clusterMinPoints?: number;
     generateId?: boolean;
-}
-export type WorkerOptions = {
-    source?: string;
-    cluster?: boolean;
-    geojsonVtOptions?: {
-        buffer?: number;
-        tolerance?: number;
-        extent?: number;
-        maxZoom?: number;
-        linemetrics?: boolean;
-        generateId?: boolean;
-    };
-    superclusterOptions?: Options<any, any>;
-    clusterProperties?: ClusterProperties;
-    fliter?: any;
-    promoteId?: any;
-    collectResourceTiming?: boolean;
 }
 
 /**
@@ -131,7 +114,7 @@ export class GeoJSONSource extends Evented implements Source {
     reparseOverscaled: boolean;
     _data: GeoJSON.GeoJSON | string | undefined;
     _options: GeoJsonSourceOptions;
-    workerOptions: WorkerOptions;
+    workerOptions: GeoJSONWorkerOptions;
     map: Map;
     actor: Actor;
     _pendingLoads: number;
@@ -341,7 +324,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @param diff - the diff object
      */
     async _updateWorkerData(diff?: GeoJSONSourceDiff) {
-        const options = extend({}, this.workerOptions);
+        const options: LoadGeoJSONParameters = extend({}, this.workerOptions);
         if (diff) {
             options.dataDiff = diff;
         } else if (typeof this._data === 'string') {
@@ -353,10 +336,8 @@ export class GeoJSONSource extends Evented implements Source {
         options.type = this.type;
         this._pendingLoads++;
         this.fire(new Event('dataloading', {dataType: 'source'}));
-        let result;
         try {
-            // HM TODO: improve types!!
-            result = await this.actor.sendAsync({type: 'geojson.loadData', data: options});
+            const result = await this.actor.sendAsync({type: 'geojson.loadData', data: options});
             this._pendingLoads--;
             if (this._removed || result.abandoned) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
