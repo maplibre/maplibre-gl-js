@@ -2506,8 +2506,7 @@ describe('Style#addSourceType', () => {
 
         style.dispatcher.broadcast = (type, params) => {
             if (type === 'loadWorkerSource') {
-                expect(params['name']).toBe('bar');
-                expect(params['url']).toBe('worker-source.js');
+                expect(params).toBe('worker-source.js');
                 done();
                 return Promise.resolve({} as any);
             }
