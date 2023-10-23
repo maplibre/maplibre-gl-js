@@ -86,7 +86,7 @@ export type SymbolFeature = {
     sourceLayerIndex: number;
     geometry: Array<Array<Point>>;
     properties: any;
-    type: 'Point' | 'LineString' | 'Polygon';
+    type: 'Unknown' | 'Point' | 'LineString' | 'Polygon';
     id?: any;
 };
 

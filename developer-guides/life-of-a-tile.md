@@ -10,7 +10,29 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
 
 ## Event Loop
 
-![Event Loop Sequence Diagram](diagrams/event-loop.plantuml.svg)
+```mermaid
+sequenceDiagram
+    actor user
+    participant DOM
+    participant handler_manager
+    participant handler
+    participant camera
+    participant transform
+    participant map
+
+    user->>camera: map#setCenter, map#panTo
+    camera->>transform: update
+    camera->>map: fire move event
+    map->>map: _render()
+
+    user->>DOM: resize, pan,<br>click, scroll,<br>...
+    DOM->>handler_manager: DOM events
+    handler_manager->>handler: forward event
+    handler-->>handler_manager: HandlerResult
+    handler_manager->>transform: update
+    handler_manager->>map: fire move event
+    map->>map: _render()
+```
 
 - [Transform](../src/geo/transform.ts) holds the current viewport details (pitch, zoom, bearing, bounds, etc.). Two places in the code update transform directly:
   - [Camera](../src/ui/camera.ts) (parent class of [Map](../src/ui/map)) in response to explicit calls to [Camera#panTo](../src/ui/camera.ts#L207), [Camera#setCenter](../src/ui/camera.ts#L169)
@@ -19,7 +41,78 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
 
 ## Tile loading
 
-![Fetch Tile Sequence Diagram](diagrams/fetch-tile.plantuml.svg)
+```mermaid
+sequenceDiagram
+  %%{init: { 'sequence': {'messageAlign': 'left', 'boxTextMargin': 5} }}%%
+  participant map
+  participant source_cache
+  participant source
+  participant ajax
+  participant glyph manager
+  box rgba(128,128,128,0.1) worker
+    participant worker
+    participant worker_source
+    participant worker_tile
+    participant bucket
+    participant worker_ajax
+  end
+
+  map->>source_cache: update(transform)
+  source_cache->>source_cache: compute covering<br> tiles
+  source_cache->>source: loadTile() for each<br>missing tile
+  alt raster_tile_source
+    source->>ajax: getImage
+    else image_source
+    source->>ajax: getImage (once)
+    else raster_dem_tile_source
+    source->>ajax: getImage()
+    source->>worker: loadDEMTile()
+    worker->>worker: add 1px buffer
+    worker-->>source: DEMData
+  else vector_tile_source/geojson_source
+    source->>worker: loadTile()
+    worker->>worker_source: loadVectorTile()
+    alt vector_tile_source
+    worker_source->>worker_ajax: getArrayBuffer()
+    worker_source->>worker_source: decode pbf
+    worker_source->>worker_source: parse vector tile
+    else geojson_source
+        worker_source->>worker_ajax: getJSON()
+        worker_source->>worker_source: geojson-vt parse
+        worker_source->>worker_source: getTile()
+    end
+    worker_source->>worker_tile: parse()
+    loop for each "layer family"
+        worker_tile->>worker_tile: calculate layout<br>properties
+        worker_tile->>worker_tile: createBucket
+        worker_tile->>bucket: populate()
+        bucket->>bucket: compute triangles<br>needed by GPU<br>for each feature we<br>have data for
+        worker_tile->>glyph manager: getGlyphs
+        glyph manager->>ajax: Fetch font<br>PBFs
+        glyph manager->>glyph manager: TinySDF
+        worker_tile->glyph manager: getImages
+        glyph manager->>ajax: Fetch icon<br>images
+        glyph manager-->>worker_tile: glyph/Image dependencies
+        worker_tile->>worker_tile: maybePrepare()
+        worker_tile->>worker_tile: create GlyphAtlas
+        worker_tile->>worker_tile: create ImageAtlas
+        worker_tile->>bucket: addFeatures
+        worker_tile->>bucket: performSymbolLayout
+        bucket->>bucket: place characters
+        bucket->>bucket: compute collision<br/>boxes
+        bucket->>bucket: compute triangles<br/>needed by GPU
+    end
+    worker_tile-->>source: callback(bucket, featureIndex, collision boxes, GlyphAtlas, ImageAtlas)
+    source->>source: loadVectorData()<br/>decode response
+  end
+  source-->>source_cache: Tile
+  source_cache-->>source_cache: _backfillDEM()<br/>copy 1px buffer<br/>from neigboring tiles
+  source->>source: fire('data', {<br/>dataType: 'source'<br>})
+  source->>source_cache:<br>
+  source_cache->map:<br>
+  map->map: fire('sourcedata')
+  map->map: render new frame
+```
 
 [Map#\_render()](../src/ui/map.ts#L2480) works in 2 different modes based on the value of `Map._sourcesDirty`. When `Map._sourcesDirty === true`, it starts by asking each source if it needs to load any new data:
 
@@ -58,7 +151,40 @@ Ideally the event loop and render frame run at 60 frames per second, and all of 
 
 ## Render loop
 
-![Render Frame Sequence Diagram](diagrams/render-frame.plantuml.svg)
+```mermaid
+sequenceDiagram
+    participant map
+    participant style
+    participant painter
+    participant layer
+    participant source_cache
+    participant GPU
+    actor user
+
+    map->>style: update(transform)
+    style->>layer: recalculate()
+    layer->>layer: recompute<br>paint properties
+    map->>source_cache: update(transform)
+    source_cache->>source_cache: fetch new tiles
+    map->>painter: render(style)
+    painter->>source_cache: prepare(context)
+    loop for each tile
+    source_cache->>GPU: upload vertices
+    source_cache->>GPU: upload image textures
+    end
+    loop for each layer
+    painter->>layer: renderLayer(pass=offscreen)
+    painter->>layer: renderLayer(pass=opaque)
+    painter->>layer: renderLayer(pass=translucent)
+    painter->>layer: renderLayer(pass=debug)
+    loop renderLayer() call for each tile
+    layer->>GPU: load program
+    layer->>GPU: drawElements()
+    GPU->>user: display pixels
+    end
+    end
+    map->>map: triggerRepaint()
+```
 
 When `map._sourcesDirty === false`, [map#\_render()](../src/ui/map.ts#L2480) just renders a new frame entirely within the main UI thread:
 

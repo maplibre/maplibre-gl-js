@@ -1,9 +1,57 @@
-import {isWorker, isSafari} from './util';
-import {serialize, deserialize} from './web_worker_transfer';
+import {isWorker} from './util';
+import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
 import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
+import type {WorkerSource} from '../source/worker_source';
+import type {OverscaledTileID} from '../source/tile_id';
+import type {Callback} from '../types/callback';
+import type {StyleGlyph} from '../style/style_glyph';
+
+export interface ActorTarget {
+    addEventListener: typeof window.addEventListener;
+    removeEventListener: typeof window.removeEventListener;
+    postMessage: typeof window.postMessage;
+    terminate?: () => void;
+}
+
+export interface WorkerSourceProvider {
+    getWorkerSource(mapId: string | number, sourceType: string, sourceName: string): WorkerSource;
+}
+
+export interface GlyphsProvider {
+    getGlyphs(mapId: string, params: {
+        stacks: {[_: string]: Array<number>};
+        source: string;
+        tileID: OverscaledTileID;
+        type: string;
+    },
+        callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
+    );
+}
+
+export type MessageType = '<response>' | '<cancel>' |
+'geojson.getClusterExpansionZoom' | 'geojson.getClusterChildren' | 'geojson.getClusterLeaves' | 'geojson.loadData' |
+'removeSource' | 'loadWorkerSource' | 'loadDEMTile' | 'removeDEMTile' |
+'removeTile' | 'reloadTile' | 'abortTile' | 'loadTile' | 'getTile' |
+'getGlyphs' | 'getImages' | 'setImages' |
+'syncRTLPluginState' | 'setReferrer' | 'setLayers' | 'updateLayers';
+
+export type MessageData = {
+    id: string;
+    type: MessageType;
+    data?: Serialized;
+    targetMapId?: string | number | null;
+    mustQueue?: boolean;
+    error?: Serialized | null;
+    hasCallback?: boolean;
+    sourceMapId: string | number | null;
+}
+
+export type Message = {
+    data: MessageData;
+}
 
 /**
  * An implementation of the [Actor design pattern](http://en.wikipedia.org/wiki/Actor_model)
@@ -12,36 +60,30 @@ import type {Cancelable} from '../types/cancelable';
  * owned by the styles
  */
 export class Actor {
-    target: any;
-    parent: any;
-    mapId: string | null;
-    callbacks: {
-        number: any;
-    };
+    target: ActorTarget;
+    parent: WorkerSourceProvider | GlyphsProvider;
+    mapId: string | number | null;
+    callbacks: { [x: number]: Function};
     name: string;
-    tasks: {
-        number: any;
-    };
-    taskQueue: Array<number>;
-    cancelCallbacks: {
-        number: Cancelable;
-    };
+    tasks: { [x: number]: MessageData };
+    taskQueue: Array<string>;
+    cancelCallbacks: { [x: number]: () => void };
     invoker: ThrottledInvoker;
-    globalScope: any;
+    globalScope: ActorTarget;
 
     /**
      * @param target - The target
      * @param parent - The parent
      * @param mapId - A unique identifier for the Map instance using this Actor.
      */
-    constructor(target: any, parent: any, mapId?: string) {
+    constructor(target: ActorTarget, parent: WorkerSourceProvider | GlyphsProvider, mapId?: string | number) {
         this.target = target;
         this.parent = parent;
         this.mapId = mapId;
-        this.callbacks = {} as { number: any };
-        this.tasks = {} as { number: any };
+        this.callbacks = {};
+        this.tasks = {};
         this.taskQueue = [];
-        this.cancelCallbacks = {} as { number: Cancelable };
+        this.cancelCallbacks = {};
         this.invoker = new ThrottledInvoker(this.process);
         this.target.addEventListener('message', this.receive, false);
         this.globalScope = isWorker() ? target : window;
@@ -55,7 +97,7 @@ export class Actor {
      * @param targetMapId - A particular mapId to which to send this message.
      */
     send(
-        type: string,
+        type: MessageType,
         data: unknown,
         callback?: Function | null,
         targetMapId?: string | null,
@@ -69,8 +111,8 @@ export class Actor {
         if (callback) {
             this.callbacks[id] = callback;
         }
-        const buffers: Array<Transferable> = isSafari(this.globalScope) ? undefined : [];
-        this.target.postMessage({
+        const buffers: Array<Transferable> = [];
+        const message: MessageData = {
             id,
             type,
             hasCallback: !!callback,
@@ -78,31 +120,27 @@ export class Actor {
             mustQueue,
             sourceMapId: this.mapId,
             data: serialize(data, buffers)
-        }, buffers);
+        };
+
+        this.target.postMessage(message, {transfer: buffers});
         return {
             cancel: () => {
                 if (callback) {
                     // Set the callback to null so that it never fires after the request is aborted.
                     delete this.callbacks[id];
                 }
-                this.target.postMessage({
+                const cancelMessage: MessageData = {
                     id,
                     type: '<cancel>',
                     targetMapId,
                     sourceMapId: this.mapId
-                });
+                };
+                this.target.postMessage(cancelMessage);
             }
         };
     }
 
-    receive = (message: {
-        data: {
-            id: number;
-            type: string;
-            data: unknown;
-            targetMapId?: string | null;
-            mustQueue: boolean;
-        };}) => {
+    receive = (message: Message) => {
         const data = message.data;
         const id = data.id;
 
@@ -164,7 +202,7 @@ export class Actor {
         this.processTask(id, task);
     };
 
-    processTask(id: number, task: any) {
+    processTask(id: string, task: MessageData) {
         if (task.type === '<response>') {
             // The done() function in the counterpart has been called, and we are now
             // firing the callback in the originating actor, if there is one.
@@ -180,30 +218,31 @@ export class Actor {
             }
         } else {
             let completed = false;
-            const buffers: Array<Transferable> = isSafari(this.globalScope) ? undefined : [];
+            const buffers: Array<Transferable> = [];
             const done = task.hasCallback ? (err: Error, data?: any) => {
                 completed = true;
                 delete this.cancelCallbacks[id];
-                this.target.postMessage({
+                const responseMessage: MessageData = {
                     id,
                     type: '<response>',
                     sourceMapId: this.mapId,
                     error: err ? serialize(err) : null,
                     data: serialize(data, buffers)
-                }, buffers);
+                };
+                this.target.postMessage(responseMessage, {transfer: buffers});
             } : (_) => {
                 completed = true;
             };
 
-            let callback = null;
-            const params = (deserialize(task.data) as any);
+            let callback: Cancelable = null;
+            const params = deserialize(task.data);
             if (this.parent[task.type]) {
                 // task.type == 'loadTile', 'removeTile', etc.
                 callback = this.parent[task.type](task.sourceMapId, params, done);
-            } else if (this.parent.getWorkerSource) {
+            } else if ('getWorkerSource' in this.parent) {
                 // task.type == sourcetype.method
                 const keys = task.type.split('.');
-                const scope = (this.parent as any).getWorkerSource(task.sourceMapId, keys[0], params.source);
+                const scope = this.parent.getWorkerSource(task.sourceMapId, keys[0], (params as any).source);
                 callback = scope[keys[1]](params, done);
             } else {
                 // No function was found.
