@@ -3235,9 +3235,7 @@ export class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
-        if (this._cooperativeGestures) {
-            this.scrollZoom.destroyCooperativeGestures();
-        }
+        if (this._cooperativeGestures) this.scrollZoom.destroyCooperativeGestures();
         this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();

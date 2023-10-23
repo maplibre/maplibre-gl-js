@@ -31,7 +31,6 @@ const maxScalePerFrame = 2;
 export class ScrollZoomHandler implements Handler {
     _map: Map;
     _cooperativeGesturesScreen: HTMLElement;
-    _cooperativeGestures: boolean | GestureOptions;
     _tr: TransformProvider;
     _metaKey: keyof MouseEvent = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
     _el: HTMLElement;
@@ -365,24 +364,21 @@ export class ScrollZoomHandler implements Handler {
     }
 
     setupCooperativeGestures() {
-        this._cooperativeGestures = this._map.getCooperativeGestures();
+        const cooperativeGestures = this._map.getCooperativeGestures();
         this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', this._map.getContainer());
-        let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
+        let desktopMessage = typeof cooperativeGestures !== 'boolean' && cooperativeGestures.windowsHelpText ? cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
         if (navigator.platform.indexOf('Mac') === 0) {
-            desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
+            desktopMessage = typeof cooperativeGestures !== 'boolean' && cooperativeGestures.macHelpText ? cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
         }
-        const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
+        const mobileMessage = typeof cooperativeGestures !== 'boolean' && cooperativeGestures.mobileHelpText ? cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
         this._cooperativeGesturesScreen.innerHTML = `
             <div class="maplibregl-desktop-message">${desktopMessage}</div>
             <div class="maplibregl-mobile-message">${mobileMessage}</div>
         `;
-
         // Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
         this._cooperativeGesturesScreen.setAttribute('aria-hidden', 'true');
-
         // Add event to canvas container since gesture container is pointer-events: none
         this._el.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-
         // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
         this._el.classList.add('maplibregl-cooperative-gestures');
     }
