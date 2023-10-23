@@ -13,7 +13,7 @@ export class Dispatcher {
     currentActor: number;
     id: string | number;
 
-    constructor(workerPool: WorkerPool, handlers: { getImages: Function; getGlyphs: Function; getResource: Function}, mapId: string | number) {
+    constructor(workerPool: WorkerPool, mapId: string | number) {
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
@@ -23,40 +23,6 @@ export class Dispatcher {
             const worker = workers[i];
             const actor = new Actor(worker, mapId);
             actor.name = `Worker ${i}`;
-            // HM TODO: use promises in the following methods or move the registration to a different method
-            actor.registerMessageHandler('getGlyphs', (mapId, params) => {
-                return new Promise((resolve, reject) => {
-                    handlers.getGlyphs(mapId, params, (err, data) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(data);
-                        }
-                    });
-                });
-            });
-            actor.registerMessageHandler('getImages', (mapId, params) => {
-                return new Promise((resolve, reject) => {
-                    handlers.getImages(mapId, params, (err, data) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(data);
-                        }
-                    });
-                });
-            });
-            actor.registerMessageHandler('getResource', (mapId, params) => {
-                return new Promise((resolve, reject) => {
-                    handlers.getImages(mapId, params, (err, data) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(data);
-                        }
-                    });
-                });
-            });
             this.actors.push(actor);
         }
         if (!this.actors.length) throw new Error('No actors found');
@@ -86,5 +52,11 @@ export class Dispatcher {
         this.actors.forEach((actor) => { actor.remove(); });
         this.actors = [];
         if (mapRemoved) this.workerPool.release(this.id);
+    }
+
+    public registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string | number, params: RequestResponseMessageMap[T][0]) => Promise<RequestResponseMessageMap[T][1]>) {
+        for (const actor of this.actors) {
+            actor.registerMessageHandler(type, handler);
+        }
     }
 }

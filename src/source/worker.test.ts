@@ -66,7 +66,6 @@ describe('Worker register RTLTextPlugin', () => {
     });
 
     test('worker source messages dispatched to the correct map instance', done => {
-        // HM TODO: fix this - sourceMapId is not set in this case as it was before
         const extenalSourceName = 'test';
 
         worker.actor.sendAsync = (message) => {

@@ -14,6 +14,7 @@ import type {WorkerTileResult} from '../../../src/source/worker_source';
 import type {OverscaledTileID} from '../../../src/source/tile_id';
 import type {TileJSON} from '../../../src/types/tilejson';
 import type {Map} from '../../../src/ui/map';
+import type {IActor} from '../../../src/util/actor';
 
 class StubMap extends Evented {
     style: Style;
@@ -57,10 +58,7 @@ export default class TileParser {
     icons: any;
     glyphs: any;
     style: Style;
-    // HM TODO: properly type this and replace to async
-    actor: {
-        send: Function;
-    };
+    actor: IActor;
 
     constructor(styleJSON: StyleSpecification, sourceID: string) {
         this.styleJSON = styleJSON;
@@ -97,6 +95,8 @@ export default class TileParser {
     setup(): Promise<void> {
         const parser = this;
         this.actor = {
+            // HM TODO: remove send once moved to promises
+            // HM TODO: see that this didn't broke the benchmarks run...
             send(action, params, callback) {
                 setTimeout(() => {
                     if (action === 'getImages') {
@@ -105,6 +105,25 @@ export default class TileParser {
                         parser.loadGlyphs(params, callback);
                     } else throw new Error(`Invalid action ${action}`);
                 }, 0);
+                return {
+                    cancel() {}
+                };
+            },
+            sendAsync(message) {
+                return new Promise((resolve, reject) => {
+                    const callback = (err, data) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(data);
+                        }
+                    };
+                    if (message.type === 'getImages') {
+                        parser.loadImages(message.data, callback);
+                    } else if (message.type === 'getGlyphs') {
+                        parser.loadGlyphs(message.data, callback);
+                    } else throw new Error(`Invalid action ${message.type}`);
+                });
             }
         };
 

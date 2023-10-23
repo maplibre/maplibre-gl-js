@@ -247,6 +247,7 @@ export default class Worker {
             // use a wrapped actor so that we can attach a target mapId param
             // to any messages invoked by the WorkerSource, this is very important when there are multiple maps
             const actor = {
+                // HM TODO: remove send once moved to promises
                 send: (type, data, callback) => {
                     return this.actor.send(type, data, callback, mapId);
                 },

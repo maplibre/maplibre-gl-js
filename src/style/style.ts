@@ -240,7 +240,41 @@ export class Style extends Evented {
         super();
 
         this.map = map;
-        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), this, map._getMapId());
+        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
+        // HM TODO: change this internal method to return a promise
+        this.dispatcher.registerMessageHandler('getGlyphs', (mapId, params) => {
+            return new Promise((resolve, reject) => {
+                this.getGlyphs(mapId, params, (err, data) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(data);
+                    }
+                });
+            });
+        });
+        this.dispatcher.registerMessageHandler('getImages', (mapId, params) => {
+            return new Promise((resolve, reject) => {
+                this.getImages(mapId, params, (err, data) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(data);
+                    }
+                });
+            });
+        });
+        this.dispatcher.registerMessageHandler('getResource', (mapId, params) => {
+            return new Promise((resolve, reject) => {
+                this.getResource(mapId, params, (err, data) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(data);
+                    }
+                });
+            });
+        });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
@@ -1572,7 +1606,7 @@ export class Style extends Evented {
     // Callbacks from web workers
 
     getImages(
-        mapId: string,
+        mapId: string | number,
         params: GetImagesParamerters,
         callback: Callback<{[_: string]: StyleImage}>
     ) {
@@ -1594,7 +1628,7 @@ export class Style extends Evented {
         }
     }
 
-    getGlyphs(mapId: string, params: GetGlyhsParamerters, callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
+    getGlyphs(mapId: string | number, params: GetGlyhsParamerters, callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
     ) {
         this.glyphManager.getGlyphs(params.stacks, callback);
         const sourceCache = this.sourceCaches[params.source];
@@ -1605,7 +1639,7 @@ export class Style extends Evented {
         }
     }
 
-    getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
+    getResource(mapId: string| number, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
         return makeRequest(params, callback);
     }
 

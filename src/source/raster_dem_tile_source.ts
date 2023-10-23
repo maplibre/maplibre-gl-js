@@ -86,7 +86,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     tile.actor = this.dispatcher.getActor();
                     try {
                         const data = await tile.actor.sendAsync({type: 'loadDEMTile', data: params});
-                        // HM TODO: find a way to fix this linting errors
+                        // HM TODO: find a way to fix this linting errors - probably after getImages will be async too
                         tile.dem = data; // eslint-disable-line require-atomic-updates
                         tile.needsHillshadePrepare = true; // eslint-disable-line require-atomic-updates
                         tile.needsTerrainPrepare = true; // eslint-disable-line require-atomic-updates
