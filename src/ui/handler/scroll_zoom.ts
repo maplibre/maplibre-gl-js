@@ -6,7 +6,7 @@ import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat} from '../../geo/lng_lat';
 import {TransformProvider} from './transform-provider';
 
-import type {GestureOptions, Map} from '../map';
+import type {Map} from '../map';
 import type Point from '@mapbox/point-geometry';
 import type {AroundCenterOptions} from './two_fingers_touch';
 import {Handler} from '../handler_manager';
