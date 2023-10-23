@@ -29,12 +29,20 @@ export type Message = {
 }
 
 /**
+ * This interface allowing to substitute only the sendAsync method of the Actor class.
+ */
+export interface IActor {
+    sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
+    send<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0], callback?: Function | null, targetMapId?: string | number | null, mustQueue?: boolean): Cancelable;
+}
+
+/**
  * An implementation of the [Actor design pattern](http://en.wikipedia.org/wiki/Actor_model)
  * that maintains the relationship between asynchronous tasks and the objects
  * that spin them off - in this case, tasks like parsing parts of styles,
  * owned by the styles
  */
-export class Actor {
+export class Actor implements IActor {
     target: ActorTarget;
     mapId: string | number | null;
     callbacks: { [x: number]: Function};

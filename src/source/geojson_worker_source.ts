@@ -14,7 +14,7 @@ import type {
     WorkerTileResult,
 } from '../source/worker_source';
 
-import type {Actor} from '../util/actor';
+import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 
 import type {LoadVectorDataCallback} from './vector_tile_worker_source';
@@ -67,7 +67,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * GeoJSON based on parameters passed from the main-thread Source.
      * See {@link GeoJSONWorkerSource#loadGeoJSON}.
      */
-    constructor(actor: Actor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadGeoJSON?: LoadGeoJSON | null) {
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadGeoJSON?: LoadGeoJSON | null) {
         super(actor, layerIndex, availableImages);
         this.loadVectorData = this.loadGeoJSONTile;
         if (loadGeoJSON) {

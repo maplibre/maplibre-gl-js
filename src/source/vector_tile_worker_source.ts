@@ -13,7 +13,7 @@ import type {
     WorkerTileResult
 } from '../source/worker_source';
 
-import type {Actor} from '../util/actor';
+import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {Callback} from '../types/callback';
 import type {VectorTile} from '@mapbox/vector-tile';
@@ -81,7 +81,7 @@ function loadVectorTile(params: WorkerTileParameters, callback: LoadVectorDataCa
  * `new VectorTileWorkerSource(actor, styleLayers, customLoadVectorDataFunction)`.
  */
 export class VectorTileWorkerSource implements WorkerSource {
-    actor: Actor;
+    actor: IActor;
     layerIndex: StyleLayerIndex;
     availableImages: Array<string>;
     loadVectorData: LoadVectorData;
@@ -95,7 +95,7 @@ export class VectorTileWorkerSource implements WorkerSource {
      * {@link VectorTileWorkerSource#loadTile}. The default implementation simply
      * loads the pbf at `params.url`.
      */
-    constructor(actor: Actor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadVectorData?: LoadVectorData | null) {
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadVectorData?: LoadVectorData | null) {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;

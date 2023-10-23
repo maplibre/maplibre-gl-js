@@ -239,22 +239,25 @@ export default class Worker {
 
         if (!this.workerSources[mapId][sourceType][sourceName]) {
             // use a wrapped actor so that we can attach a target mapId param
-            // to any messages invoked by the WorkerSource
-            // HM TODO: is this still needed??
-            //const actor = {
-            //    send: (type, data, callback) => {
-            //        this.actor.send(type, data, callback, mapId);
-            //    }
-            //};
+            // to any messages invoked by the WorkerSource, this is very important when there are multiple maps
+            const actor = {
+                send: (type, data, callback) => {
+                    return this.actor.send(type, data, callback, mapId);
+                },
+                sendAsync: (message) => {
+                    message.targetMapId = mapId;
+                    return this.actor.sendAsync(message);
+                }
+            };
             switch (sourceType) {
                 case 'vector':
-                    this.workerSources[mapId][sourceType][sourceName] = new VectorTileWorkerSource(this.actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
+                    this.workerSources[mapId][sourceType][sourceName] = new VectorTileWorkerSource(actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
                     break;
                 case 'geojson':
-                    this.workerSources[mapId][sourceType][sourceName] = new GeoJSONWorkerSource(this.actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
+                    this.workerSources[mapId][sourceType][sourceName] = new GeoJSONWorkerSource(actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
                     break;
                 default:
-                    this.workerSources[mapId][sourceType][sourceName] = new (this.externalWorkerSourceTypes[sourceType])(this.actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
+                    this.workerSources[mapId][sourceType][sourceName] = new (this.externalWorkerSourceTypes[sourceType])(actor, this._getLayerIndex(mapId), this._getAvailableImages(mapId));
                     break;
             }
         }

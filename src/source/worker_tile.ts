@@ -13,7 +13,7 @@ import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
 
 import type {Bucket} from '../data/bucket';
-import type {Actor} from '../util/actor';
+import type {Actor, IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {StyleImage} from '../style/style_image';
@@ -64,7 +64,7 @@ export class WorkerTile {
         this.dependencySentinel = -1;
     }
 
-    parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: Actor): Promise<WorkerTileResult> {
+    parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor): Promise<WorkerTileResult> {
         return new Promise((resolve, reject) => {
             this.status = 'parsing';
             this.data = data;

@@ -258,7 +258,7 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
         }
         if (isWorker(self) && self.worker && self.worker.actor) {
             const queueOnMainThread = true;
-            return (self as any).worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
+            return self.worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
         }
     }
     return makeXMLHttpRequest(requestParameters, callback);
