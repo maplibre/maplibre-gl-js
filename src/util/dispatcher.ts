@@ -23,6 +23,7 @@ export class Dispatcher {
             const worker = workers[i];
             const actor = new Actor(worker, mapId);
             actor.name = `Worker ${i}`;
+            // HM TODO: use promises in the following methods.
             actor.registerMessageHandler('getGlyphs', (mapId, params) => {
                 return new Promise((resolve, reject) => {
                     handlers.getGlyphs(mapId, params, (err, data) => {
