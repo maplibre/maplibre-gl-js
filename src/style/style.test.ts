@@ -68,6 +68,7 @@ class StubMap extends Evented {
     }
 
     setTerrain() { }
+    getTerrain() { }
 }
 
 const getStubMap = () => new StubMap() as any;
@@ -2565,6 +2566,32 @@ describe('Style#hasTransitions', () => {
             style.setPaintProperty('background', 'background-color', 'blue');
             style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
             expect(style.hasTransitions()).toBe(false);
+            done();
+        });
+    });
+});
+
+describe('Style#serialize', () => {
+    test('include terrain property when map has 3D terrain', done => {
+        const styleJson = createStyleJSON({terrain: {
+            source: 'terrainSource',
+            exaggeration: 1
+        }});
+        const style = new Style(getStubMap());
+        style.loadJSON(styleJson);
+
+        style.on('style.load', () => {
+            expect(style.serialize().terrain).toBe(styleJson.terrian);
+            done();
+        });
+    });
+
+    test('do not include terrain property when map does not have 3D terrain', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        style.on('style.load', () => {
+            expect(style.serialize().terrain).toBeUndefined();
             done();
         });
     });

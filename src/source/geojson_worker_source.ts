@@ -4,8 +4,8 @@ import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from './geojson_wrapper';
 import vtpbf from 'vt-pbf';
-import Supercluster, {type Options, type ClusterProperties} from 'supercluster';
-import geojsonvt from 'geojson-vt';
+import Supercluster, {type Options as SuperclusterOptions, type ClusterProperties} from 'supercluster';
+import geojsonvt, {type Options as GeoJSONVTOptions} from 'geojson-vt';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 
@@ -33,8 +33,8 @@ export type LoadGeoJSONParameters = {
     dataDiff?: GeoJSONSourceDiff;
     source: string;
     cluster: boolean;
-    superclusterOptions?: Options<any, any>;
-    geojsonVtOptions?: any;
+    superclusterOptions?: SuperclusterOptions<any, any>;
+    geojsonVtOptions?: GeoJSONVTOptions;
     clusterProperties?: ClusterProperties;
     filter?: Array<unknown>;
     promoteId?: string;
@@ -42,48 +42,13 @@ export type LoadGeoJSONParameters = {
 
 export type LoadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>) => Cancelable;
 
-export interface GeoJSONIndex {
-    getTile(z: number, x: number, y: number): any;
-    // supercluster methods
-    getClusterExpansionZoom(clusterId: number): number;
-    getChildren(clusterId: number): Array<GeoJSON.Feature>;
-    getLeaves(clusterId: number, limit: number, offset: number): Array<GeoJSON.Feature>;
-}
-
-function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void {
-    const canonical = params.tileID.canonical;
-
-    if (!this._geoJSONIndex) {
-        return callback(null, null);  // we couldn't load the file
-    }
-
-    const geoJSONTile = this._geoJSONIndex.getTile(canonical.z, canonical.x, canonical.y);
-    if (!geoJSONTile) {
-        return callback(null, null); // nothing in the given tile
-    }
-
-    const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features);
-
-    // Encode the geojson-vt tile into binary vector tile form.  This
-    // is a convenience that allows `FeatureIndex` to operate the same way
-    // across `VectorTileSource` and `GeoJSONSource` data.
-    let pbf = vtpbf(geojsonWrapper);
-    if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
-        // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
-        pbf = new Uint8Array(pbf);
-    }
-
-    callback(null, {
-        vectorTile: geojsonWrapper,
-        rawData: pbf.buffer
-    });
-}
+type GeoJSONIndex = ReturnType<typeof geojsonvt> | Supercluster;
 
 /**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
  * This class is designed to be easily reused to support custom source types
  * for data formats that can be parsed/converted into an in-memory GeoJSON
- * representation.  To do so, create it with
+ * representation. To do so, create it with
  * `new GeoJSONWorkerSource(actor, layerIndex, customLoadGeoJSONFunction)`.
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
  */
@@ -99,10 +64,39 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * See {@link GeoJSONWorkerSource#loadGeoJSON}.
      */
     constructor(actor: Actor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadGeoJSON?: LoadGeoJSON | null) {
-        super(actor, layerIndex, availableImages, loadGeoJSONTile);
+        super(actor, layerIndex, availableImages);
+        this.loadVectorData = this.loadGeoJSONTile;
         if (loadGeoJSON) {
             this.loadGeoJSON = loadGeoJSON;
         }
+    }
+
+    loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void {
+        const canonical = params.tileID.canonical;
+
+        if (!this._geoJSONIndex) {
+            return callback(null, null);  // we couldn't load the file
+        }
+
+        const geoJSONTile = this._geoJSONIndex.getTile(canonical.z, canonical.x, canonical.y);
+        if (!geoJSONTile) {
+            return callback(null, null); // nothing in the given tile
+        }
+
+        const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features);
+        // Encode the geojson-vt tile into binary vector tile form.  This
+        // is a convenience that allows `FeatureIndex` to operate the same way
+        // across `VectorTileSource` and `GeoJSONSource` data.
+        let pbf = vtpbf(geojsonWrapper);
+        if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
+            // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
+            pbf = new Uint8Array(pbf);
+        }
+
+        callback(null, {
+            vectorTile: geojsonWrapper,
+            rawData: pbf.buffer
+        });
     }
 
     /**
@@ -257,11 +251,11 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     getClusterExpansionZoom(params: ClusterIDAndSource): number {
-        return this._geoJSONIndex.getClusterExpansionZoom(params.clusterId);
+        return (this._geoJSONIndex as Supercluster).getClusterExpansionZoom(params.clusterId);
     }
 
     getClusterChildren(params: ClusterIDAndSource): Array<GeoJSON.Feature> {
-        return this._geoJSONIndex.getChildren(params.clusterId);
+        return (this._geoJSONIndex as Supercluster).getChildren(params.clusterId);
     }
 
     getClusterLeaves(params: {
@@ -269,7 +263,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         limit: number;
         offset: number;
     }): Array<GeoJSON.Feature> {
-        return this._geoJSONIndex.getLeaves(params.clusterId, params.limit, params.offset);
+        return (this._geoJSONIndex as Supercluster).getLeaves(params.clusterId, params.limit, params.offset);
     }
 }
 
