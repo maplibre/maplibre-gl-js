@@ -652,9 +652,7 @@ export class Map extends Camera {
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
 
-        if (this._cooperativeGestures) {
-            this.scrollZoom.setupCooperativeGestures();
-        }
+        if (this._cooperativeGestures) this.scrollZoom.setupCooperativeGestures();
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
         this._hash = options.hash && (new Hash(hashName)).addTo(this);
