@@ -240,7 +240,7 @@ export class Actor {
             if (this.messageHandlers[task.type]) {
                 this.messageHandlers[task.type](task.sourceMapId, params)
                     .then((data) => done(null, data))
-                    .catch((err) => done(err, null));
+                    .catch((err) => done(err));
             } else {
                 // No function was found.
                 done(new Error(`Could not find function ${task.type}`));

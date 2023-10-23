@@ -19,15 +19,15 @@ export type PluginState = {
 /**
  * An error callback
  */
-type ErrorCallback = (error?: Error | null) => void;
+type ErrorCallback = (error?: Error | string | null) => void;
 type PluginStateSyncCallback = (state: PluginState) => void;
-let _completionCallback = null;
+let _completionCallback: ErrorCallback = null;
 
 //Variables defining the current state of the plugin
 let pluginStatus = status.unavailable;
 let pluginURL = null;
 
-export const triggerPluginCompletionEvent = function(error: Error | string) {
+export const triggerPluginCompletionEvent = (error: string | Error) => {
     // NetworkError's are not correctly reflected by the plugin status which prevents reloading plugin
     if (error && typeof error === 'string' && error.indexOf('NetworkError') > -1) {
         pluginStatus = status.error;
@@ -44,11 +44,11 @@ function sendPluginStateToWorker() {
 
 export const evented = new Evented();
 
-export const getRTLTextPluginStatus = function () {
+export const getRTLTextPluginStatus = () => {
     return pluginStatus;
 };
 
-export const registerForPluginStateChange = function(callback: PluginStateSyncCallback) {
+export const registerForPluginStateChange = (callback: PluginStateSyncCallback) => {
     // Do an initial sync of the state
     callback({pluginStatus, pluginURL});
     // Listen for all future state changes
@@ -56,13 +56,13 @@ export const registerForPluginStateChange = function(callback: PluginStateSyncCa
     return callback;
 };
 
-export const clearRTLTextPlugin = function() {
+export const clearRTLTextPlugin = () => {
     pluginStatus = status.unavailable;
     pluginURL = null;
     _completionCallback = null;
 };
 
-export const setRTLTextPlugin = function(url: string, callback: ErrorCallback, deferred: boolean = false) {
+export const setRTLTextPlugin = (url: string, callback: ErrorCallback, deferred: boolean = false) => {
     if (pluginStatus === status.deferred || pluginStatus === status.loading || pluginStatus === status.loaded) {
         throw new Error('setRTLTextPlugin cannot be called multiple times.');
     }
@@ -77,7 +77,7 @@ export const setRTLTextPlugin = function(url: string, callback: ErrorCallback, d
     }
 };
 
-export const downloadRTLTextPlugin = function() {
+export const downloadRTLTextPlugin = () => {
     if (pluginStatus !== status.deferred || !pluginURL) {
         throw new Error('rtl-text-plugin cannot be downloaded unless a pluginURL is specified');
     }
@@ -134,7 +134,7 @@ export const plugin: {
     }
 };
 
-export const lazyLoadRTLTextPlugin = function() {
+export const lazyLoadRTLTextPlugin = () => {
     if (!plugin.isLoading() &&
         !plugin.isLoaded() &&
         getRTLTextPluginStatus() === 'deferred'

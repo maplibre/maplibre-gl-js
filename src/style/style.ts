@@ -268,7 +268,7 @@ export class Style extends Evented {
             };
             self.dispatcher.broadcast('syncRTLPluginState', state)
                 .then((results) => {
-                    triggerPluginCompletionEvent(null);
+                    triggerPluginCompletionEvent(undefined);
                     if (!results) {
                         return;
                     }
@@ -285,7 +285,7 @@ export class Style extends Evented {
                             self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
                         }
                     }
-                }).catch((err) => triggerPluginCompletionEvent(err));
+                }).catch((err: string) => triggerPluginCompletionEvent(err));
         });
 
         this.on('data', (event) => {
