@@ -240,7 +240,6 @@ export class Style extends Evented {
 
         this.map = map;
         this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
-        // HM TODO: change this internal method to return a promise
         this.dispatcher.registerMessageHandler('getGlyphs', (mapId, params) => {
             return this.getGlyphs(mapId, params);
         });
@@ -249,6 +248,7 @@ export class Style extends Evented {
         });
         this.dispatcher.registerMessageHandler('getResource', (mapId, params) => {
             return new Promise((resolve, reject) => {
+                // HM TODO: change this internal method to return a promise
                 this.getResource(mapId, params, (err, data) => {
                     if (err) {
                         reject(err);

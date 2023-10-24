@@ -167,6 +167,7 @@ export class WorkerTile {
             Promise.all(promises).then(([glyphMap, iconMap, patternMap]: [GetGlyphsResponse, GetImagesResponse, GetImagesResponse]) => {
                 if (dependencySentinel !== this.dependencySentinel) {
                     // This feels like a hack as there's no way to convert this code to an async function...
+                    // HM TODO: optinal check if this there's a way to avoid getting here?
                     return;
                 }
                 const glyphAtlas = new GlyphAtlas(glyphMap);
