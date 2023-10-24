@@ -63,7 +63,7 @@ export class WorkerTile {
     }
 
     parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor): Promise<WorkerTileResult> {
-        return new Promise(async (resolve, _reject) => {
+        return new Promise((resolve, reject) => {
             this.status = 'parsing';
             this.data = data;
 
@@ -164,48 +164,49 @@ export class WorkerTile {
                 promises.push(Promise.resolve({}));
             }
 
-            const [glyphMap, iconMap, patternMap] = await Promise.all(promises) as [GetGlyphsResponse, GetImagesResponse, GetImagesResponse];
-            if (dependencySentinel !== this.dependencySentinel) {
-                // This feels like a hack as there's no way to convert this code to an async function...
-                return;
-            }
-            const glyphAtlas = new GlyphAtlas(glyphMap);
-            const imageAtlas = new ImageAtlas(iconMap, patternMap);
-
-            for (const key in buckets) {
-                const bucket = buckets[key];
-                if (bucket instanceof SymbolBucket) {
-                    recalculateLayers(bucket.layers, this.zoom, availableImages);
-                    performSymbolLayout({
-                        bucket,
-                        glyphMap,
-                        glyphPositions: glyphAtlas.positions,
-                        imageMap: iconMap,
-                        imagePositions: imageAtlas.iconPositions,
-                        showCollisionBoxes: this.showCollisionBoxes,
-                        canonical: this.tileID.canonical
-                    });
-                } else if (bucket.hasPattern &&
-                    (bucket instanceof LineBucket ||
-                    bucket instanceof FillBucket ||
-                    bucket instanceof FillExtrusionBucket)) {
-                    recalculateLayers(bucket.layers, this.zoom, availableImages);
-                    bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
+            Promise.all(promises).then(([glyphMap, iconMap, patternMap]: [GetGlyphsResponse, GetImagesResponse, GetImagesResponse]) => {
+                if (dependencySentinel !== this.dependencySentinel) {
+                    // This feels like a hack as there's no way to convert this code to an async function...
+                    return;
                 }
-            }
+                const glyphAtlas = new GlyphAtlas(glyphMap);
+                const imageAtlas = new ImageAtlas(iconMap, patternMap);
 
-            this.status = 'done';
-            resolve({
-                buckets: Object.values(buckets).filter(b => !b.isEmpty()),
-                featureIndex,
-                collisionBoxArray: this.collisionBoxArray,
-                glyphAtlasImage: glyphAtlas.image,
-                imageAtlas,
-                // Only used for benchmarking:
-                glyphMap: this.returnDependencies ? glyphMap : null,
-                iconMap: this.returnDependencies ? iconMap : null,
-                glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
-            });
+                for (const key in buckets) {
+                    const bucket = buckets[key];
+                    if (bucket instanceof SymbolBucket) {
+                        recalculateLayers(bucket.layers, this.zoom, availableImages);
+                        performSymbolLayout({
+                            bucket,
+                            glyphMap,
+                            glyphPositions: glyphAtlas.positions,
+                            imageMap: iconMap,
+                            imagePositions: imageAtlas.iconPositions,
+                            showCollisionBoxes: this.showCollisionBoxes,
+                            canonical: this.tileID.canonical
+                        });
+                    } else if (bucket.hasPattern &&
+                        (bucket instanceof LineBucket ||
+                        bucket instanceof FillBucket ||
+                        bucket instanceof FillExtrusionBucket)) {
+                        recalculateLayers(bucket.layers, this.zoom, availableImages);
+                        bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
+                    }
+                }
+
+                this.status = 'done';
+                resolve({
+                    buckets: Object.values(buckets).filter(b => !b.isEmpty()),
+                    featureIndex,
+                    collisionBoxArray: this.collisionBoxArray,
+                    glyphAtlasImage: glyphAtlas.image,
+                    imageAtlas,
+                    // Only used for benchmarking:
+                    glyphMap: this.returnDependencies ? glyphMap : null,
+                    iconMap: this.returnDependencies ? iconMap : null,
+                    glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
+                });
+            }).catch(reject);
         });
     }
 }
