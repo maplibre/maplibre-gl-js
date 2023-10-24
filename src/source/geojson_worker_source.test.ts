@@ -45,10 +45,10 @@ describe('reloadTile', () => {
             maxZoom: 10
         };
 
-        await source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters)
+        await source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters);
 
-            // first call should load vector data from geojson
-        let firstData = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        // first call should load vector data from geojson
+        const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect(loadVectorCallCount).toBe(1);
 
         // second call won't give us new rawTileData
@@ -61,8 +61,8 @@ describe('reloadTile', () => {
         expect(loadVectorCallCount).toBe(1);
 
         // replace geojson data
-        await source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters)
-            
+        await source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters);
+
         // should call loadVectorData again after changing geojson data
         data = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect('rawTileData' in data).toBeTruthy();

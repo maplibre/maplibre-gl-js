@@ -5,7 +5,7 @@ import Protobuf from 'pbf';
 import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, type FakeServer} from 'nise';
-import {Actor, IActor} from '../util/actor';
+import {IActor} from '../util/actor';
 import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance} from '../util/test/util';
@@ -121,8 +121,8 @@ describe('vector tile worker source', () => {
         }]);
 
         const actor = {
-            sendAsync: (message: {type: string, data: unknown}, abortController: AbortController) => {
-                return new Promise((resolve, reject) => {
+            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
+                return new Promise((resolve, _reject) => {
                     const res = setTimeout(() => {
                         const response = message.type === 'getImages' ?
                             {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
@@ -132,9 +132,9 @@ describe('vector tile worker source', () => {
                     abortController.signal.addEventListener('abort', () => {
                         clearTimeout(res);
                     });
-                })
+                });
             }
-        }
+        };
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello'], loadVectorData);
         source.loadTile({
             source: 'source',

@@ -139,11 +139,10 @@ describe('worker tile', () => {
             }
         } as any as VectorTile;
 
-
-        const sendAsync = jest.fn().mockImplementation((message: {type: string, data: any}) => {
+        const sendAsync = jest.fn().mockImplementation((message: {type: string; data: any}) => {
             const response = message.type === 'getImages' ?
                 {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}}
+                {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
             return Promise.resolve(response);
         });
 
@@ -205,20 +204,20 @@ describe('worker tile', () => {
         } as any as VectorTile;
 
         let cancelCount = 0;
-        const sendAsync = jest.fn().mockImplementation((message: {type: string, data: unknown}, abortController: AbortController) => {
+        const sendAsync = jest.fn().mockImplementation((message: {type: string; data: unknown}, abortController: AbortController) => {
             return new Promise((resolve, _reject) => {
                 const res = setTimeout(() => {
-                        const response = message.type === 'getImages' ?
-                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}}
-                        resolve(response);
-                    }
+                    const response = message.type === 'getImages' ?
+                        {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
+                        {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
+                    resolve(response);
+                }
                 );
                 abortController.signal.addEventListener('abort', () => {
                     cancelCount += 1;
                     clearTimeout(res);
                 });
-            })
+            });
         });
 
         const actorMock = {
