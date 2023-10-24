@@ -36,8 +36,7 @@ describe('GlyphManager', () => {
         createLoadGlyphRangeStub();
         const manager = createGlyphManager();
 
-        manager.getGlyphs({'Arial Unicode MS': [55]}, (err, glyphs) => {
-            expect(err).toBeFalsy();
+        manager.getGlyphs({'Arial Unicode MS': [55]}).then((glyphs) => {
             expect(glyphs['Arial Unicode MS']['55'].metrics.advance).toBe(12);
             done();
         });
@@ -47,16 +46,14 @@ describe('GlyphManager', () => {
         const stub = createLoadGlyphRangeStub();
         const manager = createGlyphManager();
 
-        manager.getGlyphs({'Arial Unicode MS': [0.5]}, (err) => {
-            expect(err).toBeFalsy();
+        manager.getGlyphs({'Arial Unicode MS': [0.5]}).then(() => {
             expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
             expect(stub).toHaveBeenCalledTimes(1);
 
             // We remove all requests as in getGlyphs code.
             delete manager.entries['Arial Unicode MS'].requests[0];
 
-            manager.getGlyphs({'Arial Unicode MS': [0.5]}, (err) => {
-                expect(err).toBeFalsy();
+            manager.getGlyphs({'Arial Unicode MS': [0.5]}).then(() => {
                 expect(manager.entries['Arial Unicode MS'].ranges[0]).toBe(true);
                 expect(stub).toHaveBeenCalledTimes(1);
                 done();
@@ -71,8 +68,7 @@ describe('GlyphManager', () => {
 
         const manager = createGlyphManager();
 
-        manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
-            expect(err).toBeFalsy();
+        manager.getGlyphs({'Arial Unicode MS': [0x5e73]}).then((glyphs) => {
             expect(glyphs['Arial Unicode MS'][0x5e73]).toBeNull(); // The fixture returns a PBF without the glyph we requested
             done();
         });
@@ -92,12 +88,10 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager('sans-serif');
 
         //Request char that overlaps Katakana range
-        manager.getGlyphs({'Arial Unicode MS': [0x3005]}, (err, glyphs) => {
-            expect(err).toBeFalsy();
+        manager.getGlyphs({'Arial Unicode MS': [0x3005]}).then((glyphs) => {
             expect(glyphs['Arial Unicode MS'][0x3005]).not.toBeNull();
             //Request char from Katakana range (te テ)
-            manager.getGlyphs({'Arial Unicode MS': [0x30C6]}, (err, glyphs) => {
-                expect(err).toBeFalsy();
+            manager.getGlyphs({'Arial Unicode MS': [0x30C6]}).then((glyphs) => {
                 const glyph = glyphs['Arial Unicode MS'][0x30c6];
                 //Ensure that te is locally generated.
                 expect(glyph.bitmap.height).toBe(12);
@@ -111,8 +105,7 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager('sans-serif');
 
         // character 平
-        manager.getGlyphs({'Arial Unicode MS': [0x5e73]}, (err, glyphs) => {
-            expect(err).toBeFalsy();
+        manager.getGlyphs({'Arial Unicode MS': [0x5e73]}).then((glyphs) => {
             expect(glyphs['Arial Unicode MS'][0x5e73].metrics.advance).toBe(0.5);
             done();
         });
@@ -122,8 +115,7 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager('sans-serif');
 
         // Katakana letter te テ
-        manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
-            expect(err).toBeFalsy();
+        manager.getGlyphs({'Arial Unicode MS': [0x30c6]}).then((glyphs) => {
             expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(0.5);
             done();
         });
@@ -133,8 +125,7 @@ describe('GlyphManager', () => {
         const manager = createGlyphManager('sans-serif');
 
         //Hiragana letter te て
-        manager.getGlyphs({'Arial Unicode MS': [0x3066]}, (err, glyphs) => {
-            expect(err).toBeFalsy();
+        manager.getGlyphs({'Arial Unicode MS': [0x3066]}).then((glyphs) => {
             expect(glyphs['Arial Unicode MS'][0x3066].metrics.advance).toBe(0.5);
             done();
         });
@@ -148,10 +139,9 @@ describe('GlyphManager', () => {
         });
 
         // Katakana letter te
-        manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, (err, glyphs) => {
-            expect(err).toBeFalsy();
+        manager.getGlyphs({'Arial Unicode MS': [0x30c6]}).then((glyphs) => {
             expect(glyphs['Arial Unicode MS'][0x30c6].metrics.advance).toBe(24);
-            manager.getGlyphs({'Arial Unicode MS': [0x30c6]}, () => {
+            manager.getGlyphs({'Arial Unicode MS': [0x30c6]}).then(() => {
                 expect(drawSpy).toHaveBeenCalledTimes(1);
                 done();
             });

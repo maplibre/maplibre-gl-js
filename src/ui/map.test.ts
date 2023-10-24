@@ -2373,7 +2373,7 @@ describe('Map', () => {
 
         expect(map.hasImage(id)).toBeFalsy();
 
-        map.style.imageManager.getImages([id], (alwaysNull, generatedImage) => {
+        map.style.imageManager.getImages([id]).then((generatedImage) => {
             expect(generatedImage[id].data.width).toEqual(sampleImage.width);
             expect(generatedImage[id].data.height).toEqual(sampleImage.height);
             expect(generatedImage[id].data.data).toEqual(sampleImage.data);

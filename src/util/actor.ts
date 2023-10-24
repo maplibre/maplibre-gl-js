@@ -33,7 +33,6 @@ export type Message = {
  */
 export interface IActor {
     sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
-    send<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0], callback?: Function | null, targetMapId?: string | number | null, mustQueue?: boolean): Cancelable;
 }
 
 /**

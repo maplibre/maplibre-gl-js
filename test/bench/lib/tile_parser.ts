@@ -68,62 +68,33 @@ export default class TileParser {
         this.icons = {};
     }
 
-    loadImages(params: any, callback: Function) {
+    async loadImages(params: any) {
         const key = JSON.stringify(params);
-        if (this.icons[key]) {
-            callback(null, this.icons[key]);
-        } else {
-            this.style.getImages('', params, (err, icons) => {
-                this.icons[key] = icons;
-                callback(err, icons);
-            });
+        if (!this.icons[key]) {
+            this.icons[key] = await this.style.getImages('', params);
         }
+        return this.icons[key];
     }
 
-    loadGlyphs(params: any, callback: Function) {
+    async loadGlyphs(params: any) {
         const key = JSON.stringify(params);
-        if (this.glyphs[key]) {
-            callback(null, this.glyphs[key]);
-        } else {
-            this.style.getGlyphs('', params, (err, glyphs) => {
-                this.glyphs[key] = glyphs;
-                callback(err, glyphs);
-            });
+        if (!this.glyphs[key]) {
+            this.glyphs[key] = await this.style.getGlyphs('', params);
         }
+        return this.glyphs[key];
     }
 
     setup(): Promise<void> {
         const parser = this;
         this.actor = {
-            // HM TODO: remove send once moved to promises
-            // HM TODO: see that this didn't broke the benchmarks run...
-            send(action, params, callback) {
-                setTimeout(() => {
-                    if (action === 'getImages') {
-                        parser.loadImages(params, callback);
-                    } else if (action === 'getGlyphs') {
-                        parser.loadGlyphs(params, callback);
-                    } else throw new Error(`Invalid action ${action}`);
-                }, 0);
-                return {
-                    cancel() {}
-                };
-            },
             sendAsync(message) {
-                return new Promise((resolve, reject) => {
-                    const callback = (err, data) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(data);
-                        }
-                    };
-                    if (message.type === 'getImages') {
-                        parser.loadImages(message.data, callback);
-                    } else if (message.type === 'getGlyphs') {
-                        parser.loadGlyphs(message.data, callback);
-                    } else throw new Error(`Invalid action ${message.type}`);
-                });
+                if (message.type === 'getImages') {
+                    return parser.loadImages(message.data);
+                }
+                if (message.type === 'getGlyphs') {
+                    return parser.loadGlyphs(message.data);
+                }
+                throw new Error(`Invalid action ${message.type}`);
             }
         };
 

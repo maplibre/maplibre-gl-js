@@ -43,7 +43,6 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
 import type {Map} from '../ui/map';
 import type {Transform} from '../geo/transform';
 import type {StyleImage} from './style_image';
-import type {StyleGlyph} from './style_glyph';
 import type {Callback} from '../types/callback';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
@@ -59,7 +58,7 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
-import type {GetGlyhsParamerters, GetImagesParamerters} from '../util/actor_messages';
+import type {GetGlyphsParamerters, GetGlyphsResponse, GetImagesParamerters, GetImagesResponse} from '../util/actor_messages';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -243,26 +242,10 @@ export class Style extends Evented {
         this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
         // HM TODO: change this internal method to return a promise
         this.dispatcher.registerMessageHandler('getGlyphs', (mapId, params) => {
-            return new Promise((resolve, reject) => {
-                this.getGlyphs(mapId, params, (err, data) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(data);
-                    }
-                });
-            });
+            return this.getGlyphs(mapId, params);
         });
         this.dispatcher.registerMessageHandler('getImages', (mapId, params) => {
-            return new Promise((resolve, reject) => {
-                this.getImages(mapId, params, (err, data) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(data);
-                    }
-                });
-            });
+            return this.getImages(mapId, params);
         });
         this.dispatcher.registerMessageHandler('getResource', (mapId, params) => {
             return new Promise((resolve, reject) => {
@@ -1605,12 +1588,8 @@ export class Style extends Evented {
 
     // Callbacks from web workers
 
-    getImages(
-        mapId: string | number,
-        params: GetImagesParamerters,
-        callback: Callback<{[_: string]: StyleImage}>
-    ) {
-        this.imageManager.getImages(params.icons, callback);
+    async getImages(mapId: string | number, params: GetImagesParamerters): Promise<GetImagesResponse> {
+        const images = await this.imageManager.getImages(params.icons);
 
         // Apply queued image changes before setting the tile's dependencies so that the tile
         // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
@@ -1626,20 +1605,21 @@ export class Style extends Evented {
         if (sourceCache) {
             sourceCache.setDependencies(params.tileID.key, params.type, params.icons);
         }
+        return images;
     }
 
-    getGlyphs(mapId: string | number, params: GetGlyhsParamerters, callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
-    ) {
-        this.glyphManager.getGlyphs(params.stacks, callback);
+    async getGlyphs(mapId: string | number, params: GetGlyphsParamerters): Promise<GetGlyphsResponse> {
+        const glypgs = await this.glyphManager.getGlyphs(params.stacks);
         const sourceCache = this.sourceCaches[params.source];
         if (sourceCache) {
             // we are not setting stacks as dependencies since for now
             // we just need to know which tiles have glyph dependencies
             sourceCache.setDependencies(params.tileID.key, params.type, ['']);
         }
+        return glypgs;
     }
 
-    getResource(mapId: string| number, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
+    getResource(mapId: string | number, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
         return makeRequest(params, callback);
     }
 

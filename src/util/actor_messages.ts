@@ -38,12 +38,20 @@ export type GetImagesParamerters = {
     type: string;
 }
 
-export type GetGlyhsParamerters = {
+export type GetGlyphsParamerters = {
     type: string;
     stacks: {[_: string]: Array<number>};
     source: string;
     tileID: OverscaledTileID;
 }
+
+export type GetGlyphsResponse = {
+    [stack: string]: {
+        [id: number]: StyleGlyph;
+    };
+}
+
+export type GetImagesResponse = {[_: string]: StyleImage}
 
 export type RequestResponseMessageMap = {
     'loadDEMTile': [WorkerDEMTileParameters, DEMData];
@@ -53,8 +61,8 @@ export type RequestResponseMessageMap = {
     'loadData': [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
     'loadTile': [WorkerTileParameters, WorkerTileResult];
     'reloadTile': [WorkerTileParameters, WorkerTileResult];
-    'getGlyphs': [GetGlyhsParamerters, {[_: string]: {[_: number]: StyleGlyph}}];
-    'getImages': [GetImagesParamerters, {[_: string]: StyleImage}];
+    'getGlyphs': [GetGlyphsParamerters, GetGlyphsResponse];
+    'getImages': [GetImagesParamerters, GetImagesResponse];
     'setImages': [string[], void];
     'setLayers': [Array<LayerSpecification>, void];
     'updateLayers': [UpdateLayersParamaeters, void];

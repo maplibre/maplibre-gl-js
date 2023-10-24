@@ -16,15 +16,13 @@ import type {Bucket} from '../data/bucket';
 import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {StyleImage} from '../style/style_image';
-import type {StyleGlyph} from '../style/style_glyph';
 import type {
     WorkerTileParameters,
     WorkerTileResult,
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import {Cancelable} from '../types/cancelable';
+import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages';
 
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -45,7 +43,7 @@ export class WorkerTile {
 
     abort: (() => void);
     vectorTile: VectorTile;
-    inFlightDependencies: Cancelable[];
+    inFlightDependencies: AbortController[];
     dependencySentinel: number;
 
     constructor(params: WorkerTileParameters) {
@@ -64,185 +62,144 @@ export class WorkerTile {
         this.dependencySentinel = -1;
     }
 
-    parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor): Promise<WorkerTileResult> {
-        return new Promise((resolve, reject) => {
-            this.status = 'parsing';
-            this.data = data;
+    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor): Promise<WorkerTileResult> {
+        this.status = 'parsing';
+        this.data = data;
 
-            this.collisionBoxArray = new CollisionBoxArray();
-            const sourceLayerCoder = new DictionaryCoder(Object.keys(data.layers).sort());
+        this.collisionBoxArray = new CollisionBoxArray();
+        const sourceLayerCoder = new DictionaryCoder(Object.keys(data.layers).sort());
 
-            const featureIndex = new FeatureIndex(this.tileID, this.promoteId);
-            featureIndex.bucketLayerIDs = [];
+        const featureIndex = new FeatureIndex(this.tileID, this.promoteId);
+        featureIndex.bucketLayerIDs = [];
 
-            const buckets: {[_: string]: Bucket} = {};
+        const buckets: {[_: string]: Bucket} = {};
 
-            const options = {
-                featureIndex,
-                iconDependencies: {},
-                patternDependencies: {},
-                glyphDependencies: {},
-                availableImages
-            };
+        const options = {
+            featureIndex,
+            iconDependencies: {},
+            patternDependencies: {},
+            glyphDependencies: {},
+            availableImages
+        };
 
-            const layerFamilies = layerIndex.familiesBySource[this.source];
-            for (const sourceLayerId in layerFamilies) {
-                const sourceLayer = data.layers[sourceLayerId];
-                if (!sourceLayer) {
-                    continue;
-                }
-
-                if (sourceLayer.version === 1) {
-                    warnOnce(`Vector tile source "${this.source}" layer "${sourceLayerId}" ` +
-                        'does not use vector tile spec v2 and therefore may have some rendering errors.');
-                }
-
-                const sourceLayerIndex = sourceLayerCoder.encode(sourceLayerId);
-                const features = [];
-                for (let index = 0; index < sourceLayer.length; index++) {
-                    const feature = sourceLayer.feature(index);
-                    const id = featureIndex.getId(feature, sourceLayerId);
-                    features.push({feature, id, index, sourceLayerIndex});
-                }
-
-                for (const family of layerFamilies[sourceLayerId]) {
-                    const layer = family[0];
-
-                    if (layer.source !== this.source) {
-                        warnOnce(`layer.source = ${layer.source} does not equal this.source = ${this.source}`);
-                    }
-                    if (layer.minzoom && this.zoom < Math.floor(layer.minzoom)) continue;
-                    if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
-                    if (layer.visibility === 'none') continue;
-
-                    recalculateLayers(family, this.zoom, availableImages);
-
-                    const bucket = buckets[layer.id] = layer.createBucket({
-                        index: featureIndex.bucketLayerIDs.length,
-                        layers: family,
-                        zoom: this.zoom,
-                        pixelRatio: this.pixelRatio,
-                        overscaling: this.overscaling,
-                        collisionBoxArray: this.collisionBoxArray,
-                        sourceLayerIndex,
-                        sourceID: this.source
-                    });
-
-                    bucket.populate(features, options, this.tileID.canonical);
-                    featureIndex.bucketLayerIDs.push(family.map((l) => l.id));
-                }
+        const layerFamilies = layerIndex.familiesBySource[this.source];
+        for (const sourceLayerId in layerFamilies) {
+            const sourceLayer = data.layers[sourceLayerId];
+            if (!sourceLayer) {
+                continue;
             }
 
-            let error: Error;
-            let glyphMap: {
-                [_: string]: {
-                    [_: number]: StyleGlyph;
-                };
-            };
-            let iconMap: {[_: string]: StyleImage};
-            let patternMap: {[_: string]: StyleImage};
-
-            const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
-
-            this.inFlightDependencies.forEach((request) => request?.cancel());
-            this.inFlightDependencies = [];
-
-            // cancelling seems to be not sufficient, we seems to still manage to get a callback hit, so use a sentinel to drop stale results
-            const dependencySentinel = ++this.dependencySentinel;
-            if (Object.keys(stacks).length) {
-                // HM TODO: improve this to be async
-                this.inFlightDependencies.push(actor.send('getGlyphs', {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}, (err, result) => {
-                    if (dependencySentinel !== this.dependencySentinel) {
-                        return;
-                    }
-                    if (!error) {
-                        error = err;
-                        glyphMap = result;
-                        maybePrepare.call(this);
-                    }
-                }));
-            } else {
-                glyphMap = {};
+            if (sourceLayer.version === 1) {
+                warnOnce(`Vector tile source "${this.source}" layer "${sourceLayerId}" ` +
+                    'does not use vector tile spec v2 and therefore may have some rendering errors.');
             }
 
-            const icons = Object.keys(options.iconDependencies);
-            if (icons.length) {
-                this.inFlightDependencies.push(actor.send('getImages', {icons, source: this.source, tileID: this.tileID, type: 'icons'}, (err, result) => {
-                    if (dependencySentinel !== this.dependencySentinel) {
-                        return;
-                    }
-                    if (!error) {
-                        error = err;
-                        iconMap = result;
-                        maybePrepare.call(this);
-                    }
-                }));
-            } else {
-                iconMap = {};
+            const sourceLayerIndex = sourceLayerCoder.encode(sourceLayerId);
+            const features = [];
+            for (let index = 0; index < sourceLayer.length; index++) {
+                const feature = sourceLayer.feature(index);
+                const id = featureIndex.getId(feature, sourceLayerId);
+                features.push({feature, id, index, sourceLayerIndex});
             }
 
-            const patterns = Object.keys(options.patternDependencies);
-            if (patterns.length) {
-                this.inFlightDependencies.push(actor.send('getImages', {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}, (err, result) => {
-                    if (dependencySentinel !== this.dependencySentinel) {
-                        return;
-                    }
-                    if (!error) {
-                        error = err;
-                        patternMap = result;
-                        maybePrepare.call(this);
-                    }
-                }));
-            } else {
-                patternMap = {};
-            }
+            for (const family of layerFamilies[sourceLayerId]) {
+                const layer = family[0];
 
-            maybePrepare.call(this);
-
-            function maybePrepare() {
-                if (error) {
-                    return reject(error);
-                } else if (glyphMap && iconMap && patternMap) {
-                    const glyphAtlas = new GlyphAtlas(glyphMap);
-                    const imageAtlas = new ImageAtlas(iconMap, patternMap);
-
-                    for (const key in buckets) {
-                        const bucket = buckets[key];
-                        if (bucket instanceof SymbolBucket) {
-                            recalculateLayers(bucket.layers, this.zoom, availableImages);
-                            performSymbolLayout({
-                                bucket,
-                                glyphMap,
-                                glyphPositions: glyphAtlas.positions,
-                                imageMap: iconMap,
-                                imagePositions: imageAtlas.iconPositions,
-                                showCollisionBoxes: this.showCollisionBoxes,
-                                canonical: this.tileID.canonical
-                            });
-                        } else if (bucket.hasPattern &&
-                            (bucket instanceof LineBucket ||
-                            bucket instanceof FillBucket ||
-                            bucket instanceof FillExtrusionBucket)) {
-                            recalculateLayers(bucket.layers, this.zoom, availableImages);
-                            bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
-                        }
-                    }
-
-                    this.status = 'done';
-                    resolve({
-                        buckets: Object.values(buckets).filter(b => !b.isEmpty()),
-                        featureIndex,
-                        collisionBoxArray: this.collisionBoxArray,
-                        glyphAtlasImage: glyphAtlas.image,
-                        imageAtlas,
-                        // Only used for benchmarking:
-                        glyphMap: this.returnDependencies ? glyphMap : null,
-                        iconMap: this.returnDependencies ? iconMap : null,
-                        glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
-                    });
+                if (layer.source !== this.source) {
+                    warnOnce(`layer.source = ${layer.source} does not equal this.source = ${this.source}`);
                 }
+                if (layer.minzoom && this.zoom < Math.floor(layer.minzoom)) continue;
+                if (layer.maxzoom && this.zoom >= layer.maxzoom) continue;
+                if (layer.visibility === 'none') continue;
+
+                recalculateLayers(family, this.zoom, availableImages);
+
+                const bucket = buckets[layer.id] = layer.createBucket({
+                    index: featureIndex.bucketLayerIDs.length,
+                    layers: family,
+                    zoom: this.zoom,
+                    pixelRatio: this.pixelRatio,
+                    overscaling: this.overscaling,
+                    collisionBoxArray: this.collisionBoxArray,
+                    sourceLayerIndex,
+                    sourceID: this.source
+                });
+
+                bucket.populate(features, options, this.tileID.canonical);
+                featureIndex.bucketLayerIDs.push(family.map((l) => l.id));
             }
-        });
+        }
+
+        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+
+        this.inFlightDependencies.forEach((request) => request?.abort());
+        this.inFlightDependencies = [];
+
+        const promises = [];
+        if (Object.keys(stacks).length) {
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            promises.push(actor.sendAsync({type: 'getGlyphs', data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController));
+        } else {
+            promises.push(Promise.resolve({}));
+        }
+
+        const icons = Object.keys(options.iconDependencies);
+        if (icons.length) {
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            promises.push(actor.sendAsync({type: 'getImages', data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController));
+        } else {
+            promises.push(Promise.resolve({}));
+        }
+
+        const patterns = Object.keys(options.patternDependencies);
+        if (patterns.length) {
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            promises.push(actor.sendAsync({type: 'getImages', data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController));
+        } else {
+            promises.push(Promise.resolve({}));
+        }
+
+        const [glyphMap, iconMap, patternMap] = await Promise.all(promises) as [GetGlyphsResponse, GetImagesResponse, GetImagesResponse];
+        const glyphAtlas = new GlyphAtlas(glyphMap);
+        const imageAtlas = new ImageAtlas(iconMap, patternMap);
+
+        for (const key in buckets) {
+            const bucket = buckets[key];
+            if (bucket instanceof SymbolBucket) {
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
+                performSymbolLayout({
+                    bucket,
+                    glyphMap,
+                    glyphPositions: glyphAtlas.positions,
+                    imageMap: iconMap,
+                    imagePositions: imageAtlas.iconPositions,
+                    showCollisionBoxes: this.showCollisionBoxes,
+                    canonical: this.tileID.canonical
+                });
+            } else if (bucket.hasPattern &&
+                (bucket instanceof LineBucket ||
+                bucket instanceof FillBucket ||
+                bucket instanceof FillExtrusionBucket)) {
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
+            }
+        }
+
+        this.status = 'done';
+        return {
+            buckets: Object.values(buckets).filter(b => !b.isEmpty()),
+            featureIndex,
+            collisionBoxArray: this.collisionBoxArray,
+            glyphAtlasImage: glyphAtlas.image,
+            imageAtlas,
+            // Only used for benchmarking:
+            glyphMap: this.returnDependencies ? glyphMap : null,
+            iconMap: this.returnDependencies ? iconMap : null,
+            glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
+        };
     }
 }
 
