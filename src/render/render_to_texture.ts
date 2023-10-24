@@ -80,7 +80,7 @@ export class RenderToTexture {
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];
-        this._renderableTiles = this.terrain.sourceCache.getRenderableTiles();
+        this._renderableTiles = this.terrain.sourceCache.getRenderableTileIDs();
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
         this._coordsDescendingInv = {};

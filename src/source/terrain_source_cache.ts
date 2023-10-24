@@ -16,19 +16,15 @@ import {Terrain} from '../render/terrain';
  *   - finds all necessary renderToTexture tiles for a OverscaledTileID area
  *   - finds the corresponding raster-dem tile for OverscaledTileID
  */
-export class TerrainSourceCache extends Evented {
+export class TerrainSourceCache extends Evented { // TODO: tohle chci vykrást (render-to-texture)
     /**
      * source-cache for the raster-dem source.
      */
     sourceCache: SourceCache;
     /**
-     * stores all render-to-texture tiles.
+     * contains a map of tileID-key to tileID for the current scene. (only for performance)
      */
-    _tiles: {[_: string]: Tile};
-    /**
-     * contains a list of tileID-keys for the current scene. (only for performance)
-     */
-    _renderableTilesKeys: Array<string>;
+    _renderableTiles: {[_: string]: OverscaledTileID};
     /**
      * raster-dem-tile for a TileID cache.
      */
@@ -57,8 +53,7 @@ export class TerrainSourceCache extends Evented {
     constructor(sourceCache: SourceCache) {
         super();
         this.sourceCache = sourceCache;
-        this._tiles = {};
-        this._renderableTilesKeys = [];
+        this._renderableTiles = {};
         this._sourceTileCache = {};
         this.minzoom = 0;
         this.maxzoom = 22;
@@ -82,7 +77,7 @@ export class TerrainSourceCache extends Evented {
         // load raster-dem tiles for the current scene.
         this.sourceCache.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
-        this._renderableTilesKeys = [];
+        this._renderableTiles = {};
         const keys = {};
         for (const tileID of transform.coveringTiles({
             tileSize: this.tileSize,
@@ -92,29 +87,17 @@ export class TerrainSourceCache extends Evented {
             terrain
         })) {
             keys[tileID.key] = true;
-            this._renderableTilesKeys.push(tileID.key);
-            if (!this._tiles[tileID.key]) {
-                tileID.posMatrix = new Float64Array(16) as any;
+            if(!this._renderableTiles[tileID.key])
+            {
+                this._renderableTiles[tileID.key] = tileID;
+                tileID.posMatrix = new Float64Array(16) as any; // TODO: why even store this in the tileID anyway?
                 mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-                this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
                 this._lastTilesetChange = Date.now();
             }
         }
         // free unused tiles
-        for (const key in this._tiles) {
-            if (!keys[key]) delete this._tiles[key];
-        }
-    }
-
-    /**
-     * Free render to texture cache
-     * @param tileID - optional, free only corresponding to tileID.
-     */
-    freeRtt(tileID?: OverscaledTileID) {
-        for (const key in this._tiles) {
-            const tile = this._tiles[key];
-            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
-                tile.rtt = [];
+        for (const key in this._renderableTiles) {
+            if (!keys[key]) delete this._renderableTiles[key];
         }
     }
 
@@ -122,8 +105,8 @@ export class TerrainSourceCache extends Evented {
      * get a list of tiles, which are loaded and should be rendered in the current scene
      * @returns the renderable tiles
      */
-    getRenderableTiles(): Array<Tile> {
-        return this._renderableTilesKeys.map(key => this.getTileByID(key));
+    getRenderableTileIDs(): Array<OverscaledTileID> {
+        return Object.values(this._renderableTiles)
     }
 
     /**
@@ -131,8 +114,8 @@ export class TerrainSourceCache extends Evented {
      * @param id - the tile id
      * @returns the tile
      */
-    getTileByID(id: string): Tile {
-        return this._tiles[id];
+    getTileIDByKey(id: string): OverscaledTileID {
+        return this._renderableTiles[id];
     }
 
     /**
@@ -142,8 +125,8 @@ export class TerrainSourceCache extends Evented {
      */
     getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords = {};
-        for (const key of this._renderableTilesKeys) {
-            const _tileID = this._tiles[key].tileID;
+        for (const key in this._renderableTiles) {
+            const _tileID = this._renderableTiles[key];
             if (_tileID.canonical.equals(tileID.canonical)) {
                 const coord = tileID.clone();
                 coord.posMatrix = new Float64Array(16) as any;

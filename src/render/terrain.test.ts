@@ -21,22 +21,20 @@ describe('Terrain', () => {
             height: 1
         } as any as Painter;
         const sourceCache = {} as SourceCache;
-        const getTileByID = (tileID) : Tile => {
+        const getTileByID = (tileID) : OverscaledTileID => {
             if (tileID !== 'abcd') {
-                return null as any as Tile;
+                return null as any as OverscaledTileID;
             }
             return {
-                tileID: {
-                    canonical: {
-                        x: 0,
-                        y: 0,
-                        z: 0
-                    }
+                canonical: {
+                    x: 0,
+                    y: 0,
+                    z: 0
                 }
-            } as any as Tile;
+            } as any as OverscaledTileID;
         };
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
-        terrain.sourceCache.getTileByID = getTileByID;
+        terrain.sourceCache.getTileIDByKey = getTileByID;
         const context = painter.context as Context;
         const pixels = new Uint8Array([0, 0, 255, 255]);
         const image = new RGBAImage({width: 1, height: 1}, pixels);

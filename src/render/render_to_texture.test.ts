@@ -95,7 +95,7 @@ describe('render to texture', () => {
     style.map = map;
 
     const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
-    terrain.sourceCache.getRenderableTiles = () => [tile];
+    terrain.sourceCache.getRenderableTileIDs = () => [tile.tileID];
     terrain.sourceCache.getTerrainCoords = () => { return {[tile.tileID.key]: tile.tileID}; };
     map.terrain = terrain;
 

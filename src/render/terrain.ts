@@ -336,15 +336,15 @@ export class Terrain {
         // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
         const y = rgba[1] + ((rgba[2] & 15) << 8);
-        const tileID = this.coordsIndex[255 - rgba[3]];
-        const tile = tileID && this.sourceCache.getTileByID(tileID);
-        if (!tile) return null;
+        const tileIDkey = this.coordsIndex[255 - rgba[3]];
+        const tileID = tileIDkey && this.sourceCache.getTileIDByKey(tileIDkey);
+        if (!tileID) return null;
         const coordsSize = this._coordsTextureSize;
-        const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
+        const worldSize = (1 << tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(
-            (tile.tileID.canonical.x * coordsSize + x) / worldSize,
-            (tile.tileID.canonical.y * coordsSize + y) / worldSize,
-            this.getElevation(tile.tileID, x, y, coordsSize)
+            (tileID.canonical.x * coordsSize + x) / worldSize,
+            (tileID.canonical.y * coordsSize + y) / worldSize,
+            this.getElevation(tileID, x, y, coordsSize)
         );
     }
 
