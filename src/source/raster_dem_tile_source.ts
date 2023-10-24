@@ -69,7 +69,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             } else if (img) {
                 if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
-                const rawImageData = transfer ? img : await readImageNow(img) as RGBAImage;
+                const rawImageData = transfer ? img : await readImageNow(img);
                 const params = {
                     type: this.type,
                     uid: tile.uid,

@@ -8,20 +8,6 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {RequestParameters} from './ajax';
 
-export type MessageType = 'getClusterExpansionZoom' | 'getClusterChildren' | 'getClusterLeaves' | 'loadData' |
-'removeSource' | 'loadWorkerSource' | 'loadDEMTile' | 'removeDEMTile' |
-'removeTile' | 'reloadTile' | 'abortTile' | 'loadTile' |
-'getGlyphs' | 'getImages' | 'setImages' | 'getResource' |
-'syncRTLPluginState' | 'setReferrer' | 'setLayers' | 'updateLayers';
-
-export type AsyncMessage<T extends MessageType> = {
-    type: T;
-    data: RequestResponseMessageMap[T][0];
-    targetMapId?: string | number | null;
-    mustQueue?: boolean;
-    sourceMapId?: string | number | null;
-};
-
 export type ClusterIDAndSource = {
     type: 'geojson';
     clusterId: number;
@@ -81,3 +67,13 @@ export type RequestResponseMessageMap = {
     'removeDEMTile': [TileParameters, void];
     'getResource': [RequestParameters, any];
 }
+
+export type MessageType = keyof RequestResponseMessageMap;
+
+export type AsyncMessage<T extends MessageType> = {
+    type: T;
+    data: RequestResponseMessageMap[T][0];
+    targetMapId?: string | number | null;
+    mustQueue?: boolean;
+    sourceMapId?: string | number | null;
+};

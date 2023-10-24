@@ -29,7 +29,7 @@ export class DEMData {
 
     // RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
     // and dim is calculated as stride - 2.
-    constructor(uid: string | number, data: RGBAImage, encoding: DEMEncoding, redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0) {
+    constructor(uid: string | number, data: RGBAImage | ImageData, encoding: DEMEncoding, redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0) {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
         if (encoding && !['mapbox', 'terrarium', 'custom'].includes(encoding)) {

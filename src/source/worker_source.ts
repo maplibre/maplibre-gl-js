@@ -34,7 +34,7 @@ export type WorkerTileParameters = TileParameters & {
 };
 
 export type WorkerDEMTileParameters = TileParameters & {
-    rawImageData: RGBAImage | ImageBitmap;
+    rawImageData: RGBAImage | ImageBitmap | ImageData;
     encoding: DEMEncoding;
     redFactor: number;
     greenFactor: number;
