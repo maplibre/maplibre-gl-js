@@ -382,8 +382,8 @@ export class Painter {
             this.opaquePassCutoff = 0;
 
             // update coords/depth-framebuffer on camera movement, or tile reloading
-            const newTiles = this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
-            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
+            const hasNewTiles = this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || hasNewTiles) {
                 mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
                 this.terrainFacilitator.renderTime = Date.now();
                 this.terrainFacilitator.dirty = false;
