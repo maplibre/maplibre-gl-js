@@ -249,21 +249,6 @@ export class VectorTileSource extends Evented implements Source {
 
     }
 
-    _finishLoadTileAfterWorkerResponse(tile: Tile, data: WorkerTileResult) {
-        if (data.resourceTiming) {
-            tile.resourceTiming = data.resourceTiming;
-        }
-        if (this.map._refreshExpiredTiles) {
-            tile.setExpiryData(data);
-        }
-        tile.loadVectorData(data, this.map.painter);
-
-        if (tile.reloadCallback) {
-            this.loadTile(tile, tile.reloadCallback);
-            tile.reloadCallback = null;
-        }
-    }
-
     abortTile(tile: Tile) {
         if (tile.abortController) {
             tile.abortController.abort();
