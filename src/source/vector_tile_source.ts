@@ -187,7 +187,7 @@ export class VectorTileSource extends Evented implements Source {
         return extend({}, this._options);
     };
 
-    async loadTile(tile: Tile, callback: Callback<void>): Promise<void> {
+    async loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -210,25 +210,44 @@ export class VectorTileSource extends Evented implements Source {
             tile.reloadCallback = callback;
             return;
         }
+        tile.abortController = new AbortController();
         try {
-            tile.abortController = new AbortController();
-            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
-            delete tile.abortController;
-            if (tile.aborted) {
-                return callback();
-            }
-            this._finishLoadTileAfterWorkerResponse(tile, data);
-            callback();
+            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController)
+            this._afterTileLoadWorkerResponse(tile, callback, null, data);
         } catch (err) {
-            delete tile.abortController;
-            if (tile.aborted) {
-                return callback();
-            }
-            if (err && (err as any).status !== 404) {
-                return callback(err);
-            }
+            this._afterTileLoadWorkerResponse(tile, callback, err, null);
         }
     }
+
+    private _afterTileLoadWorkerResponse(tile: Tile, callback: Callback<void>, err: Error & {status: number}, data: WorkerTileResult) {
+        delete tile.abortController;
+
+        if (tile.aborted) {
+            return callback(null);
+        }
+
+        if (err && err.status !== 404) {
+            return callback(err);
+        }
+        // HM TODO: add a unit test that gets here with error status 404
+        if (data && data.resourceTiming) {
+            tile.resourceTiming = data.resourceTiming;
+        }
+
+        if (this.map._refreshExpiredTiles && data) {
+            tile.setExpiryData(data);
+        }
+        tile.loadVectorData(data, this.map.painter);
+
+        callback(null);
+
+        if (tile.reloadCallback) {
+            const reloadCallback = tile.reloadCallback;
+            tile.reloadCallback = null;
+            this.loadTile(tile, reloadCallback);
+        }
+        
+    };
 
     _finishLoadTileAfterWorkerResponse(tile: Tile, data: WorkerTileResult) {
         if (data.resourceTiming) {
@@ -240,9 +259,8 @@ export class VectorTileSource extends Evented implements Source {
         tile.loadVectorData(data, this.map.painter);
 
         if (tile.reloadCallback) {
-            const reloadCallback = tile.reloadCallback;
+            this.loadTile(tile, tile.reloadCallback);
             tile.reloadCallback = null;
-            this.loadTile(tile, reloadCallback);
         }
     }
 
