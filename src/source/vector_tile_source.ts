@@ -212,7 +212,7 @@ export class VectorTileSource extends Evented implements Source {
         }
         tile.abortController = new AbortController();
         try {
-            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController)
+            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
             this._afterTileLoadWorkerResponse(tile, callback, null, data);
         } catch (err) {
             this._afterTileLoadWorkerResponse(tile, callback, err, null);
@@ -246,8 +246,8 @@ export class VectorTileSource extends Evented implements Source {
             tile.reloadCallback = null;
             this.loadTile(tile, reloadCallback);
         }
-        
-    };
+
+    }
 
     _finishLoadTileAfterWorkerResponse(tile: Tile, data: WorkerTileResult) {
         if (data.resourceTiming) {
