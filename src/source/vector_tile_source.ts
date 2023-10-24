@@ -13,7 +13,7 @@ import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import { WorkerTileResult } from './worker_source';
+import type {WorkerTileResult} from './worker_source';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -203,30 +203,29 @@ export class VectorTileSource extends Evented implements Source {
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
         let messageType: 'loadTile' | 'reloadTile' = 'reloadTile';
-        if (!tile.actor) {
+        if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getActor();
-            messageType = 'loadTile'
-        }
-        if (tile.state === 'loading') {
+            messageType = 'loadTile';
+        } else if (tile.state === 'loading') {
             tile.reloadCallback = callback;
-        } else {
-            try {
-                tile.abortController = new AbortController();
-                const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
-                delete tile.abortController;
-                if (tile.aborted) {
-                    return callback();
-                }
-                this._finishLoadTileAfterWorkerResponse(tile, data);
-                callback();
-            } catch (err) {
-                delete tile.abortController;
-                if (tile.aborted) {
-                    return callback();
-                }
-                if (err && (err as any).status !== 404) {
-                    return callback(err);
-                }
+            return;
+        }
+        try {
+            tile.abortController = new AbortController();
+            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
+            delete tile.abortController;
+            if (tile.aborted) {
+                return callback();
+            }
+            this._finishLoadTileAfterWorkerResponse(tile, data);
+            callback();
+        } catch (err) {
+            delete tile.abortController;
+            if (tile.aborted) {
+                return callback();
+            }
+            if (err && (err as any).status !== 404) {
+                return callback(err);
             }
         }
     }

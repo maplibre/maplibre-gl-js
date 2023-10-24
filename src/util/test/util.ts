@@ -96,10 +96,10 @@ export function beforeMapTest() {
 }
 
 export function getWrapDispatcher() {
-    const wrapDispatcher = (dispatcher) => {
+    const wrapDispatcher = (actor) => {
         return {
             getActor() {
-                return dispatcher;
+                return actor;
             }
         } as any as Dispatcher;
     };
