@@ -150,15 +150,12 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler('loadWorkerSource', async (_mapId: string, params: string) => {
-            return new Promise((resolve, reject) => {
-                try {
-                    this.self.importScripts(params);
-                    resolve();
-                } catch (ex) {
-                    // This is done since some error messages are not serializable
-                    reject(ex.toString());
-                }
-            });
+            try {
+                this.self.importScripts(params);
+            } catch (ex) {
+                // This is done since some error messages are not serializable
+                throw ex.toString();
+            }
         });
 
         this.actor.registerMessageHandler('setImages', (mapId: string, params: string[]) => {
@@ -184,32 +181,28 @@ export default class Worker {
         }
     }
 
-    private _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            try {
-                globalRTLTextPlugin.setState(state);
-                const pluginURL = globalRTLTextPlugin.getPluginURL();
-                if (
-                    globalRTLTextPlugin.isLoaded() &&
+    private async _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
+        try {
+            globalRTLTextPlugin.setState(state);
+            const pluginURL = globalRTLTextPlugin.getPluginURL();
+            if (
+                globalRTLTextPlugin.isLoaded() &&
                     !globalRTLTextPlugin.isParsed() &&
                     pluginURL != null // Not possible when `isLoaded` is true, but keeps flow happy
-                ) {
-                    this.self.importScripts(pluginURL);
-                    const complete = globalRTLTextPlugin.isParsed();
-                    if (complete) {
-                        resolve(complete);
-                        return;
-                    }
-                    reject(new Error(`RTL Text Plugin failed to import scripts from ${pluginURL}`));
-                    return;
+            ) {
+                this.self.importScripts(pluginURL);
+                const complete = globalRTLTextPlugin.isParsed();
+                if (complete) {
+                    return complete;
                 }
-                resolve(false);
-            } catch (ex) {
-                // This is done since some error messages are not serializable
-                reject(ex.toString());
-
+                throw new Error(`RTL Text Plugin failed to import scripts from ${pluginURL}`);
             }
-        });
+            return false;
+        } catch (ex) {
+            // This is done since some error messages are not serializable
+            throw ex.toString();
+
+        }
     }
 
     private _getAvailableImages(mapId: string) {

@@ -19,7 +19,7 @@ export class RasterDEMTileWorkerSource {
         const {uid, encoding, rawImageData, redFactor, greenFactor, blueFactor, baseShift} = params;
         const width = rawImageData.width + 2;
         const height = rawImageData.height + 2;
-        const imagePixels: RGBAImage = isImageBitmap(rawImageData) ?
+        const imagePixels: RGBAImage | ImageData = isImageBitmap(rawImageData) ?
             new RGBAImage({width, height}, await getImageData(rawImageData, -1, -1, width, height)) :
             rawImageData;
         const dem = new DEMData(uid, imagePixels, encoding, redFactor, greenFactor, blueFactor, baseShift);
