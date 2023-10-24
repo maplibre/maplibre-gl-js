@@ -32,7 +32,7 @@ export class ScrollZoomHandler implements Handler {
     _map: Map;
     _cooperativeGesturesScreen: HTMLElement;
     _tr: TransformProvider;
-    _metaKey: keyof MouseEvent = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
+    _metaKey: keyof MouseEvent = navigator.userAgent.indexOf('Mac') !== -1 ? 'metaKey' : 'ctrlKey';
     _el: HTMLElement;
     _enabled: boolean;
     _active: boolean;
