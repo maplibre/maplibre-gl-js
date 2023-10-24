@@ -22,7 +22,8 @@ const config: RollupOptions[] = [{
         format: 'amd',
         sourcemap: 'inline',
         indent: false,
-        chunkFileNames: 'shared.js'
+        chunkFileNames: 'shared.js',
+        minifyInternalExports: production
     },
     onwarn: (message) => {
         console.error(message);
