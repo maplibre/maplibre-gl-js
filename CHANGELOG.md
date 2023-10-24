@@ -11,6 +11,7 @@
 
 - Add terrain property to map style object ([#3234](https://github.com/maplibre/maplibre-gl-js/pull/3234))
 - Fix exception thrown from `isWebGL2` check ([#3238](https://github.com/maplibre/maplibre-gl-js/pull/3238))
+- Fix rollup watch mode ([#3270](https://github.com/maplibre/maplibre-gl-js/pull/3270))
 - _...Add new stuff here..._
 
 ## 3.5.1
