@@ -140,7 +140,7 @@ describe('worker tile', () => {
         } as any as VectorTile;
 
 
-        const sendAsync = jest.fn().mockImplementation((message: {type: string, data: unknown}) => {
+        const sendAsync = jest.fn().mockImplementation((message: {type: string, data: any}) => {
             const response = message.type === 'getImages' ?
                 {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
                 {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}}
@@ -153,9 +153,9 @@ describe('worker tile', () => {
         tile.parse(data, layerIndex, ['hello'], actorMock).then((result) => {
             expect(result).toBeDefined();
             expect(sendAsync).toHaveBeenCalledTimes(3);
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: {'icons': ['hello'], 'type': 'icons'}}));
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: {'icons': ['hello'], 'type': 'patterns'}}));
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: {'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}}}));
+            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
+            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
+            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
             done();
         }).catch(done.fail);
     });
@@ -230,9 +230,9 @@ describe('worker tile', () => {
             expect(result).toBeDefined();
             expect(cancelCount).toBe(6);
             expect(sendAsync).toHaveBeenCalledTimes(9);
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: { 'icons': ['hello'], 'type': 'icons'} }));
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: {'icons': ['hello'], 'type': 'patterns'} }));
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: {'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}}}));
+            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
+            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
+            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
             done();
         }).catch(done.fail);
     });

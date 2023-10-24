@@ -15,7 +15,7 @@ beforeEach(() => {
 });
 
 describe('reloadTile', () => {
-    test('does not rebuild vector data unless data has changed', done => {
+    test('does not rebuild vector data unless data has changed', async () => {
         const layers = [
             {
                 id: 'mylayer',
@@ -45,47 +45,29 @@ describe('reloadTile', () => {
             maxZoom: 10
         };
 
-        function addData(callback) {
-            source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters)
-                .then(() => callback())
-                .catch(() => expect(false).toBeTruthy());
-        }
+        await source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters)
 
-        function reloadTile(callback) {
-            source.reloadTile(tileParams as any as WorkerTileParameters).then((data) => {
-                return callback(data);
-            }).catch(() => expect(false).toBeTruthy());
-        }
-
-        addData(() => {
             // first call should load vector data from geojson
-            let firstData;
-            reloadTile(data => {
-                firstData = data;
-            });
-            expect(loadVectorCallCount).toBe(1);
+        let firstData = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        expect(loadVectorCallCount).toBe(1);
 
-            // second call won't give us new rawTileData
-            reloadTile(data => {
-                expect('rawTileData' in data).toBeFalsy();
-                data.rawTileData = firstData.rawTileData;
-                expect(data).toEqual(firstData);
-            });
+        // second call won't give us new rawTileData
+        let data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        expect('rawTileData' in data).toBeFalsy();
+        data.rawTileData = firstData.rawTileData;
+        expect(data).toEqual(firstData);
 
-            // also shouldn't call loadVectorData again
-            expect(loadVectorCallCount).toBe(1);
+        // also shouldn't call loadVectorData again
+        expect(loadVectorCallCount).toBe(1);
 
-            // replace geojson data
-            addData(() => {
-                // should call loadVectorData again after changing geojson data
-                reloadTile(data => {
-                    expect('rawTileData' in data).toBeTruthy();
-                    expect(data).toEqual(firstData);
-                });
-                expect(loadVectorCallCount).toBe(2);
-                done();
-            });
-        });
+        // replace geojson data
+        await source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters)
+            
+        // should call loadVectorData again after changing geojson data
+        data = await source.reloadTile(tileParams as any as WorkerTileParameters);
+        expect('rawTileData' in data).toBeTruthy();
+        expect(data).toEqual(firstData);
+        expect(loadVectorCallCount).toBe(2);
     });
 
 });
