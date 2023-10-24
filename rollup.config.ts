@@ -1,6 +1,6 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import {plugins} from './build/rollup_plugins';
+import {plugins, watchStagingPlugin} from './build/rollup_plugins';
 import banner from './build/banner';
 import {RollupOptions} from 'rollup';
 
@@ -45,11 +45,19 @@ const config: RollupOptions[] = [{
         intro: fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8'),
         banner
     },
+    watch: {
+        // give the staging chunks a chance to finish before rebuilding the dev build
+        buildDelay: 1000
+    },
     treeshake: false,
     plugins: [
         // Ingest the sourcemaps produced in the first step of the build.
         // This is the only reason we use Rollup for this second pass
-        sourcemaps()
+        sourcemaps(),
+        // When running in development watch mode, tell rollup explicitly to watch
+        // for changes to the staging chunks built by the previous step. Otherwise
+        // only they get built, but not the merged dev build js
+        ...production ? [] : [watchStagingPlugin]
     ],
 }];
 
