@@ -13,6 +13,7 @@ import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {WorkerTileResult} from './worker_source';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -186,7 +187,7 @@ export class VectorTileSource extends Evented implements Source {
         return extend({}, this._options);
     };
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -201,48 +202,51 @@ export class VectorTileSource extends Evented implements Source {
             promoteId: this.promoteId
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
-
+        let messageType: 'loadTile' | 'reloadTile' = 'reloadTile';
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getActor();
-            tile.abortController = new AbortController();
-            tile.actor.sendAsync({type: 'loadTile', data: params}, tile.abortController)
-            // HM TODO: improve this
-                .then(data => done(null, data))
-                .catch(err => done(err, null));
+            messageType = 'loadTile';
         } else if (tile.state === 'loading') {
-            // schedule tile reloading after it has been loaded
             tile.reloadCallback = callback;
-        } else {
-            tile.abortController = new AbortController();
-            tile.actor.sendAsync({type: 'reloadTile', data: params}, tile.abortController)
-            // HM TODO: improve this
-                .then(data => done(null, data))
-                .catch(err => done(err, null));
+            return;
+        }
+        tile.abortController = new AbortController();
+        try {
+            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
+            this._afterTileLoadWorkerResponse(tile, callback, null, data);
+        } catch (err) {
+            this._afterTileLoadWorkerResponse(tile, callback, err, null);
+        }
+    }
+
+    private _afterTileLoadWorkerResponse(tile: Tile, callback: Callback<void>, err: Error & {status: number}, data: WorkerTileResult) {
+        delete tile.abortController;
+
+        if (tile.aborted) {
+            return callback(null);
         }
 
-        const done = (err, data) => {
-            delete tile.abortController;
+        if (err && err.status !== 404) {
+            return callback(err);
+        }
+        // HM TODO: add a unit test that gets here with error status 404
+        if (data && data.resourceTiming) {
+            tile.resourceTiming = data.resourceTiming;
+        }
 
-            if (tile.aborted)
-                return callback(null);
+        if (this.map._refreshExpiredTiles && data) {
+            tile.setExpiryData(data);
+        }
+        tile.loadVectorData(data, this.map.painter);
 
-            if (err && err.status !== 404) {
-                return callback(err);
-            }
+        callback(null);
 
-            if (data && data.resourceTiming)
-                tile.resourceTiming = data.resourceTiming;
+        if (tile.reloadCallback) {
+            const reloadCallback = tile.reloadCallback;
+            tile.reloadCallback = null;
+            this.loadTile(tile, reloadCallback);
+        }
 
-            if (this.map._refreshExpiredTiles && data) tile.setExpiryData(data);
-            tile.loadVectorData(data, this.map.painter);
-
-            callback(null);
-
-            if (tile.reloadCallback) {
-                this.loadTile(tile, tile.reloadCallback);
-                tile.reloadCallback = null;
-            }
-        };
     }
 
     abortTile(tile: Tile) {

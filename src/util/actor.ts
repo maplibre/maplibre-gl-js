@@ -33,7 +33,6 @@ export type Message = {
  */
 export interface IActor {
     sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
-    send<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0], callback?: Function | null, targetMapId?: string | number | null, mustQueue?: boolean): Cancelable;
 }
 
 /**
@@ -88,7 +87,7 @@ export class Actor implements IActor {
             if (abortController) {
                 abortController.signal.addEventListener('abort', () => {
                     cancelable.cancel();
-                    reject(new DOMException('Request is aborted', 'AbortError'));
+                    // In case of abort the current behavior is to keep the promise pending.
                 }, {once: true});
             }
         });
@@ -126,7 +125,6 @@ export class Actor implements IActor {
             sourceMapId: this.mapId,
             data: serialize(data, buffers)
         };
-
         this.target.postMessage(message, {transfer: buffers});
         return {
             cancel: () => {
@@ -156,8 +154,8 @@ export class Actor implements IActor {
         if (data.targetMapId && this.mapId !== data.targetMapId) {
             return;
         }
-
         if (data.type === '<cancel>') {
+
             // Remove the original request from the queue. This is only possible if it
             // hasn't been kicked off yet. The id will remain in the queue, but because
             // there is no associated task, it will be dropped once it's time to execute it.
@@ -245,8 +243,7 @@ export class Actor implements IActor {
                     .then((data) => done(null, data))
                     .catch((err) => done(err));
             } else {
-                // No function was found.
-                done(new Error(`Could not find function ${task.type}`));
+                done(new Error(`Could not find a registered handler for ${task.type}`));
             }
 
             // HM TODO: I'm not sure this is possible...

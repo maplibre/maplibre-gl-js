@@ -5,13 +5,13 @@ import Protobuf from 'pbf';
 import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, type FakeServer} from 'nise';
-import {Actor} from '../util/actor';
+import {IActor} from '../util/actor';
 import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance} from '../util/test/util';
 
 describe('vector tile worker source', () => {
-    const actor = {send: () => {}} as any as Actor;
+    const actor = {sendAsync: () => Promise.resolve({})} as IActor;
     let server: FakeServer;
 
     beforeEach(() => {
@@ -120,21 +120,21 @@ describe('vector tile worker source', () => {
             }
         }]);
 
-        const send = jest.fn().mockImplementation((type: string, data: unknown, callback: Function) => {
-            const res = setTimeout(() => callback(null,
-                type === 'getImages' ?
-                    {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
-                    {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}}
-            ));
-
-            return {
-                cancel: () => clearTimeout(res)
-            };
-        });
-
         const actor = {
-            send
-        } as unknown as Actor;
+            sendAsync: (message: {type: string; data: unknown}, abortController: AbortController) => {
+                return new Promise((resolve, _reject) => {
+                    const res = setTimeout(() => {
+                        const response = message.type === 'getImages' ?
+                            {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
+                            {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
+                        resolve(response);
+                    });
+                    abortController.signal.addEventListener('abort', () => {
+                        clearTimeout(res);
+                    });
+                });
+            }
+        };
         const source = new VectorTileWorkerSource(actor, layerIndex, ['hello'], loadVectorData);
         source.loadTile({
             source: 'source',

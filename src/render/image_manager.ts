@@ -11,7 +11,7 @@ import {warnOnce} from '../util/util';
 import type {StyleImage} from '../style/style_image';
 import type {Context} from '../gl/context';
 import type {PotpackBox} from 'potpack';
-import type {Callback} from '../types/callback';
+import type {GetImagesResponse} from '../util/actor_messages';
 
 type Pattern = {
     bin: PotpackBox;
@@ -42,7 +42,7 @@ export class ImageManager extends Evented {
     loaded: boolean;
     requestors: Array<{
         ids: Array<string>;
-        callback: Callback<{[_: string]: StyleImage}>;
+        callback: (value: GetImagesResponse) => void;
     }>;
 
     patterns: {[_: string]: Pattern};
@@ -76,7 +76,7 @@ export class ImageManager extends Evented {
 
         if (loaded) {
             for (const {ids, callback} of this.requestors) {
-                this._notify(ids, callback);
+                callback(this._getImagesForIds(ids));
             }
             this.requestors = [];
         }
@@ -176,28 +176,30 @@ export class ImageManager extends Evented {
         return Object.keys(this.images);
     }
 
-    getImages(ids: Array<string>, callback: Callback<{[_: string]: StyleImage}>) {
-        // If the sprite has been loaded, or if all the icon dependencies are already present
-        // (i.e. if they've been added via runtime styling), then notify the requestor immediately.
-        // Otherwise, delay notification until the sprite is loaded. At that point, if any of the
-        // dependencies are still unavailable, we'll just assume they are permanently missing.
-        let hasAllDependencies = true;
-        if (!this.isLoaded()) {
-            for (const id of ids) {
-                if (!this.images[id]) {
-                    hasAllDependencies = false;
+    getImages(ids: Array<string>): Promise<GetImagesResponse> {
+        return new Promise<GetImagesResponse>((resolve, _reject) => {
+            // If the sprite has been loaded, or if all the icon dependencies are already present
+            // (i.e. if they've been added via runtime styling), then notify the requestor immediately.
+            // Otherwise, delay notification until the sprite is loaded. At that point, if any of the
+            // dependencies are still unavailable, we'll just assume they are permanently missing.
+            let hasAllDependencies = true;
+            if (!this.isLoaded()) {
+                for (const id of ids) {
+                    if (!this.images[id]) {
+                        hasAllDependencies = false;
+                    }
                 }
             }
-        }
-        if (this.isLoaded() || hasAllDependencies) {
-            this._notify(ids, callback);
-        } else {
-            this.requestors.push({ids, callback});
-        }
+            if (this.isLoaded() || hasAllDependencies) {
+                resolve(this._getImagesForIds(ids));
+            } else {
+                this.requestors.push({ids, callback: resolve});
+            }
+        });
     }
 
-    _notify(ids: Array<string>, callback: Callback<{[_: string]: StyleImage}>) {
-        const response = {};
+    _getImagesForIds(ids: Array<string>): GetImagesResponse {
+        const response: GetImagesResponse = {};
 
         for (const id of ids) {
             let image = this.getImage(id);
@@ -224,8 +226,7 @@ export class ImageManager extends Evented {
                 warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
             }
         }
-
-        callback(null, response);
+        return response;
     }
 
     // Pattern stuff

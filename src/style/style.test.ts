@@ -315,7 +315,7 @@ describe('Style#loadJSON', () => {
             style.once('data', (e) => {
                 expect(e.target).toBe(style);
                 expect(e.dataType).toBe('style');
-                style.imageManager.getImages(['image1'], (error, response) => {
+                style.imageManager.getImages(['image1']).then((response) => {
                     const image = response['image1'];
                     expect(image.data).toBeInstanceOf(RGBAImage);
                     expect(image.data.width).toBe(1);
