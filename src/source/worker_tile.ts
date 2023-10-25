@@ -59,7 +59,7 @@ export class WorkerTile {
         this.returnDependencies = !!params.returnDependencies;
         this.promoteId = params.promoteId;
         this.inFlightDependencies = [];
-        this.dependencySentinel = -1;
+        //this.dependencySentinel = -1;
     }
 
     parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor): Promise<WorkerTileResult> {
@@ -167,8 +167,8 @@ export class WorkerTile {
             Promise.all(promises).then(([glyphMap, iconMap, patternMap]: [GetGlyphsResponse, GetImagesResponse, GetImagesResponse]) => {
                 // HM TODO: check if this can be completly removed - it might be related to solving a race condition though...
                 //if (dependencySentinel !== this.dependencySentinel) {
-                    // This feels like a hack as there's no way to convert this code to an async function...
-                    //return;
+                //    // This feels like a hack as there's no way to convert this code to an async function...
+                //    return;
                 //}
                 const glyphAtlas = new GlyphAtlas(glyphMap);
                 const imageAtlas = new ImageAtlas(iconMap, patternMap);

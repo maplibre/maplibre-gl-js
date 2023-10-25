@@ -54,12 +54,12 @@ export function setGlobalWorker(MockWorker: { new(...args: any): any}) {
         const workerListeners = [];
         const parentBus = new MessageBus(workerListeners, parentListeners);
         const workerBus = new MessageBus(parentListeners, workerListeners);
-    
+
         parentBus.target = workerBus;
         workerBus.target = parentBus;
-    
+
         new MockWorker(workerBus);
-    
+
         return parentBus;
     };
 }

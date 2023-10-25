@@ -18,7 +18,7 @@ describe('Actor', () => {
                 });
             }
         });
-    })
+    });
     afterAll(() => {
         global.Worker = originalWorker;
     });
@@ -45,10 +45,10 @@ describe('Actor', () => {
         const m1 = new Actor(worker, '1');
 
         let received = false;
-        let abortController = new AbortController();
+        const abortController = new AbortController();
         const p1 = m1.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
-            .then(() => received = true)
-            .catch(() => received = true);
+            .then(() => { received = true; })
+            .catch(() => { received = true; });
 
         abortController.abort();
 
