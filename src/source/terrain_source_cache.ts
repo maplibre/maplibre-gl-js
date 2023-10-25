@@ -16,7 +16,7 @@ import {Terrain} from '../render/terrain';
  *   - finds all necessary renderToTexture tiles for a OverscaledTileID area
  *   - finds the corresponding raster-dem tile for OverscaledTileID
  */
-export class TerrainSourceCache extends Evented { // TODO: tohle chci vykrást (render-to-texture)
+export class TerrainSourceCache extends Evented {
     /**
      * source-cache for the raster-dem source.
      */
@@ -87,10 +87,9 @@ export class TerrainSourceCache extends Evented { // TODO: tohle chci vykrást (
             terrain
         })) {
             keys[tileID.key] = true;
-            if(!this._renderableTiles[tileID.key])
-            {
+            if (!this._renderableTiles[tileID.key]) {
                 this._renderableTiles[tileID.key] = tileID;
-                tileID.posMatrix = new Float64Array(16) as any; // TODO: why even store this in the tileID anyway?
+                tileID.posMatrix = new Float64Array(16) as any;
                 mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
                 this._lastTilesetChange = Date.now();
             }
@@ -106,7 +105,7 @@ export class TerrainSourceCache extends Evented { // TODO: tohle chci vykrást (
      * @returns the renderable tiles
      */
     getRenderableTileIDs(): Array<OverscaledTileID> {
-        return Object.values(this._renderableTiles)
+        return Object.values(this._renderableTiles);
     }
 
     /**

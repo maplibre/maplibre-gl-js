@@ -27,11 +27,11 @@ class RttRecord {
      */
     rtt: Array<{id: number; stamp: number}>;
     /**
-     * Map of source ID -> a string representation of all tileIDs that contribute to this tile
+     * Map of source ID to a string representation of all tileIDs that contribute to this tile
      * Used to check whether the cached texture is still valid.
      */
     rttCoords: {[_:string]: string};
-};
+}
 
 /**
  * @internal
@@ -77,7 +77,7 @@ export class RenderToTexture {
     /**
      * Map of tileID key to RTT data
      */
-    _tileIDtoRtt: {[_: string]: RttRecord} // TODO: make sure to garbage-collect this
+    _tileIDtoRtt: {[_: string]: RttRecord};
 
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
@@ -132,10 +132,9 @@ export class RenderToTexture {
         for (const tileID of this._renderableTiles) {
             usedTileKeys[tileID.key] = true;
             const rttData = this._tileIDtoRtt[tileID.key];
-            if(!rttData)
-            {
+            if (!rttData) {
                 this._tileIDtoRtt[tileID.key] = {
-                    tileID: tileID,
+                    tileID,
                     rtt: [],
                     rttCoords: {}
                 };
@@ -151,7 +150,7 @@ export class RenderToTexture {
             }
         }
 
-        for(const key in this._tileIDtoRtt) {
+        for (const key in this._tileIDtoRtt) {
             if (!usedTileKeys[key]) {
                 delete this._tileIDtoRtt[key];
             }
@@ -194,7 +193,7 @@ export class RenderToTexture {
             for (const tileID of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
-                    drawTerrain(this.painter, this.terrain, this._rttTiles); // TODO: tohle by měla být nějaká customisable funkce
+                    drawTerrain(this.painter, this.terrain, this._rttTiles); // JP: TODO: tohle by měla být nějaká customisable funkce
                     this._rttTiles = [];
                     this.pool.freeAllObjects();
                 }
