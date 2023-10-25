@@ -243,8 +243,7 @@ export class Actor implements IActor {
                     .then((data) => done(null, data))
                     .catch((err) => done(err));
             } else {
-                // No function was found.
-                done(new Error(`Could not find function ${task.type}`));
+                done(new Error(`Could not find a registered handler for ${task.type}`));
             }
 
             // HM TODO: I'm not sure this is possible...

@@ -58,7 +58,8 @@ export function setGlobalWorker(MockWorker: { new(...args: any): any}) {
         parentBus.target = workerBus;
         workerBus.target = parentBus;
 
-        new MockWorker(workerBus);
+        const worker = new MockWorker(workerBus);
+        parentBus.worker = worker;
 
         return parentBus;
     };
