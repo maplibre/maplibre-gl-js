@@ -1918,6 +1918,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/maplibregl.WorkerSource/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface: WorkerSource
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -5650,7 +5670,7 @@
         
   
   <span class="md-ellipsis">
-    Variable label placement
+    Variable label placement with offset
   </span>
   
 
@@ -5872,23 +5892,23 @@ owned by the styles</p>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>target</code></td>
-<td style="text-align: left;"><code>any</code></td>
+<td style="text-align: left;"><code>ActorTarget</code></td>
 <td style="text-align: left;">The target</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>parent</code></td>
-<td style="text-align: left;"><code>any</code></td>
+<td style="text-align: left;"><code>WorkerSourceProvider</code> | <code>GlyphsProvider</code></td>
 <td style="text-align: left;">The parent</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>mapId?</code></td>
-<td style="text-align: left;"><code>string</code></td>
+<td style="text-align: left;"><code>string</code> | <code>number</code></td>
 <td style="text-align: left;">A unique identifier for the Map instance using this Actor.</td>
 </tr>
 </tbody>
 </table>
 <h4 id="defined-in">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f3f95f22e/src/util/actor.ts#L37">src/util/actor.ts:37</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/util/actor.ts#L79">src/util/actor.ts:79</a></p>
 <h2 id="methods">Methods</h2>
 <h3 id="send">send</h3>
 <p>▸ <strong>send</strong>(<code>type</code>, <code>data</code>, <code>callback?</code>, <code>targetMapId?</code>, <code>mustQueue?</code>): <a href="../../types/maplibregl.Cancelable/"><code>Cancelable</code></a></p>
@@ -5907,7 +5927,7 @@ a main-thread map instance.</p>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>type</code></td>
-<td style="text-align: left;"><code>string</code></td>
+<td style="text-align: left;"><code>MessageType</code></td>
 <td style="text-align: left;"><code>undefined</code></td>
 <td style="text-align: left;">The name of the target method to invoke or '[source-type].[source-name].name' for a method on a WorkerSource.</td>
 </tr>
@@ -5940,7 +5960,7 @@ a main-thread map instance.</p>
 <h4 id="returns">Returns</h4>
 <p><a href="../../types/maplibregl.Cancelable/"><code>Cancelable</code></a></p>
 <h4 id="defined-in_1">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f3f95f22e/src/util/actor.ts#L57">src/util/actor.ts:57</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/util/actor.ts#L99">src/util/actor.ts:99</a></p>
 
 
 

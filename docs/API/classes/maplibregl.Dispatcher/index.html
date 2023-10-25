@@ -1905,6 +1905,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interfaces/maplibregl.WorkerSource/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interface: WorkerSource
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -5637,7 +5657,7 @@
         
   
   <span class="md-ellipsis">
-    Variable label placement
+    Variable label placement with offset
   </span>
   
 
@@ -5828,7 +5848,7 @@
 <h1 id="class-dispatcher">Class: Dispatcher</h1>
 <p><a href="../../modules/maplibregl/">maplibregl</a>.Dispatcher</p>
 <p>Responsible for sending messages from a <a href="../../interfaces/maplibregl.Source/">Source</a> to an associated
-WorkerSource.</p>
+<a href="../../interfaces/maplibregl.WorkerSource/">WorkerSource</a>.</p>
 <h2 id="methods">Methods</h2>
 <h3 id="broadcast">broadcast</h3>
 <p>▸ <strong>broadcast</strong>(<code>type</code>, <code>data</code>, <code>cb?</code>): <code>void</code></p>
@@ -5844,7 +5864,7 @@ WorkerSource.</p>
 <tbody>
 <tr>
 <td style="text-align: left;"><code>type</code></td>
-<td style="text-align: left;"><code>string</code></td>
+<td style="text-align: left;"><code>MessageType</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>data</code></td>
@@ -5859,7 +5879,7 @@ WorkerSource.</p>
 <h4 id="returns">Returns</h4>
 <p><code>void</code></p>
 <h4 id="defined-in">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f3f95f22e/src/util/dispatcher.ts#L39">src/util/dispatcher.ts:39</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/util/dispatcher.ts#L34">src/util/dispatcher.ts:34</a></p>
 <hr />
 <h3 id="getactor">getActor</h3>
 <p>▸ <strong>getActor</strong>(): <a href="../maplibregl.Actor/"><code>Actor</code></a></p>
@@ -5868,7 +5888,7 @@ WorkerSource.</p>
 <p><a href="../maplibregl.Actor/"><code>Actor</code></a></p>
 <p>An actor object backed by a web worker for processing messages.</p>
 <h4 id="defined-in_1">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/f3f95f22e/src/util/dispatcher.ts#L50">src/util/dispatcher.ts:50</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/util/dispatcher.ts#L45">src/util/dispatcher.ts:45</a></p>
 
 
 
