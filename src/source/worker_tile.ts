@@ -44,7 +44,7 @@ export class WorkerTile {
     abort: (() => void);
     vectorTile: VectorTile;
     inFlightDependencies: AbortController[];
-    dependencySentinel: number;
+    //dependencySentinel: number;
 
     constructor(params: WorkerTileParameters) {
         this.tileID = new OverscaledTileID(params.tileID.overscaledZ, params.tileID.wrap, params.tileID.canonical.z, params.tileID.canonical.x, params.tileID.canonical.y);
@@ -136,7 +136,7 @@ export class WorkerTile {
             this.inFlightDependencies.forEach((request) => request?.abort());
             this.inFlightDependencies = [];
             // cancelling seems to be not sufficient, we seems to still manage to get a callback hit, so use a sentinel to drop stale results
-            const dependencySentinel = ++this.dependencySentinel;
+            //const dependencySentinel = ++this.dependencySentinel;
             const promises = [];
             if (Object.keys(stacks).length) {
                 const abortController = new AbortController();
@@ -165,11 +165,11 @@ export class WorkerTile {
             }
 
             Promise.all(promises).then(([glyphMap, iconMap, patternMap]: [GetGlyphsResponse, GetImagesResponse, GetImagesResponse]) => {
-                if (dependencySentinel !== this.dependencySentinel) {
+                // HM TODO: check if this can be completly removed - it might be related to solving a race condition though...
+                //if (dependencySentinel !== this.dependencySentinel) {
                     // This feels like a hack as there's no way to convert this code to an async function...
-                    // HM TODO: optinal check if this there's a way to avoid getting here?
-                    return;
-                }
+                    //return;
+                //}
                 const glyphAtlas = new GlyphAtlas(glyphMap);
                 const imageAtlas = new ImageAtlas(iconMap, patternMap);
 
