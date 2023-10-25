@@ -261,8 +261,8 @@ export class RenderToTexture {
      */
     getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
         const coords = {};
-        for (const key in this._renderableTiles) {
-            const _tileID = this._renderableTiles[key];
+        for (const _tileID of this._renderableTiles) {
+            const key = _tileID.key;
             if (_tileID.canonical.equals(tileID.canonical)) {
                 const coord = tileID.clone();
                 coord.posMatrix = new Float64Array(16) as any;
