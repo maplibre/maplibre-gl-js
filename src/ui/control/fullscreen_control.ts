@@ -3,8 +3,9 @@ import {DOM} from '../../util/dom';
 import {warnOnce} from '../../util/util';
 
 import {Event, Evented} from '../../util/evented';
-import type {Map, GestureOptions} from '../map';
+import type {Map} from '../map';
 import type {IControl} from './control';
+import {GestureOptions} from './cooperative_gesture_contol';
 
 /**
  * The {@link FullscreenControl} options

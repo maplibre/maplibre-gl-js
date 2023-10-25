@@ -65,6 +65,7 @@ import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
+import {CooperativeGestureControl, GestureOptions} from './control/cooperative_gesture_contol';
 
 const version = packageJSON.version;
 
@@ -328,23 +329,6 @@ export type MapOptions = {
     maxCanvasSize?: [number, number];
 };
 
-/**
- * An options object for the gesture settings
- * @example
- * ```ts
- * let options = {
- *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
- *   macHelpText: "Use ⌘ + scroll to zoom the map",
- *   mobileHelpText: "Use two fingers to move the map",
- * }
- * ```
- */
-export type GestureOptions = {
-    windowsHelpText?: string;
-    macHelpText?: string;
-    mobileHelpText?: string;
-};
-
 export type AddImageOptions = {
 
 }
@@ -456,6 +440,7 @@ export class Map extends Camera {
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
     _cooperativeGestures: boolean | GestureOptions;
+    _cooperativeGesturesControl: CooperativeGestureControl;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -652,7 +637,9 @@ export class Map extends Camera {
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
 
-        if (this._cooperativeGestures) this.scrollZoom.setupCooperativeGestures();
+        if (options.cooperativeGestures) {
+            this.addControl(new CooperativeGestureControl(options.cooperativeGestures));
+        }
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
         this._hash = options.hash && (new Hash(hashName)).addTo(this);
@@ -1170,9 +1157,14 @@ export class Map extends Camera {
     setCooperativeGestures(gestureOptions?: GestureOptions | boolean | null): Map {
         this._cooperativeGestures = gestureOptions;
         if (this._cooperativeGestures) {
-            this.scrollZoom.setupCooperativeGestures();
+            if (this._cooperativeGesturesControl) {
+                //remove existing control
+                this.removeControl(this._cooperativeGesturesControl);
+            }
+            this._cooperativeGesturesControl = new CooperativeGestureControl(this._cooperativeGestures);
+            this.addControl(this._cooperativeGesturesControl);
         } else {
-            this.scrollZoom.destroyCooperativeGestures();
+            this.removeControl(this._cooperativeGesturesControl);
         }
 
         return this;
@@ -3235,7 +3227,7 @@ export class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
-        if (this._cooperativeGestures) this.scrollZoom.destroyCooperativeGestures();
+        if (this._cooperativeGestures) this.removeControl(this._cooperativeGesturesControl);
         this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();
