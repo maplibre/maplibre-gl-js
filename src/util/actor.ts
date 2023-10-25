@@ -31,26 +31,34 @@ export interface GlyphsProvider {
     );
 }
 
-export type MessageType = '<response>' | '<cancel>' |
-'geojson.getClusterExpansionZoom' | 'geojson.getClusterChildren' | 'geojson.getClusterLeaves' | 'geojson.loadData' |
+export type MessageType = 'geojson.getClusterExpansionZoom' | 'geojson.getClusterChildren' |
+'geojson.getClusterLeaves' | 'geojson.loadData' |
 'removeSource' | 'loadWorkerSource' | 'loadDEMTile' | 'removeDEMTile' |
 'removeTile' | 'reloadTile' | 'abortTile' | 'loadTile' | 'getTile' |
 'getGlyphs' | 'getImages' | 'setImages' |
 'syncRTLPluginState' | 'setReferrer' | 'setLayers' | 'updateLayers';
 
-export type MessageData = {
+type BasicMessage = {
     id: string;
-    type: MessageType;
-    data?: Serialized;
-    targetMapId?: string | number | null;
-    mustQueue?: boolean;
-    error?: Serialized | null;
-    hasCallback?: boolean;
+    targetMapId?: string | null;
     sourceMapId: string | number | null;
 }
 
-export type Message = {
-    data: MessageData;
+type RequestMessage = BasicMessage & {
+    type: MessageType;
+    hasCallback: boolean;
+    mustQueue: boolean;
+    params: Serialized;
+}
+
+type ResponseMessage = BasicMessage & {
+    type: '<response>';
+    error?: Serialized | null;
+    callbackArgs: Array<Serialized>;
+}
+
+type CancelMessage = BasicMessage & {
+    type: '<cancel>';
 }
 
 /**
@@ -59,15 +67,16 @@ export type Message = {
  * that spin them off - in this case, tasks like parsing parts of styles,
  * owned by the styles
  */
+
 export class Actor {
     target: ActorTarget;
     parent: WorkerSourceProvider | GlyphsProvider;
     mapId: string | number | null;
-    callbacks: { [x: number]: Function};
+    callbacks: Record<string, Function> = {};
     name: string;
-    tasks: { [x: number]: MessageData };
-    taskQueue: Array<string>;
-    cancelCallbacks: { [x: number]: () => void };
+    tasks: Record<string, RequestMessage | ResponseMessage> = {};
+    taskQueue: Array<string> = [];
+    cancelCallbacks: Record<string, Cancelable['cancel']> = {};
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
 
@@ -80,10 +89,6 @@ export class Actor {
         this.target = target;
         this.parent = parent;
         this.mapId = mapId;
-        this.callbacks = {};
-        this.tasks = {};
-        this.taskQueue = [];
-        this.cancelCallbacks = {};
         this.invoker = new ThrottledInvoker(this.process);
         this.target.addEventListener('message', this.receive, false);
         this.globalScope = isWorker() ? target : window;
@@ -98,7 +103,7 @@ export class Actor {
      */
     send(
         type: MessageType,
-        data: unknown,
+        params: unknown,
         callback?: Function | null,
         targetMapId?: string | null,
         mustQueue: boolean = false
@@ -112,35 +117,34 @@ export class Actor {
             this.callbacks[id] = callback;
         }
         const buffers: Array<Transferable> = [];
-        const message: MessageData = {
+        this.target.postMessage({
             id,
             type,
             hasCallback: !!callback,
             targetMapId,
             mustQueue,
             sourceMapId: this.mapId,
-            data: serialize(data, buffers)
-        };
+            params: serialize(params, buffers)
+        } satisfies RequestMessage, {transfer: buffers});
 
-        this.target.postMessage(message, {transfer: buffers});
         return {
             cancel: () => {
                 if (callback) {
                     // Set the callback to null so that it never fires after the request is aborted.
                     delete this.callbacks[id];
                 }
-                const cancelMessage: MessageData = {
+
+                this.target.postMessage({
                     id,
                     type: '<cancel>',
                     targetMapId,
                     sourceMapId: this.mapId
-                };
-                this.target.postMessage(cancelMessage);
+                } satisfies CancelMessage);
             }
         };
     }
 
-    receive = (message: Message) => {
+    receive = (message: { data: RequestMessage | ResponseMessage | CancelMessage }) => {
         const data = message.data;
         const id = data.id;
 
@@ -163,7 +167,7 @@ export class Actor {
                 cancel();
             }
         } else {
-            if (isWorker() || data.mustQueue) {
+            if (isWorker() || data.type !== '<response>' && data.mustQueue) {
                 // In workers, store the tasks that we need to process before actually processing them. This
                 // is necessary because we want to keep receiving messages, and in particular,
                 // <cancel> messages. Some tasks may take a while in the worker thread, so before
@@ -202,7 +206,7 @@ export class Actor {
         this.processTask(id, task);
     };
 
-    processTask(id: string, task: MessageData) {
+    processTask(id: string, task: RequestMessage | ResponseMessage) {
         if (task.type === '<response>') {
             // The done() function in the counterpart has been called, and we are now
             // firing the callback in the originating actor, if there is one.
@@ -213,29 +217,28 @@ export class Actor {
                 if (task.error) {
                     callback(deserialize(task.error));
                 } else {
-                    callback(null, ...(deserialize(task.data) as any[]));
+                    callback(null, ...(task.callbackArgs.map(deserialize)));
                 }
             }
         } else {
             let completed = false;
             const buffers: Array<Transferable> = [];
-            const done = task.hasCallback ? (err: Error, ...data: any[]) => {
+            const done = task.hasCallback ? (err: Error, ...callbackArgs: unknown[]) => {
                 completed = true;
                 delete this.cancelCallbacks[id];
-                const responseMessage: MessageData = {
+                this.target.postMessage({
                     id,
                     type: '<response>',
                     sourceMapId: this.mapId,
                     error: err ? serialize(err) : null,
-                    data: serialize(data, buffers)
-                };
-                this.target.postMessage(responseMessage, {transfer: buffers});
+                    callbackArgs: callbackArgs.map(data => serialize(data, buffers))
+                } satisfies ResponseMessage, {transfer: buffers});
             } : (_) => {
                 completed = true;
             };
 
-            let callback: Cancelable = null;
-            const params = deserialize(task.data);
+            let callback: Cancelable | null = null;
+            const params = deserialize(task.params);
             if (this.parent[task.type]) {
                 // task.type == 'loadTile', 'removeTile', etc.
                 callback = this.parent[task.type](task.sourceMapId, params, done);
