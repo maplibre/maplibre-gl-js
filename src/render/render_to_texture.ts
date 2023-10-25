@@ -34,6 +34,19 @@ class RttRecord {
     rttCoords: {[_:string]: string};
 }
 
+function fract(x: number): number {
+    return x - Math.floor(x);
+}
+
+function randomColor(x: number): vec4 {
+    return [
+        fract(Math.sin(x * 1234) * 5678) * 0.5 + 0.5,
+        fract(Math.sin(x * 8522) * 4527) * 0.5 + 0.5,
+        fract(Math.sin(x * 7154) * 3415) * 0.5 + 0.5,
+        1.0
+    ];
+}
+
 /**
  * @internal
  * A helper class to help define what should be rendered to texture and how
@@ -41,6 +54,11 @@ class RttRecord {
 export class RenderToTexture {
     painter: Painter;
     pool: RenderPool;
+    /**
+     * When true, each RTT tile is drawn with a random color tone to visualize tile density.
+     * Eg. you would usually expect to see 4 by 2 tiles of 1024x1024 pixels on a 4K screen.
+     */
+    debugTileColor: boolean = false;
     /**
      * coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
      * e.g. render 4 raster-tiles with size 256px to the 512px render-to-texture tile
@@ -98,6 +116,18 @@ export class RenderToTexture {
     getTexture(tileIDkey: string): Texture {
         const rttData = this._tileIDtoRtt[tileIDkey];
         return this.pool.getObjectForId(rttData.rtt[this._stacks.length - 1].id).texture;
+    }
+
+    /**
+     * For debug purposes only - returns a unique number to any rendered texture.
+     */
+    getTileColorForDebug(tileIDkey: string): vec4 {
+        if (!this.debugTileColor) {
+            return [1, 1, 1, 1];
+        }
+        const rttData = this._tileIDtoRtt[tileIDkey];
+        const stamp = this.pool.getObjectForId(rttData.rtt[this._stacks.length - 1].id).stamp;
+        return randomColor(stamp);
     }
 
     prepareForRender(style: Style, zoom: number, renderableTiles: Array<OverscaledTileID>) {

@@ -7,6 +7,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
 import {Terrain} from './terrain';
 import {OverscaledTileID} from '../source/tile_id';
+import {vec4} from 'gl-matrix';
 
 /**
  * Redraw the Depth Framebuffer
@@ -84,7 +85,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tileIDs: Array<Overscal
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
         const posMatrix = painter.transform.calculatePosMatrix(tileID.toUnwrapped());
-        const uniformValues = terrainUniformValues(posMatrix, terrain.getMeshFrameDelta(painter.transform.zoom));
+        const uniformValues = terrainUniformValues(posMatrix, terrain.getMeshFrameDelta(painter.transform.zoom), painter.renderToTexture.getTileColorForDebug(tileID.key));
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 

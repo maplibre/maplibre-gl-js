@@ -6,7 +6,7 @@ import {
 } from '../uniform_binding';
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../../render/uniform_binding';
-import {mat4} from 'gl-matrix';
+import {mat4, vec4} from 'gl-matrix';
 
 export type TerrainPreludeUniformsType = {
     'u_depth': Uniform1i;
@@ -21,6 +21,7 @@ export type TerrainUniformsType = {
     'u_matrix': UniformMatrix4f;
     'u_texture': Uniform1i;
     'u_ele_delta': Uniform1f;
+    'u_color_debug': Uniform4f;
 };
 
 export type TerrainDepthUniformsType = {
@@ -47,7 +48,8 @@ const terrainPreludeUniforms = (context: Context, locations: UniformLocations): 
 const terrainUniforms = (context: Context, locations: UniformLocations): TerrainUniformsType => ({
     'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_texture': new Uniform1i(context, locations.u_texture),
-    'u_ele_delta': new Uniform1f(context, locations.u_ele_delta)
+    'u_ele_delta': new Uniform1f(context, locations.u_ele_delta),
+    'u_color_debug': new Uniform4f(context, locations.u_color_debug),
 });
 
 const terrainDepthUniforms = (context: Context, locations: UniformLocations): TerrainDepthUniformsType => ({
@@ -64,11 +66,13 @@ const terrainCoordsUniforms = (context: Context, locations: UniformLocations): T
 
 const terrainUniformValues = (
     matrix: mat4,
-    eleDelta: number
+    eleDelta: number,
+    colorDebug: vec4,
 ): UniformValues<TerrainUniformsType> => ({
     'u_matrix': matrix,
     'u_texture': 0,
-    'u_ele_delta': eleDelta
+    'u_ele_delta': eleDelta,
+    'u_color_debug': colorDebug,
 });
 
 const terrainDepthUniformValues = (

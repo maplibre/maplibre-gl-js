@@ -462,6 +462,7 @@ export class Map extends Camera {
     _cooperativeGesturesScreen: HTMLElement;
     _metaKey: keyof MouseEvent;
     _showTileBoundaries: boolean;
+    _showTextureTiles: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
     _showOverdrawInspector: boolean;
@@ -3191,6 +3192,10 @@ export class Map extends Camera {
             };
         }
 
+        if (this.painter.renderToTexture) {
+            this.painter.renderToTexture.debugTileColor = this._showTextureTiles;
+        }
+
         // Actually draw
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
@@ -3351,6 +3356,24 @@ export class Map extends Camera {
     set showTileBoundaries(value: boolean) {
         if (this._showTileBoundaries === value) return;
         this._showTileBoundaries = value;
+        this._update();
+    }
+
+    /**
+     * Gets and sets a Boolean indicating whether the map will visualize
+     * different render-to-texture tiles by rendering them in different color tones.
+     *
+     * Only takes effect when terrain or globe rendering is enabled.
+     *
+     * @example
+     * ```ts
+     * map.showTextureTiles = true;
+     * ```
+     */
+    get showTextureTiles(): boolean { return !!this._showTextureTiles; }
+    set showTextureTiles(value: boolean) {
+        if (this._showTextureTiles === value) return;
+        this._showTextureTiles = value;
         this._update();
     }
 
