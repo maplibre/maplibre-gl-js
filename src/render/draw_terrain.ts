@@ -7,6 +7,7 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
 import {Terrain} from './terrain';
+import { OverscaledTileID } from '../source/tile_id';
 
 /**
  * Redraw the Depth Framebuffer
@@ -67,7 +68,7 @@ function drawCoords(painter: Painter, terrain: Terrain) {
     context.viewport.set([0, 0, painter.width, painter.height]);
 }
 
-function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
+function drawTerrain(painter: Painter, terrain: Terrain, tileIDs: Array<OverscaledTileID>) {
     const context = painter.context;
     const gl = context.gl;
     const colorMode = painter.colorModeForRenderPass();
@@ -78,12 +79,12 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
     context.bindFramebuffer.set(null);
     context.viewport.set([0, 0, painter.width, painter.height]);
 
-    for (const tile of tiles) {
-        const texture = painter.renderToTexture.getTexture(tile);
-        const terrainData = terrain.getTerrainData(tile.tileID);
+    for (const tileID of tileIDs) {
+        const texture = painter.renderToTexture.getTexture(tileID.key);
+        const terrainData = terrain.getTerrainData(tileID);
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
-        const posMatrix = painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped());
+        const posMatrix = painter.transform.calculatePosMatrix(tileID.toUnwrapped());
         const uniformValues = terrainUniformValues(posMatrix, terrain.getMeshFrameDelta(painter.transform.zoom));
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }

@@ -1,5 +1,4 @@
 import {Painter} from './painter';
-import {Tile} from '../source/tile';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawTerrain} from './draw_terrain';
@@ -18,6 +17,20 @@ const LAYERS: { [keyof in StyleLayer['type']]?: boolean } = {
     line: true,
     raster: true,
     hillshade: true
+};
+
+class RttRecord {
+    tileID: OverscaledTileID;
+    /**
+     * A reference to the framebuffer and texture corresponding to each layer of the rendering stack.
+     * id references the object from render_pool, stamp is used to identify its contents.
+     */
+    rtt: Array<{id: number; stamp: number}>;
+    /**
+     * Map of source ID -> a string representation of all tileIDs that contribute to this tile
+     * Used to check whether the cached texture is still valid.
+     */
+    rttCoords: {[_:string]: string};
 };
 
 /**
@@ -52,28 +65,34 @@ export class RenderToTexture {
     /**
      * a list of tiles that can potentially rendered
      */
-    _renderableTiles: Array<Tile>;
+    _renderableTiles: Array<OverscaledTileID>;
     /**
      * a list of tiles that should be rendered to screen in the next render-call
      */
-    _rttTiles: Array<Tile>;
+    _rttTiles: Array<OverscaledTileID>;
     /**
      * a list of all layer-ids which should be rendered
      */
     _renderableLayerIds: Array<string>;
+    /**
+     * Map of tileID key to RTT data
+     */
+    _tileIDtoRtt: {[_: string]: RttRecord} // TODO: make sure to garbage-collect this
 
     constructor(painter: Painter, terrain: Terrain) {
         this.painter = painter;
         this.terrain = terrain;
         this.pool = new RenderPool(painter.context, 30, terrain.sourceCache.tileSize * terrain.qualityFactor);
+        this._tileIDtoRtt = {};
     }
 
     destruct() {
         this.pool.destruct();
     }
 
-    getTexture(tile: Tile): Texture {
-        return this.pool.getObjectForId(tile.rtt[this._stacks.length - 1].id).texture;
+    getTexture(tileIDkey: string): Texture {
+        const rttData = this._tileIDtoRtt[tileIDkey];
+        return this.pool.getObjectForId(rttData.rtt[this._stacks.length - 1].id).texture;
     }
 
     prepareForRender(style: Style, zoom: number) {
@@ -109,11 +128,32 @@ export class RenderToTexture {
         }
 
         // check tiles to render
-        for (const tile of this._renderableTiles) {
+        const usedTileKeys = {};
+        for (const tileID of this._renderableTiles) {
+            usedTileKeys[tileID.key] = true;
+            const rttData = this._tileIDtoRtt[tileID.key];
+            if(!rttData)
+            {
+                this._tileIDtoRtt[tileID.key] = {
+                    tileID: tileID,
+                    rtt: [],
+                    rttCoords: {}
+                };
+                continue;
+            }
             for (const source in this._coordsDescendingInvStr) {
                 // rerender if there are more coords to render than in the last rendering
-                const coords = this._coordsDescendingInvStr[source][tile.tileID.key];
-                if (coords && coords !== tile.rttCoords[source]) tile.rtt = [];
+                const coords = this._coordsDescendingInvStr[source][tileID.key];
+                if (coords && coords !== rttData.rttCoords[source]) {
+                    rttData.rtt = [];
+                    break;
+                }
+            }
+        }
+
+        for(const key in this._tileIDtoRtt) {
+            if (!usedTileKeys[key]) {
+                delete this._tileIDtoRtt[key];
             }
         }
     }
@@ -149,19 +189,21 @@ export class RenderToTexture {
         // in case a stack is finished render all collected stack-layers into a texture
         if (LAYERS[this._prevType] || (LAYERS[type] && isLastLayer)) {
             this._prevType = type;
-            const stack = this._stacks.length - 1, layers = this._stacks[stack] || [];
-            for (const tile of this._renderableTiles) {
+            const stack = this._stacks.length - 1;
+            const layers = this._stacks[stack] || [];
+            for (const tileID of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
-                    drawTerrain(this.painter, this.terrain, this._rttTiles);
+                    drawTerrain(this.painter, this.terrain, this._rttTiles); // TODO: tohle by měla být nějaká customisable funkce
                     this._rttTiles = [];
                     this.pool.freeAllObjects();
                 }
-                this._rttTiles.push(tile);
+                this._rttTiles.push(tileID);
                 // check for cached PoolObject
-                if (tile.rtt[stack]) {
-                    const obj = this.pool.getObjectForId(tile.rtt[stack].id);
-                    if (obj.stamp === tile.rtt[stack].stamp) {
+                const rttData = this._tileIDtoRtt[tileID.key];
+                if (rttData.rtt[stack]) {
+                    const obj = this.pool.getObjectForId(rttData.rtt[stack].id);
+                    if (obj.stamp === rttData.rtt[stack].stamp) {
                         this.pool.useObject(obj);
                         continue;
                     }
@@ -170,18 +212,18 @@ export class RenderToTexture {
                 const obj = this.pool.getOrCreateFreeObject();
                 this.pool.useObject(obj);
                 this.pool.stampObject(obj);
-                tile.rtt[stack] = {id: obj.id, stamp: obj.stamp};
+                rttData.rtt[stack] = {id: obj.id, stamp: obj.stamp};
                 // prepare PoolObject for rendering
                 painter.context.bindFramebuffer.set(obj.fbo.framebuffer);
                 painter.context.clear({color: Color.transparent, stencil: 0});
                 painter.currentStencilSource = undefined;
                 for (let l = 0; l < layers.length; l++) {
                     const layer = painter.style._layers[layers[l]];
-                    const coords = layer.source ? this._coordsDescendingInv[layer.source][tile.tileID.key] : [tile.tileID];
+                    const coords = layer.source ? this._coordsDescendingInv[layer.source][tileID.key] : [tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords);
                     painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
-                    if (layer.source) tile.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tile.tileID.key];
+                    if (layer.source) rttData.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tileID.key];
                 }
             }
             drawTerrain(this.painter, this.terrain, this._rttTiles);
@@ -194,4 +236,15 @@ export class RenderToTexture {
         return false;
     }
 
+    /**
+     * Free render to texture cache
+     * @param tileID - optional, free only corresponding to tileID.
+     */
+    freeRtt(tileID?: OverscaledTileID) {
+        for (const rtt of Object.values(this._tileIDtoRtt)) {
+            if (!tileID || rtt.tileID.equals(tileID) || rtt.tileID.isChildOf(tileID) || tileID.isChildOf(rtt.tileID)) {
+                rtt.rtt = [];
+            }
+        }
+    }
 }

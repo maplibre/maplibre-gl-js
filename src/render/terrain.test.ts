@@ -76,7 +76,6 @@ describe('Terrain', () => {
             {exaggeration: 2} as any as TerrainSpecification,
         );
 
-        terrain.sourceCache._tiles[tileID.key] = tile;
         const {minElevation, maxElevation} = terrain.getMinMaxElevation(tileID);
 
         expect(minElevation).toBe(0);

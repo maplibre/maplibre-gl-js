@@ -1994,13 +1994,13 @@ export class Map extends Camera {
             this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
-                    this.terrain.sourceCache.freeRtt();
+                    this.painter.renderToTexture.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                         this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                     }
-                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
+                    this.painter.renderToTexture.freeRtt(e.tile.tileID);
                 }
             };
             this.style.on('data', this._terrainDataCallback);
