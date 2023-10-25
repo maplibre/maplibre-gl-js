@@ -244,9 +244,9 @@ export default class Worker {
                 send: (type, data, callback) => {
                     return this.actor.send(type, data, callback, mapId);
                 },
-                sendAsync: (message) => {
+                sendAsync: (message, abortController) => {
                     message.targetMapId = mapId;
-                    return this.actor.sendAsync(message);
+                    return this.actor.sendAsync(message, abortController);
                 }
             };
             switch (sourceType) {

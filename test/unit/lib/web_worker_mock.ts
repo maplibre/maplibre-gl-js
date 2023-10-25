@@ -48,16 +48,21 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     importScripts() { }
 }
 
-(global as any).Worker = function Worker(_: string) {
-    const parentListeners = [];
-    const workerListeners = [];
-    const parentBus = new MessageBus(workerListeners, parentListeners);
-    const workerBus = new MessageBus(parentListeners, workerListeners);
+export function setGlobalWorker(MockWorker: { new(...args: any): any}) {
+    (global as any).Worker = function Worker(_: string) {
+        const parentListeners = [];
+        const workerListeners = [];
+        const parentBus = new MessageBus(workerListeners, parentListeners);
+        const workerBus = new MessageBus(parentListeners, workerListeners);
+    
+        parentBus.target = workerBus;
+        workerBus.target = parentBus;
+    
+        new MockWorker(workerBus);
+    
+        return parentBus;
+    };
+}
 
-    parentBus.target = workerBus;
-    workerBus.target = parentBus;
+setGlobalWorker(MapLibreWorker);
 
-    new MapLibreWorker(workerBus);
-
-    return parentBus;
-};

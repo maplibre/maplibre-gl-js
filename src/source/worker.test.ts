@@ -11,7 +11,7 @@ class WorkerSourceMock implements WorkerSource {
     availableImages: string[];
     constructor(private actor: IActor) {}
     loadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
-        return this.actor.sendAsync({type: 'loadTile', data: {} as any});
+        return this.actor.sendAsync({type: 'loadTile', data: {} as any}, new AbortController());
     }
     reloadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
         throw new Error('Method not implemented.');
@@ -68,9 +68,10 @@ describe('Worker register RTLTextPlugin', () => {
     test('worker source messages dispatched to the correct map instance', done => {
         const extenalSourceName = 'test';
 
-        worker.actor.sendAsync = (message) => {
+        worker.actor.sendAsync = (message, abortController) => {
             expect(message.type).toBe('loadTile');
             expect(message.targetMapId).toBe('999');
+            expect(abortController).toBeDefined();
             done();
             return Promise.resolve({} as any);
         };

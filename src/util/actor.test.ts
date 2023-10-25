@@ -1,43 +1,29 @@
 import {Actor, ActorTarget} from './actor';
 import {workerFactory} from './web_worker';
-import {MessageBus} from '../../test/unit/lib/web_worker_mock';
-
-const originalWorker = global.Worker;
-
-function setTestWorker(MockWorker: { new(...args: any): any}) {
-    (global as any).Worker = function Worker(_: string) {
-        const parentListeners = [];
-        const workerListeners = [];
-        const parentBus = new MessageBus(workerListeners, parentListeners);
-        const workerBus = new MessageBus(parentListeners, workerListeners);
-
-        parentBus.target = workerBus;
-        workerBus.target = parentBus;
-
-        new MockWorker(workerBus);
-
-        return parentBus;
-    };
-}
+import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
 
 describe('Actor', () => {
-    afterAll(() => {
-        global.Worker = originalWorker;
-    });
-
-    test('forwards responses to correct handler', async () => {
-        setTestWorker(class MockWorker {
+    let originalWorker;
+    beforeAll(() => {
+        originalWorker = global.Worker;
+        setGlobalWorker(class MockWorker {
             self: any;
             actor: Actor;
             constructor(self) {
                 this.self = self;
                 this.actor = new Actor(self);
-                this.actor.registerMessageHandler('getClusterExpansionZoom', (_mapId, params) => {
-                    return Promise.resolve(params.clusterId);
+                this.actor.registerMessageHandler('getClusterExpansionZoom', async (_mapId, params) => {
+                    await new Promise((resolve) => (setTimeout(resolve, 200)));
+                    return params.clusterId;
                 });
             }
         });
+    })
+    afterAll(() => {
+        global.Worker = originalWorker;
+    });
 
+    test('forwards responses to correct handler', async () => {
         const worker = workerFactory();
 
         const m1 = new Actor(worker, '1');
@@ -51,6 +37,25 @@ describe('Actor', () => {
         }).catch(() => expect(false).toBeTruthy());
 
         await Promise.all([p1, p2]);
+    });
+
+    test('cancel a request does not reject or resolves a promise', async () => {
+        const worker = workerFactory();
+
+        const m1 = new Actor(worker, '1');
+
+        let received = false;
+        let abortController = new AbortController();
+        const p1 = m1.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
+            .then(() => received = true)
+            .catch(() => received = true);
+
+        abortController.abort();
+
+        const p2 = new Promise((resolve) => (setTimeout(resolve, 500)));
+
+        await Promise.any([p1, p2]);
+        expect(received).toBeFalsy();
     });
 
     test('#remove unbinds event listener', done => {

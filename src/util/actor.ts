@@ -87,7 +87,7 @@ export class Actor implements IActor {
             if (abortController) {
                 abortController.signal.addEventListener('abort', () => {
                     cancelable.cancel();
-                    reject(new DOMException('Request is aborted', 'AbortError'));
+                    // In case of abort the current behavior is to keep the promise pending.
                 }, {once: true});
             }
         });
@@ -125,7 +125,7 @@ export class Actor implements IActor {
             sourceMapId: this.mapId,
             data: serialize(data, buffers)
         };
-
+        console.log("Sending a message: " + type + " id: " + id);
         this.target.postMessage(message, {transfer: buffers});
         return {
             cancel: () => {
@@ -139,6 +139,7 @@ export class Actor implements IActor {
                     targetMapId,
                     sourceMapId: this.mapId
                 };
+                console.log("***** Sending A cancel was requested for message with type: " + type + " id: " + cancelMessage.id );
                 this.target.postMessage(cancelMessage);
             }
         };
@@ -148,6 +149,8 @@ export class Actor implements IActor {
         const data = message.data;
         const id = data.id;
 
+        console.log("Recevied a message: " + data.type + " id: " + id + " mapId " + this.mapId + "tmid: " + data.targetMapId);
+
         if (!id) {
             return;
         }
@@ -155,8 +158,10 @@ export class Actor implements IActor {
         if (data.targetMapId && this.mapId !== data.targetMapId) {
             return;
         }
-
+        
         if (data.type === '<cancel>') {
+            console.log("Recevied a cancel message: " + data.type + " id: " + id, " taks legnth:" + Object.keys(this.tasks).length);
+
             // Remove the original request from the queue. This is only possible if it
             // hasn't been kicked off yet. The id will remain in the queue, but because
             // there is no associated task, it will be dropped once it's time to execute it.
@@ -212,6 +217,7 @@ export class Actor implements IActor {
             // firing the callback in the originating actor, if there is one.
             const callback = this.callbacks[id];
             delete this.callbacks[id];
+            console.log("Recevied a response message with id: " + id, " tasks legnth:" + Object.keys(this.tasks).length + " cancel length: " + Object.keys(this.cancelCallbacks).length);
             if (callback) {
                 // If we get a response, but don't have a callback, the request was canceled.
                 if (task.error) {
