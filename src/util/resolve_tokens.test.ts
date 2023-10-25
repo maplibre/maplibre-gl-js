@@ -10,6 +10,10 @@ test('resolveToken', () => {
     expect(resolveTokens({name: 'Test'}, '{name}')).toBe('Test');
     expect(resolveTokens({name: 'Test'}, '{name}-suffix')).toBe('Test-suffix');
 
+    // No properties.
+    expect(resolveTokens(null, '{name}')).toBe('');
+    expect(resolveTokens(null, '{name}-suffix')).toBe('-suffix');
+
     // Undefined property.
     expect(resolveTokens({}, '{name}')).toBe('');
     expect(resolveTokens({}, '{name}-suffix')).toBe('-suffix');
