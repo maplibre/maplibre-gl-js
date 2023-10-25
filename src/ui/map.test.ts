@@ -567,7 +567,6 @@ describe('Map', () => {
                 });
                 map.addSource('geojson', createStyleSource());
                 expect(map.isSourceLoaded('geojson')).toBe(false);
-                done();
             });
         });
 
@@ -587,7 +586,6 @@ describe('Map', () => {
                 });
                 map.addSource('geojson', createStyleSource());
                 expect(map.isSourceLoaded('geojson')).toBe(false);
-                done();
             });
         });
 
