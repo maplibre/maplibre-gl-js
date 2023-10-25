@@ -118,46 +118,6 @@ export class TerrainSourceCache extends Evented {
     }
 
     /**
-     * Searches for the corresponding current renderable terrain-tiles
-     * @param tileID - the tile to look for
-     * @returns the tiles that were found
-     */
-    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
-        const coords = {};
-        for (const key in this._renderableTiles) {
-            const _tileID = this._renderableTiles[key];
-            if (_tileID.canonical.equals(tileID.canonical)) {
-                const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-                coords[key] = coord;
-            } else if (_tileID.canonical.isChildOf(tileID.canonical)) {
-                const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
-                const dz = _tileID.canonical.z - tileID.canonical.z;
-                const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
-                const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
-                const size = EXTENT >> dz;
-                mat4.ortho(coord.posMatrix, 0, size, 0, size, 0, 1);
-                mat4.translate(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
-                coords[key] = coord;
-            } else if (tileID.canonical.isChildOf(_tileID.canonical)) {
-                const coord = tileID.clone();
-                coord.posMatrix = new Float64Array(16) as any;
-                const dz = tileID.canonical.z - _tileID.canonical.z;
-                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
-                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
-                const size = EXTENT >> dz;
-                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-                mat4.translate(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
-                mat4.scale(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
-                coords[key] = coord;
-            }
-        }
-        return coords;
-    }
-
-    /**
      * find the covering raster-dem tile
      * @param tileID - the tile to look for
      * @param searchForDEM - Optinal parameter to search for (parent) souretiles with loaded dem.

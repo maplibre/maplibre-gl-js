@@ -96,12 +96,6 @@ export class Terrain {
      */
     exaggeration: number;
     /**
-     * to not see pixels in the render-to-texture tiles it is good to render them bigger
-     * this number is the multiplicator (must be a power of 2) for the current tileSize.
-     * So to get good results with not too much memory footprint a value of 2 should be fine.
-     */
-    qualityFactor: number;
-    /**
      * holds the framebuffer object in size of the screen to render the coords & depth into a texture.
      */
     _fbo: Framebuffer;
@@ -144,7 +138,6 @@ export class Terrain {
         this.sourceCache = new TerrainSourceCache(sourceCache);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
-        this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
         this.coordsIndex = [];

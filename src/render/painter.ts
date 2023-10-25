@@ -60,6 +60,13 @@ type PainterOptions = {
     fadeDuration: number;
 };
 
+export type FuncDrawBufferedRttTiles = (painter: Painter, rttTiles: OverscaledTileID[]) => void;
+
+type RenderToTextureOptions = {
+    rttTiles: OverscaledTileID[];
+    drawFunc: FuncDrawBufferedRttTiles;
+};
+
 /**
  * @internal
  * Initialize a new painter object.
@@ -337,7 +344,7 @@ export class Painter {
         return this.currentLayer < this.opaquePassCutoff;
     }
 
-    render(style: Style, options: PainterOptions) {
+    render(style: Style, options: PainterOptions, rttOptions?: RenderToTextureOptions) {
         this.style = style;
         this.options = options;
 
@@ -376,8 +383,8 @@ export class Painter {
             }
         }
 
-        if (this.renderToTexture) {
-            this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
+        if (this.renderToTexture && rttOptions) {
+            this.renderToTexture.prepareForRender(this.style, this.transform.zoom, rttOptions.rttTiles);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             this.opaquePassCutoff = 0;
 
@@ -420,7 +427,7 @@ export class Painter {
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
-        if (!this.renderToTexture) {
+        if (!this.renderToTexture || !rttOptions) {
             this.renderPass = 'opaque';
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
@@ -441,7 +448,7 @@ export class Painter {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
-            if (this.renderToTexture && this.renderToTexture.renderLayer(layer)) continue;
+            if (this.renderToTexture && rttOptions && this.renderToTexture.renderLayer(layer, rttOptions.drawFunc)) continue;
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render

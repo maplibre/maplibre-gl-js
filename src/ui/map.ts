@@ -65,6 +65,8 @@ import {Terrain} from '../render/terrain';
 import {RenderToTexture} from '../render/render_to_texture';
 import {config} from '../util/config';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
+import {drawTerrain} from '../render/draw_terrain';
+import {OverscaledTileID} from '../source/tile_id';
 
 const version = packageJSON.version;
 
@@ -1989,7 +1991,7 @@ export class Map extends Camera {
                 }
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);
-            this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
+            this.painter.renderToTexture = new RenderToTexture(this.painter);
             this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this._terrainDataCallback = e => {
@@ -3178,6 +3180,17 @@ export class Map extends Camera {
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
+        let rttOptions;
+
+        if (this.terrain) {
+            rttOptions = {
+                rttTiles: this.terrain.sourceCache.getRenderableTileIDs(),
+                drawFunc: (painter: Painter, rttTiles: OverscaledTileID[]) => {
+                    drawTerrain(painter, this.terrain, rttTiles);
+                },
+            };
+        }
+
         // Actually draw
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
@@ -3187,7 +3200,7 @@ export class Map extends Camera {
             moving: this.isMoving(),
             fadeDuration,
             showPadding: this.showPadding,
-        });
+        }, rttOptions);
 
         this.fire(new Event('render'));
 

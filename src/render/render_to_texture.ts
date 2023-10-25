@@ -1,12 +1,13 @@
 import {Painter} from './painter';
+import type {FuncDrawBufferedRttTiles} from './painter';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {OverscaledTileID} from '../source/tile_id';
-import {drawTerrain} from './draw_terrain';
 import {Style} from '../style/style';
-import {Terrain} from './terrain';
 import {RenderPool} from '../gl/render_pool';
 import {Texture} from './texture';
 import type {StyleLayer} from '../style/style_layer';
+import {EXTENT} from '../data/extent';
+import {mat4} from 'gl-matrix';
 
 /**
  * lookup table which layers should rendered to texture
@@ -39,7 +40,6 @@ class RttRecord {
  */
 export class RenderToTexture {
     painter: Painter;
-    terrain: Terrain;
     pool: RenderPool;
     /**
      * coordsDescendingInv contains a list of all tiles which should be rendered for one render-to-texture tile
@@ -79,10 +79,15 @@ export class RenderToTexture {
      */
     _tileIDtoRtt: {[_: string]: RttRecord};
 
-    constructor(painter: Painter, terrain: Terrain) {
+    constructor(painter: Painter) {
         this.painter = painter;
-        this.terrain = terrain;
-        this.pool = new RenderPool(painter.context, 30, terrain.sourceCache.tileSize * terrain.qualityFactor);
+
+        const baseTileSize = 512; // constant
+        // to not see pixels in the render-to-texture tiles it is good to render them bigger
+        // this number is the multiplicator (must be a power of 2) for the current tileSize.
+        // So to get good results with not too much memory footprint a value of 2 should be fine.
+        const qualityFactor = 2;
+        this.pool = new RenderPool(painter.context, 30, baseTileSize * qualityFactor);
         this._tileIDtoRtt = {};
     }
 
@@ -95,11 +100,11 @@ export class RenderToTexture {
         return this.pool.getObjectForId(rttData.rtt[this._stacks.length - 1].id).texture;
     }
 
-    prepareForRender(style: Style, zoom: number) {
+    prepareForRender(style: Style, zoom: number, renderableTiles: Array<OverscaledTileID>) {
         this._stacks = [];
         this._prevType = null;
         this._rttTiles = [];
-        this._renderableTiles = this.terrain.sourceCache.getRenderableTileIDs();
+        this._renderableTiles = renderableTiles;
         this._renderableLayerIds = style._order.filter(id => !style._layers[id].isHidden(zoom));
 
         this._coordsDescendingInv = {};
@@ -107,7 +112,9 @@ export class RenderToTexture {
             this._coordsDescendingInv[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
             for (const tileID of tileIDs) {
-                const keys = this.terrain.sourceCache.getTerrainCoords(tileID);
+
+
+                const keys = this.getTerrainCoords(tileID);
                 for (const key in keys) {
                     if (!this._coordsDescendingInv[id][key]) this._coordsDescendingInv[id][key] = [];
                     this._coordsDescendingInv[id][key].push(keys[key]);
@@ -167,7 +174,7 @@ export class RenderToTexture {
      * @param layer - the layer to render
      * @returns if true layer is rendered to texture, otherwise false
      */
-    renderLayer(layer: StyleLayer): boolean {
+    renderLayer(layer: StyleLayer, drawBufferedRttTilesFunc: FuncDrawBufferedRttTiles): boolean {
         if (layer.isHidden(this.painter.transform.zoom)) return false;
 
         const type = layer.type;
@@ -193,7 +200,7 @@ export class RenderToTexture {
             for (const tileID of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
-                    drawTerrain(this.painter, this.terrain, this._rttTiles); // JP: TODO: tohle by měla být nějaká customisable funkce
+                    drawBufferedRttTilesFunc(this.painter, this._rttTiles); // JP: TODO: tohle by měla být nějaká customisable funkce
                     this._rttTiles = [];
                     this.pool.freeAllObjects();
                 }
@@ -225,7 +232,7 @@ export class RenderToTexture {
                     if (layer.source) rttData.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tileID.key];
                 }
             }
-            drawTerrain(this.painter, this.terrain, this._rttTiles);
+            drawBufferedRttTilesFunc(this.painter, this._rttTiles);
             this._rttTiles = [];
             this.pool.freeAllObjects();
 
@@ -245,5 +252,45 @@ export class RenderToTexture {
                 rtt.rtt = [];
             }
         }
+    }
+
+    /**
+     * Searches for the corresponding current renderable terrain-tiles
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+        const coords = {};
+        for (const key in this._renderableTiles) {
+            const _tileID = this._renderableTiles[key];
+            if (_tileID.canonical.equals(tileID.canonical)) {
+                const coord = tileID.clone();
+                coord.posMatrix = new Float64Array(16) as any;
+                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                coords[key] = coord;
+            } else if (_tileID.canonical.isChildOf(tileID.canonical)) {
+                const coord = tileID.clone();
+                coord.posMatrix = new Float64Array(16) as any;
+                const dz = _tileID.canonical.z - tileID.canonical.z;
+                const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
+                const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(coord.posMatrix, 0, size, 0, size, 0, 1);
+                mat4.translate(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
+                coords[key] = coord;
+            } else if (tileID.canonical.isChildOf(_tileID.canonical)) {
+                const coord = tileID.clone();
+                coord.posMatrix = new Float64Array(16) as any;
+                const dz = tileID.canonical.z - _tileID.canonical.z;
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                mat4.translate(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
+                mat4.scale(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+                coords[key] = coord;
+            }
+        }
+        return coords;
     }
 }
