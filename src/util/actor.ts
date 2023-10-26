@@ -167,7 +167,7 @@ export class Actor implements IActor {
                 abortController.abort();
             }
             return;
-        } 
+        }
         if (isWorker(self) || data.mustQueue) {
             // In workers, store the tasks that we need to process before actually processing them. This
             // is necessary because we want to keep receiving messages, and in particular,
@@ -179,7 +179,7 @@ export class Actor implements IActor {
             this.taskQueue.push(id);
             this.invoker.trigger();
             return;
-        } 
+        }
         // In the main thread, process messages immediately so that other work does not slip in
         // between getting partial data back from workers.
         this.processTask(id, data);
@@ -228,7 +228,7 @@ export class Actor implements IActor {
             return;
         }
         const params = deserialize(task.data) as any;
-        let abortController = new AbortController();
+        const abortController = new AbortController();
         this.abortControllers[id] = abortController;
         this.messageHandlers[task.type](task.sourceMapId, params, abortController)
             .then((data: any) => this.completeTask(task, id, null, data))
