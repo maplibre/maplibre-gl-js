@@ -830,6 +830,7 @@ async function executeRenderTests() {
         console.log(`Re-running failed tests: ${failedTests.length}`);
         page.close();
         page = await browser.newPage();
+        options.debug = true;
         applyDebugParameter(options, page);
         await page.addScriptTag({path: 'dist/maplibre-gl.js'});
         await runTests(page, failedTests, directory);
