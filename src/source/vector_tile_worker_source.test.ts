@@ -106,7 +106,7 @@ describe('vector tile worker source', () => {
                 } as any as vt.VectorTile,
                 rawData: rawTileData
             };
-        }
+        };
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -163,7 +163,7 @@ describe('vector tile worker source', () => {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
             };
-        }
+        };
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -193,7 +193,7 @@ describe('vector tile worker source', () => {
             expect(res).toBeDefined();
             loadCallbackCalled = true;
         }).catch(() => expect(false).toBeTruthy());
-        
+
         // let the promise start
         await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -279,7 +279,7 @@ describe('vector tile worker source', () => {
                 cacheControl: null,
                 expires: null
             };
-        }
+        };
 
         const exampleResourceTiming = {
             connectEnd: 473,
@@ -334,7 +334,7 @@ describe('vector tile worker source', () => {
                 cacheControl: null,
                 expires: null
             };
-        }
+        };
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
