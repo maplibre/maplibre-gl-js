@@ -1,7 +1,6 @@
 import {Actor, ActorTarget} from './actor';
 import {WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
-import {MessageType} from './actor_messages';
 
 class MockWorker {
     self: any;
@@ -82,7 +81,7 @@ describe('Actor', () => {
 
         let received = false;
         const abortController = new AbortController();
-        const p1 = m1.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
+        m1.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
             .then(() => { received = true; })
             .catch(() => { received = true; });
 
