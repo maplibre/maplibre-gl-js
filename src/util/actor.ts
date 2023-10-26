@@ -35,6 +35,8 @@ export interface IActor {
     sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
 }
 
+export type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>
+
 /**
  * An implementation of the [Actor design pattern](http://en.wikipedia.org/wiki/Actor_model)
  * that maintains the relationship between asynchronous tasks and the objects
@@ -48,10 +50,10 @@ export class Actor implements IActor {
     name: string;
     tasks: { [x: number]: MessageData };
     taskQueue: Array<string>;
-    cancelCallbacks: { [x: number]: () => void };
+    abortControllers: { [x: number | string]: AbortController };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
-    messageHandlers: { [x in MessageType]?: (mapId: string | number, params: RequestResponseMessageMap[x][0]) => Promise<RequestResponseMessageMap[x][1]> };
+    messageHandlers: { [x in MessageType]?: MessageHandler<MessageType>};
 
     /**
      * @param target - The target
@@ -64,14 +66,14 @@ export class Actor implements IActor {
         this.callbacks = {};
         this.tasks = {};
         this.taskQueue = [];
-        this.cancelCallbacks = {};
+        this.abortControllers = {};
         this.messageHandlers = {};
         this.invoker = new ThrottledInvoker(this.process);
         this.target.addEventListener('message', this.receive, false);
         this.globalScope = isWorker(self) ? target : window;
     }
 
-    registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string | number, params: RequestResponseMessageMap[T][0]) => Promise<RequestResponseMessageMap[T][1]>) {
+    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
         this.messageHandlers[type] = handler;
     }
 
@@ -155,37 +157,36 @@ export class Actor implements IActor {
             return;
         }
         if (data.type === '<cancel>') {
-
             // Remove the original request from the queue. This is only possible if it
             // hasn't been kicked off yet. The id will remain in the queue, but because
             // there is no associated task, it will be dropped once it's time to execute it.
             delete this.tasks[id];
-            const cancel = this.cancelCallbacks[id];
-            delete this.cancelCallbacks[id];
-            if (cancel) {
-                cancel();
+            const abortController = this.abortControllers[id];
+            delete this.abortControllers[id];
+            if (abortController) {
+                abortController.abort();
             }
-        } else {
-            if (isWorker(self) || data.mustQueue) {
-                // In workers, store the tasks that we need to process before actually processing them. This
-                // is necessary because we want to keep receiving messages, and in particular,
-                // <cancel> messages. Some tasks may take a while in the worker thread, so before
-                // executing the next task in our queue, postMessage preempts this and <cancel>
-                // messages can be processed. We're using a MessageChannel object to get throttle the
-                // process() flow to one at a time.
-                this.tasks[id] = data;
-                this.taskQueue.push(id);
-                this.invoker.trigger();
-            } else {
-                // In the main thread, process messages immediately so that other work does not slip in
-                // between getting partial data back from workers.
-                this.processTask(id, data);
-            }
-        }
+            return;
+        } 
+        if (isWorker(self) || data.mustQueue) {
+            // In workers, store the tasks that we need to process before actually processing them. This
+            // is necessary because we want to keep receiving messages, and in particular,
+            // <cancel> messages. Some tasks may take a while in the worker thread, so before
+            // executing the next task in our queue, postMessage preempts this and <cancel>
+            // messages can be processed. We're using a MessageChannel object to get throttle the
+            // process() flow to one at a time.
+            this.tasks[id] = data;
+            this.taskQueue.push(id);
+            this.invoker.trigger();
+            return;
+        } 
+        // In the main thread, process messages immediately so that other work does not slip in
+        // between getting partial data back from workers.
+        this.processTask(id, data);
     };
 
     process = () => {
-        if (!this.taskQueue.length) {
+        if (this.taskQueue.length === 0) {
             return;
         }
         const id = this.taskQueue.shift();
@@ -194,7 +195,7 @@ export class Actor implements IActor {
         // Schedule another process call if we know there's more to process _before_ invoking the
         // current task. This is necessary so that processing continues even if the current task
         // doesn't execute successfully.
-        if (this.taskQueue.length) {
+        if (this.taskQueue.length > 0) {
             this.invoker.trigger();
         }
         if (!task) {
@@ -207,51 +208,47 @@ export class Actor implements IActor {
 
     processTask(id: string, task: MessageData) {
         if (task.type === '<response>') {
-            // The done() function in the counterpart has been called, and we are now
+            // The `completeTask` function in the counterpart actor has been called, and we are now
             // firing the callback in the originating actor, if there is one.
             const callback = this.callbacks[id];
             delete this.callbacks[id];
-            if (callback) {
+            if (!callback) {
                 // If we get a response, but don't have a callback, the request was canceled.
-                if (task.error) {
-                    callback(deserialize(task.error));
-                } else {
-                    callback(null, deserialize(task.data));
-                }
+                return;
             }
-        } else {
-            //let completed = false;
-            const buffers: Array<Transferable> = [];
-            const done = task.hasCallback ? (err: Error, data?: any) => {
-                //completed = true;
-                delete this.cancelCallbacks[id];
-                const responseMessage: MessageData = {
-                    id,
-                    type: '<response>',
-                    sourceMapId: this.mapId,
-                    error: err ? serialize(err) : null,
-                    data: serialize(data, buffers)
-                };
-                this.target.postMessage(responseMessage, {transfer: buffers});
-            } : (_) => {
-                //completed = true;
-            };
-
-            const params = deserialize(task.data) as any;
-            if (this.messageHandlers[task.type]) {
-                this.messageHandlers[task.type](task.sourceMapId, params)
-                    .then((data) => done(null, data))
-                    .catch((err) => done(err));
+            if (task.error) {
+                callback(deserialize(task.error));
             } else {
-                done(new Error(`Could not find a registered handler for ${task.type}`));
+                callback(null, deserialize(task.data));
             }
-
-            // HM TODO: I'm not sure this is possible...
-            //if (!completed && callback && callback.cancel) {
-            //    // Allows canceling the task as long as it hasn't been completed yet.
-            //    this.cancelCallbacks[id] = callback.cancel;
-            //}
+            return;
         }
+        if (!this.messageHandlers[task.type]) {
+            this.completeTask(task, id, new Error(`Could not find a registered handler for ${task.type}`));
+            return;
+        }
+        const params = deserialize(task.data) as any;
+        let abortController = new AbortController();
+        this.abortControllers[id] = abortController;
+        this.messageHandlers[task.type](task.sourceMapId, params, abortController)
+            .then((data: any) => this.completeTask(task, id, null, data))
+            .catch((err: Error) => this.completeTask(task, id, err));
+    }
+
+    completeTask(task: MessageData, id: string, err: Error, data?: any) {
+        if (!task.hasCallback) {
+            return;
+        }
+        const buffers: Array<Transferable> = [];
+        delete this.abortControllers[id];
+        const responseMessage: MessageData = {
+            id,
+            type: '<response>',
+            sourceMapId: this.mapId,
+            error: err ? serialize(err) : null,
+            data: serialize(data, buffers)
+        };
+        this.target.postMessage(responseMessage, {transfer: buffers});
     }
 
     remove() {

@@ -1,6 +1,7 @@
 import {Actor, ActorTarget} from './actor';
 import {WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
+import {MessageType} from './actor_messages';
 
 class MockWorker {
     self: any;
@@ -8,10 +9,6 @@ class MockWorker {
     constructor(self) {
         this.self = self;
         this.actor = new Actor(self);
-        this.actor.registerMessageHandler('getClusterExpansionZoom', async (_mapId, params) => {
-            await new Promise((resolve) => (setTimeout(resolve, 200)));
-            return params.clusterId;
-        });
     }
 }
 
@@ -26,7 +23,11 @@ describe('Actor', () => {
     });
 
     test('forwards responses to correct handler', async () => {
-        const worker = workerFactory();
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', async (_mapId, params) => {
+            await new Promise((resolve) => (setTimeout(resolve, 0)));
+            return params.clusterId;
+        });
 
         const m1 = new Actor(worker, '1');
         const m2 = new Actor(worker, '2');
@@ -42,7 +43,11 @@ describe('Actor', () => {
     });
 
     test('cancel a request does not reject or resolves a promise', async () => {
-        const worker = workerFactory();
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', async (_mapId, params) => {
+            await new Promise((resolve) => (setTimeout(resolve, 200)));
+            return params.clusterId;
+        });
 
         const m1 = new Actor(worker, '1');
 
@@ -58,6 +63,35 @@ describe('Actor', () => {
 
         await Promise.any([p1, p2]);
         expect(received).toBeFalsy();
+    });
+
+    test('cancel a request of a canceable registrated callback will cancel it', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        let gotAbortSignal = false;
+        worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', (_mapId, _params, handlerAbortController) => {
+            return new Promise((resolve, reject) => {
+                handlerAbortController.signal.addEventListener('abort', () => {
+                    gotAbortSignal = true;
+                    reject(new Error('AbortError'));
+                });
+                setTimeout(resolve, 200);
+            });
+        });
+
+        const m1 = new Actor(worker, '1');
+
+        let received = false;
+        const abortController = new AbortController();
+        const p1 = m1.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 1729}}, abortController)
+            .then(() => { received = true; })
+            .catch(() => { received = true; });
+
+        abortController.abort();
+
+        await new Promise((resolve) => (setTimeout(resolve, 500)));
+
+        expect(received).toBeFalsy();
+        expect(gotAbortSignal).toBeTruthy();
     });
 
     test('cancel a request that must be queued will not call the method at all', async () => {
