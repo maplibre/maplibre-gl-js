@@ -17,12 +17,10 @@ jobs:
           fetch-depth: 0
           ref: main
 
-      - name: Use Node.js 18 x64
-        uses: actions/setup-node@v3.6.0
+      - name: Use Node.js from nvmrc
+        uses: actions/setup-node@v3
         with:
-          node-version: 18
-          architecture: x64
-          registry-url: 'https://registry.npmjs.org'
+          node-version-file: '.nvmrc'
 
       - name: Get version
         id: package-version
