@@ -17,7 +17,7 @@ import type {
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 
-import type {LoadVectorDataCallback} from './vector_tile_worker_source';
+import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {Cancelable} from '../types/cancelable';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
@@ -75,16 +75,16 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
     }
 
-    loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void {
+    async loadGeoJSONTile(params: WorkerTileParameters, _abortController: AbortController): Promise<LoadVectorTileResult | null> {
         const canonical = params.tileID.canonical;
 
         if (!this._geoJSONIndex) {
-            return callback(null, null);  // we couldn't load the file
+            throw new Error('Unable to parse the data into a cluster or geojson');
         }
 
         const geoJSONTile = this._geoJSONIndex.getTile(canonical.z, canonical.x, canonical.y);
         if (!geoJSONTile) {
-            return callback(null, null); // nothing in the given tile
+            throw new Error(`Tile is empty at (x,y,z): ${canonical.x}, ${canonical.y}, ${canonical.z}`);
         }
 
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features);
@@ -97,10 +97,10 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             pbf = new Uint8Array(pbf);
         }
 
-        callback(null, {
+        return {
             vectorTile: geojsonWrapper,
             rawData: pbf.buffer
-        });
+        };
     }
 
     /**
