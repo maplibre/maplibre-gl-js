@@ -118,7 +118,7 @@ export class VectorTileWorkerSource implements WorkerSource {
      * {@link VectorTileWorkerSource#loadVectorData} (which by default expects
      * a `params.url` property) for fetching and producing a VectorTile object.
      */
-    async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
+    async loadTile(params: WorkerTileParameters): Promise<WorkerTileResult | null> {
         const tileUid = params.uid;
 
         const perf = (params && params.request && params.request.collectResourceTiming) ?
@@ -132,6 +132,11 @@ export class VectorTileWorkerSource implements WorkerSource {
         try {
             const response = await this.loadVectorData(params, abortController);
             delete this.loading[tileUid];
+            if (!response) {
+                // HM TODO: add a test that is parsing an empty tile and is getting here
+                return null;
+            }
+            
             const rawTileData = response.rawData;
             const cacheControl = {} as ExpiryData;
             if (response.expires) cacheControl.expires = response.expires;

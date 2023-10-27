@@ -84,7 +84,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         const geoJSONTile = this._geoJSONIndex.getTile(canonical.z, canonical.x, canonical.y);
         if (!geoJSONTile) {
-            throw new Error(`Tile is empty at (x,y,z): ${canonical.x}, ${canonical.y}, ${canonical.z}`);
+            return null;
         }
 
         const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features);
