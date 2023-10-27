@@ -11,6 +11,7 @@ import {rasterUniforms} from './raster_program';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms} from './symbol_program';
 import {backgroundUniforms, backgroundPatternUniforms} from './background_program';
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms} from './terrain_program';
+import {globeUniforms} from './globe_program';
 
 export const programUniforms = {
     fillExtrusion: fillExtrusionUniforms,
@@ -24,6 +25,7 @@ export const programUniforms = {
     collisionCircle: collisionCircleUniforms,
     debug: debugUniforms,
     clippingMask: clippingMaskUniforms,
+    globe: globeUniforms,
     heatmap: heatmapUniforms,
     heatmapTexture: heatmapTextureUniforms,
     hillshade: hillshadeUniforms,

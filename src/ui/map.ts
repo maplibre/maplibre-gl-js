@@ -69,6 +69,8 @@ import {drawTerrain} from '../render/draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 import {Globe} from '../render/globe';
 import {drawGlobe} from '../render/draw_globe';
+import {mat4} from 'gl-matrix';
+import {EXTENT} from '../data/extent';
 
 const version = packageJSON.version;
 
@@ -3207,7 +3209,7 @@ export class Map extends Camera {
             this.style._updateSources(this.transform);
         }
 
-        const preferGlobe = false;
+        const preferGlobe = !!this.globe;
 
         let rttCoveringTiles;
 
@@ -3224,6 +3226,11 @@ export class Map extends Camera {
                 terrain: this.terrain,
                 globe: this.globe,
             });
+
+            for (const tileID of rttCoveringTiles) {
+                tileID.posMatrix = new Float64Array(16) as any;
+                mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+            }
         }
 
         // update terrain stuff
