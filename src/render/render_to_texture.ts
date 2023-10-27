@@ -7,7 +7,7 @@ import {RenderPool} from '../gl/render_pool';
 import {Texture} from './texture';
 import type {StyleLayer} from '../style/style_layer';
 import {EXTENT} from '../data/extent';
-import {mat4} from 'gl-matrix';
+import {mat4, vec4} from 'gl-matrix';
 
 /**
  * lookup table which layers should rendered to texture

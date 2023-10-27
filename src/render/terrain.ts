@@ -67,7 +67,7 @@ export type TerrainMesh = {
  *       - one texture for the coords-framebuffer with the size of the map-div.
  *       - one texture for the depth-framebuffer with the size of the map-div.
  *       - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
- *       - finally for each render-to-texture tile (= this._tiles) a set of textures
+ *       - finally for each render-to-texture tile a set of textures
  *         for each render stack (The stack-concept is documented in painter.ts).
  *         Normally there exists 1-3 Textures per tile, depending on the stylesheet.
  *         Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a

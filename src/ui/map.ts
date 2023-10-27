@@ -67,6 +67,7 @@ import {config} from '../util/config';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {drawTerrain} from '../render/draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
+import {Globe} from '../render/globe';
 
 const version = packageJSON.version;
 
@@ -452,6 +453,7 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
+    globe: Globe;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -504,6 +506,7 @@ export class Map extends Camera {
     _overridePixelRatio: number | null;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+    _renderToTextureCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
      * @internal
@@ -1976,10 +1979,9 @@ export class Map extends Camera {
             // remove terrain
             if (this.terrain) this.terrain.sourceCache.destruct();
             this.terrain = null;
-            if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
-            this.painter.renderToTexture = null;
             this.transform._minEleveationForCurrentTile = 0;
             this.transform.elevation = 0;
+            this._updateRenderToTexture();
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -1992,21 +1994,18 @@ export class Map extends Camera {
                 }
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);
-            this.painter.renderToTexture = new RenderToTexture(this.painter);
             this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this._terrainDataCallback = e => {
-                if (e.dataType === 'style') {
-                    this.painter.renderToTexture.freeRtt();
-                } else if (e.dataType === 'source' && e.tile) {
+                if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                         this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                     }
-                    this.painter.renderToTexture.freeRtt(e.tile.tileID);
                 }
             };
             this.style.on('data', this._terrainDataCallback);
+            this._updateRenderToTexture();
         }
 
         this.fire(new Event('terrain', {terrain: options}));
@@ -2023,6 +2022,45 @@ export class Map extends Camera {
      */
     getTerrain(): TerrainSpecification | null {
         return this.terrain?.options ?? null;
+    }
+
+    setGlobe(enabled: boolean = true): void {
+        if (enabled) {
+            this.globe = new Globe();
+            this._updateRenderToTexture();
+            this._update();
+        } else {
+            this.globe = null;
+            this._updateRenderToTexture();
+            this._update();
+        }
+    }
+
+    /**
+     * Enables or disables render-to-texture, depending on whether globe and/or terrain is enabled.
+     */
+    private _updateRenderToTexture(): void {
+        if (!this.terrain && !this.globe) {
+            // Disable rtt
+            if (this._renderToTextureCallback) {
+                this.style.off('data', this._renderToTextureCallback);
+            }
+            if (this.painter.renderToTexture) {
+                this.painter.renderToTexture.destruct();
+            }
+            this.painter.renderToTexture = null;
+        } else {
+            // Enable rtt
+            this.painter.renderToTexture = new RenderToTexture(this.painter);
+            this._renderToTextureCallback = e => {
+                if (e.dataType === 'style') {
+                    this.painter.renderToTexture.freeRtt();
+                } else if (e.dataType === 'source' && e.tile) {
+                    this.painter.renderToTexture.freeRtt(e.tile.tileID);
+                }
+            };
+            this.style.on('data', this._renderToTextureCallback);
+        }
     }
 
     /**
