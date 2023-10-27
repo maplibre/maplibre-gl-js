@@ -41,7 +41,7 @@ export class WorkerTile {
     data: VectorTile;
     collisionBoxArray: CollisionBoxArray;
 
-    abort: (() => void);
+    abort: AbortController;
     vectorTile: VectorTile;
     inFlightDependencies: AbortController[];
 

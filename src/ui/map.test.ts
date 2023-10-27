@@ -2176,9 +2176,11 @@ describe('Map', () => {
 
     describe('error event', () => {
         test('logs errors to console when it has NO listeners', () => {
+            // to avoid seeing error in the console in Jest
+            let stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             const map = createMap();
-            const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             stub.mockReset();
+            stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             const error = new Error('test');
             map.fire(new ErrorEvent(error));
             expect(stub).toHaveBeenCalledTimes(1);

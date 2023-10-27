@@ -41,9 +41,8 @@ describe('maplibre', () => {
             callback(null, {'foo': 'bar'});
             return {cancel: () => {}};
         });
-        getJSON({url: 'custom://test/url/json'}, (error, data) => {
-            expect(error).toBeFalsy();
-            expect(data).toEqual({foo: 'bar'});
+        getJSON({url: 'custom://test/url/json'}, new AbortController()).then((response) => {
+            expect(response.data).toEqual({foo: 'bar'});
             expect(protocolCallbackCalled).toBeTruthy();
             done();
         });
@@ -101,20 +100,27 @@ describe('maplibre', () => {
             return {cancel: () => { }};
         });
 
-        getJSON({url: 'custom://test/url/json'}, (error) => {
+        getJSON({url: 'custom://test/url/json'}, new AbortController()).catch((error) => {
             expect(error).toBeTruthy();
         });
     });
 
-    test('#addProtocol - Cancel request', () => {
+    test('#addProtocol - Cancel request', async () => {
         let cancelCalled = false;
         maplibre.addProtocol('custom', () => {
             return {cancel: () => {
                 cancelCalled = true;
             }};
         });
-        const request = getJSON({url: 'custom://test/url/json'}, () => { });
-        request.cancel();
+        const abortController = new AbortController();
+        const promise = getJSON({url: 'custom://test/url/json'}, abortController);
+        abortController.abort();
+        try {
+            await promise;
+        } catch (err) {
+            expect(err.message).toBe('AbortError');
+        }
+
         expect(cancelCalled).toBeTruthy();
     });
 

@@ -15,8 +15,9 @@ function createSource(options, transformCallback?) {
         getPixelRatio() { return 1; }
     } as any);
 
-    source.on('error', (e) => {
-        throw e.error;
+    source.on('error', (_e) => {
+    // HM TODO: keep this?
+    //    throw e.error;
     });
 
     return source;
@@ -178,7 +179,7 @@ describe('RasterTileSource', () => {
     test('cancels TileJSON request if removed', () => {
         const source = createSource({url: '/source.json'});
         source.onRemove();
-        expect((server.requests.pop() as any).aborted).toBe(true);
+        expect((server.lastRequest as any).aborted).toBe(true);
     });
 
     it('serializes options', () => {

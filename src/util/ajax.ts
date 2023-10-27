@@ -161,7 +161,6 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         fetch(request).then(response => {
             if (response.ok) {
                 return finishRequest(response);
-
             } else {
                 return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
             }
@@ -264,14 +263,24 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
     return makeXMLHttpRequest(requestParameters, callback);
 };
 
-export const getJSON = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    return makeRequest(extend(requestParameters, {type: 'json'}), callback);
+export const getJSON = <T>(requestParameters: RequestParameters, abortController: AbortController): Promise<{data: T} & ExpiryData> => {
+    return new Promise<{data: T}& ExpiryData>((resolve, reject) => {
+        const callback = (err: Error, data: T, cacheControl: string | null, expires: string | null) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({data, cacheControl, expires});
+            }
+        };
+        const canelable = makeRequest(extend(requestParameters, {type: 'json'}), callback);
+        abortController.signal.addEventListener('abort', () => {
+            canelable.cancel();
+            reject(new Error('AbortError'));
+        });
+    });
 };
 
-export const getArrayBuffer = function(
-    requestParameters: RequestParameters,
-    callback: ResponseCallback<ArrayBuffer>
-): Cancelable {
+export const getArrayBuffer = (requestParameters: RequestParameters, callback: ResponseCallback<ArrayBuffer>): Cancelable => {
     return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
 };
 

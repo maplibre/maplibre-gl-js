@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
       - run: npm ci
       - run: npm run lint
         if: success() || failure()
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
       - name: Start display server
         if: runner.os == 'Linux'
         run: nohup Xvfb &
@@ -73,7 +73,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
       - run: npm ci
       - run: npm run build-dist
       - uses: actions/upload-artifact@v3
@@ -99,7 +99,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
       - name: install CJK fonts for local ideographs render tests
         run: sudo apt install fonts-noto-cjk
       - run: npm ci
@@ -134,7 +134,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
       - run: npm ci
       - name: Start display server
         if: runner.os == 'Linux'
@@ -162,7 +162,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
       - run: npm ci
       - run: npm run build-dist
       - run: npm run test-build

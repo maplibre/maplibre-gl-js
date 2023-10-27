@@ -209,6 +209,7 @@ export class Style extends Evented {
     light: Light;
 
     _request: Cancelable;
+    _abortController: AbortController;
     _spriteRequest: Cancelable;
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
@@ -336,12 +337,14 @@ export class Style extends Evented {
             options.validate : true;
 
         const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
-        this._request = getJSON(request, (error?: Error | null, json?: any | null) => {
-            this._request = null;
+        this._abortController = new AbortController();
+        getJSON<StyleSpecification>(request, this._abortController).then((response) => {
+            this._abortController = null;
+            this._load(response.data, options, previousStyle);
+        }).catch((error) => {
+            this._abortController = null;
             if (error) {
                 this.fire(new ErrorEvent(error));
-            } else if (json) {
-                this._load(json, options, previousStyle);
             }
         });
     }
@@ -1469,6 +1472,10 @@ export class Style extends Evented {
         if (this._request) {
             this._request.cancel();
             this._request = null;
+        }
+        if (this._abortController) {
+            this._abortController.abort();
+            this._abortController = null;
         }
         if (this._spriteRequest) {
             this._spriteRequest.cancel();

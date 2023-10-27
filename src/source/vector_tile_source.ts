@@ -106,6 +106,7 @@ export class VectorTileSource extends Evented implements Source {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = loadTileJson(this._options, this.map._requestManager, (err, tileJSON) => {
+            // HM TODO: abort will return an error here, is this expected?
             this._tileJSONRequest = null;
             this._loaded = true;
             this.map.style.sourceCaches[this.id].clearTiles();
@@ -230,6 +231,7 @@ export class VectorTileSource extends Evented implements Source {
             return callback(err);
         }
         // HM TODO: add a unit test that gets here with error status 404
+        // HM TODO: add a unit test that gets here with data that is null - empty geojson
         if (data && data.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }

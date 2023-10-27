@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import {VectorTileWorkerSource} from '../source/vector_tile_worker_source';
+import {LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile_worker_source';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {fakeServer, type FakeServer} from 'nise';
 import {IActor} from '../util/actor';
@@ -34,7 +34,7 @@ describe('vector tile worker source', () => {
             request: {url: 'http://localhost:2900/abort'}
         } as any as WorkerTileParameters).then((res) => {
             expect(res).toBeFalsy();
-        }).catch((err) => expect(err).toBeUndefined());
+        }).catch((err) => expect(err.message).toBe('AbortError'));
 
         source.abortTile({
             source: 'source',
@@ -79,10 +79,10 @@ describe('vector tile worker source', () => {
         expect(parse).toHaveBeenCalledTimes(1);
     });
 
-    test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', (done) => {
+    test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', async () => {
         const rawTileData = new Uint8Array([]);
-        function loadVectorData(params, callback) {
-            return callback(null, {
+        const loadVectorData: LoadVectorData = async (_params, _abortController) => {
+            return {
                 vectorTile: {
                     layers: {
                         test: {
@@ -105,8 +105,8 @@ describe('vector tile worker source', () => {
                     }
                 } as any as vt.VectorTile,
                 rawData: rawTileData
-            });
-        }
+            };
+        };
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -128,7 +128,7 @@ describe('vector tile worker source', () => {
                             {'hello': {width: 1, height: 1, data: new Uint8Array([0])}} :
                             {'StandardFont-Bold': {width: 1, height: 1, data: new Uint8Array([0])}};
                         resolve(response);
-                    });
+                    }, 100);
                     abortController.signal.addEventListener('abort', () => {
                         clearTimeout(res);
                     });
@@ -141,30 +141,29 @@ describe('vector tile worker source', () => {
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/faketile.pbf'}
-        } as any as WorkerTileParameters).then(() => {
-            done.fail('should not be called');
-        });
+        } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
 
-        source.reloadTile({
+        // allow promise to run
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        const res = await source.reloadTile({
             source: 'source',
-            uid: '0',
+            uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
-        } as any as WorkerTileParameters).then((res) => {
-            expect(res).toBeDefined();
-            expect(res.rawTileData).toBeDefined();
-            expect(res.rawTileData).toStrictEqual(rawTileData);
-            done();
-        }).catch(() => { done.fail('should not be called'); });
+        } as any as WorkerTileParameters);
+        expect(res).toBeDefined();
+        expect(res.rawTileData).toBeDefined();
+        expect(res.rawTileData).toStrictEqual(rawTileData);
     });
 
-    test('VectorTileWorkerSource#loadTile reparses tile if reloadTile is called during reparsing', (done) => {
+    test('VectorTileWorkerSource#loadTile reparses tile if reloadTile is called during reparsing', async () => {
         const rawTileData = new Uint8Array([]);
-        function loadVectorData(params, callback) {
-            return callback(null, {
+        const loadVectorData: LoadVectorData = async (_params, _abortController) => {
+            return {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData
-            });
-        }
+            };
+        };
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
@@ -180,7 +179,7 @@ describe('vector tile worker source', () => {
             .mockImplementation(function(_data, _layerIndex, _availableImages, _actor) {
                 this.status = 'parsing';
                 return new Promise((resolve) => {
-                    setTimeout(() => resolve({} as WorkerTileResult), 10);
+                    setTimeout(() => resolve({} as WorkerTileResult), 20);
                 });
             });
 
@@ -195,16 +194,17 @@ describe('vector tile worker source', () => {
             loadCallbackCalled = true;
         }).catch(() => expect(false).toBeTruthy());
 
-        source.reloadTile({
+        // let the promise start
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        const res = await source.reloadTile({
             source: 'source',
             uid: '0',
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
-        } as any as WorkerTileParameters).then((res) => {
-            expect(res).toBeDefined();
-            expect(parseWorkerTileMock).toHaveBeenCalledTimes(2);
-            expect(loadCallbackCalled).toBeTruthy();
-            done();
-        }).catch(() => expect(false).toBeTruthy());
+        } as any as WorkerTileParameters);
+        expect(res).toBeDefined();
+        expect(parseWorkerTileMock).toHaveBeenCalledTimes(2);
+        expect(loadCallbackCalled).toBeTruthy();
     });
 
     test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTile data but does call callback', done => {
@@ -272,14 +272,14 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource provides resource timing information', done => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 
-        function loadVectorData(params, callback) {
-            return callback(null, {
+        const loadVectorData: LoadVectorData = async (_params, _abortController) => {
+            return {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null
-            });
-        }
+            };
+        };
 
         const exampleResourceTiming = {
             connectEnd: 473,
@@ -327,14 +327,14 @@ describe('vector tile worker source', () => {
     test('VectorTileWorkerSource provides resource timing information (fallback method)', done => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 
-        function loadVectorData(params, callback) {
-            return callback(null, {
+        const loadVectorData: LoadVectorData = async (_params, _abortController) => {
+            return {
                 vectorTile: new vt.VectorTile(new Protobuf(rawTileData)),
                 rawData: rawTileData,
                 cacheControl: null,
                 expires: null
-            });
-        }
+            };
+        };
 
         const layerIndex = new StyleLayerIndex([{
             id: 'test',

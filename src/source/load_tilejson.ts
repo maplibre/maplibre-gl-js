@@ -15,10 +15,9 @@ export function loadTileJson(
     requestManager: RequestManager,
     callback: Callback<TileJSON>
 ): Cancelable {
-    const loaded = function(err: Error, tileJSON: any) {
-        if (err) {
-            return callback(err);
-        } else if (tileJSON) {
+    // HM TODO: change this to promise
+    const loaded = (tileJSON: any) => {
+        if (tileJSON) {
             const result: any = pick(
                 // explicit source options take precedence over TileJSON
                 extend(tileJSON, options),
@@ -35,8 +34,16 @@ export function loadTileJson(
     };
 
     if (options.url) {
-        return getJSON(requestManager.transformRequest(options.url, ResourceType.Source), loaded);
+        const abortController = new AbortController();
+        getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController)
+            .then((response) => loaded(response.data))
+            .catch((err) => callback(err));
+        return {
+            cancel: () => {
+                abortController.abort();
+            }
+        };
     } else {
-        return browser.frame(() => loaded(null, options));
+        return browser.frame(() => loaded(options));
     }
 }

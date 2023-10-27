@@ -114,10 +114,7 @@ describe('resourceTiming', () => {
         window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
 
         const layerIndex = new StyleLayerIndex(layers);
-        const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => {
-            callback(null, geoJson);
-            return {cancel: () => {}};
-        });
+        const source = new GeoJSONWorkerSource(actor, layerIndex, [], () => Promise.resolve(geoJson));
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters)
             .then((result) => {
@@ -149,10 +146,7 @@ describe('resourceTiming', () => {
         jest.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
 
         const layerIndex = new StyleLayerIndex(layers);
-        const source = new GeoJSONWorkerSource(actor, layerIndex, [], (params, callback) => {
-            callback(null, geoJson);
-            return {cancel: () => {}};
-        });
+        const source = new GeoJSONWorkerSource(actor, layerIndex, [], () => Promise.resolve(geoJson));
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters)
             .then((result) => {
@@ -219,53 +213,51 @@ describe('loadData', () => {
 
     const layerIndex = new StyleLayerIndex(layers);
     function createWorker() {
-        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
-
-        // Making the call to loadGeoJSON asynchronous
-        // allows these tests to mimic a message queue building up
-        // (regardless of timing)
-        const originalLoadGeoJSON = worker.loadGeoJSON;
-        worker.loadGeoJSON = function(params, callback) {
-            const timeout = setTimeout(() => {
-                originalLoadGeoJSON(params, callback);
-            }, 0);
-
-            return {cancel: () => clearTimeout(timeout)};
-        };
-        return worker;
+        return new GeoJSONWorkerSource(actor, layerIndex, []);
     }
 
-    test('abandons previous callbacks', done => {
+    test('abandons previous callbacks', async () => {
         const worker = createWorker();
-        let firstCallbackHasRun = false;
 
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters).then((result) => {
-            expect(result && result.abandoned).toBeTruthy();
-            firstCallbackHasRun = true;
-        }).catch(() => expect(false).toBeTruthy());
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(geoJson));
+        });
 
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters).then((result) => {
-            expect(result && result.abandoned).toBeFalsy();
-            expect(firstCallbackHasRun).toBeTruthy();
-            done();
-        }).catch(() => expect(false).toBeTruthy());
+        const p1 = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
+        await new Promise((resolve) => (setTimeout(resolve, 0)));
+
+        const p2 = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
+
+        await new Promise((resolve) => (setTimeout(resolve, 0)));
+
+        server.respond();
+
+        const firstCallResult = await p1;
+        expect(firstCallResult && firstCallResult.abandoned).toBeTruthy();
+        const result = await p2;
+        expect(result && result.abandoned).toBeFalsy();
     });
 
-    test('removeSource aborts callbacks', done => {
+    test('removeSource aborts callbacks', async () => {
         const worker = createWorker();
-        let loadDataCallbackHasRun = false;
-        worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters).then((result) => {
-            expect(result && result.abandoned).toBeTruthy();
-            loadDataCallbackHasRun = true;
-        }).catch(() => expect(false).toBeTruthy());
 
-        worker.removeSource({source: 'source1', type: 'type'}).then(() => {
-            // Allow promsie to resolve
-            setTimeout(() => {
-                expect(loadDataCallbackHasRun).toBeTruthy();
-                done();
-            }, 0);
-        }).catch(() => expect(false).toBeTruthy());
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(geoJson));
+        });
+
+        const loadPromise = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
+
+        await new Promise((resolve) => (setTimeout(resolve, 0)));
+
+        const removePromise = worker.removeSource({source: 'source1', type: 'type'});
+
+        await new Promise((resolve) => (setTimeout(resolve, 0)));
+
+        server.respond();
+
+        const result = await loadPromise;
+        expect(result && result.abandoned).toBeTruthy();
+        await removePromise;
     });
 
     test('loadData with geojson creates an non-updateable source', done => {
