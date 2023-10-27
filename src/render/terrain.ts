@@ -19,6 +19,7 @@ import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat, earthRadius} from '../geo/lng_lat';
+import {Mesh} from './mesh';
 
 /**
  * @internal
@@ -34,16 +35,6 @@ export type TerrainData = {
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
     tile: Tile;
-}
-
-/**
- * @internal
- * A terrain mesh object
- */
-export type TerrainMesh = {
-    indexBuffer: IndexBuffer;
-    vertexBuffer: VertexBuffer;
-    segments: SegmentVector;
 }
 
 /**
@@ -106,7 +97,7 @@ export class Terrain {
      * GL Objects for the terrain-mesh
      * The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
      */
-    _mesh: TerrainMesh;
+    _mesh: Mesh;
     /**
      * coords index contains a list of tileID.keys. This index is used to identify
      * the tile via the alpha-cannel in the coords-texture.
@@ -142,6 +133,13 @@ export class Terrain {
         this._demMatrixCache = {};
         this.coordsIndex = [];
         this._coordsTextureSize = 1024;
+    }
+
+    destroy() {
+        if (this._mesh) {
+            this._mesh.destroy();
+            this._mesh = null;
+        }
     }
 
     /**
@@ -345,7 +343,7 @@ export class Terrain {
      * create a regular mesh which will be used by all terrain-tiles
      * @returns the created regular mesh
      */
-    getTerrainMesh(): TerrainMesh {
+    getTerrainMesh(): Mesh {
         if (this._mesh) return this._mesh;
         const context = this.painter.context;
         const vertexArray = new Pos3dArray();
@@ -379,11 +377,11 @@ export class Terrain {
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
-        this._mesh = {
-            indexBuffer: context.createIndexBuffer(indexArray),
-            vertexBuffer: context.createVertexBuffer(vertexArray, pos3dAttributes.members),
-            segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        };
+        this._mesh = new Mesh(
+            context.createVertexBuffer(vertexArray, pos3dAttributes.members),
+            context.createIndexBuffer(indexArray),
+            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        );
         return this._mesh;
     }
 

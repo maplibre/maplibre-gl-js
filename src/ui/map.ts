@@ -1977,7 +1977,10 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) this.terrain.sourceCache.destruct();
+            if (this.terrain) {
+                this.terrain.sourceCache.destruct();
+                this.terrain.destroy();
+            }
             this.terrain = null;
             this.transform._minEleveationForCurrentTile = 0;
             this.transform.elevation = 0;
