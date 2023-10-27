@@ -8,10 +8,10 @@
 export function resolveTokens(
     properties: {
         readonly [x: string]: unknown;
-    },
+    } | null,
     text: string
 ): string {
     return text.replace(/{([^{}]+)}/g, (match, key: string) => {
-        return key in properties ? String(properties[key]) : '';
+        return properties && key in properties ? String(properties[key]) : '';
     });
 }

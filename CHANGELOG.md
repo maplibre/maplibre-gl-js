@@ -4,6 +4,7 @@
 
 ### 🐞 Bug fixes
 
+- Fix null feature properties in resolve_tokens ([#3272](https://github.com/maplibre/maplibre-gl-js/pull/3272))
 - _...Add new stuff here..._
 
 ## 3.5.2
