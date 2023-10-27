@@ -48,7 +48,7 @@ export class CooperativeGestureControl implements IControl {
     }
 
     getDefaultPosition(): ControlPosition {
-        return 'map-container';
+        return 'full';
     }
 
     /** {@inheritDoc IControl.onAdd} */
@@ -77,17 +77,6 @@ export class CooperativeGestureControl implements IControl {
         return this._container;
     }
 
-    // /** {@inheritDoc IControl.onRemove} */
-    // onRemove() {
-    //     DOM.remove(this._container);
-    //     if (this._map) {
-    //         const mapCanvasContainer = this._map.getCanvasContainer();
-    //         this._map.off('wheel', this._cooperativeGesturesOnWheel);
-    //         this._map.off('touchmove', this._cooperativeGesturesOnTouch);
-    //         mapCanvasContainer.classList.remove('maplibregl-cooperative-gestures');
-    //         this._map = undefined;
-    //     }
-    // }
     /** {@inheritDoc IControl.onRemove} */
     onRemove(map: Map) {
         DOM.remove(this._container);

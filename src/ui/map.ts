@@ -732,7 +732,7 @@ export class Map extends Camera {
         const positionContainer = this._controlPositions[position];
         if (position.indexOf('bottom') !== -1) {
             positionContainer.insertBefore(controlElement, positionContainer.firstChild);
-        } else {
+        } else if (position !== 'full') {
             positionContainer.appendChild(controlElement);
         }
         return this;
@@ -2919,8 +2919,8 @@ export class Map extends Camera {
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
         const positions = this._controlPositions = {};
-        ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'map-container'].forEach((positionName) => {
-            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName}`, positionName === 'map-container' ? this._container : controlContainer);
+        ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
+            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName}`, controlContainer);
         });
 
         this._container.addEventListener('scroll', this._onMapScroll, false);

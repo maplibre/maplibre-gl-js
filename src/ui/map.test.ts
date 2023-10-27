@@ -1205,7 +1205,7 @@ describe('Map', () => {
     test('#remove', () => {
         const map = createMap();
         const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
-        expect(map.getContainer().childNodes).toHaveLength(3);
+        expect(map.getContainer().childNodes).toHaveLength(2);
         map.remove();
         expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
         expect(map.getContainer().childNodes).toHaveLength(0);
