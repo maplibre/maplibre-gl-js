@@ -136,7 +136,7 @@ export class VectorTileWorkerSource implements WorkerSource {
                 // HM TODO: add a test that is parsing an empty tile and is getting here
                 return null;
             }
-            
+
             const rawTileData = response.rawData;
             const cacheControl = {} as ExpiryData;
             if (response.expires) cacheControl.expires = response.expires;
