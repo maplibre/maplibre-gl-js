@@ -30,14 +30,6 @@ export class TerrainSourceCache extends Evented {
      */
     _sourceTileCache: {[_: string]: string};
     /**
-     * minimum zoomlevel to render the terrain.
-     */
-    minzoom: number;
-    /**
-     * maximum zoomlevel to render the terrain.
-     */
-    maxzoom: number;
-    /**
      * render-to-texture tileSize in scene.
      */
     tileSize: number;
@@ -55,8 +47,6 @@ export class TerrainSourceCache extends Evented {
         this.sourceCache = sourceCache;
         this._renderableTiles = {};
         this._sourceTileCache = {};
-        this.minzoom = 0;
-        this.maxzoom = 22;
         this.tileSize = 512;
         this.deltaZoom = 1;
         sourceCache.usedForTerrain = true;
@@ -72,40 +62,19 @@ export class TerrainSourceCache extends Evented {
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
      * @param transform - the operation to do
      * @param terrain - the terrain
+     * @param coveringTiles - visible tiles, obtained from `transform.coveringTiles()`
      */
-    update(transform: Transform, terrain: Terrain): void {
+    update(transform: Transform, terrain: Terrain, coveringTiles: Array<OverscaledTileID>): void {
         // load raster-dem tiles for the current scene.
         this.sourceCache.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
         this._renderableTiles = {};
-        const keys = {};
-        for (const tileID of transform.coveringTiles({
-            tileSize: this.tileSize,
-            minzoom: this.minzoom,
-            maxzoom: this.maxzoom,
-            reparseOverscaled: false,
-            terrain
-        })) {
-            keys[tileID.key] = true;
-            if (!this._renderableTiles[tileID.key]) {
-                this._renderableTiles[tileID.key] = tileID;
-                tileID.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-                this._lastTilesetChange = Date.now();
-            }
+        for (const tileID of coveringTiles) {
+            this._renderableTiles[tileID.key] = tileID;
+            tileID.posMatrix = new Float64Array(16) as any;
+            mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+            this._lastTilesetChange = Date.now();
         }
-        // free unused tiles
-        for (const key in this._renderableTiles) {
-            if (!keys[key]) delete this._renderableTiles[key];
-        }
-    }
-
-    /**
-     * get a list of tiles, which are loaded and should be rendered in the current scene
-     * @returns the renderable tiles
-     */
-    getRenderableTileIDs(): Array<OverscaledTileID> {
-        return Object.values(this._renderableTiles);
     }
 
     /**

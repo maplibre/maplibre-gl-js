@@ -1,22 +1,56 @@
 import {Transform} from '../geo/transform';
 import {OverscaledTileID} from '../source/tile_id';
+import {SegmentVector} from '../data/segment';
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {IndexBuffer} from '../gl/index_buffer';
+import {Context} from '../gl/context';
+import {Mesh} from './mesh';
+import {Pos3dTex2dArray, TriangleIndexArray} from '../data/array_types.g';
+import pos3dTex2dAttributes from '../data/pos3d_tex2d_attributes';
 
 export class Globe {
+    private _meshes: {[_: string]: Mesh};
+    private static readonly _squareMeshKey = 'square';
+
+    constructor() {
+        this._meshes = {};
+    }
 
     /**
      * Updates the tile coverage and projection of the globe.
      * @param transform Current camera transform
      */
-    public update(transform: Transform): void {
+    public update(transform: Transform, coveringTiles: Array<OverscaledTileID>, context: Context, rendering: boolean): void {
         // JP: TODO: not implemented
+        this._ensureMeshes(context);
     }
 
-    /**
-     * Gets a list of tiles
-     * @returns the renderable tiles
-     */
-    public getRenderableTileIDs(): Array<OverscaledTileID> {
-        return [];
+    public getMesh(tileIDkey: string): Mesh {
+        return this._meshes[Globe._squareMeshKey];
+        //return this._meshes[tileIDkey];
+    }
+
+    private _ensureMeshes(context: Context): void {
+        if (!this._meshes[Globe._squareMeshKey]) {
+            const vertexArray = new Pos3dTex2dArray();
+            const indexArray = new TriangleIndexArray();
+
+            for (let y = 0; y <= 2; y++) {
+                for (let x = 0; x <= 2; x++) {
+                    vertexArray.emplaceBack(x, y, 0, x, y);
+                }
+            }
+
+            indexArray.emplaceBack(0, 1, 2);
+            indexArray.emplaceBack(0, 1, 2);
+
+            const mesh = new Mesh(
+                context.createVertexBuffer(vertexArray, pos3dTex2dAttributes.members),
+                context.createIndexBuffer(indexArray),
+                SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+            );
+            this._meshes[Globe._squareMeshKey] = mesh;
+        }
     }
 
     /**

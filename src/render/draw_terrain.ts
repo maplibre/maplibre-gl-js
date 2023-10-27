@@ -7,20 +7,18 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
 import {Terrain} from './terrain';
 import {OverscaledTileID} from '../source/tile_id';
-import {vec4} from 'gl-matrix';
 
 /**
  * Redraw the Depth Framebuffer
  * @param painter - the painter
  * @param terrain - the terrain
  */
-function drawDepth(painter: Painter, terrain: Terrain) {
+function drawDepth(painter: Painter, terrain: Terrain, tileIDs: Array<OverscaledTileID>) {
     const context = painter.context;
     const gl = context.gl;
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const mesh = terrain.getTerrainMesh();
-    const tileIDs = terrain.sourceCache.getRenderableTileIDs();
     const program = painter.useProgram('terrainDepth');
     context.bindFramebuffer.set(terrain.getFramebuffer('depth').framebuffer);
     context.viewport.set([0, 0, painter.width  / devicePixelRatio, painter.height / devicePixelRatio]);
@@ -40,14 +38,13 @@ function drawDepth(painter: Painter, terrain: Terrain) {
  * @param painter - the painter
  * @param terrain - the terrain
  */
-function drawCoords(painter: Painter, terrain: Terrain) {
+function drawCoords(painter: Painter, terrain: Terrain, tileIDs: Array<OverscaledTileID>) {
     const context = painter.context;
     const gl = context.gl;
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const mesh = terrain.getTerrainMesh();
     const coords = terrain.getCoordsTexture();
-    const tileIDs = terrain.sourceCache.getRenderableTileIDs();
 
     // draw tile-coords into framebuffer
     const program = painter.useProgram('terrainCoords');
@@ -88,7 +85,6 @@ function drawTerrain(painter: Painter, terrain: Terrain, tileIDs: Array<Overscal
         const uniformValues = terrainUniformValues(posMatrix, terrain.getMeshFrameDelta(painter.transform.zoom), painter.renderToTexture.getTileColorForDebug(tileID.key));
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
-
 }
 
 export {

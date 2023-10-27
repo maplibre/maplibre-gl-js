@@ -38,6 +38,7 @@ import {
     lineVertex,
     textAnchorOffset
 } from '../src/data/bucket/symbol_attributes';
+import pos3dTex2dAttributes from '../src/data/pos3d_tex2d_attributes';
 
 const typeAbbreviations = {
     'Int8': 'b',
@@ -137,6 +138,7 @@ function camelize (str) {
 
 createStructArrayType('pos', posAttributes);
 createStructArrayType('pos3d', pos3dAttributes);
+createStructArrayType('pos3d_tex2d', pos3dTex2dAttributes);
 createStructArrayType('raster_bounds', rasterBoundsAttributes);
 
 // layout vertex arrays

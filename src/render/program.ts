@@ -52,7 +52,7 @@ export class Program<Us extends UniformBindings> {
         configuration: ProgramConfiguration,
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
-        terrain: Terrain) {
+        hasTerrain: boolean) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
@@ -75,7 +75,7 @@ export class Program<Us extends UniformBindings> {
         if (showOverdrawInspector) {
             defines.push('#define OVERDRAW_INSPECTOR;');
         }
-        if (terrain) {
+        if (hasTerrain) {
             defines.push('#define TERRAIN3D;');
         }
 

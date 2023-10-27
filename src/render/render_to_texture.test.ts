@@ -16,7 +16,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import { drawTerrain } from './draw_terrain';
+import {drawTerrain} from './draw_terrain';
 
 describe('render to texture', () => {
     const backgroundLayer = {
@@ -96,17 +96,17 @@ describe('render to texture', () => {
     style.map = map;
 
     const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
-    terrain.sourceCache.getRenderableTileIDs = () => [tile.tileID];
+    const renderableTiles = [tile.tileID];
     painter.renderToTexture.getTerrainCoords = () => { return {[tile.tileID.key]: tile.tileID}; };
     map.terrain = terrain;
 
     const rtt = new RenderToTexture(painter);
-    rtt.prepareForRender(style, 0, terrain.sourceCache.getRenderableTileIDs());
+    rtt.prepareForRender(style, 0, renderableTiles);
     painter.renderToTexture = rtt;
 
     const drawTerrainFunc = (painter: Painter, tiles: OverscaledTileID[]) => {
         drawTerrain(painter, terrain, tiles);
-    }
+    };
 
     test('check state', () => {
         expect(rtt._renderableTiles.map(t => t.key)).toStrictEqual(['923']);
@@ -116,7 +116,7 @@ describe('render to texture', () => {
 
     test('should render text after a line by not adding the text to the stack', () => {
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.prepareForRender(style, 0, terrain.sourceCache.getRenderableTileIDs());
+        rtt.prepareForRender(style, 0, renderableTiles);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
         expect(rtt.renderLayer(fillLayer, drawTerrainFunc)).toBeTruthy();
@@ -126,7 +126,7 @@ describe('render to texture', () => {
 
     test('render symbol inbetween of rtt layers', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
-        rtt.prepareForRender(style, 0, terrain.sourceCache.getRenderableTileIDs());
+        rtt.prepareForRender(style, 0, renderableTiles);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer, drawTerrainFunc)).toBeTruthy();
@@ -141,7 +141,7 @@ describe('render to texture', () => {
 
     test('render more symbols inbetween of rtt layers', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
-        rtt.prepareForRender(style, 0, terrain.sourceCache.getRenderableTileIDs());
+        rtt.prepareForRender(style, 0, renderableTiles);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
         expect(rtt.renderLayer(backgroundLayer, drawTerrainFunc)).toBeTruthy();

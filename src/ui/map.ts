@@ -68,6 +68,7 @@ import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../s
 import {drawTerrain} from '../render/draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 import {Globe} from '../render/globe';
+import {drawGlobe} from '../render/draw_globe';
 
 const version = packageJSON.version;
 
@@ -2031,11 +2032,9 @@ export class Map extends Camera {
         if (enabled) {
             this.globe = new Globe();
             this._updateRenderToTexture();
-            this._update();
         } else {
             this.globe = null;
             this._updateRenderToTexture();
-            this._update();
         }
     }
 
@@ -3208,9 +3207,28 @@ export class Map extends Camera {
             this.style._updateSources(this.transform);
         }
 
+        const preferGlobe = false;
+
+        let rttCoveringTiles;
+
+        if (this.terrain || this.globe) {
+            const rttTileSize = 512;
+            const rttMinZoom = 0;
+            const rttMaxZoom = 22;
+
+            rttCoveringTiles = this.transform.coveringTiles({
+                tileSize: rttTileSize,
+                minzoom: rttMinZoom,
+                maxzoom: rttMaxZoom,
+                reparseOverscaled: false,
+                terrain: this.terrain,
+                globe: this.globe,
+            });
+        }
+
         // update terrain stuff
         if (this.terrain) {
-            this.terrain.sourceCache.update(this.transform, this.terrain);
+            this.terrain.sourceCache.update(this.transform, this.terrain, rttCoveringTiles);
             this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             if (!this._elevationFreeze) {
                 this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
@@ -3220,17 +3238,30 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
+        if (this.globe) {
+            this.globe.update(this.transform, rttCoveringTiles, this.painter.context, preferGlobe);
+        }
+
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
         let rttOptions;
 
-        if (this.terrain) {
-            rttOptions = {
-                rttTiles: this.terrain.sourceCache.getRenderableTileIDs(),
-                drawFunc: (painter: Painter, rttTiles: OverscaledTileID[]) => {
-                    drawTerrain(painter, this.terrain, rttTiles);
-                },
-            };
+        if (this.terrain || this.globe) {
+            if (preferGlobe) {
+                rttOptions = {
+                    rttTiles: rttCoveringTiles,
+                    drawFunc: (painter: Painter, rttTiles: OverscaledTileID[]) => {
+                        drawGlobe(painter, this.globe, rttTiles);
+                    },
+                };
+            } else {
+                rttOptions = {
+                    rttTiles: rttCoveringTiles,
+                    drawFunc: (painter: Painter, rttTiles: OverscaledTileID[]) => {
+                        drawTerrain(painter, this.terrain, rttTiles);
+                    },
+                };
+            }
         }
 
         if (this.painter.renderToTexture) {
