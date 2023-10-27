@@ -230,6 +230,7 @@ export class VectorTileSource extends Evented implements Source {
             return callback(err);
         }
         // HM TODO: add a unit test that gets here with error status 404
+        // HM TODO: add a unit test that gets here with data that is null - empty geojson
         if (data && data.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
