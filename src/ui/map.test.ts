@@ -1205,7 +1205,7 @@ describe('Map', () => {
     test('#remove', () => {
         const map = createMap();
         const spyWorkerPoolRelease = jest.spyOn(map.style.dispatcher.workerPool, 'release');
-        expect(map.getContainer().childNodes).toHaveLength(2);
+        expect(map.getContainer().childNodes).toHaveLength(3);
         map.remove();
         expect(spyWorkerPoolRelease).toHaveBeenCalledTimes(1);
         expect(map.getContainer().childNodes).toHaveLength(0);
@@ -2676,6 +2676,12 @@ describe('Map', () => {
             const map = createMap({cooperativeGestures: true});
 
             expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen').getAttribute('aria-hidden')).toBeTruthy();
+        });
+
+        test('cooperativeGesture container element is not available when scrollZoom disabled', () => {
+            const map = createMap({cooperativeGestures: true});
+            map.scrollZoom.disable();
+            expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen')).toBeFalsy();
         });
     });
 

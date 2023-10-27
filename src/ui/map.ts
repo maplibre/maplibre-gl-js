@@ -638,7 +638,7 @@ export class Map extends Camera {
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
 
         if (options.cooperativeGestures) {
-            this.addControl(new CooperativeGestureControl(options.cooperativeGestures));
+            this.setCooperativeGestures(options.cooperativeGestures);
         }
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
@@ -2919,8 +2919,8 @@ export class Map extends Camera {
 
         const controlContainer = this._controlContainer = DOM.create('div', 'maplibregl-control-container', container);
         const positions = this._controlPositions = {};
-        ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((positionName) => {
-            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName} `, controlContainer);
+        ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'map-container'].forEach((positionName) => {
+            positions[positionName] = DOM.create('div', `maplibregl-ctrl-${positionName}`, positionName === 'map-container' ? this._container : controlContainer);
         });
 
         this._container.addEventListener('scroll', this._onMapScroll, false);
@@ -3227,7 +3227,6 @@ export class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
-        if (this._cooperativeGestures) this.removeControl(this._cooperativeGesturesControl);
         this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();

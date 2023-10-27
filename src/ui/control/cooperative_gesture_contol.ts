@@ -48,7 +48,7 @@ export class CooperativeGestureControl implements IControl {
     }
 
     getDefaultPosition(): ControlPosition {
-        return 'top-left';
+        return 'map-container';
     }
 
     /** {@inheritDoc IControl.onAdd} */
@@ -77,27 +77,36 @@ export class CooperativeGestureControl implements IControl {
         return this._container;
     }
 
+    // /** {@inheritDoc IControl.onRemove} */
+    // onRemove() {
+    //     DOM.remove(this._container);
+    //     if (this._map) {
+    //         const mapCanvasContainer = this._map.getCanvasContainer();
+    //         this._map.off('wheel', this._cooperativeGesturesOnWheel);
+    //         this._map.off('touchmove', this._cooperativeGesturesOnTouch);
+    //         mapCanvasContainer.classList.remove('maplibregl-cooperative-gestures');
+    //         this._map = undefined;
+    //     }
+    // }
     /** {@inheritDoc IControl.onRemove} */
-    onRemove() {
+    onRemove(map: Map) {
         DOM.remove(this._container);
-        if (this._map) {
-            const mapCanvasContainer = this._map.getCanvasContainer();
-            this._map.off('wheel', this._cooperativeGesturesOnWheel);
-            this._map.off('touchmove', this._cooperativeGesturesOnTouch);
-            mapCanvasContainer.classList.remove('maplibregl-cooperative-gestures');
-            this._map = undefined;
-        }
+        const mapCanvasContainer = map.getCanvasContainer();
+        map.off('wheel', this._cooperativeGesturesOnWheel);
+        map.off('touchmove', this._cooperativeGesturesOnTouch);
+        mapCanvasContainer.classList.remove('maplibregl-cooperative-gestures');
+        this._map = undefined;
     }
 
-    _cooperativeGesturesOnTouch = (event: TouchEvent) => {
-        this._onCooperativeGesture(event, false);
+    _cooperativeGesturesOnTouch = () => {
+        this._onCooperativeGesture(false);
     };
 
     _cooperativeGesturesOnWheel = (event: WheelEvent) => {
-        this._onCooperativeGesture(event, event[this._metaKey]);
+        this._onCooperativeGesture(event['originalEvent'][this._metaKey]);
     };
 
-    _onCooperativeGesture(event: any, metaPress) {
+    _onCooperativeGesture(metaPress:boolean) {
         if (!metaPress) {
             // Alert user how to scroll/pan
             this._container.classList.add('maplibregl-show');
