@@ -7,6 +7,7 @@ import {Context} from '../gl/context';
 import {Mesh} from './mesh';
 import {Pos3dTex2dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dTex2dAttributes from '../data/pos3d_tex2d_attributes';
+import {EXTENT} from '../data/extent';
 
 export class Globe {
     private _meshes: {[_: string]: Mesh};
@@ -37,12 +38,12 @@ export class Globe {
 
             for (let y = 0; y <= 2; y++) {
                 for (let x = 0; x <= 2; x++) {
-                    vertexArray.emplaceBack(x, y, 0, x, y);
+                    vertexArray.emplaceBack(x * EXTENT, y * EXTENT, 0, x, y);
                 }
             }
 
             indexArray.emplaceBack(0, 1, 2);
-            indexArray.emplaceBack(0, 1, 2);
+            indexArray.emplaceBack(0, 2, 1);
 
             const mesh = new Mesh(
                 context.createVertexBuffer(vertexArray, pos3dTex2dAttributes.members),
