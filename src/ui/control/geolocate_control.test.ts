@@ -474,12 +474,10 @@ describe('GeolocateControl with no options', () => {
         map.zoomTo(12, {duration: 0});
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBe('79px');
-        console.log(geolocate._circleElement.style.width);
         zoomendPromise = map.once('zoomend');
         map.zoomTo(10, {duration: 0});
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBe('20px');
-        console.log(geolocate._circleElement.style.width);
         zoomendPromise = map.once('zoomend');
 
         // test with smaller radius
@@ -487,12 +485,10 @@ describe('GeolocateControl with no options', () => {
         map.zoomTo(20, {duration: 0});
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBe('19982px');
-        console.log(geolocate._circleElement.style.width);
         zoomendPromise = map.once('zoomend');
         map.zoomTo(18, {duration: 0});
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBe('4996px');
-        console.log(geolocate._circleElement.style.width);
     });
 
     test('shown even if trackUserLocation = false', async () => {

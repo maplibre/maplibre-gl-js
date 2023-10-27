@@ -22,16 +22,21 @@ export function loadSprite(
     const format = pixelRatio > 1 ? '@2x' : '';
 
     const combinedRequestsMap: {[requestKey: string]: Cancelable} = {};
+    const getJsonRequestsMap: {[requestKey: string]: AbortController} = {};
     const jsonsMap: {[id: string]: any} = {};
     const imagesMap: {[id: string]: (HTMLImageElement | ImageBitmap)} = {};
 
     for (const {id, url} of spriteArray) {
         const jsonRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.json'), ResourceType.SpriteJSON);
         const jsonRequestKey = `${id}_${jsonRequestParameters.url}`; // use id_url as requestMap key to make sure it is unique
-        combinedRequestsMap[jsonRequestKey] = getJSON(jsonRequestParameters, (err?: Error | null, data?: any | null) => {
-            delete combinedRequestsMap[jsonRequestKey];
-            jsonsMap[id] = data;
-            doOnceCompleted(callback, jsonsMap, imagesMap, err, spriteArrayLength);
+        getJsonRequestsMap[jsonRequestKey] = new AbortController();
+        getJSON(jsonRequestParameters, getJsonRequestsMap[jsonRequestKey]).then((response) => {
+            delete getJsonRequestsMap[jsonRequestKey];
+            jsonsMap[id] = response.data;
+            doOnceCompleted(callback, jsonsMap, imagesMap, null, spriteArrayLength);
+        }).catch((err) => {
+            delete getJsonRequestsMap[jsonRequestKey];
+            callback(err);
         });
 
         const imageRequestParameters = requestManager.transformRequest(requestManager.normalizeSpriteURL(url, format, '.png'), ResourceType.SpriteImage);
@@ -47,6 +52,9 @@ export function loadSprite(
         cancel() {
             for (const requst of Object.values(combinedRequestsMap)) {
                 requst.cancel();
+            }
+            for (const controller of Object.values(getJsonRequestsMap)) {
+                controller.abort();
             }
         }
     };

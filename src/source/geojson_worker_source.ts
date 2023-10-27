@@ -200,23 +200,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     loadGeoJSON = async (params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> => {
         const {promoteId} = params;
         if (params.request) {
-            return new Promise<GeoJSON.GeoJSON>((resolve, reject) => {
-                const request = getJSON(params.request, (
-                    error?: Error,
-                    data?: any
-                ) => {
-                    this._dataUpdateable = isUpdateableGeoJSON(data, promoteId) ? toUpdateable(data, promoteId) : undefined;
-                    if (error) {
-                        reject(error);
-                        return;
-                    }
-                    resolve(data);
-                });
-                abortController.signal.addEventListener('abort', () => {
-                    request.cancel();
-                    reject(new Error('AbortError'));
-                });
-            });
+            const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
+            this._dataUpdateable = isUpdateableGeoJSON(response.data, promoteId) ? toUpdateable(response.data, promoteId) : undefined;
+            return response.data;
         }
         if (typeof params.data === 'string') {
             try {
