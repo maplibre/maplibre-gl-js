@@ -280,12 +280,21 @@ export const getJSON = <T>(requestParameters: RequestParameters, abortController
     });
 };
 
-export const getArrayBuffer = (requestParameters: RequestParameters, callback: ResponseCallback<ArrayBuffer>): Cancelable => {
-    return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
-};
-
-export const postData = function(requestParameters: RequestParameters, callback: ResponseCallback<string>): Cancelable {
-    return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
+export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<{data: ArrayBuffer} & ExpiryData> => {
+    return new Promise<{data: ArrayBuffer}& ExpiryData>((resolve, reject) => {
+        const callback = (err: Error, data: ArrayBuffer, cacheControl: string | null, expires: string | null) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({data, cacheControl, expires});
+            }
+        };
+        const canelable = makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
+        abortController.signal.addEventListener('abort', () => {
+            canelable.cancel();
+            reject(new Error('AbortError'));
+        });
+    });
 };
 
 export function sameOrigin(inComingUrl: string) {
