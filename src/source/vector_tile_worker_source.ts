@@ -38,8 +38,6 @@ export type LoadVectorDataCallback = Callback<LoadVectorTileResult>;
 export type AbortVectorData = () => void;
 export type LoadVectorData = (params: WorkerTileParameters, abortController: AbortController) => Promise<LoadVectorTileResult | null>;
 
-let me = 0;
-
 /**
  * The {@link WorkerSource} implementation that supports {@link VectorTileSource}.
  * This class is designed to be easily reused to support custom source types
@@ -55,7 +53,6 @@ export class VectorTileWorkerSource implements WorkerSource {
     fetching: {[_: string]: FetchingState };
     loading: {[_: string]: WorkerTile};
     loaded: {[_: string]: WorkerTile};
-    my: number;
 
     /**
      * @param loadVectorData - Optional method for custom loading of a VectorTile
@@ -71,13 +68,12 @@ export class VectorTileWorkerSource implements WorkerSource {
         this.fetching = {};
         this.loading = {};
         this.loaded = {};
-        this.my = me++;
     }
 
     /**
      * Loads a vector tile
      */
-    async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
+    private async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
             const vectorTile = new vt.VectorTile(new Protobuf(response.data));

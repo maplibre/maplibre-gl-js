@@ -41,7 +41,7 @@ describe('Actor', () => {
         await Promise.all([p1, p2]);
     });
 
-    test('cancel a request does not reject or resolves a promise', async () => {
+    test('cancel a request does not reject or resolve a promise', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', async (_mapId, params) => {
             await new Promise((resolve) => (setTimeout(resolve, 200)));
@@ -64,7 +64,7 @@ describe('Actor', () => {
         expect(received).toBeFalsy();
     });
 
-    test('cancel a request of a canceable registrated callback will cancel it', async () => {
+    test('cancel a request of a cancelable registered callback will cancel it', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         let gotAbortSignal = false;
         worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', (_mapId, _params, handlerAbortController) => {
