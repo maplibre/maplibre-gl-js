@@ -42,7 +42,7 @@ describe('ajax', () => {
             expect(ajaxError.statusText).toBe('Not Found');
             expect(ajaxError.url).toBe('http://example.com/test.bin');
             expect(body).toBe('404 Not Found');
-        };
+        }
     });
 
     test('getJSON', done => {
