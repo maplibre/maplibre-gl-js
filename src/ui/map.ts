@@ -2481,6 +2481,15 @@ export class Map extends Camera {
     }
 
     /**
+     * Return the ids of all layers currently in the style, including custom layers, in order.
+     *
+     * @returns ids of layers, in order
+     */
+    getLayersOrder(): string[] {
+        return this.style.getLayersOrder();
+    }
+
+    /**
      * Sets the zoom extent for the specified style layer. The zoom extent includes the
      * [minimum zoom level](https://maplibre.org/maplibre-style-spec/layers/#minzoom)
      * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/layers/#maxzoom))
