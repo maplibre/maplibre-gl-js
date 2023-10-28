@@ -52,7 +52,7 @@ export class CooperativeGestureControl implements IControl {
     }
 
     /** {@inheritDoc IControl.onAdd} */
-    onAdd(map: Map) {
+    onAdd(map:Map) {
         this._map = map;
         const mapCanvasContainer = this._map.getCanvasContainer();
         const cooperativeGestures = this._map.getCooperativeGestures();
@@ -62,10 +62,16 @@ export class CooperativeGestureControl implements IControl {
             desktopMessage = typeof cooperativeGestures !== 'boolean' && cooperativeGestures.macHelpText ? cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
         }
         const mobileMessage = typeof cooperativeGestures !== 'boolean' && cooperativeGestures.mobileHelpText ? cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
-        this._container.innerHTML = `
-            <div class="maplibregl-desktop-message">${desktopMessage}</div>
-            <div class="maplibregl-mobile-message">${mobileMessage}</div>
-        `;
+        // Create and append the desktop message div
+        const desktopDiv = document.createElement('div');
+        desktopDiv.className = 'maplibregl-desktop-message';
+        desktopDiv.textContent = desktopMessage;
+        this._container.appendChild(desktopDiv);
+        // Create and append the mobile message div
+        const mobileDiv = document.createElement('div');
+        mobileDiv.className = 'maplibregl-mobile-message';
+        mobileDiv.textContent = mobileMessage;
+        this._container.appendChild(mobileDiv);
         // Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
         this._container.setAttribute('aria-hidden', 'true');
         // Add event to canvas container since gesture container is pointer-events: none
@@ -73,10 +79,8 @@ export class CooperativeGestureControl implements IControl {
         this._map.on('touchmove', this._cooperativeGesturesOnTouch);
         // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
         mapCanvasContainer.classList.add('maplibregl-cooperative-gestures');
-
         return this._container;
     }
-
     /** {@inheritDoc IControl.onRemove} */
     onRemove(map: Map) {
         DOM.remove(this._container);
