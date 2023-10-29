@@ -60,7 +60,7 @@ describe('maplibre', () => {
         expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - returning ImageBitmap for getImage', done => {
+    test('#addProtocol - returning ImageBitmap for getImage', async () => {
         let protocolCallbackCalled = false;
         maplibre.addProtocol('custom', (_reqParam, callback) => {
             protocolCallbackCalled = true;
@@ -68,27 +68,21 @@ describe('maplibre', () => {
             return {cancel: () => {}};
         });
 
-        ImageRequest.getImage({url: 'custom://test/url/getImage'}, async (error, img) => {
-            expect(error).toBeFalsy();
-            expect(img).toBeInstanceOf(ImageBitmap);
-            expect(protocolCallbackCalled).toBeTruthy();
-            done();
-        });
+        const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
+        expect(img.data).toBeInstanceOf(ImageBitmap);
+        expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - returning HTMLImageElement for getImage', done => {
+    test('#addProtocol - returning HTMLImageElement for getImage', async () => {
         let protocolCallbackCalled = false;
         maplibre.addProtocol('custom', (reqParam, callback) => {
             protocolCallbackCalled = true;
             callback(null, new Image());
             return {cancel: () => {}};
         });
-        ImageRequest.getImage({url: 'custom://test/url/getImage'}, async (error, img) => {
-            expect(error).toBeFalsy();
-            expect(img).toBeInstanceOf(HTMLImageElement);
-            expect(protocolCallbackCalled).toBeTruthy();
-            done();
-        });
+        const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
+        expect(img.data).toBeInstanceOf(HTMLImageElement);
+        expect(protocolCallbackCalled).toBeTruthy();
     });
 
     test('#addProtocol - error', () => {

@@ -20,7 +20,6 @@ import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
-import {Cancelable} from '../types/cancelable';
 
 /**
  * Four geographical coordinates,
@@ -107,7 +106,7 @@ export class ImageSource extends Evented implements Source {
     boundsBuffer: VertexBuffer;
     boundsSegments: SegmentVector;
     _loaded: boolean;
-    _request: Cancelable;
+    _request: AbortController;
 
     /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -134,14 +133,12 @@ export class ImageSource extends Evented implements Source {
 
         this.url = this.options.url;
 
-        this._request = ImageRequest.getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), (err, image) => {
+        this._request = new AbortController();
+        ImageRequest.getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), this._request).then((response) => {
             this._request = null;
             this._loaded = true;
-
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (image) {
-                this.image = image;
+            if (response.data) {
+                this.image = response.data;
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
                 }
@@ -150,6 +147,10 @@ export class ImageSource extends Evented implements Source {
                 }
                 this._finishLoading();
             }
+        }).catch((err) => {
+            this._request = null;
+            this._loaded = true;
+            this.fire(new ErrorEvent(err));
         });
     };
 
@@ -170,7 +171,7 @@ export class ImageSource extends Evented implements Source {
         }
 
         if (this._request) {
-            this._request.cancel();
+            this._request.abort();
             this._request = null;
         }
 
@@ -193,7 +194,7 @@ export class ImageSource extends Evented implements Source {
 
     onRemove() {
         if (this._request) {
-            this._request.cancel();
+            this._request.abort();
             this._request = null;
         }
     }

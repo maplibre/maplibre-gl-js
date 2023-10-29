@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, asyncAll, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -13,50 +13,6 @@ describe('util', () => {
     expect(pick({a: 1, b: 2, c: 3}, ['a', 'c'])).toEqual({a: 1, c: 3});
     expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'])).toEqual({a: 1, c: 3});
     expect(typeof uniqueId() === 'number').toBeTruthy();
-
-    test('asyncAll - sync', done => {
-        expect(asyncAll([0, 1, 2], (data, callback) => {
-            callback(null, data);
-        }, (err, results) => {
-            expect(err).toBeFalsy();
-            expect(results).toEqual([0, 1, 2]);
-        })).toBeUndefined();
-        done();
-    });
-
-    test('asyncAll - async', done => {
-        expect(asyncAll([4, 0, 1, 2], (data, callback) => {
-            setTimeout(() => {
-                callback(null, data);
-            }, data);
-        }, (err, results) => {
-            expect(err).toBeFalsy();
-            expect(results).toEqual([4, 0, 1, 2]);
-            done();
-        })).toBeUndefined();
-    });
-
-    test('asyncAll - error', done => {
-        expect(asyncAll([4, 0, 1, 2], (data, callback) => {
-            setTimeout(() => {
-                callback(new Error('hi'), data);
-            }, data);
-        }, (err, results) => {
-            expect(err && err.message).toBe('hi');
-            expect(results).toEqual([4, 0, 1, 2]);
-            done();
-        })).toBeUndefined();
-    });
-
-    test('asyncAll - empty', done => {
-        expect(asyncAll([], (data, callback) => {
-            callback(null, 'foo');
-        }, (err, results) => {
-            expect(err).toBeFalsy();
-            expect(results).toEqual([]);
-        })).toBeUndefined();
-        done();
-    });
 
     test('isPowerOfTwo', done => {
         expect(isPowerOfTwo(1)).toBe(true);
@@ -114,20 +70,6 @@ describe('util', () => {
         expect(curve(1)).toBe(1);
         expect(curve(0.5)).toBe(0.8230854638965502);
         done();
-    });
-
-    test('asyncAll', done => {
-        let expectedValue = 1;
-        asyncAll([], (callback) => { callback(); }, () => {
-            expect('immediate callback').toBeTruthy();
-        });
-        asyncAll([1, 2, 3], (number, callback) => {
-            expect(number).toBe(expectedValue++);
-            expect(callback instanceof Function).toBeTruthy();
-            callback(null, 0);
-        }, () => {
-            done();
-        });
     });
 
     test('mapObject', () => {

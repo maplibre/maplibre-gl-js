@@ -2319,7 +2319,9 @@ export class Map extends Camera {
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
      */
     loadImage(url: string, callback: GetImageCallback) {
-        ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
+        ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController())
+            .then((response) => callback(null, response.data, {cacheControl: response.cacheControl, expires: response.expires}))
+            .catch(callback);
     }
 
     /**

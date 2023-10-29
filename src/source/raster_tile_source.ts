@@ -158,25 +158,20 @@ export class RasterTileSource extends Evented implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), (err, img, expiry) => {
-            delete tile.request;
-
-            if (tile.aborted) {
-                tile.state = 'unloaded';
-                callback(null);
-            } else if (err) {
-                tile.state = 'errored';
-                callback(err);
-            } else if (img) {
-                if (this.map._refreshExpiredTiles && expiry) tile.setExpiryData(expiry);
-
+        tile.abortController = new AbortController();
+        ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles).then((response) => {
+            delete tile.abortController;
+            if (response.data) {
+                if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
+                    tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
+                }
                 const context = this.map.painter.context;
                 const gl = context.gl;
-                tile.texture = this.map.painter.getTileTexture(img.width);
+                tile.texture = this.map.painter.getTileTexture(response.data.width);
                 if (tile.texture) {
-                    tile.texture.update(img, {useMipmap: true});
+                    tile.texture.update(response.data, {useMipmap: true});
                 } else {
-                    tile.texture = new Texture(context, img, gl.RGBA, {useMipmap: true});
+                    tile.texture = new Texture(context, response.data, gl.RGBA, {useMipmap: true});
                     tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 
                     if (context.extTextureFilterAnisotropic) {
@@ -188,13 +183,23 @@ export class RasterTileSource extends Evented implements Source {
 
                 callback(null);
             }
-        }, this.map._refreshExpiredTiles);
+        }).catch((err) => {
+            const aborted = delete tile.abortController;
+            delete tile.abortController;
+            if (aborted) {
+                tile.state = 'unloaded';
+                callback(null);
+                return;
+            }
+            tile.state = 'errored';
+            callback(err);
+        });
     }
 
     abortTile(tile: Tile, callback: Callback<void>) {
-        if (tile.request) {
-            tile.request.cancel();
-            delete tile.request;
+        if (tile.abortController) {
+            tile.abortController.abort();
+            delete tile.abortController;
         }
         callback();
     }

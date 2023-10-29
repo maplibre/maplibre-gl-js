@@ -1,6 +1,4 @@
-import type {Cancelable} from '../types/cancelable';
 import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolAction, GetResourceResponse} from './ajax';
-import type {Callback} from '../types/callback';
 
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
 import {webpSupported} from './webp_supported';
@@ -13,13 +11,13 @@ export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement |
 
 type ImageQueueThrottleControlCallback = () => boolean;
 
-export type ImageRequestQueueItem  = Cancelable & {
+export type ImageRequestQueueItem  = {
     requestParameters: RequestParameters;
     supportImageRefresh: boolean;
-    callback: GetImageCallback;
-    cancelled: boolean;
-    completed: boolean;
-    innerRequest?: AbortController;
+    state: 'queued' | 'running' | 'completed';
+    abortController: AbortController;
+    onError: (error: Error) => void;
+    onSuccess: (response: GetResourceResponse<HTMLImageElement | ImageBitmap | null>) => void;
 }
 
 type ImageQueueThrottleCallbackDictionary = {
@@ -95,17 +93,12 @@ export namespace ImageRequest {
      * @returns `true` if any callback is causing the queue to be throttled.
      */
     const isThrottled = (): boolean => {
-        const allControlKeys = Object.keys(throttleControlCallbacks);
-        let throttleingRequested = false;
-        if (allControlKeys.length > 0)        {
-            for (const key of allControlKeys) {
-                throttleingRequested = throttleControlCallbacks[key]();
-                if (throttleingRequested) {
-                    break;
-                }
+        for (const key of Object.keys(throttleControlCallbacks)) {
+            if (throttleControlCallbacks[key]()) {
+                return true;
             }
         }
-        return throttleingRequested;
+        return false;
     };
 
     /**
@@ -115,58 +108,55 @@ export namespace ImageRequest {
      * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
      * @returns Cancelable request.
      */
-    export const getImage = (
-        requestParameters: RequestParameters,
-        callback: GetImageCallback,
-        supportImageRefresh: boolean = true
-    ): ImageRequestQueueItem => {
-        if (webpSupported.supported) {
-            if (!requestParameters.headers) {
-                requestParameters.headers = {};
-            }
-            requestParameters.headers.accept = 'image/webp,*/*';
-        }
-
-        const request: ImageRequestQueueItem = {
-            requestParameters,
-            supportImageRefresh,
-            callback,
-            cancelled: false,
-            completed: false,
-            cancel: () => {
-                if (!request.completed && !request.cancelled) {
-                    request.cancelled = true;
-
-                    // Only reduce currentParallelImageRequests, if the image request was issued.
-                    if (request.innerRequest) {
-                        request.innerRequest.abort();
-                        currentParallelImageRequests--;
-                    }
-
-                    // in the case of cancelling, it WILL move on
-                    processQueue();
+    export const getImage = (requestParameters: RequestParameters, abortController: AbortController, supportImageRefresh: boolean = true): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
+        return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
+            if (webpSupported.supported) {
+                if (!requestParameters.headers) {
+                    requestParameters.headers = {};
                 }
+                requestParameters.headers.accept = 'image/webp,*/*';
             }
-        };
+            extend(requestParameters, {type: 'image'});
+            const request: ImageRequestQueueItem = {
+                abortController,
+                requestParameters,
+                supportImageRefresh,
+                state: 'queued',
+                onError: (error: Error) => {
+                    reject(error);
+                },
+                onSuccess: (response) => {
+                    resolve(response);
+                }
+            };
 
-        imageRequestQueue.push(request);
-        processQueue();
-        return request;
+            imageRequestQueue.push(request);
+            request.abortController.signal.addEventListener('abort', () => {
+                if (request.state === 'completed' || request.state === 'queued') {
+                    return;
+                }
+                // Only reduce currentParallelImageRequests, if the image request was issued.
+                currentParallelImageRequests--;
+
+                // in the case of cancelling, it WILL move on
+                processQueue();
+            });
+            processQueue();
+        });
     };
 
-    const arrayBufferToCanvasImageSource = (data: ArrayBuffer, callback: Callback<CanvasImageSource>) => {
+    const arrayBufferToCanvasImageSource = (data: ArrayBuffer): Promise<HTMLImageElement | ImageBitmap | null> => {
         const imageBitmapSupported = typeof createImageBitmap === 'function';
         if (imageBitmapSupported) {
-            arrayBufferToImageBitmap(data, callback);
+            return arrayBufferToImageBitmap(data);
         } else {
-            arrayBufferToImage(data, callback);
+            return arrayBufferToImage(data);
         }
     };
 
-    const doImageRequest = (itemInQueue: ImageRequestQueueItem, abortController: AbortController) => {
-        const {requestParameters, supportImageRefresh, callback} = itemInQueue;
-        extend(requestParameters, {type: 'image'});
-
+    const doImageRequest = async (itemInQueue: ImageRequestQueueItem) => {
+        itemInQueue.state = 'running';
+        const {requestParameters, supportImageRefresh, onError, onSuccess, abortController} = itemInQueue;
         // - If refreshExpiredTiles is false, then we can use HTMLImageElement to download raster images.
         // - Fetch/XHR (via MakeRequest API) will be used to download images for following scenarios:
         //      1. Style image sprite will had a issue with HTMLImageElement as described
@@ -182,42 +172,27 @@ export namespace ImageRequest {
             (!requestParameters.headers ||
                 Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === 'accept', true));
 
-        const action = canUseHTMLImageElement ? getImageUsingHtmlImage : makeRequest;
-        const actionPromise = action(requestParameters, abortController);
-        actionPromise.then((response) => {
-            delete itemInQueue.innerRequest;
-            onImageResponse(itemInQueue, callback, response.data, response.cacheControl, response.expires);
-        }).catch((err) => {
-            delete itemInQueue.innerRequest;
-            callback(err);
-        });
-    };
-
-    const onImageResponse = (
-        itemInQueue: ImageRequestQueueItem,
-        callback:GetImageCallback,
-        data?: HTMLImageElement | ImageBitmap | ArrayBuffer | null,
-        cacheControl?: string | null,
-        expires?: string | Date | null): void => {
-        if (data instanceof HTMLImageElement || isImageBitmap(data)) {
-            // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
-            // If HtmlImageElement is used to get image then response type will be HTMLImageElement
-            callback(null, data);
-        } else if (data) {
-            const decoratedCallback = (imgErr?: Error | null, imgResult?: CanvasImageSource | null) => {
-                if (imgErr != null) {
-                    callback(imgErr);
-                } else if (imgResult != null) {
-                    callback(null, imgResult as (HTMLImageElement | ImageBitmap), {cacheControl, expires});
-                }
-            };
-            arrayBufferToCanvasImageSource(data, decoratedCallback);
-        }
-        if (!itemInQueue.cancelled) {
-            itemInQueue.completed = true;
+        currentParallelImageRequests++;
+        const getImagePromise = canUseHTMLImageElement ?
+            getImageUsingHtmlImage(requestParameters, abortController) :
+            makeRequest<ArrayBuffer>(requestParameters, abortController);
+        try {
+            const response = await getImagePromise;
+            delete itemInQueue.abortController;
+            itemInQueue.state = 'completed';
             currentParallelImageRequests--;
-
+            if (response.data instanceof HTMLImageElement || isImageBitmap(response.data)) {
+                // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
+                // If HtmlImageElement is used to get image then response type will be HTMLImageElement
+                onSuccess(response as GetResourceResponse<HTMLImageElement | ImageBitmap | null>);
+            } else if (response.data) {
+                const img = await arrayBufferToCanvasImageSource(response.data);
+                onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});
+            }
             processQueue();
+        } catch (err) {
+            delete itemInQueue.abortController;
+            onError(err);
         }
     };
 
@@ -236,17 +211,11 @@ export namespace ImageRequest {
             numImageRequests++) {
 
             const topItemInQueue: ImageRequestQueueItem = imageRequestQueue.shift();
-            if (topItemInQueue.cancelled) {
+            if (topItemInQueue.abortController.signal.aborted) {
                 numImageRequests--;
                 continue;
             }
-
-            const innerRequestActionController = new AbortController();
-            doImageRequest(topItemInQueue, innerRequestActionController);
-
-            currentParallelImageRequests++;
-
-            topItemInQueue.innerRequest = innerRequestActionController;
+            doImageRequest(topItemInQueue);
         }
     };
 
@@ -265,6 +234,7 @@ export namespace ImageRequest {
             abortController.signal.addEventListener('abort', () => {
                 // Set src to '' to actually cancel the request
                 image.src = '';
+                reject(new Error('AbortError'));
             });
 
             image.fetchPriority = 'high';

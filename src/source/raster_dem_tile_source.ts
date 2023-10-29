@@ -15,7 +15,6 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ExpiryData} from '../util/ajax';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
 import {RGBAImage} from '../util/image';
 
@@ -58,16 +57,12 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
-        tile.request = ImageRequest.getImage(request, async (err: Error, img: (HTMLImageElement | ImageBitmap), expiry: ExpiryData) => {
-            delete tile.request;
-            if (tile.aborted) {
-                tile.state = 'unloaded';
-                callback(null);
-            } else if (err) {
-                tile.state = 'errored';
-                callback(err);
-            } else if (img) {
-                if (this.map._refreshExpiredTiles) tile.setExpiryData(expiry);
+        tile.abortController = new AbortController();
+        ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles).then(async (response) => {
+            delete tile.abortController;
+            const img = response.data;
+            if (img) {
+                if (this.map._refreshExpiredTiles) tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
                 const rawImageData = transfer ? img : await readImageNow(img);
                 const params = {
@@ -98,7 +93,18 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     }
                 }
             }
-        }, this.map._refreshExpiredTiles);
+        }).catch((err) => {
+            const aborted = delete tile.abortController;
+            delete tile.abortController;
+            if (aborted) {
+                tile.state = 'unloaded';
+                callback(null);
+                return;
+            }
+            tile.state = 'errored';
+            callback(err);
+
+        });
 
         async function readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
             if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
