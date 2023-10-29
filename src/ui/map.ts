@@ -2487,7 +2487,7 @@ export class Map extends Camera {
      *
      * @example
      * ```ts
-     * const order = map.getLayersOrder();
+     * const orderedLayerIds = map.getLayersOrder();
      * ```
      */
     getLayersOrder(): string[] {
