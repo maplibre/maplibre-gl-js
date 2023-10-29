@@ -211,7 +211,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
     });
 }
 
-export const makeRequest = (requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> => {
+export const makeRequest = <T extends any>(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<T>> => {
     // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
     // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
     //   that we can get an accruate referrer header.
