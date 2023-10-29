@@ -202,12 +202,12 @@ export namespace ImageRequest {
                 const img = await arrayBufferToCanvasImageSource(response.data);
                 onSuccess({data: img, cacheControl: response.cacheControl, expires: response.expires});
             }
-            processQueue();
         } catch (err) {
             delete itemInQueue.abortController;
             onError(err);
         } finally {
             currentParallelImageRequests--;
+            processQueue();
         }
     };
 
