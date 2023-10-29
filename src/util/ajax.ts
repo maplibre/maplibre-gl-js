@@ -129,41 +129,60 @@ export const getProtocolAction = url => config.REGISTERED_PROTOCOLS[url.substrin
 // via a file:// URL.
 const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
 
-async function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any> | undefined> {
-    const request = new Request(requestParameters.url, {
-        method: requestParameters.method || 'GET',
-        body: requestParameters.body,
-        credentials: requestParameters.credentials,
-        headers: requestParameters.headers,
-        cache: requestParameters.cache,
-        referrer: getReferrer(),
-        signal: abortController.signal
+function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any> | undefined> {
+    return new Promise((resolve, reject) => {
+        const request = new Request(requestParameters.url, {
+            method: requestParameters.method || 'GET',
+            body: requestParameters.body,
+            credentials: requestParameters.credentials,
+            headers: requestParameters.headers,
+            cache: requestParameters.cache,
+            referrer: getReferrer(),
+            signal: abortController.signal
+        });
+        let complete = false;
+        let aborted = false;
+    
+        if (requestParameters.type === 'json') {
+            request.headers.set('Accept', 'application/json');
+        }
+    
+        abortController.signal.addEventListener('abort', () => {
+            aborted = true;
+        });
+            
+    
+        const validateOrFetch = async () => {
+            if (aborted) return;
+    
+            try {
+                const response = await fetch(request);
+                if (!response.ok) {
+                    response.blob().then(body => reject(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
+                    return;
+                }
+                const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
+                    requestParameters.type === 'json' ? response.json() :
+                        response.text();
+                try {
+                    const result = await parsePromise;
+                    if (aborted) return;
+                    complete = true;
+                    resolve({data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires')});
+                } catch (err) {
+                    if (!aborted) reject(new Error(err.message));
+                }
+            } catch (error) {
+                if (error.code === 20) {
+                    // silence expected AbortError
+                    return;
+                }
+                reject(new Error(error.message));
+            }
+        };
+    
+        validateOrFetch();
     });
-
-    if (requestParameters.type === 'json') {
-        request.headers.set('Accept', 'application/json');
-    }
-    if (abortController.signal.aborted) {
-        throw new Error('AbortError');
-    }
-
-    try {
-        const response = await fetch(request);
-        if (!response.ok) {
-            const body = await response.blob();
-            throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
-        }
-        const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
-            requestParameters.type === 'json' ? response.json() :
-                response.text();
-        const result = await parsePromise;
-        return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires')};
-    } catch (error) {
-        if (abortController.signal.aborted) {
-            throw new Error('AbortError');
-        }
-        throw new Error(error.message);
-    }
 }
 
 function makeXMLHttpRequest(requestParameters: RequestParameters, abortController): Promise<GetResourceResponse<any>> {
@@ -205,61 +224,56 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
         };
         abortController.signal.addEventListener('abort', () => {
             xhr.abort();
-            reject(new Error('AbortError'));
         });
         xhr.send(requestParameters.body);
     });
 }
 
-export const makeRequest = <T extends any>(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<T>> => {
-    // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
-    // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
-    //   that we can get an accruate referrer header.
-    // - Safari exposes window.AbortController, but it doesn't work actually abort any requests in
-    //   some versions (see https://bugs.webkit.org/show_bug.cgi?id=174980#c2)
-    // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
-    //   this case we unconditionally use XHR on the current thread since referrers don't matter.
-    if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
-        if (isWorker(self) && self.worker && self.worker.actor) {
-            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters}, abortController);
-        }
-        if (!isWorker(self)) {
-            const action = getProtocolAction(requestParameters.url);
-            if (action) {
-                return addProtocolActionToPromise(action, requestParameters, abortController);
-            } else {
-                return makeFetchRequest(requestParameters, abortController);
-            }
-        }
-    }
-    if (!isFileURL(requestParameters.url)) {
-        if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
-            return makeFetchRequest(requestParameters, abortController);
-        }
-        if (isWorker(self) && self.worker && self.worker.actor) {
-            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: true}, abortController);
-        }
-    }
-    return makeXMLHttpRequest(requestParameters, abortController);
-};
-
-function addProtocolActionToPromise(action: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable,
-    requestParameters: RequestParameters,
-    abortController: AbortController): Promise<GetResourceResponse<any>> {
+export function makeRequest<T extends any>(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<T>> {
     return new Promise((resolve, reject) => {
-        const cancelable = action(requestParameters, (err, data, cacheControl, expires) => {
+        const callback = (err: Error, data: any) => {
             if (err) {
                 reject(err);
-            } else {
-                resolve({data, cacheControl, expires});
+            } else if (data) {
+                resolve(data);
             }
-        });
-        abortController.signal.addEventListener('abort', () => {
-            cancelable.cancel();
-            reject(new Error('AbortError'));
-        });
+        }
+        // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
+        // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
+        //   that we can get an accruate referrer header.
+        // - Safari exposes window.AbortController, but it doesn't work actually abort any requests in
+        //   some versions (see https://bugs.webkit.org/show_bug.cgi?id=174980#c2)
+        // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
+        //   this case we unconditionally use XHR on the current thread since referrers don't matter.
+        if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+            if (isWorker(self) && self.worker && self.worker.actor) {
+                self.worker.actor.sendAsync({type: 'getResource', data: requestParameters}, abortController).then(resolve).catch(reject);
+                return;
+            }
+            if (!isWorker(self)) {
+                const action = getProtocolAction(requestParameters.url);
+                if (action) {
+                    action(requestParameters, callback);
+                } else {
+                    makeFetchRequest(requestParameters, abortController).then(resolve).catch(reject);
+                }
+                return;
+            }
+        }
+        if (!isFileURL(requestParameters.url)) {
+            if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
+                makeFetchRequest(requestParameters, abortController).then(resolve).catch(reject);
+                return;
+            }
+            if (isWorker(self) && self.worker && self.worker.actor) {
+                const queueOnMainThread = true;
+                self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: queueOnMainThread}).then(resolve).catch(reject);
+                return;
+            }
+        }
+        makeXMLHttpRequest(requestParameters, abortController).then(resolve).catch(reject);
     });
-}
+};
 
 export const getJSON = <T>(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<T>> => {
     return makeRequest(extend(requestParameters, {type: 'json'}), abortController);
