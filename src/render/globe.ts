@@ -36,14 +36,15 @@ export class Globe {
             const vertexArray = new Pos3dTex2dArray();
             const indexArray = new TriangleIndexArray();
 
-            for (let y = 0; y <= 2; y++) {
-                for (let x = 0; x <= 2; x++) {
-                    vertexArray.emplaceBack(x * EXTENT, y * EXTENT, 0, x, y);
+            for (let y = 0; y < 2; y++) {
+                for (let x = 0; x < 2; x++) {
+                    vertexArray.emplaceBack(x * EXTENT, y * EXTENT, 0, x * 65535, y * 65535);
                 }
             }
 
-            indexArray.emplaceBack(0, 1, 2);
+            // order: CCW
             indexArray.emplaceBack(0, 2, 1);
+            indexArray.emplaceBack(1, 2, 3);
 
             const mesh = new Mesh(
                 context.createVertexBuffer(vertexArray, pos3dTex2dAttributes.members),
