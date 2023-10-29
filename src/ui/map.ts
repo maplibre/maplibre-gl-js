@@ -2484,6 +2484,11 @@ export class Map extends Camera {
      * Return the ids of all layers currently in the style, including custom layers, in order.
      *
      * @returns ids of layers, in order
+     *
+     * @example
+     * ```ts
+     * const order = map.getLayersOrder();
+     * ```
      */
     getLayersOrder(): string[] {
         return this.style.getLayersOrder();
