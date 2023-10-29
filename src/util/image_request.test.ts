@@ -46,7 +46,8 @@ describe('ImageRequest', () => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         for (let i = 0; i < maxRequests + 1; i++) {
-            ImageRequest.getImage({url: ''}, () => done('test failed: getImage callback was called')).cancel();
+            const cancelable = ImageRequest.getImage({url: ''}, (e) => expect(e.message).toBe('AbortError'));
+            cancelable.cancel();
         }
         expect(server.requests).toHaveLength(maxRequests + 1);
         done();
@@ -64,7 +65,7 @@ describe('ImageRequest', () => {
         expect(server.requests).toHaveLength(maxRequests);
 
         const queuedURL = 'this-is-the-queued-request';
-        const queued = ImageRequest.getImage({url: queuedURL}, () => done('test failed: getImage callback was called'));
+        const queued = ImageRequest.getImage({url: queuedURL}, (e) => expect(e.message).toBe('AbortError'));
 
         // the new requests is queued because the limit is reached
         expect(server.requests).toHaveLength(maxRequests);
@@ -245,9 +246,7 @@ describe('ImageRequest', () => {
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
 
-        const request = ImageRequest.getImage({url: ''}, () => {
-            done('Callback should not be called in case image request is cancelled');
-        });
+        const request = ImageRequest.getImage({url: ''}, (e) => expect(e.message).toBe('AbortError'));
 
         expect(request.cancelled).toBeFalsy();
         request.cancel();
@@ -257,12 +256,12 @@ describe('ImageRequest', () => {
         done();
     });
 
-    test('Cancel: Cancellation of an image which has not yet been requested', () => {
+    test('Cancel: Cancellation of an image which has not yet been requested', async () => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         let callbackCounter = 0;
-        function callback() {
-            callbackCounter++;
+        function callback(err) {
+            if (!err) callbackCounter++;
         }
         const requests: ImageRequestQueueItem[] = [];
         for (let i = 0; i < maxRequests + 100; i++) {
@@ -276,7 +275,7 @@ describe('ImageRequest', () => {
         // Queue should move forward and next request is made
         expect(server.requests).toHaveLength(maxRequests + 1);
 
-        // Cancel request should not call callback
+        // Cancel request should call callback with error
         expect(callbackCounter).toBe(0);
 
         // Cancel request which is not yet issued. It should not fire callback
@@ -291,6 +290,7 @@ describe('ImageRequest', () => {
 
         // On server response, next image queued should not be the cancelled image
         server.requests[1].respond(200);
+        await new Promise((resolve) => (setTimeout(resolve, 0)));
         expect(callbackCounter).toBe(1);
         expect(server.requests).toHaveLength(maxRequests + 2);
         // Verify that the last request made skipped the cancelled image request
@@ -369,7 +369,7 @@ describe('ImageRequest', () => {
         ImageRequest.removeThrottleControl(controlId);
     });
 
-    test('throttling: removing throttling client will process all requests', () => {
+    test('throttling: removing throttling client will process all requests', async () => {
         const requestParameter = {'Content-Type': 'image/png', url: ''};
         const maxRequestsPerFrame = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
 
@@ -381,8 +381,8 @@ describe('ImageRequest', () => {
         }
 
         let callbackCounter = 0;
-        function callback() {
-            callbackCounter++;
+        function callback(err) {
+            if (!err) callbackCounter++;
         }
 
         // make 2 times + 1 more requests
@@ -400,6 +400,7 @@ describe('ImageRequest', () => {
 
         // unleash it by removing the throttling client
         ImageRequest.removeThrottleControl(throttlingIndex);
+        await new Promise((resolve) => (setTimeout(resolve, 0)));
         expect(server.requests).toHaveLength(requestsMade);
 
         // all pending

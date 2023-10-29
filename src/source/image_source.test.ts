@@ -61,13 +61,15 @@ describe('ImageSource', () => {
         expect(source.tileSize).toBe(512);
     });
 
-    test('fires dataloading event', () => {
+    test('fires dataloading event', async () => {
         const source = createSource({url: '/image.png'});
         source.on('dataloading', (e) => {
             expect(e.dataType).toBe('source');
         });
         source.onAdd(new StubMap() as any);
         server.respond();
+        // HM TODO: move this to a utility method
+        await new Promise((resolve) => (setTimeout(resolve, 0)));
         expect(source.image).toBeTruthy();
     });
 
@@ -110,7 +112,7 @@ describe('ImageSource', () => {
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
 
-    test('sets coordinates via updateImage', () => {
+    test('sets coordinates via updateImage', async () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
         source.onAdd(map);
@@ -122,6 +124,7 @@ describe('ImageSource', () => {
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
         server.respond();
+        await new Promise((resolve) => (setTimeout(resolve, 0)));
         const afterSerialized = source.serialize();
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
@@ -179,7 +182,7 @@ describe('ImageSource', () => {
         expect(serialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
     });
 
-    test('allows using updateImage before initial image is loaded', () => {
+    test('allows using updateImage before initial image is loaded', async () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
 
@@ -188,6 +191,8 @@ describe('ImageSource', () => {
         expect(source.image).toBeUndefined();
         source.updateImage({url: '/image2.png'});
         server.respond();
+        await new Promise((resolve) => (setTimeout(resolve, 10)));
+
         expect(source.image).toBeTruthy();
     });
 

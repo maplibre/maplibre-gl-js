@@ -6,7 +6,7 @@ import type {StyleGlyph} from '../style/style_glyph';
 import type {PluginState} from '../source/rtl_text_plugin';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
-import type {RequestParameters} from './ajax';
+import type {GetResourceResponse, RequestParameters} from './ajax';
 
 export type ClusterIDAndSource = {
     type: 'geojson';
@@ -73,7 +73,8 @@ export type RequestResponseMessageMap = {
     'removeTile': [TileParameters, void];
     'abortTile': [TileParameters, void];
     'removeDEMTile': [TileParameters, void];
-    'getResource': [RequestParameters, any];
+    'getResource': [RequestParameters, GetResourceResponse<any>];
+    '<response>': [any, any]; // This is not needed, but if removed it creates issue with typescript?
 }
 
 export type MessageType = keyof RequestResponseMessageMap;

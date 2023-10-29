@@ -1,5 +1,5 @@
 import type {Cancelable} from '../types/cancelable';
-import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolAction} from './ajax';
+import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolAction, GetResourceResponse} from './ajax';
 import type {Callback} from '../types/callback';
 
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
@@ -19,7 +19,7 @@ export type ImageRequestQueueItem  = Cancelable & {
     callback: GetImageCallback;
     cancelled: boolean;
     completed: boolean;
-    innerRequest?: Cancelable;
+    innerRequest?: AbortController;
 }
 
 type ImageQueueThrottleCallbackDictionary = {
@@ -127,7 +127,7 @@ export namespace ImageRequest {
             requestParameters.headers.accept = 'image/webp,*/*';
         }
 
-        const request:ImageRequestQueueItem = {
+        const request: ImageRequestQueueItem = {
             requestParameters,
             supportImageRefresh,
             callback,
@@ -139,7 +139,7 @@ export namespace ImageRequest {
 
                     // Only reduce currentParallelImageRequests, if the image request was issued.
                     if (request.innerRequest) {
-                        request.innerRequest.cancel();
+                        request.innerRequest.abort();
                         currentParallelImageRequests--;
                     }
 
@@ -163,7 +163,7 @@ export namespace ImageRequest {
         }
     };
 
-    const doImageRequest = (itemInQueue: ImageRequestQueueItem): Cancelable => {
+    const doImageRequest = (itemInQueue: ImageRequestQueueItem, abortController: AbortController) => {
         const {requestParameters, supportImageRefresh, callback} = itemInQueue;
         extend(requestParameters, {type: 'image'});
 
@@ -183,26 +183,23 @@ export namespace ImageRequest {
                 Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === 'accept', true));
 
         const action = canUseHTMLImageElement ? getImageUsingHtmlImage : makeRequest;
-        return action(
-            requestParameters,
-            (err?: Error | null,
-                data?: HTMLImageElement | ImageBitmap | ArrayBuffer | null,
-                cacheControl?: string | null,
-                expires?: string | null) => {
-                onImageResponse(itemInQueue, callback, err, data, cacheControl, expires);
-            });
+        const actionPromise = action(requestParameters, abortController);
+        actionPromise.then((response) => {
+            delete itemInQueue.innerRequest;
+            onImageResponse(itemInQueue, callback, response.data, response.cacheControl, response.expires);
+        }).catch((err) => {
+            delete itemInQueue.innerRequest;
+            callback(err);
+        });
     };
 
     const onImageResponse = (
         itemInQueue: ImageRequestQueueItem,
         callback:GetImageCallback,
-        err?: Error | null,
         data?: HTMLImageElement | ImageBitmap | ArrayBuffer | null,
         cacheControl?: string | null,
-        expires?: string | null): void => {
-        if (err) {
-            callback(err);
-        } else if (data instanceof HTMLImageElement || isImageBitmap(data)) {
+        expires?: string | Date | null): void => {
+        if (data instanceof HTMLImageElement || isImageBitmap(data)) {
             // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
             // If HtmlImageElement is used to get image then response type will be HTMLImageElement
             callback(null, data);
@@ -244,44 +241,47 @@ export namespace ImageRequest {
                 continue;
             }
 
-            const innerRequest = doImageRequest(topItemInQueue);
+            const innerRequestActionController = new AbortController();
+            doImageRequest(topItemInQueue, innerRequestActionController);
 
             currentParallelImageRequests++;
 
-            topItemInQueue.innerRequest = innerRequest;
+            topItemInQueue.innerRequest = innerRequestActionController;
         }
     };
 
-    const getImageUsingHtmlImage = (requestParameters: RequestParameters, callback: GetImageCallback): Cancelable  => {
-        const image = new Image() as HTMLImageElementWithPriority;
-        const url = requestParameters.url;
-        let requestCancelled = false;
-        const credentials = requestParameters.credentials;
-        if (credentials && credentials === 'include') {
-            image.crossOrigin = 'use-credentials';
-        } else if ((credentials && credentials === 'same-origin') || !sameOrigin(url)) {
-            image.crossOrigin = 'anonymous';
-        }
+    const getImageUsingHtmlImage = (requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>  => {
+        return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
 
-        image.fetchPriority = 'high';
-        image.onload = () => {
-            callback(null, image);
-            image.onerror = image.onload = null;
-        };
-        image.onerror = () => {
-            if (!requestCancelled) {
-                callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+            const image = new Image() as HTMLImageElementWithPriority;
+            const url = requestParameters.url;
+            const credentials = requestParameters.credentials;
+            if (credentials && credentials === 'include') {
+                image.crossOrigin = 'use-credentials';
+            } else if ((credentials && credentials === 'same-origin') || !sameOrigin(url)) {
+                image.crossOrigin = 'anonymous';
             }
-            image.onerror = image.onload = null;
-        };
-        image.src = url;
-        return {
-            cancel: () => {
-                requestCancelled = true;
+
+            abortController.signal.addEventListener('abort', () => {
                 // Set src to '' to actually cancel the request
                 image.src = '';
-            }
-        };
+            });
+
+            image.fetchPriority = 'high';
+            image.onload = () => {
+                image.onerror = image.onload = null;
+                resolve({data: image});
+            };
+            image.onerror = () => {
+                image.onerror = image.onload = null;
+                if (abortController.signal.aborted) {
+                    reject(new Error('AbortError'));
+                    return;
+                }
+                reject(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+            };
+            image.src = url;
+        });
     };
 }
 
