@@ -5,6 +5,11 @@ import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
 /**
+ * A type used to store the tile's expiration date and cache control definition
+ */
+export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
+
+/**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
  * @example
  * ```ts
@@ -54,6 +59,10 @@ export type RequestParameters = {
      */
     cache?: RequestCache;
 };
+
+export type GetResourceResponse<T> = ExpiryData & {
+    data: T;
+}
 
 /**
  * The response callback used in various places
@@ -292,10 +301,7 @@ export function sameOrigin(inComingUrl: string) {
     const locationObj = window.location;
     return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
-/**
- * A type used to store the tile's expiration date and cache control definition
- */
-export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
+
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
     const video: HTMLVideoElement = window.document.createElement('video');
     video.muted = true;

@@ -11,12 +11,13 @@ describe('loadSprite', () => {
     let server: FakeServer;
 
     beforeEach(() => {
-        jest.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation((data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) => {
-            createImageBitmap(new ImageData(1024, 824)).then((imgBitmap) => {
-                callback(null, imgBitmap);
-            }).catch((e) => {
-                callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
-            });
+        jest.spyOn(util, 'arrayBufferToImageBitmap').mockImplementation(async (_data: ArrayBuffer) => {
+            try {
+                const img = await createImageBitmap(new ImageData(1024, 824));
+                return img;
+            } catch (e) {
+                throw new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
+            }
         });
         global.fetch = null;
         server = fakeServer.create();

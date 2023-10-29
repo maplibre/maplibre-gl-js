@@ -81,8 +81,6 @@ export class Tile {
     aborted: boolean;
     needsHillshadePrepare: boolean;
     needsTerrainPrepare: boolean;
-    // HM TODO: remove this once we migrate to abort contoller
-    request: Cancelable;
     abortController: AbortController;
     texture: any;
     fbo: Framebuffer;

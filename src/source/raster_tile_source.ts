@@ -158,20 +158,18 @@ export class RasterTileSource extends Evented implements Source {
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
-        tile.request = ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), (err, img, expiry) => {
-            delete tile.request;
-
+        tile.abortController = new AbortController();
+        ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles).then((response) => {
+            delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
                 callback(null);
-            } else if (err) {
-                tile.state = 'errored';
-                callback(err);
-            } else if (img) {
-                if (this.map._refreshExpiredTiles && expiry) tile.setExpiryData(expiry);
+            } else if (response && response.data) {
+                if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
 
                 const context = this.map.painter.context;
                 const gl = context.gl;
+                const img = response.data;
                 tile.texture = this.map.painter.getTileTexture(img.width);
                 if (tile.texture) {
                     tile.texture.update(img, {useMipmap: true});
@@ -188,13 +186,22 @@ export class RasterTileSource extends Evented implements Source {
 
                 callback(null);
             }
-        }, this.map._refreshExpiredTiles);
+        }).catch((err) => {
+            delete tile.abortController;
+            if (tile.aborted) {
+                tile.state = 'unloaded';
+                callback(null);
+            } else if (err) {
+                tile.state = 'errored';
+                callback(err);
+            }
+        });
     }
 
     abortTile(tile: Tile, callback: Callback<void>) {
-        if (tile.request) {
-            tile.request.cancel();
-            delete tile.request;
+        if (tile.abortController) {
+            tile.abortController.abort();
+            delete tile.abortController;
         }
         callback();
     }

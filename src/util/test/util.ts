@@ -128,7 +128,9 @@ export function stubAjaxGetImage(createImageBitmap) {
         set(url: string) {
             if (url === 'error') {
                 this.onerror();
-            } else this.onload();
+            } else if (this.onload) {
+                this.onload();
+            }
         }
     });
 }
