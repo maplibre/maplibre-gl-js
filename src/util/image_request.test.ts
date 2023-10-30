@@ -399,5 +399,5 @@ describe('ImageRequest', () => {
     });
 
     // HM TODO: write a test that all requests are returning 404 and make sure that the queue is not stuck
-    
+
 });
