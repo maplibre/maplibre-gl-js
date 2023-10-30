@@ -1,4 +1,4 @@
-import {Actor} from './actor';
+import {Actor, MessageHandler} from './actor';
 
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
@@ -54,7 +54,7 @@ export class Dispatcher {
         if (mapRemoved) this.workerPool.release(this.id);
     }
 
-    public registerMessageHandler<T extends MessageType>(type: T, handler: (mapId: string | number, params: RequestResponseMessageMap[T][0]) => Promise<RequestResponseMessageMap[T][1]>) {
+    public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
         for (const actor of this.actors) {
             actor.registerMessageHandler(type, handler);
         }

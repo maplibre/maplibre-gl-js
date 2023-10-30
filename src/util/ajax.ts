@@ -72,7 +72,7 @@ export type ResponseCallback<T> = (
     error?: Error | null,
     data?: T | null,
     cacheControl?: string | null,
-    expires?: string | null
+    expires?: string | Date | null
 ) => void;
 
 /**
@@ -130,58 +130,56 @@ export const getProtocolAction = url => config.REGISTERED_PROTOCOLS[url.substrin
 // via a file:// URL.
 const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
 
-function makeFetchRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const controller = new AbortController();
-    const request = new Request(requestParameters.url, {
-        method: requestParameters.method || 'GET',
-        body: requestParameters.body,
-        credentials: requestParameters.credentials,
-        headers: requestParameters.headers,
-        cache: requestParameters.cache,
-        referrer: getReferrer(),
-        signal: controller.signal
-    });
-    let complete = false;
-    let aborted = false;
+function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+    return new Promise((resolve, reject) => {
+        const request = new Request(requestParameters.url, {
+            method: requestParameters.method || 'GET',
+            body: requestParameters.body,
+            credentials: requestParameters.credentials,
+            headers: requestParameters.headers,
+            cache: requestParameters.cache,
+            referrer: getReferrer(),
+            signal: abortController.signal
+        });
+        let aborted = false;
 
-    if (requestParameters.type === 'json') {
-        request.headers.set('Accept', 'application/json');
-    }
-
-    const validateOrFetch = async () => {
-        if (aborted) return;
-
-        try {
-            const response = await fetch(request);
-            if (!response.ok) {
-                return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
-            }
-            const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
-                requestParameters.type === 'json' ? response.json() :
-                    response.text();
-            try {
-                const result = await parsePromise;
-                if (aborted) return;
-                complete = true;
-                callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
-            } catch (err) {
-                if (!aborted) callback(new Error(err.message));
-            }
-        } catch (error) {
-            if (error.code === 20) {
-                // silence expected AbortError
-                return;
-            }
-            callback(new Error(error.message));
+        if (requestParameters.type === 'json') {
+            request.headers.set('Accept', 'application/json');
         }
-    };
 
-    validateOrFetch();
+        abortController.signal.addEventListener('abort', () => {
+            aborted = true;
+        });
 
-    return {cancel: () => {
-        aborted = true;
-        if (!complete) controller.abort();
-    }};
+        const validateOrFetch = async () => {
+            if (aborted) return;
+
+            try {
+                const response = await fetch(request);
+                if (!response.ok) {
+                    return response.blob().then(body => reject(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
+                }
+                const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
+                    requestParameters.type === 'json' ? response.json() :
+                        response.text();
+                try {
+                    const result = await parsePromise;
+                    if (aborted) return;
+                    resolve({data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires')});
+                } catch (err) {
+                    if (!aborted) reject(new Error(err.message));
+                }
+            } catch (error) {
+                if (error.code === 20) {
+                    // silence expected AbortError
+                    return;
+                }
+                reject(new Error(error.message));
+            }
+        };
+
+        validateOrFetch();
+    });
 }
 
 function makeXMLHttpRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
@@ -223,7 +221,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, callback: Resp
     return {cancel: () => xhr.abort()};
 }
 
-export const makeRequest = function(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
+export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
     // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
     //   that we can get an accruate referrer header.
@@ -233,57 +231,50 @@ export const makeRequest = function(requestParameters: RequestParameters, callba
     //   this case we unconditionally use XHR on the current thread since referrers don't matter.
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
         if (isWorker(self) && self.worker && self.worker.actor) {
-            return self.worker.actor.send('getResource', requestParameters, callback);
+            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters}, abortController);
         }
         if (!isWorker(self)) {
-            const action = getProtocolAction(requestParameters.url) || makeFetchRequest;
-            return action(requestParameters, callback);
+            const action = cancelableToPromise(getProtocolAction(requestParameters.url)) || makeFetchRequest;
+            return action(requestParameters, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
-            return makeFetchRequest(requestParameters, callback);
+            return makeFetchRequest(requestParameters, abortController);
         }
         if (isWorker(self) && self.worker && self.worker.actor) {
-            const queueOnMainThread = true;
-            return self.worker.actor.send('getResource', requestParameters, callback, undefined, queueOnMainThread);
+            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: true}, abortController);
         }
     }
-    return makeXMLHttpRequest(requestParameters, callback);
+    return cancelableToPromise(makeXMLHttpRequest)(requestParameters, abortController);
 };
 
-export const getJSON = <T>(requestParameters: RequestParameters, abortController: AbortController): Promise<{data: T} & ExpiryData> => {
-    return new Promise<{data: T}& ExpiryData>((resolve, reject) => {
-        const callback = (err: Error, data: T, cacheControl: string | null, expires: string | null) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve({data, cacheControl, expires});
-            }
-        };
-        const canelable = makeRequest(extend(requestParameters, {type: 'json'}), callback);
-        abortController.signal.addEventListener('abort', () => {
-            canelable.cancel();
-            reject(new Error(ABORT_ERROR));
+// HM TODO: remove this when it is no longer needed
+function cancelableToPromise(method: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable): (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>> {
+    return (requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> => {
+        return new Promise<GetResourceResponse<any>>((resolve, reject) => {
+            const callback = (err: Error, data: any, cacheControl: string | null, expires: string | null) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({data, cacheControl, expires});
+                }
+            };
+            const canelable = method(requestParameters, callback);
+            abortController.signal.addEventListener('abort', () => {
+                canelable.cancel();
+                reject(new Error(ABORT_ERROR));
+            });
         });
-    });
+    };
+}
+
+export const getJSON = <T>(requestParameters: RequestParameters, abortController: AbortController): Promise<{data: T} & ExpiryData> => {
+    return makeRequest(extend(requestParameters, {type: 'json'}), abortController);
 };
 
 export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<{data: ArrayBuffer} & ExpiryData> => {
-    return new Promise<{data: ArrayBuffer}& ExpiryData>((resolve, reject) => {
-        const callback = (err: Error, data: ArrayBuffer, cacheControl: string | null, expires: string | null) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve({data, cacheControl, expires});
-            }
-        };
-        const canelable = makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
-        abortController.signal.addEventListener('abort', () => {
-            canelable.cancel();
-            reject(new Error(ABORT_ERROR));
-        });
-    });
+    return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), abortController);
 };
 
 export function sameOrigin(inComingUrl: string) {
