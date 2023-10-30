@@ -65,7 +65,7 @@
     "@types/nise": "^1.4.3",
     "@types/node": "^20.8.3",
     "@types/offscreencanvas": "^2019.7.2",
-    "@types/pixelmatch": "^5.2.4",
+    "@types/pixelmatch": "^5.2.5",
     "@types/pngjs": "^6.0.3",
     "@types/react": "^18.2.33",
     "@types/react-dom": "^18.2.14",
