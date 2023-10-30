@@ -475,7 +475,7 @@ const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA
  * ArrayBuffers.
  *
  * @param data - Data to convert
- * @param callback - A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image element (when no error) as the second
+ * @returns - A promise resolved when the conversion is finished
  */
 export const arrayBufferToImage = (data: ArrayBuffer): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
