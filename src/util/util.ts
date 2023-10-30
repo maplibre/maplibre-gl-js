@@ -454,7 +454,7 @@ export function isImageBitmap(image: any): image is ImageBitmap {
  * ArrayBuffers.
  *
  * @param data - Data to convert
- * @returns - A  promise executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image bitmap (when no error) as the second
+ * @returns - A  promise resolved when the conversion is finished. Invoked with error (if any) as the first argument and resulting image bitmap (when no error) as the second
  */
 export const arrayBufferToImageBitmap = async (data: ArrayBuffer): Promise<ImageBitmap> => {
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
