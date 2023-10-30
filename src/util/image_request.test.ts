@@ -230,7 +230,6 @@ describe('ImageRequest', () => {
         expect(abortController.signal.aborted).toBeFalsy();
         abortController.abort();
         expect(abortController.signal.aborted).toBeTruthy();
-        //await expect(promise).rejects.toThrow();
         expect(imageUrl).toBe('');
     });
 
@@ -272,7 +271,7 @@ describe('ImageRequest', () => {
         // Queue should move forward and next request is made
         expect(server.requests).toHaveLength(maxRequests + 1);
 
-        // Cancel request should call callback with error
+        // Cancel request should not call callback
         expect(callbackCounter).toBe(0);
 
         // Cancel request which is not yet issued. It should not fire callback
@@ -398,4 +397,7 @@ describe('ImageRequest', () => {
             expect(completedMap[i]).toBe(i === itemIndexToComplete ? true : undefined);
         }
     });
+
+    // HM TODO: write a test that all requests are returning 404 and make sure that the queue is not stuck
+    
 });
