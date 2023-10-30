@@ -1,8 +1,13 @@
-import {extend, warnOnce, isWorker} from './util';
+import {extend, isWorker} from './util';
 import {config} from './config';
 
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
+
+/**
+ * A type used to store the tile's expiration date and cache control definition
+ */
+export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
 
 /**
  * A `RequestParameters` object to be returned from Map.options.transformRequest callbacks.
@@ -54,6 +59,10 @@ export type RequestParameters = {
      */
     cache?: RequestCache;
 };
+
+export type GetResourceResponse<T> = ExpiryData & {
+    data: T;
+}
 
 /**
  * The response callback used in various places
@@ -138,56 +147,35 @@ function makeFetchRequest(requestParameters: RequestParameters, callback: Respon
         request.headers.set('Accept', 'application/json');
     }
 
-    const validateOrFetch = (err, cachedResponse?, responseIsFresh?) => {
+    const validateOrFetch = async () => {
         if (aborted) return;
 
-        if (err) {
-            // Do fetch in case of cache error.
-            // HTTP pages in Edge trigger a security error that can be ignored.
-            if (err.message !== 'SecurityError') {
-                warnOnce(err);
-            }
-        }
-
-        if (cachedResponse && responseIsFresh) {
-            return finishRequest(cachedResponse);
-        }
-
-        if (cachedResponse) {
-            // We can't do revalidation with 'If-None-Match' because then the
-            // request doesn't have simple cors headers.
-        }
-
-        fetch(request).then(response => {
-            if (response.ok) {
-                return finishRequest(response);
-            } else {
+        try {
+            const response = await fetch(request);
+            if (!response.ok) {
                 return response.blob().then(body => callback(new AJAXError(response.status, response.statusText, requestParameters.url, body)));
             }
-        }).catch(error => {
+            const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
+                requestParameters.type === 'json' ? response.json() :
+                    response.text();
+            try {
+                const result = await parsePromise;
+                if (aborted) return;
+                complete = true;
+                callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
+            } catch (err) {
+                if (!aborted) callback(new Error(err.message));
+            }
+        } catch (error) {
             if (error.code === 20) {
                 // silence expected AbortError
                 return;
             }
             callback(new Error(error.message));
-        });
+        }
     };
 
-    const finishRequest = (response) => {
-        (
-            (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
-                requestParameters.type === 'json' ? response.json() :
-                    response.text()
-        ).then(result => {
-            if (aborted) return;
-            complete = true;
-            callback(null, result, response.headers.get('Cache-Control'), response.headers.get('Expires'));
-        }).catch(err => {
-            if (!aborted) callback(new Error(err.message));
-        });
-    };
-
-    validateOrFetch(null, null);
+    validateOrFetch();
 
     return {cancel: () => {
         aborted = true;
@@ -280,12 +268,21 @@ export const getJSON = <T>(requestParameters: RequestParameters, abortController
     });
 };
 
-export const getArrayBuffer = (requestParameters: RequestParameters, callback: ResponseCallback<ArrayBuffer>): Cancelable => {
-    return makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
-};
-
-export const postData = function(requestParameters: RequestParameters, callback: ResponseCallback<string>): Cancelable {
-    return makeRequest(extend(requestParameters, {method: 'POST'}), callback);
+export const getArrayBuffer = (requestParameters: RequestParameters, abortController: AbortController): Promise<{data: ArrayBuffer} & ExpiryData> => {
+    return new Promise<{data: ArrayBuffer}& ExpiryData>((resolve, reject) => {
+        const callback = (err: Error, data: ArrayBuffer, cacheControl: string | null, expires: string | null) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({data, cacheControl, expires});
+            }
+        };
+        const canelable = makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
+        abortController.signal.addEventListener('abort', () => {
+            canelable.cancel();
+            reject(new Error('AbortError'));
+        });
+    });
 };
 
 export function sameOrigin(inComingUrl: string) {
@@ -304,10 +301,7 @@ export function sameOrigin(inComingUrl: string) {
     const locationObj = window.location;
     return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
-/**
- * A type used to store the tile's expiration date and cache control definition
- */
-export type ExpiryData = {cacheControl?: string | null; expires?: Date | string | null};
+
 export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
     const video: HTMLVideoElement = window.document.createElement('video');
     video.muted = true;

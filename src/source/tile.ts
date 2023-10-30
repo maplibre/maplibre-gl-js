@@ -28,7 +28,6 @@ import type {OverscaledTileID} from './tile_id';
 import type {Framebuffer} from '../gl/framebuffer';
 import type {Transform} from '../geo/transform';
 import type {LayerFeatureStates} from './source_state';
-import type {Cancelable} from '../types/cancelable';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -81,8 +80,6 @@ export class Tile {
     aborted: boolean;
     needsHillshadePrepare: boolean;
     needsTerrainPrepare: boolean;
-    // HM TODO: remove this once we migrate to abort contoller
-    request: Cancelable;
     abortController: AbortController;
     texture: any;
     fbo: Framebuffer;
