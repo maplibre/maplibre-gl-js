@@ -49,7 +49,7 @@
     "@rollup/plugin-strip": "^3.0.4",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.5",
-    "@types/benchmark": "^2.1.3",
+    "@types/benchmark": "^2.1.4",
     "@types/cssnano": "^5.0.0",
     "@types/d3": "^7.4.1",
     "@types/diff": "^5.0.7",
