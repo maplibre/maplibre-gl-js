@@ -165,8 +165,9 @@ export class RasterTileSource extends Evented implements Source {
                 tile.state = 'unloaded';
                 callback(null);
             } else if (response && response.data) {
-                if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
-
+                if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
+                    tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
+                }
                 const context = this.map.painter.context;
                 const gl = context.gl;
                 const img = response.data;
