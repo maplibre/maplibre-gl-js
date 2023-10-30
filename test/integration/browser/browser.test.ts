@@ -5,6 +5,7 @@ import type {Server} from 'http';
 import type {AddressInfo} from 'net';
 import type {Map} from '../../../src/ui/map';
 import type {default as MapLibreGL} from '../../../src/index';
+import {sleep} from '../../../src/util/test/util';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -109,7 +110,7 @@ describe('Browser tests', () => {
                 steps: 10
             });
             await page.mouse.up();
-            await new Promise(r => setTimeout(r, 200));
+            await sleep(200);
 
             return page.evaluate(() => {
                 return map.getCenter();
@@ -135,7 +136,7 @@ describe('Browser tests', () => {
 
         await page.setViewport({width: 400, height: 400, deviceScaleFactor: 2});
 
-        await new Promise(r => setTimeout(r, 200));
+        await sleep(200);
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
@@ -149,7 +150,7 @@ describe('Browser tests', () => {
             document.getElementById('map')!.style.width = '200px';
             document.getElementById('map')!.style.height = '200px';
         });
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await sleep(1000);
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();

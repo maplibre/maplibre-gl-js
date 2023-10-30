@@ -1,5 +1,4 @@
 import {getJSON} from '../util/ajax';
-
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from './geojson_wrapper';
@@ -8,6 +7,7 @@ import Supercluster, {type Options as SuperclusterOptions, type ClusterPropertie
 import geojsonvt, {type Options as GeoJSONVTOptions} from 'geojson-vt';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
+import {ABORT_ERROR} from '../util/evented';
 
 import type {
     WorkerTileParameters,
@@ -158,8 +158,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             return result;
         } catch (err) {
             delete this._pendingRequest;
-            // HM TODO: make this message a constant somewhere
-            if (err.message === 'AbortError') {
+            if (err.message === ABORT_ERROR) {
                 return {abandoned: true};
             }
             throw err;

@@ -1,5 +1,5 @@
 import {Map, MapOptions} from './map';
-import {createMap, setErrorWebGlContext, beforeMapTest} from '../util/test/util';
+import {createMap, setErrorWebGlContext, beforeMapTest, sleep} from '../util/test/util';
 import {LngLat} from '../geo/lng_lat';
 import {Tile} from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
@@ -900,7 +900,7 @@ describe('Map', () => {
             observerCallback();
             observerCallback();
             expect(resizeSpy).toHaveBeenCalledTimes(1);
-            await new Promise((resolve) => { setTimeout(resolve, 100); });
+            await sleep(100);
             expect(resizeSpy).toHaveBeenCalledTimes(2);
         });
 

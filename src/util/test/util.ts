@@ -146,3 +146,12 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
     data.copy(view);
     return view.buffer;
 }
+
+/**
+ * This allows test to wait for a certain amount of time before continuing.
+ * @param milliseconds - the amount of time to wait in milliseconds
+ * @returns - a promise that resolves after the specified amount of time
+ */
+export const sleep = (milliseconds: number = 0) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+};

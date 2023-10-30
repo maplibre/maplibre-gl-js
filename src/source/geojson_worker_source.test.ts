@@ -5,7 +5,7 @@ import perf from '../util/performance';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Actor} from '../util/actor';
 import {WorkerTileParameters} from './worker_source';
-import {setPerformance} from '../util/test/util';
+import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
 
 const actor = {send: () => {}} as any as Actor;
@@ -224,11 +224,11 @@ describe('loadData', () => {
         });
 
         const p1 = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
 
         const p2 = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
 
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
 
         server.respond();
 
@@ -246,12 +246,9 @@ describe('loadData', () => {
         });
 
         const loadPromise = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
-
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
-
+        await sleep(0);
         const removePromise = worker.removeSource({source: 'source1', type: 'type'});
-
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
 
         server.respond();
 

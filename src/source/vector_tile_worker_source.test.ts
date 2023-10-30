@@ -8,7 +8,8 @@ import {fakeServer, type FakeServer} from 'nise';
 import {IActor} from '../util/actor';
 import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
-import {setPerformance} from '../util/test/util';
+import {setPerformance, sleep} from '../util/test/util';
+import {ABORT_ERROR} from '../util/evented';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;
@@ -34,7 +35,7 @@ describe('vector tile worker source', () => {
             request: {url: 'http://localhost:2900/abort'}
         } as any as WorkerTileParameters).then((res) => {
             expect(res).toBeFalsy();
-        }).catch((err) => expect(err.message).toBe('AbortError'));
+        }).catch((err) => expect(err.message).toBe(ABORT_ERROR));
 
         source.abortTile({
             source: 'source',
@@ -144,7 +145,7 @@ describe('vector tile worker source', () => {
         } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
 
         // allow promise to run
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await sleep(0);
 
         const res = await source.reloadTile({
             source: 'source',
@@ -195,7 +196,7 @@ describe('vector tile worker source', () => {
         }).catch(() => expect(false).toBeTruthy());
 
         // let the promise start
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await sleep(0);
 
         const res = await source.reloadTile({
             source: 'source',

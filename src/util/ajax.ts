@@ -3,6 +3,7 @@ import {config} from './config';
 
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
+import {ABORT_ERROR} from './evented';
 
 /**
  * A type used to store the tile's expiration date and cache control definition
@@ -263,7 +264,7 @@ export const getJSON = <T>(requestParameters: RequestParameters, abortController
         const canelable = makeRequest(extend(requestParameters, {type: 'json'}), callback);
         abortController.signal.addEventListener('abort', () => {
             canelable.cancel();
-            reject(new Error('AbortError'));
+            reject(new Error(ABORT_ERROR));
         });
     });
 };
@@ -280,7 +281,7 @@ export const getArrayBuffer = (requestParameters: RequestParameters, abortContro
         const canelable = makeRequest(extend(requestParameters, {type: 'arrayBuffer'}), callback);
         abortController.signal.addEventListener('abort', () => {
             canelable.cancel();
-            reject(new Error('AbortError'));
+            reject(new Error(ABORT_ERROR));
         });
     });
 };
