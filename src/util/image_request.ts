@@ -106,7 +106,7 @@ export namespace ImageRequest {
      * @param requestParameters - Request parameters.
      * @param abortController - allows to abort the request.
      * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
-     * @returns - A promise resolved when the is returned.
+     * @returns - A promise resolved when the image is loaded.
      */
     export const getImage = (requestParameters: RequestParameters, abortController: AbortController, supportImageRefresh: boolean = true): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>> => {
         return new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
