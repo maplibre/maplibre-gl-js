@@ -1,6 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
-import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';import {Cancelable} from '../types/cancelable';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
+import {Cancelable} from '../types/cancelable';
 import {Callback} from '../types/callback';
 import {createAbortError} from './abort_error';
 import type {Size} from './image';
