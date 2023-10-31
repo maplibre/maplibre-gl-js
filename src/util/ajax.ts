@@ -182,43 +182,49 @@ function makeFetchRequest(requestParameters: RequestParameters, abortController:
     });
 }
 
-function makeXMLHttpRequest(requestParameters: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-    const xhr: XMLHttpRequest = new XMLHttpRequest();
+function makeXMLHttpRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+    return new Promise((resolve, reject) => {
+        const xhr: XMLHttpRequest = new XMLHttpRequest();
 
-    xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
-    if (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') {
-        xhr.responseType = 'arraybuffer';
-    }
-    for (const k in requestParameters.headers) {
-        xhr.setRequestHeader(k, requestParameters.headers[k]);
-    }
-    if (requestParameters.type === 'json') {
-        xhr.responseType = 'text';
-        xhr.setRequestHeader('Accept', 'application/json');
-    }
-    xhr.withCredentials = requestParameters.credentials === 'include';
-    xhr.onerror = () => {
-        callback(new Error(xhr.statusText));
-    };
-    xhr.onload = () => {
-        if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
-            let data: unknown = xhr.response;
-            if (requestParameters.type === 'json') {
-                // We're manually parsing JSON here to get better error messages.
-                try {
-                    data = JSON.parse(xhr.response);
-                } catch (err) {
-                    return callback(err);
-                }
-            }
-            callback(null, data, xhr.getResponseHeader('Cache-Control'), xhr.getResponseHeader('Expires'));
-        } else {
-            const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
-            callback(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
+        xhr.open(requestParameters.method || 'GET', requestParameters.url, true);
+        if (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') {
+            xhr.responseType = 'arraybuffer';
         }
-    };
-    xhr.send(requestParameters.body);
-    return {cancel: () => xhr.abort()};
+        for (const k in requestParameters.headers) {
+            xhr.setRequestHeader(k, requestParameters.headers[k]);
+        }
+        if (requestParameters.type === 'json') {
+            xhr.responseType = 'text';
+            xhr.setRequestHeader('Accept', 'application/json');
+        }
+        xhr.withCredentials = requestParameters.credentials === 'include';
+        xhr.onerror = () => {
+            reject(new Error(xhr.statusText));
+        };
+        xhr.onload = () => {
+            if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
+                let data: unknown = xhr.response;
+                if (requestParameters.type === 'json') {
+                    // We're manually parsing JSON here to get better error messages.
+                    try {
+                        data = JSON.parse(xhr.response);
+                    } catch (err) {
+                        reject(err);
+                        return;
+                    }
+                }
+                resolve({data, cacheControl: xhr.getResponseHeader('Cache-Control'), expires: xhr.getResponseHeader('Expires')});
+            } else {
+                const body = new Blob([xhr.response], {type: xhr.getResponseHeader('Content-Type')});
+                reject(new AJAXError(xhr.status, xhr.statusText, requestParameters.url, body));
+            }
+        };
+        abortController.signal.addEventListener('abort', () => {
+            xhr.abort();
+            reject(createAbortError());
+        });
+        xhr.send(requestParameters.body);
+    });
 }
 
 export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
@@ -246,7 +252,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: true}, abortController);
         }
     }
-    return cancelableToPromise(makeXMLHttpRequest)(requestParameters, abortController);
+    return makeXMLHttpRequest(requestParameters, abortController);
 };
 
 // HM TODO: remove this when it is no longer needed
