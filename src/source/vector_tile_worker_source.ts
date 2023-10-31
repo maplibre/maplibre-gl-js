@@ -42,14 +42,12 @@ export type LoadVectorData = (params: WorkerTileParameters, abortController: Abo
  * The {@link WorkerSource} implementation that supports {@link VectorTileSource}.
  * This class is designed to be easily reused to support custom source types
  * for data formats that can be parsed/converted into an in-memory VectorTile
- * representation.  To do so, create it with
- * `new VectorTileWorkerSource(actor, styleLayers, customLoadVectorDataFunction)`.
+ * representation. To do so, override its `loadVectorTile` method.
  */
 export class VectorTileWorkerSource implements WorkerSource {
     actor: IActor;
     layerIndex: StyleLayerIndex;
     availableImages: Array<string>;
-    loadVectorData: LoadVectorData;
     fetching: {[_: string]: FetchingState };
     loading: {[_: string]: WorkerTile};
     loaded: {[_: string]: WorkerTile};
@@ -60,11 +58,10 @@ export class VectorTileWorkerSource implements WorkerSource {
      * {@link VectorTileWorkerSource#loadTile}. The default implementation simply
      * loads the pbf at `params.url`.
      */
-    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadVectorData?: LoadVectorData | null) {
+    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>) {
         this.actor = actor;
         this.layerIndex = layerIndex;
         this.availableImages = availableImages;
-        this.loadVectorData = loadVectorData || this.loadVectorTile;
         this.fetching = {};
         this.loading = {};
         this.loaded = {};
@@ -73,7 +70,7 @@ export class VectorTileWorkerSource implements WorkerSource {
     /**
      * Loads a vector tile
      */
-    private async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
+    async loadVectorTile(params: WorkerTileParameters, abortController: AbortController): Promise<LoadVectorTileResult> {
         const response = await getArrayBuffer(params.request, abortController);
         try {
             const vectorTile = new vt.VectorTile(new Protobuf(response.data));
@@ -113,10 +110,9 @@ export class VectorTileWorkerSource implements WorkerSource {
         const abortController = new AbortController();
         workerTile.abort = abortController;
         try {
-            const response = await this.loadVectorData(params, abortController);
+            const response = await this.loadVectorTile(params, abortController);
             delete this.loading[tileUid];
             if (!response) {
-                // HM TODO: add a test that is parsing an empty tile and is getting here
                 return null;
             }
 

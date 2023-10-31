@@ -136,7 +136,8 @@ describe('vector tile worker source', () => {
                 });
             }
         };
-        const source = new VectorTileWorkerSource(actor, layerIndex, ['hello'], loadVectorData);
+        const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
+        source.loadVectorTile = loadVectorData;
         source.loadTile({
             source: 'source',
             uid: 0,
@@ -173,7 +174,8 @@ describe('vector tile worker source', () => {
             type: 'fill'
         }]);
 
-        const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = loadVectorData;
 
         const parseWorkerTileMock = jest
             .spyOn(WorkerTile.prototype, 'parse')
@@ -224,6 +226,28 @@ describe('vector tile worker source', () => {
             done();
         });
         expect(parse).not.toHaveBeenCalled();
+    });
+
+    test('VectorTileWorkerSource#loadTile returns null for an empty tile', async () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        source.loadVectorTile = (_params, _abortController) => Promise.resolve(null);
+        const parse = jest.fn();
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, 'something...');
+        });
+
+        const promise = source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'}
+        } as any as WorkerTileParameters);
+
+        server.respond();
+
+        expect(parse).not.toHaveBeenCalled();
+        expect(await promise).toBeNull();
     });
 
     test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', done => {
@@ -310,7 +334,8 @@ describe('vector tile worker source', () => {
             type: 'fill'
         }]);
 
-        const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = loadVectorData;
 
         window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
 
@@ -344,7 +369,8 @@ describe('vector tile worker source', () => {
             type: 'fill'
         }]);
 
-        const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = loadVectorData;
 
         const sampleMarks = [100, 350];
         const marks = {};

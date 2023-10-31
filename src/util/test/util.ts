@@ -2,6 +2,7 @@ import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
 import {setWebGlContext} from './mock_webgl';
+import {IActor} from '../actor';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -96,7 +97,7 @@ export function beforeMapTest() {
 }
 
 export function getWrapDispatcher() {
-    const wrapDispatcher = (actor) => {
+    const wrapDispatcher = (actor: IActor) => {
         return {
             getActor() {
                 return actor;

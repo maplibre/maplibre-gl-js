@@ -258,7 +258,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
     return makeXMLHttpRequest(requestParameters, abortController);
 };
 
-// HM TODO: remove this when it is no longer needed
+// HM TODO: remove this when changing how add protocol works?
 function cancelableToPromise(method: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable): (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>> {
     return (requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> => {
         return new Promise<GetResourceResponse<any>>((resolve, reject) => {

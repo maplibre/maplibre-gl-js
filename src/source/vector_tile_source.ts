@@ -226,17 +226,14 @@ export class VectorTileSource extends Evented implements Source {
         if (tile.aborted) {
             return callback(null);
         }
-
         if (err && err.status !== 404) {
             return callback(err);
         }
-        // HM TODO: add a unit test that gets here with error status 404
-        // HM TODO: add a unit test that gets here with data that is null - empty geojson
         if (data && data.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
 
-        if (this.map._refreshExpiredTiles && data) {
+        if (data && this.map._refreshExpiredTiles) {
             tile.setExpiryData(data);
         }
         tile.loadVectorData(data, this.map.painter);

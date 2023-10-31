@@ -25,9 +25,9 @@ describe('reloadTile', () => {
         ] as LayerSpecification[];
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        const originalLoadVectorData = source.loadVectorData;
+        const originalLoadVectorData = source.loadVectorTile;
         let loadVectorCallCount = 0;
-        source.loadVectorData = function(params, callback) {
+        source.loadVectorTile = function(params, callback) {
             loadVectorCallCount++;
             return originalLoadVectorData.call(this, params, callback);
         };
@@ -114,7 +114,8 @@ describe('resourceTiming', () => {
         window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
 
         const layerIndex = new StyleLayerIndex(layers);
-        const source = new GeoJSONWorkerSource(actor, layerIndex, [], () => Promise.resolve(geoJson));
+        const source = new GeoJSONWorkerSource(actor, layerIndex, []);
+        source.loadGeoJSON = () => Promise.resolve(geoJson);
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters)
             .then((result) => {
@@ -146,7 +147,8 @@ describe('resourceTiming', () => {
         jest.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
 
         const layerIndex = new StyleLayerIndex(layers);
-        const source = new GeoJSONWorkerSource(actor, layerIndex, [], () => Promise.resolve(geoJson));
+        const source = new GeoJSONWorkerSource(actor, layerIndex, []);
+        source.loadGeoJSON = () => Promise.resolve(geoJson);
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters)
             .then((result) => {

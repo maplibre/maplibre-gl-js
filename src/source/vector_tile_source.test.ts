@@ -8,6 +8,7 @@ import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep} from '../util/test/util';
 import {Map} from '../ui/map';
+import {WorkerTileParameters} from './worker_source';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -149,9 +150,9 @@ describe('VectorTileSource', () => {
             });
 
             source.dispatcher = getWrapDispatcher()({
-                sendAsync(messaage) {
-                    expect(messaage.type).toBe('loadTile');
-                    expect(expectedURL).toBe(messaage.data.request.url);
+                sendAsync(message) {
+                    expect(message.type).toBe('loadTile');
+                    expect(expectedURL).toBe((message.data as WorkerTileParameters).request.url);
                     done();
                     return Promise.resolve({});
                 }
@@ -185,6 +186,64 @@ describe('VectorTileSource', () => {
                 expect(transformSpy).toHaveBeenCalledTimes(1);
                 expect(transformSpy).toHaveBeenCalledWith('http://example.com/10/5/5.png', 'Tile');
                 done();
+            }
+        });
+
+        server.respond();
+    });
+
+    test('loads an tile even in case of 404', done => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+
+        const source = createSource({url: '/source.json'});
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message) {
+                const error = new Error();
+                (error as any).status = 404;
+                return Promise.reject(error);
+            }
+        });
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                const tile = {
+                    tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                    state: 'loading',
+                    loadVectorData: jest.fn(),
+                    setExpiryData() {}
+                } as any as Tile;
+                source.loadTile(tile, () => {
+                    expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
+                    done();
+                });
+
+            }
+        });
+
+        server.respond();
+    });
+
+    test('loads an empty tile received from worker', done => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+
+        const source = createSource({url: '/source.json'});
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message) {
+                return Promise.resolve(null);
+            }
+        });
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                const tile = {
+                    tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+                    state: 'loading',
+                    loadVectorData: jest.fn(),
+                    setExpiryData() {}
+                } as any as Tile;
+                source.loadTile(tile, () => {
+                    expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
+                    done();
+                });
+
             }
         });
 
@@ -287,7 +346,7 @@ describe('VectorTileSource', () => {
         });
         source.dispatcher = getWrapDispatcher()({
             sendAsync(message) {
-                expect(message.data.request.collectResourceTiming).toBeTruthy();
+                expect((message.data as WorkerTileParameters).request.collectResourceTiming).toBeTruthy();
                 done();
 
                 // do nothing for cache size check dispatch
