@@ -6,7 +6,7 @@ import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher} from '../util/test/util';
+import {getMockDispatcher, getWrapDispatcher, sleep} from '../util/test/util';
 import {Map} from '../ui/map';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
@@ -349,6 +349,7 @@ describe('VectorTileSource', () => {
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
         source.setTiles(['http://example2.com/{z}/{x}/{y}.pbf']);
         expect(clearTiles.mock.calls).toHaveLength(0);
+        await sleep(0);
         await source.once('data');
         expect(clearTiles.mock.calls).toHaveLength(1);
     });

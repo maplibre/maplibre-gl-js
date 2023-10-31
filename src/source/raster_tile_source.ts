@@ -14,7 +14,6 @@ import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
-import type {Cancelable} from '../types/cancelable';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
@@ -67,7 +66,7 @@ export class RasterTileSource extends Evented implements Source {
 
     _loaded: boolean;
     _options: RasterSourceSpecification | RasterDEMSourceSpecification;
-    _tileJSONRequest: Cancelable;
+    _tileJSONRequest: AbortController;
 
     constructor(id: string, options: RasterSourceSpecification | RasterDEMSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
@@ -90,12 +89,11 @@ export class RasterTileSource extends Evented implements Source {
     load() {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
-        this._tileJSONRequest = loadTileJson(this._options, this.map._requestManager, (err, tileJSON) => {
+        this._tileJSONRequest = new AbortController();
+        loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest).then((tileJSON) => {
             this._tileJSONRequest = null;
             this._loaded = true;
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (tileJSON) {
+            if (tileJSON) {
                 extend(this, tileJSON);
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 
@@ -105,6 +103,9 @@ export class RasterTileSource extends Evented implements Source {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
+        }).catch((err) => {
+            this._tileJSONRequest = null;
+            this.fire(new ErrorEvent(err));
         });
     }
 
@@ -119,14 +120,15 @@ export class RasterTileSource extends Evented implements Source {
 
     onRemove() {
         if (this._tileJSONRequest) {
-            this._tileJSONRequest.cancel();
+            this._tileJSONRequest.abort();
             this._tileJSONRequest = null;
         }
     }
 
     setSourceProperty(callback: Function) {
         if (this._tileJSONRequest) {
-            this._tileJSONRequest.cancel();
+            this._tileJSONRequest.abort();
+            this._tileJSONRequest = null;
         }
 
         callback();

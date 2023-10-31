@@ -79,7 +79,7 @@ export class Actor implements IActor {
 
     sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
         return new Promise((resolve, reject) => {
-            const cancelable = this.send(message.type, message.data, (err: Error, data: any) => {
+            const cancelable = this._send(message.type, message.data, (err: Error, data: any) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -102,7 +102,7 @@ export class Actor implements IActor {
      * @param type - The name of the target method to invoke or '[source-type].[source-name].name' for a method on a WorkerSource.
      * @param targetMapId - A particular mapId to which to send this message.
      */
-    send<T extends MessageType>(
+    _send<T extends MessageType>(
         type: T,
         data: RequestResponseMessageMap[T][0],
         callback?: Function | null,

@@ -3,7 +3,7 @@ import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolActio
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
 import {webpSupported} from './webp_supported';
 import {config} from './config';
-import {ABORT_ERROR} from './evented';
+import {createAbortError} from './abort_error';
 
 /**
  * The callback that is being called after an image was fetched
@@ -228,7 +228,7 @@ export namespace ImageRequest {
             abortController.signal.addEventListener('abort', () => {
                 // Set src to '' to actually cancel the request
                 image.src = '';
-                reject(new Error(ABORT_ERROR));
+                reject(createAbortError());
             });
 
             image.fetchPriority = 'high';

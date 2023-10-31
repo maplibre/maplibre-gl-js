@@ -52,11 +52,6 @@ export class ErrorEvent extends Event {
 }
 
 /**
- * An error message to use when an operation is aborted
- */
-export const ABORT_ERROR = 'AbortError';
-
-/**
  * Methods mixed in to other classes for event capabilities.
  *
  * @group Event Related

@@ -1,9 +1,9 @@
 import {extend, isWorker} from './util';
 import {config} from './config';
+import {createAbortError} from './abort_error';
 
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
-import {ABORT_ERROR} from './evented';
 
 /**
  * A type used to store the tile's expiration date and cache control definition
@@ -263,7 +263,7 @@ function cancelableToPromise(method: (requestParameters: RequestParameters, call
             const canelable = method(requestParameters, callback);
             abortController.signal.addEventListener('abort', () => {
                 canelable.cancel();
-                reject(new Error(ABORT_ERROR));
+                reject(createAbortError());
             });
         });
     };

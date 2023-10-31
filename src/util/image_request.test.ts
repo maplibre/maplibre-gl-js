@@ -3,7 +3,7 @@ import {webpSupported} from './webp_supported';
 import {sleep, stubAjaxGetImage} from './test/util';
 import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from './image_request';
-import {ABORT_ERROR} from './evented';
+import {isAbortError} from './abort_error';
 import * as ajax from './ajax';
 
 describe('ImageRequest', () => {
@@ -62,7 +62,7 @@ describe('ImageRequest', () => {
 
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(e.message).toBe(ABORT_ERROR));
+            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
             abortController.abort();
             await sleep(0);
         }
@@ -84,7 +84,7 @@ describe('ImageRequest', () => {
 
         const queuedURL = 'this-is-the-queued-request';
         const abortController = new AbortController();
-        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(e.message).toBe(ABORT_ERROR));
+        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
 
         // the new requests is queued because the limit is reached
         expect(server.requests).toHaveLength(maxRequests);

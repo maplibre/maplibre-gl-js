@@ -2,7 +2,7 @@ import {Actor, ActorTarget} from './actor';
 import {WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
 import {sleep} from './test/util';
-import {ABORT_ERROR} from './evented';
+import {ABORT_ERROR, createAbortError} from './abort_error';
 
 class MockWorker {
     self: any;
@@ -73,7 +73,7 @@ describe('Actor', () => {
             return new Promise((resolve, reject) => {
                 handlerAbortController.signal.addEventListener('abort', () => {
                     gotAbortSignal = true;
-                    reject(new Error(ABORT_ERROR));
+                    reject(createAbortError());
                 });
                 setTimeout(resolve, 200);
             });
@@ -134,7 +134,7 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        worker.worker.actor.registerMessageHandler('abortTile', () => Promise.reject(new Error(ABORT_ERROR)));
+        worker.worker.actor.registerMessageHandler('abortTile', () => Promise.reject(createAbortError()));
 
         await expect(async () => actor.sendAsync({type: 'abortTile', data: {} as any})).rejects.toThrow(ABORT_ERROR);
     });

@@ -9,7 +9,7 @@ import {IActor} from '../util/actor';
 import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance, sleep} from '../util/test/util';
-import {ABORT_ERROR} from '../util/evented';
+import {isAbortError} from '../util/abort_error';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;
@@ -35,7 +35,7 @@ describe('vector tile worker source', () => {
             request: {url: 'http://localhost:2900/abort'}
         } as any as WorkerTileParameters).then((res) => {
             expect(res).toBeFalsy();
-        }).catch((err) => expect(err.message).toBe(ABORT_ERROR));
+        }).catch((err) => expect(isAbortError(err)).toBeTruthy());
 
         source.abortTile({
             source: 'source',

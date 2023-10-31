@@ -11,7 +11,6 @@ import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
-import type {Cancelable} from '../types/cancelable';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from './worker_source';
 
@@ -73,7 +72,7 @@ export class VectorTileSource extends Evented implements Source {
     tileBounds: TileBounds;
     reparseOverscaled: boolean;
     isTileClipped: boolean;
-    _tileJSONRequest: Cancelable;
+    _tileJSONRequest: AbortController;
     _loaded: boolean;
 
     constructor(id: string, options: VectorTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -105,14 +104,12 @@ export class VectorTileSource extends Evented implements Source {
     load = () => {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
-        this._tileJSONRequest = loadTileJson(this._options, this.map._requestManager, (err, tileJSON) => {
-            // HM TODO: abort will return an error here, is this expected?
+        this._tileJSONRequest = new AbortController();
+        loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest).then((tileJSON) => {
             this._tileJSONRequest = null;
             this._loaded = true;
             this.map.style.sourceCaches[this.id].clearTiles();
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (tileJSON) {
+            if (tileJSON) {
                 extend(this, tileJSON);
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 
@@ -122,6 +119,9 @@ export class VectorTileSource extends Evented implements Source {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
+        }).catch((err) => {
+            this._tileJSONRequest = null;
+            this.fire(new ErrorEvent(err));
         });
     };
 
@@ -140,7 +140,7 @@ export class VectorTileSource extends Evented implements Source {
 
     setSourceProperty(callback: Function) {
         if (this._tileJSONRequest) {
-            this._tileJSONRequest.cancel();
+            this._tileJSONRequest.abort();
         }
 
         callback();
@@ -179,7 +179,7 @@ export class VectorTileSource extends Evented implements Source {
 
     onRemove() {
         if (this._tileJSONRequest) {
-            this._tileJSONRequest.cancel();
+            this._tileJSONRequest.abort();
             this._tileJSONRequest = null;
         }
     }
