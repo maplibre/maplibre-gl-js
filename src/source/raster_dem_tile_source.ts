@@ -84,18 +84,19 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
+                    /* eslint-disable require-atomic-updates */
                     try {
                         const data = await tile.actor.sendAsync({type: 'loadDEMTile', data: params});
-                        // HM TODO: find a way to fix this linting errors - probably after getImages will be async too
-                        tile.dem = data; // eslint-disable-line require-atomic-updates
-                        tile.needsHillshadePrepare = true; // eslint-disable-line require-atomic-updates
-                        tile.needsTerrainPrepare = true; // eslint-disable-line require-atomic-updates
-                        tile.state = 'loaded'; // eslint-disable-line require-atomic-updates
+                        tile.dem = data;
+                        tile.needsHillshadePrepare = true;
+                        tile.needsTerrainPrepare = true;
+                        tile.state = 'loaded';
                         callback(null);
                     } catch (err) {
-                        tile.state = 'errored'; // eslint-disable-line require-atomic-updates
+                        tile.state = 'errored';
                         callback(err);
                     }
+                    /* eslint-enable require-atomic-updates */
                 }
             }
         }).catch((err) => {
