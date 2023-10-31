@@ -202,6 +202,9 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
             reject(new Error(xhr.statusText));
         };
         xhr.onload = () => {
+            if (abortController.signal.aborted) {
+                return;
+            }
             if (((xhr.status >= 200 && xhr.status < 300) || xhr.status === 0) && xhr.response !== null) {
                 let data: unknown = xhr.response;
                 if (requestParameters.type === 'json') {
