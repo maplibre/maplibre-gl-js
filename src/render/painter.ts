@@ -414,7 +414,7 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords);
+            this.renderLayer(this, sourceCaches[layer.source], layer, coords, false);
         }
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
@@ -438,7 +438,7 @@ export class Painter {
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords);
-                this.renderLayer(this, sourceCache, layer, coords);
+                this.renderLayer(this, sourceCache, layer, coords, false);
             }
         }
 
@@ -458,7 +458,7 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
-            this.renderLayer(this, sourceCache, layer, coords);
+            this.renderLayer(this, sourceCache, layer, coords, false);
         }
 
         if (this.options.showTileBoundaries) {
@@ -477,7 +477,7 @@ export class Painter {
         this.context.setDefault();
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
+    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
@@ -493,19 +493,19 @@ export class Painter {
                 drawHeatmap(painter, sourceCache, layer as any, coords);
                 break;
             case 'line':
-                drawLine(painter, sourceCache, layer as any, coords);
+                drawLine(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'fill':
-                drawFill(painter, sourceCache, layer as any, coords);
+                drawFill(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'fill-extrusion':
                 drawFillExtrusion(painter, sourceCache, layer as any, coords);
                 break;
             case 'hillshade':
-                drawHillshade(painter, sourceCache, layer as any, coords);
+                drawHillshade(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'raster':
-                drawRaster(painter, sourceCache, layer as any, coords);
+                drawRaster(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'background':
                 drawBackground(painter, sourceCache, layer as any, coords);

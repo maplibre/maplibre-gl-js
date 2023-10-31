@@ -17,7 +17,7 @@ import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
 
-export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
     if (painter.renderPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');
@@ -66,11 +66,11 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const terrainCoord = terrainData ? coord : null;
-        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, terrainCoord) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, terrainCoord) :
-                gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, terrainCoord) :
-                    lineUniformValues(painter, tile, layer, terrainCoord);
+        const rttCoord = isRenderingToTexture ? coord : null;
+        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, rttCoord) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, rttCoord) :
+                gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, rttCoord) :
+                    lineUniformValues(painter, tile, layer, rttCoord);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);

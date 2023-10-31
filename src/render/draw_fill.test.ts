@@ -37,7 +37,7 @@ describe('drawFill', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(mockTile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID]);
+        drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID], false);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);

@@ -12,7 +12,7 @@ import type {SourceCache} from '../source/source_cache';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 
-export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>) {
+export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
@@ -41,7 +41,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
         tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
         const parentTile = sourceCache.findLoadedParent(coord, 0),
-            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, painter.style.map.terrain);
+            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, isRenderingToTexture);
 
         let parentScaleBy, parentTL;
 
@@ -62,8 +62,8 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
         }
 
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const terrainCoord = terrainData ? coord : null;
-        const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
+        const rttCoord = isRenderingToTexture ? coord : null;
+        const posMatrix = rttCoord ? rttCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
         const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer);
 
         if (source instanceof ImageSource) {
@@ -78,10 +78,10 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     }
 }
 
-function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain) {
+function getFadeValues(tile, parentTile, sourceCache, layer, transform, isRenderingToTexture) {
     const fadeDuration = layer.paint.get('raster-fade-duration');
 
-    if (!terrain && fadeDuration > 0) {
+    if (!isRenderingToTexture && fadeDuration > 0) {
         const now = browser.now();
         const sinceTile = (now - tile.timeAdded) / fadeDuration;
         const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;

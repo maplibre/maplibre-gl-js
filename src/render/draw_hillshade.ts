@@ -14,7 +14,7 @@ import type {SourceCache} from '../source/source_cache';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 
-export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>) {
+export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     const context = painter.context;
@@ -30,7 +30,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
         if (typeof tile.needsHillshadePrepare !== 'undefined' && tile.needsHillshadePrepare && painter.renderPass === 'offscreen') {
             prepareHillshade(painter, tile, layer, depthMode, StencilMode.disabled, colorMode);
         } else if (painter.renderPass === 'translucent') {
-            renderHillshade(painter, coord, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode);
+            renderHillshade(painter, coord, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode, isRenderingToTexture);
         }
     }
 
@@ -44,7 +44,8 @@ function renderHillshade(
     layer: HillshadeStyleLayer,
     depthMode: Readonly<DepthMode>,
     stencilMode: Readonly<StencilMode>,
-    colorMode: Readonly<ColorMode>) {
+    colorMode: Readonly<ColorMode>,
+    isRenderingToTexture: boolean) {
     const context = painter.context;
     const gl = context.gl;
     const fbo = tile.fbo;
@@ -56,9 +57,9 @@ function renderHillshade(
     context.activeTexture.set(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-    const terrainCoord = terrainData ? coord : null;
+    const rttCoord = isRenderingToTexture ? coord : null;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        hillshadeUniformValues(painter, tile, layer, terrainCoord), terrainData, layer.id, painter.rasterBoundsBuffer,
+        hillshadeUniformValues(painter, tile, layer, rttCoord), terrainData, layer.id, painter.rasterBoundsBuffer,
         painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
 
 }

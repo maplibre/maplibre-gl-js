@@ -258,7 +258,7 @@ export class RenderToTexture {
                     const coords = layer.source ? this._coordsDescendingInv[layer.source][tileID.key] : [tileID];
                     painter.context.viewport.set([0, 0, obj.fbo.width, obj.fbo.height]);
                     painter._renderTileClippingMasks(layer, coords);
-                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords);
+                    painter.renderLayer(painter, painter.style.sourceCaches[layer.source], layer, coords, true);
                     if (layer.source) rttData.rttCoords[layer.source] = this._coordsDescendingInvStr[layer.source][tileID.key];
                 }
             }

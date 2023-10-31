@@ -16,7 +16,7 @@ import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
 
-export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
+export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
     const color = layer.paint.get('fill-color');
     const opacity = layer.paint.get('fill-opacity');
 
@@ -36,7 +36,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
     if (painter.renderPass === pass) {
         const depthMode = painter.depthModeForSublayer(
             1, painter.renderPass === 'opaque' ? DepthMode.ReadWrite : DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, false, isRenderingToTexture);
     }
 
     // Draw stroke
@@ -52,7 +52,7 @@ export function drawFill(painter: Painter, sourceCache: SourceCache, layer: Fill
         // the (non-antialiased) fill.
         const depthMode = painter.depthModeForSublayer(
             layer.getPaintProperty('fill-outline-color') ? 2 : 0, DepthMode.ReadOnly);
-        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true);
+        drawFillTiles(painter, sourceCache, layer, coords, depthMode, colorMode, true, isRenderingToTexture);
     }
 }
 
@@ -63,7 +63,8 @@ function drawFillTiles(
     coords: Array<OverscaledTileID>,
     depthMode: Readonly<DepthMode>,
     colorMode: Readonly<ColorMode>,
-    isOutline: boolean) {
+    isOutline: boolean,
+    isRenderingToTexture: boolean) {
     const gl = painter.context.gl;
     const fillPropertyName = 'fill-pattern';
     const patternProperty = layer.paint.get(fillPropertyName);
@@ -100,8 +101,8 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const terrainCoord = terrainData ? coord : null;
-        const posMatrix = terrainCoord ? terrainCoord.posMatrix : coord.posMatrix;
+        const rttCoord = isRenderingToTexture ? coord : null;
+        const posMatrix = rttCoord ? rttCoord.posMatrix : coord.posMatrix;
         const tileMatrix = painter.translatePosMatrix(posMatrix, tile,
             layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));
 
