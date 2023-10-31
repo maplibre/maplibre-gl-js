@@ -811,6 +811,36 @@ describe('Map', () => {
         expect(mapLayer.source).toBe(layer.source);
     });
 
+    describe('#getLayersOrder', () => {
+        test('returns ids of layers in the correct order', done => {
+            const map = createMap({
+                style: extend(createStyle(), {
+                    'sources': {
+                        'raster': {
+                            type: 'raster',
+                            tiles: ['http://tiles.server']
+                        }
+                    },
+                    'layers': [{
+                        'id': 'raster',
+                        'type': 'raster',
+                        'source': 'raster'
+                    }]
+                })
+            });
+
+            map.on('style.load', () => {
+                map.addLayer({
+                    id: 'custom',
+                    type: 'custom',
+                    render() {}
+                }, 'raster');
+                expect(map.getLayersOrder()).toEqual(['custom', 'raster']);
+                done();
+            });
+        });
+    });
+
     describe('#resize', () => {
         test('sets width and height from container clients', () => {
             const map = createMap(),

@@ -2155,6 +2155,36 @@ describe('Style#setLayerZoomRange', () => {
     });
 });
 
+describe('Style#getLayersOrder', () => {
+    test('returns ids of layers in the correct order', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON({
+            'version': 8,
+            'sources': {
+                'raster': {
+                    type: 'raster',
+                    tiles: ['http://tiles.server']
+                }
+            },
+            'layers': [{
+                'id': 'raster',
+                'type': 'raster',
+                'source': 'raster'
+            }]
+        });
+
+        style.on('style.load', () => {
+            style.addLayer({
+                id: 'custom',
+                type: 'custom',
+                render() {}
+            }, 'raster');
+            expect(style.getLayersOrder()).toEqual(['custom', 'raster']);
+            done();
+        });
+    });
+});
+
 describe('Style#queryRenderedFeatures', () => {
 
     let style;

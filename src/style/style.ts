@@ -1008,7 +1008,16 @@ export class Style extends Evented {
     }
 
     /**
-     * checks if a specific layer is present within the style.
+     * Return the ids of all layers currently in the style, including custom layers, in order.
+     *
+     * @returns ids of layers, in order
+     */
+    getLayersOrder(): string[] {
+        return [...this._order];
+    }
+
+    /**
+     * Checks if a specific layer is present within the style.
      *
      * @param id - the id of the desired layer
      * @returns a boolean specifying if the given layer is present
