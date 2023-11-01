@@ -35,7 +35,7 @@ export class Globe {
         mat4.translate(m, m, [transform.point.x, transform.point.y, 0]); // undo translation from transform's projection matrix
         mat4.scale(m, m, [transform.worldSize, transform.worldSize, 0]);
         mat4.rotateX(m, m, -transform.center.lat * degreesToRadians);
-        mat4.rotateY(m, m, -transform.center.lng * degreesToRadians + Math.PI);
+        mat4.rotateY(m, m, -transform.center.lng * degreesToRadians);
         mat4.scale(m, m, [1, -1, 1]);
         mat4.multiply(m, transform.projMatrix, m);
         this.cachedTransform = new Float32Array(m);
@@ -61,22 +61,18 @@ export class Globe {
 
     private _webMercatorPixelToSphereAngle(tileX: number, tileY: number, zoom: number): { x: number; y: number; z: number } {
         // just pretend this stuff isn't horribly wrong for now...
-        const tilesRangeX = Math.PI * 2;
-        const tilesRangeY = 85.06 * 2.0 / 180.0 * Math.PI; // this is almost certainly horribly wrong
 
-        const angleSizeX = tilesRangeX / (1 << zoom);
-        const angleSizeY = tilesRangeY / (1 << zoom);
+        const tileAngularSizeX = Math.PI * 2 / (1 << zoom);
+        // get the "latitude and longitude" on a perfect sphere for the given mercator tile coordinates
+        const angleE = -Math.PI + tileAngularSizeX * tileX;
+        const sphericalAngleN = 2.0 * Math.atan(Math.exp(Math.PI - (tileY * Math.PI * 2.0 / (1 << zoom)))) - Math.PI * 0.5;
 
-        // angle distance from 0° to the east for X, and from equator to the north for Y
-        const angleFromX = angleSizeX * tileX;
-        const angleFromY = tilesRangeY * 0.5 - angleSizeY * tileY;
-
-        const len = Math.cos(angleFromY);
+        const len = Math.cos(sphericalAngleN);
 
         return {
-            x: Math.sin(angleFromX) * len,
-            y: Math.sin(angleFromY),
-            z: Math.cos(angleFromX) * len
+            x: Math.sin(angleE) * len,
+            y: Math.sin(sphericalAngleN),
+            z: Math.cos(angleE) * len
         };
     }
 
@@ -110,8 +106,18 @@ export class Globe {
      * @returns Mesh for the given tile
      */
     private _createMesh(context: Context, tileX: number, tileY: number, zoom: number) : any {
-        const granuality = 8; // mesh triangulation granuality: 1 => just a single quad, 3 => 3x3 = 9 quads
+        let granuality = 24; // mesh triangulation granuality: 1 => just a single quad, 3 => 3x3 = 9 quads
+
+        // Boost mesh granuality for when sphere edges are likely to be visible - avoid jagged edges
+        if (zoom === 0) {
+            granuality *= 4;
+        } else if (zoom === 1) {
+            granuality *= 2;
+        }
+
         const verticesPerAxis = granuality + 1;
+
+        // JP: TODO: for meshes neighbouring the poles, generate triangles all the way to the poles
 
         const vertexArray = new Pos3dTex2dArray();
         const indexArray = new TriangleIndexArray();
