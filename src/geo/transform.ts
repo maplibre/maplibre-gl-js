@@ -576,7 +576,7 @@ export class Transform {
     pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
-            const coordinate = terrain.pointCoordinate(p);
+            const coordinate = terrain.pointCoordinate(p, this.width, this._center.lng);
             if (coordinate != null) {
                 return coordinate;
             }
