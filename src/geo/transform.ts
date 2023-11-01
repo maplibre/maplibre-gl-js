@@ -31,6 +31,12 @@ export class Transform {
     angle: number;
     rotationMatrix: mat2;
     pixelsToGLUnits: [number, number];
+
+    /**
+     * Distance from camera origin to view plane, in pixels.
+     * Calculated using vertical fov and viewport height.
+     * Center is considered to be in the middle of the viewport.
+     */
     cameraToCenterDistance: number;
     mercatorMatrix: mat4;
     projMatrix: mat4;
@@ -41,7 +47,12 @@ export class Transform {
     pixelMatrixInverse: mat4;
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
+
+    /**
+     * Vertical field of view in radians.
+     */
     _fov: number;
+
     _pitch: number;
     _zoom: number;
     _unmodified: boolean;
@@ -829,7 +840,11 @@ export class Transform {
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        const farZ = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
+        const farZbase = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
+
+        // Ensure globe is always within farZ range
+        // this.worldSize is the globe's diameter, and we only ever see the near half of the globe
+        const farZ = Math.max(farZbase, cameraToSeaLevelDistance + this.worldSize * 0.5);
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)

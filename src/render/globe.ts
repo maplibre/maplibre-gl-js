@@ -32,12 +32,19 @@ export class Globe {
         const degreesToRadians = Math.PI / 180.0;
         const m = new Float64Array(16) as any;
         mat4.identity(m);
-        mat4.translate(m, m, [transform.point.x, transform.point.y, 0]); // undo translation from transform's projection matrix
-        mat4.scale(m, m, [transform.worldSize, transform.worldSize, 0]);
+        // undo translation from transform's projection matrix
+        mat4.translate(m, m, [transform.point.x, transform.point.y, 0]);
+        // scale the globe to the size of mercator zoom 0 tile,
+        // also undo the _pixelPerMeter scaling from transform.ts projection matrix
+        mat4.scale(m, m, [transform.worldSize, transform.worldSize, transform.worldSize / transform._pixelPerMeter]);
+        // offset the sphere down to its top touches the regular map plane (visible when pitch > 0)
+        mat4.translate(m, m, [0.0, 0, -0.5]);
+        // Rotate the sphere to center it on viewed coordinates
         mat4.rotateX(m, m, -transform.center.lat * degreesToRadians);
         mat4.rotateY(m, m, -transform.center.lng * degreesToRadians);
+        // Flip it upside down
         mat4.scale(m, m, [1, -1, 1]);
-        mat4.scale(m, m, [0.8, 0.8, 0.8]); // remove me!
+        // Finally, apply transform's projection matrix
         mat4.multiply(m, transform.projMatrix, m);
         this.cachedTransform = new Float32Array(m);
     }
