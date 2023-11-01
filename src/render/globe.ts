@@ -37,6 +37,7 @@ export class Globe {
         mat4.rotateX(m, m, -transform.center.lat * degreesToRadians);
         mat4.rotateY(m, m, -transform.center.lng * degreesToRadians);
         mat4.scale(m, m, [1, -1, 1]);
+        mat4.scale(m, m, [0.8, 0.8, 0.8]); // remove me!
         mat4.multiply(m, transform.projMatrix, m);
         this.cachedTransform = new Float32Array(m);
     }
@@ -62,6 +63,8 @@ export class Globe {
     private _webMercatorPixelToSphereAngle(tileX: number, tileY: number, zoom: number): { x: number; y: number; z: number } {
         // just pretend this stuff isn't horribly wrong for now...
 
+        const scale = 0.5; // ensure the mesh sphere has diameter of 1 (radius of 0.5)
+
         const tileAngularSizeX = Math.PI * 2 / (1 << zoom);
         // get the "latitude and longitude" on a perfect sphere for the given mercator tile coordinates
         const angleE = -Math.PI + tileAngularSizeX * tileX;
@@ -70,9 +73,9 @@ export class Globe {
         const len = Math.cos(sphericalAngleN);
 
         return {
-            x: Math.sin(angleE) * len,
-            y: Math.sin(sphericalAngleN),
-            z: Math.cos(angleE) * len
+            x: Math.sin(angleE) * len * scale,
+            y: Math.sin(sphericalAngleN) * scale,
+            z: Math.cos(angleE) * len * scale
         };
     }
 
@@ -127,8 +130,7 @@ export class Globe {
                 const localX = tileX + x / granuality;
                 const localY = tileY + y / granuality;
                 const pos = this._webMercatorPixelToSphereAngle(localX, localY, zoom);
-                const scale = 0.5; // ensure the mesh sphere has diameter of 1 (radius of 0.5)
-                vertexArray.emplaceBack(pos.x * scale, pos.y * scale, pos.z * scale, x / granuality * 65535, y / granuality * 65535);
+                vertexArray.emplaceBack(pos.x, pos.y, pos.z, x / granuality * 65535, y / granuality * 65535);
             }
         }
 
@@ -144,10 +146,28 @@ export class Globe {
                 // v2----v3
                 indexArray.emplaceBack(v0, v2, v1);
                 indexArray.emplaceBack(v1, v2, v3);
+            }
+        }
 
-                // also create backside for debug
-                //indexArray.emplaceBack(v0, v1, v2);
-                //indexArray.emplaceBack(v1, v3, v2);
+        // North pole
+        if (tileY === 0) {
+            vertexArray.emplaceBack(0, 0.5, 0, 32768, 0);
+            for (let x = 0; x < granuality; x++) {
+                const v0 = vertexArray.length - 1;
+                const v1 = x;
+                const v2 = x + 1;
+                indexArray.emplaceBack(v0, v1, v2);
+            }
+        }
+
+        // South pole
+        if (tileY === (1 << zoom) - 1) {
+            vertexArray.emplaceBack(0, -0.5, 0, 32768, 65535);
+            for (let x = 0; x < granuality; x++) {
+                const v0 = vertexArray.length - 1;
+                const v1 = x + verticesPerAxis * (verticesPerAxis - 1);
+                const v2 = x + 1 + verticesPerAxis * (verticesPerAxis - 1);
+                indexArray.emplaceBack(v0, v2, v1);
             }
         }
 
