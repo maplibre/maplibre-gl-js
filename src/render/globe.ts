@@ -29,12 +29,14 @@ export class Globe {
         this._lastCoveringTiles = coveringTiles;
         this._ensureMeshes(context);
 
+        const degreesToRadians = Math.PI / 180.0;
         const m = new Float64Array(16) as any;
         mat4.identity(m);
         mat4.translate(m, m, [transform.point.x, transform.point.y, 0]); // undo translation from transform's projection matrix
         mat4.scale(m, m, [transform.worldSize, transform.worldSize, 0]);
-        mat4.rotateZ(m, m, transform.center.lat);
-        mat4.rotateY(m, m, transform.center.lng);
+        mat4.rotateX(m, m, -transform.center.lat * degreesToRadians);
+        mat4.rotateY(m, m, -transform.center.lng * degreesToRadians + Math.PI);
+        mat4.scale(m, m, [1, -1, 1]);
         mat4.multiply(m, transform.projMatrix, m);
         this.cachedTransform = new Float32Array(m);
     }
@@ -74,7 +76,7 @@ export class Globe {
         return {
             x: Math.sin(angleFromX) * len,
             y: Math.sin(angleFromY),
-            z: Math.cos(angleFromX) * len * 0
+            z: Math.cos(angleFromX) * len
         };
     }
 
@@ -108,13 +110,14 @@ export class Globe {
      * @returns Mesh for the given tile
      */
     private _createMesh(context: Context, tileX: number, tileY: number, zoom: number) : any {
-        const granuality = 4; // mesh triangulation granuality: 1 => just a single quad, 3 => 3x3 = 9 quads
+        const granuality = 8; // mesh triangulation granuality: 1 => just a single quad, 3 => 3x3 = 9 quads
+        const verticesPerAxis = granuality + 1;
 
         const vertexArray = new Pos3dTex2dArray();
         const indexArray = new TriangleIndexArray();
 
-        for (let y = 0; y <= granuality; y++) {
-            for (let x = 0; x <= granuality; x++) {
+        for (let y = 0; y < verticesPerAxis; y++) {
+            for (let x = 0; x < verticesPerAxis; x++) {
                 const localX = tileX + x / granuality;
                 const localY = tileY + y / granuality;
                 const pos = this._webMercatorPixelToSphereAngle(localX, localY, zoom);
@@ -123,13 +126,12 @@ export class Globe {
             }
         }
 
-        // Note: these for-loops do one less iteration than the vertex generation loops (<= vs < in the condition)
         for (let y = 0; y < granuality; y++) {
             for (let x = 0; x < granuality; x++) {
-                const v0 = x + y * granuality;
-                const v1 = (x + 1) + y * granuality;
-                const v2 = x + (y + 1) * granuality;
-                const v3 = (x + 1) + (y + 1) * granuality;
+                const v0 = x + y * verticesPerAxis;
+                const v1 = (x + 1) + y * verticesPerAxis;
+                const v2 = x + (y + 1) * verticesPerAxis;
+                const v3 = (x + 1) + (y + 1) * verticesPerAxis;
                 // v0----v1
                 //  |  / |
                 //  | /  |
@@ -138,8 +140,8 @@ export class Globe {
                 indexArray.emplaceBack(v1, v2, v3);
 
                 // also create backside for debug
-                indexArray.emplaceBack(v0, v1, v2);
-                indexArray.emplaceBack(v1, v3, v2);
+                //indexArray.emplaceBack(v0, v1, v2);
+                //indexArray.emplaceBack(v1, v3, v2);
             }
         }
 
