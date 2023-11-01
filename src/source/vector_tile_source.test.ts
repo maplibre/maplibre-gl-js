@@ -192,7 +192,7 @@ describe('VectorTileSource', () => {
         server.respond();
     });
 
-    test('loads an tile even in case of 404', done => {
+    test('loads a tile even in case of 404', done => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
         const source = createSource({url: '/source.json'});
