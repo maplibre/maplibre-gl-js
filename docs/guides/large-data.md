@@ -3,7 +3,7 @@
 Performance is a critical aspect of providing users with a smooth and responsive experience. This guide focuses on techniques for improving the performance of MapLibre, particularly when dealing with large datasets in GeoJSON format. We'll categorise our strategies into two key areas:
 
 1. Loading the data
-1. visualising the data
+1. Visualizing the data
 
 ## Loading the Data
 
