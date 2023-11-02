@@ -1,4 +1,4 @@
-### MapLibre GL JS Documentation
+# MapLibre GL JS Documentation
 
 This directory contains the source for the [MapLibre GL JS docs](https://maplibre.org/maplibre-gl-js/docs/) hosted on the MapLibre site.
 
@@ -12,7 +12,6 @@ To start a documentation server locally, first, ensure that you have an up-to-da
 npm run build-prod
 npm run build-css
 ```
-
 
 Then generate the docs files:
 
@@ -52,12 +51,14 @@ API documentation is written as [TSDoc comments](https://tsdoc.org/) and process
 ## Writing Examples
 
 Examples are written as regular html files in `test/examples`. Each example should have a title and a og:description.
+
 * `title`: A short title for the example in **sentence case** as a **verb phrase**.
 * `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
 
 When you create a new example, you **must** make an accompanying image.
 
-1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`. Commit the image.
+1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`.
+2. Commit the image.
 
 For some examples, `npm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assests/examples/` folder.
 
@@ -72,6 +73,7 @@ To update or add a new example, PR the relevant changes to this repo. The exampl
 ## How does all this work?
 
 It uses 3 tools:
+
 1. [TypeDoc](https://typedoc.org/) cli
 2. [MkDocs material](https://squidfunk.github.io/mkdocs-material/)
 3. `generate-docs.ts` script
