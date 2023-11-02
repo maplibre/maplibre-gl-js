@@ -1,49 +1,36 @@
 import {pick, extend} from '../util/util';
-
 import {getJSON} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 
 import type {RequestManager} from '../util/request_manager';
-import type {Callback} from '../types/callback';
 import type {TileJSON} from '../types/tilejson';
-import type {Cancelable} from '../types/cancelable';
 import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export function loadTileJson(
+export async function loadTileJson(
     options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,
     requestManager: RequestManager,
-    callback: Callback<TileJSON>
-): Cancelable {
-    // HM TODO: change this to promise
-    const loaded = (tileJSON: any) => {
-        if (tileJSON) {
-            const result: any = pick(
-                // explicit source options take precedence over TileJSON
-                extend(tileJSON, options),
-                ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
-            );
-
-            if (tileJSON.vector_layers) {
-                result.vectorLayers = tileJSON.vector_layers;
-                result.vectorLayerIds = result.vectorLayers.map((layer) => { return layer.id; });
-            }
-
-            callback(null, result);
-        }
-    };
-
+    abortController: AbortController,
+): Promise<TileJSON> {
+    let tileJSON: any = options;
     if (options.url) {
-        const abortController = new AbortController();
-        getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController)
-            .then((response) => loaded(response.data))
-            .catch((err) => callback(err));
-        return {
-            cancel: () => {
-                abortController.abort();
-            }
-        };
+        const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
+        tileJSON = response.data;
     } else {
-        return browser.frame(() => loaded(options));
+        await browser.frameAsync(abortController);
+    }
+    if (tileJSON) {
+        const result: TileJSON = pick(
+            // explicit source options take precedence over TileJSON
+            extend(tileJSON, options),
+            ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
+        );
+
+        if (tileJSON.vector_layers) {
+            result.vectorLayers = tileJSON.vector_layers;
+            result.vectorLayerIds = result.vectorLayers.map((layer) => { return layer.id; });
+        }
+
+        return result;
     }
 }

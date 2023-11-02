@@ -1,6 +1,8 @@
 import {Actor, ActorTarget} from './actor';
 import {WorkerGlobalScopeInterface, workerFactory} from './web_worker';
 import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
+import {sleep} from './test/util';
+import {ABORT_ERROR, createAbortError} from './abort_error';
 
 class MockWorker {
     self: any;
@@ -24,7 +26,7 @@ describe('Actor', () => {
     test('forwards responses to correct handler', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', async (_mapId, params) => {
-            await new Promise((resolve) => (setTimeout(resolve, 0)));
+            await sleep(0);
             return params.clusterId;
         });
 
@@ -44,7 +46,7 @@ describe('Actor', () => {
     test('cancel a request does not reject or resolve a promise', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', async (_mapId, params) => {
-            await new Promise((resolve) => (setTimeout(resolve, 200)));
+            await sleep(200);
             return params.clusterId;
         });
 
@@ -71,7 +73,7 @@ describe('Actor', () => {
             return new Promise((resolve, reject) => {
                 handlerAbortController.signal.addEventListener('abort', () => {
                     gotAbortSignal = true;
-                    reject(new Error('AbortError'));
+                    reject(createAbortError());
                 });
                 setTimeout(resolve, 200);
             });
@@ -87,7 +89,7 @@ describe('Actor', () => {
 
         abortController.abort();
 
-        await new Promise((resolve) => (setTimeout(resolve, 500)));
+        await sleep(500);
 
         expect(received).toBeFalsy();
         expect(gotAbortSignal).toBeTruthy();
@@ -132,9 +134,9 @@ describe('Actor', () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
-        worker.worker.actor.registerMessageHandler('abortTile', () => Promise.reject(new Error('AbortError')));
+        worker.worker.actor.registerMessageHandler('abortTile', () => Promise.reject(createAbortError()));
 
-        await expect(async () => actor.sendAsync({type: 'abortTile', data: {} as any})).rejects.toThrow('AbortError');
+        await expect(async () => actor.sendAsync({type: 'abortTile', data: {} as any})).rejects.toThrow(ABORT_ERROR);
     });
 
     test('send a messege that must be queued, it should still arrive', async () => {
@@ -168,7 +170,7 @@ describe('Actor', () => {
 
         actor.sendAsync({type: 'getClusterExpansionZoom', data: {} as any, targetMapId: '1'});
 
-        await new Promise((resolve) => (setTimeout(resolve, 100)));
+        await sleep(100);
 
         expect(spy).not.toHaveBeenCalled();
     });

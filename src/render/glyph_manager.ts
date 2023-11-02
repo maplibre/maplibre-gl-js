@@ -6,7 +6,6 @@ import {AlphaImage} from '../util/image';
 
 import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
-import type {Callback} from '../types/callback';
 import type {GetGlyphsResponse} from '../util/actor_messages';
 
 type Entry = {
@@ -15,9 +14,7 @@ type Entry = {
         [id: number]: StyleGlyph | null;
     };
     requests: {
-        [range: number]: Array<Callback<{
-            [_: number]: StyleGlyph | null;
-        }>>;
+        [range: number]: Promise<{[_: number]: StyleGlyph | null}>;
     };
     ranges: {
         [range: number]: boolean | null;
@@ -28,9 +25,7 @@ type Entry = {
 export class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string;
-    entries: {
-        [_: string]: Entry;
-    };
+    entries: {[stack: string]: Entry};
     url: string;
 
     // exposed as statics to enable stubbing in unit tests
@@ -48,88 +43,15 @@ export class GlyphManager {
     }
 
     async getGlyphs(glyphs: {[stack: string]: Array<number>}): Promise<GetGlyphsResponse> {
-        const all = [];
+        const glyphsPromises: Promise<{stack: string; id: number; glyph: StyleGlyph}>[] = [];
 
         for (const stack in glyphs) {
             for (const id of glyphs[stack]) {
-                all.push({stack, id});
+                glyphsPromises.push(this._getAndCacheGlyphsPromise(stack, id));
             }
         }
-        const promises = all.map(({stack, id}) => {
-            return new Promise<{stack: string; id: number; glyph: StyleGlyph}>((resolve, reject) => {
-                let entry = this.entries[stack];
-                if (!entry) {
-                    entry = this.entries[stack] = {
-                        glyphs: {},
-                        requests: {},
-                        ranges: {}
-                    };
-                }
 
-                let glyph = entry.glyphs[id];
-                if (glyph !== undefined) {
-                    resolve({stack, id, glyph});
-                    return;
-                }
-
-                glyph = this._tinySDF(entry, stack, id);
-                if (glyph) {
-                    entry.glyphs[id] = glyph;
-                    resolve({stack, id, glyph});
-                    return;
-                }
-
-                const range = Math.floor(id / 256);
-                if (range * 256 > 65535) {
-                    reject(new Error('glyphs > 65535 not supported'));
-                    return;
-                }
-
-                if (entry.ranges[range]) {
-                    resolve({stack, id, glyph});
-                    return;
-                }
-
-                if (!this.url) {
-                    reject(new Error('glyphsUrl is not set'));
-                    return;
-                }
-
-                let requests = entry.requests[range];
-                if (!requests) {
-                    requests = entry.requests[range] = [];
-                    GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager,
-                        (err, response?: {
-                            [_: number]: StyleGlyph | null;
-                        } | null) => {
-                            if (response) {
-                                for (const id in response) {
-                                    if (!this._doesCharSupportLocalGlyph(+id)) {
-                                        entry.glyphs[+id] = response[+id];
-                                    }
-                                }
-                                entry.ranges[range] = true;
-                            }
-                            for (const cb of requests) {
-                                cb(err, response);
-                            }
-                            delete entry.requests[range];
-                        });
-                }
-
-                requests.push((err, result?: {
-                    [_: number]: StyleGlyph | null;
-                } | null) => {
-                    if (err) {
-                        reject(err);
-                    } else if (result) {
-                        resolve({stack, id, glyph: result[id] || null});
-                    }
-                });
-            });
-        });
-
-        const updatedGlyphs = await Promise.all(promises);
+        const updatedGlyphs = await Promise.all(glyphsPromises);
 
         const result: GetGlyphsResponse = {};
 
@@ -146,6 +68,55 @@ export class GlyphManager {
         }
 
         return result;
+    }
+
+    async _getAndCacheGlyphsPromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
+        let entry = this.entries[stack];
+        if (!entry) {
+            entry = this.entries[stack] = {
+                glyphs: {},
+                requests: {},
+                ranges: {}
+            };
+        }
+
+        let glyph = entry.glyphs[id];
+        if (glyph !== undefined) {
+            return {stack, id, glyph};
+        }
+
+        glyph = this._tinySDF(entry, stack, id);
+        if (glyph) {
+            entry.glyphs[id] = glyph;
+            return {stack, id, glyph};
+        }
+
+        const range = Math.floor(id / 256);
+        if (range * 256 > 65535) {
+            throw new Error('glyphs > 65535 not supported');
+        }
+
+        if (entry.ranges[range]) {
+            return {stack, id, glyph};
+        }
+
+        if (!this.url) {
+            throw new Error('glyphsUrl is not set');
+        }
+
+        if (!entry.requests[range]) {
+            const promise = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
+            entry.requests[range] = promise;
+        }
+
+        const response = await entry.requests[range];
+        for (const id in response) {
+            if (!this._doesCharSupportLocalGlyph(+id)) {
+                entry.glyphs[+id] = response[+id];
+            }
+        }
+        entry.ranges[range] = true;
+        return {stack, id, glyph: response[id] || null};
     }
 
     _doesCharSupportLocalGlyph(id: number): boolean {

@@ -47,7 +47,7 @@ import type {Callback} from '../types/callback';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
 import type {Cancelable} from '../types/cancelable';
-import type {RequestParameters, ResponseCallback} from '../util/ajax';
+import type {GetResourceResponse, RequestParameters} from '../util/ajax';
 import type {
     LayerSpecification,
     FilterSpecification,
@@ -209,8 +209,8 @@ export class Style extends Evented {
     light: Light;
 
     _request: Cancelable;
-    _abortController: AbortController;
-    _spriteRequest: Cancelable;
+    _loadStyleRequest: AbortController;
+    _spriteRequest: AbortController;
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: Array<string>;
@@ -247,17 +247,8 @@ export class Style extends Evented {
         this.dispatcher.registerMessageHandler('getImages', (mapId, params) => {
             return this.getImages(mapId, params);
         });
-        this.dispatcher.registerMessageHandler('getResource', (mapId, params) => {
-            return new Promise((resolve, reject) => {
-                // HM TODO: change this internal method to return a promise
-                this.getResource(mapId, params, (err, data) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(data);
-                    }
-                });
-            });
+        this.dispatcher.registerMessageHandler('getResource', (mapId, params, abortController) => {
+            return this.getResource(mapId, params, abortController);
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
@@ -337,12 +328,12 @@ export class Style extends Evented {
             options.validate : true;
 
         const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
-        this._abortController = new AbortController();
-        getJSON<StyleSpecification>(request, this._abortController).then((response) => {
-            this._abortController = null;
+        this._loadStyleRequest = new AbortController();
+        getJSON<StyleSpecification>(request, this._loadStyleRequest).then((response) => {
+            this._loadStyleRequest = null;
             this._load(response.data, options, previousStyle);
         }).catch((error) => {
-            this._abortController = null;
+            this._loadStyleRequest = null;
             if (error) {
                 this.fire(new ErrorEvent(error));
             }
@@ -416,11 +407,11 @@ export class Style extends Evented {
     _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
         this.imageManager.setLoaded(false);
 
-        this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
+        this._spriteRequest = new AbortController();
+        let err: Error;
+        loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
             this._spriteRequest = null;
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (images) {
+            if (images) {
                 for (const spriteId in images) {
                     this._spritesImagesIds[spriteId] = [];
 
@@ -448,7 +439,11 @@ export class Style extends Evented {
                     }
                 }
             }
-
+        }).catch((error) => {
+            this._spriteRequest = null;
+            err = error;
+            this.fire(new ErrorEvent(err));
+        }).finally(() => {
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
 
@@ -1473,12 +1468,12 @@ export class Style extends Evented {
             this._request.cancel();
             this._request = null;
         }
-        if (this._abortController) {
-            this._abortController.abort();
-            this._abortController = null;
+        if (this._loadStyleRequest) {
+            this._loadStyleRequest.abort();
+            this._loadStyleRequest = null;
         }
         if (this._spriteRequest) {
-            this._spriteRequest.cancel();
+            this._spriteRequest.abort();
             this._spriteRequest = null;
         }
         rtlTextPluginEvented.off('pluginStateChange', this._rtlTextPluginCallback);
@@ -1626,8 +1621,8 @@ export class Style extends Evented {
         return glypgs;
     }
 
-    getResource(mapId: string | number, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-        return makeRequest(params, callback);
+    getResource(mapId: string | number, params: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+        return makeRequest(params, abortController);
     }
 
     getGlyphsUrl() {

@@ -8,7 +8,8 @@ import {fakeServer, type FakeServer} from 'nise';
 import {IActor} from '../util/actor';
 import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
-import {setPerformance} from '../util/test/util';
+import {setPerformance, sleep} from '../util/test/util';
+import {isAbortError} from '../util/abort_error';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;
@@ -34,7 +35,7 @@ describe('vector tile worker source', () => {
             request: {url: 'http://localhost:2900/abort'}
         } as any as WorkerTileParameters).then((res) => {
             expect(res).toBeFalsy();
-        }).catch((err) => expect(err.message).toBe('AbortError'));
+        }).catch((err) => expect(isAbortError(err)).toBeTruthy());
 
         source.abortTile({
             source: 'source',
@@ -135,7 +136,8 @@ describe('vector tile worker source', () => {
                 });
             }
         };
-        const source = new VectorTileWorkerSource(actor, layerIndex, ['hello'], loadVectorData);
+        const source = new VectorTileWorkerSource(actor, layerIndex, ['hello']);
+        source.loadVectorTile = loadVectorData;
         source.loadTile({
             source: 'source',
             uid: 0,
@@ -144,7 +146,7 @@ describe('vector tile worker source', () => {
         } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
 
         // allow promise to run
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await sleep(0);
 
         const res = await source.reloadTile({
             source: 'source',
@@ -172,7 +174,8 @@ describe('vector tile worker source', () => {
             type: 'fill'
         }]);
 
-        const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = loadVectorData;
 
         const parseWorkerTileMock = jest
             .spyOn(WorkerTile.prototype, 'parse')
@@ -195,7 +198,7 @@ describe('vector tile worker source', () => {
         }).catch(() => expect(false).toBeTruthy());
 
         // let the promise start
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await sleep(0);
 
         const res = await source.reloadTile({
             source: 'source',
@@ -223,6 +226,28 @@ describe('vector tile worker source', () => {
             done();
         });
         expect(parse).not.toHaveBeenCalled();
+    });
+
+    test('VectorTileWorkerSource#loadTile returns null for an empty tile', async () => {
+        const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
+        source.loadVectorTile = (_params, _abortController) => Promise.resolve(null);
+        const parse = jest.fn();
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/pbf'}, 'something...');
+        });
+
+        const promise = source.loadTile({
+            source: 'source',
+            uid: 0,
+            tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            request: {url: 'http://localhost:2900/faketile.pbf'}
+        } as any as WorkerTileParameters);
+
+        server.respond();
+
+        expect(parse).not.toHaveBeenCalled();
+        expect(await promise).toBeNull();
     });
 
     test('VectorTileWorkerSource#returns a good error message when failing to parse a tile', done => {
@@ -309,7 +334,8 @@ describe('vector tile worker source', () => {
             type: 'fill'
         }]);
 
-        const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = loadVectorData;
 
         window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
 
@@ -343,7 +369,8 @@ describe('vector tile worker source', () => {
             type: 'fill'
         }]);
 
-        const source = new VectorTileWorkerSource(actor, layerIndex, [], loadVectorData);
+        const source = new VectorTileWorkerSource(actor, layerIndex, []);
+        source.loadVectorTile = loadVectorData;
 
         const sampleMarks = [100, 350];
         const marks = {};

@@ -11,12 +11,12 @@ for (const glyph of parseGlyphPbf(fs.readFileSync('./test/unit/assets/0-255.pbf'
 const identityTransform = ((url) => ({url})) as any as RequestManager;
 
 const createLoadGlyphRangeStub = () => {
-    return jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
+    return jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform) => {
         expect(stack).toBe('Arial Unicode MS');
         expect(range).toBe(0);
         expect(urlTemplate).toBe('https://localhost/fonts/v1/{fontstack}/{range}.pbf');
         expect(transform).toBe(identityTransform);
-        setTimeout(() => callback(null, glyphs), 0);
+        return Promise.resolve(glyphs);
     });
 };
 
@@ -62,8 +62,8 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager requests remote CJK PBF', done => {
-        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
-            setTimeout(() => callback(null, glyphs), 0);
+        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, _range, _urlTemplate, _transform) => {
+            return Promise.resolve(glyphs);
         });
 
         const manager = createGlyphManager();
@@ -75,14 +75,14 @@ describe('GlyphManager', () => {
     });
 
     test('GlyphManager does not cache CJK chars that should be rendered locally', done => {
-        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((stack, range, urlTemplate, transform, callback) => {
+        jest.spyOn(GlyphManager, 'loadGlyphRange').mockImplementation((_stack, range, _urlTemplate, _transform) => {
             const overlappingGlyphs = {};
             const start = range * 256;
             const end = start + 256;
             for (let i = start, j = 0; i < end; i++, j++) {
                 overlappingGlyphs[i] = glyphs[j];
             }
-            setTimeout(() => callback(null, overlappingGlyphs), 0);
+            return Promise.resolve(overlappingGlyphs);
         });
 
         const manager = createGlyphManager('sans-serif');

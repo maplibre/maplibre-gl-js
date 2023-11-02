@@ -1,5 +1,4 @@
 import {getJSON} from '../util/ajax';
-
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
 import {GeoJSONWrapper} from './geojson_wrapper';
@@ -8,14 +7,12 @@ import Supercluster, {type Options as SuperclusterOptions, type ClusterPropertie
 import geojsonvt, {type Options as GeoJSONVTOptions} from 'geojson-vt';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
+import {isAbortError} from '../util/abort_error';
 
 import type {
     WorkerTileParameters,
     WorkerTileResult,
 } from '../source/worker_source';
-
-import type {IActor} from '../util/actor';
-import type {StyleLayerIndex} from '../style/style_layer_index';
 
 import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
@@ -60,20 +57,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
 
-    /**
-     * @param loadGeoJSON - Optional method for custom loading/parsing of
-     * GeoJSON based on parameters passed from the main-thread Source.
-     * See {@link GeoJSONWorkerSource#loadGeoJSON}.
-     */
-    constructor(actor: IActor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadGeoJSON?: LoadGeoJSON | null) {
-        super(actor, layerIndex, availableImages);
-        this.loadVectorData = this.loadGeoJSONTile;
-        if (loadGeoJSON) {
-            this.loadGeoJSON = loadGeoJSON;
-        }
-    }
-
-    async loadGeoJSONTile(params: WorkerTileParameters, _abortController: AbortController): Promise<LoadVectorTileResult | null> {
+    override async loadVectorTile(params: WorkerTileParameters, _abortController: AbortController): Promise<LoadVectorTileResult | null> {
         const canonical = params.tileID.canonical;
 
         if (!this._geoJSONIndex) {
@@ -158,8 +142,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             return result;
         } catch (err) {
             delete this._pendingRequest;
-            // HM TODO: make this message a constant somewhere
-            if (err.message === 'AbortError') {
+            if (isAbortError(err)) {
                 return {abandoned: true};
             }
             throw err;

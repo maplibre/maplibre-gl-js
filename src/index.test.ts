@@ -2,6 +2,7 @@ import {config} from './util/config';
 import maplibre from './index';
 import {getJSON, getArrayBuffer} from './util/ajax';
 import {ImageRequest} from './util/image_request';
+import {isAbortError} from './util/abort_error';
 
 describe('maplibre', () => {
     beforeEach(() => {
@@ -109,7 +110,7 @@ describe('maplibre', () => {
         try {
             await promise;
         } catch (err) {
-            expect(err.message).toBe('AbortError');
+            expect(isAbortError(err)).toBeTruthy();
         }
 
         expect(cancelCalled).toBeTruthy();

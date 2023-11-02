@@ -5,7 +5,7 @@ import {extend} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {RequestManager} from '../util/request_manager';
 import {Dispatcher} from '../util/dispatcher';
-import {stubAjaxGetImage} from '../util/test/util';
+import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {VertexBuffer} from '../gl/vertex_buffer';
@@ -68,8 +68,7 @@ describe('ImageSource', () => {
         });
         source.onAdd(new StubMap() as any);
         server.respond();
-        // HM TODO: move this to a utility method
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
         expect(source.image).toBeTruthy();
     });
 
@@ -124,7 +123,7 @@ describe('ImageSource', () => {
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
         server.respond();
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
         const afterSerialized = source.serialize();
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
@@ -190,7 +189,7 @@ describe('ImageSource', () => {
         expect(source.image).toBeUndefined();
         source.updateImage({url: '/image2.png'});
         server.respond();
-        await new Promise((resolve) => (setTimeout(resolve, 10)));
+        await sleep(10);
 
         expect(source.image).toBeTruthy();
     });

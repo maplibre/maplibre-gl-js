@@ -133,7 +133,3 @@ export const getSourceType = (name: string): SourceClass => {
 export const setSourceType = (name: string, type: SourceClass) => {
     registeredSources[name] = type;
 };
-
-export interface Actor {
-    send(type: string, data: any, callback: Callback<any>): void;
-}

@@ -5,7 +5,7 @@ import perf from '../util/performance';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Actor} from '../util/actor';
 import {WorkerTileParameters} from './worker_source';
-import {setPerformance} from '../util/test/util';
+import {setPerformance, sleep} from '../util/test/util';
 import {type FakeServer, fakeServer} from 'nise';
 
 const actor = {send: () => {}} as any as Actor;
@@ -25,9 +25,9 @@ describe('reloadTile', () => {
         ] as LayerSpecification[];
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        const originalLoadVectorData = source.loadVectorData;
+        const originalLoadVectorData = source.loadVectorTile;
         let loadVectorCallCount = 0;
-        source.loadVectorData = function(params, callback) {
+        source.loadVectorTile = function(params, callback) {
             loadVectorCallCount++;
             return originalLoadVectorData.call(this, params, callback);
         };
@@ -114,7 +114,8 @@ describe('resourceTiming', () => {
         window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
 
         const layerIndex = new StyleLayerIndex(layers);
-        const source = new GeoJSONWorkerSource(actor, layerIndex, [], () => Promise.resolve(geoJson));
+        const source = new GeoJSONWorkerSource(actor, layerIndex, []);
+        source.loadGeoJSON = () => Promise.resolve(geoJson);
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters)
             .then((result) => {
@@ -146,7 +147,8 @@ describe('resourceTiming', () => {
         jest.spyOn(perf, 'clearMeasures').mockImplementation(() => { return null; });
 
         const layerIndex = new StyleLayerIndex(layers);
-        const source = new GeoJSONWorkerSource(actor, layerIndex, [], () => Promise.resolve(geoJson));
+        const source = new GeoJSONWorkerSource(actor, layerIndex, []);
+        source.loadGeoJSON = () => Promise.resolve(geoJson);
 
         source.loadData({source: 'testSource', request: {url: 'http://localhost/nonexistent', collectResourceTiming: true}} as LoadGeoJSONParameters)
             .then((result) => {
@@ -224,11 +226,11 @@ describe('loadData', () => {
         });
 
         const p1 = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
 
         const p2 = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
 
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
 
         server.respond();
 
@@ -246,12 +248,9 @@ describe('loadData', () => {
         });
 
         const loadPromise = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
-
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
-
+        await sleep(0);
         const removePromise = worker.removeSource({source: 'source1', type: 'type'});
-
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
 
         server.respond();
 

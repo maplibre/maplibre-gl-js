@@ -2,6 +2,7 @@ import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
 import {setWebGlContext} from './mock_webgl';
+import {IActor} from '../actor';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -96,7 +97,7 @@ export function beforeMapTest() {
 }
 
 export function getWrapDispatcher() {
-    const wrapDispatcher = (actor) => {
+    const wrapDispatcher = (actor: IActor) => {
         return {
             getActor() {
                 return actor;
@@ -146,3 +147,12 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
     data.copy(view);
     return view.buffer;
 }
+
+/**
+ * This allows test to wait for a certain amount of time before continuing.
+ * @param milliseconds - the amount of time to wait in milliseconds
+ * @returns - a promise that resolves after the specified amount of time
+ */
+export const sleep = (milliseconds: number = 0) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+};

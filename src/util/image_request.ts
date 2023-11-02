@@ -3,6 +3,7 @@ import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolActio
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
 import {webpSupported} from './webp_supported';
 import {config} from './config';
+import {createAbortError} from './abort_error';
 
 /**
  * The callback that is being called after an image was fetched
@@ -131,16 +132,6 @@ export namespace ImageRequest {
             };
 
             imageRequestQueue.push(request);
-            request.abortController.signal.addEventListener('abort', () => {
-                if (request.state === 'completed' || request.state === 'queued') {
-                    return;
-                }
-                // Only reduce currentParallelImageRequests, if the image request was issued.
-                currentParallelImageRequests--;
-
-                // in the case of cancelling, it WILL move on
-                processQueue();
-            });
             processQueue();
         });
     };
@@ -176,19 +167,7 @@ export namespace ImageRequest {
 
         const getImagePromise = canUseHTMLImageElement ?
             getImageUsingHtmlImage(requestParameters, abortController) :
-            new Promise<GetResourceResponse<HTMLImageElement | ImageBitmap | null>>((resolve, reject) => {
-                const callback = (error: Error | null, data: HTMLImageElement | ImageBitmap | null, cacheControl?: string, expires?: string) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve({data, cacheControl, expires});
-                    }
-                };
-                const cancelable = makeRequest(requestParameters, callback);
-                abortController.signal.addEventListener('abort', () => {
-                    cancelable.cancel();
-                });
-            });
+            makeRequest(requestParameters, abortController);
 
         try {
             const response = await getImagePromise;
@@ -249,6 +228,7 @@ export namespace ImageRequest {
             abortController.signal.addEventListener('abort', () => {
                 // Set src to '' to actually cancel the request
                 image.src = '';
+                reject(createAbortError());
             });
 
             image.fetchPriority = 'high';

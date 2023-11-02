@@ -1,8 +1,9 @@
 import {config} from './config';
 import {webpSupported} from './webp_supported';
-import {stubAjaxGetImage} from './test/util';
+import {sleep, stubAjaxGetImage} from './test/util';
 import {fakeServer, type FakeServer} from 'nise';
 import {ImageRequest} from './image_request';
+import {isAbortError} from './abort_error';
 import * as ajax from './ajax';
 
 describe('ImageRequest', () => {
@@ -41,18 +42,31 @@ describe('ImageRequest', () => {
         server.requests[1].respond(200, undefined, undefined);
         expect(server.requests).toHaveLength(maxRequests + callbackCount);
     });
-    test('Cancel: getImage cancelling frees up request for maxParallelImageRequests', done => {
-        server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
+    test('getImage respects maxParallelImageRequests and continues to respond even when server returns 404', async () => {
+        server.respondWith(request => request.respond(404));
+
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
+
+        for (let i = 0; i < maxRequests + 5; i++) {
+            ImageRequest.getImage({url: ''}, new AbortController()).catch(() => {});
+        }
+        expect(server.requests).toHaveLength(maxRequests);
+        server.respond();
+        await sleep(0);
+        expect(server.requests).toHaveLength(maxRequests + 5);
+    });
+
+    test('Cancel: getImage cancelling frees up request for maxParallelImageRequests', async () => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         for (let i = 0; i < maxRequests + 1; i++) {
             const abortController = new AbortController();
-            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(e.message).toBe('AbortError'));
+            ImageRequest.getImage({url: ''}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
             abortController.abort();
+            await sleep(0);
         }
         expect(server.requests).toHaveLength(maxRequests + 1);
-        done();
     });
 
     test('Cancel: getImage requests that were once queued are still abortable', async () => {
@@ -70,13 +84,14 @@ describe('ImageRequest', () => {
 
         const queuedURL = 'this-is-the-queued-request';
         const abortController = new AbortController();
-        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(e.message).toBe('AbortError'));
+        ImageRequest.getImage({url: queuedURL}, abortController).catch((e) => expect(isAbortError(e)).toBeTruthy());
 
         // the new requests is queued because the limit is reached
         expect(server.requests).toHaveLength(maxRequests);
 
         // cancel the first request to let the queued request start
         abortControllers[0].abort();
+        await sleep(0);
         expect(server.requests).toHaveLength(maxRequests + 1);
 
         // abort the previously queued request and confirm that it is aborted
@@ -224,7 +239,7 @@ describe('ImageRequest', () => {
         });
 
         const abortController = new AbortController();
-        ImageRequest.getImage({url: requestUrl}, abortController, false);
+        ImageRequest.getImage({url: requestUrl}, abortController, false).catch(() => {});
 
         expect(imageUrl).toBe(requestUrl);
         expect(abortController.signal.aborted).toBeFalsy();
@@ -266,8 +281,7 @@ describe('ImageRequest', () => {
         }
 
         abortConstollers[0].abortController.abort();
-
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
         // Queue should move forward and next request is made
         expect(server.requests).toHaveLength(maxRequests + 1);
 
@@ -285,7 +299,7 @@ describe('ImageRequest', () => {
 
         // On server response, next image queued should not be the cancelled image
         server.requests[1].respond(200);
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
         expect(callbackCounter).toBe(1);
         expect(server.requests).toHaveLength(maxRequests + 2);
         // Verify that the last request made skipped the cancelled image request
@@ -386,7 +400,7 @@ describe('ImageRequest', () => {
 
         // unleash it by removing the throttling client
         ImageRequest.removeThrottleControl(throttlingIndex);
-        await new Promise((resolve) => (setTimeout(resolve, 0)));
+        await sleep(0);
         expect(server.requests).toHaveLength(requestsMade);
 
         // all pending
@@ -397,7 +411,4 @@ describe('ImageRequest', () => {
             expect(completedMap[i]).toBe(i === itemIndexToComplete ? true : undefined);
         }
     });
-
-    // HM TODO: write a test that all requests are returning 404 and make sure that the queue is not stuck
-
 });
