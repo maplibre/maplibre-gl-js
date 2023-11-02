@@ -2,17 +2,28 @@
 
 ### ✨ Features and improvements
 
-- Convert plantuml diagrams to mermaid ([#3217](https://github.com/maplibre/maplibre-gl-js/pull/3217))
-- Improve buffer transfer in Safari after Safari fixed a memory leak bug ([#3225](https://github.com/maplibre/maplibre-gl-js/pull/3225))
-- Minify internal exports to reduce bundle size ([#3216](https://github.com/maplibre/maplibre-gl-js/pull/3216))
+- Add getLayersOrder() to Map and Style ([#3279](https://github.com/maplibre/maplibre-gl-js/pull/3279))
 - ⚠️ Change the undeling worker communication from callbacks to promises. This has a breaking effect on the implementation of custom `WorkerSource` and how it behaves ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
+- Fix null feature properties in resolve_tokens ([#3272](https://github.com/maplibre/maplibre-gl-js/pull/3272))
+- _...Add new stuff here..._
+
+## 3.5.2
+
+### ✨ Features and improvements
+
+- Convert plantuml diagrams to mermaid ([#3217](https://github.com/maplibre/maplibre-gl-js/pull/3217))
+- Improve buffer transfer in Safari after Safari fixed a memory leak bug ([#3225](https://github.com/maplibre/maplibre-gl-js/pull/3225))
+- Minify internal exports to reduce bundle size ([#3216](https://github.com/maplibre/maplibre-gl-js/pull/3216))
+
+### 🐞 Bug fixes
+
 - Add terrain property to map style object ([#3234](https://github.com/maplibre/maplibre-gl-js/pull/3234))
 - Fix exception thrown from `isWebGL2` check ([#3238](https://github.com/maplibre/maplibre-gl-js/pull/3238))
-- _...Add new stuff here..._
+- Fix rollup watch mode ([#3270](https://github.com/maplibre/maplibre-gl-js/pull/3270))
 
 ## 3.5.1
 

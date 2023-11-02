@@ -12,7 +12,6 @@
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "skipLibCheck": false,
-    "sourceMap": true,
     "strict": false,
     "target": "ES2016",
     "lib": [
