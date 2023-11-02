@@ -104,7 +104,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * the previous one is aborted.
      *
      * @param params - the parameters
-     * @param callback - the callback for completion or error
+     * @returns a promise that resolves when the data is loaded
      */
     async loadData(params: LoadGeoJSONParameters): Promise<GeoJSONWorkerSourceLoadDataResult> {
         this._pendingRequest?.abort();
@@ -162,7 +162,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     * Otherwise, such as after a setData() call, we load the tile fresh.
     *
     * @param params - the parameters
-    * @param callback - the callback for completion or error
+    * @returns A promise that resolves when the tile is reloaded
     */
     reloadTile(params: WorkerTileParameters): Promise<WorkerTileResult> {
         const loaded = this.loaded,
@@ -183,10 +183,10 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * expected as a literal (string or object) `params.data`.
      *
      * @param params - the parameters
-     * @param callback - the callback for completion or error
-     * @returns A Cancelable object.
+     * @param abortController - the abort controller that allows aborting this operation
+     * @returns a promise that resolves when the data is loaded
      */
-    loadGeoJSON = async (params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> => {
+    async loadGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
         const {promoteId} = params;
         if (params.request) {
             const response = await getJSON<GeoJSON.GeoJSON>(params.request, abortController);
@@ -210,7 +210,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         }
         applySourceDiff(this._dataUpdateable, params.dataDiff, promoteId);
         return {type: 'FeatureCollection', features: Array.from(this._dataUpdateable.values())};
-    };
+    }
 
     async removeSource(_params: RemoveSourceParams): Promise<void> {
         if (this._pendingRequest) {

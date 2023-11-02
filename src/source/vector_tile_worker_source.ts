@@ -184,9 +184,6 @@ export class VectorTileWorkerSource implements WorkerSource {
 
     /**
      * Implements {@link WorkerSource#abortTile}.
-     *
-     * @param params - The tile parameters
-     * @param callback - The callback
      */
     async abortTile(params: TileParameters): Promise<void> {
         const loading = this.loading;
@@ -199,9 +196,6 @@ export class VectorTileWorkerSource implements WorkerSource {
 
     /**
      * Implements {@link WorkerSource#removeTile}.
-     *
-     * @param params - The tile parameters
-     * @param callback - The callback
      */
     async removeTile(params: TileParameters): Promise<void> {
         if (this.loaded && this.loaded[params.uid]) {

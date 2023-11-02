@@ -114,20 +114,25 @@ export class AJAXError extends Error {
     }
 }
 
-// Ensure that we're sending the correct referrer from blob URL worker bundles.
-// For files loaded from the local file system, `location.origin` will be set
-// to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge, IE),
-// and we will set an empty referrer. Otherwise, we're using the document's URL.
-/* global self */
+/**
+ * Ensure that we're sending the correct referrer from blob URL worker bundles.
+ * For files loaded from the local file system, `location.origin` will be set
+ * to the string(!) "null" (Firefox), or "file://" (Chrome, Safari, Edge),
+ * and we will set an empty referrer. Otherwise, we're using the document's URL.
+ */
 export const getReferrer = () => isWorker(self) ?
     self.worker && self.worker.referrer :
     (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
 export const getProtocolAction = url => config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf('://'))];
 
-// Determines whether a URL is a file:// URL. This is obviously the case if it begins
-// with file://. Relative URLs are also file:// URLs iff the original document was loaded
-// via a file:// URL.
+/**
+ * Determines whether a URL is a file:// URL. This is obviously the case if it begins
+ * with file://. Relative URLs are also file:// URLs iff the original document was loaded
+ * via a file:// URL.
+ * @param url - The URL to check
+ * @returns `true` if the URL is a file:// URL, `false` otherwise
+ */
 const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
 
 function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
@@ -230,14 +235,16 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
     });
 }
 
+
+/**
+ * We're trying to use the Fetch API if possible. However, requests for resources with the file:// URI scheme don't work with the Fetch API. 
+ * In this case we unconditionally use XHR on the current thread since referrers don't matter.
+ * This method can also use the registered method if `addProtocol` was called.
+ * @param requestParameters - The request parameters
+ * @param abortController - The abort controller allowing to cancel the request
+ * @returns a promise resolving to the response, including cache control and expiry data
+ */
 export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
-    // We're trying to use the Fetch API if possible. However, in some situations we can't use it:
-    // - IE11 doesn't support it at all. In this case, we dispatch the request to the main thread so
-    //   that we can get an accruate referrer header.
-    // - Safari exposes window.AbortController, but it doesn't work actually abort any requests in
-    //   some versions (see https://bugs.webkit.org/show_bug.cgi?id=174980#c2)
-    // - Requests for resources with the file:// URI scheme don't work with the Fetch API either. In
-    //   this case we unconditionally use XHR on the current thread since referrers don't matter.
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
         if (isWorker(self) && self.worker && self.worker.actor) {
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters}, abortController);
@@ -287,9 +294,7 @@ export const getArrayBuffer = (requestParameters: RequestParameters, abortContro
 };
 
 export function sameOrigin(inComingUrl: string) {
-    // URL class should be available everywhere
-    // https://developer.mozilla.org/en-US/docs/Web/API/URL
-    // In addtion, a relative URL "/foo" or "./foo" will throw exception in its ctor,
+    // A relative URL "/foo" or "./foo" will throw exception in URL's ctor,
     // try-catch is expansive so just use a heuristic check to avoid it
     // also check data URL
     if (!inComingUrl ||

@@ -132,36 +132,35 @@ export class WorkerTile {
 
         this.inFlightDependencies.forEach((request) => request?.abort());
         this.inFlightDependencies = [];
-        // cancelling seems to be not sufficient, we seems to still manage to get a callback hit, so use a sentinel to drop stale results
-        //const dependencySentinel = ++this.dependencySentinel;
-        const promises = [];
+
+        const getPlyphsAndImagesPromises = [];
         if (Object.keys(stacks).length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            promises.push(actor.sendAsync({type: 'getGlyphs', data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController));
+            getPlyphsAndImagesPromises.push(actor.sendAsync({type: 'getGlyphs', data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController));
         } else {
-            promises.push(Promise.resolve({}));
+            getPlyphsAndImagesPromises.push(Promise.resolve({}));
         }
 
         const icons = Object.keys(options.iconDependencies);
         if (icons.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            promises.push(actor.sendAsync({type: 'getImages', data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController));
+            getPlyphsAndImagesPromises.push(actor.sendAsync({type: 'getImages', data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController));
         } else {
-            promises.push(Promise.resolve({}));
+            getPlyphsAndImagesPromises.push(Promise.resolve({}));
         }
 
         const patterns = Object.keys(options.patternDependencies);
         if (patterns.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            promises.push(actor.sendAsync({type: 'getImages', data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController));
+            getPlyphsAndImagesPromises.push(actor.sendAsync({type: 'getImages', data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController));
         } else {
-            promises.push(Promise.resolve({}));
+            getPlyphsAndImagesPromises.push(Promise.resolve({}));
         }
 
-        const [glyphMap, iconMap, patternMap] = await Promise.all(promises) as [GetGlyphsResponse, GetImagesResponse, GetImagesResponse];
+        const [glyphMap, iconMap, patternMap] = await Promise.all(getPlyphsAndImagesPromises) as [GetGlyphsResponse, GetImagesResponse, GetImagesResponse];
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
 
