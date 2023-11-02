@@ -235,9 +235,8 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
     });
 }
 
-
 /**
- * We're trying to use the Fetch API if possible. However, requests for resources with the file:// URI scheme don't work with the Fetch API. 
+ * We're trying to use the Fetch API if possible. However, requests for resources with the file:// URI scheme don't work with the Fetch API.
  * In this case we unconditionally use XHR on the current thread since referrers don't matter.
  * This method can also use the registered method if `addProtocol` was called.
  * @param requestParameters - The request parameters
