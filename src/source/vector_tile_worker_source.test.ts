@@ -9,7 +9,7 @@ import {IActor} from '../util/actor';
 import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {WorkerTile} from './worker_tile';
 import {setPerformance, sleep} from '../util/test/util';
-import {isAbortError} from '../util/abort_error';
+import {ABORT_ERROR} from '../util/abort_error';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;
@@ -25,46 +25,43 @@ describe('vector tile worker source', () => {
         server.restore();
         jest.clearAllMocks();
     });
-    test('VectorTileWorkerSource#abortTile aborts pending request', () => {
+    test('VectorTileWorkerSource#abortTile aborts pending request', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
-        source.loadTile({
+        const loadPromise = source.loadTile({
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/abort'}
-        } as any as WorkerTileParameters).then((res) => {
-            expect(res).toBeFalsy();
-        }).catch((err) => expect(isAbortError(err)).toBeTruthy());
+        } as any as WorkerTileParameters);
 
-        source.abortTile({
+        const abortPromise = source.abortTile({
             source: 'source',
             uid: 0
-        } as any as TileParameters).then((res) => {
-            expect(res).toBeFalsy();
-        }).catch(() => expect(false).toBeTruthy());
+        } as any as TileParameters);
 
         expect(source.loading).toEqual({});
+        await expect(abortPromise).resolves.toBeFalsy();
+        await expect(loadPromise).rejects.toThrow(ABORT_ERROR);
     });
 
-    test('VectorTileWorkerSource#removeTile removes loaded tile', () => {
+    test('VectorTileWorkerSource#removeTile removes loaded tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
 
         source.loaded = {
             '0': {} as WorkerTile
         };
 
-        source.removeTile({
+        const res = await source.removeTile({
             source: 'source',
             uid: 0
-        } as any as TileParameters).then((res) => {
-            expect(res).toBeFalsy();
-        }).catch(() => expect(false).toBeTruthy());
+        } as any as TileParameters);
+        expect(res).toBeUndefined();
 
         expect(source.loaded).toEqual({});
     });
 
-    test('VectorTileWorkerSource#reloadTile reloads a previously-loaded tile', () => {
+    test('VectorTileWorkerSource#reloadTile reloads a previously-loaded tile', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = jest.fn().mockReturnValue(Promise.resolve({} as WorkerTileResult));
 
@@ -76,8 +73,9 @@ describe('vector tile worker source', () => {
             } as any as WorkerTile
         };
 
-        source.reloadTile({uid: 0} as any as WorkerTileParameters).then(() => expect(true).toBeTruthy());
+        const reloadPromise = source.reloadTile({uid: 0} as any as WorkerTileParameters);
         expect(parse).toHaveBeenCalledTimes(1);
+        await expect(reloadPromise).resolves.toBeTruthy();
     });
 
     test('VectorTileWorkerSource#loadTile reparses tile if the reloadTile has been called during parsing', async () => {
@@ -186,16 +184,12 @@ describe('vector tile worker source', () => {
                 });
             });
 
-        let loadCallbackCalled = false;
-        source.loadTile({
+        const loadPromise = source.loadTile({
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/faketile.pbf'}
-        } as any as WorkerTileParameters).then((res) => {
-            expect(res).toBeDefined();
-            loadCallbackCalled = true;
-        }).catch(() => expect(false).toBeTruthy());
+        } as any as WorkerTileParameters);
 
         // let the promise start
         await sleep(0);
@@ -207,10 +201,10 @@ describe('vector tile worker source', () => {
         } as any as WorkerTileParameters);
         expect(res).toBeDefined();
         expect(parseWorkerTileMock).toHaveBeenCalledTimes(2);
-        expect(loadCallbackCalled).toBeTruthy();
+        await expect(loadPromise).resolves.toBeTruthy();
     });
 
-    test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTile data but does call callback', done => {
+    test('VectorTileWorkerSource#reloadTile does not reparse tiles with no vectorTile data but does call callback', async () => {
         const source = new VectorTileWorkerSource(actor, new StyleLayerIndex(), []);
         const parse = jest.fn();
 
@@ -221,10 +215,7 @@ describe('vector tile worker source', () => {
             } as any as WorkerTile
         };
 
-        source.reloadTile({uid: 0} as any as WorkerTileParameters).then(() => {
-            expect(true).toBeTruthy();
-            done();
-        });
+        await source.reloadTile({uid: 0} as any as WorkerTileParameters);
         expect(parse).not.toHaveBeenCalled();
     });
 
@@ -294,7 +285,7 @@ describe('vector tile worker source', () => {
         expect(parse).not.toHaveBeenCalled();
     });
 
-    test('VectorTileWorkerSource provides resource timing information', done => {
+    test('VectorTileWorkerSource provides resource timing information', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
@@ -339,18 +330,18 @@ describe('vector tile worker source', () => {
 
         window.performance.getEntriesByName = jest.fn().mockReturnValue([exampleResourceTiming]);
 
-        source.loadTile({
+        const res = await source.loadTile({
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/faketile.pbf', collectResourceTiming: true}
-        } as any as WorkerTileParameters).then((res) => {
-            expect(res.resourceTiming[0]).toEqual(exampleResourceTiming);
-            done();
-        }).catch(() => expect(false).toBeTruthy());
+        } as any as WorkerTileParameters);
+
+        expect(res.resourceTiming[0]).toEqual(exampleResourceTiming);
+
     });
 
-    test('VectorTileWorkerSource provides resource timing information (fallback method)', done => {
+    test('VectorTileWorkerSource provides resource timing information (fallback method)', async () => {
         const rawTileData = fs.readFileSync(path.join(__dirname, '/../../test/unit/assets/mbsv5-6-18-23.vector.pbf'));
 
         const loadVectorData: LoadVectorData = async (_params, _abortController) => {
@@ -391,16 +382,15 @@ describe('vector tile worker source', () => {
             return null;
         });
 
-        source.loadTile({
+        const res = await source.loadTile({
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
             request: {url: 'http://localhost:2900/faketile.pbf', collectResourceTiming: true}
-        } as any as WorkerTileParameters).then((res) => {
-            expect(res.resourceTiming[0]).toEqual(
-                {'duration': 250, 'entryType': 'measure', 'name': 'http://localhost:2900/faketile.pbf', 'startTime': 100}
-            );
-            done();
-        }).catch(() => expect(false).toBeTruthy());
+        } as any as WorkerTileParameters);
+
+        expect(res.resourceTiming[0]).toEqual(
+            {'duration': 250, 'entryType': 'measure', 'name': 'http://localhost:2900/faketile.pbf', 'startTime': 100}
+        );
     });
 });

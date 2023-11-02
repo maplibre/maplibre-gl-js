@@ -2390,7 +2390,7 @@ describe('Map', () => {
 
     });
 
-    test('map fires `styleimagemissing` for missing icons', done => {
+    test('map fires `styleimagemissing` for missing icons', async () => {
         const map = createMap();
 
         const id = 'missing-image';
@@ -2405,14 +2405,12 @@ describe('Map', () => {
 
         expect(map.hasImage(id)).toBeFalsy();
 
-        map.style.imageManager.getImages([id]).then((generatedImage) => {
-            expect(generatedImage[id].data.width).toEqual(sampleImage.width);
-            expect(generatedImage[id].data.height).toEqual(sampleImage.height);
-            expect(generatedImage[id].data.data).toEqual(sampleImage.data);
-            expect(called).toBe(id);
-            expect(map.hasImage(id)).toBeTruthy();
-            done();
-        });
+        const generatedImage = await map.style.imageManager.getImages([id]);
+        expect(generatedImage[id].data.width).toEqual(sampleImage.width);
+        expect(generatedImage[id].data.height).toEqual(sampleImage.height);
+        expect(generatedImage[id].data.data).toEqual(sampleImage.data);
+        expect(called).toBe(id);
+        expect(map.hasImage(id)).toBeTruthy();
     });
 
     test('map getImage matches addImage, uintArray', () => {

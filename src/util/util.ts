@@ -1,9 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
-import {Cancelable} from '../types/cancelable';
-import {Callback} from '../types/callback';
-import {createAbortError} from './abort_error';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
@@ -644,24 +641,4 @@ export async function getImageData(
         }
     }
     return readImageDataUsingOffscreenCanvas(image, x, y, width, height);
-}
-
-// HM TODO: remove this when done
-export function cancelableToPromise<TRequest, TResponse>(method: (requestParameters: TRequest, callback: Callback<TResponse>) => Cancelable): (requestParameters: TRequest, abortController: AbortController) => Promise<TResponse> {
-    return (requestParameters: TRequest, abortController: AbortController): Promise<TResponse> => {
-        return new Promise<TResponse>((resolve, reject) => {
-            const callback = (err: Error, data: TResponse) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(data);
-                }
-            };
-            const canelable = method(requestParameters, callback);
-            abortController.signal.addEventListener('abort', () => {
-                canelable.cancel();
-                reject(createAbortError());
-            });
-        });
-    };
 }

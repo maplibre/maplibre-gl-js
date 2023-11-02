@@ -33,14 +33,12 @@ describe('Actor', () => {
         const m1 = new Actor(worker, '1');
         const m2 = new Actor(worker, '2');
 
-        const p1 = m1.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 1729}}).then((response) => {
-            expect(response).toBe(1729);
-        }).catch(() => expect(false).toBeTruthy());
-        const p2 = m2.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 4104}}).then((response) => {
-            expect(response).toBe(4104);
-        }).catch(() => expect(false).toBeTruthy());
+        const p1 = m1.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 1729}});
+        const p2 = m2.sendAsync({type: 'getClusterExpansionZoom', data: {type: 'geojson', source: '', clusterId: 4104}});
 
         await Promise.all([p1, p2]);
+        await expect(p1).resolves.toBe(1729);
+        await expect(p2).resolves.toBe(4104);
     });
 
     test('cancel a request does not reject or resolve a promise', async () => {

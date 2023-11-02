@@ -209,7 +209,7 @@ export class Actor implements IActor {
         this.processTask(id, task);
     };
 
-    processTask(id: string, task: MessageData) {
+    async processTask(id: string, task: MessageData) {
         if (task.type === '<response>') {
             // The `completeTask` function in the counterpart actor has been called, and we are now
             // firing the callback in the originating actor, if there is one.
@@ -233,9 +233,12 @@ export class Actor implements IActor {
         const params = deserialize(task.data) as any;
         const abortController = new AbortController();
         this.abortControllers[id] = abortController;
-        this.messageHandlers[task.type](task.sourceMapId, params, abortController)
-            .then((data: any) => this.completeTask(task, id, null, data))
-            .catch((err: Error) => this.completeTask(task, id, err));
+        try {
+            const data = await this.messageHandlers[task.type](task.sourceMapId, params, abortController);
+            this.completeTask(task, id, null, data);
+        } catch (err) {
+            this.completeTask(task, id, err);
+        }
     }
 
     completeTask(task: MessageData, id: string, err: Error, data?: any) {
