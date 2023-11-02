@@ -8,29 +8,47 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {RequestParameters} from './ajax';
 
+/**
+ * The parameters needed in order to get information about the cluster
+ */
 export type ClusterIDAndSource = {
     type: 'geojson';
     clusterId: number;
     source: string;
 };
 
+/**
+ * Parameters needed to get the leaves of a cluster
+ */
 export type GetClusterLeavesParams = ClusterIDAndSource & { limit: number; offset: number };
 
+/**
+ * The result of the call to load a geojson source
+ */
 export type GeoJSONWorkerSourceLoadDataResult = {
     resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
     abandoned?: boolean;
 };
 
+/**
+ * Parameters needed to remove a source
+ */
 export type RemoveSourceParams = {
     source: string;
     type: string;
 }
 
+/**
+ * Parameters needed to update the layers
+ */
 export type UpdateLayersParamaeters = {
     layers: Array<LayerSpecification>;
     removedIds: Array<string>;
 }
 
+/**
+ * Parameters needed to get the images
+ */
 export type GetImagesParamerters = {
     icons: Array<string>;
     source: string;
@@ -38,6 +56,9 @@ export type GetImagesParamerters = {
     type: string;
 }
 
+/**
+ * Parameters needed to get the glyphs
+ */
 export type GetGlyphsParamerters = {
     type: string;
     stacks: {[_: string]: Array<number>};
@@ -45,14 +66,24 @@ export type GetGlyphsParamerters = {
     tileID: OverscaledTileID;
 }
 
+/**
+ * A response object returned when requesting glyphs
+ */
 export type GetGlyphsResponse = {
     [stack: string]: {
         [id: number]: StyleGlyph;
     };
 }
 
+/**
+ * A response object returned when requesting images
+ */
 export type GetImagesResponse = {[_: string]: StyleImage}
 
+/**
+ * This is basically a mapping between all the calls that are made to and from the workers.
+ * The key is the event name, the first parameter is the event input type, and the last parameter is the output type.
+ */
 export type RequestResponseMessageMap = {
     'loadDEMTile': [WorkerDEMTileParameters, DEMData];
     'getClusterExpansionZoom': [ClusterIDAndSource, number];

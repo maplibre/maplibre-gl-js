@@ -1,5 +1,8 @@
 import type {AlphaImage} from '../util/image';
 
+/**
+ * Some metices related to a glyph
+ */
 export type GlyphMetrics = {
     width: number;
     height: number;
@@ -13,7 +16,6 @@ export type GlyphMetrics = {
 };
 
 /**
- * @internal
  * A style glyph type
  */
 export type StyleGlyph = {

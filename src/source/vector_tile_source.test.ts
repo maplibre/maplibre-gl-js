@@ -20,10 +20,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         getPixelRatio() { return 1; }
     } as any as Map);
 
-    source.on('error', (_e) => {
-        // HM TODO, keep this?
-        //throw e.error;
-    });
+    source.on('error', () => { }); // to prevent console log of errors
 
     return source;
 }

@@ -6,6 +6,9 @@ import type {Transferable} from '../types/transferable';
 import type {Cancelable} from '../types/cancelable';
 import type {AsyncMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
 
+/**
+ * An interface to be sent to the actor in order for it to allow communication between the worker and the main thread
+ */
 export interface ActorTarget {
     addEventListener: typeof window.addEventListener;
     removeEventListener: typeof window.removeEventListener;

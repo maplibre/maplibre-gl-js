@@ -14,12 +14,18 @@ import {RemoveSourceParams as RemoveSourceParameters} from '../util/actor_messag
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 
+/**
+ * Parameters to identify a tile
+ */
 export type TileParameters = {
     type: string;
     source: string;
     uid: string | number;
 };
 
+/**
+ * Parameters that are send when requesting to load a tile to the worker
+ */
 export type WorkerTileParameters = TileParameters & {
     tileID: OverscaledTileID;
     request?: RequestParameters;
@@ -33,6 +39,9 @@ export type WorkerTileParameters = TileParameters & {
     returnDependencies?: boolean;
 };
 
+/**
+ * The paremeters needed in order to load a DEM tile
+ */
 export type WorkerDEMTileParameters = TileParameters & {
     rawImageData: RGBAImage | ImageBitmap | ImageData;
     encoding: DEMEncoding;
@@ -43,7 +52,6 @@ export type WorkerDEMTileParameters = TileParameters & {
 };
 
 /**
- * @internal
  * The worker tile's result type
  */
 export type WorkerTileResult = ExpiryData & {

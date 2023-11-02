@@ -3,6 +3,9 @@ import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
 import {isWorker} from '../util/util';
 
+/**
+ * The possible option of the status
+ */
 const status = {
     unavailable: 'unavailable', // Not loaded
     deferred: 'deferred', // The plugin URL has been specified, but loading has been deferred
@@ -11,6 +14,9 @@ const status = {
     error: 'error'
 };
 
+/**
+ * The RTL plugin state
+ */
 export type PluginState = {
     pluginStatus: typeof status[keyof typeof status];
     pluginURL: string;

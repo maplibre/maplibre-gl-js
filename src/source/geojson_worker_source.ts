@@ -19,6 +19,9 @@ import type {RequestParameters} from '../util/ajax';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
 
+/**
+ * The geojson worker options that can be passed to the worker
+ */
 export type GeoJSONWorkerOptions = {
     source?: string;
     cluster?: boolean;
@@ -30,6 +33,9 @@ export type GeoJSONWorkerOptions = {
     collectResourceTiming?: boolean;
 }
 
+/**
+ * Parameters needed to load a geojson to the wokrer
+ */
 export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     type: 'geojson';
     request?: RequestParameters;
