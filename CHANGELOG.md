@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Add getLayersOrder() to Map and Style ([#3279](https://github.com/maplibre/maplibre-gl-js/pull/3279))
+- Updated description of `fullscreen` example ([#3311](https://github.com/maplibre/maplibre-gl-js/pull/3311))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
