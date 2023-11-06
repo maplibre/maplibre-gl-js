@@ -73,7 +73,7 @@
     "@types/shuffle-seed": "^1.1.1",
     "@types/window-or-global": "^1.0.5",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
-    "@typescript-eslint/parser": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.1",
     "address": "^2.0.1",
     "benchmark": "^2.1.4",
     "canvas": "^2.11.2",
