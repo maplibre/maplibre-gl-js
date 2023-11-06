@@ -60,8 +60,8 @@ Adds a control to show a miniature overview of the current map.
 <br/><small>[View on GitHub](https://github.com/aesqe/mapboxgl-minimap)</small>
     
 #### maplibre-gl-temporal-control
-Temporal Controller plugin for MapLibre GL JS. [demo](https://kanahiro.github.io/maplibre-gl-temporal-control/raster.html).
-<br/><small>[View on GitHub](https://github.com/Kanahiro/maplibre-gl-temporal-control)</small>
+Temporal Controller plugin for MapLibre GL JS. [demo](https://mug-jp.github.io/maplibre-gl-temporal-control/raster.html).
+<br/><small>[View on GitHub](https://github.com/mug-jp/maplibre-gl-temporal-control)</small>
     
 #### mapbox-gl-valhalla
 Adds a control to provide isochrone features from valhalla server.
