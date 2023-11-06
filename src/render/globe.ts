@@ -9,16 +9,42 @@ import {Pos3dTex2dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dTex2dAttributes from '../data/pos3d_tex2d_attributes';
 import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
+import {Uniform1f, Uniform1i, Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
+
+export type GlobeProjectionPreludeUniformsType = {
+    'u_projection_tile_mercator_coords': Uniform4f;
+};
+
+export const projectionUniforms = (context: Context, locations: UniformLocations): GlobeProjectionPreludeUniformsType => ({
+    'u_projection_tile_mercator_coords': new Uniform4f(context, locations.u_projection_tile_mercator_coords)
+});
+
+export type ProjectionData = {
+    'u_projection_tile_mercator_coords': [number, number, number, number];
+}
 
 export class Globe {
     private _meshes: {[_: string]: Mesh};
     private static readonly _squareMeshKey = 'square';
     private _lastCoveringTiles: Array<OverscaledTileID>;
 
+    public useRtt: boolean = false;
+
     cachedTransform: mat4;
 
     constructor() {
         this._meshes = {};
+    }
+
+    public getProjectionData(tileID: OverscaledTileID): [mat4, ProjectionData] {
+        return [this.cachedTransform, {
+            'u_projection_tile_mercator_coords': [
+                tileID.canonical.x / (1 << tileID.canonical.z),
+                tileID.canonical.y / (1 << tileID.canonical.z),
+                (tileID.canonical.x + 1) / (1 << tileID.canonical.z),
+                (tileID.canonical.y + 1) / (1 << tileID.canonical.z)
+            ]
+        }];
     }
 
     /**
@@ -60,7 +86,7 @@ export class Globe {
             this._meshes[Globe._squareMeshKey] = this._createSquareMesh(context);
         }
 
-        for (const tileID of this._lastCoveringTiles) {
+        for (const tileID of (this._lastCoveringTiles || [])) {
             if (!(tileID.key in this._meshes)) {
                 this._meshes[tileID.key] = this._createMesh(context, tileID.canonical.x, tileID.canonical.y, tileID.canonical.z);
             }

@@ -230,7 +230,7 @@ export class RenderToTexture {
             for (const tileID of this._renderableTiles) {
                 // if render pool is full draw current tiles to screen and free pool
                 if (this.pool.isFull()) {
-                    drawBufferedRttTilesFunc(this.painter, this._rttTiles); // JP: TODO: tohle by měla být nějaká customisable funkce
+                    drawBufferedRttTilesFunc(this.painter, this._rttTiles);
                     this._rttTiles = [];
                     this.pool.freeAllObjects();
                 }

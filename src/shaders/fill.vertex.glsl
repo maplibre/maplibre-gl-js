@@ -9,5 +9,5 @@ void main() {
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize lowp float opacity
 
-    gl_Position = u_matrix * vec4(a_pos, 0, 1);
+    gl_Position = u_matrix * projectTile(a_pos);
 }

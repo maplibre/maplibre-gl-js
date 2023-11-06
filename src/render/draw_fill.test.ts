@@ -28,7 +28,7 @@ describe('drawFill', () => {
         const painterMock: Painter = constructMockPainer();
         const layer: FillStyleLayer = constructMockLayer();
 
-        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any);
+        const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any, null as any);
         (painterMock.useProgram as jest.Mock).mockReturnValue(programMock);
 
         const mockTile = constructMockTile(layer);
@@ -37,7 +37,7 @@ describe('drawFill', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(mockTile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
-        drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID], false);
+        drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID]);
 
         // twice: first for fill, second for stroke
         expect(programMock.draw).toHaveBeenCalledTimes(2);

@@ -3210,10 +3210,11 @@ export class Map extends Camera {
         }
 
         const preferGlobe = !!this.globe;
+        const useRtt = (this.globe && this.globe.useRtt) || !!this.terrain;
 
         let rttCoveringTiles;
 
-        if (this.terrain || this.globe) {
+        if (useRtt) {
             const rttTileSize = 512;
             const rttMinZoom = 0;
             const rttMaxZoom = 22;
@@ -3253,7 +3254,7 @@ export class Map extends Camera {
 
         let rttOptions;
 
-        if (this.terrain || this.globe) {
+        if (useRtt) {
             if (preferGlobe) {
                 rttOptions = {
                     rttTiles: rttCoveringTiles,

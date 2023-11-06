@@ -14,7 +14,7 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration';
 import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
 import type {TerrainData} from '../render/terrain';
-import {Terrain} from '../render/terrain';
+import {GlobeProjectionPreludeUniformsType, projectionUniforms} from './globe';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
@@ -39,6 +39,7 @@ export class Program<Us extends UniformBindings> {
     numAttributes: number;
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
+    projectionUniforms: GlobeProjectionPreludeUniformsType;
     binderUniforms: Array<BinderUniform>;
     failedToCreate: boolean;
 
@@ -52,7 +53,8 @@ export class Program<Us extends UniformBindings> {
         configuration: ProgramConfiguration,
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
-        hasTerrain: boolean) {
+        hasTerrain: boolean,
+        hasGlobe: boolean) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
@@ -77,6 +79,9 @@ export class Program<Us extends UniformBindings> {
         }
         if (hasTerrain) {
             defines.push('#define TERRAIN3D;');
+        }
+        if (hasGlobe) {
+            defines.push('#define GLOBE;');
         }
 
         const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
@@ -143,6 +148,7 @@ export class Program<Us extends UniformBindings> {
 
         this.fixedUniforms = fixedUniforms(context, uniformLocations);
         this.terrainUniforms = terrainPreludeUniforms(context, uniformLocations);
+        this.projectionUniforms = projectionUniforms(context, uniformLocations);
         this.binderUniforms = configuration ? configuration.getUniforms(context, uniformLocations) : [];
     }
 
@@ -163,7 +169,8 @@ export class Program<Us extends UniformBindings> {
         configuration?: ProgramConfiguration | null,
         dynamicLayoutBuffer?: VertexBuffer | null,
         dynamicLayoutBuffer2?: VertexBuffer | null,
-        dynamicLayoutBuffer3?: VertexBuffer | null) {
+        dynamicLayoutBuffer3?: VertexBuffer | null,
+        projectionParams?: any) {
 
         const gl = context.gl;
 
@@ -183,6 +190,12 @@ export class Program<Us extends UniformBindings> {
             gl.bindTexture(gl.TEXTURE_2D, terrain.texture);
             for (const name in this.terrainUniforms) {
                 this.terrainUniforms[name].set(terrain[name]);
+            }
+        }
+
+        if (projectionParams) {
+            for (const name in this.projectionUniforms) {
+                this.projectionUniforms[name].set(projectionParams[name]);
             }
         }
 

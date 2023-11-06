@@ -32,7 +32,7 @@ void main() {
     float fromScale = u_scale.y;
     float toScale = u_scale.z;
 
-    gl_Position = u_matrix * vec4(a_pos, 0, 1);
+    gl_Position = u_matrix * projectTile(a_pos);
 
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;

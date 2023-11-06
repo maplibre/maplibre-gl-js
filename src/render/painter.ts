@@ -496,7 +496,7 @@ export class Painter {
                 drawLine(painter, sourceCache, layer as any, coords, isRenderingToTexture);
                 break;
             case 'fill':
-                drawFill(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+                drawFill(painter, sourceCache, layer as any, coords);
                 break;
             case 'fill-extrusion':
                 drawFillExtrusion(painter, sourceCache, layer as any, coords);
@@ -577,10 +577,13 @@ export class Painter {
 
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null): Program<any> {
         this.cache = this.cache || {};
+        const useTerrain = !!this.style.map.terrain;
+        const useGlobe = !!this.style.map.globe;
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             (this._showOverdrawInspector ? '/overdraw' : '') +
-            (this.style.map.terrain ? '/terrain' : '');
+            (useTerrain ? '/terrain' : '') +
+            (useGlobe ? '/globe' : ''); // JP: TODO: globe and terrain should never be active at the same time
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
@@ -588,7 +591,8 @@ export class Painter {
                 programConfiguration,
                 programUniforms[name],
                 this._showOverdrawInspector,
-                !!this.style.map.terrain
+                useTerrain,
+                useGlobe
             );
         }
         return this.cache[key];

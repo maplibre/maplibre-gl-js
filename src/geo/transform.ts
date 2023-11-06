@@ -28,6 +28,10 @@ export class Transform {
     scale: number;
     width: number;
     height: number;
+
+    /**
+     * This transform's bearing in radians.
+     */
     angle: number;
     rotationMatrix: mat2;
     pixelsToGLUnits: [number, number];
