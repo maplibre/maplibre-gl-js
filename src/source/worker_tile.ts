@@ -132,36 +132,31 @@ export class WorkerTile {
 
         this.inFlightDependencies.forEach((request) => request?.abort());
         this.inFlightDependencies = [];
-        // cancelling seems to be not sufficient, we seems to still manage to get a callback hit, so use a sentinel to drop stale results
-        //const dependencySentinel = ++this.dependencySentinel;
-        const promises = [];
+
+        let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});
         if (Object.keys(stacks).length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            promises.push(actor.sendAsync({type: 'getGlyphs', data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController));
-        } else {
-            promises.push(Promise.resolve({}));
+            getGlyphsPromise = actor.sendAsync({type: 'getGlyphs', data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController);
         }
 
         const icons = Object.keys(options.iconDependencies);
+        let getIconsPromise = Promise.resolve<GetImagesResponse>({});
         if (icons.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            promises.push(actor.sendAsync({type: 'getImages', data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController));
-        } else {
-            promises.push(Promise.resolve({}));
+            getIconsPromise = actor.sendAsync({type: 'getImages', data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController);
         }
 
         const patterns = Object.keys(options.patternDependencies);
+        let getPatternsPromise = Promise.resolve<GetImagesResponse>({});
         if (patterns.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            promises.push(actor.sendAsync({type: 'getImages', data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController));
-        } else {
-            promises.push(Promise.resolve({}));
+            getPatternsPromise = actor.sendAsync({type: 'getImages', data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
         }
 
-        const [glyphMap, iconMap, patternMap] = await Promise.all(promises) as [GetGlyphsResponse, GetImagesResponse, GetImagesResponse];
+        const [glyphMap, iconMap, patternMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
         const glyphAtlas = new GlyphAtlas(glyphMap);
         const imageAtlas = new ImageAtlas(iconMap, patternMap);
 

@@ -312,17 +312,16 @@ describe('Style#loadJSON', () => {
             expect(e.target).toBe(style);
             expect(e.dataType).toBe('style');
 
-            style.once('data', (e) => {
+            style.once('data', async (e) => {
                 expect(e.target).toBe(style);
                 expect(e.dataType).toBe('style');
-                style.imageManager.getImages(['image1']).then((response) => {
-                    const image = response['image1'];
-                    expect(image.data).toBeInstanceOf(RGBAImage);
-                    expect(image.data.width).toBe(1);
-                    expect(image.data.height).toBe(1);
-                    expect(image.pixelRatio).toBe(1);
-                    done();
-                });
+                const response = await style.imageManager.getImages(['image1']);
+                const image = response['image1'];
+                expect(image.data).toBeInstanceOf(RGBAImage);
+                expect(image.data.width).toBe(1);
+                expect(image.data.height).toBe(1);
+                expect(image.pixelRatio).toBe(1);
+                done();
             });
 
             server.respond();

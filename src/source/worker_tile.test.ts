@@ -26,7 +26,7 @@ function createWrapper() {
 }
 
 describe('worker tile', () => {
-    test('WorkerTile#parse', done => {
+    test('WorkerTile#parse', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -34,13 +34,11 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        tile.parse(createWrapper(), layerIndex, [], {} as any).then((result) => {
-            expect(result.buckets[0]).toBeTruthy();
-            done();
-        }).catch(done.fail);
+        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any);
+        expect(result.buckets[0]).toBeTruthy();
     });
 
-    test('WorkerTile#parse skips hidden layers', done => {
+    test('WorkerTile#parse skips hidden layers', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test-hidden',
             source: 'source',
@@ -49,13 +47,11 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        tile.parse(createWrapper(), layerIndex, [], {} as any).then((result) => {
-            expect(result.buckets).toHaveLength(0);
-            done();
-        }).catch(done.fail);
+        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any);
+        expect(result.buckets).toHaveLength(0);
     });
 
-    test('WorkerTile#parse skips layers without a corresponding source layer', done => {
+    test('WorkerTile#parse skips layers without a corresponding source layer', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -64,13 +60,11 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        tile.parse({layers: {}}, layerIndex, [], {} as any).then((result) => {
-            expect(result.buckets).toHaveLength(0);
-            done();
-        }).catch(done.fail);
+        const result = await tile.parse({layers: {}}, layerIndex, [], {} as any);
+        expect(result.buckets).toHaveLength(0);
     });
 
-    test('WorkerTile#parse warns once when encountering a v1 vector tile layer', done => {
+    test('WorkerTile#parse warns once when encountering a v1 vector tile layer', async () => {
         const layerIndex = new StyleLayerIndex([{
             id: 'test',
             source: 'source',
@@ -89,13 +83,11 @@ describe('worker tile', () => {
         const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
         const tile = createWorkerTile();
-        tile.parse(data, layerIndex, [], {} as any).then(() => {
-            expect(spy.mock.calls[0][0]).toMatch(/does not use vector tile spec v2/);
-            done();
-        }).catch(done.fail);
+        await tile.parse(data, layerIndex, [], {} as any);
+        expect(spy.mock.calls[0][0]).toMatch(/does not use vector tile spec v2/);
     });
 
-    test('WorkerTile#parse would request all types of dependencies', done => {
+    test('WorkerTile#parse would request all types of dependencies', async () => {
         const tile = createWorkerTile();
         const layerIndex = new StyleLayerIndex([{
             id: '1',
@@ -149,17 +141,15 @@ describe('worker tile', () => {
         const actorMock = {
             sendAsync
         };
-        tile.parse(data, layerIndex, ['hello'], actorMock).then((result) => {
-            expect(result).toBeDefined();
-            expect(sendAsync).toHaveBeenCalledTimes(3);
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
-            done();
-        }).catch(done.fail);
+        const result = await tile.parse(data, layerIndex, ['hello'], actorMock);
+        expect(result).toBeDefined();
+        expect(sendAsync).toHaveBeenCalledTimes(3);
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
     });
 
-    test('WorkerTile#parse would cancel and only event once on repeated reparsing', done => {
+    test('WorkerTile#parse would cancel and only event once on repeated reparsing', async () => {
         const tile = createWorkerTile();
         const layerIndex = new StyleLayerIndex([{
             id: '1',
@@ -223,16 +213,14 @@ describe('worker tile', () => {
         const actorMock = {
             sendAsync
         };
-        tile.parse(data, layerIndex, ['hello'], actorMock).then(() => done.fail('should not be called'));
-        tile.parse(data, layerIndex, ['hello'], actorMock).then(() => done.fail('should not be called'));
-        tile.parse(data, layerIndex, ['hello'], actorMock).then((result) => {
-            expect(result).toBeDefined();
-            expect(cancelCount).toBe(6);
-            expect(sendAsync).toHaveBeenCalledTimes(9);
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
-            expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
-            done();
-        }).catch(done.fail);
+        tile.parse(data, layerIndex, ['hello'], actorMock).then(() => expect(false).toBeTruthy());
+        tile.parse(data, layerIndex, ['hello'], actorMock).then(() => expect(false).toBeTruthy());
+        const result = await tile.parse(data, layerIndex, ['hello'], actorMock);
+        expect(result).toBeDefined();
+        expect(cancelCount).toBe(6);
+        expect(sendAsync).toHaveBeenCalledTimes(9);
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'patterns'})}), expect.any(Object));
+        expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'source': 'source', 'type': 'glyphs', 'stacks': {'StandardFont-Bold': [101, 115, 116]}})}), expect.any(Object));
     });
 });

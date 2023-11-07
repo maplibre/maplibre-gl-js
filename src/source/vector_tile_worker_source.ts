@@ -177,16 +177,13 @@ export class VectorTileWorkerSource implements WorkerSource {
         }
         // if there was no vector tile data on the initial load, don't try and re-parse tile
         if (workerTile.status === 'done' && workerTile.vectorTile) {
-            // HM TODO: this seems like a missing case where cache control is lost?
+            // this seems like a missing case where cache control is lost? see #3309
             return workerTile.parse(workerTile.vectorTile, this.layerIndex, this.availableImages, this.actor);
         }
     }
 
     /**
      * Implements {@link WorkerSource#abortTile}.
-     *
-     * @param params - The tile parameters
-     * @param callback - The callback
      */
     async abortTile(params: TileParameters): Promise<void> {
         const loading = this.loading;
@@ -199,9 +196,6 @@ export class VectorTileWorkerSource implements WorkerSource {
 
     /**
      * Implements {@link WorkerSource#removeTile}.
-     *
-     * @param params - The tile parameters
-     * @param callback - The callback
      */
     async removeTile(params: TileParameters): Promise<void> {
         if (this.loaded && this.loaded[params.uid]) {

@@ -18,29 +18,24 @@ describe('ImageRequest', () => {
         server.restore();
     });
 
-    test('getImage respects maxParallelImageRequests', done => {
+    test('getImage respects maxParallelImageRequests', async () => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
-        let callbackCount = 0;
 
-        const promiseCallback = () => {
-            callbackCount++;
-            if (callbackCount === 2) {
-                done();
-            }
-        };
-
+        const promises: Promise<any>[] = [];
         for (let i = 0; i < maxRequests + 5; i++) {
-            ImageRequest.getImage({url: ''}, new AbortController()).then(promiseCallback);
+            promises.push(ImageRequest.getImage({url: ''}, new AbortController()));
 
         }
         expect(server.requests).toHaveLength(maxRequests);
 
-        server.requests[0].respond(200, undefined, undefined);
-        expect(server.requests).toHaveLength(maxRequests + callbackCount);
-        server.requests[1].respond(200, undefined, undefined);
-        expect(server.requests).toHaveLength(maxRequests + callbackCount);
+        server.requests[0].respond(200);
+        await promises[0];
+        expect(server.requests).toHaveLength(maxRequests + 1);
+        server.requests[1].respond(200);
+        await promises[1];
+        expect(server.requests).toHaveLength(maxRequests + 2);
     });
 
     test('getImage respects maxParallelImageRequests and continues to respond even when server returns 404', async () => {
@@ -115,8 +110,7 @@ describe('ImageRequest', () => {
 
         server.respond();
 
-        await promise;
-        expect(true).toBeTruthy();
+        await expect(promise).resolves.toBeDefined();
     });
 
     test('getImage uses createImageBitmap when supported', async () => {

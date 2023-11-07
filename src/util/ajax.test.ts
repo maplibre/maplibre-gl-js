@@ -45,26 +45,28 @@ describe('ajax', () => {
         }
     });
 
-    test('getJSON', done => {
+    test('getJSON', async () => {
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
         });
-        getJSON({url: ''}, new AbortController()).then((body) => {
-            expect(body.data).toEqual({foo: 'bar'});
-            done();
-        });
+        const promise = getJSON({url: ''}, new AbortController());
         server.respond();
+
+        const body = await promise;
+        expect(body.data).toEqual({foo: 'bar'});
     });
 
-    test('getJSON, invalid syntax', done => {
+    test('getJSON, invalid syntax', async () => {
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
         });
-        getJSON({url: ''}, new AbortController()).catch((error) => {
-            expect(error).toBeTruthy();
-            done();
-        });
+        const promise = getJSON({url: ''}, new AbortController());
         server.respond();
+        try {
+            await promise;
+        } catch (error) {
+            expect(error).toBeTruthy();
+        }
     });
 
     test('getJSON, 404', async () => {
