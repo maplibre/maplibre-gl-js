@@ -115,9 +115,10 @@ try {
 
     await merger.save(`${dir}/all.pdf`);
 } catch (error) {
-    console.log(error);
     if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
         console.log('Could not connect to server. Please run \'npm run start-bench\'.');
+    } else {
+        console.log(error);
     }
 } finally {
     await browser.close();

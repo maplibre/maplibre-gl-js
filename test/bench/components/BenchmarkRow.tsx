@@ -15,8 +15,8 @@ export type BenchmarkRowProps = {
 export const BenchmarkRow = (props: BenchmarkRowProps) => {
     const endedCount = props.versions.filter(version => version.status === 'ended').length;
 
-    let main;
-    let current;
+    let main: Version;
+    let current: Version;
     if (/main/.test(props.versions[0].name)) {
         [main, current] = props.versions;
     } else {
