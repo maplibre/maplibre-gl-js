@@ -137,6 +137,6 @@ export default class TileParser {
 
         const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
 
-        return workerTile.parse(vectorTile, this.layerIndex, [], ((this.actor as any)));
+        return workerTile.parse(vectorTile, this.layerIndex, [], this.actor);
     }
 }
