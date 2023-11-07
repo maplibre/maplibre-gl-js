@@ -3,7 +3,7 @@ import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
 import type {Transferable} from '../types/transferable';
-import type {AsyncMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
+import type {ActorMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
 
 /**
  * An interface to be sent to the actor in order for it to allow communication between the worker and the main thread
@@ -37,7 +37,7 @@ type ResolveReject = {
  * This interface allowing to substitute only the sendAsync method of the Actor class.
  */
 export interface IActor {
-    sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
+    sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
 }
 
 export type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>
@@ -89,7 +89,7 @@ export class Actor implements IActor {
      * @param abortController - an optional AbortController to abort the request
      * @returns a promise that will be resolved with the response data
      */
-    sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
+    sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
         return new Promise((resolve, reject) => {
             // We're using a string ID instead of numbers because they are being used as object keys
             // anyway, and thus stringified implicitly. We use random IDs because an actor may receive

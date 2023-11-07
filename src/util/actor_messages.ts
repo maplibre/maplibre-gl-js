@@ -107,9 +107,15 @@ export type RequestResponseMessageMap = {
     'getResource': [RequestParameters, GetResourceResponse<any>];
 }
 
+/**
+ * All the possible message types that can be sent to and from the worker
+ */
 export type MessageType = keyof RequestResponseMessageMap;
 
-export type AsyncMessage<T extends MessageType> = {
+/**
+ * The message to be sent by the actor
+ */
+export type ActorMessage<T extends MessageType> = {
     type: T;
     data: RequestResponseMessageMap[T][0];
     targetMapId?: string | number | null;

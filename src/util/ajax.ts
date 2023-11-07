@@ -61,6 +61,9 @@ export type RequestParameters = {
     cache?: RequestCache;
 };
 
+/**
+ * The response object returned from a successful AJAx request
+ */
 export type GetResourceResponse<T> = ExpiryData & {
     data: T;
 }
