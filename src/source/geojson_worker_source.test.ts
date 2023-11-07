@@ -293,11 +293,7 @@ describe('loadData', () => {
 
         await promise;
 
-        try {
-            await worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters);
-        } catch (err) {
-            expect(err).toBeDefined();
-        }
+        await expect(worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters)).rejects.toBeDefined();
     });
 
     test('loadData with diff updates', async () => {

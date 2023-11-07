@@ -4,21 +4,25 @@ import {Event, Evented} from '../util/evented';
 import {isWorker} from '../util/util';
 
 /**
- * The possible option of the status
+ * The possible option of the plugin's status
+ *
+ * `unavailable`: Not loaded.
+ *
+ * `deferred`: The plugin URL has been specified, but loading has been deferred.
+ *
+ * `loading`: request in-flight.
+ *
+ * `loaded`: The plugin is now loaded
+ *
+ *  `error`: The plugin failed to load
  */
-const status = {
-    unavailable: 'unavailable', // Not loaded
-    deferred: 'deferred', // The plugin URL has been specified, but loading has been deferred
-    loading: 'loading', // request in-flight
-    loaded: 'loaded',
-    error: 'error'
-};
+type RTLPlginStatus = 'unavailable' | 'deferred' | 'loading' | 'loaded' | 'error';
 
 /**
  * The RTL plugin state
  */
 export type PluginState = {
-    pluginStatus: typeof status[keyof typeof status];
+    pluginStatus: RTLPlginStatus;
     pluginURL: string;
 };
 
@@ -30,13 +34,13 @@ type PluginStateSyncCallback = (state: PluginState) => void;
 let _completionCallback: ErrorCallback = null;
 
 //Variables defining the current state of the plugin
-let pluginStatus = status.unavailable;
+let pluginStatus: RTLPlginStatus = 'unavailable';
 let pluginURL = null;
 
 export const triggerPluginCompletionEvent = (error: string | Error) => {
     // NetworkError's are not correctly reflected by the plugin status which prevents reloading plugin
     if (error && typeof error === 'string' && error.indexOf('NetworkError') > -1) {
-        pluginStatus = status.error;
+        pluginStatus = 'error';
     }
 
     if (_completionCallback) {
@@ -63,17 +67,17 @@ export const registerForPluginStateChange = (callback: PluginStateSyncCallback) 
 };
 
 export const clearRTLTextPlugin = () => {
-    pluginStatus = status.unavailable;
+    pluginStatus = 'unavailable';
     pluginURL = null;
     _completionCallback = null;
 };
 
 export const setRTLTextPlugin = (url: string, callback?: ErrorCallback, deferred: boolean = false) => {
-    if (pluginStatus === status.deferred || pluginStatus === status.loading || pluginStatus === status.loaded) {
+    if (pluginStatus === 'deferred' || pluginStatus === 'loading' || pluginStatus === 'loaded') {
         throw new Error('setRTLTextPlugin cannot be called multiple times.');
     }
     pluginURL = browser.resolveURL(url);
-    pluginStatus = status.deferred;
+    pluginStatus = 'deferred';
     _completionCallback = callback;
     sendPluginStateToWorker();
 
@@ -84,13 +88,13 @@ export const setRTLTextPlugin = (url: string, callback?: ErrorCallback, deferred
 };
 
 export const downloadRTLTextPlugin = () => {
-    if (pluginStatus !== status.deferred || !pluginURL) {
+    if (pluginStatus !== 'deferred' || !pluginURL) {
         throw new Error('rtl-text-plugin cannot be downloaded unless a pluginURL is specified');
     }
-    pluginStatus = status.loading;
+    pluginStatus = 'loading';
     sendPluginStateToWorker();
     getArrayBuffer({url: pluginURL}, new AbortController()).then(() => {
-        pluginStatus = status.loaded;
+        pluginStatus = 'loaded';
         sendPluginStateToWorker();
     }).catch((error) => {
         if (error) {
@@ -113,11 +117,11 @@ export const plugin: {
     processBidirectionalText: null,
     processStyledBidirectionalText: null,
     isLoaded() {
-        return pluginStatus === status.loaded || // Main Thread: loaded if the completion callback returned successfully
+        return pluginStatus === 'loaded' || // Main Thread: loaded if the completion callback returned successfully
             plugin.applyArabicShaping != null; // Web-worker: loaded if the plugin functions have been compiled
     },
     isLoading() { // Main Thread Only: query the loading status, this function does not return the correct value in the worker context.
-        return pluginStatus === status.loading;
+        return pluginStatus === 'loading';
     },
     setState(state: PluginState) { // Worker thread only: this tells the worker threads that the plugin is available on the Main thread
         if (!isWorker(self)) throw new Error('Cannot set the state of the rtl-text-plugin when not in the web-worker context');
