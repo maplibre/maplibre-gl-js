@@ -5,7 +5,6 @@ import {BenchmarksTable} from './components/BenchmarkTable';
 import {summaryStatistics, regression, Summary} from './lib/statistics';
 import type {BenchmarkRowProps} from './components/BenchmarkRow';
 
-
 function updateUI(benchmarks: BenchmarkRowProps[], finished?: boolean) {
     finished = !!finished;
 
@@ -31,13 +30,13 @@ export async function run(benchmarks: BenchmarkRowProps[]) {
 
     const allRuns: Promise<any>[] = [];
 
-    for (let bench of benchmarks) {
-        for (let version of bench.versions) {
+    for (const bench of benchmarks) {
+        for (const version of bench.versions) {
             version.status = 'running';
             updateUI(benchmarks);
 
             try {
-                let measurements = await version.bench.run();
+                const measurements = await version.bench.run();
                 const samples = measurements.map(({time, iterations}) => time / iterations);
                 version.status = 'ended';
                 version.samples = samples;
@@ -49,8 +48,8 @@ export async function run(benchmarks: BenchmarkRowProps[]) {
                 version.error = error;
                 updateUI(benchmarks);
             }
-        };
-    };
+        }
+    }
 
     await Promise.all(allRuns);
     updateUI(benchmarks, true);
