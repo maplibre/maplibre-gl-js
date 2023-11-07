@@ -75,7 +75,7 @@ export const BenchmarkRow = (props: BenchmarkRowProps) => {
             <table className="fixed space-bottom">
                 <tbody>
                     <tr><th><h2 className="col4"><a href={`#${props.name}`} onClick={reload}>{props.name}</a></h2></th>
-                        {props.versions.map(version => <th style={{color: versionColor(version.name)}} key={version.name}>{version.name}</th>)}</tr>
+                        {props.versions.map(version => <th style={{color: versionColor(version.name)}} key={version.name}>{version.displayName}</th>)}</tr>
                     {props.location && <tr>
                         <th><p style={{color: '#1287A8'}}>{props.location.description}</p></th>
                         <th><p style={{color: '#1287A8'}}>Zoom Level: {props.location.zoom}</p></th>

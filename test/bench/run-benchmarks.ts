@@ -56,7 +56,7 @@ try {
     const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
     // @ts-ignore
     const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
-    const versionsDisplayName = await webPage.evaluate(() => (window as any).versionsToRun);
+    const versionsDisplayName = await webPage.evaluate(() => (window as any).versionsDisplayName);
 
     // The following will run all the tests if no arguments are passed, will run only the tests passed as arguments otherwise
     const toRun = argv._.length > 0 ? argv._ : allNames;
@@ -64,7 +64,7 @@ try {
     const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
     const timeWidth = Math.max(...versions.map(v => v.length), 16);
 
-    console.log(''.padStart(nameWidth), ...versions.map((v, i) =>  `${(versionsDisplayName[i] || v).padStart(timeWidth)} `));
+    console.log(''.padStart(nameWidth), ...versions.map((v, i) =>  `${(versionsDisplayName[i]).padStart(timeWidth)} `));
 
     const merger = new PDFMerger();
     for (const name of toRun) {

@@ -4,6 +4,7 @@ import Benchmark from '../lib/benchmark';
 
 export type Version = {
     name: string;
+    displayName: string;
     status: string;
     samples: number[];
     density: [number, number][];

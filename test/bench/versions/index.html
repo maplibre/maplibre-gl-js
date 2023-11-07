@@ -17,14 +17,14 @@
         async function runComparison() {
             try {
                 const params = new URL(location).searchParams;
-                window.versionsToRun = params.getAll('compare').filter(Boolean);
+                window.versionsDisplayName = params.getAll('compare').filter(Boolean);
                 if (!params.has('compare')) {
                     const response = await fetch('https://api.github.com/repos/maplibre/maplibre-gl-js/releases/latest');
                     const responseJson = await response.json();
-                    window.versionsToRun = [responseJson['tag_name'], 'main'];
+                    window.versionsDisplayName = [responseJson['tag_name'], 'main'];
                 }
-                console.log(`Comparing versions: ${window.versionsToRun}`);
-                const versionsScripts = window.versionsToRun.map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
+                console.log(`Comparing versions: ${window.versionsDisplayName}`);
+                const versionsScripts = window.versionsDisplayName.map(v => `https://maplibre.org/maplibre-gl-js/benchmarks/${v}/benchmarks_generated.js`)
                     .concat('/test/bench/versions/benchmarks_generated.js');
                 for (const script of versionsScripts) {
                     await loadScript(script);
@@ -41,12 +41,17 @@
 
                     let index = 0;
                     for (const version in window.maplibreglBenchmarks[benchmarkName]) {
+                        if (!window.versionsDisplayName[index]) {
+                            window.versionsDisplayName[index] = version;
+                        }
                         versions.push({
-                            name: window.versionsToRun[index++] || version,
+                            displayName: window.versionsDisplayName[index],
+                            name: version,
                             bench: window.maplibreglBenchmarks[benchmarkName][version]
                         });
+                        index++;
                     }
-                    benchmarks.push({benchmarkName, versions});
+                    benchmarks.push({name: benchmarkName, versions});
                 }
 
                 const results = await window.Benchmarks.run(benchmarks);
