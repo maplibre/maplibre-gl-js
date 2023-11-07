@@ -256,19 +256,14 @@ describe('loadData', () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         await worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters);
-        try {
-            await worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters);
-        } catch (err) {
-            expect(err).toBeDefined();
-        }
+        await expect(worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters)).rejects.toBeDefined();
     });
 
     test('loadData with geojson creates an updateable source', async () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         await worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters);
-        await worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters);
-        expect(true).toBeTruthy();
+        await expect(worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 
     test('loadData with geojson network call creates an updateable source', async () => {
@@ -282,9 +277,7 @@ describe('loadData', () => {
         server.respond();
 
         await load1Promise;
-        await worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters);
-
-        expect(true).toBeTruthy();
+        await expect(worker.loadData({source: 'source1', dataDiff: {removeAll: true}} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 
     test('loadData with geojson network call creates a non-updateable source', async () => {
@@ -311,15 +304,13 @@ describe('loadData', () => {
         const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
 
         await worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters);
-        await worker.loadData({source: 'source1', dataDiff: {
+        await expect(worker.loadData({source: 'source1', dataDiff: {
             add: [{
                 type: 'Feature',
                 id: 'update_point',
                 geometry: {type: 'Point', coordinates: [0, 0]},
                 properties: {}
             }]
-        }} as LoadGeoJSONParameters);
-
-        expect(true).toBeTruthy();
+        }} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 });

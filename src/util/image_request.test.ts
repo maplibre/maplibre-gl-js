@@ -110,8 +110,7 @@ describe('ImageRequest', () => {
 
         server.respond();
 
-        await promise;
-        expect(true).toBeTruthy();
+        await expect(promise).resolves.toBeDefined();
     });
 
     test('getImage uses createImageBitmap when supported', async () => {
