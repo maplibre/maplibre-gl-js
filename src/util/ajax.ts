@@ -135,7 +135,7 @@ export const getProtocolAction = url => config.REGISTERED_PROTOCOLS[url.substrin
  */
 const isFileURL = url => /^file:/.test(url) || (/^file:/.test(getReferrer()) && !/^\w+:/.test(url));
 
-function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+async function makeFetchRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     const request = new Request(requestParameters.url, {
         method: requestParameters.method || 'GET',
         body: requestParameters.body,
@@ -150,29 +150,19 @@ function makeFetchRequest(requestParameters: RequestParameters, abortController:
         request.headers.set('Accept', 'application/json');
     }
 
-    return new Promise(async (resolve, reject) => { // eslint-disable-line no-async-promise-executor -- to solve this see #3308
-        if (abortController.signal.aborted) return;
-
-        try {
-            const response = await fetch(request);
-            if (!response.ok) {
-                const body = await response.blob();
-                return reject(new AJAXError(response.status, response.statusText, requestParameters.url, body));
-            }
-            const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
-                requestParameters.type === 'json' ? response.json() :
-                    response.text();
-            const result = await parsePromise;
-            if (abortController.signal.aborted) return;
-            resolve({data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires')});
-        } catch (error) {
-            if (abortController.signal.aborted) {
-                // silence expected AbortError
-                return;
-            }
-            reject(new Error(error.message));
-        }
-    });
+    const response = await fetch(request);
+    if (!response.ok) {
+        const body = await response.blob();
+        throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
+    }
+    const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
+        requestParameters.type === 'json' ? response.json() :
+            response.text();
+    const result = await parsePromise;
+    if (abortController.signal.aborted) {
+        throw createAbortError();
+    }
+    return {data: result, cacheControl: response.headers.get('Cache-Control'), expires: response.headers.get('Expires')};
 }
 
 function makeXMLHttpRequest(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
@@ -236,14 +226,13 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
         if (isWorker(self) && self.worker && self.worker.actor) {
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters}, abortController);
         }
-        if (!isWorker(self)) {
-            const action = addProtocolCallbackToPromise(getProtocolAction(requestParameters.url)) || makeFetchRequest;
-            return action(requestParameters, abortController);
+        if (!isWorker(self) && getProtocolAction(requestParameters.url)) {
+            return promiseFromAddProtocolCallback(getProtocolAction(requestParameters.url))(requestParameters, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
-            return makeFetchRequest(requestParameters, abortController);
+            return silenceOnAbort(makeFetchRequest(requestParameters, abortController), abortController);
         }
         if (isWorker(self) && self.worker && self.worker.actor) {
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: true}, abortController);
@@ -252,7 +241,16 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
     return makeXMLHttpRequest(requestParameters, abortController);
 };
 
-function addProtocolCallbackToPromise(method: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable): (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>> {
+// This needs to be removed in general, see #3308
+function silenceOnAbort<T>(promise: Promise<T>, abortController: AbortController): Promise<T> {
+    return new Promise((resolve, reject) => {
+        promise
+            .then(result => { if (!abortController.signal.aborted) resolve(result); })
+            .catch(error => { if (!abortController.signal.aborted) reject(error); });
+    });
+}
+
+function promiseFromAddProtocolCallback(method: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable): (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>> {
     return (requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> => {
         return new Promise<GetResourceResponse<any>>((resolve, reject) => {
             const callback = (err: Error, data: any, cacheControl: string | null, expires: string | null) => {
