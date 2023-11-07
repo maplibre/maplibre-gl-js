@@ -6,7 +6,7 @@ import type {StyleGlyph} from '../style/style_glyph';
 import type {PluginState} from '../source/rtl_text_plugin';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
-import type {RequestParameters} from './ajax';
+import type {GetResourceResponse, RequestParameters} from './ajax';
 
 /**
  * The parameters needed in order to get information about the cluster
@@ -104,7 +104,7 @@ export type RequestResponseMessageMap = {
     'removeTile': [TileParameters, void];
     'abortTile': [TileParameters, void];
     'removeDEMTile': [TileParameters, void];
-    'getResource': [RequestParameters, any];
+    'getResource': [RequestParameters, GetResourceResponse<any>];
 }
 
 export type MessageType = keyof RequestResponseMessageMap;

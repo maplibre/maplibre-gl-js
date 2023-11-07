@@ -3,7 +3,6 @@ import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
 import type {Transferable} from '../types/transferable';
-import type {Cancelable} from '../types/cancelable';
 import type {AsyncMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
 
 /**
@@ -16,19 +15,22 @@ export interface ActorTarget {
     terminate?: () => void;
 }
 
-export type MessageData = {
+/**
+ * This is used to define the parameters of the message that is sent to the worker and back
+ */
+type MessageData = {
     id: string;
     type: MessageType | '<cancel>' | '<response>';
     data?: Serialized;
     targetMapId?: string | number | null;
     mustQueue?: boolean;
     error?: Serialized | null;
-    hasCallback?: boolean;
     sourceMapId: string | number | null;
 }
 
-export type Message = {
-    data: MessageData;
+type ResolveReject = {
+    resolve: (value?: RequestResponseMessageMap[MessageType][1]) => void;
+    reject: (reason?: Error) => void;
 }
 
 /**
@@ -49,7 +51,7 @@ export type MessageHandler<T extends MessageType> = (mapId: string | number, par
 export class Actor implements IActor {
     target: ActorTarget;
     mapId: string | number | null;
-    callbacks: { [x: number]: Function};
+    resolveRejects: { [x: string]: ResolveReject};
     name: string;
     tasks: { [x: number]: MessageData };
     taskQueue: Array<string>;
@@ -66,7 +68,7 @@ export class Actor implements IActor {
     constructor(target: ActorTarget, mapId?: string | number) {
         this.target = target;
         this.mapId = mapId;
-        this.callbacks = {};
+        this.resolveRejects = {};
         this.tasks = {};
         this.taskQueue = [];
         this.abortControllers = {};
@@ -80,81 +82,51 @@ export class Actor implements IActor {
         this.messageHandlers[type] = handler;
     }
 
-    sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
-        return new Promise((resolve, reject) => {
-            const cancelable = this._send(message.type, message.data, (err: Error, data: any) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(data);
-                }
-            }, message.targetMapId, message.mustQueue);
-            if (abortController) {
-                abortController.signal.addEventListener('abort', () => {
-                    cancelable.cancel();
-                    // In case of abort the current behavior is to keep the promise pending.
-                }, {once: true});
-            }
-        });
-    }
-
     /**
      * Sends a message from a main-thread map to a Worker or from a Worker back to
      * a main-thread map instance.
-     *
-     * @param type - The name of the target method to invoke or '[source-type].[source-name].name' for a method on a WorkerSource.
-     * @param targetMapId - A particular mapId to which to send this message.
+     * @param message - the message to send
+     * @param abortController - an optional AbortController to abort the request
+     * @returns a promise that will be resolved with the response data
      */
-    _send<T extends MessageType>(
-        type: T,
-        data: RequestResponseMessageMap[T][0],
-        callback?: Function | null,
-        targetMapId?: string | number | null,
-        mustQueue: boolean = false
-    ): Cancelable {
-        // We're using a string ID instead of numbers because they are being used as object keys
-        // anyway, and thus stringified implicitly. We use random IDs because an actor may receive
-        // message from multiple other actors which could run in different execution context. A
-        // linearly increasing ID could produce collisions.
-        const id = Math.round((Math.random() * 1e18)).toString(36).substring(0, 10);
-        if (callback) {
-            this.callbacks[id] = callback;
-        }
-        const buffers: Array<Transferable> = [];
-        const message: MessageData = {
-            id,
-            type,
-            hasCallback: !!callback,
-            targetMapId,
-            mustQueue,
-            sourceMapId: this.mapId,
-            data: serialize(data, buffers)
-        };
-        this.target.postMessage(message, {transfer: buffers});
-        return {
-            cancel: () => {
-                if (callback) {
-                    // Set the callback to null so that it never fires after the request is aborted.
-                    delete this.callbacks[id];
-                }
-                const cancelMessage: MessageData = {
-                    id,
-                    type: '<cancel>',
-                    targetMapId,
-                    sourceMapId: this.mapId
-                };
-                this.target.postMessage(cancelMessage);
+    sendAsync<T extends MessageType>(message: AsyncMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
+        return new Promise((resolve, reject) => {
+            // We're using a string ID instead of numbers because they are being used as object keys
+            // anyway, and thus stringified implicitly. We use random IDs because an actor may receive
+            // message from multiple other actors which could run in different execution context. A
+            // linearly increasing ID could produce collisions.
+            const id = Math.round((Math.random() * 1e18)).toString(36).substring(0, 10);
+            this.resolveRejects[id] = {
+                resolve,
+                reject
+            };
+            if (abortController) {
+                abortController.signal.addEventListener('abort', () => {
+                    delete this.resolveRejects[id];
+                    const cancelMessage: MessageData = {
+                        id,
+                        type: '<cancel>',
+                        targetMapId: message.targetMapId,
+                        sourceMapId: this.mapId
+                    };
+                    this.target.postMessage(cancelMessage);
+                    // In case of abort the current behavior is to keep the promise pending.
+                }, {once: true});
             }
-        };
+            const buffers: Array<Transferable> = [];
+            const messageToPost: MessageData = {
+                ...message,
+                id,
+                sourceMapId: this.mapId,
+                data: serialize(message.data, buffers)
+            };
+            this.target.postMessage(messageToPost, {transfer: buffers});
+        });
     }
 
-    receive = (message: Message) => {
+    receive = (message: {data: MessageData}) => {
         const data = message.data;
         const id = data.id;
-
-        if (!id) {
-            return;
-        }
 
         if (data.targetMapId && this.mapId !== data.targetMapId) {
             return;
@@ -213,38 +185,35 @@ export class Actor implements IActor {
         if (task.type === '<response>') {
             // The `completeTask` function in the counterpart actor has been called, and we are now
             // firing the callback in the originating actor, if there is one.
-            const callback = this.callbacks[id];
-            delete this.callbacks[id];
-            if (!callback) {
+            const resolveReject = this.resolveRejects[id];
+            delete this.resolveRejects[id];
+            if (!resolveReject) {
                 // If we get a response, but don't have a callback, the request was canceled.
                 return;
             }
             if (task.error) {
-                callback(deserialize(task.error));
+                resolveReject.reject(deserialize(task.error) as Error);
             } else {
-                callback(null, deserialize(task.data));
+                resolveReject.resolve(deserialize(task.data));
             }
             return;
         }
         if (!this.messageHandlers[task.type]) {
-            this.completeTask(task, id, new Error(`Could not find a registered handler for ${task.type}`));
+            this.completeTask(id, new Error(`Could not find a registered handler for ${task.type}`));
             return;
         }
-        const params = deserialize(task.data) as any;
+        const params = deserialize(task.data) as RequestResponseMessageMap[MessageType][0];
         const abortController = new AbortController();
         this.abortControllers[id] = abortController;
         try {
             const data = await this.messageHandlers[task.type](task.sourceMapId, params, abortController);
-            this.completeTask(task, id, null, data);
+            this.completeTask(id, null, data);
         } catch (err) {
-            this.completeTask(task, id, err);
+            this.completeTask(id, err);
         }
     }
 
-    completeTask(task: MessageData, id: string, err: Error, data?: any) {
-        if (!task.hasCallback) {
-            return;
-        }
+    completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]) {
         const buffers: Array<Transferable> = [];
         delete this.abortControllers[id];
         const responseMessage: MessageData = {

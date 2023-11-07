@@ -288,7 +288,7 @@ describe('Style#loadJSON', () => {
         });
     });
 
-    test('Validate sprite image extraction', done => {
+    test('Validate sprite image extraction', async () => {
         // Stubbing to bypass Web APIs that supported by jsdom:
         // * `URL.createObjectURL` in ajax.getImage (https://github.com/tmpvar/jsdom/issues/1721)
         // * `canvas.getContext('2d')` in browser.getImageData
@@ -308,24 +308,23 @@ describe('Style#loadJSON', () => {
             'sprite': 'http://example.com/sprite'
         });
 
-        style.once('data', (e) => {
-            expect(e.target).toBe(style);
-            expect(e.dataType).toBe('style');
+        const firstDataEvent = await style.once('data');
+        expect(firstDataEvent.target).toBe(style);
+        expect(firstDataEvent.dataType).toBe('style');
 
-            style.once('data', async (e) => {
-                expect(e.target).toBe(style);
-                expect(e.dataType).toBe('style');
-                const response = await style.imageManager.getImages(['image1']);
-                const image = response['image1'];
-                expect(image.data).toBeInstanceOf(RGBAImage);
-                expect(image.data.width).toBe(1);
-                expect(image.data.height).toBe(1);
-                expect(image.pixelRatio).toBe(1);
-                done();
-            });
+        const secondDataPromise = style.once('data');
 
-            server.respond();
-        });
+        server.respond();
+
+        const secondDateEvent = await secondDataPromise;
+        expect(secondDateEvent.target).toBe(style);
+        expect(secondDateEvent.dataType).toBe('style');
+        const response = await style.imageManager.getImages(['image1']);
+        const image = response['image1'];
+        expect(image.data).toBeInstanceOf(RGBAImage);
+        expect(image.data.width).toBe(1);
+        expect(image.data.height).toBe(1);
+        expect(image.pixelRatio).toBe(1);
     });
 
     test('validates the style', done => {
