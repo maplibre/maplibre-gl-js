@@ -10,6 +10,7 @@ export type BenchmarkRowProps = {
     name: string;
     location: LocationsWithTileID;
     versions: Version[];
+    finishedAll: boolean;
 }
 
 export const BenchmarkRow = (props: BenchmarkRowProps) => {
@@ -96,8 +97,8 @@ export const BenchmarkRow = (props: BenchmarkRowProps) => {
                     {pInferiority && <tr><td colSpan={3}>{pInferiority}</td></tr>}
                 </tbody>
             </table>
-            {endedCount > 0 && <StatisticsPlot versions={props.versions}/>}
-            {endedCount > 0 && <RegressionPlot versions={props.versions}/>}
+            {props.finishedAll && <StatisticsPlot versions={props.versions}/>}
+            {props.finishedAll && <RegressionPlot versions={props.versions}/>}
         </div>
     );
 
