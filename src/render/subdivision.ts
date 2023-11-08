@@ -12,6 +12,10 @@ function sign(p1x: number, p1y: number, p2x: number, p2y: number, p3x: number, p
     return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
 }
 
+function cross(ax: number, ay: number, bx: number, by: number): number {
+    return ax * by - ay * bx;
+}
+
 // Adapted from: https://stackoverflow.com/a/2049593
 function pointInTriangle(pointX: number, pointY: number, triangleVertices: Array<number>): boolean {
     const d1 = sign(pointX, pointY, triangleVertices[0], triangleVertices[1], triangleVertices[2], triangleVertices[3]);
@@ -42,15 +46,15 @@ function vectorLength(x: number, y: number): number {
 }
 
 /**
- * Angle in radians of this vector from the positive X axis clockwise (assuming X=right, Y=down).
+ * Angle in radians of this vector from the negativy Y axis clockwise (assuming X=right, Y=down).
  */
 function angle(x: number, y: number): number {
     const len = vectorLength(x, y);
     const ny = y / len;
     if (x >= 0) {
-        return Math.asin(ny);
+        return Math.acos(-ny);
     } else {
-        return Math.PI * 2.0 - Math.asin(ny);
+        return Math.PI * 2.0 - Math.acos(-ny);
     }
 }
 
@@ -119,22 +123,22 @@ export function subdivideTriangles(vertices: Array<number>, indices: Array<numbe
         return index;
     }
 
-    function checkEdgeSubdivisionX(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideX: number): void {
-        const y = checkEdgeDivide(e0x, e0y, e1x, e1y, divideX);
-        if (y !== undefined) {
-            addUnique(indicesInsideCell, getVertexIndex(divideX, y));
-        }
-    }
-    function checkEdgeSubdivisionY(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideY: number): void {
-        const x = checkEdgeDivide(e0y, e0x, e1y, e1x, divideY); // reuse checkEdgeDivide that only checks division line parallel to Y by swaping x and y in edge coordinates
-        if (x !== undefined) {
-            addUnique(indicesInsideCell, getVertexIndex(x, divideY));
-        }
-    }
-
     const finalIndices = [];
 
     const granualityStep = EXTENT / granuality;
+
+    function checkEdgeSubdivisionX(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideX: number, boundMin: number, boundMax: number): void {
+        const y = checkEdgeDivide(e0x, e0y, e1x, e1y, divideX);
+        if (y !== undefined && y >= boundMin && y <= boundMax) {
+            addUnique(indicesInsideCell, getVertexIndex(divideX, y));
+        }
+    }
+    function checkEdgeSubdivisionY(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideY: number, boundMin: number, boundMax: number): void {
+        const x = checkEdgeDivide(e0y, e0x, e1y, e1x, divideY); // reuse checkEdgeDivide that only checks division line parallel to Y by swaping x and y in edge coordinates
+        if (x !== undefined && x >= boundMin && x <= boundMax) {
+            addUnique(indicesInsideCell, getVertexIndex(x, divideY));
+        }
+    }
 
     // Iterate over all input triangles
     for (let primitiveIndex = 0; primitiveIndex < indices.length; primitiveIndex += 3) {
@@ -205,10 +209,10 @@ export function subdivideTriangles(vertices: Array<number>, indices: Array<numbe
                     const e0y = triangleVertices[(edge % 3) * 2 + 1];
                     const e1x = triangleVertices[((edge + 1) % 3) * 2 + 0];
                     const e1y = triangleVertices[((edge + 1) % 3) * 2 + 1];
-                    checkEdgeSubdivisionX(indicesInsideCell, e0x, e0y, e1x, e1y, cellMinX);
-                    checkEdgeSubdivisionX(indicesInsideCell, e0x, e0y, e1x, e1y, cellMaxX);
-                    checkEdgeSubdivisionY(indicesInsideCell, e0x, e0y, e1x, e1y, cellMinY);
-                    checkEdgeSubdivisionY(indicesInsideCell, e0x, e0y, e1x, e1y, cellMaxY);
+                    checkEdgeSubdivisionX(indicesInsideCell, e0x, e0y, e1x, e1y, cellMinX, cellMinY, cellMaxY);
+                    checkEdgeSubdivisionX(indicesInsideCell, e0x, e0y, e1x, e1y, cellMaxX, cellMinY, cellMaxY);
+                    checkEdgeSubdivisionY(indicesInsideCell, e0x, e0y, e1x, e1y, cellMinY, cellMinX, cellMaxX);
+                    checkEdgeSubdivisionY(indicesInsideCell, e0x, e0y, e1x, e1y, cellMaxY, cellMinX, cellMaxX);
                 }
 
                 // Now, indicesInsideCell contains all the vertices this subdivided cell contains - but in arbitrary order!
@@ -245,13 +249,91 @@ export function subdivideTriangles(vertices: Array<number>, indices: Array<numbe
 
                 // Now we finally generate triangles
                 for (let i = 2; i < indicesInsideCell.length; i++) {
+                    const ax = finalVertices[indicesInsideCell[i - 1] * 2 + 0] - finalVertices[indicesInsideCell[0] * 2 + 0];
+                    const ay = finalVertices[indicesInsideCell[i - 1] * 2 + 1] - finalVertices[indicesInsideCell[0] * 2 + 1];
+                    const bx = finalVertices[indicesInsideCell[i] * 2 + 0] - finalVertices[indicesInsideCell[0] * 2 + 0];
+                    const by = finalVertices[indicesInsideCell[i] * 2 + 1] - finalVertices[indicesInsideCell[0] * 2 + 1];
+
+                    const c = cross(ax, ay, bx, by);
+
+                    // Skip degenerate (linear) triangles
+                    if (c === 0 ||
+                        (finalVertices[indicesInsideCell[0] * 2 + 0] === finalVertices[indicesInsideCell[i] * 2 + 0] && finalVertices[indicesInsideCell[0] * 2 + 0] === finalVertices[indicesInsideCell[i] * 2 + 0]) ||
+                        (finalVertices[indicesInsideCell[0] * 2 + 1] === finalVertices[indicesInsideCell[i] * 2 + 1] && finalVertices[indicesInsideCell[0] * 2 + 1] === finalVertices[indicesInsideCell[i] * 2 + 1])) {
+                        continue;
+                    }
+
                     finalIndices.push(indicesInsideCell[0]);
                     finalIndices.push(indicesInsideCell[i - 1]);
                     finalIndices.push(indicesInsideCell[i]);
+
+                    const triangleVertices2 = [
+                        finalVertices[finalIndices[finalIndices.length - 3] * 2 + 0], // v0.x
+                        finalVertices[finalIndices[finalIndices.length - 3] * 2 + 1], // v0.y
+                        finalVertices[finalIndices[finalIndices.length - 2] * 2 + 0], // v1.x
+                        finalVertices[finalIndices[finalIndices.length - 2] * 2 + 1], // v1.y
+                        finalVertices[finalIndices[finalIndices.length - 1] * 2 + 0], // v2.x
+                        finalVertices[finalIndices[finalIndices.length - 1] * 2 + 1], // v2.y
+                    ];
+                    //   v1--v2
+                    //   |  /
+                    //   | /
+                    //   v0
+                    // a: v0->v1
+                    // b: v0->v2
+                    if (c <= 0) {
+                        console.log('Panic! a CCW or degenerate triangle!');
+                        console.log(`Bad triangle: ${triangleVertices2.toString()}`);
+                        console.log(`Original triangle: ${triangleVertices.toString()}`);
+                        console.log(`Cell box: X: ${cellMinX} to ${cellMaxX}; Y: ${cellMinY} to ${cellMaxY}`);
+                        console.log(`Angle a: ${angle(triangleVertices2[0] - avgX, triangleVertices2[1] - avgY) / Math.PI * 180.0}`);
+                        console.log(`Angle b: ${angle(triangleVertices2[2] - avgX, triangleVertices2[3] - avgY) / Math.PI * 180.0}`);
+                        console.log(`Angle c: ${angle(triangleVertices2[4] - avgX, triangleVertices2[5] - avgY) / Math.PI * 180.0}`);
+                        console.log(`Avg: X: ${avgX} Y: ${avgY}`);
+                        console.log('All ordered vertices:');
+                        for (let j = 0; j < indicesInsideCell.length; j++) {
+                            console.log(`${finalVertices[indicesInsideCell[j] * 2 + 0]} ${finalVertices[indicesInsideCell[j] * 2 + 1]}`);
+                        }
+                        console.log('---');
+                        return {
+                            vertices: [...vertices],
+                            indices: [...indices]
+                        };
+                    }
                 }
             }
         }
     }
+
+    // for (let i = 0; i < finalIndices.length; i += 3) {
+    //     const triangleVertices = [
+    //         finalVertices[finalIndices[i + 0] * 2 + 0], // v0.x
+    //         finalVertices[finalIndices[i + 0] * 2 + 1], // v0.y
+    //         finalVertices[finalIndices[i + 1] * 2 + 0], // v1.x
+    //         finalVertices[finalIndices[i + 1] * 2 + 1], // v1.y
+    //         finalVertices[finalIndices[i + 2] * 2 + 0], // v2.x
+    //         finalVertices[finalIndices[i + 2] * 2 + 1], // v2.y
+    //     ];
+    //     //   v1--v2
+    //     //   |  /
+    //     //   | /
+    //     //   v0
+    //     // a: v0->v1
+    //     // b: v0->v2
+    //     const ax = triangleVertices[2] - triangleVertices[0];
+    //     const ay = triangleVertices[3] - triangleVertices[1];
+    //     const bx = triangleVertices[4] - triangleVertices[0];
+    //     const by = triangleVertices[5] - triangleVertices[1];
+    //     const c = cross(ax, ay, bx, by);
+    //     if (c >= 0) {
+    //         console.log('Panic! a CCW or degenerate triangle!');
+    //         console.log(triangleVertices);
+    //         return {
+    //             vertices: [...vertices],
+    //             indices: [...indices]
+    //         };
+    //     }
+    // }
 
     return {
         vertices: finalVertices,
