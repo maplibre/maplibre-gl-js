@@ -1,4 +1,4 @@
-import {isWorker} from './util';
+import {Subscription, isWorker, subscribe} from './util';
 import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
@@ -21,6 +21,7 @@ export interface ActorTarget {
 type MessageData = {
     id: string;
     type: MessageType | '<cancel>' | '<response>';
+    origin: string;
     data?: Serialized;
     targetMapId?: string | number | null;
     mustQueue?: boolean;
@@ -59,6 +60,7 @@ export class Actor implements IActor {
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
     messageHandlers: { [x in MessageType]?: MessageHandler<MessageType>};
+    subscription: Subscription;
 
     /**
      * @param target - The target
@@ -73,8 +75,8 @@ export class Actor implements IActor {
         this.taskQueue = [];
         this.abortControllers = {};
         this.messageHandlers = {};
-        this.invoker = new ThrottledInvoker(this.process);
-        this.target.addEventListener('message', this.receive, false);
+        this.invoker = new ThrottledInvoker(() => this.process());
+        this.subscription = subscribe(this.target, 'message', (message) => this.receive(message), false);
         this.globalScope = isWorker(self) ? target : window;
     }
 
@@ -106,6 +108,7 @@ export class Actor implements IActor {
                     const cancelMessage: MessageData = {
                         id,
                         type: '<cancel>',
+                        origin: location.origin,
                         targetMapId: message.targetMapId,
                         sourceMapId: this.mapId
                     };
@@ -118,16 +121,19 @@ export class Actor implements IActor {
                 ...message,
                 id,
                 sourceMapId: this.mapId,
+                origin: location.origin,
                 data: serialize(message.data, buffers)
             };
             this.target.postMessage(messageToPost, {transfer: buffers});
         });
     }
 
-    receive = (message: {data: MessageData}) => {
+    receive(message: {data: MessageData}) {
         const data = message.data;
         const id = data.id;
-
+        if (data.origin !== location.origin) {
+            return;
+        }
         if (data.targetMapId && this.mapId !== data.targetMapId) {
             return;
         }
@@ -158,9 +164,9 @@ export class Actor implements IActor {
         // In the main thread, process messages immediately so that other work does not slip in
         // between getting partial data back from workers.
         this.processTask(id, data);
-    };
+    }
 
-    process = () => {
+    process() {
         if (this.taskQueue.length === 0) {
             return;
         }
@@ -179,7 +185,7 @@ export class Actor implements IActor {
         }
 
         this.processTask(id, task);
-    };
+    }
 
     async processTask(id: string, task: MessageData) {
         if (task.type === '<response>') {
@@ -220,6 +226,7 @@ export class Actor implements IActor {
             id,
             type: '<response>',
             sourceMapId: this.mapId,
+            origin: location.origin,
             error: err ? serialize(err) : null,
             data: serialize(data, buffers)
         };
@@ -228,6 +235,6 @@ export class Actor implements IActor {
 
     remove() {
         this.invoker.remove();
-        this.target.removeEventListener('message', this.receive, false);
+        this.subscription.unsubscribe();
     }
 }
