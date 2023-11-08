@@ -86,7 +86,6 @@ export class Painter {
     pixelRatio: number;
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
-    tileExtentTesselatedMesh: Mesh;
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
     rasterBoundsBuffer: VertexBuffer;
@@ -201,53 +200,8 @@ export class Painter {
         quadTriangleIndices.emplaceBack(2, 1, 3);
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
 
-        // Tesselated tile extent "quad" for projection modes that use the vertex shader for curvature
-        this.tileExtentTesselatedMesh = this._createQuadMesh(context, 64);
-
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
-    }
-
-    /**
-     * Creates a quad mesh covering positions in range 0..EXTENT, eg. for tile clipping.
-     * @param context MapLibre's rendering context object.
-     * @param granuality Mesh triangulation granuality: 1 for just a single quad, 3 for 3x3 quads.
-     * @returns
-     */
-    private _createQuadMesh(context: Context, granuality: number): Mesh {
-        const verticesPerAxis = granuality + 1;
-
-        const vertexArray = new PosArray();
-        const indexArray = new TriangleIndexArray();
-
-        for (let y = 0; y < verticesPerAxis; y++) {
-            for (let x = 0; x < verticesPerAxis; x++) {
-                vertexArray.emplaceBack(x / granuality * EXTENT, y / granuality * EXTENT);
-            }
-        }
-
-        for (let y = 0; y < granuality; y++) {
-            for (let x = 0; x < granuality; x++) {
-                const v0 = x + y * verticesPerAxis;
-                const v1 = (x + 1) + y * verticesPerAxis;
-                const v2 = x + (y + 1) * verticesPerAxis;
-                const v3 = (x + 1) + (y + 1) * verticesPerAxis;
-                // v0----v1
-                //  |  / |
-                //  | /  |
-                // v2----v3
-                indexArray.emplaceBack(v0, v2, v1);
-                indexArray.emplaceBack(v1, v2, v3);
-            }
-        }
-
-        const mesh = new Mesh(
-            context.createVertexBuffer(vertexArray, posAttributes.members),
-            context.createIndexBuffer(indexArray),
-            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        );
-
-        return mesh;
     }
 
     /*
@@ -306,13 +260,14 @@ export class Painter {
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
             const projectionData = this.style.map.projectionManager.getProjectionData(tileID);
+            const mesh = this.style.map.projectionManager.getMesh(this.context, tileID.canonical.z);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
                 ColorMode.disabled, CullFaceMode.backCCW, null,
-                terrainData, projectionData, '$clipping', this.tileExtentTesselatedMesh.vertexBuffer,
-                this.tileExtentTesselatedMesh.indexBuffer, this.tileExtentTesselatedMesh.segments);
+                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
+                mesh.indexBuffer, mesh.segments);
         }
     }
 
