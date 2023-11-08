@@ -18,7 +18,6 @@ import {StencilMode} from '../gl/stencil_mode';
 import {ColorMode} from '../gl/color_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {Texture} from './texture';
-import {clippingMaskUniformValues} from './program/clipping_mask_program';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {drawSymbols} from './draw_symbol';
 import {drawCircles} from './draw_circle';
@@ -47,6 +46,7 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
+import {Mesh} from './mesh';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -86,6 +86,7 @@ export class Painter {
     pixelRatio: number;
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
+    tileExtentTesselatedMesh: Mesh;
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
     rasterBoundsBuffer: VertexBuffer;
@@ -200,8 +201,53 @@ export class Painter {
         quadTriangleIndices.emplaceBack(2, 1, 3);
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
 
+        // Tesselated tile extent "quad" for projection modes that use the vertex shader for curvature
+        this.tileExtentTesselatedMesh = this._createQuadMesh(context, 16);
+
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
+    }
+
+    /**
+     * Creates a quad mesh covering positions in range 0..EXTENT, eg. for tile clipping.
+     * @param context MapLibre's rendering context object.
+     * @param granuality Mesh triangulation granuality: 1 for just a single quad, 3 for 3x3 quads.
+     * @returns
+     */
+    private _createQuadMesh(context: Context, granuality: number): Mesh {
+        const verticesPerAxis = granuality + 1;
+
+        const vertexArray = new PosArray();
+        const indexArray = new TriangleIndexArray();
+
+        for (let y = 0; y < verticesPerAxis; y++) {
+            for (let x = 0; x < verticesPerAxis; x++) {
+                vertexArray.emplaceBack(x / granuality * EXTENT, y / granuality * EXTENT);
+            }
+        }
+
+        for (let y = 0; y < granuality; y++) {
+            for (let x = 0; x < granuality; x++) {
+                const v0 = x + y * verticesPerAxis;
+                const v1 = (x + 1) + y * verticesPerAxis;
+                const v2 = x + (y + 1) * verticesPerAxis;
+                const v3 = (x + 1) + (y + 1) * verticesPerAxis;
+                // v0----v1
+                //  |  / |
+                //  | /  |
+                // v2----v3
+                indexArray.emplaceBack(v0, v2, v1);
+                indexArray.emplaceBack(v1, v2, v3);
+            }
+        }
+
+        const mesh = new Mesh(
+            context.createVertexBuffer(vertexArray, posAttributes.members),
+            context.createIndexBuffer(indexArray),
+            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        );
+
+        return mesh;
     }
 
     /*
@@ -224,9 +270,13 @@ export class Painter {
         mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
-        this.useProgram('clippingMask').draw(context, gl.TRIANGLES,
+        const projectionData = this.style.map.projectionManager.getProjectionData(null);
+        projectionData['u_projection_matrix'] = matrix;
+
+        // Note: we use a shader with projection code disabled since we want to draw a fullscreen quad
+        this.useProgram('clippingMask', null, false).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
-            clippingMaskUniformValues(matrix), null,
+            null, null, projectionData,
             '$clipping', this.viewportBuffer,
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
@@ -255,12 +305,14 @@ export class Painter {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
+            const projectionData = this.style.map.projectionManager.getProjectionData(tileID);
+
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
-                ColorMode.disabled, CullFaceMode.disabled, clippingMaskUniformValues(tileID.posMatrix),
-                terrainData, '$clipping', this.tileExtentBuffer,
-                this.quadTriangleIndexBuffer, this.tileExtentSegments);
+                ColorMode.disabled, CullFaceMode.disabled, null,
+                terrainData, projectionData, '$clipping', this.tileExtentTesselatedMesh.vertexBuffer,
+                this.tileExtentTesselatedMesh.indexBuffer, this.tileExtentTesselatedMesh.segments);
         }
     }
 
@@ -575,10 +627,17 @@ export class Painter {
         return !imagePosA || !imagePosB;
     }
 
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null): Program<any> {
+    /**
+     * TODO
+     * @param name
+     * @param programConfiguration
+     * @param allowProjection Use shader variant with complex projection vertex shader. True by default.
+     * @returns
+     */
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, allowProjection?: boolean): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
-        const useGlobe = !!this.style.map.globe;
+        const useGlobe = !!this.style.map.globe && (allowProjection === null ? true : allowProjection);
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             (this._showOverdrawInspector ? '/overdraw' : '') +

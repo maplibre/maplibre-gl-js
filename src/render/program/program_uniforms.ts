@@ -1,9 +1,8 @@
 import {fillExtrusionUniforms, fillExtrusionPatternUniforms} from './fill_extrusion_program';
-import {fillUniforms, fillPatternUniforms, fillOutlineUniforms, fillOutlinePatternUniforms} from './fill_program';
+import {fillPatternUniforms, fillOutlineUniforms, fillOutlinePatternUniforms} from './fill_program';
 import {circleUniforms} from './circle_program';
 import {collisionUniforms, collisionCircleUniforms} from './collision_program';
 import {debugUniforms} from './debug_program';
-import {clippingMaskUniforms} from './clipping_mask_program';
 import {heatmapUniforms, heatmapTextureUniforms} from './heatmap_program';
 import {hillshadeUniforms, hillshadePrepareUniforms} from './hillshade_program';
 import {lineUniforms, lineGradientUniforms, linePatternUniforms, lineSDFUniforms} from './line_program';
@@ -13,10 +12,12 @@ import {backgroundUniforms, backgroundPatternUniforms} from './background_progra
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms} from './terrain_program';
 import {globeUniforms} from './globe_program';
 
+const emptyUniforms = (context: any, locations: any): any => {};
+
 export const programUniforms = {
     fillExtrusion: fillExtrusionUniforms,
     fillExtrusionPattern: fillExtrusionPatternUniforms,
-    fill: fillUniforms,
+    fill: emptyUniforms,
     fillPattern: fillPatternUniforms,
     fillOutline: fillOutlineUniforms,
     fillOutlinePattern: fillOutlinePatternUniforms,
@@ -24,7 +25,7 @@ export const programUniforms = {
     collisionBox: collisionUniforms,
     collisionCircle: collisionCircleUniforms,
     debug: debugUniforms,
-    clippingMask: clippingMaskUniforms,
+    clippingMask: emptyUniforms,
     globe: globeUniforms,
     heatmap: heatmapUniforms,
     heatmapTexture: heatmapTextureUniforms,

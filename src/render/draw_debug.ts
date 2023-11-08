@@ -93,10 +93,10 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     drawTextToOverlay(painter, tileLabel);
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, ColorMode.alphaBlended, CullFaceMode.disabled,
-        debugUniformValues(posMatrix, Color.transparent, scaleRatio), null, id,
+        debugUniformValues(posMatrix, Color.transparent, scaleRatio), null, null, id,
         painter.debugBuffer, painter.quadTriangleIndexBuffer, painter.debugSegments);
     program.draw(context, gl.LINE_STRIP, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        debugUniformValues(posMatrix, Color.red), terrainData, id,
+        debugUniformValues(posMatrix, Color.red), terrainData, null, id,
         painter.debugBuffer, painter.tileBorderIndexBuffer, painter.debugSegments);
 }
 

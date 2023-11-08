@@ -14,7 +14,7 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration';
 import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
 import type {TerrainData} from '../render/terrain';
-import {GlobeProjectionPreludeUniformsType, projectionUniforms} from './globe';
+import {ProjectionPreludeUniformsType, ProjectionData, projectionUniforms} from './projection_manager';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 
@@ -39,7 +39,7 @@ export class Program<Us extends UniformBindings> {
     numAttributes: number;
     fixedUniforms: Us;
     terrainUniforms: TerrainPreludeUniformsType;
-    projectionUniforms: GlobeProjectionPreludeUniformsType;
+    projectionUniforms: ProjectionPreludeUniformsType;
     binderUniforms: Array<BinderUniform>;
     failedToCreate: boolean;
 
@@ -160,6 +160,7 @@ export class Program<Us extends UniformBindings> {
         cullFaceMode: Readonly<CullFaceMode>,
         uniformValues: UniformValues<Us>,
         terrain: TerrainData,
+        projectionData: ProjectionData,
         layerID: string,
         layoutVertexBuffer: VertexBuffer,
         indexBuffer: IndexBuffer,
@@ -169,8 +170,7 @@ export class Program<Us extends UniformBindings> {
         configuration?: ProgramConfiguration | null,
         dynamicLayoutBuffer?: VertexBuffer | null,
         dynamicLayoutBuffer2?: VertexBuffer | null,
-        dynamicLayoutBuffer3?: VertexBuffer | null,
-        projectionParams?: any) {
+        dynamicLayoutBuffer3?: VertexBuffer | null) {
 
         const gl = context.gl;
 
@@ -193,14 +193,16 @@ export class Program<Us extends UniformBindings> {
             }
         }
 
-        if (projectionParams) {
+        if (projectionData) {
             for (const name in this.projectionUniforms) {
-                this.projectionUniforms[name].set(projectionParams[name]);
+                this.projectionUniforms[name].set(projectionData[name]);
             }
         }
 
-        for (const name in this.fixedUniforms) {
-            this.fixedUniforms[name].set(uniformValues[name]);
+        if (uniformValues) {
+            for (const name in this.fixedUniforms) {
+                this.fixedUniforms[name].set(uniformValues[name]);
+            }
         }
 
         if (configuration) {

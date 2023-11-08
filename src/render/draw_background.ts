@@ -47,7 +47,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(tileID);
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            uniformValues, terrainData, layer.id, painter.tileExtentBuffer,
+            uniformValues, terrainData, null, layer.id, painter.tileExtentBuffer,
             painter.quadTriangleIndexBuffer, painter.tileExtentSegments);
     }
 }

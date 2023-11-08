@@ -1,27 +1,12 @@
 import {Transform} from '../geo/transform';
 import {OverscaledTileID} from '../source/tile_id';
 import {SegmentVector} from '../data/segment';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
 import {Context} from '../gl/context';
 import {Mesh} from './mesh';
 import {Pos3dTex2dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dTex2dAttributes from '../data/pos3d_tex2d_attributes';
 import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
-import {Uniform1f, Uniform1i, Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
-
-export type GlobeProjectionPreludeUniformsType = {
-    'u_projection_tile_mercator_coords': Uniform4f;
-};
-
-export const projectionUniforms = (context: Context, locations: UniformLocations): GlobeProjectionPreludeUniformsType => ({
-    'u_projection_tile_mercator_coords': new Uniform4f(context, locations.u_projection_tile_mercator_coords)
-});
-
-export type ProjectionData = {
-    'u_projection_tile_mercator_coords': [number, number, number, number];
-}
 
 export class Globe {
     private _meshes: {[_: string]: Mesh};
@@ -34,17 +19,6 @@ export class Globe {
 
     constructor() {
         this._meshes = {};
-    }
-
-    public getProjectionData(tileID: OverscaledTileID): [mat4, ProjectionData] {
-        return [this.cachedTransform, {
-            'u_projection_tile_mercator_coords': [
-                tileID.canonical.x / (1 << tileID.canonical.z),
-                tileID.canonical.y / (1 << tileID.canonical.z),
-                (tileID.canonical.x + 1) / (1 << tileID.canonical.z),
-                (tileID.canonical.y + 1) / (1 << tileID.canonical.z)
-            ]
-        }];
     }
 
     /**

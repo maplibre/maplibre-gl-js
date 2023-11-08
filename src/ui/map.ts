@@ -71,6 +71,7 @@ import {Globe} from '../render/globe';
 import {drawGlobe} from '../render/draw_globe';
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../data/extent';
+import {ProjectionManager} from '../render/projection_manager';
 
 const version = packageJSON.version;
 
@@ -457,6 +458,7 @@ export class Map extends Camera {
     painter: Painter;
     handlers: HandlerManager;
     globe: Globe;
+    projectionManager: ProjectionManager;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -632,6 +634,8 @@ export class Map extends Camera {
         if (options.maxBounds) {
             this.setMaxBounds(options.maxBounds);
         }
+
+        this.projectionManager = new ProjectionManager(this);
 
         this._setupContainer();
         this._setupPainter();

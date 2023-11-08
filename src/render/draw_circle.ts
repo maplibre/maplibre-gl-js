@@ -106,7 +106,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
         const segments = segmentsState.segments;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            uniformValues, terrainData, layer.id,
+            uniformValues, terrainData, null, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

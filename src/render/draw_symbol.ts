@@ -442,7 +442,7 @@ function drawSymbolElements(
     const context = painter.context;
     const gl = context.gl;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        uniformValues, terrainData, layer.id, buffers.layoutVertexBuffer,
+        uniformValues, terrainData, null, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);

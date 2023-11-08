@@ -68,11 +68,11 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
 
         if (source instanceof ImageSource) {
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, layer.id, source.boundsBuffer,
+                uniformValues, terrainData, null, layer.id, source.boundsBuffer,
                 painter.quadTriangleIndexBuffer, source.boundsSegments);
         } else {
             program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, layer.id, painter.rasterBoundsBuffer,
+                uniformValues, terrainData, null, layer.id, painter.rasterBoundsBuffer,
                 painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
         }
     }

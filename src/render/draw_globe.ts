@@ -28,7 +28,7 @@ function drawGlobe(painter: Painter, globe: Globe, tileIDs: Array<OverscaledTile
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
         //const posMatrix = painter.transform.calculatePosMatrix(tileID.toUnwrapped());
         const uniformValues = globeUniformValues(posMatrix, painter.renderToTexture.getTileColorForDebug(tileID.key));
-        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, null, 'globe', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, null, null, 'globe', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
 

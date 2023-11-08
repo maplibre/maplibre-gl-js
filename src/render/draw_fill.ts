@@ -3,7 +3,6 @@ import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {ColorMode} from '../gl/color_mode';
 import {
-    fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
@@ -103,33 +102,24 @@ function drawFillTiles(
         //const tileMatrix = painter.translatePosMatrix(coord.posMatrix, tile,
         //    layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));
 
-        let tileMatrix = coord.posMatrix;
-        let projectionData = null;
-
-        if (painter.style.map.globe) {
-            const result = painter.style.map.globe.getProjectionData(coord);
-            tileMatrix = result[0];
-            projectionData = result[1];
-        }
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ?
-                fillPatternUniformValues(tileMatrix, painter, crossfade, tile) :
-                fillUniformValues(tileMatrix);
+            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile) : null;
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(tileMatrix, painter, crossfade, tile, drawingBufferSize) :
-                fillOutlineUniformValues(tileMatrix, drawingBufferSize);
+                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize) :
+                fillOutlineUniformValues(drawingBufferSize);
         }
 
         program.draw(painter.context, drawMode, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.backCW, uniformValues, terrainData,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.backCW, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
-            layer.paint, painter.transform.zoom, programConfiguration, null, null, null, projectionData);
+            layer.paint, painter.transform.zoom, programConfiguration);
     }
 }

@@ -115,7 +115,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         }
 
         program.draw(context, gl.TRIANGLES, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, null,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 
