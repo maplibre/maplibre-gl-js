@@ -310,7 +310,7 @@ export class Painter {
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
-                ColorMode.disabled, CullFaceMode.disabled, null,
+                ColorMode.disabled, CullFaceMode.backCCW, null,
                 terrainData, projectionData, '$clipping', this.tileExtentTesselatedMesh.vertexBuffer,
                 this.tileExtentTesselatedMesh.indexBuffer, this.tileExtentTesselatedMesh.segments);
         }
@@ -637,7 +637,7 @@ export class Painter {
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, allowProjection?: boolean): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
-        const useGlobe = !!this.style.map.globe && (allowProjection === null ? true : allowProjection);
+        const useGlobe = (!!this.style.map.globe) && ((typeof allowProjection !== 'undefined') ? allowProjection : true);
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             (this._showOverdrawInspector ? '/overdraw' : '') +
