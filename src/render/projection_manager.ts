@@ -29,8 +29,9 @@ export class ProjectionManager {
 
     /**
      * Mercator tiles will be subdivided to this degree of granuality in order to allow for a curved projection.
+     * Should be a power of 2.
      */
-    private static readonly targetGranuality = 16;
+    private static readonly targetGranuality = 4;
 
     /**
      * The granuality specified by `targetGranuality` will be used for zoom levels from this value onwards.
