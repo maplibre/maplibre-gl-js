@@ -44,6 +44,7 @@ export class Globe {
         mat4.rotateY(m, m, -transform.center.lng * degreesToRadians);
         // Flip it upside down
         mat4.scale(m, m, [1, -1, 1]);
+        mat4.scale(m, m, [0.5, 0.5, 0.5]); // Scale the unit sphere to a sphere with diameter of 1
         // Finally, apply transform's projection matrix
         mat4.multiply(m, transform.projMatrix, m);
         this.cachedTransform = new Float32Array(m);
@@ -70,7 +71,7 @@ export class Globe {
     private _webMercatorPixelToSphereAngle(tileX: number, tileY: number, zoom: number): { x: number; y: number; z: number } {
         // just pretend this stuff isn't horribly wrong for now...
 
-        const scale = 0.5; // ensure the mesh sphere has diameter of 1 (radius of 0.5)
+        const scale = 1.0; // ensure the mesh sphere has diameter of 1 (radius of 0.5)
 
         const tileAngularSizeX = Math.PI * 2 / (1 << zoom);
         // get the "latitude and longitude" on a perfect sphere for the given mercator tile coordinates

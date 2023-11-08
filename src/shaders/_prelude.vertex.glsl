@@ -172,7 +172,7 @@ vec4 projectTile(vec2 posInTile) {
     // However, for now we will treat them as coordinates on a perfect sphere. TODO.
 
     vec2 spherical;
-    spherical.x = mercator_pos.x * GLOBE_PI * 2.0;
+    spherical.x = mercator_pos.x * GLOBE_PI * 2.0 + GLOBE_PI;
     spherical.y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos.y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
 
     float scale = 0.5;

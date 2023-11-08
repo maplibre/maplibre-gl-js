@@ -202,7 +202,7 @@ export class Painter {
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
 
         // Tesselated tile extent "quad" for projection modes that use the vertex shader for curvature
-        this.tileExtentTesselatedMesh = this._createQuadMesh(context, 16);
+        this.tileExtentTesselatedMesh = this._createQuadMesh(context, 64);
 
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
