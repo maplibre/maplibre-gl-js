@@ -1,22 +1,18 @@
 name: Release
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
-    inputs:
-      version:
-        description: Version to change to.
-        required: true
-        type: string
 
 jobs:
-  release:
-    name: Release
+  release-check:
+    name: Check if version changed
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
     steps:
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -27,15 +23,41 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Bump version
-        run: |
-          npm version --commit-hooks false --git-tag-version false ${{ inputs.version }}
-          ./build/bump-version-changelog.js
-      - name: Commit and push version bump with a tag
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Check if version changed
+        id: check
+        uses: EndBug/version-check@v2
+
+    outputs:
+      publish: ${{ steps.check.outputs.changed }}
+
+  release-publish:
+    name: Publish to NPM and GitHub
+    needs: release-check
+    if: ${{ needs.release-check.outputs.publish == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
         with:
-          commit_message: Bump version to ${{ inputs.version }}
-          tagging_message:  ${{ inputs.version }}
+          fetch-depth: 0
+          ref: main
+
+      - name: Use Node.js from nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Get version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+
+      - name: Tag commit and push
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.package-version.outputs.current-version }}
 
       - name: Install
         run: npm ci
@@ -43,8 +65,8 @@ jobs:
       - name: Prepare release
         id: prepare_release
         run: |
-          echo "version_tag=v${{ inputs.version }}" >> $GITHUB_OUTPUT
-          RELEASE_TYPE=$(node -e "console.log(require('semver').prerelease('${{ inputs.version }}') ? 'prerelease' : 'regular')")
+          echo "version_tag=v${{ steps.package-version.outputs.current-version }}" >> $GITHUB_OUTPUT
+          RELEASE_TYPE=$(node -e "console.log(require('semver').prerelease('${{ steps.package-version.outputs.current-version }}') ? 'prerelease' : 'regular')")
           echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
 
       - name: Build
