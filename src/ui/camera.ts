@@ -1370,7 +1370,9 @@ export abstract class Camera extends Evented {
     }
 
     isEasing() {
-        return !!this._easeFrameId;
+        // currently only prepareEase sets _moving to true
+        // and afterEase sets _moving to false
+        return this._moving;
     }
 
     /**
@@ -1425,12 +1427,15 @@ export abstract class Camera extends Evented {
 
     // Callback for map._requestRenderFrame
     _renderFrameCallback = () => {
-        const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
-        this._onEaseFrame(this._easeOptions.easing(t));
-        if (t < 1) {
-            this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
-        } else {
-            this.stop();
+        // avoid callback if _afterEase has been called, in case of _stop called after task callback
+        if (this._moving) {
+            const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
+            this._onEaseFrame(this._easeOptions.easing(t));
+            if (t < 1) {
+                this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
+            } else {
+                this.stop();
+            }
         }
     };
 
