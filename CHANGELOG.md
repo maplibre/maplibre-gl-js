@@ -9,7 +9,7 @@
 ### 🐞 Bug fixes
 
 - Fix null feature properties in resolve_tokens ([#3272](https://github.com/maplibre/maplibre-gl-js/pull/3272))
-- Fix undefined _onEaseFrame call in Camera._renderFrameCallback() while doing Camera.jumpTo during an Camera.easeTo
+- Fix undefined _onEaseFrame call in Camera._renderFrameCallback() while doing Camera.jumpTo during an Camera.easeTo ([#3332](https://github.com/maplibre/maplibre-gl-js/pull/3332))
 - _...Add new stuff here..._
 
 ## 3.5.2
