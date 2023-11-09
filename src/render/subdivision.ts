@@ -258,8 +258,8 @@ export function subdivideTriangles(vertices: Array<number>, indices: Array<numbe
 
                     // Skip degenerate (linear) triangles
                     if (c === 0 ||
-                        (finalVertices[indicesInsideCell[0] * 2 + 0] === finalVertices[indicesInsideCell[i] * 2 + 0] && finalVertices[indicesInsideCell[0] * 2 + 0] === finalVertices[indicesInsideCell[i] * 2 + 0]) ||
-                        (finalVertices[indicesInsideCell[0] * 2 + 1] === finalVertices[indicesInsideCell[i] * 2 + 1] && finalVertices[indicesInsideCell[0] * 2 + 1] === finalVertices[indicesInsideCell[i] * 2 + 1])) {
+                        (finalVertices[indicesInsideCell[0] * 2 + 0] === finalVertices[indicesInsideCell[i] * 2 + 0] && finalVertices[indicesInsideCell[0] * 2 + 0] === finalVertices[indicesInsideCell[i - 1] * 2 + 0]) ||
+                        (finalVertices[indicesInsideCell[0] * 2 + 1] === finalVertices[indicesInsideCell[i] * 2 + 1] && finalVertices[indicesInsideCell[0] * 2 + 1] === finalVertices[indicesInsideCell[i - 1] * 2 + 1])) {
                         continue;
                     }
 
@@ -282,23 +282,26 @@ export function subdivideTriangles(vertices: Array<number>, indices: Array<numbe
                     // a: v0->v1
                     // b: v0->v2
                     if (c <= 0) {
-                        console.log('Panic! a CCW or degenerate triangle!');
-                        console.log(`Bad triangle: ${triangleVertices2.toString()}`);
-                        console.log(`Original triangle: ${triangleVertices.toString()}`);
-                        console.log(`Cell box: X: ${cellMinX} to ${cellMaxX}; Y: ${cellMinY} to ${cellMaxY}`);
-                        console.log(`Angle a: ${angle(triangleVertices2[0] - avgX, triangleVertices2[1] - avgY) / Math.PI * 180.0}`);
-                        console.log(`Angle b: ${angle(triangleVertices2[2] - avgX, triangleVertices2[3] - avgY) / Math.PI * 180.0}`);
-                        console.log(`Angle c: ${angle(triangleVertices2[4] - avgX, triangleVertices2[5] - avgY) / Math.PI * 180.0}`);
-                        console.log(`Avg: X: ${avgX} Y: ${avgY}`);
-                        console.log('All ordered vertices:');
+                        let msg = `Panic! a CCW or degenerate triangle!
+                        \nBad triangle: ${triangleVertices2.toString()}
+                        \nOriginal triangle: ${triangleVertices.toString()}
+                        \nCell box: X: ${cellMinX} to ${cellMaxX}; Y: ${cellMinY} to ${cellMaxY}
+                        \nAngle a: ${angle(triangleVertices2[0] - avgX, triangleVertices2[1] - avgY) / Math.PI * 180.0}
+                        \nAngle b: ${angle(triangleVertices2[2] - avgX, triangleVertices2[3] - avgY) / Math.PI * 180.0}
+                        \nAngle c: ${angle(triangleVertices2[4] - avgX, triangleVertices2[5] - avgY) / Math.PI * 180.0}
+                        \nCross: ${c}
+                        \nAvg: X: ${avgX} Y: ${avgY}
+                        \nAll ordered vertices:`;
                         for (let j = 0; j < indicesInsideCell.length; j++) {
-                            console.log(`${finalVertices[indicesInsideCell[j] * 2 + 0]} ${finalVertices[indicesInsideCell[j] * 2 + 1]}`);
+                            msg += `\n${finalVertices[indicesInsideCell[j] * 2 + 0]} ${finalVertices[indicesInsideCell[j] * 2 + 1]}`;
                         }
-                        console.log('---');
-                        return {
-                            vertices: [...vertices],
-                            indices: [...indices]
-                        };
+                        msg += '\n---';
+                        console.log(msg);
+
+                        // return {
+                        //     vertices: [...vertices],
+                        //     indices: [...indices]
+                        // };
                     }
                 }
             }
