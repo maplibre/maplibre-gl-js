@@ -31,13 +31,11 @@ jobs:
         run: |
           npm version --commit-hooks false --git-tag-version false ${{ inputs.version }}
           ./build/bump-version-changelog.js
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git commit -m "Bump version to ${{ inputs.version }}"
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+      - name: Commit and push version bump
+        uses: actions-js/push@master
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} 
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: Bump version to ${{ inputs.version }}
       - name: Tag commit and push
         uses: mathieudutour/github-tag-action@v6.1
         with:
