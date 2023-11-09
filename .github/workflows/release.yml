@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-check:
-    name: Release
+    name: Check if version changed
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -31,6 +31,7 @@ jobs:
       run_release: ${{ steps.check.outputs.changed }}
 
   release-publish:
+    name: Publish to NPM and GitHub
     needs: release-check
     if: ${{ needs.release-check.outputs.run_release == 'true' }}
     runs-on: ubuntu-latest
