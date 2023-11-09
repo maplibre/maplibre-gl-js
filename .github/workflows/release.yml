@@ -27,8 +27,8 @@ jobs:
         id: check
         uses: EndBug/version-check@v2
 
-      - name: Set Continue Flag
-        run: echo "run_release=${{ steps.check.outputs.changed }}" >> $GITHUB_OUTPUT
+    outputs:
+      run_release: ${{ steps.check.outputs.changed }}
 
   release-publish:
     needs: release-check
