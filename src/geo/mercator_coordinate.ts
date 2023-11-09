@@ -1,3 +1,4 @@
+import {vec3} from 'gl-matrix';
 import {LngLat, earthRadius} from '../geo/lng_lat';
 import type {LngLatLike} from '../geo/lng_lat';
 import {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
@@ -37,6 +38,28 @@ export function latFromMercatorY(y: number) {
 
 export function altitudeFromMercatorZ(z: number, y: number) {
     return z * circumferenceAtLatitude(latFromMercatorY(y));
+}
+
+/**
+ * Returns the 3D point on a unit sphere for a given web mercator coordinate.
+ * @param tileX Mercator X coordinate, in range 0..2^zoom. Can be fractional.
+ * @param tileY Mercator Y coordinate, in range 0..2^zoom. Can be fractional.
+ * @param zoom Mercator zoom level, determines the range for `tileX` and `tileY`
+ * @returns The 3D vector pointing to the point on unit sphere specified by the mercator coordinates.
+ */
+export function webMercatorToSpherePoint(tileX: number, tileY: number, zoom: number): vec3 {
+    const tileAngularSizeX = Math.PI * 2 / (1 << zoom);
+    // get the "latitude and longitude" on a perfect sphere for the given mercator tile coordinates
+    const angleE = -Math.PI + tileAngularSizeX * tileX;
+    const sphericalAngleN = 2.0 * Math.atan(Math.exp(Math.PI - (tileY * Math.PI * 2.0 / (1 << zoom)))) - Math.PI * 0.5;
+
+    const len = Math.cos(sphericalAngleN);
+
+    return [
+        Math.sin(angleE) * len,
+        Math.sin(sphericalAngleN),
+        Math.cos(angleE) * len
+    ];
 }
 
 /**

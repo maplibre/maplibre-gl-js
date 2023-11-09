@@ -68,25 +68,6 @@ export class Globe {
         }
     }
 
-    private _webMercatorPixelToSphereAngle(tileX: number, tileY: number, zoom: number): { x: number; y: number; z: number } {
-        // just pretend this stuff isn't horribly wrong for now...
-
-        const scale = 1.0; // ensure the mesh sphere has diameter of 1 (radius of 0.5)
-
-        const tileAngularSizeX = Math.PI * 2 / (1 << zoom);
-        // get the "latitude and longitude" on a perfect sphere for the given mercator tile coordinates
-        const angleE = -Math.PI + tileAngularSizeX * tileX;
-        const sphericalAngleN = 2.0 * Math.atan(Math.exp(Math.PI - (tileY * Math.PI * 2.0 / (1 << zoom)))) - Math.PI * 0.5;
-
-        const len = Math.cos(sphericalAngleN);
-
-        return {
-            x: Math.sin(angleE) * len * scale,
-            y: Math.sin(sphericalAngleN) * scale,
-            z: Math.cos(angleE) * len * scale
-        };
-    }
-
     private _createSquareMesh(context: Context): Mesh {
         const vertexArray = new Pos3dTex2dArray();
         const indexArray = new TriangleIndexArray();
@@ -137,8 +118,8 @@ export class Globe {
             for (let x = 0; x < verticesPerAxis; x++) {
                 const localX = tileX + x / granuality;
                 const localY = tileY + y / granuality;
-                const pos = this._webMercatorPixelToSphereAngle(localX, localY, zoom);
-                vertexArray.emplaceBack(pos.x, pos.y, pos.z, x / granuality * 65535, y / granuality * 65535);
+                const pos = webMercatorToSpherePoint(localX, localY, zoom);
+                vertexArray.emplaceBack(pos[0], pos[1], pos[2], x / granuality * 65535, y / granuality * 65535);
             }
         }
 

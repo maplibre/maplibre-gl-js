@@ -29,7 +29,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideTriangles} from '../../render/subdivision';
+import {subdivideSimple, subdivideTriangles} from '../../render/subdivision';
 import {ProjectionManager} from '../../render/projection_manager';
 
 export class FillBucket implements Bucket {
@@ -203,7 +203,7 @@ export class FillBucket implements Bucket {
 
             const indices = earcut(flattened, holeIndices);
 
-            const subdivided = subdivideTriangles(flattened, indices, ProjectionManager.getGranualityForZoomLevel(canonical.z));
+            const subdivided = subdivideSimple(flattened, indices, ProjectionManager.getGranualityForZoomLevel(canonical.z), canonical);
 
             const numVertices = subdivided.vertices.length / 2;
 
