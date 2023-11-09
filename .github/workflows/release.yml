@@ -28,12 +28,12 @@ jobs:
         uses: EndBug/version-check@v2
 
     outputs:
-      run_release: ${{ steps.check.outputs.changed }}
+      publish: ${{ steps.check.outputs.changed }}
 
   release-publish:
     name: Publish to NPM and GitHub
     needs: release-check
-    if: ${{ needs.release-check.outputs.run_release == 'true' }}
+    if: ${{ needs.release-check.outputs.publish == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
