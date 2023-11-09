@@ -1,7 +1,12 @@
 name: Release
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to change to.
+        required: true
+        type: string
 
 jobs:
   release:
@@ -22,18 +27,20 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Get version
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@v1.3.1
-
-      # - name: Check tag does not exist yet
-      #   run: if git rev-list v${{ steps.package-version.outputs.current-version }}; then echo "Tag already exists. Aborting the release process."; exit 1; fi
-
+      - name: Bump version
+        run: |
+          npm version --commit-hooks false --git-tag-version false ${{ inputs.version }}
+          ./build/bump-version-changelog.js
+          git commit -m "Bump version to ${{ inputs.version }}"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} 
       - name: Tag commit and push
         uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ steps.package-version.outputs.current-version }}
+          custom_tag: ${{ inputs.version }}
 
       - name: Install
         run: npm ci
@@ -41,8 +48,8 @@ jobs:
       - name: Prepare release
         id: prepare_release
         run: |
-          echo "version_tag=v${{ steps.package-version.outputs.current-version }}" >> $GITHUB_OUTPUT
-          RELEASE_TYPE=$(node -e "console.log(require('semver').prerelease('${{ steps.package-version.outputs.current-version }}') ? 'prerelease' : 'regular')")
+          echo "version_tag=v${{ inputs.version }}" >> $GITHUB_OUTPUT
+          RELEASE_TYPE=$(node -e "console.log(require('semver').prerelease('${{ inputs.version }}') ? 'prerelease' : 'regular')")
           echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
 
       - name: Build
