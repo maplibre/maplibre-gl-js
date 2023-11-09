@@ -30,10 +30,10 @@ jobs:
       - name: Set Continue Flag
         run: echo "run_release=${{ steps.check.outputs.changed }}" >> $GITHUB_OUTPUT
 
-release-publish:
-  needs: release-check
-  if: ${{ needs.release-check.outputs.run_release == 'true' }}
-  runs-on: ubuntu-latest
+  release-publish:
+    needs: release-check
+    if: ${{ needs.release-check.outputs.run_release == 'true' }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
