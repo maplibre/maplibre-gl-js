@@ -1,7 +1,7 @@
-import Style from './style';
-import SourceCache from '../source/source_cache';
-import StyleLayer from './style_layer';
-import Transform from '../geo/transform';
+import {Style} from './style';
+import {SourceCache} from '../source/source_cache';
+import {StyleLayer} from './style_layer';
+import {Transform} from '../geo/transform';
 import {extend} from '../util/util';
 import {RequestManager} from '../util/request_manager';
 import {Event, Evented} from '../util/evented';
@@ -11,14 +11,14 @@ import {
     clearRTLTextPlugin,
     evented as rtlTextPluginEvented
 } from '../source/rtl_text_plugin';
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
-import {fakeXhr, fakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 
-import EvaluationParameters from './evaluation_parameters';
+import {EvaluationParameters} from './evaluation_parameters';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {SourceClass} from '../source/source';
-import GeoJSONSource from '../source/geojson_source';
+import {GeoJSONSource} from '../source/geojson_source';
 
 function createStyleJSON(properties?) {
     return extend({
@@ -68,6 +68,7 @@ class StubMap extends Evented {
     }
 
     setTerrain() { }
+    getTerrain() { }
 }
 
 const getStubMap = () => new StubMap() as any;
@@ -78,21 +79,17 @@ function createStyle(map = getStubMap()) {
     return style;
 }
 
-let sinonFakeXMLServer;
-let sinonFakeServer;
+let server: FakeServer;
 let mockConsoleError;
 
 beforeEach(() => {
     global.fetch = null;
-    sinonFakeServer = fakeServer.create();
-    sinonFakeXMLServer = fakeXhr.useFakeXMLHttpRequest();
-
+    server = fakeServer.create();
     mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
 });
 
 afterEach(() => {
-    sinonFakeXMLServer.restore();
-    sinonFakeServer.restore();
+    server.restore();
     mockConsoleError.mockRestore();
 });
 
@@ -115,12 +112,12 @@ describe('Style', () => {
 
     test('loads plugin immediately if already registered', done => {
         clearRTLTextPlugin();
-        sinonFakeServer.respondWith('/plugin.js', 'doesn\'t matter');
+        server.respondWith('/plugin.js', 'doesn\'t matter');
         setRTLTextPlugin('/plugin.js', (error) => {
             expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
             done();
         });
-        sinonFakeServer.respond();
+        server.respond();
         new Style(getStubMap());
     });
 
@@ -152,7 +149,7 @@ describe('Style', () => {
             jest.spyOn(style.sourceCaches['vector'], 'reload');
 
             clearRTLTextPlugin();
-            sinonFakeServer.respondWith('/plugin.js', 'doesn\'t matter');
+            server.respondWith('/plugin.js', 'doesn\'t matter');
             const _broadcast = style.dispatcher.broadcast;
             style.dispatcher.broadcast = function (type, state, callback) {
                 if (type === 'syncRTLPluginState') {
@@ -171,7 +168,7 @@ describe('Style', () => {
                     done();
                 }, 0);
             });
-            sinonFakeServer.respond();
+            server.respond();
         });
     });
 });
@@ -211,19 +208,29 @@ describe('Style#loadURL', () => {
         });
 
         style.loadURL('style.json');
-        sinonFakeServer.respondWith(JSON.stringify(createStyleJSON({version: 'invalid'})));
-        sinonFakeServer.respond();
+        server.respondWith(JSON.stringify(createStyleJSON({version: 'invalid'})));
+        server.respond();
     });
 
     test('cancels pending requests if removed', () => {
         const style = new Style(getStubMap());
         style.loadURL('style.json');
         style._remove();
-        expect(sinonFakeServer.lastRequest.aborted).toBe(true);
+        expect((server.lastRequest as any).aborted).toBe(true);
     });
 });
 
 describe('Style#loadJSON', () => {
+    test('serialize() returns undefined until style is loaded', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+        expect(style.serialize()).toBeUndefined();
+        style.on('style.load', () => {
+            expect(style.serialize()).toEqual(createStyleJSON());
+            done();
+        });
+    });
+
     test('fires "dataloading" (synchronously)', () => {
         const style = new Style(getStubMap());
         const spy = jest.fn();
@@ -256,21 +263,8 @@ describe('Style#loadJSON', () => {
         // stub Image so we can invoke 'onload'
         // https://github.com/jsdom/jsdom/commit/58a7028d0d5b6aacc5b435daee9fd8f9eacbb14c
 
-        // fake the image request (sinon doesn't allow non-string data for
-        // server.respondWith, so we do so manually)
-        const requests = [];
-        sinonFakeXMLServer.onCreate = req => { requests.push(req); };
-        const respond = () => {
-            let req = requests.find(req => req.url === 'http://example.com/sprite.png');
-            req.setStatus(200);
-            req.response = new ArrayBuffer(8);
-            req.onload();
-
-            req = requests.find(req => req.url === 'http://example.com/sprite.json');
-            req.setStatus(200);
-            req.response = '{}';
-            req.onload();
-        };
+        server.respondWith('GET', 'http://example.com/sprite.png', new ArrayBuffer(8));
+        server.respondWith('GET', 'http://example.com/sprite.json', '{}');
 
         const style = new Style(getStubMap());
 
@@ -293,7 +287,7 @@ describe('Style#loadJSON', () => {
                 done();
             });
 
-            respond();
+            server.respond();
         });
     });
 
@@ -305,21 +299,8 @@ describe('Style#loadJSON', () => {
         // stub Image so we can invoke 'onload'
         // https://github.com/jsdom/jsdom/commit/58a7028d0d5b6aacc5b435daee9fd8f9eacbb14c
 
-        // fake the image request (sinon doesn't allow non-string data for
-        // server.respondWith, so we do so manually)
-        const requests = [];
-        sinonFakeXMLServer.onCreate = req => { requests.push(req); };
-        const respond = () => {
-            let req = requests.find(req => req.url === 'http://example.com/sprite.png');
-            req.setStatus(200);
-            req.response = new ArrayBuffer(8);
-            req.onload();
-
-            req = requests.find(req => req.url === 'http://example.com/sprite.json');
-            req.setStatus(200);
-            req.response = '{"image1": {"width": 1, "height": 1, "x": 0, "y": 0, "pixelRatio": 1.0}}';
-            req.onload();
-        };
+        server.respondWith('GET', 'http://example.com/sprite.png', new ArrayBuffer(8));
+        server.respondWith('GET', 'http://example.com/sprite.json', '{"image1": {"width": 1, "height": 1, "x": 0, "y": 0, "pixelRatio": 1.0}}');
 
         const style = new Style(getStubMap());
 
@@ -347,7 +328,7 @@ describe('Style#loadJSON', () => {
                 });
             });
 
-            respond();
+            server.respond();
         });
     });
 
@@ -741,7 +722,7 @@ describe('Style#setState', () => {
     });
 
     test('Issue #3893: compare new source options against originally provided options rather than normalized properties', done => {
-        sinonFakeServer.respondWith('/tilejson.json', JSON.stringify({
+        server.respondWith('/tilejson.json', JSON.stringify({
             tiles: ['http://tiles.server']
         }));
         const initial = createStyleJSON();
@@ -757,7 +738,7 @@ describe('Style#setState', () => {
             style.setState(initial);
             done();
         });
-        sinonFakeServer.respond();
+        server.respond();
     });
 
     test('return true if there is a change', done => {
@@ -1726,7 +1707,7 @@ describe('Style#setPaintProperty', () => {
             let styleUpdateCalled = false;
 
             (source as any).on('data', (e) => setTimeout(() => {
-                if (!begun && sourceCache.loaded()) {
+                if (!begun) {
                     begun = true;
                     jest.spyOn(sourceCache, 'reload').mockImplementation(() => {
                         expect(styleUpdateCalled).toBeTruthy();
@@ -2174,6 +2155,36 @@ describe('Style#setLayerZoomRange', () => {
     });
 });
 
+describe('Style#getLayersOrder', () => {
+    test('returns ids of layers in the correct order', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON({
+            'version': 8,
+            'sources': {
+                'raster': {
+                    type: 'raster',
+                    tiles: ['http://tiles.server']
+                }
+            },
+            'layers': [{
+                'id': 'raster',
+                'type': 'raster',
+                'source': 'raster'
+            }]
+        });
+
+        style.on('style.load', () => {
+            style.addLayer({
+                id: 'custom',
+                type: 'custom',
+                render() {}
+            }, 'raster');
+            expect(style.getLayersOrder()).toEqual(['custom', 'raster']);
+            done();
+        });
+    });
+});
+
 describe('Style#queryRenderedFeatures', () => {
 
     let style;
@@ -2496,13 +2507,6 @@ describe('Style#query*Features', () => {
 });
 
 describe('Style#addSourceType', () => {
-    const _types = {'existing' () {}};
-
-    jest.spyOn(Style, 'getSourceType').mockImplementation(name => _types[name]);
-    jest.spyOn(Style, 'setSourceType').mockImplementation((name, create) => {
-        _types[name] = create;
-    });
-
     test('adds factory function', done => {
         const style = new Style(getStubMap());
         const sourceType = function () {} as any as SourceClass;
@@ -2514,8 +2518,9 @@ describe('Style#addSourceType', () => {
             }
         };
 
-        style.addSourceType('foo', sourceType, () => {
-            expect(_types['foo']).toBe(sourceType);
+        style.addSourceType('foo', sourceType, (arg1, arg2) => {
+            expect(arg1).toBeNull();
+            expect(arg2).toBeNull();
             done();
         });
     });
@@ -2525,9 +2530,8 @@ describe('Style#addSourceType', () => {
         const sourceType = function () {} as any as SourceClass;
         sourceType.workerSourceURL = 'worker-source.js' as any as URL;
 
-        style.dispatcher.broadcast = function (type, params) {
+        style.dispatcher.broadcast = (type, params) => {
             if (type === 'loadWorkerSource') {
-                expect(_types['bar']).toBe(sourceType);
                 expect(params['name']).toBe('bar');
                 expect(params['url']).toBe('worker-source.js');
                 done();
@@ -2540,7 +2544,7 @@ describe('Style#addSourceType', () => {
     test('refuses to add new type over existing name', done => {
         const style = new Style(getStubMap());
         const sourceType = function () {} as any as SourceClass;
-        style.addSourceType('existing', sourceType, (err) => {
+        style.addSourceType('canvas', sourceType, (err) => {
             expect(err).toBeTruthy();
             done();
         });
@@ -2587,6 +2591,32 @@ describe('Style#hasTransitions', () => {
             style.setPaintProperty('background', 'background-color', 'blue');
             style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
             expect(style.hasTransitions()).toBe(false);
+            done();
+        });
+    });
+});
+
+describe('Style#serialize', () => {
+    test('include terrain property when map has 3D terrain', done => {
+        const styleJson = createStyleJSON({terrain: {
+            source: 'terrainSource',
+            exaggeration: 1
+        }});
+        const style = new Style(getStubMap());
+        style.loadJSON(styleJson);
+
+        style.on('style.load', () => {
+            expect(style.serialize().terrain).toBe(styleJson.terrian);
+            done();
+        });
+    });
+
+    test('do not include terrain property when map does not have 3D terrain', done => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        style.on('style.load', () => {
+            expect(style.serialize().terrain).toBeUndefined();
             done();
         });
     });

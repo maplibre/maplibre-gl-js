@@ -1,4 +1,4 @@
-name: Automated Testing
+name: Tests
 
 on:
   push:
@@ -16,83 +16,154 @@ jobs:
     name: Code Hygiene
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
       - run: npm ci
       - run: npm run lint
         if: success() || failure()
       - run: npm run lint-css
         if: success() || failure()
-      - run: npm run lint-docs
+      - run: npm run generate-typings
         if: success() || failure()
       - run: npm run typecheck
         if: success() || failure()
-  non-gl-tests:
-    name: Tests not using GL
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: lts/*
-      - run: npm ci
-      - run: npm run jest-ci -- --selectProjects unit --testPathIgnorePatterns "/src/(gl|render|ui)/" 
-      - run: npm run build-dev
-      - run: npm run jest-ci -- --selectProjects integration --testPathIgnorePatterns "/test/integration/(query|browser|build)/"
-  gl-tests:
-    name: Tests including GL
+      - run: npm run generate-docs
+      - run: docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
+
+  unit-tests:
+    name: Unit tests and Coverage
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
-      - run: npm ci
+          node-version-file: '.nvmrc'
       - name: Start display server
         if: runner.os == 'Linux'
-        run:
-          nohup Xvfb &
+        run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm run jest-ci -- --coverage --coverageReporters text html-spa --selectProjects unit
+      - run: npm ci
+      - run: npm run jest-ci -- --coverage --coverageReporters json text html-spa --selectProjects unit
       - name: Upload unit test coverage
         if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: unit-test-coverage
           path: ${{ github.workspace }}/coverage
-      - run: npm run build-dev
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/coverage/coverage-final.json
+          verbose: true
+
+  integration-tests:
+    name: Integration tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - run: npm ci
+      - run: npm run build-dist
+      - uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: build-dist
+          path: dist/maplibre-gl.js
+      - run: npm run test-integration
         if: success() || failure()
-      - run: npm run test-render -- --report
+
+  render-tests-ubuntu:
+    name: Render tests
+    env:
+      SPLIT_COUNT: 2
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        split: [0, 1]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - name: install CJK fonts for local ideographs render tests
+        run: sudo apt install fonts-noto-cjk
+      - run: npm ci
+      - name: Start display server
+        if: runner.os == 'Linux'
+        run: nohup Xvfb &
+          echo "DISPLAY=:0" >> $GITHUB_ENV
+      - run: npm run build-prod
+      - run: npm run test-render
+        env:
+          CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
         uses: actions/upload-artifact@v3
         with:
-          name: render-test-report-${{ matrix.os }}
+          name: render-test-report-${{ matrix.os }}-${{ matrix.split }}
           path: ${{ github.workspace }}/test/integration/render/results.html
-      - run: npm run build-dist
-        if: success() || failure()
-      - run: npm run jest-ci -- --selectProjects integration
-        if: success() || failure()
 
-  packaging-tests:
-    name: Packaging
+  render-tests-windows:
+    name: Render tests
+    env:
+      SPLIT_COUNT: 3
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        split: [0, 1, 2]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - run: npm ci
+      - name: Start display server
+        if: runner.os == 'Linux'
+        run: nohup Xvfb &
+          echo "DISPLAY=:0" >> $GITHUB_ENV
+      - run: npm run build-prod
+      - run: npm run test-render
+        env:
+          CURRENT_SPLIT_INDEX: ${{ matrix.split }}
+        if: success() || failure()
+      - name: Upload render test failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: render-test-report-${{ matrix.os }}-${{ matrix.split }}
+          path: ${{ github.workspace }}/test/integration/render/results.html
+
+  build-tests:
+    name: Build tests
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
       - run: npm ci
       - run: npm run build-dist
-      - run: npm run jest-ci -- --selectProjects build
+      - run: npm run test-build
         if: success() || failure()

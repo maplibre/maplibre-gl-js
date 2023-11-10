@@ -1,10 +1,8 @@
 /**
  * Invokes the wrapped function in a non-blocking way when trigger() is called. Invocation requests
  * are ignored until the function was actually invoked.
- *
- * @private
  */
-class ThrottledInvoker {
+export class ThrottledInvoker {
     _channel: MessageChannel;
     _triggered: boolean;
     _callback: Function;
@@ -40,5 +38,3 @@ class ThrottledInvoker {
         this._callback = () => {};
     }
 }
-
-export default ThrottledInvoker;

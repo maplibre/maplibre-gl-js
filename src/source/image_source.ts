@@ -1,34 +1,57 @@
 import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import ImageRequest from '../util/image_request';
+import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 import {RasterBoundsArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import SegmentVector from '../data/segment';
-import Texture from '../render/texture';
-import MercatorCoordinate from '../geo/mercator_coordinate';
+import {SegmentVector} from '../data/segment';
+import {Texture} from '../render/texture';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 import type {Source} from './source';
 import type {CanvasSourceSpecification} from './canvas_source';
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
-import type VertexBuffer from '../gl/vertex_buffer';
+import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import {Cancelable} from '../types/cancelable';
 
+/**
+ * Four geographical coordinates,
+ * represented as arrays of longitude and latitude numbers, which define the corners of the image.
+ * The coordinates start at the top left corner of the image and proceed in clockwise order.
+ * They do not have to represent a rectangle.
+ */
 export type Coordinates = [[number, number], [number, number], [number, number], [number, number]];
+
+/**
+ * The options object for the {@link ImageSource#updateImage} method
+ */
+export type UpdateImageOptions = {
+    /**
+     * Required image URL.
+     */
+    url: string;
+    /**
+     * The image coordinates
+     */
+    coordinates?: Coordinates;
+}
 
 /**
  * A data source containing an image.
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/#sources-image) for detailed documentation of options.)
  *
+ * @group Sources
+ *
  * @example
+ * ```ts
  * // add to map
  * map.addSource('some id', {
  *    type: 'image',
@@ -42,7 +65,7 @@ export type Coordinates = [[number, number], [number, number], [number, number],
  * });
  *
  * // update coordinates
- * var mySource = map.getSource('some id');
+ * let mySource = map.getSource('some id');
  * mySource.setCoordinates([
  *     [-76.54335737228394, 39.18579907229748],
  *     [-76.52803659439087, 39.1838364847587],
@@ -62,8 +85,9 @@ export type Coordinates = [[number, number], [number, number], [number, number],
  * })
  *
  * map.removeSource('some id');  // remove
+ * ```
  */
-class ImageSource extends Evented implements Source {
+export class ImageSource extends Evented implements Source {
     type: string;
     id: string;
     minzoom: number;
@@ -85,9 +109,7 @@ class ImageSource extends Evented implements Source {
     _loaded: boolean;
     _request: Cancelable;
 
-    /**
-     * @private
-     */
+    /** @internal */
     constructor(id: string, options: ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
@@ -106,7 +128,7 @@ class ImageSource extends Evented implements Source {
         this.options = options;
     }
 
-    load(newCoordinates?: Coordinates, successCallback?: () => void) {
+    load = (newCoordinates?: Coordinates, successCallback?: () => void) => {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
 
@@ -129,7 +151,7 @@ class ImageSource extends Evented implements Source {
                 this._finishLoading();
             }
         });
-    }
+    };
 
     loaded(): boolean {
         return this._loaded;
@@ -139,18 +161,10 @@ class ImageSource extends Evented implements Source {
      * Updates the image URL and, optionally, the coordinates. To avoid having the image flash after changing,
      * set the `raster-fade-duration` paint property on the raster layer to 0.
      *
-     * @param {Object} options Options object.
-     * @param {string} [options.url] Required image URL.
-     * @param {Array<Array<number>>} [options.coordinates] Four geographical coordinates,
-     * represented as arrays of longitude and latitude numbers, which define the corners of the image.
-     * The coordinates start at the top left corner of the image and proceed in clockwise order.
-     * They do not have to represent a rectangle.
-     * @returns {ImageSource} this
+     * @param options - The options object.
+     * @returns `this`
      */
-    updateImage(options: {
-        url: string;
-        coordinates?: Coordinates;
-    }) {
+    updateImage(options: UpdateImageOptions): this {
         if (!options.url) {
             return this;
         }
@@ -187,13 +201,13 @@ class ImageSource extends Evented implements Source {
     /**
      * Sets the image's coordinates and re-renders the map.
      *
-     * @param {Array<Array<number>>} coordinates Four geographical coordinates,
+     * @param coordinates - Four geographical coordinates,
      * represented as arrays of longitude and latitude numbers, which define the corners of the image.
      * The coordinates start at the top left corner of the image and proceed in clockwise order.
      * They do not have to represent a rectangle.
-     * @returns {ImageSource} this
+     * @returns `this`
      */
-    setCoordinates(coordinates: Coordinates) {
+    setCoordinates(coordinates: Coordinates): this {
         this.coordinates = coordinates;
 
         // Calculate which mercator tile is suitable for rendering the video in
@@ -231,7 +245,7 @@ class ImageSource extends Evented implements Source {
         return this;
     }
 
-    prepare() {
+    prepare = () => {
         if (Object.keys(this.tiles).length === 0 || !this.image) {
             return;
         }
@@ -252,14 +266,20 @@ class ImageSource extends Evented implements Source {
             this.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
 
+        let newTilesLoaded = false;
         for (const w in this.tiles) {
             const tile = this.tiles[w];
             if (tile.state !== 'loaded') {
                 tile.state = 'loaded';
                 tile.texture = this.texture;
+                newTilesLoaded = true;
             }
         }
-    }
+
+        if (newTilesLoaded) {
+            this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
+        }
+    };
 
     loadTile(tile: Tile, callback: Callback<void>) {
         // We have a single tile -- whose coordinates are this.tileID -- that
@@ -278,13 +298,13 @@ class ImageSource extends Evented implements Source {
         }
     }
 
-    serialize(): any {
+    serialize = (): ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification => {
         return {
             type: 'image',
             url: this.options.url,
             coordinates: this.coordinates
         };
-    }
+    };
 
     hasTransition() {
         return false;
@@ -295,7 +315,7 @@ class ImageSource extends Evented implements Source {
  * Given a list of coordinates, get their center as a coordinate.
  *
  * @returns centerpoint
- * @private
+ * @internal
  */
 export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
     let minX = Infinity;
@@ -321,5 +341,3 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
         Math.floor((minX + maxX) / 2 * tilesAtZoom),
         Math.floor((minY + maxY) / 2 * tilesAtZoom));
 }
-
-export default ImageSource;

@@ -1,46 +1,59 @@
 import {Event, ErrorEvent, Evented} from '../util/evented';
 
 import {extend, pick} from '../util/util';
-import loadTileJSON from './load_tilejson';
-import TileBounds from './tile_bounds';
+import {loadTileJson} from './load_tilejson';
+import {TileBounds} from './tile_bounds';
 import {ResourceType} from '../util/request_manager';
 
 import type {Source} from './source';
 import type {OverscaledTileID} from './tile_id';
-import type Map from '../ui/map';
-import type Dispatcher from '../util/dispatcher';
-import type Tile from './tile';
+import type {Map} from '../ui/map';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Tile} from './tile';
 import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+
+export type VectorTileSourceOptions = VectorSourceSpecification & {
+    collectResourceTiming?: boolean;
+}
 
 /**
  * A source containing vector tiles in [Mapbox Vector Tile format](https://docs.mapbox.com/vector-tiles/reference/).
  * (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
  *
+ * @group Sources
+ *
  * @example
+ * ```ts
  * map.addSource('some id', {
  *     type: 'vector',
  *     url: 'https://demotiles.maplibre.org/tiles/tiles.json'
  * });
+ * ```
  *
  * @example
+ * ```ts
  * map.addSource('some id', {
  *     type: 'vector',
  *     tiles: ['https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt'],
  *     minzoom: 6,
  *     maxzoom: 14
  * });
+ * ```
  *
  * @example
+ * ```ts
  * map.getSource('some id').setUrl("https://demotiles.maplibre.org/tiles/tiles.json");
+ * ```
  *
  * @example
+ * ```ts
  * map.getSource('some id').setTiles(['https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt']);
- * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/vector-source/)
- * @see [Add a third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/example/third-party/)
+ * ```
+ * @see [Add a vector tile source](https://maplibre.org/maplibre-gl-js/docs/examples/vector-source/)
  */
-class VectorTileSource extends Evented implements Source {
+export class VectorTileSource extends Evented implements Source {
     type: 'vector';
     id: string;
     minzoom: number;
@@ -62,9 +75,7 @@ class VectorTileSource extends Evented implements Source {
     _tileJSONRequest: Cancelable;
     _loaded: boolean;
 
-    constructor(id: string, options: VectorSourceSpecification & {
-        collectResourceTiming: boolean;
-    }, dispatcher: Dispatcher, eventedParent: Evented) {
+    constructor(id: string, options: VectorTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
         this.dispatcher = dispatcher;
@@ -90,10 +101,10 @@ class VectorTileSource extends Evented implements Source {
         this.setEventedParent(eventedParent);
     }
 
-    load() {
+    load = () => {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
-        this._tileJSONRequest = loadTileJSON(this._options, this.map._requestManager, (err, tileJSON) => {
+        this._tileJSONRequest = loadTileJson(this._options, this.map._requestManager, (err, tileJSON) => {
             this._tileJSONRequest = null;
             this._loaded = true;
             this.map.style.sourceCaches[this.id].clearTiles();
@@ -110,7 +121,7 @@ class VectorTileSource extends Evented implements Source {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
         });
-    }
+    };
 
     loaded(): boolean {
         return this._loaded;
@@ -138,10 +149,10 @@ class VectorTileSource extends Evented implements Source {
     /**
      * Sets the source `tiles` property and re-renders the map.
      *
-     * @param {string[]} tiles An array of one or more tile source URLs, as in the TileJSON spec.
-     * @returns {VectorTileSource} this
+     * @param tiles - An array of one or more tile source URLs, as in the TileJSON spec.
+     * @returns `this`
      */
-    setTiles(tiles: Array<string>) {
+    setTiles(tiles: Array<string>): this {
         this.setSourceProperty(() => {
             this._options.tiles = tiles;
         });
@@ -152,10 +163,10 @@ class VectorTileSource extends Evented implements Source {
     /**
      * Sets the source `url` property and re-renders the map.
      *
-     * @param {string} url A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
-     * @returns {VectorTileSource} this
+     * @param url - A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
+     * @returns `this`
      */
-    setUrl(url: string) {
+    setUrl(url: string): this {
         this.setSourceProperty(() => {
             this.url = url;
             this._options.url = url;
@@ -171,9 +182,9 @@ class VectorTileSource extends Evented implements Source {
         }
     }
 
-    serialize() {
+    serialize = (): VectorSourceSpecification => {
         return extend({}, this._options);
-    }
+    };
 
     loadTile(tile: Tile, callback: Callback<void>) {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
@@ -247,5 +258,3 @@ class VectorTileSource extends Evented implements Source {
         return false;
     }
 }
-
-export default VectorTileSource;

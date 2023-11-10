@@ -1,10 +1,10 @@
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 import type {RGBAImage, AlphaImage} from '../util/image';
 import {isImageBitmap} from '../util/util';
 
-export type TextureFormat = WebGLRenderingContext['RGBA'] | WebGLRenderingContext['ALPHA'];
-export type TextureFilter = WebGLRenderingContext['LINEAR'] | WebGLRenderingContext['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContext['NEAREST'];
-export type TextureWrap = WebGLRenderingContext['REPEAT'] | WebGLRenderingContext['CLAMP_TO_EDGE'] | WebGLRenderingContext['MIRRORED_REPEAT'];
+export type TextureFormat = WebGLRenderingContextBase['RGBA'] | WebGLRenderingContextBase['ALPHA'];
+export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['NEAREST'];
+export type TextureWrap = WebGLRenderingContextBase['REPEAT'] | WebGLRenderingContextBase['CLAMP_TO_EDGE'] | WebGLRenderingContextBase['MIRRORED_REPEAT'];
 
 type EmptyImage = {
     width: number;
@@ -15,7 +15,11 @@ type EmptyImage = {
 type DataTextureImage = RGBAImage | AlphaImage | EmptyImage;
 export type TextureImage = TexImageSource | DataTextureImage;
 
-class Texture {
+/**
+ * @internal
+ * A `Texture` GL related object
+ */
+export class Texture {
     context: Context;
     size: [number, number];
     texture: WebGLTexture;
@@ -41,7 +45,7 @@ class Texture {
         x: number;
         y: number;
     }) {
-        const {width, height} = image;
+        const {width, height} = image as {width: number; height: number};
         const resize = (!this.size || this.size[0] !== width || this.size[1] !== height) && !position;
         const {context} = this;
         const {gl} = context;
@@ -108,5 +112,3 @@ class Texture {
         this.texture = null;
     }
 }
-
-export default Texture;

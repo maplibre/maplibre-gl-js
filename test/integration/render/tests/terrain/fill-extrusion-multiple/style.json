@@ -1,0 +1,93 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 500,
+      "width": 500,
+      "timeout": 60000,
+      "operations": [["wait"]]
+    }
+  },
+  "center": [35.2705, 30.9205],
+  "zoom": 17,
+  "bearing": 0,
+  "pitch": 35,
+  "terrain": {"source": "TerrainRGB", "exaggeration": 1},
+  "sources": {
+    "TerrainRGB": {
+      "type": "raster-dem",
+      "tiles": ["local://tiles/terrain/{z}-{x}-{y}.terrain.png"],
+      "minzoom": 7,
+      "maxzoom": 12
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {"which": "a", "property": 10},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [35.2702, 30.9202],
+                  [35.2702, 30.9208],
+                  [35.2708, 30.9208],
+                  [35.2708, 30.9202],
+                  [35.2702, 30.9202]
+                ]
+              ]
+            }
+          },
+          {
+            "type": "Feature",
+            "properties": {"which": "b", "property": 20},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [35.2701, 30.9205],
+                  [35.2705, 30.9209],
+                  [35.2709, 30.9205],
+                  [35.2705, 30.9201],
+                  [35.2701, 30.9205]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "white"}
+    },
+    {
+      "id": "a",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "filter": ["==", "which", "a"],
+      "paint": {
+        "fill-extrusion-color": "red",
+        "fill-extrusion-base": 0,
+        "fill-extrusion-height": 15
+      }
+    },
+    {
+      "id": "b",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "filter": ["==", "which", "b"],
+      "paint": {
+        "fill-extrusion-color": "blue",
+        "fill-extrusion-base": 15,
+        "fill-extrusion-height": 40
+      }
+    }
+  ]
+}

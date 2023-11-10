@@ -9,8 +9,5 @@
  * * One bit is lost because the line vertex buffer used to pack 1 bit of other data into the int.
  * * One bit is lost to support features extending past the extent on the right edge of the tile.
  * * This leaves us with 2^13 = 8192
- *
- * @private
- * @readonly
  */
-export default 8192;
+export const EXTENT = 8192;

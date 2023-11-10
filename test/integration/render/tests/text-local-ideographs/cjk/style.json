@@ -1,0 +1,69 @@
+{
+    "version": 8,
+    "metadata": {
+        "test": {
+            "pixelRatio": 2,
+            "localIdeographFontFamily": "sans-serif",
+            "width": 800,
+            "height": 600
+        }
+    },
+    "zoom": 8,
+    "sources": {
+        "sample": {
+            "type": "geojson",
+            "data": {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [0, 0]
+                },
+                "properties": {
+                    "name_en": "abcde",
+                    "name_ja": "あいうえお",
+                    "name_ch": "阿衣乌唉哦",
+                    "name_kr": "아이우"
+                }
+            }
+        }
+    },
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "layers": [
+        {
+            "id": "sample-text-left",
+            "type": "symbol",
+            "source": "sample",
+            "layout": {
+                "text-anchor": "top",
+                "text-field": "{name_ja}{name_en}",
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-size": 30,
+                "text-offset": [0, -2]
+            }
+        },
+        {
+            "id": "sample-text-center",
+            "type": "symbol",
+            "source": "sample",
+            "layout": {
+                "text-anchor": "top",
+                "text-field": "{name_ch}{name_kr}",
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-size": 30,
+                "text-offset": [0, 0]
+            }
+        },
+        {
+            "id": "sample-text-right",
+            "type": "symbol",
+            "source": "sample",
+            "layout": {
+                "text-anchor": "top",
+                "text-field": "{name_en}{name_ja}",
+                "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+                "text-size": 30,
+                "text-offset": [0, 2]
+            }
+        }
+    ]
+}

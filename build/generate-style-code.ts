@@ -29,6 +29,8 @@ function nativeType(property) {
             return 'Color';
         case 'padding':
             return 'Padding';
+        case 'variableAnchorOffsetCollection':
+            return 'VariableAnchorOffsetCollection';
         case 'sprite':
             return 'Sprite';
         case 'formatted':
@@ -41,7 +43,7 @@ function nativeType(property) {
             } else {
                 return `Array<${nativeType({type: property.value, values: property.values})}>`;
             }
-        default: throw new Error(`unknown type for ${property.name}`);
+        default: throw new Error(`unknown type "${property.type}" for "${property.name}"`);
     }
 }
 
@@ -93,6 +95,8 @@ function runtimeType(property) {
             return 'ColorType';
         case 'padding':
             return 'PaddingType';
+        case 'variableAnchorOffsetCollection':
+            return 'VariableAnchorOffsetCollectionType';
         case 'sprite':
             return 'SpriteType';
         case 'formatted':
@@ -105,7 +109,7 @@ function runtimeType(property) {
             } else {
                 return `array(${runtimeType({type: property.value})})`;
             }
-        default: throw new Error(`unknown type for ${property.name}`);
+        default: throw new Error(`unknown type "${property.type}" for "${property.name}"`);
     }
 }
 
@@ -182,12 +186,7 @@ import {
     CrossFaded
 } from '../properties';
 
-import type {Color} from '@maplibre/maplibre-gl-style-spec';
-import type {Padding} from '@maplibre/maplibre-gl-style-spec';
-
-import type {Formatted} from '@maplibre/maplibre-gl-style-spec';
-
-import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
+import type {Color, Formatted, Padding, ResolvedImage, VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
 import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 `);
 
@@ -223,7 +222,8 @@ export type ${layerType}LayoutPropsPossiblyEvaluated = {`);
         output.push(
             `};
 
-const layout: Properties<${layerType}LayoutProps> = new Properties({`);
+let layout: Properties<${layerType}LayoutProps>;
+const getLayout = () => layout = layout || new Properties({`);
 
         for (const property of layoutProperties) {
             output.push(
@@ -263,7 +263,8 @@ export type ${layerType}PaintPropsPossiblyEvaluated = {`);
 
     output.push(
         `
-const paint: Properties<${layerType}PaintProps> = new Properties({`);
+let paint: Properties<${layerType}PaintProps>;
+const getPaint = () => paint = paint || new Properties({`);
 
     for (const property of paintProperties) {
         output.push(
@@ -273,9 +274,7 @@ const paint: Properties<${layerType}PaintProps> = new Properties({`);
     output.push(
         `});
 
-export default ({ paint${layoutProperties.length ? ', layout' : ''} } as {
-    paint: Properties<${layerType}PaintProps>${layoutProperties.length ? `,\n    layout: Properties<${layerType}LayoutProps>` : ''}
-});`);
+export default ({ get paint() { return getPaint() }${layoutProperties.length ? ', get layout() { return getLayout() }' : ''} });`);
 
     return output.join('\n');
 }

@@ -3,7 +3,7 @@ import {
     charAllowsIdeographicBreaking,
     charInComplexShapingScript
 } from '../util/script_detection';
-import verticalizePunctuation from '../util/verticalize_punctuation';
+import {verticalizePunctuation} from '../util/verticalize_punctuation';
 import {plugin as rtlTextPlugin} from '../source/rtl_text_plugin';
 import ONE_EM from './one_em';
 import {warnOnce} from '../util/util';

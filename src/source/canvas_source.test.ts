@@ -1,9 +1,13 @@
-import CanvasSource from '../source/canvas_source';
-import Transform from '../geo/transform';
+import {CanvasSource} from '../source/canvas_source';
+import {Transform} from '../geo/transform';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 
-import type Dispatcher from '../util/dispatcher';
+import type {Dispatcher} from '../util/dispatcher';
+import {Tile} from './tile';
+import {OverscaledTileID} from './tile_id';
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {SegmentVector} from '../data/segment';
 
 function createSource(options?) {
     const c = options && options.canvas || window.document.createElement('canvas');
@@ -25,11 +29,17 @@ function createSource(options?) {
 class StubMap extends Evented {
     transform: Transform;
     style: any;
+    painter: any;
 
     constructor() {
         super();
         this.transform = new Transform();
         this.style = {};
+        this.painter = {
+            context: {
+                gl: {}
+            }
+        };
     }
 
     triggerRepaint() {
@@ -165,6 +175,27 @@ describe('CanvasSource', () => {
 
         expect(source.hasTransition()).toBe(true);
 
+    });
+
+    test('fires idle event on prepare call when there is at least one not loaded tile', done => {
+        const source = createSource();
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        source.on('data', (e) => {
+            if (e.dataType === 'source' && e.sourceDataType === 'idle') {
+                expect(tile.state).toBe('loaded');
+                done();
+            }
+        });
+        source.onAdd(map);
+
+        source.tiles[String(tile.tileID.wrap)] = tile;
+        // assign dummies directly so we don't need to stub the gl things
+        source.boundsBuffer = {} as VertexBuffer;
+        source.boundsSegments = {} as SegmentVector;
+        source.texture = {
+            update: () => {}
+        } as any;
+        source.prepare();
     });
 
 });

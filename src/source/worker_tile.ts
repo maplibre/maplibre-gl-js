@@ -1,22 +1,21 @@
-import FeatureIndex from '../data/feature_index';
-
+import {FeatureIndex} from '../data/feature_index';
 import {performSymbolLayout} from '../symbol/symbol_layout';
 import {CollisionBoxArray} from '../data/array_types.g';
-import DictionaryCoder from '../util/dictionary_coder';
-import SymbolBucket from '../data/bucket/symbol_bucket';
-import LineBucket from '../data/bucket/line_bucket';
-import FillBucket from '../data/bucket/fill_bucket';
-import FillExtrusionBucket from '../data/bucket/fill_extrusion_bucket';
+import {DictionaryCoder} from '../util/dictionary_coder';
+import {SymbolBucket} from '../data/bucket/symbol_bucket';
+import {LineBucket} from '../data/bucket/line_bucket';
+import {FillBucket} from '../data/bucket/fill_bucket';
+import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
 import {warnOnce, mapObject} from '../util/util';
-import ImageAtlas from '../render/image_atlas';
-import GlyphAtlas from '../render/glyph_atlas';
-import EvaluationParameters from '../style/evaluation_parameters';
+import {ImageAtlas} from '../render/image_atlas';
+import {GlyphAtlas} from '../render/glyph_atlas';
+import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
 
 import type {Bucket} from '../data/bucket';
-import type Actor from '../util/actor';
-import type StyleLayer from '../style/style_layer';
-import type StyleLayerIndex from '../style/style_layer_index';
+import type {Actor} from '../util/actor';
+import type {StyleLayer} from '../style/style_layer';
+import type {StyleLayerIndex} from '../style/style_layer_index';
 import type {StyleImage} from '../style/style_image';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {
@@ -25,8 +24,9 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
+import {Cancelable} from '../types/cancelable';
 
-class WorkerTile {
+export class WorkerTile {
     tileID: OverscaledTileID;
     uid: string;
     zoom: number;
@@ -44,8 +44,9 @@ class WorkerTile {
     collisionBoxArray: CollisionBoxArray;
 
     abort: (() => void);
-    reloadCallback: WorkerTileCallback;
     vectorTile: VectorTile;
+    inFlightDependencies: Cancelable[];
+    dependencySentinel: number;
 
     constructor(params: WorkerTileParameters) {
         this.tileID = new OverscaledTileID(params.tileID.overscaledZ, params.tileID.wrap, params.tileID.canonical.z, params.tileID.canonical.x, params.tileID.canonical.y);
@@ -59,6 +60,8 @@ class WorkerTile {
         this.collectResourceTiming = !!params.collectResourceTiming;
         this.returnDependencies = !!params.returnDependencies;
         this.promoteId = params.promoteId;
+        this.inFlightDependencies = [];
+        this.dependencySentinel = -1;
     }
 
     parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: Actor, callback: WorkerTileCallback) {
@@ -139,40 +142,55 @@ class WorkerTile {
         let patternMap: {[_: string]: StyleImage};
 
         const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+
+        this.inFlightDependencies.forEach((request) => request?.cancel());
+        this.inFlightDependencies = [];
+
+        // cancelling seems to be not sufficient, we seems to still manage to get a callback hit, so use a sentinel to drop stale results
+        const dependencySentinel = ++this.dependencySentinel;
         if (Object.keys(stacks).length) {
-            actor.send('getGlyphs', {uid: this.uid, stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}, (err, result) => {
+            this.inFlightDependencies.push(actor.send('getGlyphs', {uid: this.uid, stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}, (err, result) => {
+                if (dependencySentinel !== this.dependencySentinel) {
+                    return;
+                }
                 if (!error) {
                     error = err;
                     glyphMap = result;
                     maybePrepare.call(this);
                 }
-            });
+            }));
         } else {
             glyphMap = {};
         }
 
         const icons = Object.keys(options.iconDependencies);
         if (icons.length) {
-            actor.send('getImages', {icons, source: this.source, tileID: this.tileID, type: 'icons'}, (err, result) => {
+            this.inFlightDependencies.push(actor.send('getImages', {icons, source: this.source, tileID: this.tileID, type: 'icons'}, (err, result) => {
+                if (dependencySentinel !== this.dependencySentinel) {
+                    return;
+                }
                 if (!error) {
                     error = err;
                     iconMap = result;
                     maybePrepare.call(this);
                 }
-            });
+            }));
         } else {
             iconMap = {};
         }
 
         const patterns = Object.keys(options.patternDependencies);
         if (patterns.length) {
-            actor.send('getImages', {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}, (err, result) => {
+            this.inFlightDependencies.push(actor.send('getImages', {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}, (err, result) => {
+                if (dependencySentinel !== this.dependencySentinel) {
+                    return;
+                }
                 if (!error) {
                     error = err;
                     patternMap = result;
                     maybePrepare.call(this);
                 }
-            });
+            }));
         } else {
             patternMap = {};
         }
@@ -232,5 +250,3 @@ function recalculateLayers(layers: ReadonlyArray<StyleLayer>, zoom: number, avai
         layer.recalculate(parameters, availableImages);
     }
 }
-
-export default WorkerTile;

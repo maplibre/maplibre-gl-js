@@ -1,4 +1,4 @@
-import resolveTokens from './resolve_tokens';
+import {resolveTokens} from './resolve_tokens';
 
 test('resolveToken', () => {
     expect('3 Fine Fields').toBe(resolveTokens({a: 3, b: 'Fine', c: 'Fields'}, '{a} {b} {c}'));
@@ -9,6 +9,10 @@ test('resolveToken', () => {
     // Basic.
     expect(resolveTokens({name: 'Test'}, '{name}')).toBe('Test');
     expect(resolveTokens({name: 'Test'}, '{name}-suffix')).toBe('Test-suffix');
+
+    // No properties.
+    expect(resolveTokens(null, '{name}')).toBe('');
+    expect(resolveTokens(null, '{name}-suffix')).toBe('-suffix');
 
     // Undefined property.
     expect(resolveTokens({}, '{name}')).toBe('');

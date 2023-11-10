@@ -1,11 +1,14 @@
 import {getTileBBox} from '@mapbox/whoots-js';
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 import Point from '@mapbox/point-geometry';
-import MercatorCoordinate from '../geo/mercator_coordinate';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {register} from '../util/web_worker_transfer';
 import {mat4} from 'gl-matrix';
 import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 
+/**
+ * A canonical way to define a tile ID
+ */
 export class CanonicalTileID implements ICanonicalTileID {
     z: number;
     x: number;
@@ -60,6 +63,10 @@ export class CanonicalTileID implements ICanonicalTileID {
     }
 }
 
+/**
+ * @internal
+ * An unwrapped tile identifier
+ */
 export class UnwrappedTileID {
     wrap: number;
     canonical: CanonicalTileID;
@@ -72,6 +79,9 @@ export class UnwrappedTileID {
     }
 }
 
+/**
+ * An overscaled tile identifier
+ */
 export class OverscaledTileID {
     overscaledZ: number;
     wrap: number;

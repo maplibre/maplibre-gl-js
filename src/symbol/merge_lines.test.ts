@@ -1,4 +1,4 @@
-import mergeLines from './merge_lines';
+import {mergeLines} from './merge_lines';
 import Point from '@mapbox/point-geometry';
 
 function makeFeatures(lines) {

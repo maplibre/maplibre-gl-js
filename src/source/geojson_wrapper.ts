@@ -3,27 +3,17 @@ import Point from '@mapbox/point-geometry';
 import mvt from '@mapbox/vector-tile';
 import type {VectorTileFeature, VectorTileLayer, VectorTile} from '@mapbox/vector-tile';
 const toGeoJSON = mvt.VectorTileFeature.prototype.toGeoJSON;
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
+import type {TileFeature, AnyProps} from 'supercluster';
+import type {Feature as GeoJSONVTFeature} from 'geojson-vt';
 
-// The feature type used by geojson-vt and supercluster. Should be extracted to
-// global type and used in module definitions for those two modules.
-export type Feature = {
-    type: 1;
-    id: any;
-    tags: {[_: string]: string | number | boolean};
-    geometry: Array<[number, number]>;
-} | {
-    type: 2 | 3;
-    id: any;
-    tags: {[_: string]: string | number | boolean};
-    geometry: Array<Array<[number, number]>>;
-};
+export type Feature = TileFeature<AnyProps, AnyProps> | GeoJSONVTFeature;
 
 class FeatureWrapper implements VectorTileFeature {
     _feature: Feature;
 
     extent: number;
-    type: 1 | 2 | 3;
+    type: Feature['type'];
     id: number;
     properties: {[_: string]: string | number | boolean};
 
@@ -40,7 +30,7 @@ class FeatureWrapper implements VectorTileFeature {
         // vector tile spec only supports integer values for feature ids --
         // allowing non-integer values here results in a non-compliant PBF
         // that causes an exception when it is parsed with vector-tile-js
-        if ('id' in feature && !isNaN(feature.id)) {
+        if ('id' in feature && !isNaN(feature.id as any)) {
             this.id = parseInt(feature.id, 10);
         }
     }
@@ -70,7 +60,7 @@ class FeatureWrapper implements VectorTileFeature {
     }
 }
 
-class GeoJSONWrapper implements VectorTile, VectorTileLayer {
+export class GeoJSONWrapper implements VectorTile, VectorTileLayer {
     layers: {[_: string]: VectorTileLayer};
     name: string;
     extent: number;
@@ -89,5 +79,3 @@ class GeoJSONWrapper implements VectorTile, VectorTileLayer {
         return new FeatureWrapper(this._features[i]);
     }
 }
-
-export default GeoJSONWrapper;

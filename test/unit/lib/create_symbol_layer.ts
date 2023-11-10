@@ -1,7 +1,7 @@
-import SymbolBucket from '../../../src/data/bucket/symbol_bucket';
-import SymbolStyleLayer from '../../../src/style/style_layer/symbol_style_layer';
+import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket';
+import {SymbolStyleLayer} from '../../../src/style/style_layer/symbol_style_layer';
 import {featureFilter, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import EvaluationParameters from '../../../src/style/evaluation_parameters';
+import {EvaluationParameters} from '../../../src/style/evaluation_parameters';
 import {BucketParameters} from '../../../src/data/bucket';
 
 export function createSymbolBucket(layerId, font, text, collisionBoxArray) {

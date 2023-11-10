@@ -1,5 +1,5 @@
 
-import {Browser, chromium, Page} from 'playwright';
+import puppeteer, {Page, Browser} from 'puppeteer';
 
 import {deepEqual} from '../lib/json-diff';
 import st from 'st';
@@ -10,8 +10,10 @@ import path from 'node:path/posix';
 import fs from 'node:fs';
 import type {AddressInfo} from 'node:net';
 
-import localizeURLs from '../lib/localize-urls';
+import {localizeURLs} from '../lib/localize-urls';
 import {globSync} from 'glob';
+
+jest.retryTimes(3);
 
 function performQueryOnFixture(fixture)  {
 
@@ -133,9 +135,9 @@ describe('query tests', () => {
                 cors: true,
             })
         );
-        browser = await chromium.launch();
+        browser = await puppeteer.launch({headless: 'new'});
         await new Promise<void>((resolve) => server.listen(resolve));
-    });
+    }, 60000);
 
     afterAll(async () => {
         await browser.close();
@@ -146,6 +148,7 @@ describe('query tests', () => {
 
     beforeEach(async () => {
         page = await browser.newPage();
+        await page.setViewport({width: 512, height: 512, deviceScaleFactor: 2});
     });
     afterEach(async() => {
         await page.close();

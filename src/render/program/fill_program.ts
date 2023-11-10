@@ -8,11 +8,11 @@ import {
 } from '../uniform_binding';
 import {extend} from '../../util/util';
 
-import type Painter from '../painter';
+import type {Painter} from '../painter';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type Context from '../../gl/context';
+import type {Context} from '../../gl/context';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type Tile from '../../source/tile';
+import type {Tile} from '../../source/tile';
 import {mat4} from 'gl-matrix';
 
 export type FillUniformsType = {

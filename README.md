@@ -2,11 +2,11 @@
 
 # MapLibre GL JS
 
-**[MapLibre GL JS](https://maplibre.org/maplibre-gl-js-docs/api/)** is an open-source library for publishing maps on your websites or webview based apps. Fast displaying of maps is possible thanks to GPU-accelerated vector tile rendering. 
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg?style=flat)](LICENSE.txt) [![Version](https://img.shields.io/npm/v/maplibre-gl?style=flat)](https://www.npmjs.com/package/maplibre-gl) [![CI](https://github.com/maplibre/maplibre-gl-js/actions/workflows/test-all.yml/badge.svg)](https://github.com/maplibre/maplibre-gl-js/actions/workflows/test-all.yml) [![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause) [![codecov](https://codecov.io/gh/maplibre/maplibre-gl-js/branch/main/graph/badge.svg)](https://codecov.io/gh/maplibre/maplibre-gl-js)
+
+**[MapLibre GL JS](https://maplibre.org/maplibre-gl-js/docs/API/)** is an open-source library for publishing maps on your websites or webview based apps. Fast displaying of maps is possible thanks to GPU-accelerated vector tile rendering. 
 
 It originated as an open-source fork of [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js), before their switch to a non-OSS license in December 2020. The library's initial versions (1.x) were intended to be a drop-in replacement for the Mapbox’s OSS version (1.x) with additional functionality, but have evolved a lot since then.
-
-[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg?style=flat)](LICENSE.txt)[![Version](https://img.shields.io/npm/v/maplibre-gl?style=flat)](https://www.npmjs.com/package/maplibre-gl)[![CI](https://github.com/maplibre/maplibre-gl-js/actions/workflows/ci.yml/badge.svg)](https://github.com/maplibre/maplibre-gl-js/actions/workflows/ci.yml)[![PRs](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause)
 
 ## Getting Started
 
@@ -37,15 +37,15 @@ Enjoy the map!
 
 ## Documentation
 
-Full documentation for this library [is available here](https://maplibre.org/maplibre-gl-js-docs/api/).
+Full documentation for this library [is available here](https://maplibre.org/maplibre-gl-js/docs/API/).
 
-Check out the features through [examples](https://maplibre.org/maplibre-gl-js-docs/example/).
+Check out the features through [examples](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
 | Showcases |      |
 | ---- | ---- |
-|![Display a map](https://maplibre.org/maplibre-gl-js-docs/assets/simple-map-800-1427cd84c8c693ead996f81b06e467bb.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js-docs/assets/third-party-800-72a3092888152ba26920ec0ba5aeacd0.png)	|
-|![Animate a series of images](https://maplibre.org/maplibre-gl-js-docs/assets/animate-images-800-522ec4f83d7988b2d6f23a0c1d5eb924.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js-docs/assets/heatmap-layer-800-a23e44d9c1238315f191187c5c628719.png)	|
-|![3D buildings](https://maplibre.org/maplibre-gl-js-docs/assets/3d-buildings-800-18cda57800c107d1dee5f269bf7a12f2.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js-docs/assets/visualize-population-density-800-dc0290780f7b2842031bdf1b9347981a.png)	|
+|![Display a map](https://maplibre.org/maplibre-gl-js/docs/assets/examples/simple-map.png)	|![Third party vector tile source](https://maplibre.org/maplibre-gl-js/docs/assets/examples/3d-terrain.png)	|
+|![Animate a series of images](https://maplibre.org/maplibre-gl-js/docs/assets/examples/animate-images.png)	|![Create a heatmap layer](https://maplibre.org/maplibre-gl-js/docs/assets/examples/heatmap-layer.png)	|
+|![3D buildings](https://maplibre.org/maplibre-gl-js/docs/assets/examples/3d-buildings.png)	|![Visualize population density](https://maplibre.org/maplibre-gl-js/docs/assets/examples/visualize-population-density.png)	|
 
 <br />
 
@@ -64,11 +64,11 @@ The overall migration happens by uninstalling `mapbox-gl` and installing `maplib
 
 #### Compatibility branch
 
-Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. 
+MapLibre GL JS v1 is completely backward compatible with Mapbox GL JS v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. 
 
 #### CDN Links
 
-> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more information, please see [MapLibre GL is on unpkg.com](./docs/README-unpkg.md#maplibre-gl-on-unpkgcom).
+> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more information, please see [MapLibre GL JS is on unpkg.com](./developer-guides/README-unpkg.md).
 
 ```diff
 -    <script src="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.js"></script>
@@ -86,7 +86,7 @@ Maplibre v1 is completely backward compatible with Mapbox v1. This compatibility
 
 ```
 
-Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js-docs/example/).
+Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
 Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started/get-started#using-with-a-mapbox-gl-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
 
@@ -105,10 +105,10 @@ You can find the official status of the backing community and steering committee
 
 ### Avoid Fragmentation
 
-If you depend on a free software alternative to `mapbox-gl-js`, please consider joining our effort! Anyone with a stake in a healthy community-led fork is welcome to help us figure out our next steps. We welcome contributors and leaders! MapLibre GL already represents the combined efforts of a few early fork efforts, and we all benefit from "one project" rather than "our way". If you know of other forks, please reach out to them and direct them here.
+If you depend on a free software alternative to `mapbox-gl-js`, please consider joining our effort! Anyone with a stake in a healthy community-led fork is welcome to help us figure out our next steps. We welcome contributors and leaders! MapLibre GL JS already represents the combined efforts of a few early fork efforts, and we all benefit from "one project" rather than "our way". If you know of other forks, please reach out to them and direct them here.
  
 
-> **MapLibre GL** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
+> **MapLibre GL JS** is developed following [Semantic Versioning (2.0.0)](https://semver.org/spec/v2.0.0.html).
 
 ### Bounties
 
@@ -130,14 +130,19 @@ Platinum:
 
 <a href="https://aws.com"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
 
-Silver:
+Gold:
 
 <a href="https://meta.com"><img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="25%"/></a>
+
+Silver:
 
 <a href="https://www.mierune.co.jp/?lang=en"><img src="https://maplibre.org/img/mierune-logo.svg" alt="Logo MIERUNE" width="25%"/></a>
 
 <a href="https://komoot.com/"><img src="https://maplibre.org/img/komoot-logo.svg" alt="Logo komoot" width="25%"/></a>
 
+<a href="https://www.jawg.io/"><img src="https://maplibre.org/img/jawgmaps-logo.svg" alt="Logo JawgMaps" width="25%"/></a>
+
+<a href="https://www.radar.com/"><img src="https://maplibre.org/img/radar-logo.svg" alt="Logo Radar" width="25%"/></a>
 
 Backers and Supporters:
 
@@ -185,4 +190,4 @@ Please keep in mind: Unauthorized backports are the biggest threat to the MapLib
 
 ## License
 
-**MapLibre GL** is licensed under the [3-Clause BSD license](./LICENSE.txt).
+**MapLibre GL JS** is licensed under the [3-Clause BSD license](./LICENSE.txt).

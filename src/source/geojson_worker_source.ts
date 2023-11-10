@@ -2,11 +2,11 @@ import {getJSON} from '../util/ajax';
 
 import {RequestPerformance} from '../util/performance';
 import rewind from '@mapbox/geojson-rewind';
-import GeoJSONWrapper from './geojson_wrapper';
+import {GeoJSONWrapper} from './geojson_wrapper';
 import vtpbf from 'vt-pbf';
-import Supercluster from 'supercluster';
-import geojsonvt from 'geojson-vt';
-import VectorTileWorkerSource from './vector_tile_worker_source';
+import Supercluster, {type Options as SuperclusterOptions, type ClusterProperties} from 'supercluster';
+import geojsonvt, {type Options as GeoJSONVTOptions} from 'geojson-vt';
+import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {createExpression} from '@maplibre/maplibre-gl-style-spec';
 
 import type {
@@ -14,8 +14,8 @@ import type {
     WorkerTileCallback,
 } from '../source/worker_source';
 
-import type Actor from '../util/actor';
-import type StyleLayerIndex from '../style/style_layer_index';
+import type {Actor} from '../util/actor';
+import type {StyleLayerIndex} from '../style/style_layer_index';
 
 import type {LoadVectorDataCallback} from './vector_tile_worker_source';
 import type {RequestParameters, ResponseCallback} from '../util/ajax';
@@ -25,67 +25,33 @@ import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateab
 
 export type LoadGeoJSONParameters = {
     request?: RequestParameters;
+    /**
+     * Literal GeoJSON data. Must be provided if `request.url` is not.
+     */
     data?: string;
     dataDiff?: GeoJSONSourceDiff;
     source: string;
     cluster: boolean;
-    superclusterOptions?: any;
-    geojsonVtOptions?: any;
-    clusterProperties?: any;
+    superclusterOptions?: SuperclusterOptions<any, any>;
+    geojsonVtOptions?: GeoJSONVTOptions;
+    clusterProperties?: ClusterProperties;
     filter?: Array<unknown>;
     promoteId?: string;
 };
 
 export type LoadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>) => Cancelable;
 
-export interface GeoJSONIndex {
-    getTile(z: number, x: number, y: number): any;
-    // supercluster methods
-    getClusterExpansionZoom(clusterId: number): number;
-    getChildren(clusterId: number): Array<GeoJSON.Feature>;
-    getLeaves(clusterId: number, limit: number, offset: number): Array<GeoJSON.Feature>;
-}
-
-function loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void {
-    const canonical = params.tileID.canonical;
-
-    if (!this._geoJSONIndex) {
-        return callback(null, null);  // we couldn't load the file
-    }
-
-    const geoJSONTile = this._geoJSONIndex.getTile(canonical.z, canonical.x, canonical.y);
-    if (!geoJSONTile) {
-        return callback(null, null); // nothing in the given tile
-    }
-
-    const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features);
-
-    // Encode the geojson-vt tile into binary vector tile form.  This
-    // is a convenience that allows `FeatureIndex` to operate the same way
-    // across `VectorTileSource` and `GeoJSONSource` data.
-    let pbf = vtpbf(geojsonWrapper);
-    if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
-        // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
-        pbf = new Uint8Array(pbf);
-    }
-
-    callback(null, {
-        vectorTile: geojsonWrapper,
-        rawData: pbf.buffer
-    });
-}
+type GeoJSONIndex = ReturnType<typeof geojsonvt> | Supercluster;
 
 /**
  * The {@link WorkerSource} implementation that supports {@link GeoJSONSource}.
  * This class is designed to be easily reused to support custom source types
  * for data formats that can be parsed/converted into an in-memory GeoJSON
- * representation.  To do so, create it with
+ * representation. To do so, create it with
  * `new GeoJSONWorkerSource(actor, layerIndex, customLoadGeoJSONFunction)`.
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
- *
- * @private
  */
-class GeoJSONWorkerSource extends VectorTileWorkerSource {
+export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _pendingCallback: Callback<{
         resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
         abandoned?: boolean;
@@ -95,16 +61,44 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
 
     /**
-     * @param [loadGeoJSON] Optional method for custom loading/parsing of
+     * @param loadGeoJSON - Optional method for custom loading/parsing of
      * GeoJSON based on parameters passed from the main-thread Source.
      * See {@link GeoJSONWorkerSource#loadGeoJSON}.
-     * @private
      */
     constructor(actor: Actor, layerIndex: StyleLayerIndex, availableImages: Array<string>, loadGeoJSON?: LoadGeoJSON | null) {
-        super(actor, layerIndex, availableImages, loadGeoJSONTile);
+        super(actor, layerIndex, availableImages);
+        this.loadVectorData = this.loadGeoJSONTile;
         if (loadGeoJSON) {
             this.loadGeoJSON = loadGeoJSON;
         }
+    }
+
+    loadGeoJSONTile(params: WorkerTileParameters, callback: LoadVectorDataCallback): (() => void) | void {
+        const canonical = params.tileID.canonical;
+
+        if (!this._geoJSONIndex) {
+            return callback(null, null);  // we couldn't load the file
+        }
+
+        const geoJSONTile = this._geoJSONIndex.getTile(canonical.z, canonical.x, canonical.y);
+        if (!geoJSONTile) {
+            return callback(null, null); // nothing in the given tile
+        }
+
+        const geojsonWrapper = new GeoJSONWrapper(geoJSONTile.features);
+        // Encode the geojson-vt tile into binary vector tile form.  This
+        // is a convenience that allows `FeatureIndex` to operate the same way
+        // across `VectorTileSource` and `GeoJSONSource` data.
+        let pbf = vtpbf(geojsonWrapper);
+        if (pbf.byteOffset !== 0 || pbf.byteLength !== pbf.buffer.byteLength) {
+            // Compatibility with node Buffer (https://github.com/mapbox/pbf/issues/35)
+            pbf = new Uint8Array(pbf);
+        }
+
+        callback(null, {
+            vectorTile: geojsonWrapper,
+            rawData: pbf.buffer
+        });
     }
 
     /**
@@ -119,9 +113,8 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * When a `loadData` request comes in while a previous one is being processed,
      * the previous one is aborted.
      *
-     * @param params
-     * @param callback
-     * @private
+     * @param params - the parameters
+     * @param callback - the callback for completion or error
      */
     loadData(params: LoadGeoJSONParameters, callback: Callback<{
         resourceTiming?: {[_: string]: Array<PerformanceResourceTiming>};
@@ -188,9 +181,8 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
     * If the tile is loaded, uses the implementation in VectorTileWorkerSource.
     * Otherwise, such as after a setData() call, we load the tile fresh.
     *
-    * @param params
-    * @param params.uid The UID for this tile.
-    * @private
+    * @param params - the parameters
+    * @param callback - the callback for completion or error
     */
     reloadTile(params: WorkerTileParameters, callback: WorkerTileCallback) {
         const loaded = this.loaded,
@@ -210,11 +202,9 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * GeoJSON is loaded and parsed from `params.url` if it exists, or else
      * expected as a literal (string or object) `params.data`.
      *
-     * @param params
-     * @param [params.url] A URL to the remote GeoJSON data.
-     * @param [params.data] Literal GeoJSON data. Must be provided if `params.url` is not.
-     * @returns {Cancelable} A Cancelable object.
-     * @private
+     * @param params - the parameters
+     * @param callback - the callback for completion or error
+     * @returns A Cancelable object.
      */
     loadGeoJSON = (params: LoadGeoJSONParameters, callback: ResponseCallback<any>): Cancelable => {
         const {promoteId} = params;
@@ -268,7 +258,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         clusterId: number;
     }, callback: Callback<number>) {
         try {
-            callback(null, this._geoJSONIndex.getClusterExpansionZoom(params.clusterId));
+            callback(null, (this._geoJSONIndex as Supercluster).getClusterExpansionZoom(params.clusterId));
         } catch (e) {
             callback(e);
         }
@@ -278,7 +268,7 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         clusterId: number;
     }, callback: Callback<Array<GeoJSON.Feature>>) {
         try {
-            callback(null, this._geoJSONIndex.getChildren(params.clusterId));
+            callback(null, (this._geoJSONIndex as Supercluster).getChildren(params.clusterId));
         } catch (e) {
             callback(e);
         }
@@ -290,14 +280,14 @@ class GeoJSONWorkerSource extends VectorTileWorkerSource {
         offset: number;
     }, callback: Callback<Array<GeoJSON.Feature>>) {
         try {
-            callback(null, this._geoJSONIndex.getLeaves(params.clusterId, params.limit, params.offset));
+            callback(null, (this._geoJSONIndex as Supercluster).getLeaves(params.clusterId, params.limit, params.offset));
         } catch (e) {
             callback(e);
         }
     }
 }
 
-function getSuperclusterOptions({superclusterOptions, clusterProperties}: { superclusterOptions?: any; clusterProperties?: any}) {
+function getSuperclusterOptions({superclusterOptions, clusterProperties}: LoadGeoJSONParameters) {
     if (!clusterProperties || !superclusterOptions) return superclusterOptions;
 
     const mapExpressions = {};
@@ -335,5 +325,3 @@ function getSuperclusterOptions({superclusterOptions, clusterProperties}: { supe
 
     return superclusterOptions;
 }
-
-export default GeoJSONWorkerSource;

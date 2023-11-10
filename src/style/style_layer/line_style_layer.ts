@@ -1,22 +1,22 @@
 import Point from '@mapbox/point-geometry';
 
-import StyleLayer from '../style_layer';
-import LineBucket from '../../data/bucket/line_bucket';
+import {StyleLayer} from '../style_layer';
+import {LineBucket} from '../../data/bucket/line_bucket';
 import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
 import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils';
 import properties, {LineLayoutPropsPossiblyEvaluated, LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
 import {extend} from '../../util/util';
-import EvaluationParameters from '../evaluation_parameters';
+import {EvaluationParameters} from '../evaluation_parameters';
 import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
 
-import {Step} from '@maplibre/maplibre-gl-style-spec';
-import type {FeatureState, ZoomConstantExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
+import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
-import type Transform from '../../geo/transform';
+import type {Transform} from '../../geo/transform';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
-class LineFloorwidthProperty extends DataDrivenProperty<number> {
+export class LineFloorwidthProperty extends DataDrivenProperty<number> {
     useIntegerZoom: true;
 
     possiblyEvaluate(value, parameters) {
@@ -35,10 +35,9 @@ class LineFloorwidthProperty extends DataDrivenProperty<number> {
     }
 }
 
-const lineFloorwidthProperty = new LineFloorwidthProperty(properties.paint.properties['line-width'].specification);
-lineFloorwidthProperty.useIntegerZoom = true;
+let lineFloorwidthProperty: LineFloorwidthProperty;
 
-class LineStyleLayer extends StyleLayer {
+export class LineStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<LineLayoutProps>;
     layout: PossiblyEvaluated<LineLayoutProps, LineLayoutPropsPossiblyEvaluated>;
 
@@ -52,12 +51,21 @@ class LineStyleLayer extends StyleLayer {
     constructor(layer: LayerSpecification) {
         super(layer, properties);
         this.gradientVersion = 0;
+        if (!lineFloorwidthProperty) {
+            lineFloorwidthProperty =
+                new LineFloorwidthProperty(properties.paint.properties['line-width'].specification);
+            lineFloorwidthProperty.useIntegerZoom = true;
+        }
     }
 
     _handleSpecialPaintPropertyUpdate(name: string) {
         if (name === 'line-gradient') {
-            const expression: ZoomConstantExpression<'source'> = (this._transitionablePaint._values['line-gradient'].value.expression as any);
-            this.stepInterpolant = expression._styleExpression.expression instanceof Step;
+            const expression = this.gradientExpression();
+            if (isZoomExpression(expression)) {
+                this.stepInterpolant = expression._styleExpression.expression instanceof Step;
+            } else {
+                this.stepInterpolant = false;
+            }
             this.gradientVersion = (this.gradientVersion + 1) % Number.MAX_SAFE_INTEGER;
         }
     }
@@ -68,7 +76,6 @@ class LineStyleLayer extends StyleLayer {
 
     recalculate(parameters: EvaluationParameters, availableImages: Array<string>) {
         super.recalculate(parameters, availableImages);
-
         (this.paint._values as any)['line-floorwidth'] =
             lineFloorwidthProperty.possiblyEvaluate(this._transitioningPaint._values['line-width'].value, parameters);
     }
@@ -114,8 +121,6 @@ class LineStyleLayer extends StyleLayer {
         return true;
     }
 }
-
-export default LineStyleLayer;
 
 function getLineWidth(lineWidth, lineGapWidth) {
     if (lineGapWidth > 0) {

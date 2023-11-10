@@ -12,24 +12,19 @@ jobs:
         shell: bash
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: main
 
-      - name: Use Node.js 18 x64
-        uses: actions/setup-node@v3.6.0
+      - name: Use Node.js from nvmrc
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
-          architecture: x64
-          registry-url: 'https://registry.npmjs.org'
+          node-version-file: '.nvmrc'
 
       - name: Get version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.3.1
-
-      - name: Check tag does not exist yet
-        run: if git rev-list v${{ steps.package-version.outputs.current-version }}; then echo "Tag already exists. Aborting the release process."; exit 1; fi
 
       - name: Tag commit and push
         uses: mathieudutour/github-tag-action@v6.1
@@ -77,18 +72,12 @@ jobs:
         with:
           tag: ${{ steps.prepare_release.outputs.version_tag }}
           name: ${{steps.prepare_release.outputs.version_tag }}
-          body: ${{ steps.release_notes.outputs.release_notes }}
+          bodyFile: ${{ steps.release_notes.outputs.release_notes }}
+          artifacts: "dist.zip"
+          artifactContentType: "application/zip"
+          allowUpdates: true
           draft: false
           prerelease: false
-
-      - name: Upload GitHub Release Assets (regular)
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: ${{ steps.pack.outputs.filename }}
-          repository: ${{ steps.create_regular_release.outputs.upload_url }}
 
       - name: Create GitHub Release (prerelease)
         id: create_prerelease
@@ -126,6 +115,20 @@ jobs:
           publish_dir: tmp
           destination_dir: benchmarks/${{ steps.prepare_release.outputs.version_tag }}
           commit_message: 'deploy: ${{ steps.prepare_release.outputs.version_tag }}'
+
+      - name: Build the Docs
+        run: |
+          npm run generate-docs
+          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
+
+      - name: Publish the docs
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site
+          destination_dir: docs
+          commit_message: 'deploy docs: ${{ steps.prepare_release.outputs.version_tag }}'
 
       - name: Clean up
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}

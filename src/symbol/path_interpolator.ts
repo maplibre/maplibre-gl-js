@@ -1,7 +1,7 @@
 import {clamp} from '../util/util';
 import Point from '@mapbox/point-geometry';
 
-class PathInterpolator {
+export class PathInterpolator {
     points: Array<Point>;
     length: number;
     paddedLength: number;
@@ -53,5 +53,3 @@ class PathInterpolator {
         return this.points[idxOfPrevPoint].mult(1.0 - segmentT).add(this.points[currentIndex].mult(segmentT));
     }
 }
-
-export default PathInterpolator;

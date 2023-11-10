@@ -1,0 +1,103 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 128,
+      "width": 128
+    }
+  },
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "sources": {
+    "icon": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [{
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [0, 0]
+          }
+        }]
+      }
+    },
+    "text": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [0, 0]
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [0, 0]
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [0, 0]
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [0, 0]
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [0, 0]
+            }
+          }, {
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [0, 0]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "sprite": "local://sprites/icon-offset",
+  "layers": [
+    {
+      "id": "icon",
+      "type": "symbol",
+      "source": "icon",
+      "layout": {
+        "icon-anchor": "bottom",
+        "icon-image": "icon"
+      }
+    },
+    {
+        "id": "text",
+        "type": "symbol",
+        "source": "text",
+        "layout": {
+          "text-font": [
+            "Open Sans Semibold",
+            "Arial Unicode MS Bold"
+          ],
+          "text-justify": "auto",
+          "text-variable-anchor-offset" : [
+            "top",          [0, 0.8],
+            "bottom",       [0, -2.5],
+            "left",         [1.2, -1.5],
+            "right",        [-1.2, -1.5],
+            "top-left",     [1.2, 0],
+            "top-right",    [-1.2, 0]
+          ],
+          "text-field": "Test"
+        }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add a generated icon to the map</title>
+    <meta property="og:description" content="Add an icon to the map that was generated at runtime." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+    });
+
+    map.on('load', () => {
+        const width = 64; // The image will be 64 pixels square
+        const bytesPerPixel = 4; // Each pixel is represented by 4 bytes: red, green, blue, and alpha.
+        const data = new Uint8Array(width * width * bytesPerPixel);
+
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < width; y++) {
+                const offset = (y * width + x) * bytesPerPixel;
+                data[offset + 0] = (y / width) * 255; // red
+                data[offset + 1] = (x / width) * 255; // green
+                data[offset + 2] = 128; // blue
+                data[offset + 3] = 255; // alpha
+            }
+        }
+
+        map.addImage('gradient', {width, height: width, data});
+
+        map.addSource('point', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [0, 0]
+                        }
+                    }
+                ]
+            }
+        });
+        map.addLayer({
+            'id': 'points',
+            'type': 'symbol',
+            'source': 'point',
+            'layout': {
+                'icon-image': 'gradient'
+            }
+        });
+    });
+</script>
+</body>
+</html>

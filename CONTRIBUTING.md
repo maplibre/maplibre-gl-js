@@ -1,4 +1,4 @@
-Hi, and thanks in advance for contributing to MapLibre GL. Here's how we work. Please follow these conventions when submitting an issue or pull request.
+Hi, and thanks in advance for contributing to MapLibre GL JS. Here's how we work. Please follow these conventions when submitting an issue or pull request.
 
 ## Do not violate Mapbox copyright!
 In December 2020 Mapbox decided to publish future versions of mapbox-gl-js under a proprietary license. **You are not allowed to backport code from Mapbox projects which has been contributed under this new license**. Unauthorized backports are the biggest threat to the MapLibre project. If you are unsure about this issue, [please ask](https://github.com/maplibre/maplibre-gl-js/discussions)!
@@ -38,6 +38,11 @@ Some best practices for PRs for bugfixes are as follows:
 This is not intended to be a strict process but rather a guideline that will build confidence that your PR is addressing the problem.
 
 ## Preparing your Development Environment
+
+### CodeSpaces
+
+By creating a code spcace you should be able to start working immidiately after the post create script finishes running.
+This script basically installes everything written here in the linux part.
 
 ### OSX
 
@@ -122,6 +127,9 @@ cd maplibre-gl-js &&
 npm install
 ```
 
+Before you can [run the docs](./docs/README.md), you need to ensure Docker is installed and you have permission to run `docker` commands without `sudo`, as explained [here in the Docker docs](https://docs.docker.com/engine/install/linux-postinstall/).
+
+
 ### Windows
 
 Consider using WSL and follow the above Linux guide or follow the next steps
@@ -157,6 +165,10 @@ npm run build-css
 
 Once those commands finish, you will have a standalone build at `dist/maplibre-gl.js` and `dist/maplibre-gl.css`
 
+## Testing changes and Writing Documentation
+
+See [`docs/README.md`](./docs/README.md)
+
 ## Writing & Running Tests
 
 See [`test/README.md`](./test/README.md).
@@ -164,6 +176,10 @@ See [`test/README.md`](./test/README.md).
 ## Writing & Running Benchmarks
 
 See [`test/bench/README.md`](./test/bench/README.md).
+
+## Further guides
+
+See [`developer-guides`](./developer-guides) directory for guides on the release process and tile lifecycle.
 
 ## Code Conventions
 

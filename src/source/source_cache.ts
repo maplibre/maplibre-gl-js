@@ -1,29 +1,31 @@
 import {create as createSource} from './source';
 
-import Tile from './tile';
+import {Tile} from './tile';
 import {Event, ErrorEvent, Evented} from '../util/evented';
-import TileCache from './tile_cache';
-import MercatorCoordinate from '../geo/mercator_coordinate';
+import {TileCache} from './tile_cache';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {keysDifference} from '../util/util';
-import EXTENT from '../data/extent';
-import Context from '../gl/context';
+import {EXTENT} from '../data/extent';
+import {Context} from '../gl/context';
 import Point from '@mapbox/point-geometry';
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {OverscaledTileID} from './tile_id';
-import SourceFeatureState from './source_state';
+import {SourceFeatureState} from './source_state';
 
 import type {Source} from './source';
-import type Map from '../ui/map';
-import type Style from '../style/style';
-import type Dispatcher from '../util/dispatcher';
-import type Transform from '../geo/transform';
+import type {Map} from '../ui/map';
+import type {Style} from '../style/style';
+import type {Dispatcher} from '../util/dispatcher';
+import type {Transform} from '../geo/transform';
 import type {TileState} from './tile';
 import type {Callback} from '../types/callback';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
-import Terrain from '../render/terrain';
+import {Terrain} from '../render/terrain';
+import {config} from '../util/config';
 
 /**
+ * @internal
  * `SourceCache` is responsible for
  *
  *  - creating an instance of `Source`
@@ -31,10 +33,8 @@ import Terrain from '../render/terrain';
  *  - caching tiles loaded from an instance of `Source`
  *  - loading the tiles needed to render a given viewport
  *  - unloading the cached tiles not needed to render a given viewport
- *
- * @private
  */
-class SourceCache extends Evented {
+export class SourceCache extends Evented {
     id: string;
     dispatcher: Dispatcher;
     map: Map;
@@ -53,6 +53,7 @@ class SourceCache extends Evented {
         [_ in any]: ReturnType<typeof setTimeout>;
     };
     _maxTileCacheSize: number;
+    _maxTileCacheZoomLevels: number;
     _paused: boolean;
     _shouldReloadOnResume: boolean;
     _coveredTiles: {[_: string]: boolean};
@@ -63,6 +64,8 @@ class SourceCache extends Evented {
     tileSize: number;
     _state: SourceFeatureState;
     _loadedParentTiles: {[_: string]: Tile};
+    _didEmitContent: boolean;
+    _updated: boolean;
 
     static maxUnderzooming: number;
     static maxOverzooming: number;
@@ -85,6 +88,8 @@ class SourceCache extends Evented {
                 if (this.transform) {
                     this.update(this.transform, this.terrain);
                 }
+
+                this._didEmitContent = true;
             }
         });
 
@@ -104,15 +109,19 @@ class SourceCache extends Evented {
         this._timers = {};
         this._cacheTimers = {};
         this._maxTileCacheSize = null;
+        this._maxTileCacheZoomLevels = null;
         this._loadedParentTiles = {};
 
         this._coveredTiles = {};
         this._state = new SourceFeatureState();
+        this._didEmitContent = false;
+        this._updated = false;
     }
 
     onAdd(map: Map) {
         this.map = map;
         this._maxTileCacheSize = map ? map._maxTileCacheSize : null;
+        this._maxTileCacheZoomLevels = map ? map._maxTileCacheZoomLevels : null;
         if (this._source && this._source.onAdd) {
             this._source.onAdd(map);
         }
@@ -128,12 +137,15 @@ class SourceCache extends Evented {
     /**
      * Return true if no tile data is pending, tiles will not change unless
      * an additional API call is received.
-     * @private
      */
     loaded(): boolean {
         if (this._sourceErrored) { return true; }
         if (!this._sourceLoaded) { return false; }
         if (!this._source.loaded()) { return false; }
+        if ((this.used !== undefined || this.usedForTerrain !== undefined) && !this.used && !this.usedForTerrain) { return true; }
+        // do not consider as loaded if the update hasn't been called yet (we do not know if we will have any tiles to fetch)
+        if (!this._updated) { return false; }
+
         for (const t in this._tiles) {
             const tile = this._tiles[t];
             if (tile.state !== 'loaded' && tile.state !== 'errored')
@@ -194,7 +206,6 @@ class SourceCache extends Evented {
 
     /**
      * Return all tile ids ordered with z-order, and cast to numbers
-     * @private
      */
     getIds(): Array<string> {
         return (Object.values(this._tiles) as any).map((tile: Tile) => tile.tileID).sort(compareTileId).map(id => id.key);
@@ -284,7 +295,6 @@ class SourceCache extends Evented {
 
     /**
     * For raster terrain source, backfill DEM to eliminate visible tile boundaries
-    * @private
     */
     _backfillDEM(tile: Tile) {
         const renderables = this.getRenderableIds();
@@ -325,7 +335,6 @@ class SourceCache extends Evented {
     }
     /**
      * Get a specific tile by TileID
-     * @private
      */
     getTile(tileID: OverscaledTileID): Tile {
         return this.getTileByID(tileID.key);
@@ -333,7 +342,6 @@ class SourceCache extends Evented {
 
     /**
      * Get a specific tile by id
-     * @private
      */
     getTileByID(id: string): Tile {
         return this._tiles[id];
@@ -342,7 +350,6 @@ class SourceCache extends Evented {
     /**
      * For a given set of tiles, retain children that are loaded and have a zoom
      * between `zoom` (exclusive) and `maxCoveringZoom` (inclusive)
-     * @private
      */
     _retainLoadedChildren(
         idealTiles: {
@@ -392,7 +399,6 @@ class SourceCache extends Evented {
 
     /**
      * Find a loaded parent of the given tile (up to minCoveringZoom)
-     * @private
      */
     findLoadedParent(tileID: OverscaledTileID, minCoveringZoom: number): Tile {
         if (tileID.key in this._loadedParentTiles) {
@@ -429,16 +435,16 @@ class SourceCache extends Evented {
      * Larger viewports use more tiles and need larger caches. Larger viewports
      * are more likely to be found on devices with more memory and on pages where
      * the map is more important.
-     * @private
      */
     updateCacheSize(transform: Transform) {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
         const approxTilesInView = widthInTiles * heightInTiles;
-        const commonZoomRange = 5;
-
+        const commonZoomRange = this._maxTileCacheZoomLevels === null ?
+            config.MAX_TILE_CACHE_ZOOM_LEVELS : this._maxTileCacheZoomLevels;
         const viewDependentMaxSize = Math.floor(approxTilesInView * commonZoomRange);
-        const maxSize = typeof this._maxTileCacheSize === 'number' ? Math.min(this._maxTileCacheSize, viewDependentMaxSize) : viewDependentMaxSize;
+        const maxSize = typeof this._maxTileCacheSize === 'number' ?
+            Math.min(this._maxTileCacheSize, viewDependentMaxSize) : viewDependentMaxSize;
 
         this._cache.setMaxSize(maxSize);
     }
@@ -489,7 +495,6 @@ class SourceCache extends Evented {
     /**
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
-     * @private
      */
     update(transform: Transform, terrain?: Terrain) {
         this.transform = transform;
@@ -544,6 +549,14 @@ class SourceCache extends Evented {
             idealTileIDs = idealTileIDs.concat(Object.values(parents));
         }
 
+        const noPendingDataEmissions = idealTileIDs.length === 0 && !this._updated && this._didEmitContent;
+        this._updated = true;
+        // if we won't have any tiles to fetch and content is already emitted
+        // there will be no more data emissions, so we need to emit the event with isSourceLoaded = true
+        if (noPendingDataEmissions) {
+            this.fire(new Event('data', {sourceDataType: 'idle', dataType: 'source', sourceId: this.id}));
+        }
+
         // Retain is a list of tiles that we shouldn't delete, even if they are not
         // the most ideal tile for the current viewport. This may include tiles like
         // parent or child tiles that are *already* loaded.
@@ -553,11 +566,18 @@ class SourceCache extends Evented {
             const parentsForFading: {[_: string]: OverscaledTileID} = {};
             const fadingTiles = {};
             const ids = Object.keys(retain);
+            const now = browser.now();
             for (const id of ids) {
                 const tileID = retain[id];
 
                 const tile = this._tiles[id];
-                if (!tile || tile.fadeEndTime && tile.fadeEndTime <= browser.now()) continue;
+
+                // when fadeEndTime is 0, the tile is created but registerFadeDuration
+                // has not been called, therefore must be kept in fadingTiles dictionary
+                // for next round of rendering
+                if (!tile || (tile.fadeEndTime !== 0 && tile.fadeEndTime <= now)) {
+                    continue;
+                }
 
                 // if the tile is loaded but still fading in, find parents to cross-fade with it
                 const parentTile = this.findLoadedParent(tileID, minCoveringZoom);
@@ -771,7 +791,6 @@ class SourceCache extends Evented {
 
     /**
      * Add a tile, given its coordinate, to the pyramid.
-     * @private
      */
     _addTile(tileID: OverscaledTileID): Tile {
         let tile = this._tiles[tileID.key];
@@ -824,7 +843,6 @@ class SourceCache extends Evented {
 
     /**
      * Remove a tile, given its id, from the pyramid
-     * @private
      */
     _removeTile(id: string) {
         const tile = this._tiles[id];
@@ -866,11 +884,10 @@ class SourceCache extends Evented {
     /**
      * Search through our current tiles and attempt to find the tiles that
      * cover the given bounds.
-     * @param pointQueryGeometry coordinates of the corners of bounding rectangle
-     * @returns {Array<Object>} result items have {tile, minX, maxX, minY, maxY}, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
-     * @private
+     * @param pointQueryGeometry - coordinates of the corners of bounding rectangle
+     * @returns result items have `{tile, minX, maxX, minY, maxY}`, where min/max bounding values are the given bounds transformed in into the coordinate space of this tile.
      */
-    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean) {
+    tilesIn(pointQueryGeometry: Array<Point>, maxPitchScaleFactor: number, has3DLayer: boolean): any[] {
 
         const tileResults = [];
 
@@ -946,9 +963,10 @@ class SourceCache extends Evented {
         }
 
         if (isRasterType(this._source.type)) {
+            const now = browser.now();
             for (const id in this._tiles) {
                 const tile = this._tiles[id];
-                if (tile.fadeEndTime !== undefined && tile.fadeEndTime >= browser.now()) {
+                if (tile.fadeEndTime >= now) {
                     return true;
                 }
             }
@@ -959,7 +977,6 @@ class SourceCache extends Evented {
 
     /**
      * Set the value of a particular state for a feature
-     * @private
      */
     setFeatureState(sourceLayer: string, featureId: number | string, state: any) {
         sourceLayer = sourceLayer || '_geojsonTileLayer';
@@ -968,7 +985,6 @@ class SourceCache extends Evented {
 
     /**
      * Resets the value of a particular state key for a feature
-     * @private
      */
     removeFeatureState(sourceLayer?: string, featureId?: number | string, key?: string) {
         sourceLayer = sourceLayer || '_geojsonTileLayer';
@@ -977,7 +993,6 @@ class SourceCache extends Evented {
 
     /**
      * Get the entire state object for a feature
-     * @private
      */
     getFeatureState(sourceLayer: string, featureId: number | string) {
         sourceLayer = sourceLayer || '_geojsonTileLayer';
@@ -987,7 +1002,6 @@ class SourceCache extends Evented {
     /**
      * Sets the set of keys that the tile depends on. This allows tiles to
      * be reloaded when their dependencies change.
-     * @private
      */
     setDependencies(tileKey: string, namespace: string, dependencies: Array<string>) {
         const tile = this._tiles[tileKey];
@@ -998,7 +1012,6 @@ class SourceCache extends Evented {
 
     /**
      * Reloads all tiles that depend on the given keys.
-     * @private
      */
     reloadTilesForDependencies(namespaces: Array<string>, keys: Array<string>) {
         for (const id in this._tiles) {
@@ -1026,5 +1039,3 @@ function compareTileId(a: OverscaledTileID, b: OverscaledTileID): number {
 function isRasterType(type) {
     return type === 'raster' || type === 'image' || type === 'video';
 }
-
-export default SourceCache;

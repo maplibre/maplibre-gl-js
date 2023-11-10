@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>View local GeoJSON</title>
+    <meta property="og:description" content="View local GeoJSON without server upload." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    #file {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+</style>
+<div id="map"></div>
+<input
+    type="file"
+    id="file"
+    name="file"
+    accept="application/geo+json,application/vnd.geo+json,.geojson"
+/>
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [-8.3226655, 53.7654751],
+        zoom: 8
+    });
+
+    function handleFileSelect(evt) {
+        const file = evt.target.files[0]; // Read first selected file
+
+        const reader = new FileReader();
+
+        reader.onload = function (theFile) {
+            // Parse as (geo)JSON
+            const geoJSONcontent = JSON.parse(theFile.target.result);
+
+            // Add as source to the map
+            map.addSource('uploaded-source', {
+                'type': 'geojson',
+                'data': geoJSONcontent
+            });
+
+            map.addLayer({
+                'id': 'uploaded-polygons',
+                'type': 'fill',
+                'source': 'uploaded-source',
+                'paint': {
+                    'fill-color': '#888888',
+                    'fill-outline-color': 'red',
+                    'fill-opacity': 0.4
+                },
+                // filter for (multi)polygons; for also displaying linestrings
+                // or points add more layers with different filters
+                'filter': ['==', '$type', 'Polygon']
+            });
+        };
+
+        // Read the GeoJSON as text
+        reader.readAsText(file, 'UTF-8');
+    }
+
+    document
+        .getElementById('file')
+        .addEventListener('change', handleFileSelect, false);
+</script>
+</body>
+</html>

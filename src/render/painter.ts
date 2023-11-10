@@ -1,66 +1,52 @@
-import browser from '../util/browser';
+import {browser} from '../util/browser';
 import {mat4, vec3} from 'gl-matrix';
-import SourceCache from '../source/source_cache';
-import EXTENT from '../data/extent';
-import pixelsToTileUnits from '../source/pixels_to_tile_units';
-import SegmentVector from '../data/segment';
+import {SourceCache} from '../source/source_cache';
+import {EXTENT} from '../data/extent';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
+import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import posAttributes from '../data/pos_attributes';
-import ProgramConfiguration from '../data/program_configuration';
-import CrossTileSymbolIndex from '../symbol/cross_tile_symbol_index';
-import shaders from '../shaders/shaders';
-import Program from './program';
+import {ProgramConfiguration} from '../data/program_configuration';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
+import {shaders} from '../shaders/shaders';
+import {Program} from './program';
 import {programUniforms} from './program/program_uniforms';
-import Context from '../gl/context';
-import DepthMode from '../gl/depth_mode';
-import StencilMode from '../gl/stencil_mode';
-import ColorMode from '../gl/color_mode';
-import CullFaceMode from '../gl/cull_face_mode';
-import Texture from './texture';
+import {Context} from '../gl/context';
+import {DepthMode} from '../gl/depth_mode';
+import {StencilMode} from '../gl/stencil_mode';
+import {ColorMode} from '../gl/color_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
+import {Texture} from './texture';
 import {clippingMaskUniformValues} from './program/clipping_mask_program';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import symbol from './draw_symbol';
-import circle from './draw_circle';
-import heatmap from './draw_heatmap';
-import line from './draw_line';
-import fill from './draw_fill';
-import fillExtrusion from './draw_fill_extrusion';
-import hillshade from './draw_hillshade';
-import raster from './draw_raster';
-import background from './draw_background';
-import debug, {drawDebugPadding, selectDebugSource} from './draw_debug';
-import custom from './draw_custom';
+import {drawSymbols} from './draw_symbol';
+import {drawCircles} from './draw_circle';
+import {drawHeatmap} from './draw_heatmap';
+import {drawLine} from './draw_line';
+import {drawFill} from './draw_fill';
+import {drawFillExtrusion} from './draw_fill_extrusion';
+import {drawHillshade} from './draw_hillshade';
+import {drawRaster} from './draw_raster';
+import {drawBackground} from './draw_background';
+import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
+import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 
-const draw = {
-    symbol,
-    circle,
-    heatmap,
-    line,
-    fill,
-    'fill-extrusion': fillExtrusion,
-    hillshade,
-    raster,
-    background,
-    debug,
-    custom
-};
-
-import type Transform from '../geo/transform';
-import type Tile from '../source/tile';
-import type Style from '../style/style';
-import type StyleLayer from '../style/style_layer';
+import type {Transform} from '../geo/transform';
+import type {Tile} from '../source/tile';
+import type {Style} from '../style/style';
+import type {StyleLayer} from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
-import type LineAtlas from './line_atlas';
-import type ImageManager from './image_manager';
-import type GlyphManager from './glyph_manager';
-import type VertexBuffer from '../gl/vertex_buffer';
-import type IndexBuffer from '../gl/index_buffer';
+import type {LineAtlas} from './line_atlas';
+import type {ImageManager} from './image_manager';
+import type {GlyphManager} from './glyph_manager';
+import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import RenderToTexture from './render_to_texture';
+import {RenderToTexture} from './render_to_texture';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -71,17 +57,14 @@ type PainterOptions = {
     rotating: boolean;
     zooming: boolean;
     moving: boolean;
-    gpuTiming: boolean;
     fadeDuration: number;
 };
 
 /**
+ * @internal
  * Initialize a new painter object.
- *
- * @param {Canvas} gl an experimental-webgl drawing context
- * @private
  */
-class Painter {
+export class Painter {
     context: Context;
     transform: Transform;
     renderToTexture: RenderToTexture;
@@ -122,7 +105,6 @@ class Painter {
     cache: {[_: string]: Program<any>};
     crossTileSymbolIndex: CrossTileSymbolIndex;
     symbolFadeChange: number;
-    gpuTimers: {[_: string]: any};
     debugOverlayTexture: Texture;
     debugOverlayCanvas: HTMLCanvasElement;
     // this object stores the current camera-matrix and the last render time
@@ -130,7 +112,7 @@ class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGLRenderingContext, transform: Transform) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: Transform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};
@@ -144,8 +126,6 @@ class Painter {
         this.depthEpsilon = 1 / Math.pow(2, 16);
 
         this.crossTileSymbolIndex = new CrossTileSymbolIndex();
-
-        this.gpuTimers = {};
     }
 
     /*
@@ -153,8 +133,8 @@ class Painter {
      * for a new width and height value.
      */
     resize(width: number, height: number, pixelRatio: number) {
-        this.width = width * pixelRatio;
-        this.height = height * pixelRatio;
+        this.width = Math.floor(width * pixelRatio);
+        this.height = Math.floor(height * pixelRatio);
         this.pixelRatio = pixelRatio;
         this.context.viewport.set([0, 0, this.width, this.height]);
 
@@ -475,7 +455,7 @@ class Painter {
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);
             if (selectedSource) {
-                draw.debug(this, selectedSource, selectedSource.getVisibleCoordinates());
+                drawDebug(this, selectedSource, selectedSource.getVisibleCoordinates());
             }
         }
 
@@ -493,61 +473,46 @@ class Painter {
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
 
-        this.gpuTimingStart(layer);
-        draw[layer.type](painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
-        this.gpuTimingEnd();
-    }
-
-    gpuTimingStart(layer: StyleLayer) {
-        if (!this.options.gpuTiming) return;
-        const ext = this.context.extTimerQuery;
-        // This tries to time the draw call itself, but note that the cost for drawing a layer
-        // may be dominated by the cost of uploading vertices to the GPU.
-        // To instrument that, we'd need to pass the layerTimers object down into the bucket
-        // uploading logic.
-        let layerTimer = this.gpuTimers[layer.id];
-        if (!layerTimer) {
-            layerTimer = this.gpuTimers[layer.id] = {
-                calls: 0,
-                cpuTime: 0,
-                query: ext.createQueryEXT()
-            };
+        switch (layer.type) {
+            case 'symbol':
+                drawSymbols(painter, sourceCache, layer as any, coords, this.style.placement.variableOffsets);
+                break;
+            case 'circle':
+                drawCircles(painter, sourceCache, layer as any, coords);
+                break;
+            case 'heatmap':
+                drawHeatmap(painter, sourceCache, layer as any, coords);
+                break;
+            case 'line':
+                drawLine(painter, sourceCache, layer as any, coords);
+                break;
+            case 'fill':
+                drawFill(painter, sourceCache, layer as any, coords);
+                break;
+            case 'fill-extrusion':
+                drawFillExtrusion(painter, sourceCache, layer as any, coords);
+                break;
+            case 'hillshade':
+                drawHillshade(painter, sourceCache, layer as any, coords);
+                break;
+            case 'raster':
+                drawRaster(painter, sourceCache, layer as any, coords);
+                break;
+            case 'background':
+                drawBackground(painter, sourceCache, layer as any, coords);
+                break;
+            case 'custom':
+                drawCustom(painter, sourceCache, layer as any);
+                break;
         }
-        layerTimer.calls++;
-        ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, layerTimer.query);
-    }
-
-    gpuTimingEnd() {
-        if (!this.options.gpuTiming) return;
-        const ext = this.context.extTimerQuery;
-        ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
-    }
-
-    collectGpuTimers() {
-        const currentLayerTimers = this.gpuTimers;
-        this.gpuTimers = {};
-        return currentLayerTimers;
-    }
-
-    queryGpuTimers(gpuTimers: {[_: string]: any}) {
-        const layers = {};
-        for (const layerId in gpuTimers) {
-            const gpuTimer = gpuTimers[layerId];
-            const ext = this.context.extTimerQuery;
-            const gpuTime = ext.getQueryObjectEXT(gpuTimer.query, ext.QUERY_RESULT_EXT) / (1000 * 1000);
-            ext.deleteQueryEXT(gpuTimer.query);
-            layers[layerId] = gpuTime;
-        }
-        return layers;
     }
 
     /**
      * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
-     * @param inViewportPixelUnitsUnits True when the units accepted by the matrix are in viewport pixels instead of tile units.
-     * @returns {mat4} matrix
-     * @private
+     * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+     * @returns matrix
      */
-    translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean) {
+    translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean): mat4 {
         if (!translate[0] && !translate[1]) return matrix;
 
         const angle = inViewportPixelUnitsUnits ?
@@ -592,7 +557,6 @@ class Painter {
      * Checks whether a pattern image is needed, and if it is, whether it is not loaded.
      *
      * @returns true if a needed image is missing and rendering needs to be skipped.
-     * @private
      */
     isPatternMissing(image?: CrossFaded<ResolvedImage> | null): boolean {
         if (!image) return false;
@@ -611,7 +575,6 @@ class Painter {
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
-                name,
                 shaders[name],
                 programConfiguration,
                 programUniforms[name],
@@ -666,6 +629,14 @@ class Painter {
             this.debugOverlayTexture.destroy();
         }
     }
-}
 
-export default Painter;
+    /*
+     * Return true if drawing buffer size is != from requested size.
+     * That means that we've reached GL limits somehow.
+     * Note: drawing buffer size changes only when canvas size changes
+     */
+    overLimit() {
+        const {drawingBufferWidth, drawingBufferHeight} = this.context.gl;
+        return this.width !== drawingBufferWidth || this.height !== drawingBufferHeight;
+    }
+}

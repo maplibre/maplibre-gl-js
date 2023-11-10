@@ -2,6 +2,10 @@
 
 import type {Transferable} from '../types/transferable';
 
+/**
+ * @internal
+ * A view type size
+ */
 const viewTypes = {
     'Int8': Int8Array,
     'Uint8': Uint8Array,
@@ -12,11 +16,13 @@ const viewTypes = {
     'Float32': Float32Array
 };
 
+/**
+ * @internal
+ * A view type size
+ */
 export type ViewType = keyof typeof viewTypes;
 
-/**
- * @private
- */
+/** @internal */
 class Struct {
     _pos1: number;
     _pos2: number;
@@ -28,9 +34,8 @@ class Struct {
     size: number;
 
     /**
-     * @param {StructArray} structArray The StructArray the struct is stored in
-     * @param {number} index The index of the struct in the StructArray.
-     * @private
+     * @param structArray - The StructArray the struct is stored in
+     * @param index - The index of the struct in the StructArray.
      */
     constructor(structArray: StructArray, index: number) {
         (this as any)._structArray = structArray;
@@ -44,6 +49,10 @@ class Struct {
 const DEFAULT_CAPACITY = 128;
 const RESIZE_MULTIPLIER = 5;
 
+/**
+ * @internal
+ * A struct array memeber
+ */
 export type StructArrayMember = {
     name: string;
     type: ViewType;
@@ -57,12 +66,16 @@ export type StructArrayLayout = {
     alignment: number;
 };
 
+/**
+ * An array that can be desialized
+ */
 export type SerializedStructArray = {
     length: number;
     arrayBuffer: ArrayBuffer;
 };
 
 /**
+ * @internal
  * `StructArray` provides an abstraction over `ArrayBuffer` and `TypedArray`
  * making it behave like an array of typed structs.
  *
@@ -80,8 +93,6 @@ export type SerializedStructArray = {
  * i-th element.  This affords the convience of working with (seemingly) plain
  * Javascript objects without the overhead of serializing/deserializing them
  * into ArrayBuffers for efficient web worker transfer.
- *
- * @private
  */
 abstract class StructArray {
     capacity: number;
@@ -106,7 +117,6 @@ abstract class StructArray {
      * Serialize a StructArray instance.  Serializes both the raw data and the
      * metadata needed to reconstruct the StructArray base class during
      * deserialization.
-     * @private
      */
     static serialize(array: StructArray, transferables?: Array<Transferable>): SerializedStructArray {
 
@@ -144,7 +154,7 @@ abstract class StructArray {
     }
 
     /**
-     * Resets the the length of the array to 0 without de-allocating capcacity.
+     * Resets the length of the array to 0 without de-allocating capcacity.
      */
     clear() {
         this.length = 0;
@@ -154,7 +164,7 @@ abstract class StructArray {
      * Resize the array.
      * If `n` is greater than the current length then additional elements with undefined values are added.
      * If `n` is less than the current length then the array will be reduced to the first `n` elements.
-     * @param {number} n The new size of the array.
+     * @param n - The new size of the array.
      */
     resize(n: number) {
         this.reserve(n);
@@ -164,7 +174,7 @@ abstract class StructArray {
     /**
      * Indicate a planned increase in size, so that any necessary allocation may
      * be done once, ahead of time.
-     * @param {number} n The expected size of the array.
+     * @param n - The expected size of the array.
      */
     reserve(n: number) {
         if (n > this.capacity) {
@@ -190,8 +200,6 @@ abstract class StructArray {
  * particular calculating the correct byte offset for each field.  This data
  * is used at build time to generate StructArrayLayout_*#emplaceBack() and
  * other accessors, and at runtime for binding vertex buffer attributes.
- *
- * @private
  */
 function createLayout(
     members: Array<{

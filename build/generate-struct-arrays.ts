@@ -19,9 +19,9 @@ import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
 import circleAttributes from '../src/data/bucket/circle_attributes';
 import fillAttributes from '../src/data/bucket/fill_attributes';
 import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes';
-import lineAttributes from '../src/data/bucket/line_attributes';
-import lineAttributesExt from '../src/data/bucket/line_attributes_ext';
-import patternAttributes from '../src/data/bucket/pattern_attributes';
+import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
+import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';
+import {patternAttributes} from '../src/data/bucket/pattern_attributes';
 // symbol layer specific arrays
 import {
     symbolLayoutAttributes,
@@ -35,7 +35,8 @@ import {
     placement,
     symbolInstance,
     glyphOffset,
-    lineVertex
+    lineVertex,
+    textAnchorOffset
 } from '../src/data/bucket/symbol_attributes';
 
 const typeAbbreviations = {
@@ -144,8 +145,8 @@ const layoutAttributes = {
     fill: fillAttributes,
     'fill-extrusion': fillExtrusionAttributes,
     heatmap: circleAttributes,
-    line: lineAttributes,
-    lineExt: lineAttributesExt,
+    line: lineLayoutAttributes,
+    lineExt: lineLayoutAttributesExt,
     pattern: patternAttributes
 };
 for (const name in layoutAttributes) {
@@ -164,6 +165,7 @@ createStructArrayType('placed_symbol', placement, true);
 createStructArrayType('symbol_instance', symbolInstance, true);
 createStructArrayType('glyph_offset', glyphOffset, true);
 createStructArrayType('symbol_line_vertex', lineVertex, true);
+createStructArrayType('text_anchor_offset', textAnchorOffset, true);
 
 // feature index array
 createStructArrayType('feature_index', createLayout([
@@ -227,6 +229,7 @@ function emitStructArrayLayout(locals) {
 
     output.push(
         `/**
+ * @internal
  * Implementation of the StructArray layout:`);
 
     for (const member of members) {
@@ -236,7 +239,6 @@ function emitStructArrayLayout(locals) {
 
     output.push(
         ` *
- * @private
  */
 class ${structArrayLayoutClass} extends StructArray {`);
 
@@ -349,7 +351,8 @@ function emitStructArray(locals) {
 
     if (includeStructAccessors && !useComponentGetters) {
         output.push(
-            `class ${structTypeClass} extends Struct {
+            `/** @internal */
+class ${structTypeClass} extends Struct {
     _structArray: ${structArrayClass};`);
 
         for (const {name, member, component} of components) {
@@ -384,9 +387,7 @@ export type ${structTypeClass.replace('Struct', '')} = ${structTypeClass};
     } // end 'if (includeStructAccessors)'
 
     output.push(
-        `/**
- * @private
- */
+        `/** @internal */
 export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
 
     if (useComponentGetters) {
@@ -407,8 +408,7 @@ export class ${structArrayClass} extends ${structArrayLayoutClass} {`);
         output.push(
             `    /**
      * Return the ${structTypeClass} at the given location in the array.
-     * @param {number} index The index of the element.
-     * @private
+     * @param index The index of the element.
      */
     get(index: number): ${structTypeClass} {
         return new ${structTypeClass}(this, index);

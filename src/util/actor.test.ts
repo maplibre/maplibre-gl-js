@@ -1,5 +1,5 @@
-import Actor from './actor';
-import workerFactory from './web_worker';
+import {Actor, ActorTarget} from './actor';
+import {workerFactory} from './web_worker';
 import {MessageBus} from '../../test/unit/lib/web_worker_mock';
 
 const originalWorker = global.Worker;
@@ -33,18 +33,19 @@ describe('Actor', () => {
                 this.self = self;
                 this.actor = new Actor(self, this);
             }
-            test(mapId, params, callback) {
+            getTile(mapId, params, callback) {
                 setTimeout(callback, 0, null, params);
             }
+            getWorkerSource() { return null; }
         });
 
         const worker = workerFactory();
 
-        const m1 = new Actor(worker, {}, 1);
-        const m2 = new Actor(worker, {}, 2);
+        const m1 = new Actor(worker, {} as any, '1');
+        const m2 = new Actor(worker, {} as any, '2');
 
         let callbackCount = 0;
-        m1.send('test', {value: 1729}, (err, response) => {
+        m1.send('getTile', {value: 1729}, (err, response) => {
             expect(err).toBeFalsy();
             expect(response).toEqual({value: 1729});
             callbackCount++;
@@ -52,7 +53,7 @@ describe('Actor', () => {
                 done();
             }
         });
-        m2.send('test', {value: 4104}, (err, response) => {
+        m2.send('getTile', {value: 4104}, (err, response) => {
             expect(err).toBeFalsy();
             expect(response).toEqual({value: 4104});
             callbackCount++;
@@ -72,20 +73,21 @@ describe('Actor', () => {
                 this.self = self;
                 this.actor = workerActor = new Actor(self, this);
             }
+            getWorkerSource() { return null; }
         });
 
         const worker = workerFactory();
 
         new Actor(worker, {
             test () { done(); }
-        }, 1);
+        } as any, '1');
         new Actor(worker, {
             test () {
                 done('test failed');
             }
-        }, 2);
+        } as any, '2');
 
-        workerActor.send('test', {}, () => {}, 1);
+        workerActor.send('test', {}, () => {}, '1');
     });
 
     test('#remove unbinds event listener', done => {
@@ -97,7 +99,7 @@ describe('Actor', () => {
                 expect([type, callback, useCapture]).toEqual(this._addEventListenerArgs);
                 done();
             }
-        }, {}, null);
+        } as ActorTarget, {} as any, null);
         actor.remove();
     });
 

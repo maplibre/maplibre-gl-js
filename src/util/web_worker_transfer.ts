@@ -1,4 +1,4 @@
-import TransferableGridIndex from './transferable_grid_index';
+import {TransferableGridIndex} from './transferable_grid_index';
 import {Color, CompoundExpression, expressions, ResolvedImage, StylePropertyFunction,
     StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
 
@@ -24,8 +24,17 @@ type Registry = {
     };
 };
 
+/**
+ * Register options
+ */
 type RegisterOptions<T> = {
+    /**
+     * List of properties to omit from serialization (e.g., cached/computed properties)
+     */
     omit?: ReadonlyArray<keyof T>;
+    /**
+     * List of properties that should be serialized by a simple shallow copy, rather than by a recursive call to serialize().
+     */
     shallow?: ReadonlyArray<keyof T>;
 };
 
@@ -34,11 +43,7 @@ const registry: Registry = {};
 /**
  * Register the given class as serializable.
  *
- * @param options
- * @param options.omit List of properties to omit from serialization (e.g., cached/computed properties)
- * @param options.shallow List of properties that should be serialized by a simple shallow copy, rather than by a recursive call to serialize().
- *
- * @private
+ * @param options - the registration options
  */
 export function register<T extends any>(
     name: string,
@@ -94,8 +99,6 @@ function isArrayBuffer(value: any): value is ArrayBuffer {
  * If a `transferables` array is provided, add any transferable objects (i.e.,
  * any ArrayBuffers or ArrayBuffer views) to the list. (If a copy is needed,
  * this should happen in the client code, before using serialize().)
- *
- * @private
  */
 export function serialize(input: unknown, transferables?: Array<Transferable> | null): Serialized {
     if (input === null ||
@@ -169,10 +172,9 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
 
         if (!klass.serialize) {
             for (const key in input) {
-                // any cast due to https://github.com/facebook/flow/issues/5393
-                if (!(input as any).hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
+                if (!input.hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
                 if (registry[name].omit.indexOf(key) >= 0) continue;
-                const property = (input as any)[key];
+                const property = input[key];
                 properties[key] = registry[name].shallow.indexOf(key) >= 0 ?
                     property :
                     serialize(property, transferables);
@@ -181,7 +183,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
                 properties.message = input.message;
             }
         } else {
-            if (transferables && properties as any === transferables[transferables.length - 1]) {
+            if (transferables && properties === transferables[transferables.length - 1]) {
                 throw new Error('statically serialized object won\'t survive transfer of $name property');
             }
         }
@@ -223,7 +225,7 @@ export function deserialize(input: Serialized): unknown {
     }
 
     if (typeof input === 'object') {
-        const name = (input as any).$name || 'Object';
+        const name = input.$name || 'Object';
         if (!registry[name]) {
             throw new Error(`can't deserialize unregistered class ${name}`);
         }

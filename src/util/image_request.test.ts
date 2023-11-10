@@ -1,8 +1,8 @@
-import config from './config';
-import webpSupported from './webp_supported';
+import {config} from './config';
+import {webpSupported} from './webp_supported';
 import {stubAjaxGetImage} from './test/util';
-import {fakeServer, FakeServer} from 'nise';
-import ImageRequest, {ImageRequestQueueItem} from './image_request';
+import {fakeServer, type FakeServer} from 'nise';
+import {ImageRequest, ImageRequestQueueItem} from './image_request';
 import * as ajax from './ajax';
 
 describe('ImageRequest', () => {
@@ -40,8 +40,7 @@ describe('ImageRequest', () => {
         server.requests[0].respond(undefined, undefined, undefined);
         server.requests[1].respond(undefined, undefined, undefined);
     });
-
-    test('getImage cancelling frees up request for maxParallelImageRequests', done => {
+    test('Cancel: getImage cancelling frees up request for maxParallelImageRequests', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png'}, ''));
 
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
@@ -53,7 +52,7 @@ describe('ImageRequest', () => {
         done();
     });
 
-    test('getImage requests that were once queued are still abortable', done => {
+    test('Cancel: getImage requests that were once queued are still abortable', done => {
         const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         const requests = [];
@@ -219,7 +218,7 @@ describe('ImageRequest', () => {
         }, false);
     });
 
-    test('getImage request cancelled for HTTPImageRequest', done => {
+    test('Cancel: getImage request cancelled for HTTPImageRequest', done => {
         let imageUrl;
         const requestUrl = 'test';
         // eslint-disable-next-line accessor-pairs
@@ -241,7 +240,7 @@ describe('ImageRequest', () => {
         done();
     });
 
-    test('getImage request cancelled', done => {
+    test('Cancel: getImage request cancelled', done => {
         server.respondWith(request => request.respond(200, {'Content-Type': 'image/png',
             'Cache-Control': 'cache',
             'Expires': 'expires'}, ''));
@@ -258,174 +257,48 @@ describe('ImageRequest', () => {
         done();
     });
 
-    test('throttling: getImage queues requests for later processing', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
-        const callbackHandle = ImageRequest.addThrottleControl(() => true);
+    test('Cancel: Cancellation of an image which has not yet been requested', () => {
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         let callbackCounter = 0;
         function callback() {
             callbackCounter++;
         }
-
-        for (let i = 0; i < maxRequests + 1; i++) {
-            ImageRequest.getImage({url: ''}, callback);
+        const requests: ImageRequestQueueItem[] = [];
+        for (let i = 0; i < maxRequests + 100; i++) {
+            requests.push(ImageRequest.getImage({url: `${i}`}, callback));
         }
 
-        // with throttling enabled, no requests should have been proessed yet
-        expect(server.requests).toHaveLength(0);
+        // Request should have been initiated
+        expect(requests[0].innerRequest).toBeDefined();
+        requests[0].cancel();
 
-        // process pending requests up to maxRequests
-        ImageRequest.processQueue();
-        expect(server.requests).toHaveLength(maxRequests);
-
-        // all pending
-        expect(callbackCounter).toBe(0);
-
-        ImageRequest.removeThrottleControl(callbackHandle);
-        done();
-    });
-
-    test('throttling: do NOT advance to next item when one of them is completed', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
-        const callbackHandle = ImageRequest.addThrottleControl(() => true);
-
-        let callbackCounter = 0;
-        function callback() {
-            callbackCounter++;
-        }
-
-        // make 1 more request for testing
-        const imageResults: ImageRequestQueueItem[] = [];
-        for (let i = 0; i < maxRequests + 1; i++) {
-            imageResults.push(ImageRequest.getImage({url: ''}, callback));
-        }
-
-        // with throttling enabled, no requests should have been processed yet
-        expect(server.requests).toHaveLength(0);
-
-        // process all of the pending requests
-        ImageRequest.processQueue();
-
-        // process requests up to maxRequests
-        expect(server.requests).toHaveLength(maxRequests);
-
-        // finish one of them
-        const itemIndexToComplete = 3;
-        server.requests[itemIndexToComplete].respond(200, undefined, undefined);
-
-        // Should still be maxRequests, because it does NOT fetch the next round
-        expect(server.requests).toHaveLength(maxRequests);
-
-        expect(callbackCounter).toBe(1);
-        expect(server.requests[itemIndexToComplete].status).toBe(200);
-
-        // everything should still be pending except itemIndexToComplete
-        for (let i = 0; i < maxRequests + 1; i++) {
-            expect(imageResults[i].completed).toBe(i === itemIndexToComplete);
-        }
-
-        ImageRequest.removeThrottleControl(callbackHandle);
-
-        done();
-    });
-
-    test('throttling: DO advance to next item when one of them is canceled', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
-        const callbackHandle = ImageRequest.addThrottleControl(() => true);
-
-        let callbackCounter = 0;
-        function callback() {
-            callbackCounter++;
-        }
-
-        // make 1 more request for testing
-        const imageResults: ImageRequestQueueItem[] = [];
-        for (let i = 0; i < maxRequests + 1; i++) {
-            imageResults.push(ImageRequest.getImage({url: ''}, callback));
-        }
-
-        // with throttling enabled, no requests should have been proessed yet
-        expect(server.requests).toHaveLength(0);
-
-        // process all of the pending requests
-        ImageRequest.processQueue();
-
-        // process requests up to maxRequests
-        expect(server.requests).toHaveLength(maxRequests);
-
-        // cancel 1
-        const itemIndexToCancel = 1;
-        imageResults[itemIndexToCancel].cancel();
-
-        // should have one more now
+        // Queue should move forward and next request is made
         expect(server.requests).toHaveLength(maxRequests + 1);
 
+        // Cancel request should not call callback
         expect(callbackCounter).toBe(0);
-        expect(server.requests[itemIndexToCancel].status).toBe(0);
-        expect((server.requests[itemIndexToCancel] as any).aborted).toBe(true);
 
-        // everything should still be pending except itemIndexToComplete
-        for (let i = 0; i < maxRequests + 1; i++) {
-            expect(imageResults[i].cancelled).toBe(i === itemIndexToCancel);
-        }
+        // Cancel request which is not yet issued. It should not fire callback
+        const nextRequestInQueue = requests[server.requests.length];
+        expect(nextRequestInQueue.innerRequest).toBeUndefined();
+        const cancelledImageUrl = nextRequestInQueue.requestParameters.url;
+        nextRequestInQueue.cancel();
 
-        ImageRequest.removeThrottleControl(callbackHandle);
-
-        done();
-    });
-
-    test('throttling: process next item only when processQueue is called again', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
-
-        const isThrottling = true;
-        const callbackHandle = ImageRequest.addThrottleControl(() => isThrottling);
-
-        let callbackCounter = 0;
-        function callback() {
-            callbackCounter++;
-        }
-
-        // make 1 more request for testing
-        const imageResults: ImageRequestQueueItem[] = [];
-        for (let i = 0; i < maxRequests + 1; i++) {
-            imageResults.push(ImageRequest.getImage({url: ''}, callback));
-        }
-
-        // with throttling enabled, no requests should have been proessed yet
-        expect(server.requests).toHaveLength(0);
-
-        // process all of the pending requests
-        ImageRequest.processQueue();
-
-        // process requests up to maxRequests
-        expect(server.requests).toHaveLength(maxRequests);
-
-        // finish one of them
-        const itemIndexToComplete = 4;
-        server.requests[itemIndexToComplete].respond(200, undefined, undefined);
-
-        // Should still be maxRequests, because it does NOT fetch the next round
-        expect(server.requests).toHaveLength(maxRequests);
-
-        expect(callbackCounter).toBe(1);
-        expect(server.requests[itemIndexToComplete].status).toBe(200);
-
-        // everything should still be pending except itemIndexToComplete
-        for (let i = 0; i < maxRequests + 1; i++) {
-            expect(imageResults[i].completed).toBe(i === itemIndexToComplete);
-        }
-
-        // process again in next frame
-        ImageRequest.processQueue();
+        // Queue should not move forward as cancelled image was sitting in queue
         expect(server.requests).toHaveLength(maxRequests + 1);
+        expect(callbackCounter).toBe(0);
 
-        ImageRequest.removeThrottleControl(callbackHandle);
-
-        done();
+        // On server response, next image queued should not be the cancelled image
+        server.requests[1].respond(200);
+        expect(callbackCounter).toBe(1);
+        expect(server.requests).toHaveLength(maxRequests + 2);
+        // Verify that the last request made skipped the cancelled image request
+        expect(server.requests[server.requests.length - 1].url).toBe((parseInt(cancelledImageUrl) + 1).toString());
     });
 
-    test('throttling: one throttling client will result in throttle behavior for all', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
+    test('throttling: one throttling client will result in throttle behavior for all', () => {
+        const maxRequestsPerFrame = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
         const callbackHandles = [];
 
         // add one for each
@@ -437,16 +310,11 @@ describe('ImageRequest', () => {
             callbackCounter++;
         }
 
-        for (let i = 0; i < maxRequests + 1; i++) {
+        for (let i = 0; i < maxRequestsPerFrame + 1; i++) {
             ImageRequest.getImage({url: ''}, callback);
         }
 
-        // with throttling enabled, no requests should have been proessed yet
-        expect(server.requests).toHaveLength(0);
-
-        // process pending requests up to maxRequests
-        ImageRequest.processQueue();
-        expect(server.requests).toHaveLength(maxRequests);
+        expect(server.requests).toHaveLength(maxRequestsPerFrame);
 
         // all pending
         expect(callbackCounter).toBe(0);
@@ -454,11 +322,33 @@ describe('ImageRequest', () => {
         for (const handle of callbackHandles) {
             ImageRequest.removeThrottleControl(handle);
         }
-        done();
     });
 
-    test('throttling: image queue will process all requests if throttling control returns false', done => {
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
+    test('throttling: image queue will process MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME if throttling control returns true', () => {
+        const maxRequestsPerFrame = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
+        const controlId = ImageRequest.addThrottleControl(() => true);
+
+        let callbackCounter = 0;
+        function callback() {
+            callbackCounter++;
+        }
+
+        for (let i = 0; i < maxRequests; i++) {
+            ImageRequest.getImage({url: ''}, callback);
+        }
+
+        // Should only fire request to a max allowed per frame
+        expect(server.requests).toHaveLength(maxRequestsPerFrame);
+
+        // all pending
+        expect(callbackCounter).toBe(0);
+
+        ImageRequest.removeThrottleControl(controlId);
+    });
+
+    test('throttling: image queue will process MAX_PARALLEL_IMAGE_REQUESTS if throttling control returns false', () => {
+        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS;
         const controlId = ImageRequest.addThrottleControl(() => false);
 
         let callbackCounter = 0;
@@ -466,24 +356,22 @@ describe('ImageRequest', () => {
             callbackCounter++;
         }
 
-        for (let i = 0; i < maxRequests + 1; i++) {
+        for (let i = 0; i < maxRequests + 100; i++) {
             ImageRequest.getImage({url: ''}, callback);
         }
 
         // all should be processed because throttle control is returning false
-        expect(server.requests).toHaveLength(maxRequests + 1);
+        expect(server.requests).toHaveLength(maxRequests);
 
         // all pending
         expect(callbackCounter).toBe(0);
 
         ImageRequest.removeThrottleControl(controlId);
-        done();
     });
 
-    test('throttling: removing throttling client will process all requests', done => {
+    test('throttling: removing throttling client will process all requests', () => {
         const requestParameter = {'Content-Type': 'image/png', url: ''};
-        server.respondWith(request => request.respond(200, requestParameter, ''));
-        const maxRequests = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
+        const maxRequestsPerFrame = config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME;
 
         // add 10, and one of them is throttling
         const throttlingIndex = 5;
@@ -498,37 +386,28 @@ describe('ImageRequest', () => {
         }
 
         // make 2 times + 1 more requests
-        const requestsMade = 2 * maxRequests + 1;
+        const requestsMade = 2 * maxRequestsPerFrame + 1;
         const imageResults: ImageRequestQueueItem[] = [];
         for (let i = 0; i < requestsMade; i++) {
             imageResults.push(ImageRequest.getImage(requestParameter, callback));
         }
 
-        // with throttling enabled, no requests should have been proessed yet
-        expect(server.requests).toHaveLength(0);
-
-        // process all of the pending requests
-        ImageRequest.processQueue();
-
         // up to the config value
-        expect(server.requests).toHaveLength(maxRequests);
+        expect(server.requests).toHaveLength(maxRequestsPerFrame);
 
         const itemIndexToComplete = 6;
-        server.requests[itemIndexToComplete].respond(200, undefined, undefined);
+        server.requests[itemIndexToComplete].respond(200);
 
-        // unleash it by removing teh throttling client
+        // unleash it by removing the throttling client
         ImageRequest.removeThrottleControl(throttlingIndex);
-        ImageRequest.processQueue();
         expect(server.requests).toHaveLength(requestsMade);
 
         // all pending
         expect(callbackCounter).toBe(1);
 
         // everything should still be pending except itemIndexToComplete
-        for (let i = 0; i < maxRequests + 1; i++) {
+        for (let i = 0; i < maxRequestsPerFrame + 1; i++) {
             expect(imageResults[i].completed).toBe(i === itemIndexToComplete);
         }
-
-        done();
     });
 });

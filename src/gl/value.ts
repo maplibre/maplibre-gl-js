@@ -1,6 +1,7 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {isWebGL2} from './webgl2';
 
-import type Context from './context';
+import type {Context} from './context';
 import type {
     BlendFuncType,
     BlendEquationType,
@@ -26,7 +27,7 @@ export interface IValue<T> {
 }
 
 class BaseValue<T> implements IValue<T> {
-    gl: WebGLRenderingContext;
+    gl: WebGLRenderingContext|WebGL2RenderingContext;
     current: T;
     default: T;
     dirty: boolean;
@@ -417,19 +418,20 @@ export class BindElementBuffer extends BaseValue<WebGLBuffer> {
     }
 }
 
-export class BindVertexArrayOES extends BaseValue<any> {
-    vao: any;
-
-    constructor(context: Context) {
-        super(context);
-        this.vao = context.extVertexArrayObject;
-    }
-    getDefault(): any {
+export class BindVertexArray extends BaseValue<WebGLVertexArrayObject | null> {
+    getDefault(): WebGLVertexArrayObject | null {
         return null;
     }
-    set(v: any) {
-        if (!this.vao || v === this.current && !this.dirty) return;
-        this.vao.bindVertexArrayOES(v);
+    set(v: WebGLVertexArrayObject | null) {
+        if (v === this.current && !this.dirty) return;
+        const gl = this.gl;
+
+        if (isWebGL2(gl)) {
+            gl.bindVertexArray(v);
+        } else {
+            gl.getExtension('OES_vertex_array_object')?.bindVertexArrayOES(v);
+        }
+
         this.current = v;
         this.dirty = false;
     }
@@ -499,6 +501,7 @@ export class ColorAttachment extends FramebufferAttachment<WebGLTexture> {
         // attachment point, but thus far MBGL only uses textures for color
         const gl = this.gl;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, v, 0);
+
         this.current = v;
         this.dirty = false;
     }

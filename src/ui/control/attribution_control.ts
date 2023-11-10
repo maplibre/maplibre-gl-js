@@ -1,28 +1,37 @@
-import DOM from '../../util/dom';
-import {bindAll} from '../../util/util';
+import {DOM} from '../../util/dom';
 
-import type Map from '../map';
+import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
-
+import type {MapDataEvent} from '../events';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+/**
+ * The {@link AttributionControl} options
+ */
 type AttributionOptions = {
+    /**
+     * If `true`, the attribution control will always collapse when moving the map. If `false`,
+     * force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.
+     * **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.**
+     */
     compact?: boolean;
+    /**
+     * Attributions to show in addition to any other attributions.
+     */
     customAttribution?: string | Array<string>;
 };
 
 /**
  * An `AttributionControl` control presents the map's attribution information. By default, the attribution control is expanded (regardless of map width).
- *
- * @implements {IControl}
- * @param {Object} [options]
- * @param {boolean} [options.compact] If `true`, the attribution control will always collapse when moving the map. If `false`, force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.  **Attribution should not be collapsed if it can comfortably fit on the map. `compact` should only be used to modify default attribution when map size makes it impossible to fit default attribution and when the automatic compact resizing for default settings are not sufficient.**
- * @param {string | Array<string>} [options.customAttribution] String or strings to show in addition to any other attributions.
+ * @group Markers and Controls
  * @example
- * var map = new maplibregl.Map({attributionControl: false})
+ * ```ts
+ * let map = new maplibregl.Map({attributionControl: false})
  *     .addControl(new maplibregl.AttributionControl({
  *         compact: true
  *     }));
+ * ```
  */
-class AttributionControl implements IControl {
+export class AttributionControl implements IControl {
     options: AttributionOptions;
     _map: Map;
     _compact: boolean;
@@ -34,21 +43,18 @@ class AttributionControl implements IControl {
     styleId: string;
     styleOwner: string;
 
+    /**
+     * @param options - the attribution options
+     */
     constructor(options: AttributionOptions = {}) {
         this.options = options;
-
-        bindAll([
-            '_toggleAttribution',
-            '_updateData',
-            '_updateCompact',
-            '_updateCompactMinimize'
-        ], this);
     }
 
     getDefaultPosition(): ControlPosition {
         return 'bottom-right';
     }
 
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options && this.options.compact;
@@ -70,6 +76,7 @@ class AttributionControl implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._container);
 
@@ -90,7 +97,7 @@ class AttributionControl implements IControl {
         element.setAttribute('aria-label', str);
     }
 
-    _toggleAttribution() {
+    _toggleAttribution = () => {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.setAttribute('open', '');
@@ -100,13 +107,13 @@ class AttributionControl implements IControl {
                 this._container.removeAttribute('open');
             }
         }
-    }
+    };
 
-    _updateData(e: any) {
+    _updateData = (e: MapDataEvent) => {
         if (e && (e.sourceDataType === 'metadata' || e.sourceDataType === 'visibility' || e.dataType === 'style' || e.type === 'terrain')) {
             this._updateAttributions();
         }
-    }
+    };
 
     _updateAttributions() {
         if (!this._map.style) return;
@@ -125,7 +132,7 @@ class AttributionControl implements IControl {
         }
 
         if (this._map.style.stylesheet) {
-            const stylesheet: any = this._map.style.stylesheet;
+            const stylesheet = this._map.style.stylesheet as StyleSpecification & { owner: string; id: string };
             this.styleOwner = stylesheet.owner;
             this.styleId = stylesheet.id;
         }
@@ -171,7 +178,7 @@ class AttributionControl implements IControl {
         this._editLink = null;
     }
 
-    _updateCompact() {
+    _updateCompact = () => {
         if (this._map.getCanvasContainer().offsetWidth <= 640 || this._compact) {
             if (this._compact === false) {
                 this._container.setAttribute('open', '');
@@ -185,16 +192,13 @@ class AttributionControl implements IControl {
                 this._container.classList.remove('maplibregl-compact', 'maplibregl-compact-show');
             }
         }
-    }
+    };
 
-    _updateCompactMinimize() {
+    _updateCompactMinimize = () => {
         if (this._container.classList.contains('maplibregl-compact')) {
             if (this._container.classList.contains('maplibregl-compact-show')) {
                 this._container.classList.remove('maplibregl-compact-show');
             }
         }
-    }
-
+    };
 }
-
-export default AttributionControl;

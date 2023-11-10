@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "types": [
+      "geojson",
+      "offscreencanvas"
+    ]
+  },
+  "include": [
+    "dist/maplibre-gl.d.ts"
+  ],
+  "exclude": []
+}

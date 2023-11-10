@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Use locally generated ideographs</title>
+    <meta property="og:description" content="Set localIdeographFontFamily to override the font used for displaying CJK (Chinese, Japanese and Korean) characters, ignoring the map style. This setting must be a CSS font rule specifying fallbacks of on-device fonts. Set localIdeographFontFamily to false to use server-provided fonts, which is much slower." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+    const map = new maplibregl.Map({
+        container: 'map',
+        style:
+            'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        center: [120.3049, 31.4751],
+        zoom: 12,
+        localIdeographFontFamily: '"Apple LiSung", serif'
+    });
+</script>
+</body>
+</html>

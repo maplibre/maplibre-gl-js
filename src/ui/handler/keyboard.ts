@@ -1,4 +1,6 @@
-import type Map from '../map';
+import {Handler} from '../handler_manager';
+import type {Map} from '../map';
+import {TransformProvider} from './transform-provider';
 
 const defaultOptions = {
     panStep: 100,
@@ -19,8 +21,11 @@ const defaultOptions = {
  * - `Shift+⇠`: Decrease the rotation by 15 degrees.
  * - `Shift+⇡`: Increase the pitch by 10 degrees.
  * - `Shift+⇣`: Decrease the pitch by 10 degrees.
+ *
+ * @group Handlers
  */
-class KeyboardHandler {
+export class KeyboardHandler implements Handler {
+    _tr: TransformProvider;
     _enabled: boolean;
     _active: boolean;
     _panStep: number;
@@ -28,10 +33,9 @@ class KeyboardHandler {
     _pitchStep: number;
     _rotationDisabled: boolean;
 
-    /**
-    * @private
-    */
-    constructor() {
+    /** @internal */
+    constructor(map: Map) {
+        this._tr = new TransformProvider(map);
         const stepOptions = defaultOptions;
         this._panStep = stepOptions.panStep;
         this._bearingStep = stepOptions.bearingStep;
@@ -113,17 +117,17 @@ class KeyboardHandler {
 
         return {
             cameraAnimation: (map: Map) => {
-                const zoom = map.getZoom();
+                const tr = this._tr;
                 map.easeTo({
                     duration: 300,
                     easeId: 'keyboardHandler',
                     easing: easeOut,
 
-                    zoom: zoomDir ? Math.round(zoom) + zoomDir * (e.shiftKey ? 2 : 1) : zoom,
-                    bearing: map.getBearing() + bearingDir * this._bearingStep,
-                    pitch: map.getPitch() + pitchDir * this._pitchStep,
+                    zoom: zoomDir ? Math.round(tr.zoom) + zoomDir * (e.shiftKey ? 2 : 1) : tr.zoom,
+                    bearing: tr.bearing + bearingDir * this._bearingStep,
+                    pitch: tr.pitch + pitchDir * this._pitchStep,
                     offset: [-xDir * this._panStep, -yDir * this._panStep],
-                    center: map.getCenter()
+                    center: tr.center
                 }, {originalEvent: e});
             }
         };
@@ -133,7 +137,9 @@ class KeyboardHandler {
      * Enables the "keyboard rotate and zoom" interaction.
      *
      * @example
-     *   map.keyboard.enable();
+     * ```ts
+     * map.keyboard.enable();
+     * ```
      */
     enable() {
         this._enabled = true;
@@ -143,7 +149,9 @@ class KeyboardHandler {
      * Disables the "keyboard rotate and zoom" interaction.
      *
      * @example
-     *   map.keyboard.disable();
+     * ```ts
+     * map.keyboard.disable();
+     * ```
      */
     disable() {
         this._enabled = false;
@@ -154,7 +162,7 @@ class KeyboardHandler {
      * Returns a Boolean indicating whether the "keyboard rotate and zoom"
      * interaction is enabled.
      *
-     * @returns {boolean} `true` if the "keyboard rotate and zoom"
+     * @returns `true` if the "keyboard rotate and zoom"
      * interaction is enabled.
      */
     isEnabled() {
@@ -165,7 +173,7 @@ class KeyboardHandler {
      * Returns true if the handler is enabled and has detected the start of a
      * zoom/rotate gesture.
      *
-     * @returns {boolean} `true` if the handler is enabled and has detected the
+     * @returns `true` if the handler is enabled and has detected the
      * start of a zoom/rotate gesture.
      */
     isActive() {
@@ -177,7 +185,9 @@ class KeyboardHandler {
      * "keyboard zoom" interaction enabled.
      *
      * @example
-     *   map.keyboard.disableRotation();
+     * ```ts
+     * map.keyboard.disableRotation();
+     * ```
      */
     disableRotation() {
         this._rotationDisabled = true;
@@ -187,8 +197,10 @@ class KeyboardHandler {
      * Enables the "keyboard pan/rotate" interaction.
      *
      * @example
-     *   map.keyboard.enable();
-     *   map.keyboard.enableRotation();
+     * ```ts
+     * map.keyboard.enable();
+     * map.keyboard.enableRotation();
+     * ```
      */
     enableRotation() {
         this._rotationDisabled = false;
@@ -198,5 +210,3 @@ class KeyboardHandler {
 function easeOut(t: number) {
     return t * (2 - t);
 }
-
-export default KeyboardHandler;

@@ -4,19 +4,19 @@ import {register} from '../util/web_worker_transfer';
 import {PossiblyEvaluatedPropertyValue} from '../style/properties';
 import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
 import {clamp} from '../util/util';
-import patternAttributes from './bucket/pattern_attributes';
-import EvaluationParameters from '../style/evaluation_parameters';
-import FeaturePositionMap from './feature_position_map';
+import {patternAttributes} from './bucket/pattern_attributes';
+import {EvaluationParameters} from '../style/evaluation_parameters';
+import {FeaturePositionMap} from './feature_position_map';
 import {Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
 
 import type {UniformLocations} from '../render/uniform_binding';
 
 import type {CanonicalTileID} from '../source/tile_id';
-import type Context from '../gl/context';
+import type {Context} from '../gl/context';
 import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
 import type {CrossfadeParameters} from '../style/evaluation_parameters';
 import type {StructArray, StructArrayMember} from '../util/struct_array';
-import type VertexBuffer from '../gl/vertex_buffer';
+import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {ImagePosition} from '../render/image_atlas';
 import type {
     Feature,
@@ -66,10 +66,7 @@ function packColor(color: Color): [number, number] {
  *
  *  Note that the shader source varies depending on whether we're using a uniform or
  *  attribute. We dynamically compile shaders at runtime to accommodate this.
- *
- * @private
  */
-
 interface AttributeBinder {
     populatePaintArray(
         length: number,
@@ -396,6 +393,7 @@ class CrossFadedCompositeBinder implements AttributeBinder {
 }
 
 /**
+ * @internal
  * ProgramConfiguration contains the logic for binding style layer properties and tile
  * layer feature data into GL program uniforms and vertex attributes.
  *
@@ -412,10 +410,8 @@ class CrossFadedCompositeBinder implements AttributeBinder {
  * When a vector tile is parsed, this same configuration information is used to
  * populate the attribute buffers needed for data-driven styling using the zoom
  * level and feature property data.
- *
- * @private
  */
-export default class ProgramConfiguration {
+export class ProgramConfiguration {
     binders: {[_: string]: AttributeBinder | UniformBinder};
     cacheKey: string;
 

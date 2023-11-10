@@ -7,35 +7,22 @@ import {interpolates, Color, StylePropertySpecification, normalizePropertyExpres
     CompositeExpression, TransitionSpecification,
     PropertyValueSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {register} from '../util/web_worker_transfer';
-import EvaluationParameters from './evaluation_parameters';
+import {EvaluationParameters} from './evaluation_parameters';
 
 import {CanonicalTileID} from '../source/tile_id';
 
 type TimePoint = number;
 
+/**
+ * A from-to type
+ */
 export type CrossFaded<T> = {
     to: T;
     from: T;
 };
 
 /**
- * Implements a number of classes that define state and behavior for paint and layout properties, most
- * importantly their respective evaluation chains:
- *
- *       Transitionable paint property value
- *     → Transitioning paint property value
- *     → Possibly evaluated paint property value
- *     → Fully evaluated paint property value
- *
- *       Layout property value
- *     → Possibly evaluated layout property value
- *     → Fully evaluated layout property value
- *
- * @module
- * @private
- */
-
-/**
+ * @internal
  *  Implementations of the `Property` interface:
  *
  *  * Hold metadata about a property that's independent of any specific value: stuff like the type of the value,
@@ -50,8 +37,6 @@ export type CrossFaded<T> = {
  *  and one for properties that don't. There are a few "special case" implementations as well: one for properties
  *  which cross-fade between two values rather than interpolating, one for `heatmap-color` and `line-gradient`,
  *  and one for `light-position`.
- *
- * @private
  */
 export interface Property<T, R> {
     specification: StylePropertySpecification;
@@ -65,6 +50,7 @@ export interface Property<T, R> {
 }
 
 /**
+ * @internal
  *  `PropertyValue` represents the value part of a property key-value unit. It's used to represent both
  *  paint and layout property values, and regardless of whether or not their property supports data-driven
  *  expressions.
@@ -80,8 +66,6 @@ export interface Property<T, R> {
  *  In addition to storing the original input value, `PropertyValue` also stores a normalized representation,
  *  effectively treating functions as if they are expressions, and constant or default values as if they are
  *  (constant) expressions.
- *
- *  @private
  */
 export class PropertyValue<T, R> {
     property: Property<T, R>;
@@ -107,14 +91,13 @@ export class PropertyValue<T, R> {
     }
 }
 
-// ------- Transitionable -------
-
 export type TransitionParameters = {
     now: TimePoint;
     transition: TransitionSpecification;
 };
 
 /**
+ * @internal
  * Paint properties are _transitionable_: they can change in a fluid manner, interpolating or cross-fading between
  * old and new value. The duration of the transition, and the delay before it begins, is configurable.
  *
@@ -123,8 +106,6 @@ export type TransitionParameters = {
  *
  * A `TransitionablePropertyValue` can calculate the next step in the evaluation chain for paint property values:
  * `TransitioningPropertyValue`.
- *
- * @private
  */
 class TransitionablePropertyValue<T, R> {
     property: Property<T, R>;
@@ -147,11 +128,10 @@ class TransitionablePropertyValue<T, R> {
 }
 
 /**
+ * @internal
  * `Transitionable` stores a map of all (property name, `TransitionablePropertyValue`) pairs for paint properties of a
  * given layer type. It can calculate the `TransitioningPropertyValue`s for all of them at once, producing a
  * `Transitioning` instance for the same set of properties.
- *
- * @private
  */
 export class Transitionable<Props> {
     _properties: Properties<Props>;
@@ -219,16 +199,13 @@ export class Transitionable<Props> {
     }
 }
 
-// ------- Transitioning -------
-
 /**
+ * @internal
  * `TransitioningPropertyValue` implements the first of two intermediate steps in the evaluation chain of a paint
  * property value. In this step, transitions between old and new values are handled: as long as the transition is in
  * progress, `TransitioningPropertyValue` maintains a reference to the prior value, and interpolates between it and
  * the new value based on the current time and the configured transition duration and delay. The product is the next
  * step in the evaluation chain: the "possibly evaluated" result type `R`. See below for more on this concept.
- *
- * @private
  */
 class TransitioningPropertyValue<T, R> {
     property: Property<T, R>;
@@ -284,11 +261,10 @@ class TransitioningPropertyValue<T, R> {
 }
 
 /**
+ * @internal
  * `Transitioning` stores a map of all (property name, `TransitioningPropertyValue`) pairs for paint properties of a
  * given layer type. It can calculate the possibly-evaluated values for all of them at once, producing a
  * `PossiblyEvaluated` instance for the same set of properties.
- *
- * @private
  */
 export class Transitioning<Props> {
     _properties: Properties<Props>;
@@ -331,8 +307,6 @@ export class Transitioning<Props> {
  * `Layout` stores a map of all (property name, `PropertyValue`) pairs for layout properties of a
  * given layer type. It can calculate the possibly-evaluated values for all of them at once, producing a
  * `PossiblyEvaluated` instance for the same set of properties.
- *
- * @private
  */
 export class Layout<Props> {
     _properties: Properties<Props>;
@@ -341,6 +315,10 @@ export class Layout<Props> {
     constructor(properties: Properties<Props>) {
         this._properties = properties;
         this._values = (Object.create(properties.defaultPropertyValues) as any);
+    }
+
+    hasValue<S extends keyof Props>(name: S) {
+        return this._values[name].value !== undefined;
     }
 
     getValue<S extends keyof Props>(name: S) {
@@ -395,8 +373,6 @@ export class Layout<Props> {
  * Note that `PossiblyEvaluatedValue` (and `PossiblyEvaluatedPropertyValue`, below) are _not_ used for properties that
  * do not allow data-driven values. For such properties, we know that the "possibly evaluated" result is always a constant
  * scalar value. See below.
- *
- * @private
  */
 type PossiblyEvaluatedValue<T> = {
     kind: 'constant';
@@ -404,12 +380,11 @@ type PossiblyEvaluatedValue<T> = {
 } | SourceExpression | CompositeExpression;
 
 /**
+ * @internal
  * `PossiblyEvaluatedPropertyValue` is used for data-driven paint and layout property values. It holds a
  * `PossiblyEvaluatedValue` and the `GlobalProperties` that were used to generate it. You're not allowed to supply
  * a different set of `GlobalProperties` when performing the final evaluation because they would be ignored in the
  * case where the input value was a constant or camera function.
- *
- * @private
  */
 export class PossiblyEvaluatedPropertyValue<T> {
     property: DataDrivenProperty<T>;
@@ -445,9 +420,9 @@ export class PossiblyEvaluatedPropertyValue<T> {
 }
 
 /**
+ * @internal
  * `PossiblyEvaluated` stores a map of all (property name, `R`) pairs for paint or layout properties of a
  * given layer type.
- * @private
  */
 export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
     _properties: Properties<Props>;
@@ -464,11 +439,10 @@ export class PossiblyEvaluated<Props, PossibleEvaluatedProps> {
 }
 
 /**
+ * @internal
  * An implementation of `Property` for properties that do not permit data-driven (source or composite) expressions.
  * This restriction allows us to declare statically that the result of possibly evaluating this kind of property
  * is in fact always the scalar type `T`, and can be used without further evaluating the value on a per-feature basis.
- *
- * @private
  */
 export class DataConstantProperty<T> implements Property<T, T> {
     specification: StylePropertySpecification;
@@ -494,11 +468,10 @@ export class DataConstantProperty<T> implements Property<T, T> {
 }
 
 /**
+ * @internal
  * An implementation of `Property` for properties that permit data-driven (source or composite) expressions.
  * The result of possibly evaluating this kind of property is `PossiblyEvaluatedPropertyValue<T>`; obtaining
  * a scalar value `T` requires further evaluation on a per-feature basis.
- *
- * @private
  */
 export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPropertyValue<T>> {
     specification: StylePropertySpecification;
@@ -570,10 +543,9 @@ export class DataDrivenProperty<T> implements Property<T, PossiblyEvaluatedPrope
 }
 
 /**
+ * @internal
  * An implementation of `Property` for  data driven `line-pattern` which are transitioned by cross-fading
  * rather than interpolation.
- *
- * @private
  */
 
 export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFaded<T>> {
@@ -637,10 +609,9 @@ export class CrossFadedDataDrivenProperty<T> extends DataDrivenProperty<CrossFad
     }
 }
 /**
+ * @internal
  * An implementation of `Property` for `*-pattern` and `line-dasharray`, which are transitioned by cross-fading
  * rather than interpolation.
- *
- * @private
  */
 export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
     specification: StylePropertySpecification;
@@ -680,11 +651,10 @@ export class CrossFadedProperty<T> implements Property<T, CrossFaded<T>> {
 }
 
 /**
+ * @internal
  * An implementation of `Property` for `heatmap-color` and `line-gradient`. Interpolation is a no-op, and
  * evaluation returns a boolean value in order to indicate its presence, but the real
  * evaluation happens in StyleLayer classes.
- *
- * @private
  */
 
 export class ColorRampProperty implements Property<Color, boolean> {
@@ -707,6 +677,7 @@ export class ColorRampProperty implements Property<Color, boolean> {
 }
 
 /**
+ * @internal
  * `Properties` holds objects containing default values for the layout or paint property set of a given
  * layer type. These objects are immutable, and they are used as the prototypes for the `_values` members of
  * `Transitionable`, `Transitioning`, `Layout`, and `PossiblyEvaluated`. This allows these classes to avoid
@@ -714,8 +685,6 @@ export class ColorRampProperty implements Property<Color, boolean> {
  * on the default value: using `for (const property of Object.keys(this._values))`, they can iterate over
  * only the _own_ properties of `_values`, skipping repeated calculation of transitions and possible/final
  * evaluations for defaults, the result of which will always be the same.
- *
- * @private
  */
 export class Properties<Props> {
     properties: Props;

@@ -1,5 +1,5 @@
-import Map from '../../ui/map';
-import DOM from '../../util/dom';
+import {Map} from '../../ui/map';
+import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {extend} from '../../util/util';
 import {beforeMapTest} from '../../util/test/util';

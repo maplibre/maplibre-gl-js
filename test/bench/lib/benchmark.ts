@@ -34,7 +34,7 @@ class Benchmark {
 
     /**
      * The minimum number of measurements affects how many statistical observations can be made on the benchmark e.g,
-     * 210 measurement samples => 20 observations for regression because the sum of 1 to 20 = 210. See regression() in statistics.ts.
+     * 210 measurement `samples => 20` observations for regression because the sum of 1 to 20 = 210. See regression() in statistics.ts.
      * The minimum number of measurements also affects the runtime: more measurements means a longer running beanchmark.
      */
     public minimumMeasurements = 210;
@@ -96,32 +96,28 @@ class Benchmark {
         }
     }
 
-    private _measureAsync(): Promise<Array<Measurement>> {
-        const time = performance.now() - this._start;
-        this._elapsed += time;
-        if (time < minTimeForMeasurement) {
-            this._iterationsPerMeasurement++;
-        } else {
-            this._measurements.push({time, iterations: this._iterationsPerMeasurement});
-        }
-        if (this._done()) {
-            return this._end();
-        }
-        this._start = performance.now();
-        return this._runAsync(this._iterationsPerMeasurement).then(() => this._measureAsync());
-    }
-
-    private _runAsync(n: number): Promise<void> {
-        const bench = (this.bench() as any as Promise<void>);
-        if (n === 1) {
-            return bench;
-        } else {
-            return bench.then(() => this._runAsync(n - 1));
+    private async _measureAsync(): Promise<Array<Measurement>> {
+        while (true) {
+            const time = performance.now() - this._start;
+            this._elapsed += time;
+            if (time < minTimeForMeasurement) {
+                this._iterationsPerMeasurement++;
+            } else {
+                this._measurements.push({time, iterations: this._iterationsPerMeasurement});
+            }
+            if (this._done()) {
+                return this._end();
+            }
+            this._start = performance.now();
+            for (let i = this._iterationsPerMeasurement; i > 0; --i) {
+                await this.bench();
+            }
         }
     }
 
-    private _end(): Promise<Array<Measurement>> {
-        return Promise.resolve(this.teardown()).then(() => this._measurements);
+    private async _end(): Promise<Array<Measurement>> {
+        await this.teardown();
+        return this._measurements;
     }
 }
 

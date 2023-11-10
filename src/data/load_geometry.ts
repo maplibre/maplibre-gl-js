@@ -1,6 +1,6 @@
 import {warnOnce, clamp} from '../util/util';
 
-import EXTENT from './extent';
+import {EXTENT} from './extent';
 
 import type Point from '@mapbox/point-geometry';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
@@ -16,10 +16,9 @@ const MIN = -MAX - 1;
 /**
  * Loads a geometry from a VectorTileFeature and scales it to the common extent
  * used internally.
- * @param {VectorTileFeature} feature
- * @private
+ * @param feature - the vector tile feature to load
  */
-export default function loadGeometry(feature: VectorTileFeature): Array<Array<Point>> {
+export function loadGeometry(feature: VectorTileFeature): Array<Array<Point>> {
     const scale = EXTENT / feature.extent;
     const geometry = feature.loadGeometry();
     for (let r = 0; r < geometry.length; r++) {

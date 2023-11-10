@@ -2,10 +2,13 @@ import type {Cancelable} from '../types/cancelable';
 import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolAction} from './ajax';
 import type {Callback} from '../types/callback';
 
-import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker} from './util';
-import webpSupported from './webp_supported';
-import config from './config';
+import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
+import {webpSupported} from './webp_supported';
+import {config} from './config';
 
+/**
+ * The callback that is being called after an image was fetched
+ */
 export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
 type ImageQueueThrottleControlCallback = () => boolean;
@@ -23,6 +26,14 @@ type ImageQueueThrottleCallbackDictionary = {
     [Key: number]: ImageQueueThrottleControlCallback;
 }
 
+type HTMLImageElementWithPriority = HTMLImageElement &
+{
+    // fetchPriority is experimental property supported on Chromium browsers from Version 102
+    // By default images are downloaded with priority low, whereas fetch request downloads with priority high
+    // https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/fetchPriority
+    fetchPriority?: 'auto' | 'high' | 'low';
+};
+
 /**
  * By default, the image queue is self driven, meaning as soon as one requested item is processed,
  * it will move on to next one as quickly as it can while limiting
@@ -38,7 +49,7 @@ type ImageQueueThrottleCallbackDictionary = {
  * use a lambda function to determine when the queue should be throttled (e.g. when isMoving())
  * and manually calling {@link processQueue} in the render loop.
  */
-namespace ImageRequest {
+export namespace ImageRequest {
     let imageRequestQueue : ImageRequestQueueItem[];
     let currentParallelImageRequests:number;
 
@@ -58,10 +69,10 @@ namespace ImageRequest {
     /**
      * Install a callback to control when image queue throttling is desired.
      * (e.g. when the map view is moving)
-     * @param {ImageQueueThrottleControlCallback} callback The callback function to install
-     * @returns {number} handle that identifies the installed callback.
+     * @param callback - The callback function to install
+     * @returns handle that identifies the installed callback.
      */
-    export const addThrottleControl = (callback: ImageQueueThrottleControlCallback): number /*callbackHandle*/ => {
+    export const addThrottleControl = (callback: ImageQueueThrottleControlCallback): number => {
         const handle = throttleControlCallbackHandleCounter++;
         throttleControlCallbacks[handle] = callback;
         return handle;
@@ -70,16 +81,18 @@ namespace ImageRequest {
     /**
      * Remove a previously installed callback by passing in the handle returned
      * by {@link addThrottleControl}.
-     * @param {number} callbackHandle The handle for the callback to remove.
+     * @param callbackHandle - The handle for the callback to remove.
      */
     export const removeThrottleControl = (callbackHandle: number): void => {
         delete throttleControlCallbacks[callbackHandle];
+        // Try updating the queue
+        processQueue();
     };
 
     /**
      * Check to see if any of the installed callbacks are requesting the queue
      * to be throttled.
-     * @returns {boolean} true if any callback is causing the queue to be throttled.
+     * @returns `true` if any callback is causing the queue to be throttled.
      */
     const isThrottled = (): boolean => {
         const allControlKeys = Object.keys(throttleControlCallbacks);
@@ -97,10 +110,10 @@ namespace ImageRequest {
 
     /**
      * Request to load an image.
-     * @param {RequestParameters} requestParameters Request parameters.
-     * @param {GetImageCallback} callback Callback to issue when the request completes.
-     * @param {supportImageRefresh} supportImageRefresh true, if the image request need to support refresh based on cache headers.
-     * @returns {Cancelable} Cancelable request.
+     * @param requestParameters - Request parameters.
+     * @param callback - Callback to issue when the request completes.
+     * @param supportImageRefresh - `true`, if the image request need to support refresh based on cache headers.
+     * @returns Cancelable request.
      */
     export const getImage = (
         requestParameters: RequestParameters,
@@ -114,23 +127,31 @@ namespace ImageRequest {
             requestParameters.headers.accept = 'image/webp,*/*';
         }
 
-        const queued:ImageRequestQueueItem = {
+        const request:ImageRequestQueueItem = {
             requestParameters,
             supportImageRefresh,
             callback,
             cancelled: false,
             completed: false,
+            cancel: () => {
+                if (!request.completed && !request.cancelled) {
+                    request.cancelled = true;
 
-            // Just a place holder. The real one will be assigned during processQueue()
-            cancel: () => {}
+                    // Only reduce currentParallelImageRequests, if the image request was issued.
+                    if (request.innerRequest) {
+                        request.innerRequest.cancel();
+                        currentParallelImageRequests--;
+                    }
+
+                    // in the case of cancelling, it WILL move on
+                    processQueue();
+                }
+            }
         };
-        imageRequestQueue.push(queued);
 
-        if (!isThrottled()) {
-            processQueue();
-        }
-
-        return queued;
+        imageRequestQueue.push(request);
+        processQueue();
+        return request;
     };
 
     const arrayBufferToCanvasImageSource = (data: ArrayBuffer, callback: Callback<CanvasImageSource>) => {
@@ -181,7 +202,7 @@ namespace ImageRequest {
         expires?: string | null): void => {
         if (err) {
             callback(err);
-        } else if (data instanceof HTMLImageElement || data instanceof ImageBitmap) {
+        } else if (data instanceof HTMLImageElement || isImageBitmap(data)) {
             // User using addProtocol can directly return HTMLImageElement/ImageBitmap type
             // If HtmlImageElement is used to get image then response type will be HTMLImageElement
             callback(null, data);
@@ -199,43 +220,27 @@ namespace ImageRequest {
             itemInQueue.completed = true;
             currentParallelImageRequests--;
 
-            if (!isThrottled()) {
-                processQueue();
-            }
+            processQueue();
         }
     };
 
     /**
      * Process some number of items in the image request queue.
-     * @param {number} maxImageRequests The maximum number of request items to process. By default, up to {@link Config.MAX_PARALLEL_IMAGE_REQUESTS} will be processed.
-     * @returns {number} The number of items remaining in the queue.
      */
-    export const processQueue = (
-        maxImageRequests: number = 0): number => {
+    const processQueue = (): void => {
 
-        if (maxImageRequests <= 0) {
-            maxImageRequests = isThrottled() ? config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME : config.MAX_PARALLEL_IMAGE_REQUESTS;
-        }
-
-        const cancelRequest = (request: ImageRequestQueueItem) => {
-            if (!request.completed && !request.cancelled) {
-                currentParallelImageRequests--;
-                request.cancelled = true;
-                request.innerRequest.cancel();
-
-                // in the case of cancelling, it WILL move on
-                processQueue();
-            }
-        };
+        const maxImageRequests = isThrottled() ?
+            config.MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME :
+            config.MAX_PARALLEL_IMAGE_REQUESTS;
 
         // limit concurrent image loads to help with raster sources performance on big screens
-
         for (let numImageRequests = currentParallelImageRequests;
             numImageRequests < maxImageRequests && imageRequestQueue.length > 0;
             numImageRequests++) {
 
             const topItemInQueue: ImageRequestQueueItem = imageRequestQueue.shift();
             if (topItemInQueue.cancelled) {
+                numImageRequests--;
                 continue;
             }
 
@@ -244,14 +249,11 @@ namespace ImageRequest {
             currentParallelImageRequests++;
 
             topItemInQueue.innerRequest = innerRequest;
-            topItemInQueue.cancel = () => cancelRequest(topItemInQueue);
         }
-
-        return imageRequestQueue.length;
     };
 
     const getImageUsingHtmlImage = (requestParameters: RequestParameters, callback: GetImageCallback): Cancelable  => {
-        const image = new Image();
+        const image = new Image() as HTMLImageElementWithPriority;
         const url = requestParameters.url;
         let requestCancelled = false;
         const credentials = requestParameters.credentials;
@@ -261,6 +263,7 @@ namespace ImageRequest {
             image.crossOrigin = 'anonymous';
         }
 
+        image.fetchPriority = 'high';
         image.onload = () => {
             callback(null, image);
             image.onerror = image.onload = null;
@@ -283,5 +286,3 @@ namespace ImageRequest {
 }
 
 ImageRequest.resetRequestQueue();
-
-export default ImageRequest;

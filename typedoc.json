@@ -1,0 +1,27 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "plugin": ["typedoc-plugin-missing-exports", "typedoc-plugin-markdown"],
+    "groupOrder": [
+        "Main",
+        "Markers and Controls",
+        "Geography and Geometry",
+        "Handlers",
+        "Sources",
+        "Event Related"
+    ],
+    "out": "./docs/API",
+    "excludeExternals": true,
+    "excludeInternal": true,
+    "excludeNotDocumented": true,
+    "internalModule": "maplibregl",
+    "entryPoints": ["./src/index.ts"],
+    "navigation": {
+        "includeCategories": false,
+        "includeGroups": true
+    },
+    "name": "MapLibre GL JS",
+    "githubPages": false,
+    "hideInPageTOC": true,
+    "hideBreadcrumbs": true,
+    "allReflectionsHaveOwnDocument": true
+  }

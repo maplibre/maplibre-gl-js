@@ -1,13 +1,13 @@
 import KDBush from 'kdbush';
-import EXTENT from '../data/extent';
+import {EXTENT} from '../data/extent';
 
 import {SymbolInstanceArray} from '../data/array_types.g';
 
 import type {SymbolInstance} from '../data/array_types.g';
 import type {OverscaledTileID} from '../source/tile_id';
-import type SymbolBucket from '../data/bucket/symbol_bucket';
-import type StyleLayer from '../style/style_layer';
-import type Tile from '../source/tile';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket';
+import type {StyleLayer} from '../style/style_layer';
+import type {Tile} from '../source/tile';
 
 /*
     The CrossTileSymbolIndex generally works on the assumption that
@@ -29,7 +29,7 @@ const roundingFactor = 512 / EXTENT / 2;
 export const KDBUSH_THRESHHOLD = 128;
 
 interface SymbolsByKeyEntry {
-    index?: KDBush<never>;
+    index?: KDBush;
     positions?: {x: number; y: number}[];
     crossTileIDs: number[];
 }
@@ -61,9 +61,12 @@ class TileLayerIndex {
 
             // once we get too many symbols for a given key, it becomes much faster to index it before queries
             if (entry.positions.length > KDBUSH_THRESHHOLD) {
-                const index = new KDBush(entry.positions, v => v.x, v => v.y, 16, Uint16Array) as KDBush<never>;
+
+                const index = new KDBush(entry.positions.length, 16, Uint16Array);
+                for (const {x, y} of entry.positions) index.add(x, y);
+                index.finish();
+
                 // clear all references to the original positions data
-                delete index.points;
                 delete entry.positions;
                 entry.index = index;
             }
@@ -304,7 +307,7 @@ class CrossTileSymbolLayerIndex {
     }
 }
 
-class CrossTileSymbolIndex {
+export class CrossTileSymbolIndex {
     layerIndexes: {[layerId: string]: CrossTileSymbolLayerIndex};
     crossTileIDs: CrossTileIDs;
     maxBucketInstanceId: number;
@@ -362,5 +365,3 @@ class CrossTileSymbolIndex {
         }
     }
 }
-
-export default CrossTileSymbolIndex;

@@ -1,21 +1,6 @@
-import config from './config';
+import {config} from './config';
 
 import type {WorkerSource} from '../source/worker_source';
-
-export type MessageListener = (
-    a: {
-        data: any;
-        target: any;
-    }
-) => unknown;
-
-// The main thread interface. Provided by Worker in a browser environment,
-export interface WorkerInterface {
-    addEventListener(type: 'message', listener: MessageListener): void;
-    removeEventListener(type: 'message', listener: MessageListener): void;
-    postMessage(message: any): void;
-    terminate(): void;
-}
 
 export interface WorkerGlobalScopeInterface {
     importScripts(...urls: Array<string>): void;
@@ -28,6 +13,6 @@ export interface WorkerGlobalScopeInterface {
     registerRTLTextPlugin: (_: any) => void;
 }
 
-export default function workerFactory() {
+export function workerFactory() {
     return new Worker(config.WORKER_URL);
 }

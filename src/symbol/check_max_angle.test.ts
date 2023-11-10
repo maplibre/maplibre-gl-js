@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
-import checkMaxAngle from './check_max_angle';
-import Anchor from './anchor';
+import {checkMaxAngle} from './check_max_angle';
+import {Anchor} from './anchor';
 
 describe('checkMaxAngle', () => {
     test('line with no sharp angles', () => {
@@ -44,5 +44,11 @@ describe('checkMaxAngle', () => {
         const anchor = new Anchor(25, 0, 0, 2);
         expect(checkMaxAngle(line, anchor, 11, 5, Math.PI)).toBeFalsy();
         expect(checkMaxAngle(line, anchor, 10, 5, Math.PI)).toBeTruthy();
+    });
+
+    test('one segment and label length is 0', () => {
+        const line = [new Point(0, 0), new Point(10, 0)];
+        const anchor = new Anchor(5, 0, 0, 0);
+        expect(checkMaxAngle(line, anchor, 0, 5, Math.PI)).toBeTruthy();
     });
 });

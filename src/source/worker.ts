@@ -1,9 +1,8 @@
-import Actor from '../util/actor';
-
-import StyleLayerIndex from '../style/style_layer_index';
-import VectorTileWorkerSource from './vector_tile_worker_source';
-import RasterDEMTileWorkerSource from './raster_dem_tile_worker_source';
-import GeoJSONWorkerSource from './geojson_worker_source';
+import {Actor, ActorTarget} from '../util/actor';
+import {StyleLayerIndex} from '../style/style_layer_index';
+import {VectorTileWorkerSource} from './vector_tile_worker_source';
+import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
+import {GeoJSONWorkerSource} from './geojson_worker_source';
 import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
 import {isWorker} from '../util/util';
 
@@ -22,10 +21,10 @@ import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PluginState} from './rtl_text_plugin';
 
 /**
- * @private
+ * The Worker class responsidble for background thread related execution
  */
 export default class Worker {
-    self: WorkerGlobalScopeInterface;
+    self: WorkerGlobalScopeInterface & ActorTarget;
     actor: Actor;
     layerIndexes: {[_: string]: StyleLayerIndex};
     availableImages: {[_: string]: Array<string>};
@@ -48,7 +47,7 @@ export default class Worker {
     };
     referrer: string;
 
-    constructor(self: WorkerGlobalScopeInterface) {
+    constructor(self: WorkerGlobalScopeInterface & ActorTarget) {
         this.self = self;
         this.actor = new Actor(self, this);
 
@@ -174,7 +173,6 @@ export default class Worker {
      * Load a {@link WorkerSource} script at params.url.  The script is run
      * (using importScripts) with `registerWorkerSource` in scope, which is a
      * function taking `(name, workerSourceObject)`.
-     *  @private
      */
     loadWorkerSource(map: string, params: {
         url: string;
@@ -224,13 +222,13 @@ export default class Worker {
         return layerIndexes;
     }
 
-    getWorkerSource(mapId: string, type: string, source: string) {
+    getWorkerSource(mapId: string, sourceType: string, sourceName: string): WorkerSource {
         if (!this.workerSources[mapId])
             this.workerSources[mapId] = {};
-        if (!this.workerSources[mapId][type])
-            this.workerSources[mapId][type] = {};
+        if (!this.workerSources[mapId][sourceType])
+            this.workerSources[mapId][sourceType] = {};
 
-        if (!this.workerSources[mapId][type][source]) {
+        if (!this.workerSources[mapId][sourceType][sourceName]) {
             // use a wrapped actor so that we can attach a target mapId param
             // to any messages invoked by the WorkerSource
             const actor = {
@@ -238,10 +236,10 @@ export default class Worker {
                     this.actor.send(type, data, callback, mapId);
                 }
             };
-            this.workerSources[mapId][type][source] = new (this.workerSourceTypes[type] as any)((actor as any), this.getLayerIndex(mapId), this.getAvailableImages(mapId));
+            this.workerSources[mapId][sourceType][sourceName] = new (this.workerSourceTypes[sourceType] as any)((actor as any), this.getLayerIndex(mapId), this.getAvailableImages(mapId));
         }
 
-        return this.workerSources[mapId][type][source];
+        return this.workerSources[mapId][sourceType][sourceName];
     }
 
     getDEMWorkerSource(mapId: string, source: string) {
