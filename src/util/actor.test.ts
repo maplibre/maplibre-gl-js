@@ -172,4 +172,18 @@ describe('Actor', () => {
 
         expect(spy).not.toHaveBeenCalled();
     });
+
+    test('should not process a message with the wrong origin', async () => {
+        const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
+        const actor = new Actor(worker, '1');
+
+        const spy = jest.fn().mockReturnValue(Promise.resolve({}));
+        worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', spy);
+
+        actor.target.postMessage({type: 'getClusterExpansionZoom', data: {} as any, origin: 'https://example.com'});
+
+        await sleep(100);
+
+        expect(spy).not.toHaveBeenCalled();
+    });
 });
