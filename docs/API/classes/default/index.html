@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.8">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.6">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.4b4a2bd9.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.35e1ed30.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
@@ -1142,7 +1142,7 @@
         
   
   <span class="md-ellipsis">
-    Class: Layout\<Props>
+    Class: Layout<Props>
   </span>
   
 
@@ -2218,7 +2218,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: Callback\<T>
+    Type alias: Callback<T>
   </span>
   
 
@@ -2418,7 +2418,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: CrossFaded\<T>
+    Type alias: CrossFaded<T>
   </span>
   
 
@@ -2478,7 +2478,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: DistributiveKeys\<T>
+    Type alias: DistributiveKeys<T>
   </span>
   
 
@@ -2498,7 +2498,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: DistributiveOmit\<T, K>
+    Type alias: DistributiveOmit<T, K>
   </span>
   
 
@@ -3098,7 +3098,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: MapLibreEvent\<TOrig>
+    Type alias: MapLibreEvent<TOrig>
   </span>
   
 
@@ -3398,7 +3398,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: PossiblyEvaluatedValue\<T>
+    Type alias: PossiblyEvaluatedValue<T>
   </span>
   
 
@@ -3518,7 +3518,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: RequireAtLeastOne\<T>
+    Type alias: RequireAtLeastOne<T>
   </span>
   
 
@@ -3538,7 +3538,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: ResponseCallback\<T>
+    Type alias: ResponseCallback<T>
   </span>
   
 
@@ -5999,7 +5999,7 @@
 <p><code>maplibregl</code> is the global object that allows configurations that are not specific to a map instance</p>
 <h2 id="accessors">Accessors</h2>
 <h3 id="maxparallelimagerequests">maxParallelImageRequests</h3>
-<p>• <code>get</code> <strong>maxParallelImageRequests</strong>(): <code>number</code></p>
+<p>• <code>Static</code> <code>get</code> <strong>maxParallelImageRequests</strong>(): <code>number</code></p>
 <p>Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
 which affects performance in raster-heavy maps. 16 by default.</p>
 <h4 id="returns">Returns</h4>
@@ -6009,19 +6009,19 @@ which affects performance in raster-heavy maps. 16 by default.</p>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">maplibregl</span><span class="p">.</span><span class="nx">maxParallelImageRequests</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10</span><span class="p">;</span>
 </span></code></pre></div>
 <h4 id="defined-in">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L168">src/index.ts:168</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L168">src/index.ts:168</a></p>
 <hr />
 <h3 id="version">version</h3>
-<p>• <code>get</code> <strong>version</strong>(): <code>string</code></p>
+<p>• <code>Static</code> <code>get</code> <strong>version</strong>(): <code>string</code></p>
 <p>Returns the package version of the library</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>string</code></p>
 <p>Package version of the library</p>
 <h4 id="defined-in_1">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L136">src/index.ts:136</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L136">src/index.ts:136</a></p>
 <hr />
 <h3 id="workercount">workerCount</h3>
-<p>• <code>get</code> <strong>workerCount</strong>(): <code>number</code></p>
+<p>• <code>Static</code> <code>get</code> <strong>workerCount</strong>(): <code>number</code></p>
 <p>Gets and sets the number of web workers instantiated on a page with GL JS maps.
 By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3).
 Make sure to set this property before creating any map instances for it to have effect.</p>
@@ -6032,10 +6032,10 @@ Make sure to set this property before creating any map instances for it to have 
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">maplibregl</span><span class="p">.</span><span class="nx">workerCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2</span><span class="p">;</span>
 </span></code></pre></div>
 <h4 id="defined-in_2">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L151">src/index.ts:151</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L151">src/index.ts:151</a></p>
 <h2 id="methods">Methods</h2>
 <h3 id="addprotocol">addProtocol</h3>
-<p>▸ <strong>addProtocol</strong>(<code>customProtocol</code>, <code>loadFn</code>): <code>void</code></p>
+<p>▸ <code>Static</code> <strong>addProtocol</strong>(<code>customProtocol</code>, <code>loadFn</code>): <code>void</code></p>
 <p>Sets a custom load tile function that will be called when using a source that starts with a custom url schema.
 The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
 The function passed will receive the request parameters and should call the callback with the resulting request,
@@ -6057,7 +6057,7 @@ for example a pbf vector tile, non-compressed, represented as ArrayBuffer.</p>
 </tr>
 <tr>
 <td style="text-align: left;"><code>loadFn</code></td>
-<td style="text-align: left;">(<code>requestParameters</code>: <a href="../../types/maplibregl.RequestParameters/"><code>RequestParameters</code></a>, <code>callback</code>: <a href="../../types/maplibregl.ResponseCallback/"><code>ResponseCallback</code></a>\&lt;<code>any</code>&gt;) =&gt; <a href="../../types/maplibregl.Cancelable/"><code>Cancelable</code></a></td>
+<td style="text-align: left;">(<code>requestParameters</code>: <a href="../../types/maplibregl.RequestParameters/"><code>RequestParameters</code></a>, <code>callback</code>: <a href="../../types/maplibregl.ResponseCallback/"><code>ResponseCallback</code></a>&lt;<code>any</code>&gt;) =&gt; <a href="../../types/maplibregl.Cancelable/"><code>Cancelable</code></a></td>
 <td style="text-align: left;">the function to use when trying to fetch a tile specified by the customProtocol</td>
 </tr>
 </tbody>
@@ -6089,10 +6089,10 @@ for example a pbf vector tile, non-compressed, represented as ArrayBuffer.</p>
 </span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="p">});</span>
 </span></code></pre></div></p>
 <h4 id="defined-in_3">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L218">src/index.ts:218</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L218">src/index.ts:218</a></p>
 <hr />
 <h3 id="removeprotocol">removeProtocol</h3>
-<p>▸ <strong>removeProtocol</strong>(<code>customProtocol</code>): <code>void</code></p>
+<p>▸ <code>Static</code> <strong>removeProtocol</strong>(<code>customProtocol</code>): <code>void</code></p>
 <p>Removes a previously added protocol</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -6117,7 +6117,7 @@ for example a pbf vector tile, non-compressed, represented as ArrayBuffer.</p>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nx">maplibregl</span><span class="p">.</span><span class="nx">removeProtocol</span><span class="p">(</span><span class="s1">&#39;custom&#39;</span><span class="p">);</span>
 </span></code></pre></div>
 <h4 id="defined-in_4">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L231">src/index.ts:231</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L231">src/index.ts:231</a></p>
 <h2 id="properties">Properties</h2>
 <h3 id="clearprewarmedresources">clearPrewarmedResources</h3>
 <p>▪ <code>Static</code> <strong>clearPrewarmedResources</strong>: () =&gt; <code>void</code> = <code>clearPrewarmedResources</code></p>
@@ -6133,7 +6133,7 @@ in your application.</p>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nx">maplibregl</span><span class="p">.</span><span class="nx">clearPrewarmedResources</span><span class="p">()</span>
 </span></code></pre></div>
 <h4 id="defined-in_5">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L131">src/index.ts:131</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L131">src/index.ts:131</a></p>
 <hr />
 <h3 id="getrtltextpluginstatus">getRTLTextPluginStatus</h3>
 <p>▪ <code>Static</code> <strong>getRTLTextPluginStatus</strong>: () =&gt; <code>string</code> = <code>getRTLTextPluginStatus</code></p>
@@ -6148,7 +6148,7 @@ If the status is <code>loaded</code> and the plugin is requested again, an error
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">pluginStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nx">getRTLTextPluginStatus</span><span class="p">();</span>
 </span></code></pre></div>
 <h4 id="defined-in_6">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L96">src/index.ts:96</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L96">src/index.ts:96</a></p>
 <hr />
 <h3 id="prewarm">prewarm</h3>
 <p>▪ <code>Static</code> <strong>prewarm</strong>: () =&gt; <code>void</code> = <code>prewarm</code></p>
@@ -6173,7 +6173,7 @@ created and destroyed.</p>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nx">maplibregl</span><span class="p">.</span><span class="nx">prewarm</span><span class="p">()</span>
 </span></code></pre></div>
 <h4 id="defined-in_7">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L119">src/index.ts:119</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L119">src/index.ts:119</a></p>
 <hr />
 <h3 id="setrtltextplugin">setRTLTextPlugin</h3>
 <p>▪ <code>Static</code> <strong>setRTLTextPlugin</strong>: (<code>url</code>: <code>string</code>, <code>callback</code>: <a href="../../types/maplibregl.ErrorCallback/"><code>ErrorCallback</code></a>, <code>deferred</code>: <code>boolean</code>) =&gt; <code>void</code> = <code>setRTLTextPlugin</code></p>
@@ -6220,7 +6220,7 @@ Necessary for supporting the Arabic and Hebrew languages, which are written righ
 <p><strong><code>See</code></strong></p>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/">Add support for right-to-left scripts</a></p>
 <h4 id="defined-in_8">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/bf6d06d36/src/index.ts#L85">src/index.ts:85</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/index.ts#L85">src/index.ts:85</a></p>
 
 
 
@@ -6303,7 +6303,7 @@ Necessary for supporting the Arabic and Hebrew languages, which are written righ
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.81fa17fe.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.aecac24b.min.js"></script>
       
     
   </body>
