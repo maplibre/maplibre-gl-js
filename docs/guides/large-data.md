@@ -79,7 +79,7 @@ You can see a full example here: [Create and style clusters](https://maplibre.or
 
 ### Allow Overlap
 
-By default, Maplibre calculates if features such as points, texts or icons are overlapping. This can be computationally intensive, particularly when there are a lot of features. Changing the [overlap mode](https://maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.OverlapMode/) so that all points are shown and no overlapping is checked can significantly reduce this.
+By default, Maplibre calculates if features such as points, texts or icons are overlapping. This can be computationally intensive, particularly when there are a lot of features. Changing the [overlap mode](https://maplibre.org/maplibre-style-spec/layers/#layout-symbol-icon-allow-overlap) so that all points are shown and no overlapping is checked can significantly reduce this.
 
 ### Simplify Styling
 
