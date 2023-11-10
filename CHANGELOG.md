@@ -6,7 +6,7 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
-## 3.6.0
+## 3.6.0 
 
 ### ✨ Features and improvements
 
