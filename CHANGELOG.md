@@ -1,11 +1,21 @@
 ## main
 
+### ✨ Features and improvements
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 3.6.0
+
+### ✨ Features and improvements
+
+- Add getLayersOrder() to Map and Style ([#3279](https://github.com/maplibre/maplibre-gl-js/pull/3279))
+- Updated description of `fullscreen` example ([#3311](https://github.com/maplibre/maplibre-gl-js/pull/3311))
 
 ### 🐞 Bug fixes
 
 - Fix null feature properties in resolve_tokens ([#3272](https://github.com/maplibre/maplibre-gl-js/pull/3272))
-- _...Add new stuff here..._
 
 ## 3.5.2
 

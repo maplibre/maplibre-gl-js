@@ -2,9 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import {BenchmarksTable} from './components/BenchmarkTable';
-import {summaryStatistics, regression} from './lib/statistics';
+import {summaryStatistics, regression, Summary} from './lib/statistics';
+import type {BenchmarkRowProps} from './components/BenchmarkRow';
 
-function updateUI(benchmarks, finished?) {
+function updateUI(benchmarks: BenchmarkRowProps[], finished?: boolean) {
     finished = !!finished;
 
     ReactDOM.render(
@@ -13,53 +14,44 @@ function updateUI(benchmarks, finished?) {
     );
 }
 
-export function run(benchmarks) {
+export async function run(benchmarks: BenchmarkRowProps[]) {
     const filter = window.location.hash.substr(1);
     if (filter) benchmarks = benchmarks.filter(({name}) => name === filter);
 
     for (const benchmark of benchmarks) {
         for (const version of benchmark.versions) {
             version.status = 'waiting';
-            version.logs = [];
             version.samples = [];
-            version.summary = {};
+            version.summary = {} as Summary;
         }
     }
 
     updateUI(benchmarks);
 
-    let promise = Promise.resolve();
+    const allRuns: Promise<any>[] = [];
 
-    benchmarks.forEach(bench => {
-        bench.versions.forEach(version => {
-            promise = promise.then(() => {
-                version.status = 'running';
+    for (const bench of benchmarks) {
+        for (const version of bench.versions) {
+            version.status = 'running';
+            updateUI(benchmarks);
+
+            try {
+                const measurements = await version.bench.run();
+                const samples = measurements.map(({time, iterations}) => time / iterations);
+                version.status = 'ended';
+                version.samples = samples;
+                version.summary = summaryStatistics(samples);
+                version.regression = regression(measurements);
                 updateUI(benchmarks);
+            } catch (error) {
+                version.status = 'errored';
+                version.error = error;
+                updateUI(benchmarks);
+            }
+        }
+    }
 
-                return version.bench.run()
-                    .then(measurements => {
-                        // scale measurements down by iteration count, so that
-                        // they represent (average) time for a single iteration
-                        const samples = measurements.map(({time, iterations}) => time / iterations);
-                        version.status = 'ended';
-                        version.samples = samples;
-                        version.summary = summaryStatistics(samples);
-                        version.regression = regression(measurements);
-                        updateUI(benchmarks);
-                    })
-                    .catch(error => {
-                        version.status = 'errored';
-                        version.error = error;
-                        updateUI(benchmarks);
-                    });
-            });
-        });
-    });
-
-    promise = promise.then(() => {
-        updateUI(benchmarks, true);
-        return benchmarks;
-    });
-
-    return promise;
+    await Promise.all(allRuns);
+    updateUI(benchmarks, true);
+    return benchmarks;
 }
