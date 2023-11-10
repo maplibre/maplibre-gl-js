@@ -42,7 +42,7 @@ export function updatePatternPositionsInProgram(
     // try again in case patternPositions has been updated by worker
     if (!posTo || !posFrom) {
         const transitioned = layer.getPaintProperty(propertyName) as string;
-        // BUG: key could be an array like ['step', Array(1), 'zoo_11', 4, 'volcano_11'] its not gauranteed to be a string
+        // BUG: key could be an array like ['step', Array(1), 'zoo_11', 4, 'volcano_11'] its not guaranteed to be a string
         posTo = patternPositions[transitioned];
         posFrom = patternPositions[transitioned];
     }
