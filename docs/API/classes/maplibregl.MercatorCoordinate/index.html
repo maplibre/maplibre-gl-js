@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.6">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.8">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.35e1ed30.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.4b4a2bd9.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
@@ -1000,7 +1000,7 @@
         
   
   <span class="md-ellipsis">
-    Class: Layout<Props>
+    Class: Layout\<Props>
   </span>
   
 
@@ -2184,7 +2184,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: Callback<T>
+    Type alias: Callback\<T>
   </span>
   
 
@@ -2384,7 +2384,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: CrossFaded<T>
+    Type alias: CrossFaded\<T>
   </span>
   
 
@@ -2444,7 +2444,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: DistributiveKeys<T>
+    Type alias: DistributiveKeys\<T>
   </span>
   
 
@@ -2464,7 +2464,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: DistributiveOmit<T, K>
+    Type alias: DistributiveOmit\<T, K>
   </span>
   
 
@@ -3064,7 +3064,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: MapLibreEvent<TOrig>
+    Type alias: MapLibreEvent\<TOrig>
   </span>
   
 
@@ -3364,7 +3364,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: PossiblyEvaluatedValue<T>
+    Type alias: PossiblyEvaluatedValue\<T>
   </span>
   
 
@@ -3484,7 +3484,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: RequireAtLeastOne<T>
+    Type alias: RequireAtLeastOne\<T>
   </span>
   
 
@@ -3504,7 +3504,7 @@
         
   
   <span class="md-ellipsis">
-    Type alias: ResponseCallback<T>
+    Type alias: ResponseCallback\<T>
   </span>
   
 
@@ -5949,7 +5949,7 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 </ul>
 <h2 id="constructors">Constructors</h2>
 <h3 id="constructor">constructor</h3>
-<p>• <strong>new MercatorCoordinate</strong>(<code>x</code>, <code>y</code>, <code>z?</code>)</p>
+<p>• <strong>new MercatorCoordinate</strong>(<code>x</code>, <code>y</code>, <code>z?</code>): <a href="./"><code>MercatorCoordinate</code></a></p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -5981,26 +5981,28 @@ of the coordinate space as the <code>0/0/0</code> tile with an extent of <code>1
 </tr>
 </tbody>
 </table>
+<h4 id="returns">Returns</h4>
+<p><a href="./"><code>MercatorCoordinate</code></a></p>
 <h4 id="defined-in">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/geo/mercator_coordinate.ts#L87">src/geo/mercator_coordinate.ts:87</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/2f04957b6/src/geo/mercator_coordinate.ts#L87">src/geo/mercator_coordinate.ts:87</a></p>
 <h2 id="methods">Methods</h2>
 <h3 id="meterinmercatorcoordinateunits">meterInMercatorCoordinateUnits</h3>
 <p>▸ <strong>meterInMercatorCoordinateUnits</strong>(): <code>number</code></p>
 <p>Returns the distance of 1 meter in <code>MercatorCoordinate</code> units at this latitude.</p>
 <p>For coordinates in real world units using meters, this naturally provides the scale
 to transform into <code>MercatorCoordinate</code>s.</p>
-<h4 id="returns">Returns</h4>
+<h4 id="returns_1">Returns</h4>
 <p><code>number</code></p>
 <p>Distance of 1 meter in <code>MercatorCoordinate</code> units.</p>
 <h4 id="implementation-of">Implementation of</h4>
 <p>IMercatorCoordinate.meterInMercatorCoordinateUnits</p>
 <h4 id="defined-in_1">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/geo/mercator_coordinate.ts#L152">src/geo/mercator_coordinate.ts:152</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/2f04957b6/src/geo/mercator_coordinate.ts#L152">src/geo/mercator_coordinate.ts:152</a></p>
 <hr />
 <h3 id="toaltitude">toAltitude</h3>
 <p>▸ <strong>toAltitude</strong>(): <code>number</code></p>
 <p>Returns the altitude in meters of the coordinate.</p>
-<h4 id="returns_1">Returns</h4>
+<h4 id="returns_2">Returns</h4>
 <p><code>number</code></p>
 <p>The altitude in meters.</p>
 <p><strong><code>Example</code></strong></p>
@@ -6010,12 +6012,12 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <h4 id="implementation-of_1">Implementation of</h4>
 <p>IMercatorCoordinate.toAltitude</p>
 <h4 id="defined-in_2">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/geo/mercator_coordinate.ts#L140">src/geo/mercator_coordinate.ts:140</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/2f04957b6/src/geo/mercator_coordinate.ts#L140">src/geo/mercator_coordinate.ts:140</a></p>
 <hr />
 <h3 id="tolnglat">toLngLat</h3>
 <p>▸ <strong>toLngLat</strong>(): <a href="../maplibregl.LngLat/"><code>LngLat</code></a></p>
 <p>Returns the <code>LngLat</code> for the coordinate.</p>
-<h4 id="returns_2">Returns</h4>
+<h4 id="returns_3">Returns</h4>
 <p><a href="../maplibregl.LngLat/"><code>LngLat</code></a></p>
 <p>The <code>LngLat</code> object.</p>
 <p><strong><code>Example</code></strong></p>
@@ -6025,10 +6027,10 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 <h4 id="implementation-of_2">Implementation of</h4>
 <p>IMercatorCoordinate.toLngLat</p>
 <h4 id="defined-in_3">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/geo/mercator_coordinate.ts#L124">src/geo/mercator_coordinate.ts:124</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/2f04957b6/src/geo/mercator_coordinate.ts#L124">src/geo/mercator_coordinate.ts:124</a></p>
 <hr />
 <h3 id="fromlnglat">fromLngLat</h3>
-<p>▸ <code>Static</code> <strong>fromLngLat</strong>(<code>lngLatLike</code>, <code>altitude?</code>): <a href="./"><code>MercatorCoordinate</code></a></p>
+<p>▸ <strong>fromLngLat</strong>(<code>lngLatLike</code>, <code>altitude?</code>): <a href="./"><code>MercatorCoordinate</code></a></p>
 <p>Project a <code>LngLat</code> to a <code>MercatorCoordinate</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
@@ -6055,7 +6057,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><a href="./"><code>MercatorCoordinate</code></a></p>
 <p>The projected mercator coordinate.</p>
 <p><strong><code>Example</code></strong></p>
@@ -6063,7 +6065,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">coord</span><span class="p">;</span><span class="w"> </span><span class="c1">// MercatorCoordinate(0.5, 0.5, 0)</span>
 </span></code></pre></div>
 <h4 id="defined-in_4">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/ff348dacb/src/geo/mercator_coordinate.ts#L105">src/geo/mercator_coordinate.ts:105</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/2f04957b6/src/geo/mercator_coordinate.ts#L105">src/geo/mercator_coordinate.ts:105</a></p>
 
 
 
@@ -6146,7 +6148,7 @@ to transform into <code>MercatorCoordinate</code>s.</p>
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.aecac24b.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.81fa17fe.min.js"></script>
       
     
   </body>
