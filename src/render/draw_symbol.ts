@@ -403,6 +403,7 @@ function drawLayerSymbols(
     }
 
     for (const segmentState of tileRenderState) {
+        console.log(segmentState)
         const state = segmentState.state;
 
         context.activeTexture.set(gl.TEXTURE0);
