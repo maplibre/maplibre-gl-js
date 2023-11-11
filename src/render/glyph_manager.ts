@@ -161,7 +161,6 @@ export class GlyphManager {
     }
 
     _doesCharSupportLocalGlyph(id: number): boolean {
-        return false;
         /* eslint-disable new-cap */
         return !!this.localIdeographFontFamily &&
             (unicodeBlockLookup['CJK Unified Ideographs'](id) ||
