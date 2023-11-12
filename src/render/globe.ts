@@ -7,6 +7,7 @@ import {Pos3dTex2dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dTex2dAttributes from '../data/pos3d_tex2d_attributes';
 import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
+import {webMercatorToSpherePoint} from '../geo/mercator_coordinate';
 
 export class Globe {
     private _meshes: {[_: string]: Mesh};

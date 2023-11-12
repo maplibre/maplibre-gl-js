@@ -76,7 +76,7 @@ export class ProjectionManager {
     }
 
     private setGlobeProjection(data: ProjectionData): void {
-        data['u_projection_matrix'] = this.map.globe.cachedTransform;
+        data['u_projection_matrix'] = this.map.transform.globeProjMatrix;
     }
 
     public getMesh(context: Context, zoomLevel: number): Mesh {
