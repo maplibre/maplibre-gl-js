@@ -29,7 +29,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideSimple, subdivideTriangles} from '../../render/subdivision';
+import {subdivideLines, subdivideSimple, subdivideTriangles} from '../../render/subdivision';
 import {ProjectionManager} from '../../render/projection_manager';
 
 export class FillBucket implements Bucket {
@@ -174,6 +174,7 @@ export class FillBucket implements Bucket {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             const flattened = [];
             const holeIndices = [];
+            const lineIndices = [];
 
             for (const ring of polygon) {
                 if (ring.length === 0) {
@@ -184,45 +185,62 @@ export class FillBucket implements Bucket {
                     holeIndices.push(flattened.length / 2);
                 }
 
-                const lineSegment = this.segments2.prepareSegment(ring.length, this.layoutVertexArray, this.indexArray2);
-                const lineIndex = lineSegment.vertexLength;
-
-                this.indexArray2.emplaceBack(lineIndex + ring.length - 1, lineIndex);
+                lineIndices.push(ring.length - 1);
+                lineIndices.push(0);
                 flattened.push(ring[0].x);
                 flattened.push(ring[0].y);
 
                 for (let i = 1; i < ring.length; i++) {
-                    this.indexArray2.emplaceBack(lineIndex + i - 1, lineIndex + i);
+                    lineIndices.push(i - 1);
+                    lineIndices.push(i);
                     flattened.push(ring[i].x);
                     flattened.push(ring[i].y);
                 }
-
-                lineSegment.vertexLength += ring.length;
-                lineSegment.primitiveLength += ring.length;
             }
 
             const indices = earcut(flattened, holeIndices);
 
-            const subdivided = subdivideSimple(flattened, indices, ProjectionManager.getGranualityForZoomLevel(canonical.z), canonical);
+            // const subdivided = {
+            //     vertices: flattened,
+            //     indices,
+            // };
+            const subdividedTris = subdivideTriangles(flattened, indices, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
+            const subdividedLines = subdivideLines(subdividedTris.vertices, lineIndices, subdividedTris.vertexDictionary, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
+            //const subdivided = subdivideSimple(flattened, indices, ProjectionManager.getGranualityForZoomLevel(canonical.z), canonical);
 
-            const numVertices = subdivided.vertices.length / 2;
+            const finalVertices = subdividedLines.vertices;
+            const finalIndicesTriangles = subdividedTris.indices;
+            const finalIndicesLines = subdividedLines.indices;
+
+            const numVertices = finalVertices.length / 2;
 
             const triangleSegment = this.segments.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray);
             const triangleIndex = triangleSegment.vertexLength;
+            // We still need to call this, because this function call may break up segments if it overflows
+            const lineSegment = this.segments2.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray2);
+            const lineIndex = lineSegment.vertexLength;
 
-            for (let i = 0; i < subdivided.indices.length; i += 3) {
+            for (let i = 0; i < finalIndicesTriangles.length; i += 3) {
                 this.indexArray.emplaceBack(
-                    triangleIndex + subdivided.indices[i],
-                    triangleIndex + subdivided.indices[i + 1],
-                    triangleIndex + subdivided.indices[i + 2]);
+                    triangleIndex + finalIndicesTriangles[i],
+                    triangleIndex + finalIndicesTriangles[i + 1],
+                    triangleIndex + finalIndicesTriangles[i + 2]);
             }
 
-            for (let i = 0; i < subdivided.vertices.length; i += 2) {
-                this.layoutVertexArray.emplaceBack(subdivided.vertices[i], subdivided.vertices[i + 1]);
+            for (let i = 0; i < finalIndicesLines.length; i += 2) {
+                this.indexArray2.emplaceBack(
+                    lineIndex + finalIndicesLines[i],
+                    lineIndex + finalIndicesLines[i + 1]);
+            }
+
+            for (let i = 0; i < finalVertices.length; i += 2) {
+                this.layoutVertexArray.emplaceBack(finalVertices[i], finalVertices[i + 1]);
             }
 
             triangleSegment.vertexLength += numVertices;
-            triangleSegment.primitiveLength += subdivided.indices.length / 3;
+            triangleSegment.primitiveLength += finalIndicesTriangles.length / 3;
+            lineSegment.vertexLength += numVertices;
+            lineSegment.primitiveLength += finalIndicesLines.length / 2;
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }

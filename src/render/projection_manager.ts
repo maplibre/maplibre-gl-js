@@ -8,6 +8,7 @@ import {Mesh} from './mesh';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import posAttributes from '../data/pos_attributes';
+import {subdivideTriangles} from './subdivision';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
@@ -31,7 +32,7 @@ export class ProjectionManager {
      * Mercator tiles will be subdivided to this degree of granuality in order to allow for a curved projection.
      * Should be a power of 2.
      */
-    private static readonly targetGranuality = 4;
+    private static readonly targetGranuality = 8;
 
     /**
      * The granuality specified by `targetGranuality` will be used for zoom levels from this value onwards.
@@ -40,6 +41,9 @@ export class ProjectionManager {
      * (and not a poorly tesselated triangular mesh). This also ensures that higher zoom levels are not needlessly subdivided.
      */
     private static readonly targetGranualityMinZoom = 3;
+
+    private static readonly targetGranualityStencil = 8;
+    private static readonly targetGranualityMinZoomStencil = 3;
 
     private tileMeshCache: Array<Mesh> = null;
 
@@ -79,15 +83,20 @@ export class ProjectionManager {
         if (!this.tileMeshCache) {
             this.tileMeshCache = [];
             for (let zoom = 0; zoom <= ProjectionManager.targetGranualityMinZoom; zoom++) {
-                this.tileMeshCache.push(this._createQuadMesh(context, ProjectionManager.getGranualityForZoomLevel(zoom)));
+                this.tileMeshCache.push(this._createQuadMesh(context, ProjectionManager.getGranualityForZoomLevel(zoom, ProjectionManager.targetGranualityStencil, ProjectionManager.targetGranualityMinZoomStencil)));
+                //this.tileMeshCache.push(this._createQuadMeshUsingSubdivision(context, zoom));
             }
         }
 
         return this.tileMeshCache[Math.min(zoomLevel, ProjectionManager.targetGranualityMinZoom)];
     }
 
-    public static getGranualityForZoomLevel(zoomLevel: number): number {
-        return ProjectionManager.targetGranuality << Math.max(ProjectionManager.targetGranualityMinZoom - zoomLevel, 0);
+    public static getGranualityForZoomLevelForTiles(zoomLevel: number): number {
+        return ProjectionManager.getGranualityForZoomLevel(zoomLevel, ProjectionManager.targetGranuality, ProjectionManager.targetGranualityMinZoom);
+    }
+
+    private static getGranualityForZoomLevel(zoomLevel: number, target: number, minToom: number): number {
+        return target << Math.max(minToom - zoomLevel, 0);
     }
 
     /**
@@ -121,6 +130,39 @@ export class ProjectionManager {
                 indexArray.emplaceBack(v0, v2, v1);
                 indexArray.emplaceBack(v1, v2, v3);
             }
+        }
+
+        const mesh = new Mesh(
+            context.createVertexBuffer(vertexArray, posAttributes.members),
+            context.createIndexBuffer(indexArray),
+            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        );
+
+        return mesh;
+    }
+
+    private _createQuadMeshUsingSubdivision(context: Context, zoomLevel: number): Mesh {
+        const flattenedVertices = [
+            0, 0,
+            EXTENT, 0,
+            0, EXTENT,
+            EXTENT, EXTENT,
+        ];
+        const indices = [
+            0, 2, 1,
+            2, 3, 1
+        ];
+
+        const subdivided = subdivideTriangles(flattenedVertices, indices, ProjectionManager.getGranualityForZoomLevelForTiles(zoomLevel));
+
+        const vertexArray = new PosArray();
+        const indexArray = new TriangleIndexArray();
+
+        for (let i = 0; i < subdivided.vertices.length; i += 2) {
+            vertexArray.emplaceBack(subdivided.vertices[i], subdivided.vertices[i + 1]);
+        }
+        for (let i = 0; i < subdivided.indices.length; i += 3) {
+            indexArray.emplaceBack(subdivided.indices[i], subdivided.indices[i + 1], subdivided.indices[i + 2]);
         }
 
         const mesh = new Mesh(
