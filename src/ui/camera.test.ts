@@ -7,6 +7,7 @@ import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import {Terrain} from '../render/terrain';
 import {LngLat, LngLatLike} from '../geo/lng_lat';
+import { Event } from '../util/evented';
 
 beforeEach(() => {
     setMatchMedia();
@@ -974,6 +975,39 @@ describe('#easeTo', () => {
         assertTransitionTime(done, camera, 0, 10);
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
     });
+
+    test('jumpTo on("zoom") during easeTo', async () => {
+        return new Promise((resolve, reject) => {
+            const camera = createCamera();
+
+            const render = () => {
+                setTimeout(() => {
+                    try {
+                        requestAnimationFrame(render);
+                        camera.simulateFrame();
+                    } catch (error) {
+                        reject(error);
+                    }
+                }, 0);
+            };
+
+            camera.on('moveend', (e: Event & {done?: true}) => {
+                if (('done' in e)) {
+                    setTimeout(() => {
+                        resolve(true);
+                    }, 50);
+                }
+            });
+
+            camera.easeTo({zoom: 20, bearing: 90, duration: 500}, {done: true});
+            camera.on('zoom', () => {
+                camera.jumpTo({pitch: 40});
+            });
+
+            render();
+        });
+    }, 500);
+
 });
 
 describe('#flyTo', () => {
