@@ -1370,9 +1370,7 @@ export abstract class Camera extends Evented {
     }
 
     isEasing() {
-        // currently only prepareEase sets _moving to true
-        // and afterEase sets _moving to false
-        return this._moving;
+        return !!this._easeFrameId;
     }
 
     /**
