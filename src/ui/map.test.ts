@@ -2908,6 +2908,31 @@ describe('Map', () => {
         });
     });
 
+    test('jumpTo on("zoom") during easeTo', async () => {
+        return new Promise((resolve) => {
+            const container = window.document.createElement('div');
+            const style = createStyle();
+            const map = createMap({
+                container, // container id
+                zoom: 12, // starting zoom
+                style
+            });
+
+            map.on('moveend', (e) => {
+                if (('done' in e)) {
+                    setTimeout(() => {
+                        resolve(true);
+                    }, 1000);
+                }
+            });
+
+            map.easeTo({zoom: 20, bearing: 90, duration: 1000}, {done: true});
+            map.on('zoom', () => {
+                map.jumpTo({pitch: 40});
+            });
+        });
+    });
+
 });
 
 function createStyle() {
