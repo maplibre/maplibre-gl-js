@@ -1425,7 +1425,6 @@ export abstract class Camera extends Evented {
 
     // Callback for map._requestRenderFrame
     _renderFrameCallback = () => {
-        // avoid callback if _afterEase has been called, in case of _stop called after task callback
         const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
         this._onEaseFrame(this._easeOptions.easing(t));
         if (t < 1) {
