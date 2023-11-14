@@ -8,7 +8,7 @@ import {Mesh} from './mesh';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import posAttributes from '../data/pos_attributes';
-import {subdivideTriangles} from './subdivision';
+import {subdivideFill} from './subdivision';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
@@ -153,16 +153,16 @@ export class ProjectionManager {
             2, 3, 1
         ];
 
-        const subdivided = subdivideTriangles(flattenedVertices, indices, ProjectionManager.getGranualityForZoomLevelForTiles(zoomLevel));
+        const subdivided = subdivideFill(flattenedVertices, indices, null, ProjectionManager.getGranualityForZoomLevelForTiles(zoomLevel));
 
         const vertexArray = new PosArray();
         const indexArray = new TriangleIndexArray();
 
-        for (let i = 0; i < subdivided.vertices.length; i += 2) {
-            vertexArray.emplaceBack(subdivided.vertices[i], subdivided.vertices[i + 1]);
+        for (let i = 0; i < subdivided.verticesFlattened.length; i += 2) {
+            vertexArray.emplaceBack(subdivided.verticesFlattened[i], subdivided.verticesFlattened[i + 1]);
         }
-        for (let i = 0; i < subdivided.indices.length; i += 3) {
-            indexArray.emplaceBack(subdivided.indices[i], subdivided.indices[i + 1], subdivided.indices[i + 2]);
+        for (let i = 0; i < subdivided.indicesTriangles.length; i += 3) {
+            indexArray.emplaceBack(subdivided.indicesTriangles[i], subdivided.indicesTriangles[i + 1], subdivided.indicesTriangles[i + 2]);
         }
 
         const mesh = new Mesh(

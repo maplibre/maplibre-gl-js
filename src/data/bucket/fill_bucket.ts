@@ -29,7 +29,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideLines, subdivideSimple, subdivideTriangles} from '../../render/subdivision';
+import {subdivideFill} from '../../render/subdivision';
 import {ProjectionManager} from '../../render/projection_manager';
 
 export class FillBucket implements Bucket {
@@ -204,13 +204,16 @@ export class FillBucket implements Bucket {
             //     vertices: flattened,
             //     indices,
             // };
-            const subdividedTris = subdivideTriangles(flattened, indices, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
-            const subdividedLines = subdivideLines(subdividedTris.vertices, lineIndices, subdividedTris.vertexDictionary, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
+            //const subdividedTris = subdivideTriangles(flattened, indices, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
+            //const subdividedLines = subdivideLines(subdividedTris.vertices, lineIndices, subdividedTris.vertexDictionary, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
             //const subdivided = subdivideSimple(flattened, indices, ProjectionManager.getGranualityForZoomLevel(canonical.z), canonical);
-
-            const finalVertices = subdividedLines.vertices;
-            const finalIndicesTriangles = subdividedTris.indices;
-            const finalIndicesLines = subdividedLines.indices;
+            const subdivided = subdivideFill(flattened, indices, lineIndices, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
+            const finalVertices = subdivided.verticesFlattened;
+            const finalIndicesTriangles = subdivided.indicesTriangles;
+            const finalIndicesLines = subdivided.indicesLines;
+            // const finalVertices = flattened;
+            // const finalIndicesTriangles = holeIndices;
+            // const finalIndicesLines = lineIndices;
 
             const numVertices = finalVertices.length / 2;
 

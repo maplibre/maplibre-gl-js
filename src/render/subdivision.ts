@@ -2,10 +2,10 @@ import {EXTENT} from '../data/extent';
 import {webMercatorToSpherePoint} from '../geo/mercator_coordinate';
 import {CanonicalTileID} from '../source/tile_id';
 
-type SubdividedMesh = {
-    vertices: Array<number>;
-    indices: Array<number>;
-    vertexDictionary: {[_: string]: number};
+type SubdivisionResult = {
+    verticesFlattened: Array<number>;
+    indicesTriangles: Array<number>;
+    indicesLines: Array<number>;
 };
 
 // Point p1 is the tested point, points p2 and p3 are the triangle edge.
@@ -83,325 +83,314 @@ function checkEdgeDivide(e0x: number, e0y: number, e1x: number, e1y: number, div
     return Math.round(divideY);
 }
 
-function getKey(x: number, y: number) {
+function getKey(x: number, y: number): string {
     return Math.floor(x).toString(36) + Math.floor(y).toString(36);
 }
 
-/**
- * Subdivides an input mesh. Imagine a regular square grid with the target granuality overlaid over the mesh - this is the subdivision's result.
- * Assumes a mesh of tile features - vertex coordinates are integers, visible range where subdivision happens is 0..8191.
- * @param vertices Input vertex buffer, flattened - two values per vertex (x, y).
- * @param indices Input index buffer.
- * @param granuality Target granuality. If less or equal to 1, the input buffers are returned without modification.
- * @returns Vertex and index buffers with subdivision applied.
- */
-export function subdivideTriangles(vertices: Array<number>, indices: Array<number>, granuality: number): SubdividedMesh {
-    if (granuality <= 1) {
-        return {
-            vertices: [...vertices],
-            indices: [...indices],
-            vertexDictionary: null,
-        };
+class Subdivider {
+    /**
+     * Flattened vertex positions (xyxyxy).
+     */
+    private _finalVertices: Array<number>;
+    /**
+     * Map of (vertex x and y coordinate) -> index of such vertex.
+     */
+    private _vertexDictionary: {[_: string]: number};
+
+    private readonly _granuality;
+    private readonly _granualityStep;
+
+    constructor(granuality: number) {
+        this._granuality = granuality;
+        this._granualityStep = EXTENT / granuality;
     }
 
-    const finalVertices = [...vertices]; // initialize with input vertices since we will use all of them anyway
-    const vertexDictionary = {};
-
-    // Fill in indices for all starting vertices
-    for (let i = 0; i < vertices.length; i += 2) {
-        const index = i / 2;
-        const key = getKey(vertices[i], vertices[i + 1]);
-        vertexDictionary[key] = index;
-    }
-
-    // Returns the index of an arbitrary vertex - if it does not exist yet, creates it first.
-    function getVertexIndex(x: number, y: number): number {
-        const key = getKey(x, y);
-        if (key in vertexDictionary) {
-            return vertexDictionary[key];
-        }
-        const index = finalVertices.length / 2;
-        vertexDictionary[key] = index;
-        finalVertices.push(x);
-        finalVertices.push(y);
-        return index;
-    }
-
-    const finalIndices = [];
-
-    const granualityStep = EXTENT / granuality;
-
-    function checkEdgeSubdivisionX(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideX: number, boundMin: number, boundMax: number): void {
-        const y = checkEdgeDivide(e0x, e0y, e1x, e1y, divideX);
-        if (y !== undefined && y >= boundMin && y <= boundMax) {
-            addUnique(indicesInsideCell, getVertexIndex(divideX, y));
-        }
-    }
-    function checkEdgeSubdivisionY(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideY: number, boundMin: number, boundMax: number): void {
-        const x = checkEdgeDivide(e0y, e0x, e1y, e1x, divideY); // reuse checkEdgeDivide that only checks division line parallel to Y by swaping x and y in edge coordinates
-        if (x !== undefined && x >= boundMin && x <= boundMax) {
-            addUnique(indicesInsideCell, getVertexIndex(x, divideY));
-        }
-    }
-
-    // Iterate over all input triangles
-    for (let primitiveIndex = 0; primitiveIndex < indices.length; primitiveIndex += 3) {
-        const triangleIndices = [
-            indices[primitiveIndex + 0], // v0
-            indices[primitiveIndex + 1], // v1
-            indices[primitiveIndex + 2], // v2
-        ];
-
-        const triangleVertices = [
-            vertices[indices[primitiveIndex + 0] * 2 + 0], // v0.x
-            vertices[indices[primitiveIndex + 0] * 2 + 1], // v0.y
-            vertices[indices[primitiveIndex + 1] * 2 + 0], // v1.x
-            vertices[indices[primitiveIndex + 1] * 2 + 1], // v1.y
-            vertices[indices[primitiveIndex + 2] * 2 + 0], // v2.x
-            vertices[indices[primitiveIndex + 2] * 2 + 1], // v2.y
-        ];
-
-        // Get triangle AABB
-        const minX = Math.min(triangleVertices[0], triangleVertices[2], triangleVertices[4]);
-        const maxX = Math.max(triangleVertices[0], triangleVertices[2], triangleVertices[4]);
-        const minY = Math.min(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
-        const maxY = Math.max(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
-
-        // Iterate over all the "granuality grid" cells that might intersect this triangle
-        for (let cellX = Math.floor(Math.max(minX, 0) / granualityStep); cellX <= Math.floor((Math.min(maxX, EXTENT - 1) + granualityStep - 1) / granualityStep); cellX += 1) {
-            for (let cellY = Math.floor(Math.max(minY, 0) / granualityStep); cellY <= Math.floor((Math.min(maxY, EXTENT - 1) + granualityStep - 1) / granualityStep); cellY += 1) {
-                // Cell AABB
-                const cellMinX = cellX * granualityStep;
-                const cellMinY = cellY * granualityStep;
-                const cellMaxX = (cellX + 1) * granualityStep;
-                const cellMaxY = (cellY + 1) * granualityStep;
-
-                // Find all vertices (and their indices) that are inside this cell.
-                const indicesInsideCell = [];
-
-                // Check all original triangle vertices
-                if (triangleVertices[0] >= cellMinX && triangleVertices[0] <= cellMaxX &&
-                    triangleVertices[1] >= cellMinY && triangleVertices[1] <= cellMaxY) {
-                    addUnique(indicesInsideCell, triangleIndices[0]);
-                }
-                if (triangleVertices[2] >= cellMinX && triangleVertices[2] <= cellMaxX &&
-                    triangleVertices[3] >= cellMinY && triangleVertices[3] <= cellMaxY) {
-                    addUnique(indicesInsideCell, triangleIndices[1]);
-                }
-                if (triangleVertices[4] >= cellMinX && triangleVertices[4] <= cellMaxX &&
-                    triangleVertices[5] >= cellMinY && triangleVertices[5] <= cellMaxY) {
-                    addUnique(indicesInsideCell, triangleIndices[2]);
-                }
-
-                // Check all cell edge vertices
-                if (pointInTriangle(cellMinX, cellMinY, triangleVertices)) {
-                    addUnique(indicesInsideCell, getVertexIndex(cellMinX, cellMinY));
-                }
-                if (pointInTriangle(cellMaxX, cellMinY, triangleVertices)) {
-                    addUnique(indicesInsideCell, getVertexIndex(cellMaxX, cellMinY));
-                }
-                if (pointInTriangle(cellMinX, cellMaxY, triangleVertices)) {
-                    addUnique(indicesInsideCell, getVertexIndex(cellMinX, cellMaxY));
-                }
-                if (pointInTriangle(cellMaxX, cellMaxY, triangleVertices)) {
-                    addUnique(indicesInsideCell, getVertexIndex(cellMaxX, cellMaxY));
-                }
-
-                // Check all intersections between triangle edges and cell edges
-                for (let edge = 0; edge < 3; edge++) {
-                    const e0x = triangleVertices[(edge % 3) * 2 + 0];
-                    const e0y = triangleVertices[(edge % 3) * 2 + 1];
-                    const e1x = triangleVertices[((edge + 1) % 3) * 2 + 0];
-                    const e1y = triangleVertices[((edge + 1) % 3) * 2 + 1];
-                    checkEdgeSubdivisionX(indicesInsideCell, e0x, e0y, e1x, e1y, cellMinX, cellMinY, cellMaxY);
-                    checkEdgeSubdivisionX(indicesInsideCell, e0x, e0y, e1x, e1y, cellMaxX, cellMinY, cellMaxY);
-                    checkEdgeSubdivisionY(indicesInsideCell, e0x, e0y, e1x, e1y, cellMinY, cellMinX, cellMaxX);
-                    checkEdgeSubdivisionY(indicesInsideCell, e0x, e0y, e1x, e1y, cellMaxY, cellMinX, cellMaxX);
-                }
-
-                // Now, indicesInsideCell contains all the vertices this subdivided cell contains - but in arbitrary order!
-                // We will now order them clockwise, from there generating the triangles is simple.
-                // We take advantage of the fact that the shape we want to triangulate is convex, and thus the average of all its vertices is guaranteed to lie inside the shape.
-                // Thus we will simply order the vertices by their azimuth angle from the average point.
-
-                let avgX = 0;
-                let avgY = 0;
-
-                for (let i = 0; i < indicesInsideCell.length; i++) {
-                    avgX += finalVertices[indicesInsideCell[i] * 2 + 0];
-                    avgY += finalVertices[indicesInsideCell[i] * 2 + 1];
-                }
-
-                avgX /= indicesInsideCell.length;
-                avgY /= indicesInsideCell.length;
-
-                indicesInsideCell.sort((a: number, b: number) => {
-                    const ax = finalVertices[a * 2 + 0] - avgX;
-                    const ay = finalVertices[a * 2 + 1] - avgY;
-                    const bx = finalVertices[b * 2 + 0] - avgX;
-                    const by = finalVertices[b * 2 + 1] - avgY;
-                    const angleA = angle(ax, ay);
-                    const angleB = angle(bx, by);
-                    if (angleA < angleB) {
-                        return -1;
-                    }
-                    if (angleA > angleB) {
-                        return 1;
-                    }
-                    return 0;
-                });
-
-                // Now we finally generate triangles
-                for (let i = 2; i < indicesInsideCell.length; i++) {
-                    const ax = finalVertices[indicesInsideCell[i - 1] * 2 + 0] - finalVertices[indicesInsideCell[0] * 2 + 0];
-                    const ay = finalVertices[indicesInsideCell[i - 1] * 2 + 1] - finalVertices[indicesInsideCell[0] * 2 + 1];
-                    const bx = finalVertices[indicesInsideCell[i] * 2 + 0] - finalVertices[indicesInsideCell[0] * 2 + 0];
-                    const by = finalVertices[indicesInsideCell[i] * 2 + 1] - finalVertices[indicesInsideCell[0] * 2 + 1];
-
-                    const c = cross(ax, ay, bx, by);
-
-                    // Skip degenerate (linear) triangles
-                    if (c === 0 ||
-                        (finalVertices[indicesInsideCell[0] * 2 + 0] === finalVertices[indicesInsideCell[i] * 2 + 0] && finalVertices[indicesInsideCell[0] * 2 + 0] === finalVertices[indicesInsideCell[i - 1] * 2 + 0]) ||
-                        (finalVertices[indicesInsideCell[0] * 2 + 1] === finalVertices[indicesInsideCell[i] * 2 + 1] && finalVertices[indicesInsideCell[0] * 2 + 1] === finalVertices[indicesInsideCell[i - 1] * 2 + 1])) {
-                        continue;
-                    }
-
-                    if (c > 0) {
-                        finalIndices.push(indicesInsideCell[0]);
-                        finalIndices.push(indicesInsideCell[i - 1]);
-                        finalIndices.push(indicesInsideCell[i]);
-                    }
-
-                    if (c < 0) {
-                        finalIndices.push(indicesInsideCell[0]);
-                        finalIndices.push(indicesInsideCell[i]);
-                        finalIndices.push(indicesInsideCell[i - 1]);
-                    }
-                }
-            }
-        }
-    }
-
-    return {
-        vertices: finalVertices,
-        indices: finalIndices,
-        vertexDictionary,
-    };
-}
-
-export function subdivideLines(vertices: Array<number>, indices: Array<number>, vertexDictionary: {[_: string]: number}, granuality: number): SubdividedMesh {
-    if (granuality <= 1) {
-        return {
-            vertices: [...vertices],
-            indices: [...indices],
-            vertexDictionary,
-        };
-    }
-
-    function getKey(x: number, y: number) {
+    private getKey(x: number, y: number): string {
         return Math.floor(x).toString(36) + Math.floor(y).toString(36);
     }
 
-    const finalVertices = [...vertices]; // initialize with input vertices since we will use all of them anyway
-
-    // Returns the index of an arbitrary vertex - if it does not exist yet, creates it first.
-    function getVertexIndex(x: number, y: number): number {
-        const key = getKey(x, y);
-        if (key in vertexDictionary) {
-            return vertexDictionary[key];
+    private getVertexIndex(x: number, y: number): number {
+        const key = this.getKey(x, y);
+        if (key in this._vertexDictionary) {
+            return this._vertexDictionary[key];
         }
-        const index = finalVertices.length / 2;
-        vertexDictionary[key] = index;
-        finalVertices.push(x);
-        finalVertices.push(y);
+        const index = this._finalVertices.length / 2;
+        this._vertexDictionary[key] = index;
+        this._finalVertices.push(x);
+        this._finalVertices.push(y);
         return index;
     }
 
-    const finalIndices = [];
-
-    const granualityStep = EXTENT / granuality;
-
-    function checkEdgeSubdivisionX(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideX: number, boundMin: number, boundMax: number): void {
+    private checkEdgeSubdivisionX(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideX: number, boundMin: number, boundMax: number): void {
         const y = checkEdgeDivide(e0x, e0y, e1x, e1y, divideX);
         if (y !== undefined && y >= boundMin && y <= boundMax) {
-            addUnique(indicesInsideCell, getVertexIndex(divideX, y));
+            addUnique(indicesInsideCell, this.getVertexIndex(divideX, y));
         }
     }
-    function checkEdgeSubdivisionY(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideY: number, boundMin: number, boundMax: number): void {
+
+    private checkEdgeSubdivisionY(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideY: number, boundMin: number, boundMax: number): void {
         const x = checkEdgeDivide(e0y, e0x, e1y, e1x, divideY); // reuse checkEdgeDivide that only checks division line parallel to Y by swaping x and y in edge coordinates
         if (x !== undefined && x >= boundMin && x <= boundMax) {
-            addUnique(indicesInsideCell, getVertexIndex(x, divideY));
+            addUnique(indicesInsideCell, this.getVertexIndex(x, divideY));
         }
     }
 
-    // Iterate over all input lines
-    for (let primitiveIndex = 0; primitiveIndex < indices.length; primitiveIndex += 2) {
-        const lineIndex0 = indices[primitiveIndex + 0];
-        const lineIndex1 = indices[primitiveIndex + 1];
-
-        const lineVertex0x = vertices[lineIndex0 * 2 + 0];
-        const lineVertex0y = vertices[lineIndex0 * 2 + 1];
-        const lineVertex1x = vertices[lineIndex1 * 2 + 0];
-        const lineVertex1y = vertices[lineIndex1 * 2 + 1];
-
-        // Get line AABB
-        const minX = Math.min(lineVertex0x, lineVertex1x);
-        const maxX = Math.max(lineVertex0x, lineVertex1x);
-        const minY = Math.min(lineVertex0y, lineVertex1y);
-        const maxY = Math.max(lineVertex0y, lineVertex1y);
-
-        const lineIndices = [];
-
-        // Add original line vertices - but only if they lie within the tile, as for globe rendering
-        // we need to rely on software clipping done here instead of stencil clipping.
-        if (lineVertex0x >= 0 && lineVertex0x <= EXTENT && lineVertex0y >= 0 && lineVertex0y <= EXTENT) {
-            lineIndices.push(lineIndex0);
-        }
-        if (lineVertex1x >= 0 && lineVertex1x <= EXTENT && lineVertex1y >= 0 && lineVertex1y <= EXTENT) {
-            lineIndices.push(lineIndex1);
+    private subdivideTriangles(triangleIndices: Array<number>): Array<number> {
+        if (!triangleIndices) {
+            return [];
         }
 
-        for (let cellX = Math.floor(Math.max(minX, 0) / granualityStep); cellX <= Math.floor((Math.min(maxX, EXTENT - 1) + granualityStep - 1) / granualityStep) + 1; cellX += 1) {
-            const cellEdgeX = cellX * granualityStep;
-            checkEdgeSubdivisionX(lineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, minX, maxX);
-        }
+        const finalTriangleIndices = [];
 
-        for (let cellY = Math.floor(Math.max(minY, 0) / granualityStep); cellY <= Math.floor((Math.min(maxY, EXTENT - 1) + granualityStep - 1) / granualityStep) + 1; cellY += 1) {
-            const cellEdgeY = cellY * granualityStep;
-            checkEdgeSubdivisionY(lineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, minY, maxY);
-        }
+        // Iterate over all input triangles
+        for (let primitiveIndex = 0; primitiveIndex < triangleIndices.length; primitiveIndex += 3) {
+            const triangle = [
+                triangleIndices[primitiveIndex + 0], // v0
+                triangleIndices[primitiveIndex + 1], // v1
+                triangleIndices[primitiveIndex + 2], // v2
+            ];
 
-        const edgeX = lineVertex1x - lineVertex0x;
-        const edgeY = lineVertex1y - lineVertex0y;
+            const triangleVertices = [
+                this._finalVertices[triangleIndices[primitiveIndex + 0] * 2 + 0], // v0.x
+                this._finalVertices[triangleIndices[primitiveIndex + 0] * 2 + 1], // v0.y
+                this._finalVertices[triangleIndices[primitiveIndex + 1] * 2 + 0], // v1.x
+                this._finalVertices[triangleIndices[primitiveIndex + 1] * 2 + 1], // v1.y
+                this._finalVertices[triangleIndices[primitiveIndex + 2] * 2 + 0], // v2.x
+                this._finalVertices[triangleIndices[primitiveIndex + 2] * 2 + 1], // v2.y
+            ];
 
-        lineIndices.sort((a: number, b: number) => {
-            const ax = finalVertices[a * 2 + 0] - lineVertex0x;
-            const ay = finalVertices[a * 2 + 1] - lineVertex0y;
-            const bx = finalVertices[b * 2 + 0] - lineVertex0x;
-            const by = finalVertices[b * 2 + 1] - lineVertex0y;
-            const aDist = ax * edgeX + ay * edgeY;
-            const bDist = bx * edgeX + by * edgeY;
-            if (aDist < bDist) {
-                return -1;
+            // Get triangle AABB
+            const minX = Math.min(triangleVertices[0], triangleVertices[2], triangleVertices[4]);
+            const maxX = Math.max(triangleVertices[0], triangleVertices[2], triangleVertices[4]);
+            const minY = Math.min(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
+            const maxY = Math.max(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
+
+            // Iterate over all the "granuality grid" cells that might intersect this triangle
+            for (let cellX = Math.floor(Math.max(minX, 0) / this._granualityStep); cellX <= Math.floor((Math.min(maxX, EXTENT - 1) + this._granualityStep - 1) / this._granualityStep); cellX += 1) {
+                for (let cellY = Math.floor(Math.max(minY, 0) / this._granualityStep); cellY <= Math.floor((Math.min(maxY, EXTENT - 1) + this._granualityStep - 1) / this._granualityStep); cellY += 1) {
+                // Cell AABB
+                    const cellMinX = cellX * this._granualityStep;
+                    const cellMinY = cellY * this._granualityStep;
+                    const cellMaxX = (cellX + 1) * this._granualityStep;
+                    const cellMaxY = (cellY + 1) * this._granualityStep;
+
+                    // Find all vertices (and their indices) that are inside this cell.
+                    const indicesInsideCell = [];
+
+                    // Check all original triangle vertices
+                    if (triangleVertices[0] >= cellMinX && triangleVertices[0] <= cellMaxX &&
+                    triangleVertices[1] >= cellMinY && triangleVertices[1] <= cellMaxY) {
+                        addUnique(indicesInsideCell, triangle[0]);
+                    }
+                    if (triangleVertices[2] >= cellMinX && triangleVertices[2] <= cellMaxX &&
+                    triangleVertices[3] >= cellMinY && triangleVertices[3] <= cellMaxY) {
+                        addUnique(indicesInsideCell, triangle[1]);
+                    }
+                    if (triangleVertices[4] >= cellMinX && triangleVertices[4] <= cellMaxX &&
+                    triangleVertices[5] >= cellMinY && triangleVertices[5] <= cellMaxY) {
+                        addUnique(indicesInsideCell, triangle[2]);
+                    }
+
+                    // Check all cell edge vertices
+                    if (pointInTriangle(cellMinX, cellMinY, triangleVertices)) {
+                        addUnique(indicesInsideCell, this.getVertexIndex(cellMinX, cellMinY));
+                    }
+                    if (pointInTriangle(cellMaxX, cellMinY, triangleVertices)) {
+                        addUnique(indicesInsideCell, this.getVertexIndex(cellMaxX, cellMinY));
+                    }
+                    if (pointInTriangle(cellMinX, cellMaxY, triangleVertices)) {
+                        addUnique(indicesInsideCell, this.getVertexIndex(cellMinX, cellMaxY));
+                    }
+                    if (pointInTriangle(cellMaxX, cellMaxY, triangleVertices)) {
+                        addUnique(indicesInsideCell, this.getVertexIndex(cellMaxX, cellMaxY));
+                    }
+
+                    // Check all intersections between triangle edges and cell edges
+                    for (let edge = 0; edge < 3; edge++) {
+                        const e0x = triangleVertices[(edge % 3) * 2 + 0];
+                        const e0y = triangleVertices[(edge % 3) * 2 + 1];
+                        const e1x = triangleVertices[((edge + 1) % 3) * 2 + 0];
+                        const e1y = triangleVertices[((edge + 1) % 3) * 2 + 1];
+                        this.checkEdgeSubdivisionX(indicesInsideCell, e0x, e0y, e1x, e1y, cellMinX, cellMinY, cellMaxY);
+                        this.checkEdgeSubdivisionX(indicesInsideCell, e0x, e0y, e1x, e1y, cellMaxX, cellMinY, cellMaxY);
+                        this.checkEdgeSubdivisionY(indicesInsideCell, e0x, e0y, e1x, e1y, cellMinY, cellMinX, cellMaxX);
+                        this.checkEdgeSubdivisionY(indicesInsideCell, e0x, e0y, e1x, e1y, cellMaxY, cellMinX, cellMaxX);
+                    }
+
+                    // Now, indicesInsideCell contains all the vertices this subdivided cell contains - but in arbitrary order!
+                    // We will now order them clockwise, from there generating the triangles is simple.
+                    // We take advantage of the fact that the shape we want to triangulate is convex, and thus the average of all its vertices is guaranteed to lie inside the shape.
+                    // Thus we will simply order the vertices by their azimuth angle from the average point.
+
+                    let avgX = 0;
+                    let avgY = 0;
+
+                    for (let i = 0; i < indicesInsideCell.length; i++) {
+                        avgX += this._finalVertices[indicesInsideCell[i] * 2 + 0];
+                        avgY += this._finalVertices[indicesInsideCell[i] * 2 + 1];
+                    }
+
+                    avgX /= indicesInsideCell.length;
+                    avgY /= indicesInsideCell.length;
+
+                    indicesInsideCell.sort((a: number, b: number) => {
+                        const ax = this._finalVertices[a * 2 + 0] - avgX;
+                        const ay = this._finalVertices[a * 2 + 1] - avgY;
+                        const bx = this._finalVertices[b * 2 + 0] - avgX;
+                        const by = this._finalVertices[b * 2 + 1] - avgY;
+                        const angleA = angle(ax, ay);
+                        const angleB = angle(bx, by);
+                        if (angleA < angleB) {
+                            return -1;
+                        }
+                        if (angleA > angleB) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+
+                    // Now we finally generate triangles
+                    for (let i = 2; i < indicesInsideCell.length; i++) {
+                        const ax = this._finalVertices[indicesInsideCell[i - 1] * 2 + 0] - this._finalVertices[indicesInsideCell[0] * 2 + 0];
+                        const ay = this._finalVertices[indicesInsideCell[i - 1] * 2 + 1] - this._finalVertices[indicesInsideCell[0] * 2 + 1];
+                        const bx = this._finalVertices[indicesInsideCell[i] * 2 + 0] - this._finalVertices[indicesInsideCell[0] * 2 + 0];
+                        const by = this._finalVertices[indicesInsideCell[i] * 2 + 1] - this._finalVertices[indicesInsideCell[0] * 2 + 1];
+
+                        const c = cross(ax, ay, bx, by);
+
+                        // Skip degenerate (linear) triangles
+                        if (c === 0 ||
+                            (this._finalVertices[indicesInsideCell[0] * 2 + 0] === this._finalVertices[indicesInsideCell[i] * 2 + 0] && this._finalVertices[indicesInsideCell[0] * 2 + 0] === this._finalVertices[indicesInsideCell[i - 1] * 2 + 0]) ||
+                            (this._finalVertices[indicesInsideCell[0] * 2 + 1] === this._finalVertices[indicesInsideCell[i] * 2 + 1] && this._finalVertices[indicesInsideCell[0] * 2 + 1] === this._finalVertices[indicesInsideCell[i - 1] * 2 + 1])) {
+                            continue;
+                        }
+
+                        if (c > 0) {
+                            finalTriangleIndices.push(indicesInsideCell[0]);
+                            finalTriangleIndices.push(indicesInsideCell[i - 1]);
+                            finalTriangleIndices.push(indicesInsideCell[i]);
+                        }
+
+                        if (c < 0) {
+                            finalTriangleIndices.push(indicesInsideCell[0]);
+                            finalTriangleIndices.push(indicesInsideCell[i]);
+                            finalTriangleIndices.push(indicesInsideCell[i - 1]);
+                        }
+                    }
+                }
             }
-            if (aDist > bDist) {
-                return 1;
-            }
-            return 0;
-        });
-
-        for (let i = 1; i < lineIndices.length; i++) {
-            finalIndices.push(lineIndices[i - 1]);
-            finalIndices.push(lineIndices[i]);
         }
+
+        return finalTriangleIndices;
     }
 
-    return {
-        vertices: finalVertices,
-        indices: finalIndices,
-        vertexDictionary
-    };
+    private subdivideLines(lineIndices: Array<number>): Array<number> {
+        if (!lineIndices) {
+            return [];
+        }
+
+        const finalLineIndices = [];
+
+        // Iterate over all input lines
+        for (let primitiveIndex = 0; primitiveIndex < lineIndices.length; primitiveIndex += 2) {
+            const lineIndex0 = lineIndices[primitiveIndex + 0];
+            const lineIndex1 = lineIndices[primitiveIndex + 1];
+
+            const lineVertex0x = this._finalVertices[lineIndex0 * 2 + 0];
+            const lineVertex0y = this._finalVertices[lineIndex0 * 2 + 1];
+            const lineVertex1x = this._finalVertices[lineIndex1 * 2 + 0];
+            const lineVertex1y = this._finalVertices[lineIndex1 * 2 + 1];
+
+            // Get line AABB
+            const minX = Math.min(lineVertex0x, lineVertex1x);
+            const maxX = Math.max(lineVertex0x, lineVertex1x);
+            const minY = Math.min(lineVertex0y, lineVertex1y);
+            const maxY = Math.max(lineVertex0y, lineVertex1y);
+
+            const subdividedLineIndices = [];
+
+            // Add original line vertices - but only if they lie within the tile, as for globe rendering
+            // we need to rely on software clipping done here instead of stencil clipping.
+            if (lineVertex0x >= 0 && lineVertex0x <= EXTENT && lineVertex0y >= 0 && lineVertex0y <= EXTENT) {
+                subdividedLineIndices.push(lineIndex0);
+            }
+            if (lineVertex1x >= 0 && lineVertex1x <= EXTENT && lineVertex1y >= 0 && lineVertex1y <= EXTENT) {
+                subdividedLineIndices.push(lineIndex1);
+            }
+
+            for (let cellX = Math.floor(Math.max(minX, 0) / this._granualityStep); cellX <= Math.floor((Math.min(maxX, EXTENT - 1) + this._granualityStep - 1) / this._granualityStep) + 1; cellX += 1) {
+                const cellEdgeX = cellX * this._granualityStep;
+                this.checkEdgeSubdivisionX(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, minX, maxX);
+            }
+
+            for (let cellY = Math.floor(Math.max(minY, 0) / this._granualityStep); cellY <= Math.floor((Math.min(maxY, EXTENT - 1) + this._granualityStep - 1) / this._granualityStep) + 1; cellY += 1) {
+                const cellEdgeY = cellY * this._granualityStep;
+                this.checkEdgeSubdivisionY(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, minY, maxY);
+            }
+
+            const edgeX = lineVertex1x - lineVertex0x;
+            const edgeY = lineVertex1y - lineVertex0y;
+
+            subdividedLineIndices.sort((a: number, b: number) => {
+                const ax = this._finalVertices[a * 2 + 0] - lineVertex0x;
+                const ay = this._finalVertices[a * 2 + 1] - lineVertex0y;
+                const bx = this._finalVertices[b * 2 + 0] - lineVertex0x;
+                const by = this._finalVertices[b * 2 + 1] - lineVertex0y;
+                const aDist = ax * edgeX + ay * edgeY;
+                const bDist = bx * edgeX + by * edgeY;
+                if (aDist < bDist) {
+                    return -1;
+                }
+                if (aDist > bDist) {
+                    return 1;
+                }
+                return 0;
+            });
+
+            for (let i = 1; i < subdividedLineIndices.length; i++) {
+                finalLineIndices.push(subdividedLineIndices[i - 1]);
+                finalLineIndices.push(subdividedLineIndices[i]);
+            }
+        }
+
+        return finalLineIndices;
+    }
+
+    /**
+     * Subdivides an input mesh. Imagine a regular square grid with the target granuality overlaid over the mesh - this is the subdivision's result.
+     * Assumes a mesh of tile features - vertex coordinates are integers, visible range where subdivision happens is 0..8191.
+     * @param vertices Input vertex buffer, flattened - two values per vertex (x, y).
+     * @param indices Input index buffer.
+     * @param granuality Target granuality. If less or equal to 1, the input buffers are returned without modification.
+     * @returns Vertex and index buffers with subdivision applied.
+     */
+    public subdivide(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<number>): SubdivisionResult {
+        if (this._vertexDictionary) {
+            console.error('Subdivider: multiple use not allowed.');
+            return undefined;
+        }
+
+        this._finalVertices = [...vertices]; // initialize with input vertices since we will use all of them anyway
+        this._vertexDictionary = {};
+
+        // Fill in indices for all starting vertices
+        for (let i = 0; i < vertices.length; i += 2) {
+            const index = i / 2;
+            const key = this.getKey(vertices[i], vertices[i + 1]);
+            this._vertexDictionary[key] = index;
+        }
+
+        return {
+            verticesFlattened: this._finalVertices,
+            indicesTriangles: this.subdivideTriangles(triangleIndices),
+            indicesLines: this.subdivideLines(lineIndices),
+        };
+    }
+}
+
+export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<number>, granuality: number): SubdivisionResult {
+    const subdivider = new Subdivider(granuality);
+    return subdivider.subdivide(vertices, triangleIndices, lineIndices);
 }
 
 /**
@@ -419,7 +408,7 @@ function edgeLengthMercator(e0x: number, e0y: number, e1x: number, e1y: number, 
     return Math.acos(e0[0] * e1[0] + e0[1] * e1[1] + e0[2] * e1[2]);
 }
 
-export function subdivideSimple(vertices: Array<number>, indices: Array<number>, granuality: number, tileID: CanonicalTileID): SubdividedMesh {
+export function subdivideSimple(vertices: Array<number>, indices: Array<number>, granuality: number, tileID: CanonicalTileID): any {
     if (granuality <= 1) {
         return {
             vertices: [...vertices],
