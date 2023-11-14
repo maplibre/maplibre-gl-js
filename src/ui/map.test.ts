@@ -209,7 +209,7 @@ describe('Map', () => {
             await map.once('idle');
             idleTriggered = true;
             map.zoomTo(0.5, {duration: 100});
-            spy.mockReset();
+            spy.mockRestore();
         });
     });
 
