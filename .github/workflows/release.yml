@@ -1,12 +1,7 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: Version to change to.
-        required: true
-        type: string
+  workflow_dispatch
 
 jobs:
   release:
@@ -26,21 +21,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
+          registry-url: 'https://registry.npmjs.org'
 
-      - name: Bump version
-        run: |
-          npm version --commit-hooks false --git-tag-version false ${{ inputs.version }}
-          ./build/bump-version-changelog.js
-          git commit -m "Bump version to ${{ inputs.version }}"
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} 
-      - name: Tag commit and push
-        uses: mathieudutour/github-tag-action@v6.1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ inputs.version }}
+      - name: Get version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
 
       - name: Install
         run: npm ci
@@ -48,8 +33,8 @@ jobs:
       - name: Prepare release
         id: prepare_release
         run: |
-          echo "version_tag=v${{ inputs.version }}" >> $GITHUB_OUTPUT
-          RELEASE_TYPE=$(node -e "console.log(require('semver').prerelease('${{ inputs.version }}') ? 'prerelease' : 'regular')")
+          echo "version_tag=v${{ steps.package-version.outputs.current-version }}" >> $GITHUB_OUTPUT
+          RELEASE_TYPE=$(node -e "console.log(require('semver').prerelease('${{ steps.package-version.outputs.current-version }}') ? 'prerelease' : 'regular')")
           echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
 
       - name: Build
@@ -60,6 +45,26 @@ jobs:
           npm run build-css
           npm run build-benchmarks
           npm run generate-typings
+
+      - name: Publish NPM package (regular)
+        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
+        run: |
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
+
+      - name: Publish NPM package (pre-release)
+        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
+        run: |
+          npm publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
+
+      - name: Tag commit and push
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.package-version.outputs.current-version }}
 
       - name: Create Archive
         run: |
@@ -139,22 +144,3 @@ jobs:
           publish_dir: site
           destination_dir: docs
           commit_message: 'deploy docs: ${{ steps.prepare_release.outputs.version_tag }}'
-
-      - name: Clean up
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        run: |
-          rm -f ${{ steps.prepare_release.outputs.release_notes }}
-
-      - name: Publish NPM package (regular)
-        if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        run: |
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
-
-      - name: Publish NPM package (pre-release)
-        if: ${{ steps.prepare_release.outputs.release_type == 'prerelease' }}
-        run: |
-          npm publish --tag next
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ORG_TOKEN }}
