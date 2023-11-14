@@ -174,7 +174,7 @@ export class FillBucket implements Bucket {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             const flattened = [];
             const holeIndices = [];
-            const lineIndices = [];
+            const lineList = [];
 
             for (const ring of polygon) {
                 if (ring.length === 0) {
@@ -185,17 +185,22 @@ export class FillBucket implements Bucket {
                     holeIndices.push(flattened.length / 2);
                 }
 
-                lineIndices.push(ring.length - 1);
-                lineIndices.push(0);
+                const lineIndices = [];
+                const baseIndex = flattened.length / 2;
+
+                lineIndices.push(baseIndex + ring.length - 1);
+                lineIndices.push(baseIndex);
                 flattened.push(ring[0].x);
                 flattened.push(ring[0].y);
 
                 for (let i = 1; i < ring.length; i++) {
-                    lineIndices.push(i - 1);
-                    lineIndices.push(i);
+                    lineIndices.push(baseIndex + i - 1);
+                    lineIndices.push(baseIndex + i);
                     flattened.push(ring[i].x);
                     flattened.push(ring[i].y);
                 }
+
+                lineList.push(lineIndices);
             }
 
             const indices = earcut(flattened, holeIndices);
@@ -207,21 +212,20 @@ export class FillBucket implements Bucket {
             //const subdividedTris = subdivideTriangles(flattened, indices, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
             //const subdividedLines = subdivideLines(subdividedTris.vertices, lineIndices, subdividedTris.vertexDictionary, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
             //const subdivided = subdivideSimple(flattened, indices, ProjectionManager.getGranualityForZoomLevel(canonical.z), canonical);
-            const subdivided = subdivideFill(flattened, indices, lineIndices, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
+
+            const subdivided = subdivideFill(flattened, indices, lineList, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
             const finalVertices = subdivided.verticesFlattened;
             const finalIndicesTriangles = subdivided.indicesTriangles;
-            const finalIndicesLines = subdivided.indicesLines;
+            const finalIndicesLineList = subdivided.indicesLineList;
+
             // const finalVertices = flattened;
-            // const finalIndicesTriangles = holeIndices;
-            // const finalIndicesLines = lineIndices;
+            // const finalIndicesTriangles = indices;
+            // const finalIndicesLineList = lineList;
 
             const numVertices = finalVertices.length / 2;
 
             const triangleSegment = this.segments.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray);
             const triangleIndex = triangleSegment.vertexLength;
-            // We still need to call this, because this function call may break up segments if it overflows
-            const lineSegment = this.segments2.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray2);
-            const lineIndex = lineSegment.vertexLength;
 
             for (let i = 0; i < finalIndicesTriangles.length; i += 3) {
                 this.indexArray.emplaceBack(
@@ -230,20 +234,32 @@ export class FillBucket implements Bucket {
                     triangleIndex + finalIndicesTriangles[i + 2]);
             }
 
-            for (let i = 0; i < finalIndicesLines.length; i += 2) {
-                this.indexArray2.emplaceBack(
-                    lineIndex + finalIndicesLines[i],
-                    lineIndex + finalIndicesLines[i + 1]);
-            }
+            triangleSegment.vertexLength += numVertices;
+            triangleSegment.primitiveLength += finalIndicesTriangles.length / 3;
+
+            let lineSegment = this.segments2.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray2);
+            const lineIndicesStart = lineSegment.vertexLength;
+            lineSegment.vertexLength += numVertices;
 
             for (let i = 0; i < finalVertices.length; i += 2) {
                 this.layoutVertexArray.emplaceBack(finalVertices[i], finalVertices[i + 1]);
             }
 
-            triangleSegment.vertexLength += numVertices;
-            triangleSegment.primitiveLength += finalIndicesTriangles.length / 3;
-            lineSegment.vertexLength += numVertices;
-            lineSegment.primitiveLength += finalIndicesLines.length / 2;
+            for (let listIndex = 0; listIndex < finalIndicesLineList.length; listIndex++) {
+                if (listIndex > 0) {
+                    // All new vertices were added to the first line segment -> pass 0 as numVertices here.
+                    lineSegment = this.segments2.prepareSegment(0, this.layoutVertexArray, this.indexArray2);
+                }
+                const lineIndices = finalIndicesLineList[listIndex];
+
+                for (let i = 1; i < lineIndices.length; i += 2) {
+                    this.indexArray2.emplaceBack(
+                        lineIndicesStart + lineIndices[i - 1],
+                        lineIndicesStart + lineIndices[i]);
+                }
+
+                lineSegment.primitiveLength += lineIndices.length / 2;
+            }
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }

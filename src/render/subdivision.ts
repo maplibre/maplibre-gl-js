@@ -5,7 +5,7 @@ import {CanonicalTileID} from '../source/tile_id';
 type SubdivisionResult = {
     verticesFlattened: Array<number>;
     indicesTriangles: Array<number>;
-    indicesLines: Array<number>;
+    indicesLineList: Array<Array<number>>;
 };
 
 // Point p1 is the tested point, points p2 and p3 are the triangle edge.
@@ -307,6 +307,11 @@ class Subdivider {
             const minY = Math.min(lineVertex0y, lineVertex1y);
             const maxY = Math.max(lineVertex0y, lineVertex1y);
 
+            const clampedMinX = Math.max(minX, 0);
+            const clampedMaxX = Math.min(maxX, EXTENT);
+            const clampedMinY = Math.max(minY, 0);
+            const clampedMaxY = Math.min(maxY, EXTENT);
+
             const subdividedLineIndices = [];
 
             // Add original line vertices - but only if they lie within the tile, as for globe rendering
@@ -318,18 +323,22 @@ class Subdivider {
                 subdividedLineIndices.push(lineIndex1);
             }
 
-            for (let cellX = Math.floor(Math.max(minX, 0) / this._granualityStep); cellX <= Math.floor((Math.min(maxX, EXTENT - 1) + this._granualityStep - 1) / this._granualityStep) + 1; cellX += 1) {
+            for (let cellX = Math.max(Math.floor((minX + this._granualityStep) / this._granualityStep), 0); cellX <= Math.min(Math.floor((maxX - 1) / this._granualityStep), this._granuality); cellX += 1) {
                 const cellEdgeX = cellX * this._granualityStep;
-                this.checkEdgeSubdivisionX(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, minX, maxX);
+                this.checkEdgeSubdivisionX(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, clampedMinX, clampedMaxX);
             }
 
-            for (let cellY = Math.floor(Math.max(minY, 0) / this._granualityStep); cellY <= Math.floor((Math.min(maxY, EXTENT - 1) + this._granualityStep - 1) / this._granualityStep) + 1; cellY += 1) {
+            for (let cellY = Math.max(Math.floor((minY + this._granualityStep) / this._granualityStep), 0); cellY <= Math.min(Math.floor((maxY - 1) / this._granualityStep), this._granuality); cellY += 1) {
                 const cellEdgeY = cellY * this._granualityStep;
-                this.checkEdgeSubdivisionY(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, minY, maxY);
+                this.checkEdgeSubdivisionY(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, clampedMinY, clampedMaxY);
             }
 
             const edgeX = lineVertex1x - lineVertex0x;
             const edgeY = lineVertex1y - lineVertex0y;
+
+            if (subdividedLineIndices.length < 2) {
+                continue;
+            }
 
             subdividedLineIndices.sort((a: number, b: number) => {
                 const ax = this._finalVertices[a * 2 + 0] - lineVertex0x;
@@ -351,6 +360,35 @@ class Subdivider {
                 finalLineIndices.push(subdividedLineIndices[i - 1]);
                 finalLineIndices.push(subdividedLineIndices[i]);
             }
+
+            // const lineLen = vectorLength(edgeX, edgeY);
+            // let subdividedLen = 0;
+
+            // for (let i = 1; i < subdividedLineIndices.length; i++) {
+            //     const v0x = this._finalVertices[subdividedLineIndices[i - 1] * 2];
+            //     const v0y = this._finalVertices[subdividedLineIndices[i - 1] * 2 + 1];
+            //     const v1x = this._finalVertices[subdividedLineIndices[i] * 2];
+            //     const v1y = this._finalVertices[subdividedLineIndices[i] * 2 + 1];
+            //     const e0x = v1x - v0x;
+            //     const e0y = v1y - v0y;
+            //     subdividedLen += vectorLength(e0x, e0y);
+            // }
+
+            // if (subdividedLen < lineLen * 2) {
+            //     continue;
+            // }
+
+            // if (subdividedLineIndices.length > 2) {
+            //     let msg = `Indices:\n- original: ${lineIndex0} ${lineIndex1}\n- subdiv'd: `;
+            //     for (let i = 0; i < subdividedLineIndices.length; i++) {
+            //         msg += `${subdividedLineIndices[i]} `;
+            //     }
+            //     msg += `\nPositions:\n- original: x ${lineVertex0x} y ${lineVertex0y} x ${lineVertex1x} y ${lineVertex1y}\n- subdiv'd: `;
+            //     for (let i = 0; i < subdividedLineIndices.length; i++) {
+            //         msg += `x ${this._finalVertices[subdividedLineIndices[i] * 2]} y ${this._finalVertices[subdividedLineIndices[i] * 2 + 1]} `;
+            //     }
+            //     console.log(msg);
+            // }
         }
 
         return finalLineIndices;
@@ -364,7 +402,7 @@ class Subdivider {
      * @param granuality Target granuality. If less or equal to 1, the input buffers are returned without modification.
      * @returns Vertex and index buffers with subdivision applied.
      */
-    public subdivide(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<number>): SubdivisionResult {
+    public subdivide(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>): SubdivisionResult {
         if (this._vertexDictionary) {
             console.error('Subdivider: multiple use not allowed.');
             return undefined;
@@ -380,15 +418,22 @@ class Subdivider {
             this._vertexDictionary[key] = index;
         }
 
+        const subdividedTriangles = this.subdivideTriangles(triangleIndices);
+        const subdividedLines = [];
+
+        for (const lines of lineIndices) {
+            subdividedLines.push(this.subdivideLines(lines));
+        }
+
         return {
             verticesFlattened: this._finalVertices,
-            indicesTriangles: this.subdivideTriangles(triangleIndices),
-            indicesLines: this.subdivideLines(lineIndices),
+            indicesTriangles: subdividedTriangles,
+            indicesLineList: subdividedLines,
         };
     }
 }
 
-export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<number>, granuality: number): SubdivisionResult {
+export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, granuality: number): SubdivisionResult {
     const subdivider = new Subdivider(granuality);
     return subdivider.subdivide(vertices, triangleIndices, lineIndices);
 }
