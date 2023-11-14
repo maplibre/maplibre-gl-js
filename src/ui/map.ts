@@ -3256,6 +3256,8 @@ export class Map extends Camera {
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
+        this.projectionManager.updateProjection(this.painter.transform);
+
         let rttOptions;
 
         if (useRtt) {

@@ -845,11 +845,7 @@ export class Transform {
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        const farZbase = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
-
-        // Ensure globe is always within farZ range
-        // this.worldSize is the globe's diameter, and we only ever see the near half of the globe
-        const farZ = cameraToSeaLevelDistance + this.worldSize * 0.5;
+        const farZ = (Math.cos(Math.PI / 2 - this._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -892,36 +888,11 @@ export class Transform {
         // matrix for conversion from location to screen coordinates in 2D
         this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
-        //
-        //
-        //
-        // A completely separate matrix for globe view
-        //
-        //
-        // cam....
-        //  |     ....        |
-        //  |         ....    |
-        //   |            ....center
-        //   |            ggggggggg
-        //   |      gggggg        .gggggg
-        //    |  ggg                  ...ggg
-        //    |gg
-        //    g
-        //    g
         // JP: TODO: dependency on tile size and viewport pixel size here is bad - remove it
 
-        // Distance from camera to point at the same elevation as camera, right above center point on globe
-        const horizontalDistanceToCenter = Math.sin(this._pitch) * this.cameraToCenterDistance;
-        // Distance from camera to globe center
-        const cameraDistanceToGlobeCenter = (Math.cos(this._pitch) * this.cameraToCenterDistance + this.worldSize * 0.5);
-        const distanceCameraToGlobeCenter = Math.sqrt(horizontalDistanceToCenter * horizontalDistanceToCenter + cameraDistanceToGlobeCenter * cameraDistanceToGlobeCenter);
-        const distanceCameraToGlobeTangent = Math.sqrt(distanceCameraToGlobeCenter - (this.worldSize * 0.5) * (this.worldSize * 0.5));
-        const cameraToGlobeTangentAngleCos = distanceCameraToGlobeTangent / distanceCameraToGlobeCenter;
-        const tagentPointDistanceFromCameraPlane = cameraToGlobeTangentAngleCos * distanceCameraToGlobeTangent;
+        // Construct a completely separate matrix for globe view
         const globeMatrix = new Float64Array(16) as any;
-        //mat4.perspective(globeMatrix, this._fov, this.width / this.height, 0.5, tagentPointDistanceFromCameraPlane);
-        mat4.perspective(globeMatrix, this._fov, this.width / this.height, 0.5, distanceCameraToGlobeCenter);
-        //mat4.perspective(globeMatrix, this._fov, this.width / this.height, 0.5, this.cameraToCenterDistance + Math.cos(this._pitch) * this.worldSize * 0.5);
+        mat4.perspective(globeMatrix, this._fov, this.width / this.height, 0.5, this.cameraToCenterDistance + this.worldSize); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -this._pitch);
         mat4.rotateZ(globeMatrix, globeMatrix, -this.angle);
@@ -931,9 +902,6 @@ export class Transform {
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, [0.5 * this.worldSize, 0.5 * this.worldSize, 0.5 * this.worldSize]); // Scale the unit sphere to a sphere with diameter of 1
         this.globeProjMatrix = globeMatrix;
-        //
-        //
-        //
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
