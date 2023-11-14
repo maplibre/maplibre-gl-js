@@ -2209,7 +2209,7 @@ describe('Map', () => {
             // to avoid seeing error in the console in Jest
             let stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             const map = createMap();
-            stub.mockRestore();
+            stub.mockReset();
             stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             const error = new Error('test');
             map.fire(new ErrorEvent(error));

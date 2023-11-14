@@ -94,7 +94,7 @@ afterEach(() => {
     mockConsoleError.mockRestore();
 });
 
-describe('Styleeee', () => {
+describe('Style', () => {
     test('registers plugin state change listener', () => {
         const style = new Style(getStubMap());
         const mockStyleDispatcherBroadcast = jest.spyOn(style.dispatcher, 'broadcast');
@@ -511,7 +511,7 @@ describe('Style#loadJSON', () => {
     });
 });
 
-describe('Style _load', () => {
+describe('Style#_load', () => {
     test('initiates sprite loading when it\'s present', () => {
         const style = new Style(getStubMap());
 
@@ -614,7 +614,7 @@ describe('Style _load', () => {
     });
 });
 
-describe('Style _remove', () => {
+describe('Style#_remove', () => {
     test('removes cache sources and clears their tiles', done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({

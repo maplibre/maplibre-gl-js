@@ -165,7 +165,7 @@ describe('ImageSource', () => {
         source.tiles[String(tile.tileID.wrap)] = tile;
         source.image = new ImageBitmap();
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = { destroy: () => {}} as VertexBuffer;
+        source.boundsBuffer = {destroy: () => {}} as VertexBuffer;
         source.boundsSegments = {} as SegmentVector;
         source.texture = {} as Texture;
         source.prepare();
@@ -198,7 +198,7 @@ describe('ImageSource', () => {
     test('cancels request if updateImage is used', () => {
         const map = new StubMap() as any;
         const source = createSource({url: '/image.png', eventedParent: map});
-        
+
         // Suppress errors because we're aborting.
         map.on('error', () => {});
         source.onAdd(map);

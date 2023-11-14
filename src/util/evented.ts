@@ -120,6 +120,7 @@ export class Evented {
         }
 
         const type = event.type;
+
         if (this.listens(type)) {
             (event as any).target = this;
 
