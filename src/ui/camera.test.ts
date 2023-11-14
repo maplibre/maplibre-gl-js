@@ -7,7 +7,7 @@ import {setMatchMedia} from '../util/test/util';
 import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import {Terrain} from '../render/terrain';
 import {LngLat, LngLatLike} from '../geo/lng_lat';
-import { Event } from '../util/evented';
+import {Event} from '../util/evented';
 
 beforeEach(() => {
     setMatchMedia();
@@ -976,38 +976,85 @@ describe('#easeTo', () => {
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
     });
 
-    test('jumpTo on("zoom") during easeTo', async () => {
-        return new Promise((resolve, reject) => {
-            const camera = createCamera();
+    test('jumpTo on("move") during easeTo', (done) => {
+        const camera = createCamera();
 
-            const render = () => {
+        camera.on('moveend', (e: Event & {done?: true}) => {
+            if ('done' in e) {
                 setTimeout(() => {
-                    try {
-                        requestAnimationFrame(render);
-                        camera.simulateFrame();
-                    } catch (error) {
-                        reject(error);
-                    }
-                }, 0);
-            };
-
-            camera.on('moveend', (e: Event & {done?: true}) => {
-                if (('done' in e)) {
-                    setTimeout(() => {
-                        resolve(true);
-                    }, 50);
-                }
-            });
-
-            camera.easeTo({zoom: 20, bearing: 90, duration: 500}, {done: true});
-            camera.on('zoom', () => {
-                camera.jumpTo({pitch: 40});
-            });
-
-            render();
+                    done();
+                }, 50);
+            }
         });
-    }, 500);
 
+        camera.easeTo({zoom: 20, bearing: 90, pitch: 60, duration: 500}, {done: true});
+        camera.once('move', () => {
+            camera.jumpTo({pitch: 40});
+        });
+
+        camera.simulateFrame();
+        camera.simulateFrame();
+    });
+
+    test('jumpTo on("zoom") during easeTo', (done) => {
+        const camera = createCamera();
+
+        camera.on('moveend', (e: Event & {done?: true}) => {
+            if ('done' in e) {
+                setTimeout(() => {
+                    done();
+                }, 50);
+            }
+        });
+
+        camera.easeTo({zoom: 20, duration: 500}, {done: true});
+        camera.once('zoom', () => {
+            camera.jumpTo({pitch: 40});
+        });
+
+        camera.simulateFrame();
+        camera.simulateFrame();
+    });
+
+    test('jumpTo on("pitch") during easeTo', (done) => {
+        const camera = createCamera();
+
+        camera.on('moveend', (e: Event & {done?: true}) => {
+            if ('done' in e) {
+                setTimeout(() => {
+                    done();
+                }, 50);
+            }
+        });
+
+        camera.easeTo({pitch: 60, duration: 500}, {done: true});
+        camera.once('pitch', () => {
+            camera.jumpTo({pitch: 40});
+        });
+
+        camera.simulateFrame();
+        camera.simulateFrame();
+    });
+
+    test('jumpTo on("rotate") during easeTo', (done) => {
+        const camera = createCamera();
+
+        camera.on('moveend', (e: Event & {done?: true}) => {
+            if ('done' in e) {
+                setTimeout(() => {
+                    done();
+                }, 50);
+            }
+        });
+
+        camera.easeTo({bearing: 90, duration: 500}, {done: true});
+        camera.once('rotate', () => {
+            camera.jumpTo({pitch: 40});
+        });
+
+        camera.simulateFrame();
+        camera.simulateFrame();
+    });
 });
 
 describe('#flyTo', () => {
