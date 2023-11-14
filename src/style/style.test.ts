@@ -80,12 +80,13 @@ function createStyle(map = getStubMap()) {
 }
 
 let server: FakeServer;
-let mockConsoleError;
+let mockConsoleError: jest.SpyInstance;
 
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
     mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
+    clearRTLTextPlugin();
 });
 
 afterEach(() => {
@@ -93,10 +94,8 @@ afterEach(() => {
     mockConsoleError.mockRestore();
 });
 
-describe('Style', () => {
+describe('Styleeee', () => {
     test('registers plugin state change listener', () => {
-        clearRTLTextPlugin();
-
         const style = new Style(getStubMap());
         const mockStyleDispatcherBroadcast = jest.spyOn(style.dispatcher, 'broadcast');
 
@@ -109,7 +108,6 @@ describe('Style', () => {
     });
 
     test('loads plugin immediately if already registered', done => {
-        clearRTLTextPlugin();
         server.respondWith('/plugin.js', 'doesn\'t matter');
         setRTLTextPlugin('/plugin.js', (error) => {
             expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
@@ -513,7 +511,7 @@ describe('Style#loadJSON', () => {
     });
 });
 
-describe('Style#_load', () => {
+describe('Style _load', () => {
     test('initiates sprite loading when it\'s present', () => {
         const style = new Style(getStubMap());
 
@@ -573,7 +571,7 @@ describe('Style#_load', () => {
         expect(dispatchData[0].id).toBe('background');
 
         // cleanup
-        _broadcastSpyOn.mockReset();
+        _broadcastSpyOn.mockRestore();
     });
 
     test('validate style when validate option is true', () => {
@@ -616,7 +614,7 @@ describe('Style#_load', () => {
     });
 });
 
-describe('Style#_remove', () => {
+describe('Style _remove', () => {
     test('removes cache sources and clears their tiles', done => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON({
@@ -639,18 +637,16 @@ describe('Style#_remove', () => {
         });
     });
 
-    test('deregisters plugin listener', done => {
+    test('deregisters plugin listener', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const mockStyleDispatcherBroadcast = jest.spyOn(style.dispatcher, 'broadcast');
 
-        style.on('style.load', () => {
-            style._remove();
+        await style.once('style.load');
+        style._remove();
 
-            rtlTextPluginEvented.fire(new Event('pluginStateChange'));
-            expect(mockStyleDispatcherBroadcast).not.toHaveBeenCalledWith('syncRTLPluginState');
-            done();
-        });
+        rtlTextPluginEvented.fire(new Event('pluginStateChange'));
+        expect(mockStyleDispatcherBroadcast).not.toHaveBeenCalledWith('syncRTLPluginState');
     });
 });
 

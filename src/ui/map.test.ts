@@ -209,7 +209,7 @@ describe('Map', () => {
             await map.once('idle');
             idleTriggered = true;
             map.zoomTo(0.5, {duration: 100});
-            spy.mockReset();
+            spy.mockRestore();
         });
     });
 
@@ -288,7 +288,7 @@ describe('Map', () => {
 
         });
 
-        test('setStyle back to the first style should work', done => {
+        test('setStyle back to the first style should work', async () => {
             const redStyle = {version: 8 as const, sources: {}, layers: [
                 {id: 'background', type: 'background' as const, paint: {'background-color': 'red'}},
             ]};
@@ -296,13 +296,13 @@ describe('Map', () => {
                 {id: 'background', type: 'background' as const, paint: {'background-color': 'blue'}},
             ]};
             const map = createMap({style: redStyle});
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             map.setStyle(blueStyle);
-            map.once('style.load', () => {
-                map.setStyle(redStyle);
-                const serializedStyle =  map.style.serialize();
-                expect(serializedStyle.layers[0].paint['background-color']).toBe('red');
-                done();
-            });
+            await map.once('style.load');
+            map.setStyle(redStyle);
+            const serializedStyle =  map.style.serialize();
+            expect(serializedStyle.layers[0].paint['background-color']).toBe('red');
+            spy.mockRestore();
         });
 
         test('style transform overrides unmodified map transform', done => {
@@ -2209,7 +2209,7 @@ describe('Map', () => {
             // to avoid seeing error in the console in Jest
             let stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             const map = createMap();
-            stub.mockReset();
+            stub.mockRestore();
             stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             const error = new Error('test');
             map.fire(new ErrorEvent(error));
