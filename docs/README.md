@@ -26,7 +26,7 @@ Finally, run:
 npm run start-docs
 ```
 
-Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them.
+Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them. Some tile service providers of the docs example pages such as MapTiler or Staida Maps might only send you tiles if the host is localhost. In that case, try http://localhost:8000. 
 
 The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
