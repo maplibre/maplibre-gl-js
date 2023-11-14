@@ -976,7 +976,7 @@ describe('#easeTo', () => {
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 1000});
     });
 
-    test('jumpTo on("move") during easeTo', (done) => {
+    test('jumpTo on("move") during easeTo with zoom, pitch, etc', (done) => {
         const camera = createCamera();
 
         camera.on('moveend', (e: Event & {done?: true}) => {
