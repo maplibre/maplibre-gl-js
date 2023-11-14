@@ -8,7 +8,6 @@
 
 ## 3.6.1
 
-### ✨ Features and improvements
 
 ### 🐞 Bug fixes
 - Fix `undefined` `_onEaseFrame` call in `Camera._renderFrameCallback()` while doing `Camera.jumpTo` during a `Camera.easeTo` ([#3332](https://github.com/maplibre/maplibre-gl-js/pull/3332))
