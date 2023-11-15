@@ -370,15 +370,23 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
+        const isGlobeActive = !!style.map.globe; // JP: TODO: this should be always false for large zooms!
+
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
             if (sourceCache.used) {
                 sourceCache.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates();
-            coordsDescending[id] = coordsAscending[id].slice().reverse();
-            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
+            if (isGlobeActive) {
+                coordsAscending[id] = sourceCache.getVisibleCoordinates().filter(id => id.wrap === 0);
+                coordsDescending[id] = coordsAscending[id].slice().reverse();
+                coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).filter(id => id.wrap === 0).reverse();
+            } else {
+                coordsAscending[id] = sourceCache.getVisibleCoordinates();
+                coordsDescending[id] = coordsAscending[id].slice().reverse();
+                coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
+            }
         }
 
         this.opaquePassCutoff = Infinity;
