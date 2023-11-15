@@ -33,6 +33,7 @@ import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {ExpiryData} from '../util/ajax';
+import {Callback} from '../types/callback';
 
 /**
  * The tile's state, can be:
@@ -85,7 +86,7 @@ export class Tile {
     fbo: Framebuffer;
     demTexture: Texture;
     refreshedUponExpiration: boolean;
-    reloadCallback: any;
+    reloadPromise: {resolve?: any; reject?: any; callback?: Callback<void>};
     resourceTiming: Array<PerformanceResourceTiming>;
     queryPadding: number;
 

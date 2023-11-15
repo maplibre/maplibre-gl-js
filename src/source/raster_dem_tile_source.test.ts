@@ -70,7 +70,7 @@ describe('RasterTileSource', () => {
                     loadVectorData () {},
                     setExpiryData() {}
                 } as any as Tile;
-                source.loadTile(tile, () => {});
+                source.loadTile(tile);
 
                 expect(transformSpy).toHaveBeenCalledTimes(1);
                 expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
@@ -97,7 +97,7 @@ describe('RasterTileSource', () => {
                     loadVectorData () {},
                     setExpiryData() {}
                 } as any as Tile;
-                source.loadTile(tile, () => {});
+                source.loadTile(tile);
 
                 expect(Object.keys(tile.neighboringTiles)).toEqual([
                     new OverscaledTileID(10, 0, 10, 4, 5).key,
@@ -133,7 +133,7 @@ describe('RasterTileSource', () => {
                     loadVectorData () {},
                     setExpiryData() {}
                 } as any as Tile;
-                source.loadTile(tile, () => {});
+                source.loadTile(tile);
 
                 expect(Object.keys(tile.neighboringTiles)).toEqual([
                     new OverscaledTileID(5, 0, 5, 30, 6).key,

@@ -158,15 +158,18 @@ export class RasterTileSource extends Evented implements Source {
         return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
     }
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.abortController = new AbortController();
-        ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles).then((response) => {
+        try {
+            const response = await ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                callback(null);
-            } else if (response && response.data) {
+                if (callback) callback();
+                return;
+            }
+            if (response && response.data) {
                 if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
@@ -186,19 +189,22 @@ export class RasterTileSource extends Evented implements Source {
                 }
 
                 tile.state = 'loaded';
-
-                callback(null);
             }
-        }).catch((err) => {
+            if (callback) callback();
+        } catch (err) {
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                callback(null);
+                if (callback) callback();
             } else if (err) {
                 tile.state = 'errored';
-                callback(err);
+                if (callback) {
+                    callback(err);
+                } else {
+                    throw err;
+                }
             }
-        });
+        }
     }
 
     abortTile(tile: Tile, callback: Callback<void>) {

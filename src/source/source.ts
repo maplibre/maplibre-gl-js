@@ -54,12 +54,12 @@ export interface Source {
     hasTransition(): boolean;
     loaded(): boolean;
     fire(event: Event): unknown;
-    readonly onAdd?: (map: Map) => void;
-    readonly onRemove?: (map: Map) => void;
-    loadTile(tile: Tile, callback: Callback<void>): void;
-    readonly hasTile?: (tileID: OverscaledTileID) => boolean;
-    readonly abortTile?: (tile: Tile, callback: Callback<void>) => void;
-    readonly unloadTile?: (tile: Tile, callback: Callback<void>) => void;
+    onAdd?(map: Map): void;
+    onRemove?(map: Map): void;
+    loadTile(tile: Tile, callback?: Callback<void>): Promise<void>;
+    hasTile?(tileID: OverscaledTileID): boolean;
+    abortTile?(tile: Tile, callback: Callback<void>): void;
+    unloadTile?(tile: Tile, callback: Callback<void>): void;
     /**
      * @returns A plain (stringifiable) JS object representing the current state of the source.
      * Creating a source using the returned object as the `options` should result in a Source that is

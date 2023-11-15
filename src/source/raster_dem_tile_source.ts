@@ -53,17 +53,20 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.baseShift = options.baseShift;
     }
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
-        ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles).then(async (response) => {
+        try {
+            const response = await ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles);
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                callback(null);
-            } else if (response && response.data) {
+                if (callback) callback();
+                return;
+            }
+            if (response && response.data) {
                 const img = response.data;
                 if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
@@ -85,30 +88,29 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
                     /* eslint-disable require-atomic-updates */
-                    try {
-                        const data = await tile.actor.sendAsync({type: 'loadDEMTile', data: params});
-                        tile.dem = data;
-                        tile.needsHillshadePrepare = true;
-                        tile.needsTerrainPrepare = true;
-                        tile.state = 'loaded';
-                        callback(null);
-                    } catch (err) {
-                        tile.state = 'errored';
-                        callback(err);
-                    }
+                    const data = await tile.actor.sendAsync({type: 'loadDEMTile', data: params});
+                    tile.dem = data;
+                    tile.needsHillshadePrepare = true;
+                    tile.needsTerrainPrepare = true;
+                    tile.state = 'loaded';
                     /* eslint-enable require-atomic-updates */
                 }
             }
-        }).catch((err) => {
+            if (callback) callback();
+        } catch (err) {
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                callback(null);
+                if (callback) callback();
             } else if (err) {
                 tile.state = 'errored';
-                callback(err);
+                if (callback) {
+                    callback(err);
+                } else {
+                    throw err;
+                }
             }
-        });
+        }
 
         async function readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
             if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {

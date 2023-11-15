@@ -282,7 +282,7 @@ export class ImageSource extends Evented implements Source {
         }
     };
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
         // We have a single tile -- whose coordinates are this.tileID -- that
         // covers the image we want to render.  If that's the one being
         // requested, set it up with the image; otherwise, mark the tile as
@@ -292,10 +292,11 @@ export class ImageSource extends Evented implements Source {
         if (this.tileID && this.tileID.equals(tile.tileID.canonical)) {
             this.tiles[String(tile.tileID.wrap)] = tile;
             tile.buckets = {};
-            callback(null);
         } else {
             tile.state = 'errored';
-            callback(null);
+        }
+        if (callback) {
+            callback();
         }
     }
 
