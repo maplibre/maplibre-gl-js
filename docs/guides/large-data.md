@@ -61,7 +61,7 @@ Once the data is loaded, to ensure a smooth user experience, it's essential to o
 
 ### Cluster
 
-One simple approach is to visualise less points. To do this we can use 'clustering' to group nearby points together. This approach reduces the number of features displayed on the map, improving rendering performance and maintaining map readability.
+One simple approach is to visualise fewer points. If we are using a GeoJSON source (i.e. not vector tiles), we can use 'clustering' to group nearby points together. This approach reduces the number of features displayed on the map, improving rendering performance and maintaining map readability.
 
 To do this, when we add the data, we can adjust the [cluster options](https://maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.SetClusterOptions/#type-declaration). For example:
 
