@@ -45,7 +45,7 @@ describe('Terrain', () => {
         terrain._fboCoordsTexture.texture = imageTexture.texture;
         terrain.coordsIndex.push('abcd');
 
-        const coordinate = terrain.pointCoordinate(new Point(0, 0), 1, 0);
+        const coordinate = terrain.pointCoordinate(new Point(0, 0));
 
         expect(coordinate).not.toBeNull();
     });

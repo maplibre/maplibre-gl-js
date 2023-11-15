@@ -324,11 +324,9 @@ export class Terrain {
     /**
      * Reads a pixel from the coords-framebuffer and translate this to mercator.
      * @param p - Screen-Coordinate
-     * @param width - width of the screen
-     * @param centerLng - longitude at the center of the screen
      * @returns mercator coordinate for a screen pixel
      */
-    pointCoordinate(p: Point, width: number, centerLng: number): MercatorCoordinate {
+    pointCoordinate(p: Point): MercatorCoordinate {
         const rgba = new Uint8Array(4);
         const context = this.painter.context, gl = context.gl;
         // grab coordinate pixel from coordinates framebuffer
@@ -345,7 +343,7 @@ export class Terrain {
         const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
         const mercatorX = (tile.tileID.canonical.x * coordsSize + x) / worldSize;
         return new MercatorCoordinate(
-            this._allowMercatorOverflow(p, mercatorX, width, centerLng),
+            this._allowMercatorOverflow(p, mercatorX),
             (tile.tileID.canonical.y * coordsSize + y) / worldSize,
             this.getElevation(tile.tileID, x, y, coordsSize)
         );
@@ -445,9 +443,10 @@ export class Terrain {
         };
     }
 
-    _allowMercatorOverflow(p: Point, mercatorX: number, width: number, centerLng: number): number {
-        const inLeftHalf = p.x < (width / 2);
+    _allowMercatorOverflow(p: Point, mercatorX: number): number {
+        const inLeftHalf = p.x < (this.painter.width / 2);
         let lng = lngFromMercatorX(mercatorX);
+        const centerLng = this.painter.transform.center.lng;
         if (
             (inLeftHalf && Math.sign(lng) > 0 && Math.sign(centerLng) < 0) ||
             (!inLeftHalf && Math.sign(lng) < 0 && Math.sign(centerLng) > 0)
