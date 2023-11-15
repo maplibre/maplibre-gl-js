@@ -1,4 +1,4 @@
-import {mat4} from 'gl-matrix';
+import {mat4, vec3, vec4} from 'gl-matrix';
 import {Context} from '../gl/context';
 import {Map} from '../ui/map';
 import {Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
@@ -14,16 +14,19 @@ import {Transform} from '../geo/transform';
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
     'u_projection_tile_mercator_coords': Uniform4f;
+    'u_projection_clipping_plane': Uniform4f;
 };
 
 export const projectionUniforms = (context: Context, locations: UniformLocations): ProjectionPreludeUniformsType => ({
     'u_projection_matrix': new UniformMatrix4f(context, locations.u_projection_matrix),
-    'u_projection_tile_mercator_coords': new Uniform4f(context, locations.u_projection_tile_mercator_coords)
+    'u_projection_tile_mercator_coords': new Uniform4f(context, locations.u_projection_tile_mercator_coords),
+    'u_projection_clipping_plane': new Uniform4f(context, locations.u_projection_clipping_plane)
 });
 
 export type ProjectionData = {
     'u_projection_matrix': mat4;
     'u_projection_tile_mercator_coords': [number, number, number, number];
+    'u_projection_clipping_plane': [number, number, number, number];
 }
 
 export class ProjectionManager {
@@ -47,25 +50,33 @@ export class ProjectionManager {
     private static readonly targetGranualityMinZoomStencil = 3;
 
     private tileMeshCache: Array<Mesh> = null;
+    private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
 
     constructor(map: Map) {
         this.map = map;
     }
 
     public updateProjection(transform: Transform): void {
+
+        // We want to compute a plane equation that, when applied to the unit sphere generated
+        // in the vertex shader, places all visible parts of the sphere into the positive half-space
+        // and all the non-visible parts in the negative half-space.
+        // We can then use that to accurately clip all non-visible geometry.
+
         // cam....------------A
         //        ....        |
         //            ....    |
         //                ....B
         //                ggggggggg
         //          gggggg    |   .gggggg
-        //       ggg          |       ...ggg
-        //     gg             |
-        //    g               |
-        //    g               |
-        //   g                C
+        //       ggg          |       ...ggg    ^
+        //     gg             |                 |
+        //    g               |                 y
+        //    g               |                 |
+        //   g                C                 #---x--->
         //
         // Notes:
+        // - note the coordinate axes
         // - "g" marks the globe edge
         // - the dotted line is the camera center "ray" - we are looking in this direction
         // - "cam" is camera origin
@@ -78,8 +89,8 @@ export class ProjectionManager {
         // - elevation is assumed to be zero - globe rendering must be separate from terrain rendering anyway
 
         const globeRadiusInTransformUnits = transform.worldSize * 0.5;
-        const pitch = transform.pitch;
-        // scale so that the globe radius is 1
+        const pitch = transform.pitch * Math.PI / 180.0;
+        // scale things so that the globe radius is 1
         const distanceCameraToB = transform.cameraToCenterDistance / globeRadiusInTransformUnits;
         const radius = 1;
 
@@ -94,9 +105,25 @@ export class ProjectionManager {
         // cam - C - T angle cosine (at C)
         const camCTcosine = radius / distanceCameraToC;
         // Distance from globe center to the plane defined by all possible "T" points
-        const tangentPlaneDistanceToC = distanceCameraToC * radius;
+        const tangentPlaneDistanceToC = camCTcosine * radius;
 
-        // JP: TODO: use this to clip stuff
+        let vectorCtoCamX = -distanceCameraToA;
+        let vectorCtoCamY = distanceAtoC;
+        // Normalize the vector
+        const vectorCtoCamLength = Math.sqrt(vectorCtoCamX * vectorCtoCamX + vectorCtoCamY * vectorCtoCamY);
+        vectorCtoCamX /= vectorCtoCamLength;
+        vectorCtoCamY /= vectorCtoCamLength;
+
+        // Note the swizzled components
+        const planeVector: vec3 = [0, vectorCtoCamX, vectorCtoCamY];
+        // Apply transforms - lat, lng and angle (NOT pitch - already accounted for, as it affects the tangent plane)
+        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], transform.angle);
+        vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * transform.center.lat * Math.PI / 180.0);
+        vec3.rotateY(planeVector, planeVector, [0, 0, 0], transform.center.lng * Math.PI / 180.0);
+        // Scale the plane vector down
+        const scale = 0.25;
+        vec3.scale(planeVector, planeVector, scale);
+        this._cachedClippingPlane = [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
     public getProjectionData(tileID: OverscaledTileID): ProjectionData {
@@ -104,6 +131,7 @@ export class ProjectionManager {
         const data: ProjectionData = {
             'u_projection_matrix': identity,
             'u_projection_tile_mercator_coords': [0, 0, 1, 1],
+            'u_projection_clipping_plane': [...this._cachedClippingPlane],
         };
 
         if (tileID) {

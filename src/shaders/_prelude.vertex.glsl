@@ -156,6 +156,7 @@ uniform mat4 u_projection_matrix;
 #define GLOBE_PI 3.1415926535897932384626433832795
 
 uniform vec4 u_projection_tile_mercator_coords;
+uniform vec4 u_projection_clipping_plane;
 
 // get position inside the tile in range 0..8191 and project it onto the surface of a unit sphere
 vec4 projectTile(vec2 posInTile) {
@@ -175,7 +176,6 @@ vec4 projectTile(vec2 posInTile) {
     spherical.x = mercator_pos.x * GLOBE_PI * 2.0 + GLOBE_PI;
     spherical.y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos.y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
 
-    float scale = 0.5;
     float len = cos(spherical.y);
     vec4 pos = vec4(
         sin(spherical.x) * len,
@@ -183,8 +183,37 @@ vec4 projectTile(vec2 posInTile) {
         cos(spherical.x) * len,
         1.0
     );
-    return u_projection_matrix * pos;
+    vec4 result = u_projection_matrix * pos;
+    result.z = (1.0 - (dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * result.w;
+    return result;
 }
+
+// vec4 getDebugColor(vec2 posInTile) {
+//     vec2 mercator_pos = mix(u_projection_tile_mercator_coords.xy, u_projection_tile_mercator_coords.zw, posInTile / 8192.0);
+//     vec2 spherical;
+//     spherical.x = mercator_pos.x * GLOBE_PI * 2.0 + GLOBE_PI;
+//     spherical.y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos.y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
+//     float scale = 0.5;
+//     float len = cos(spherical.y);
+//     vec4 pos = vec4(
+//         sin(spherical.x) * len,
+//         sin(spherical.y),
+//         cos(spherical.x) * len,
+//         1.0
+//     );
+//     float dist = dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w;
+
+//     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);
+//     float epsilon = 0.02;
+
+//     if(dist > epsilon)
+//         result = vec4(0.0, 1.0, 0.0, 1.0);
+//     if(dist < -epsilon)
+//         result = vec4(1.0, 0.0, 0.0, 1.0);
+
+//     return result;
+// }
 #else
 #define projectTile(p) (u_projection_matrix * vec4((p).x, (p).y, 0.0, 1.0))
+#define getDebugColor(p) (vec4(1.0, 0.0, 1.0, 1.0))
 #endif
