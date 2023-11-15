@@ -40,8 +40,10 @@ describe('GeolocateControl with no options', () => {
     test('is disabled when there\'s no support', async () => {
         (checkGeolocationSupport as any as jest.SpyInstance).mockReset().mockImplementationOnce((cb) => cb(false));
         const geolocate = new GeolocateControl(undefined);
+        const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
         map.addControl(geolocate);
         expect(geolocate._geolocateButton.disabled).toBeTruthy();
+        spy.mockRestore();
     });
 
     test('is enabled when there no support', async () => {
