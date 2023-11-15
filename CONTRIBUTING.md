@@ -136,9 +136,10 @@ Consider using WSL and follow the above Linux guide or follow the next steps
 
 Install [git](https://git-scm.com/), [node.js](https://nodejs.org/) (version ^18), [npm and node-gyp](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules).
 
-Clone the repository
+While cloning the repo, symbolic links are required for render tests to be successful. Follow the instructions here
+<a href='https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development' target='_blank'>Enable your device for development</a>
 ```bash
-git clone git@github.com:maplibre/maplibre-gl-js.git
+git clone -c core.symlinks=true https://github.com/maplibre/maplibre-gl-js.git
 ```
 
 

@@ -81,6 +81,8 @@ type TestStats = {
     passed: TestData[];
 };
 
+const testAssetRoot = 'test/integration/assets';
+
 // https://stackoverflow.com/a/1349426/229714
 function makeHash(): string {
     const array = [];
@@ -238,6 +240,8 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
             if (tests.length !== 0 && !tests.some(t => test.id.indexOf(t) !== -1)) {
                 return false;
             }
+
+            validateSymbolicLink(test.id);
 
             if (process.env.BUILDTYPE !== 'Debug' && test.id.match(/^debug\//)) {
                 console.log(`* skipped ${test.id}`);
@@ -796,7 +800,7 @@ async function executeRenderTests() {
 
     const server = http.createServer(
         st({
-            path: 'test/integration/assets',
+            path: testAssetRoot,
             cors: true,
         })
     );
@@ -895,6 +899,28 @@ async function executeRenderTests() {
     }
 
     process.exit(success ? 0 : 1);
+}
+
+/**
+ * On Windows machine if environment is not created with symbolic link, two render tests
+ * will fail and it is time consuming to debug.
+ * This function validates the assets and gives clear instructions.
+ */
+function validateSymbolicLink(testId: string) {
+    if (testId.indexOf('both-text-anchor-2x-image-1x-screen') > -1 ||
+    testId.indexOf('both-text-anchor-1x-image-2x-screen') > -1) {
+
+        const filesToValidate = ['icon-text-fit-1x@2x.json', 'icon-text-fit-2x.json'];
+
+        for (const fileName of filesToValidate) {
+            const fileContent = fs.readFileSync(`${testAssetRoot}/sprites/${fileName}`, 'utf8');
+            try {
+                JSON.parse(fileContent);
+            } catch {
+                throw new Error(`${fileName} is not a valid JSON. Please validate your environment is setup with symbolic link. See details at https://github.com/maplibre/maplibre-gl-js/blob/main/CONTRIBUTING.md#windows`);
+            }
+        }
+    }
 }
 
 // start testing here
