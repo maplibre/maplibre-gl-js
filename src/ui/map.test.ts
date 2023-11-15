@@ -554,39 +554,42 @@ describe('Map', () => {
 
     describe('#is_Loaded', () => {
 
-        test('Map#isSourceLoaded', done => {
+        test('Map#isSourceLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
 
-            map.on('load', () => {
+            await map.once('load');
+            const promise = new Promise<void>((resolve) => {
                 map.on('data', (e) => {
                     if (e.dataType === 'source' && e.sourceDataType === 'idle') {
                         expect(map.isSourceLoaded('geojson')).toBe(true);
-                        done();
+                        resolve();
                     }
                 });
-                map.addSource('geojson', createStyleSource());
-                expect(map.isSourceLoaded('geojson')).toBe(false);
             });
+            map.addSource('geojson', createStyleSource());
+            expect(map.isSourceLoaded('geojson')).toBe(false);
+            await promise;
         });
 
-        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', done => {
+        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', async () => {
             const style = createStyle();
             const map = createMap({style});
 
-            map.on('load', () => {
-                map.on('data', (e) => {
+            await map.once('load')
+            const promise = new Promise<void>((resolve) => {
+                map.on('data', (e: MapSourceDataEvent) => {
                     if (e.dataType === 'source' && 'source' in e) {
-                        const sourceDataEvent = e as MapSourceDataEvent;
-                        expect(map.isSourceLoaded('geojson')).toBe(sourceDataEvent.isSourceLoaded);
-                        if (sourceDataEvent.sourceDataType === 'idle') {
-                            done();
+                        expect(map.isSourceLoaded('geojson')).toBe(e.isSourceLoaded);
+                        if (e.sourceDataType === 'idle') {
+                            resolve();
                         }
                     }
                 });
-                map.addSource('geojson', createStyleSource());
-                expect(map.isSourceLoaded('geojson')).toBe(false);
             });
+            map.addSource('geojson', createStyleSource());
+            expect(map.isSourceLoaded('geojson')).toBe(false);
+            await promise;
         });
 
         test('Map#isStyleLoaded', done => {

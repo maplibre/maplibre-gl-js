@@ -30,11 +30,6 @@ type FetchingState = {
     resourceTiming: any;
 }
 
-/**
- * The callback when finished loading vector data
- */
-export type LoadVectorDataCallback = Callback<LoadVectorTileResult>;
-
 export type AbortVectorData = () => void;
 export type LoadVectorData = (params: WorkerTileParameters, abortController: AbortController) => Promise<LoadVectorTileResult | null>;
 

@@ -295,19 +295,20 @@ export function sameOrigin(inComingUrl: string) {
     return urlObj.protocol === locationObj.protocol && urlObj.host === locationObj.host;
 }
 
-export const getVideo = function(urls: Array<string>, callback: Callback<HTMLVideoElement>): Cancelable {
+export const getVideo = (urls: Array<string>): Promise<HTMLVideoElement> => {
     const video: HTMLVideoElement = window.document.createElement('video');
     video.muted = true;
-    video.onloadstart = function() {
-        callback(null, video);
-    };
-    for (let i = 0; i < urls.length; i++) {
-        const s: HTMLSourceElement = window.document.createElement('source');
-        if (!sameOrigin(urls[i])) {
-            video.crossOrigin = 'Anonymous';
+    return new Promise((resolve) => {
+        video.onloadstart = () => {
+            resolve(video);
+        };
+        for (let url of urls) {
+            const s: HTMLSourceElement = window.document.createElement('source');
+            if (!sameOrigin(url)) {
+                video.crossOrigin = 'Anonymous';
+            }
+            s.src = url;
+            video.appendChild(s);
         }
-        s.src = urls[i];
-        video.appendChild(s);
-    }
-    return {cancel: () => {}};
+    });
 };
