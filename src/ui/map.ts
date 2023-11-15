@@ -49,7 +49,6 @@ import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
 import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {defaultLocale} from './default_locale';
 import type {TaskID} from '../util/task_queue';
-import type {Cancelable} from '../types/cancelable';
 import type {
     FilterSpecification,
     StyleSpecification,
@@ -468,7 +467,7 @@ export class Map extends Camera {
     _canvas: HTMLCanvasElement;
     _maxTileCacheSize: number;
     _maxTileCacheZoomLevels: number;
-    _frame: Cancelable;
+    _frameRequest: AbortController;
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
@@ -3040,9 +3039,9 @@ export class Map extends Camera {
 
     _contextLost = (event: any) => {
         event.preventDefault();
-        if (this._frame) {
-            this._frame.cancel();
-            this._frame = null;
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
         }
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
@@ -3255,9 +3254,9 @@ export class Map extends Camera {
     redraw(): this {
         if (this.style) {
             // cancel the scheduled update
-            if (this._frame) {
-                this._frame.cancel();
-                this._frame = null;
+            if (this._frameRequest) {
+                this._frameRequest.abort();
+                this._frameRequest = null;
             }
             this._render(0);
         }
@@ -3279,9 +3278,9 @@ export class Map extends Camera {
         for (const control of this._controls) control.onRemove(this);
         this._controls = [];
 
-        if (this._frame) {
-            this._frame.cancel();
-            this._frame = null;
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
         }
         this._renderTaskQueue.clear();
         this.painter.destroy();
@@ -3324,12 +3323,13 @@ export class Map extends Camera {
      * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/)
      */
     triggerRepaint() {
-        if (this.style && !this._frame) {
-            this._frame = browser.frame((paintStartTimeStamp: number) => {
+        if (this.style && !this._frameRequest) {
+            this._frameRequest = new AbortController();
+            browser.frameAsync(this._frameRequest).then((paintStartTimeStamp: number) => {
                 PerformanceUtils.frame(paintStartTimeStamp);
-                this._frame = null;
+                this._frameRequest = null;
                 this._render(paintStartTimeStamp);
-            });
+            }).catch(() => {}); // ignore abort error
         }
     }
 

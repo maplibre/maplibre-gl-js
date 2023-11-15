@@ -46,7 +46,6 @@ import type {StyleImage} from './style_image';
 import type {Callback} from '../types/callback';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
-import type {Cancelable} from '../types/cancelable';
 import type {GetResourceResponse, RequestParameters} from '../util/ajax';
 import type {
     LayerSpecification,
@@ -208,7 +207,7 @@ export class Style extends Evented {
     lineAtlas: LineAtlas;
     light: Light;
 
-    _request: Cancelable;
+    _frameRequest: AbortController;
     _loadStyleRequest: AbortController;
     _spriteRequest: AbortController;
     _layers: {[_: string]: StyleLayer};
@@ -343,11 +342,12 @@ export class Style extends Evented {
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
-        this._request = browser.frame(() => {
-            this._request = null;
+        this._frameRequest = new AbortController();
+        browser.frameAsync(this._frameRequest).then(() => {
+            this._frameRequest = null;
             options.validate = options.validate !== false;
             this._load(json, options, previousStyle);
-        });
+        }).catch(() => {}); // ignore abort
     }
 
     loadEmpty() {
@@ -1473,9 +1473,9 @@ export class Style extends Evented {
     }
 
     _remove(mapRemoved: boolean = true) {
-        if (this._request) {
-            this._request.cancel();
-            this._request = null;
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
         }
         if (this._loadStyleRequest) {
             this._loadStyleRequest.abort();

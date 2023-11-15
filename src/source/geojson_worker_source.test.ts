@@ -25,12 +25,7 @@ describe('reloadTile', () => {
         ] as LayerSpecification[];
         const layerIndex = new StyleLayerIndex(layers);
         const source = new GeoJSONWorkerSource(actor, layerIndex, []);
-        const originalLoadVectorData = source.loadVectorTile;
-        let loadVectorCallCount = 0;
-        source.loadVectorTile = function(params, callback) {
-            loadVectorCallCount++;
-            return originalLoadVectorData.call(this, params, callback);
-        };
+        const spy = jest.spyOn(source, 'loadVectorTile');
         const geoJson = {
             'type': 'Feature',
             'geometry': {
@@ -49,7 +44,7 @@ describe('reloadTile', () => {
 
         // first call should load vector data from geojson
         const firstData = await source.reloadTile(tileParams as any as WorkerTileParameters);
-        expect(loadVectorCallCount).toBe(1);
+        expect(spy).toHaveBeenCalledTimes(1);
 
         // second call won't give us new rawTileData
         let data = await source.reloadTile(tileParams as any as WorkerTileParameters);
@@ -58,7 +53,7 @@ describe('reloadTile', () => {
         expect(data).toEqual(firstData);
 
         // also shouldn't call loadVectorData again
-        expect(loadVectorCallCount).toBe(1);
+        expect(spy).toHaveBeenCalledTimes(1);
 
         // replace geojson data
         await source.loadData({source: 'sourceId', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters);
@@ -67,7 +62,7 @@ describe('reloadTile', () => {
         data = await source.reloadTile(tileParams as any as WorkerTileParameters);
         expect('rawTileData' in data).toBeTruthy();
         expect(data).toEqual(firstData);
-        expect(loadVectorCallCount).toBe(2);
+        expect(spy).toHaveBeenCalledTimes(2);
     });
 
 });

@@ -15,7 +15,6 @@ import type {
 
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {Callback} from '../types/callback';
 import type {VectorTile} from '@mapbox/vector-tile';
 
 export type LoadVectorTileResult = {
@@ -29,11 +28,6 @@ type FetchingState = {
     cacheControl: ExpiryData;
     resourceTiming: any;
 }
-
-/**
- * The callback when finished loading vector data
- */
-export type LoadVectorDataCallback = Callback<LoadVectorTileResult>;
 
 export type AbortVectorData = () => void;
 export type LoadVectorData = (params: WorkerTileParameters, abortController: AbortController) => Promise<LoadVectorTileResult | null>;
