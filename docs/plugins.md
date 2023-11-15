@@ -136,6 +136,10 @@ A library for retrieving features from FlatGeobuf file using a tiled approach. C
 #### mapbox-gl-arcgis-featureserver
 A library for retrieving features from an ArcGIS FeatureServer or MapServer. This library makes tiled requests rather than simply requesting every feature.
 <br/><small>[View on GitHub](https://github.com/rowanwins/mapbox-gl-arcgis-featureserver)</small>
+
+#### mapbox-gl-ogc-feature-collection
+A small package for requesting geojson from an OGC Feature API endpoint to serve tiles in MapBox/MapLibre.
+<br/><small>[View on GitHub](https://github.com/mkeller3/mapbox-gl-ogc-feature-collection)</small>
     
 #### mapbox-gl-esri-sources
 A library for making it easier to use Esri services in MapLibre GL JS. Supports Esri Map Services (dynamic & tiled), Esri Vector Tile Services & Esri Vector Basemap Styles.
