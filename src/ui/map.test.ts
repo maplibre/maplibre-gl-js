@@ -576,7 +576,7 @@ describe('Map', () => {
             const style = createStyle();
             const map = createMap({style});
 
-            await map.once('load')
+            await map.once('load');
             const promise = new Promise<void>((resolve) => {
                 map.on('data', (e: MapSourceDataEvent) => {
                     if (e.dataType === 'source' && 'source' in e) {

@@ -2,7 +2,6 @@ import {extend, isWorker} from './util';
 import {config} from './config';
 import {createAbortError} from './abort_error';
 
-import type {Callback} from '../types/callback';
 import type {Cancelable} from '../types/cancelable';
 
 /**
@@ -44,7 +43,7 @@ export type RequestParameters = {
      */
     body?: string;
     /**
-     * Response body type to be returned `'string' | 'json' | 'arrayBuffer'`.
+     * Response body type to be returned.
      */
     type?: 'string' | 'json' | 'arrayBuffer' | 'image';
     /**
@@ -302,7 +301,7 @@ export const getVideo = (urls: Array<string>): Promise<HTMLVideoElement> => {
         video.onloadstart = () => {
             resolve(video);
         };
-        for (let url of urls) {
+        for (const url of urls) {
             const s: HTMLSourceElement = window.document.createElement('source');
             if (!sameOrigin(url)) {
                 video.crossOrigin = 'Anonymous';
