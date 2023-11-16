@@ -498,7 +498,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                             }, operation[1]);
                         });
                         break;
-                    case 'addImage':
+                    case 'addImage': {
                         const getImage = async (url) => {
                             const img = new Image();
                             img.src = url;
@@ -507,14 +507,15 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                             return img;
                         };
                         const image = await getImage(`http://localhost:2900/${operation[2]}`);
-        
+
                         map.addImage(operation[1], image, operation[3] || {});
                         break;
+                    }
                     case 'addCustomLayer':
                         map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
                         map._render();
                         break;
-                    case 'updateFakeCanvas':
+                    case 'updateFakeCanvas': {
                         const canvasSource = map.getSource(operation[1]) as CanvasSource;
                         canvasSource.play();
                         // update before pause should be rendered
@@ -524,6 +525,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
                         map._render();
                         break;
+                    }
                     case 'setStyle':
                         map.setStyle(operation[1], {localIdeographFontFamily: false as any});
                         break;
@@ -536,7 +538,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                         }
                 }
             }
-            
+
         }
 
         async function createFakeCanvas(document: Document, id: string, imagePath: string): Promise<HTMLCanvasElement> {
