@@ -466,86 +466,77 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
          * @param operations - The operations
          * @param callback - The callback to use when all the operations are executed
          */
-        async function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[], callback: Function) {
-            const operation = operations && operations[0];
+        async function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[]) {
             if (!operations || operations.length === 0) {
-                callback();
-
-            } else if (operation[0] === 'wait') {
-                if (operation.length > 1) {
-                    if (typeof operation[1] === 'number'
-                    ) {
-                        await new Promise((resolve) => {
+                return;
+            }
+            for (const operation of operations) {
+                switch (operation[0]) {
+                    case 'wait':
+                        if (operation.length <= 1) {
+                            while (!map.loaded()) {
+                                await map.once('render');
+                            }
+                        } else {
+                            if (typeof operation[1] === 'string') {
+                                // Wait for the event to fire
+                                await map.once(operation[1]);
+                            } else {
+                                await new Promise<void>((resolve) => {
+                                    setTimeout(() => {
+                                        resolve();
+                                    }, operation[1]);
+                                });
+                                map._render();
+                            }
+                        }
+                        break;
+                    case 'sleep':
+                        await new Promise<void>((resolve) => {
                             setTimeout(() => {
-                                resolve(true); // Has to return something
+                                resolve();
                             }, operation[1]);
                         });
-
+                        break;
+                    case 'addImage':
+                        const getImage = async (url) => {
+                            const img = new Image();
+                            img.src = url;
+                            img.crossOrigin = 'anonymous';
+                            await img.decode();
+                            return img;
+                        };
+                        const image = await getImage(`http://localhost:2900/${operation[2]}`);
+        
+                        map.addImage(operation[1], image, operation[3] || {});
+                        break;
+                    case 'addCustomLayer':
+                        map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
                         map._render();
-                        applyOperations(testData, map, operations.slice(1), callback);
-                    } else {
-                        // Wait for the event to fire
-                        map.once(operation[1], () => {
-                            applyOperations(testData, map, operations.slice(1), callback);
-                        });
-                    }
-                } else {
-                    const wait = function() {
-                        if (map.loaded()) {
-                            applyOperations(testData, map, operations.slice(1), callback);
-                        } else {
-                            map.once('render', wait);
+                        break;
+                    case 'updateFakeCanvas':
+                        const canvasSource = map.getSource(operation[1]) as CanvasSource;
+                        canvasSource.play();
+                        // update before pause should be rendered
+                        await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
+                        canvasSource.pause();
+                        // update after pause should not be rendered
+                        await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
+                        map._render();
+                        break;
+                    case 'setStyle':
+                        map.setStyle(operation[1], {localIdeographFontFamily: false as any});
+                        break;
+                    case 'pauseSource':
+                        map.style.sourceCaches[operation[1]].pause();
+                        break;
+                    default:
+                        if (typeof map[operation[0]] === 'function') {
+                            map[operation[0]](...operation.slice(1));
                         }
-                    };
-                    wait();
                 }
-            } else if (operation[0] === 'sleep') {
-                // Prefer "wait", which renders until the map is loaded
-                // Use "sleep" when you need to test something that sidesteps the "loaded" logic
-                setTimeout(() => {
-                    applyOperations(testData, map, operations.slice(1), callback);
-                }, operation[1]);
-            } else if (operation[0] === 'addImage') {
-
-                const getImage = async (url) => {
-                    const img = new Image();
-                    img.src = url;
-                    img.crossOrigin = 'anonymous';
-                    await img.decode();
-                    return img;
-                };
-                const image = await getImage(`http://localhost:2900/${operation[2]}`);
-
-                map.addImage(operation[1], image, operation[3] || {});
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else if (operation[0] === 'addCustomLayer') {
-                map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
-                map._render();
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else if (operation[0] === 'updateFakeCanvas') {
-                const canvasSource = map.getSource(operation[1]) as CanvasSource;
-                canvasSource.play();
-                // update before pause should be rendered
-                await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
-                canvasSource.pause();
-                // update after pause should not be rendered
-                await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
-                map._render();
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else if (operation[0] === 'setStyle') {
-                // Disable local ideograph generation (enabled by default) for
-                // consistent local ideograph rendering using fixtures in all runs of the test suite.
-                map.setStyle(operation[1], {localIdeographFontFamily: false as any});
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else if (operation[0] === 'pauseSource') {
-                map.style.sourceCaches[operation[1]].pause();
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else {
-                if (typeof map[operation[0]] === 'function') {
-                    map[operation[0]](...operation.slice(1));
-                }
-                applyOperations(testData, map, operations.slice(1), callback);
             }
+            
         }
 
         async function createFakeCanvas(document: Document, id: string, imagePath: string): Promise<HTMLCanvasElement> {
@@ -585,7 +576,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
                 maplibregl.setRTLTextPlugin(
                     'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
-                    null,
+                    undefined,
                     false // Don't lazy load the plugin
                 );
             }
@@ -618,46 +609,44 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             const gl = map.painter.context.gl;
 
-            map.once('load', () => {
-                if (options.collisionDebug) {
-                    map.showCollisionBoxes = true;
-                    if (options.operations) {
-                        options.operations.push(['wait']);
-                    } else {
-                        options.operations = [['wait']];
-                    }
+            await map.once('load');
+            if (options.collisionDebug) {
+                map.showCollisionBoxes = true;
+                if (options.operations) {
+                    options.operations.push(['wait']);
+                } else {
+                    options.operations = [['wait']];
                 }
+            }
 
-                applyOperations(options, map as any, options.operations, () => {
-                    const viewport = gl.getParameter(gl.VIEWPORT);
-                    const w = options.reportWidth ?? viewport[2];
-                    const h = options.reportHeight ?? viewport[3];
+            await applyOperations(options, map as any, options.operations);
+            const viewport = gl.getParameter(gl.VIEWPORT);
+            const w = options.reportWidth ?? viewport[2];
+            const h = options.reportHeight ?? viewport[3];
 
-                    const data = new Uint8Array(w * h * 4);
-                    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+            const data = new Uint8Array(w * h * 4);
+            gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
-                    // Flip the scanlines.
-                    const stride = w * 4;
-                    const tmp = new Uint8Array(stride);
-                    for (let i = 0, j = h - 1; i < j; i++, j--) {
-                        const start = i * stride;
-                        const end = j * stride;
-                        tmp.set(data.slice(start, start + stride), 0);
-                        data.set(data.slice(end, end + stride), start);
-                        data.set(tmp, end);
-                    }
+            // Flip the scanlines.
+            const stride = w * 4;
+            const tmp = new Uint8Array(stride);
+            for (let i = 0, j = h - 1; i < j; i++, j--) {
+                const start = i * stride;
+                const end = j * stride;
+                tmp.set(data.slice(start, start + stride), 0);
+                data.set(data.slice(end, end + stride), start);
+                data.set(tmp, end);
+            }
 
-                    map.remove();
-                    delete map.painter.context.gl;
+            map.remove();
+            delete map.painter.context.gl;
 
-                    if (options.addFakeCanvas) {
-                        const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
-                        fakeCanvas.parentNode.removeChild(fakeCanvas);
-                    }
+            if (options.addFakeCanvas) {
+                const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
+                fakeCanvas.parentNode.removeChild(fakeCanvas);
+            }
 
-                    resolve(data);
-                });
-            });
+            resolve(data);
         });
     }, styleForTest as any);
 
@@ -830,6 +819,7 @@ async function executeRenderTests() {
         console.log(`Re-running failed tests: ${failedTests.length}`);
         page.close();
         page = await browser.newPage();
+        options.debug = true;
         applyDebugParameter(options, page);
         await page.addScriptTag({path: 'dist/maplibre-gl.js'});
         await runTests(page, failedTests, directory);
