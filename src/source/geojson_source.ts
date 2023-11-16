@@ -373,6 +373,14 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
+        if (!callback) {
+            return this._loadTileIternal(tile);
+        } else {
+            this._loadTileIternal(tile).then(() => callback()).catch((err) => callback(err));
+        }
+    }
+
+    async _loadTileIternal(tile: Tile): Promise<void> {
         const message = !tile.actor ? 'loadTile' : 'reloadTile';
         tile.actor = this.actor;
         const params = {
@@ -397,15 +405,7 @@ export class GeoJSONSource extends Evented implements Source {
             if (!tile.aborted) {
                 tile.loadVectorData(data, this.map.painter, message === 'reloadTile');
             }
-
-            if (callback) {
-                callback();
-            }
         } catch (err) {
-            if (callback) {
-                callback(err);
-                return;
-            }
             throw err;
         }
     }

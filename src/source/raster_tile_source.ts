@@ -159,6 +159,14 @@ export class RasterTileSource extends Evented implements Source {
     }
 
     async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
+        if (!callback) {
+            return this._loadTileIternal(tile);
+        } else {
+            this._loadTileIternal(tile).then(() => callback()).catch((err) => callback(err));
+        }
+    }
+
+    async _loadTileIternal(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.abortController = new AbortController();
         try {
@@ -166,7 +174,6 @@ export class RasterTileSource extends Evented implements Source {
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                if (callback) callback();
                 return;
             }
             if (response && response.data) {
@@ -187,22 +194,15 @@ export class RasterTileSource extends Evented implements Source {
                         gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, context.extTextureFilterAnisotropicMax);
                     }
                 }
-
                 tile.state = 'loaded';
             }
-            if (callback) callback();
         } catch (err) {
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                if (callback) callback();
             } else if (err) {
                 tile.state = 'errored';
-                if (callback) {
-                    callback(err);
-                } else {
-                    throw err;
-                }
+                throw err;
             }
         }
     }

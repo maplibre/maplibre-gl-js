@@ -54,6 +54,14 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
     }
 
     async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
+        if (!callback) {
+            return this._loadTileIternal(tile);
+        } else {
+            this._loadTileIternal(tile).then(() => callback()).catch((err) => callback(err));
+        }
+    }
+
+    async _loadTileInternal(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
@@ -63,7 +71,6 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                if (callback) callback();
                 return;
             }
             if (response && response.data) {
@@ -72,7 +79,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
-                const rawImageData = transfer ? img : await readImageNow(img);
+                const rawImageData = transfer ? img : await this.readImageNow(img);
                 const params = {
                     type: this.type,
                     uid: tile.uid,
@@ -96,34 +103,28 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                     /* eslint-enable require-atomic-updates */
                 }
             }
-            if (callback) callback();
         } catch (err) {
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                if (callback) callback();
             } else if (err) {
                 tile.state = 'errored';
-                if (callback) {
-                    callback(err);
-                } else {
-                    throw err;
-                }
+                throw err;
             }
         }
+    }
 
-        async function readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
-            if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
-                const width = img.width + 2;
-                const height = img.height + 2;
-                try {
-                    return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
-                } catch (e) {
-                    // fall-back to browser canvas decoding
-                }
+    async readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
+        if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
+            const width = img.width + 2;
+            const height = img.height + 2;
+            try {
+                return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
+            } catch (e) {
+                // fall-back to browser canvas decoding
             }
-            return browser.getImageData(img, 1);
         }
+        return browser.getImageData(img, 1);
     }
 
     _getNeighboringTiles(tileID: OverscaledTileID) {

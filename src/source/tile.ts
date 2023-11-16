@@ -86,7 +86,7 @@ export class Tile {
     fbo: Framebuffer;
     demTexture: Texture;
     refreshedUponExpiration: boolean;
-    reloadPromise: {resolve?: any; reject?: any; callback?: Callback<void>};
+    reloadPromise: {resolve?: () => void; reject?: () => void;};
     resourceTiming: Array<PerformanceResourceTiming>;
     queryPadding: number;
 
