@@ -949,8 +949,23 @@ export class SourceCache extends Evented {
         return tileResults;
     }
 
-    getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
-        const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
+    getVisibleCoordinates(symbolLayer?: boolean, deduplicateWrapped?: boolean): Array<OverscaledTileID> {
+        let coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
+
+        if (deduplicateWrapped) {
+            const visibleDeduplicated = [];
+            const visibleDictionary = {};
+            // getRenderableIds orders tiles from lowest wrap to highest, we need to preserve this ordering
+            for (const coord of coords) {
+                const key = coord.canonical.key;
+                if (!(key in visibleDictionary)) {
+                    visibleDictionary[key] = true;
+                    visibleDeduplicated.push(coord);
+                }
+            }
+            coords = visibleDeduplicated;
+        }
+
         for (const coord of coords) {
             coord.posMatrix = this.transform.calculatePosMatrix(coord.toUnwrapped());
         }

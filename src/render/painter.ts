@@ -378,15 +378,9 @@ export class Painter {
                 sourceCache.prepare(this.context);
             }
 
-            if (isGlobeActive) {
-                coordsAscending[id] = sourceCache.getVisibleCoordinates().filter(id => id.wrap === 0);
-                coordsDescending[id] = coordsAscending[id].slice().reverse();
-                coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).filter(id => id.wrap === 0).reverse();
-            } else {
-                coordsAscending[id] = sourceCache.getVisibleCoordinates();
-                coordsDescending[id] = coordsAscending[id].slice().reverse();
-                coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
-            }
+            coordsAscending[id] = sourceCache.getVisibleCoordinates(false, isGlobeActive);
+            coordsDescending[id] = coordsAscending[id].slice().reverse();
+            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true, isGlobeActive).reverse();
         }
 
         this.opaquePassCutoff = Infinity;
