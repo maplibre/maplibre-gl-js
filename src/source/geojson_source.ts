@@ -187,9 +187,9 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    load = () => {
+    load() {
         this._updateWorkerData();
-    };
+    }
 
     onAdd(map: Map) {
         this.map = map;
@@ -397,16 +397,12 @@ export class GeoJSONSource extends Evented implements Source {
         };
 
         tile.abortController = new AbortController();
-        try {
-            const data = await this.actor.sendAsync({type: message, data: params}, tile.abortController);
-            delete tile.abortController;
-            tile.unloadVectorData();
+        const data = await this.actor.sendAsync({type: message, data: params}, tile.abortController);
+        delete tile.abortController;
+        tile.unloadVectorData();
 
-            if (!tile.aborted) {
-                tile.loadVectorData(data, this.map.painter, message === 'reloadTile');
-            }
-        } catch (err) {
-            throw err;
+        if (!tile.aborted) {
+            tile.loadVectorData(data, this.map.painter, message === 'reloadTile');
         }
     }
 
@@ -428,12 +424,12 @@ export class GeoJSONSource extends Evented implements Source {
         this.actor.sendAsync({type: 'removeSource', data: {type: this.type, source: this.id}});
     }
 
-    serialize = (): GeoJSONSourceSpecification => {
+    serialize(): GeoJSONSourceSpecification {
         return extend({}, this._options, {
             type: this.type,
             data: this._data
         });
-    };
+    }
 
     hasTransition() {
         return false;

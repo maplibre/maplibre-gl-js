@@ -53,15 +53,15 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.baseShift = options.baseShift;
     }
 
-    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
+    override async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
         if (!callback) {
-            return this._loadTileIternal(tile);
+            await this._loadTileInternal(tile);
         } else {
-            this._loadTileIternal(tile).then(() => callback()).catch((err) => callback(err));
+            this._loadTileInternal(tile).then(() => callback()).catch((err) => callback(err));
         }
     }
 
-    async _loadTileInternal(tile: Tile): Promise<void> {
+    override async _loadTileInternal(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);

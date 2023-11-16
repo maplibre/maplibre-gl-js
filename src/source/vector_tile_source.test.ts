@@ -6,7 +6,7 @@ import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher, sleep} from '../util/test/util';
+import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
 import {Map} from '../ui/map';
 import {WorkerTileParameters} from './worker_source';
 
@@ -23,16 +23,6 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
     source.on('error', () => { }); // to prevent console log of errors
 
     return source;
-}
-
-function waitForMetadataEvent(source: VectorTileSource): Promise<void> {
-    return new Promise((resolve) => {
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                resolve();
-            }
-        });
-    });
 }
 
 describe('VectorTileSource', () => {
@@ -220,7 +210,7 @@ describe('VectorTileSource', () => {
         const source = createSource({url: '/source.json'});
         source.dispatcher = getWrapDispatcher()({
             async sendAsync(_message) {
-                throw new Error("Error");
+                throw new Error('Error');
             }
         });
         const promise = waitForMetadataEvent(source);
@@ -232,7 +222,7 @@ describe('VectorTileSource', () => {
             loadVectorData: jest.fn(),
             setExpiryData() {}
         } as any as Tile;
-        await expect(source.loadTile(tile)).rejects.toThrow("Error");
+        await expect(source.loadTile(tile)).rejects.toThrow('Error');
         expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
     });
 

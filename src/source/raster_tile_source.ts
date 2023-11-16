@@ -86,11 +86,12 @@ export class RasterTileSource extends Evented implements Source {
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
     }
 
-    load() {
+    async load() {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = new AbortController();
-        loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest).then((tileJSON) => {
+        try {
+            const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest);
             this._tileJSONRequest = null;
             this._loaded = true;
             if (tileJSON) {
@@ -103,10 +104,10 @@ export class RasterTileSource extends Evented implements Source {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
-        }).catch((err) => {
+        } catch (err) {
             this._tileJSONRequest = null;
             this.fire(new ErrorEvent(err));
-        });
+        }
     }
 
     loaded(): boolean {
@@ -160,13 +161,13 @@ export class RasterTileSource extends Evented implements Source {
 
     async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
         if (!callback) {
-            return this._loadTileIternal(tile);
+            return this._loadTileInternal(tile);
         } else {
-            this._loadTileIternal(tile).then(() => callback()).catch((err) => callback(err));
+            this._loadTileInternal(tile).then(() => callback()).catch((err) => callback(err));
         }
     }
 
-    async _loadTileIternal(tile: Tile): Promise<void> {
+    async _loadTileInternal(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.abortController = new AbortController();
         try {

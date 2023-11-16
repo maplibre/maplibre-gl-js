@@ -3,6 +3,7 @@ import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
 import {setWebGlContext} from './mock_webgl';
 import {IActor} from '../actor';
+import type {Evented} from '../evented';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -156,3 +157,13 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
 export const sleep = (milliseconds: number = 0) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds));
 };
+
+export function waitForMetadataEvent(source: Evented): Promise<void> {
+    return new Promise((resolve) => {
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                resolve();
+            }
+        });
+    });
+}

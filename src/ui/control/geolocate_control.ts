@@ -519,8 +519,7 @@ export class GeolocateControl extends Evented implements IControl {
             this._map.on('zoom', this._onZoom);
         }
 
-        this._geolocateButton.addEventListener('click',
-            this.trigger.bind(this));
+        this._geolocateButton.addEventListener('click', () => this.trigger());
 
         this._setup = true;
 
