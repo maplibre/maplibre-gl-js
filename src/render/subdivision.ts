@@ -435,7 +435,9 @@ class Subdivider {
 
 export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, granuality: number): SubdivisionResult {
     const subdivider = new Subdivider(granuality);
-    return subdivider.subdivide(vertices, triangleIndices, lineIndices);
+    const result = subdivider.subdivide(vertices, triangleIndices, lineIndices);
+    fixTjoints(result.verticesFlattened, result.indicesTriangles);
+    return result;
 }
 
 /**
@@ -630,4 +632,36 @@ export function subdivideSimple(vertices: Array<number>, indices: Array<number>,
         indices: finalIndices,
         vertexDictionary
     };
+}
+
+/**
+ * Fixes axis-aligned T-joints in a triangle mesh. Appends new triangles to the supplied index array.
+ * A T-joint is when three triangles meet in such a way that their edges form a "T":
+ * ```
+ *         C
+ *        / \
+ *      /     \
+ *    /         \
+ *  /    tri1     \
+ * A-------T-------B
+ *  \      |      /
+ *   \tri2 | tri3/
+ *    \    |    /
+ *     \   |   /
+ *      \  |  /
+ *       \ | /
+ *        \|/
+ *         D
+ * ```
+ * When a nontrivial projection is applied to such geometry, the vertex T might be projected
+ * slightly (one pixel) off the line formed by vertices A and B, producing a visible gap at this line.
+ * In other words, the line A-B does not match the lines A-T and T-B pixel-perfectly.
+ * The solution is to add an additional triangle A-T-B that will fill this gap,
+ * or to break up triangle 1 into triangles A-T-C and T-B-C, thus breaking up the line A-B.
+ * This function does the former.
+ * @param flattened Flattened vertex coordinates, xyxyxy.
+ * @param indices Triangle indices. This array is appended with new primitives.
+ */
+function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
+    // TODO
 }

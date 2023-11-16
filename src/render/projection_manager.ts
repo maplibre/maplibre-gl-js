@@ -46,6 +46,9 @@ export class ProjectionManager {
      */
     private static readonly targetGranualityMinZoom = 3;
 
+    // At targetGranuality=8 and minzoom=4 (base tile granuality of 128) the sphere appears almost perfectly smooth
+    // triangulation is invisible, apart from slight pixel shimmering at the equator
+
     private static readonly targetGranualityStencil = 8;
     private static readonly targetGranualityMinZoomStencil = 3;
 
