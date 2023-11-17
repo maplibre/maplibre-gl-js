@@ -372,15 +372,7 @@ export class GeoJSONSource extends Evented implements Source {
         return this._pendingLoads === 0;
     }
 
-    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
-        if (!callback) {
-            return this._loadTileIternal(tile);
-        } else {
-            this._loadTileIternal(tile).then(() => callback()).catch((err) => callback(err));
-        }
-    }
-
-    async _loadTileIternal(tile: Tile): Promise<void> {
+    async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ? 'loadTile' : 'reloadTile';
         tile.actor = this.actor;
         const params = {
@@ -406,7 +398,7 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    abortTile(tile: Tile) {
+    async abortTile(tile: Tile) {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
@@ -414,9 +406,9 @@ export class GeoJSONSource extends Evented implements Source {
         tile.aborted = true;
     }
 
-    unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile) {
         tile.unloadVectorData();
-        this.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
+        await this.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
     }
 
     onRemove() {

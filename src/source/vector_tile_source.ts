@@ -10,7 +10,6 @@ import type {OverscaledTileID} from './tile_id';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {Callback} from '../types/callback';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from './worker_source';
 
@@ -189,15 +188,7 @@ export class VectorTileSource extends Evented implements Source {
         return extend({}, this._options);
     }
 
-    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
-        if (!callback) {
-            return this._loadTileInternal(tile);
-        } else {
-            this._loadTileInternal(tile).then(() => callback()).catch((err) => callback(err));
-        }
-    }
-
-    async _loadTileInternal(tile: Tile): Promise<void> {
+    async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -256,7 +247,7 @@ export class VectorTileSource extends Evented implements Source {
         if (tile.reloadPromise) {
             const reloadPromise = tile.reloadPromise;
             tile.reloadPromise = null;
-            this._loadTileInternal(tile).then(reloadPromise.resolve).catch(reloadPromise.reject);
+            this.loadTile(tile).then(reloadPromise.resolve).catch(reloadPromise.reject);
         }
     }
 

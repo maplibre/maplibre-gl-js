@@ -206,7 +206,7 @@ describe('loadData', () => {
         return new GeoJSONWorkerSource(actor, layerIndex, []);
     }
 
-    test('abandons previous callbacks', async () => {
+    test('abandons previous requests', async () => {
         const worker = createWorker();
 
         server.respondWith(request => {
@@ -228,7 +228,7 @@ describe('loadData', () => {
         expect(result && result.abandoned).toBeFalsy();
     });
 
-    test('removeSource aborts callbacks', async () => {
+    test('removeSource aborts requests', async () => {
         const worker = createWorker();
 
         server.respondWith(request => {

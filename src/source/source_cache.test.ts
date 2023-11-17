@@ -58,8 +58,8 @@ class SourceMock extends Evented implements Source {
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
         }
     }
-    abortTile() {}
-    unloadTile() {}
+    async abortTile() {}
+    async unloadTile() {}
     serialize() {}
     hasTransition(): boolean {
         return false;
@@ -279,15 +279,13 @@ describe('SourceCache#removeTile', () => {
         });
     });
 
-    test('caches (does not unload) loaded tile', done => {
+    test('caches (does not unload) loaded tile', () => {
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
-        sourceCache._source.unloadTile = () => {
-            done('test failed: unloadTile has been called');
-        };
+        sourceCache._source.unloadTile = jest.fn();
 
         const tr = new Transform();
         tr.width = 512;
@@ -297,7 +295,7 @@ describe('SourceCache#removeTile', () => {
         sourceCache._addTile(tileID);
         sourceCache._removeTile(tileID.key);
 
-        done();
+        expect(sourceCache._source.unloadTile).not.toHaveBeenCalled();
     });
 
     test('aborts and unloads unfinished tile', () => {
@@ -306,11 +304,11 @@ describe('SourceCache#removeTile', () => {
             unload = 0;
 
         const sourceCache = createSourceCache();
-        sourceCache._source.abortTile = (tile) => {
+        sourceCache._source.abortTile = async (tile) => {
             expect(tile.tileID).toEqual(tileID);
             abort++;
         };
-        sourceCache._source.unloadTile = (tile) => {
+        sourceCache._source.unloadTile = async (tile) => {
             expect(tile.tileID).toEqual(tileID);
             unload++;
         };
@@ -1298,11 +1296,11 @@ describe('SourceCache#clearTiles', () => {
             unload = 0;
 
         const sourceCache = createSourceCache();
-        sourceCache._source.abortTile = (tile) => {
+        sourceCache._source.abortTile = async (tile) => {
             expect(tile.tileID).toEqual(coord);
             abort++;
         };
-        sourceCache._source.unloadTile = (tile) => {
+        sourceCache._source.unloadTile = async (tile) => {
             expect(tile.tileID).toEqual(coord);
             unload++;
         };

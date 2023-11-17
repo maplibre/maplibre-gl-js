@@ -13,7 +13,6 @@ import type {OverscaledTileID} from './tile_id';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {Callback} from '../types/callback';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
@@ -159,15 +158,7 @@ export class RasterTileSource extends Evented implements Source {
         return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
     }
 
-    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
-        if (!callback) {
-            return this._loadTileInternal(tile);
-        } else {
-            this._loadTileInternal(tile).then(() => callback()).catch((err) => callback(err));
-        }
-    }
-
-    async _loadTileInternal(tile: Tile): Promise<void> {
+    async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.abortController = new AbortController();
         try {
@@ -208,17 +199,17 @@ export class RasterTileSource extends Evented implements Source {
         }
     }
 
-    abortTile(tile: Tile, callback: Callback<void>) {
+    async abortTile(tile: Tile) {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
         }
-        callback();
     }
 
-    unloadTile(tile: Tile, callback: Callback<void>) {
-        if (tile.texture) this.map.painter.saveTileTexture(tile.texture);
-        callback();
+    async unloadTile(tile: Tile) {
+        if (tile.texture) {
+            this.map.painter.saveTileTexture(tile.texture);
+        }
     }
 
     hasTransition() {

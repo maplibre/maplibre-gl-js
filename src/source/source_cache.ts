@@ -187,12 +187,12 @@ export class SourceCache extends Evented {
 
     _unloadTile(tile: Tile) {
         if (this._source.unloadTile)
-            return this._source.unloadTile(tile, () => {});
+            this._source.unloadTile(tile);
     }
 
     _abortTile(tile: Tile) {
         if (this._source.abortTile)
-            this._source.abortTile(tile, () => {});
+            this._source.abortTile(tile);
 
         this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
     }

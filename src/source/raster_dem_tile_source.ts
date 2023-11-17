@@ -13,7 +13,6 @@ import type {DEMEncoding} from '../data/dem_data';
 import type {Source} from './source';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
 import {RGBAImage} from '../util/image';
@@ -53,15 +52,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.baseShift = options.baseShift;
     }
 
-    override async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
-        if (!callback) {
-            await this._loadTileInternal(tile);
-        } else {
-            this._loadTileInternal(tile).then(() => callback()).catch((err) => callback(err));
-        }
-    }
-
-    override async _loadTileInternal(tile: Tile): Promise<void> {
+    override async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
@@ -157,7 +148,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         return neighboringTiles;
     }
 
-    unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile) {
         if (tile.demTexture) this.map.painter.saveTileTexture(tile.demTexture);
         if (tile.fbo) {
             tile.fbo.destroy();
@@ -168,7 +159,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
         tile.state = 'unloaded';
         if (tile.actor) {
-            tile.actor.sendAsync({type: 'removeDEMTile', data: {type: this.type, uid: tile.uid, source: this.id}});
+            await tile.actor.sendAsync({type: 'removeDEMTile', data: {type: this.type, uid: tile.uid, source: this.id}});
         }
     }
 }

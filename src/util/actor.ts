@@ -190,11 +190,11 @@ export class Actor implements IActor {
     async processTask(id: string, task: MessageData) {
         if (task.type === '<response>') {
             // The `completeTask` function in the counterpart actor has been called, and we are now
-            // firing the callback in the originating actor, if there is one.
+            // resolving or rejecting the promise in the originating actor, if there is one.
             const resolveReject = this.resolveRejects[id];
             delete this.resolveRejects[id];
             if (!resolveReject) {
-                // If we get a response, but don't have a callback, the request was canceled.
+                // If we get a response, but don't have a resolve or reject, the request was canceled.
                 return;
             }
             if (task.error) {
