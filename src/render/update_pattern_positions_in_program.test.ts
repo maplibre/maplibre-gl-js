@@ -17,7 +17,7 @@ interface MockProgramConfiguration extends ProgramConfiguration {
 
 function constructMockProgramConfiguration(): MockProgramConfiguration {
     const mockProgramConfiguration: MockProgramConfiguration = {patternPositions: {}} as any;
-    mockProgramConfiguration.updatePaintBuffers = () => {};
+    mockProgramConfiguration.updatePaintBuffers = jest.fn();
     mockProgramConfiguration.setConstantPatternPositions = (posFrom: ImagePosition, posTo: ImagePosition) => {
         // this does not exist on ProgramConfiguration but we want to test the resulting output
         mockProgramConfiguration.patternPositions = {posFrom: posFrom.paddedRect, posTo: posTo.paddedRect};
@@ -47,7 +47,6 @@ function constructMockFillStyleLayer(): FillStyleLayer {
 }
 
 describe('updatePatternPositionsInProgram', () => {
-
     test('geojson tile', () => {
         const config = constructMockProgramConfiguration();
         const tile = new Tile(new OverscaledTileID(3, 0, 2, 1, 2), undefined);
@@ -66,7 +65,6 @@ describe('updatePatternPositionsInProgram', () => {
             tile,
             constructMockFillStyleLayer()
         );
-
         // we added this property to just see what the update looks like
         expect(config.patternPositions).toEqual({
             posFrom: {x: 0, y: 0, w: 0, h: 0},
