@@ -13,7 +13,7 @@ import {Painter} from './painter';
 import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {MercatorCoordinate, lngFromMercatorX, mercatorXfromLng} from '../geo/mercator_coordinate';
 import {TerrainSourceCache} from '../source/terrain_source_cache';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
@@ -341,8 +341,9 @@ export class Terrain {
         if (!tile) return null;
         const coordsSize = this._coordsTextureSize;
         const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
+        const mercatorX = (tile.tileID.canonical.x * coordsSize + x) / worldSize;
         return new MercatorCoordinate(
-            (tile.tileID.canonical.x * coordsSize + x) / worldSize,
+            this._allowMercatorOverflow(p, mercatorX),
             (tile.tileID.canonical.y * coordsSize + y) / worldSize,
             this.getElevation(tile.tileID, x, y, coordsSize)
         );
@@ -440,5 +441,19 @@ export class Terrain {
             mercatorX,
             mercatorY
         };
+    }
+
+    _allowMercatorOverflow(p: Point, mercatorX: number): number {
+        const inLeftHalf = p.x < (this.painter.width / 2);
+        let lng = lngFromMercatorX(mercatorX);
+        const centerLng = this.painter.transform.center.lng;
+        if (
+            (inLeftHalf && Math.sign(lng) > 0 && Math.sign(centerLng) < 0) ||
+            (!inLeftHalf && Math.sign(lng) < 0 && Math.sign(centerLng) > 0)
+        ) {
+            lng = 360 * Math.sign(centerLng) + lng;
+            return mercatorXfromLng(lng);
+        }
+        return mercatorX;
     }
 }
