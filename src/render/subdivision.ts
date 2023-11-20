@@ -83,10 +83,6 @@ function checkEdgeDivide(e0x: number, e0y: number, e1x: number, e1y: number, div
     return Math.round(divideY);
 }
 
-function getKey(x: number, y: number): string {
-    return Math.floor(x).toString(36) + Math.floor(y).toString(36);
-}
-
 class Subdivider {
     /**
      * Flattened vertex positions (xyxyxy).
@@ -262,7 +258,7 @@ class Subdivider {
                         if (c === 0 ||
                             (this._finalVertices[indicesInsideCell[0] * 2 + 0] === this._finalVertices[indicesInsideCell[i] * 2 + 0] && this._finalVertices[indicesInsideCell[0] * 2 + 0] === this._finalVertices[indicesInsideCell[i - 1] * 2 + 0]) ||
                             (this._finalVertices[indicesInsideCell[0] * 2 + 1] === this._finalVertices[indicesInsideCell[i] * 2 + 1] && this._finalVertices[indicesInsideCell[0] * 2 + 1] === this._finalVertices[indicesInsideCell[i - 1] * 2 + 1])) {
-                            continue;
+                            //continue;
                         }
 
                         if (c > 0) {
@@ -663,5 +659,84 @@ export function subdivideSimple(vertices: Array<number>, indices: Array<number>,
  * @param indices Triangle indices. This array is appended with new primitives.
  */
 function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
-    // TODO
+    const indicesByXthenY = indices.toSorted((a, b) => {
+        const ax = flattened[a * 2 + 0];
+        const ay = flattened[a * 2 + 1];
+        const bx = flattened[b * 2 + 0];
+        const by = flattened[b * 2 + 1];
+        if (ax == bx) {
+            return ay - by;
+        }
+        return ax - bx;
+    });
+    const indicesByYthenX = indices.toSorted((a, b) => {
+        const ax = flattened[a * 2 + 0];
+        const ay = flattened[a * 2 + 1];
+        const bx = flattened[b * 2 + 0];
+        const by = flattened[b * 2 + 1];
+        if (ay == by) {
+            return ax - bx;
+        }
+        return ay - by;
+    });
+
+    // Following is not needed if we assume that all "linear" triangles were removed first.
+    // const trianglesX = [];
+    // const trianglesY = [];
+
+    // for(let i = 2; i < indices.length; i += 3) {
+    //     const v0x = flattened[indices[i-2] * 2];
+    //     const v0y = flattened[indices[i-2] * 2 + 1];
+    //     const v1x = flattened[indices[i-1] * 2];
+    //     const v1y = flattened[indices[i-1] * 2 + 1];
+    //     const v2x = flattened[indices[i] * 2];
+    //     const v2y = flattened[indices[i] * 2 + 1];
+    //     if(v0x === v1x && v1x === v2x) {
+    //         trianglesX.push([indices[i-2], indices[i-1], indices[i]]);
+    //     }
+    //     if(v0y === v1y && v1y === v2y) {
+    //         trianglesY.push([indices[i-2], indices[i-1], indices[i]]);
+    //     }
+    // }
+
+    // Cases for T-joints in X:
+    //
+    // A------C----D--B
+    // A--------------B         <- T-joint detected (A-CD-B)
+    //
+    // A---------C------------D <- T-joint detected (C-B-D)
+    // A--------------B         <- T-joint detected (A-C-B)
+    //
+    // A---C----D---------E     <- T-joint detected (D-B-E)
+    // A--------------B         <- T-joint detected (A-CD-B)
+
+    for(let i = 2; i < indices.length; i += 3) {
+        const v0x = flattened[indices[i-2] * 2];
+        const v0y = flattened[indices[i-2] * 2 + 1];
+        const v1x = flattened[indices[i-1] * 2];
+        const v1y = flattened[indices[i-1] * 2 + 1];
+        const v2x = flattened[indices[i] * 2];
+        const v2y = flattened[indices[i] * 2 + 1];
+        
+        // for each triangle edge
+    }
+}
+
+export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
+    const lineIndices = [];
+    
+    for(let i = 2; i < triangleIndices.length; i += 3) {
+        const i0 = triangleIndices[i - 2];
+        const i1 = triangleIndices[i - 1];
+        const i2 = triangleIndices[i];
+
+        lineIndices.push(i0);
+        lineIndices.push(i1);
+        lineIndices.push(i1);
+        lineIndices.push(i2);
+        lineIndices.push(i2);
+        lineIndices.push(i0);
+    }
+
+    return lineIndices;
 }
