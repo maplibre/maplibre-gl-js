@@ -23,7 +23,7 @@
     "@maplibre/maplibre-gl-style-spec": "^19.3.3",
     "@types/geojson": "^7946.0.13",
     "@types/mapbox__point-geometry": "^0.1.4",
-    "@types/mapbox__vector-tile": "^1.3.3",
+    "@types/mapbox__vector-tile": "^1.3.4",
     "@types/pbf": "^3.0.4",
     "@types/supercluster": "^7.1.3",
     "earcut": "^2.2.4",
