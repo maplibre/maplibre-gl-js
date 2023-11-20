@@ -45,7 +45,7 @@ export function setupFetchMock(): FetchMock {
 
     global.AbortController = AbortControllerMock;
     global.Request = RequestMock as unknown as typeof Request;
-    global.fetch = fetchMock;
+    global.fetch = fetchMock as any;
 
     return fetchMock;
 }
