@@ -63,11 +63,11 @@ function angle(x: number, y: number): number {
 
 /**
  * Check whether an edge can be divided by a line parallel to the Y axis, return the X coordinate of the division point if yes.
- * @param e0x Edge vertex 0 x.
- * @param e0y Edge vertex 0 y.
- * @param e1x Edge vertex 1 x.
- * @param e1y Edge vertex 1 y.
- * @param divideX Division line X coordinate.
+ * @param e0x - Edge vertex 0 x.
+ * @param e0y - Edge vertex 0 y.
+ * @param e1x - Edge vertex 1 x.
+ * @param e1y - Edge vertex 1 y.
+ * @param divideX - Division line X coordinate.
  * @returns Either the Y coordinate of the intersection of the edge and division line, or undefined if the division line doesn't intersect the triangle.
  */
 function checkEdgeDivide(e0x: number, e0y: number, e1x: number, e1y: number, divideX: number): number | undefined {
@@ -89,7 +89,7 @@ class Subdivider {
      */
     private _finalVertices: Array<number>;
     /**
-     * Map of (vertex x and y coordinate) -> index of such vertex.
+     * Map of "vertex x and y coordinate" to "index of such vertex".
      */
     private _vertexDictionary: {[_: string]: number};
 
@@ -393,9 +393,9 @@ class Subdivider {
     /**
      * Subdivides an input mesh. Imagine a regular square grid with the target granuality overlaid over the mesh - this is the subdivision's result.
      * Assumes a mesh of tile features - vertex coordinates are integers, visible range where subdivision happens is 0..8191.
-     * @param vertices Input vertex buffer, flattened - two values per vertex (x, y).
-     * @param indices Input index buffer.
-     * @param granuality Target granuality. If less or equal to 1, the input buffers are returned without modification.
+     * @param vertices - Input vertex buffer, flattened - two values per vertex (x, y).
+     * @param indices - Input index buffer.
+     * @param granuality - Target granuality. If less or equal to 1, the input buffers are returned without modification.
      * @returns Vertex and index buffers with subdivision applied.
      */
     public subdivide(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>): SubdivisionResult {
@@ -430,6 +430,7 @@ class Subdivider {
 }
 
 export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, granuality: number): SubdivisionResult {
+    // JP: TODO: handle 16bit indices overflow!
     const subdivider = new Subdivider(granuality);
     const result = subdivider.subdivide(vertices, triangleIndices, lineIndices);
     fixTjoints(result.verticesFlattened, result.indicesTriangles);
@@ -438,11 +439,11 @@ export function subdivideFill(vertices: Array<number>, triangleIndices: Array<nu
 
 /**
  * Returns the angular length of an edge projected onto a sphere, in radians. The edge is specified in in-tile coordinates (0..EXTENT) in a given web mercator tile.
- * @param e0x Edge start x.
- * @param e0y Edge start y.
- * @param e1x Edge end x.
- * @param e1y Edge end y.
- * @param tileID Web mercator tile coordinates and zoom.
+ * @param e0x - Edge start x.
+ * @param e0y - Edge start y.
+ * @param e1x -  Edge end x.
+ * @param e1y - Edge end y.
+ * @param tileID - Web mercator tile coordinates and zoom.
  * @returns Length of the edge in radians.
  */
 function edgeLengthMercator(e0x: number, e0y: number, e1x: number, e1y: number, tileID: CanonicalTileID): number {
@@ -655,8 +656,9 @@ export function subdivideSimple(vertices: Array<number>, indices: Array<number>,
  * The solution is to add an additional triangle A-T-B that will fill this gap,
  * or to break up triangle 1 into triangles A-T-C and T-B-C, thus breaking up the line A-B.
  * This function does the former.
- * @param flattened Flattened vertex coordinates, xyxyxy.
- * @param indices Triangle indices. This array is appended with new primitives.
+ * This function assumes that all axis-aligned "linear" triangles (when eg. the x coordinate of all vertices is the same) were removed first.
+ * @param flattened - Flattened vertex coordinates, xyxyxy.
+ * @param indices - Triangle indices. This array is appended with new primitives.
  */
 function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
     const indicesByXthenY = indices.toSorted((a, b) => {
