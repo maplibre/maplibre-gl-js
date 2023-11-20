@@ -107,14 +107,12 @@ function drawFillTiles(
         //    layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));
 
         const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
-        let cullface = CullFaceMode.backCW;
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
             uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile) : null;
         } else {
-            cullface = CullFaceMode.disabled;
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
@@ -124,7 +122,7 @@ function drawFillTiles(
         }
 
         program.draw(painter.context, drawMode, depthMode,
-            painter.stencilModeFor3D(), colorMode, cullface, uniformValues, terrainData, projectionData,
+            painter.stencilModeFor3D(), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

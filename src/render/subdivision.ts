@@ -632,7 +632,7 @@ export function subdivideSimple(vertices: Array<number>, indices: Array<number>,
 
 /**
  * Fixes axis-aligned T-joints in a triangle mesh. Appends new triangles to the supplied index array.
- * A T-joint is when three triangles meet in such a way that their edges form a "T":
+ * A T-joint is when three triangles meet in such a way that their edges form a "T" shape:
  * ```
  *         C
  *        / \
@@ -680,26 +680,20 @@ function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
         return ay - by;
     });
 
-    // Following is not needed if we assume that all "linear" triangles were removed first.
-    // const trianglesX = [];
-    // const trianglesY = [];
+    // map of "vertex index" -> "index of this vertex in indicesByXthenY"
+    const dictionaryByXthenY = {};
+    for (let i = 0; i < indicesByXthenY.length; i++) {
+        const index = indicesByXthenY[i];
+        dictionaryByXthenY[index.toString(36)] = i;
+    }
+    const dictionaryByYthenX = {};
+    for (let i = 0; i < indicesByYthenX.length; i++) {
+        const index = indicesByYthenX[i];
+        dictionaryByYthenX[index.toString(36)] = i;
+    }
 
-    // for(let i = 2; i < indices.length; i += 3) {
-    //     const v0x = flattened[indices[i-2] * 2];
-    //     const v0y = flattened[indices[i-2] * 2 + 1];
-    //     const v1x = flattened[indices[i-1] * 2];
-    //     const v1y = flattened[indices[i-1] * 2 + 1];
-    //     const v2x = flattened[indices[i] * 2];
-    //     const v2y = flattened[indices[i] * 2 + 1];
-    //     if(v0x === v1x && v1x === v2x) {
-    //         trianglesX.push([indices[i-2], indices[i-1], indices[i]]);
-    //     }
-    //     if(v0y === v1y && v1y === v2y) {
-    //         trianglesY.push([indices[i-2], indices[i-1], indices[i]]);
-    //     }
-    // }
-
-    // Cases for T-joints in X:
+    // We assume that all "linear" triangles were removed first.
+    // Cases for T-joints in X axis (dashes are edges, letters are vertices):
     //
     // A------C----D--B
     // A--------------B         <- T-joint detected (A-CD-B)
@@ -710,15 +704,53 @@ function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
     // A---C----D---------E     <- T-joint detected (D-B-E)
     // A--------------B         <- T-joint detected (A-CD-B)
 
-    for (let i = 2; i < indices.length; i += 3) {
-        const v0x = flattened[indices[i - 2] * 2];
-        const v0y = flattened[indices[i - 2] * 2 + 1];
-        const v1x = flattened[indices[i - 1] * 2];
-        const v1y = flattened[indices[i - 1] * 2 + 1];
-        const v2x = flattened[indices[i] * 2];
-        const v2y = flattened[indices[i] * 2 + 1];
+    const numIndices = indices.length;
+
+    function tryFixEdge(i0: number, i1: number, dict: {[_: string] : number}, orderedIndices: Array<number>) {
+        const orderedIndex0 = dict[i0.toString(36)];
+        const orderedIndex1 = dict[i1.toString(36)];
+
+        const orderedMin = Math.min(orderedIndex0, orderedIndex1);
+        const orderedMax = Math.max(orderedIndex0, orderedIndex1);
+
+        // If there is no vertex between 0 and 1, zero iterations are done
+        for (let i = orderedMin + 1; i < orderedMax; i++) {
+            indices.push(orderedIndices[orderedMax]);
+            indices.push(orderedIndices[i - 1]);
+            indices.push(orderedIndices[i]);
+        }
+    }
+
+    for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
+        const i0 = indices[primitiveIndex - 2];
+        const i1 = indices[primitiveIndex - 1];
+        const i2 = indices[primitiveIndex];
+        const v0x = flattened[i0 * 2];
+        const v0y = flattened[i0 * 2 + 1];
+        const v1x = flattened[i1 * 2];
+        const v1y = flattened[i1 * 2 + 1];
+        const v2x = flattened[i2 * 2];
+        const v2y = flattened[i2 * 2 + 1];
 
         // for each triangle edge
+        if (v0x === v1x) {
+            tryFixEdge(i0, i1, dictionaryByXthenY, indicesByXthenY);
+        }
+        if (v1x === v2x) {
+            tryFixEdge(i1, i2, dictionaryByXthenY, indicesByXthenY);
+        }
+        if (v2x === v0x) {
+            tryFixEdge(i2, i0, dictionaryByXthenY, indicesByXthenY);
+        }
+        if (v0y === v1y) {
+            tryFixEdge(i0, i1, dictionaryByYthenX, indicesByYthenX);
+        }
+        if (v1y === v2y) {
+            tryFixEdge(i1, i2, dictionaryByYthenX, indicesByYthenX);
+        }
+        if (v2y === v0y) {
+            tryFixEdge(i2, i0, dictionaryByYthenX, indicesByYthenX);
+        }
     }
 }
 

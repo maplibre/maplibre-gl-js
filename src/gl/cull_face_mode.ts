@@ -22,13 +22,7 @@ export class CullFaceMode {
      * Use for 3D geometry such as terrain.
      */
     static backCCW: Readonly<CullFaceMode>;
-
-    /**
-     * Cull mode for rendering fill layer polygons, which use nonstandard clockwise vertex order.
-     */
-    static backCW: Readonly<CullFaceMode>;
 }
 
 CullFaceMode.disabled = new CullFaceMode(false, BACK, CCW);
 CullFaceMode.backCCW = new CullFaceMode(true, BACK, CCW);
-CullFaceMode.backCW = new CullFaceMode(true, BACK, CW);
