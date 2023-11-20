@@ -7,6 +7,12 @@
 
 - Fix fill patterns sometimes not rendering at all ([#3339](https://github.com/maplibre/maplibre-gl-js/pull/3339))
 - _...Add new stuff here..._
+- Fix mapbox-gl-draw example ([#2601](https://github.com/maplibre/maplibre-gl-js/issues/2601), [#3394](https://github.com/maplibre/maplibre-gl-js/pull/3394))
+
+## 3.6.1
+
+### 🐞 Bug fixes
+- Fix `undefined` `_onEaseFrame` call in `Camera._renderFrameCallback()` while doing `Camera.jumpTo` during a `Camera.easeTo` ([#3332](https://github.com/maplibre/maplibre-gl-js/pull/3332))
 
 ## 3.6.0
 
