@@ -232,7 +232,7 @@ export class ProjectionManager {
             2, 3, 1
         ];
 
-        const subdivided = subdivideFill(flattenedVertices, indices, null, ProjectionManager.getGranualityForZoomLevelForTiles(zoomLevel));
+        const subdivided = subdivideFill(flattenedVertices, indices, null, null, ProjectionManager.getGranualityForZoomLevelForTiles(zoomLevel));
 
         const vertexArray = new PosArray();
         const indexArray = new TriangleIndexArray();

@@ -183,7 +183,18 @@ vec4 projectTile(vec2 posInTile) {
         cos(spherical.x) * len,
         1.0
     );
+
+    // North pole
+    if(posInTile.x < -32767.5 && posInTile.y < -32767.5) {
+        pos.xyz = vec3(0.0, 1.0, 0.0);
+    }
+    // South pole
+    if(posInTile.x > 32766.5 && posInTile.y > 32766.5) {
+        pos.xyz = vec3(0.0, -1.0, 0.0);
+    }
+
     vec4 result = u_projection_matrix * pos;
+    // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
     result.z = (1.0 - (dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * result.w;
     return result;
 }

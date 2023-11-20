@@ -429,11 +429,28 @@ class Subdivider {
     }
 }
 
-export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, granuality: number): SubdivisionResult {
+export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, canonical: CanonicalTileID, granuality: number): SubdivisionResult {
     // JP: TODO: handle 16bit indices overflow!
     const subdivider = new Subdivider(granuality);
     const result = subdivider.subdivide(vertices, triangleIndices, lineIndices);
     fixTjoints(result.verticesFlattened, result.indicesTriangles);
+
+    let north = false;
+    let south = false;
+
+    if (canonical) {
+        if (canonical.y === 0) {
+            north = true;
+        }
+        if (canonical.y === (1 << canonical.z) - 1) {
+            south = true;
+        }
+    }
+
+    if (north || south) {
+        fillPoles(result.verticesFlattened, result.indicesTriangles, north, south);
+    }
+
     return result;
 }
 
@@ -773,4 +790,103 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
     }
 
     return lineIndices;
+}
+
+/**
+ * Detects edges that border the north or south tile edge
+ * and adds triangles that extend those edges to the poles.
+ * Only run this function on tiles that border the poles.
+ * Assumes that supplied geometry is clipped to the inclusive range of 0..EXTENT.
+ * Mutates the supplies vertex and index arrays.
+ * @param flattened - Flattened vertex coordinates, xyxyxy. This array is appended with new vertices.
+ * @param indices - Triangle indices. This array is appended with new primitives.
+ */
+function fillPoles(flattened: Array<number>, indices: Array<number>, north: boolean, south: boolean): void {
+    // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
+    // First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
+    const northXY = -32768;
+    const southXY = 32767;
+
+    const northEdge = 0;
+    const southEdge = EXTENT;
+
+    for (let i = 1; i < flattened.length; i += 2) {
+        const vx = flattened[i - 1];
+        const vy = flattened[i];
+        if (north && vx === northXY && vy === northXY) {
+            // Move slightly down
+            flattened[i] = northXY + 1;
+        }
+        if (south && vx === southXY && vy === southXY) {
+            // Move slightly down
+            flattened[i] = southXY - 1;
+        }
+    }
+
+    let vertexNorthPole: number | null = null;
+    let vertexSouthPole: number | null = null;
+
+    function getNorthPole() {
+        if (vertexNorthPole) {
+            return vertexNorthPole;
+        }
+        vertexNorthPole = flattened.length / 2;
+        flattened.push(northXY);
+        flattened.push(northXY);
+        return vertexNorthPole;
+    }
+    function getSouthPole() {
+        if (vertexSouthPole) {
+            return vertexSouthPole;
+        }
+        vertexSouthPole = flattened.length / 2;
+        flattened.push(southXY);
+        flattened.push(southXY);
+        return vertexSouthPole;
+    }
+
+    const numIndices = indices.length;
+    for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
+        const i0 = indices[primitiveIndex - 2];
+        const i1 = indices[primitiveIndex - 1];
+        const i2 = indices[primitiveIndex];
+        const v0y = flattened[i0 * 2 + 1];
+        const v1y = flattened[i1 * 2 + 1];
+        const v2y = flattened[i2 * 2 + 1];
+
+        if (north) {
+            if (v0y === northEdge && v1y === northEdge) {
+                indices.push(i0);
+                indices.push(i1);
+                indices.push(getNorthPole());
+            }
+            if (v1y === northEdge && v2y === northEdge) {
+                indices.push(i1);
+                indices.push(i2);
+                indices.push(getNorthPole());
+            }
+            if (v2y === northEdge && v0y === northEdge) {
+                indices.push(i2);
+                indices.push(i0);
+                indices.push(getNorthPole());
+            }
+        }
+        if (south) {
+            if (v0y === southEdge && v1y === southEdge) {
+                indices.push(i0);
+                indices.push(i1);
+                indices.push(getSouthPole());
+            }
+            if (v1y === southEdge && v2y === southEdge) {
+                indices.push(i1);
+                indices.push(i2);
+                indices.push(getSouthPole());
+            }
+            if (v2y === southEdge && v0y === southEdge) {
+                indices.push(i2);
+                indices.push(i0);
+                indices.push(getSouthPole());
+            }
+        }
+    }
 }
