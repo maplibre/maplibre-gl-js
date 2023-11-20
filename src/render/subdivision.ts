@@ -162,8 +162,8 @@ class Subdivider {
             const maxY = Math.max(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
 
             // Iterate over all the "granuality grid" cells that might intersect this triangle
-            for (let cellX = Math.floor(Math.max(minX, 0) / this._granualityStep); cellX <= Math.floor((Math.min(maxX, EXTENT - 1) + this._granualityStep - 1) / this._granualityStep); cellX += 1) {
-                for (let cellY = Math.floor(Math.max(minY, 0) / this._granualityStep); cellY <= Math.floor((Math.min(maxY, EXTENT - 1) + this._granualityStep - 1) / this._granualityStep); cellY += 1) {
+            for (let cellX = Math.floor(Math.max(minX, 0) / this._granualityStep); cellX <= Math.floor((Math.min(maxX, EXTENT) - 1) / this._granualityStep); cellX += 1) {
+                for (let cellY = Math.floor(Math.max(minY, 0) / this._granualityStep); cellY <= Math.floor((Math.min(maxY, EXTENT) - 1) / this._granualityStep); cellY += 1) {
                 // Cell AABB
                     const cellMinX = cellX * this._granualityStep;
                     const cellMinY = cellY * this._granualityStep;
