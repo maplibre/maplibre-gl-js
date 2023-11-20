@@ -51,7 +51,7 @@
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/benchmark": "^2.1.5",
     "@types/cssnano": "^5.0.0",
-    "@types/d3": "^7.4.2",
+    "@types/d3": "^7.4.3",
     "@types/diff": "^5.0.8",
     "@types/earcut": "^2.1.4",
     "@types/eslint": "^8.44.7",
