@@ -664,7 +664,7 @@ function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
         const ay = flattened[a * 2 + 1];
         const bx = flattened[b * 2 + 0];
         const by = flattened[b * 2 + 1];
-        if (ax == bx) {
+        if (ax === bx) {
             return ay - by;
         }
         return ax - bx;
@@ -674,7 +674,7 @@ function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
         const ay = flattened[a * 2 + 1];
         const bx = flattened[b * 2 + 0];
         const by = flattened[b * 2 + 1];
-        if (ay == by) {
+        if (ay === by) {
             return ax - bx;
         }
         return ay - by;
@@ -710,22 +710,22 @@ function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
     // A---C----D---------E     <- T-joint detected (D-B-E)
     // A--------------B         <- T-joint detected (A-CD-B)
 
-    for(let i = 2; i < indices.length; i += 3) {
-        const v0x = flattened[indices[i-2] * 2];
-        const v0y = flattened[indices[i-2] * 2 + 1];
-        const v1x = flattened[indices[i-1] * 2];
-        const v1y = flattened[indices[i-1] * 2 + 1];
+    for (let i = 2; i < indices.length; i += 3) {
+        const v0x = flattened[indices[i - 2] * 2];
+        const v0y = flattened[indices[i - 2] * 2 + 1];
+        const v1x = flattened[indices[i - 1] * 2];
+        const v1y = flattened[indices[i - 1] * 2 + 1];
         const v2x = flattened[indices[i] * 2];
         const v2y = flattened[indices[i] * 2 + 1];
-        
+
         // for each triangle edge
     }
 }
 
 export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
     const lineIndices = [];
-    
-    for(let i = 2; i < triangleIndices.length; i += 3) {
+
+    for (let i = 2; i < triangleIndices.length; i += 3) {
         const i0 = triangleIndices[i - 2];
         const i1 = triangleIndices[i - 1];
         const i2 = triangleIndices[i];
