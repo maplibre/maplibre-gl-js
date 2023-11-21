@@ -122,7 +122,7 @@ function drawFillTiles(
         }
 
         program.draw(painter.context, drawMode, depthMode,
-            painter.stencilModeFor3D(), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

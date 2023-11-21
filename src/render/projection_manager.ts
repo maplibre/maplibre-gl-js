@@ -185,7 +185,7 @@ export class ProjectionManager {
     }
 
     /**
-     * Creates a quad mesh covering positions in range 0..EXTENT, eg. for tile clipping.
+     * Creates a quad mesh covering positions in range 0..EXTENT, for tile clipping.
      * @param context MapLibre's rendering context object.
      * @param granuality Mesh triangulation granuality: 1 for just a single quad, 3 for 3x3 quads.
      * @returns

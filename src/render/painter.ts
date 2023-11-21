@@ -255,12 +255,14 @@ export class Painter {
 
         this._tileClippingMaskIDs = {};
 
+
+        // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
             const projectionData = this.style.map.projectionManager.getProjectionData(tileID);
-            const mesh = this.style.map.projectionManager.getMesh(this.context, tileID.canonical.z);
+            const mesh = this.style.map.projectionManager.getMesh(this.context, tileID.canonical);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.

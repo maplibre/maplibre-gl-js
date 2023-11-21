@@ -1,4 +1,4 @@
-import {EXTENT} from '../data/extent';
+import {EXTENT, EXTENT_SUBDIVISION_BORDER} from '../data/extent';
 import {webMercatorToSpherePoint} from '../geo/mercator_coordinate';
 import {CanonicalTileID} from '../source/tile_id';
 
@@ -161,10 +161,17 @@ class Subdivider {
             const minY = Math.min(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
             const maxY = Math.max(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
 
+            // Compute the relevant cell range so that only the cells inside the actual tile + border are covered
+            const borderCells = Math.floor((EXTENT_SUBDIVISION_BORDER + this._granualityStep - 1) / this._granualityStep);
+            const cellRangeXmin = Math.max(Math.floor(minX / this._granualityStep), -borderCells);
+            const cellRangeYmin = Math.max(Math.floor(minY / this._granualityStep), -borderCells);
+            const cellRangeXmax = Math.min(Math.floor((maxX - 1) / this._granualityStep), this._granuality - 1 + borderCells);
+            const cellRangeYmax = Math.min(Math.floor((maxY - 1) / this._granualityStep), this._granuality - 1 + borderCells);
+
             // Iterate over all the "granuality grid" cells that might intersect this triangle
-            for (let cellX = Math.floor(Math.max(minX, 0) / this._granualityStep); cellX <= Math.floor((Math.min(maxX, EXTENT) - 1) / this._granualityStep); cellX += 1) {
-                for (let cellY = Math.floor(Math.max(minY, 0) / this._granualityStep); cellY <= Math.floor((Math.min(maxY, EXTENT) - 1) / this._granualityStep); cellY += 1) {
-                // Cell AABB
+            for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
+                for (let cellY = cellRangeYmin; cellY <= cellRangeYmax; cellY += 1) {
+                    // Cell AABB
                     const cellMinX = cellX * this._granualityStep;
                     const cellMinY = cellY * this._granualityStep;
                     const cellMaxX = (cellX + 1) * this._granualityStep;
@@ -285,6 +292,8 @@ class Subdivider {
             return [];
         }
 
+        // JP: TODO: adapt for subdivision with border
+
         const finalLineIndices = [];
 
         // Iterate over all input lines
@@ -356,35 +365,6 @@ class Subdivider {
                 finalLineIndices.push(subdividedLineIndices[i - 1]);
                 finalLineIndices.push(subdividedLineIndices[i]);
             }
-
-            // const lineLen = vectorLength(edgeX, edgeY);
-            // let subdividedLen = 0;
-
-            // for (let i = 1; i < subdividedLineIndices.length; i++) {
-            //     const v0x = this._finalVertices[subdividedLineIndices[i - 1] * 2];
-            //     const v0y = this._finalVertices[subdividedLineIndices[i - 1] * 2 + 1];
-            //     const v1x = this._finalVertices[subdividedLineIndices[i] * 2];
-            //     const v1y = this._finalVertices[subdividedLineIndices[i] * 2 + 1];
-            //     const e0x = v1x - v0x;
-            //     const e0y = v1y - v0y;
-            //     subdividedLen += vectorLength(e0x, e0y);
-            // }
-
-            // if (subdividedLen < lineLen * 2) {
-            //     continue;
-            // }
-
-            // if (subdividedLineIndices.length > 2) {
-            //     let msg = `Indices:\n- original: ${lineIndex0} ${lineIndex1}\n- subdiv'd: `;
-            //     for (let i = 0; i < subdividedLineIndices.length; i++) {
-            //         msg += `${subdividedLineIndices[i]} `;
-            //     }
-            //     msg += `\nPositions:\n- original: x ${lineVertex0x} y ${lineVertex0y} x ${lineVertex1x} y ${lineVertex1y}\n- subdiv'd: `;
-            //     for (let i = 0; i < subdividedLineIndices.length; i++) {
-            //         msg += `x ${this._finalVertices[subdividedLineIndices[i] * 2]} y ${this._finalVertices[subdividedLineIndices[i] * 2 + 1]} `;
-            //     }
-            //     console.log(msg);
-            // }
         }
 
         return finalLineIndices;

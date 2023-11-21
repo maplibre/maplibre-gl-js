@@ -16,9 +16,11 @@ export const EXTENT = 8192;
  * The size of border region for stencil masks, in internal tile coordinates.
  * Used for globe rendering.
  */
-export const EXTENT_STENCIL_BORDER = EXTENT / 64;
+export const EXTENT_STENCIL_BORDER = EXTENT / 128;
 /**
  * The minimal size of border region for tiles, in internal tile coordinates.
  * Used during subdivision. Any geometry outside this border may be clipped.
+ * This value should be larger than EXTENT_STENCIL_BORDER - we want
+ * a bigger border on the actual tile geometry than on the stencil mask.
  */
-export const EXTENT_SUBDIVISION_BORDER = EXTENT / 32;
+export const EXTENT_SUBDIVISION_BORDER = EXTENT / 64;
