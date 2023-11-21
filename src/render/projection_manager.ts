@@ -1,14 +1,13 @@
-import {mat4, vec3, vec4} from 'gl-matrix';
+import {mat4, vec3} from 'gl-matrix';
 import {Context} from '../gl/context';
 import {Map} from '../ui/map';
 import {Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
-import {OverscaledTileID} from '../source/tile_id';
-import {PosArray, TriangleIndexArray} from '../data/array_types.g';
+import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
+import {Pos3dArray, PosArray, TriangleIndexArray} from '../data/array_types.g';
 import {Mesh} from './mesh';
-import {EXTENT} from '../data/extent';
+import {EXTENT, EXTENT_STENCIL_BORDER} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import posAttributes from '../data/pos_attributes';
-import {subdivideFill} from './subdivision';
 import {Transform} from '../geo/transform';
 
 export type ProjectionPreludeUniformsType = {
@@ -36,7 +35,7 @@ export class ProjectionManager {
      * Mercator tiles will be subdivided to this degree of granuality in order to allow for a curved projection.
      * Should be a power of 2.
      */
-    private static readonly targetGranuality = 8;
+    private static readonly targetGranuality = 1;
 
     /**
      * The granuality specified by `targetGranuality` will be used for zoom levels from this value onwards.
@@ -44,7 +43,7 @@ export class ProjectionManager {
      * This ensures that then looking at the entire earth, it will be subdivided enough give the illusion of an actual sphere
      * (and not a poorly tesselated triangular mesh). This also ensures that higher zoom levels are not needlessly subdivided.
      */
-    private static readonly targetGranualityMinZoom = 3;
+    private static readonly targetGranualityMinZoom = 6;
 
     // At targetGranuality=8 and minzoom=4 (base tile granuality of 128) the sphere appears almost perfectly smooth
     // triangulation is invisible, apart from slight pixel shimmering at the equator
@@ -52,7 +51,7 @@ export class ProjectionManager {
     private static readonly targetGranualityStencil = 8;
     private static readonly targetGranualityMinZoomStencil = 3;
 
-    private tileMeshCache: Array<Mesh> = null;
+    private _tileMeshCache: {[_: string]: Mesh} = {};
     private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
 
     constructor(map: Map) {
@@ -158,16 +157,23 @@ export class ProjectionManager {
         data['u_projection_matrix'] = this.map.transform.globeProjMatrix;
     }
 
-    public getMesh(context: Context, zoomLevel: number): Mesh {
-        if (!this.tileMeshCache) {
-            this.tileMeshCache = [];
-            for (let zoom = 0; zoom <= ProjectionManager.targetGranualityMinZoom; zoom++) {
-                this.tileMeshCache.push(this._createQuadMesh(context, ProjectionManager.getGranualityForZoomLevel(zoom, ProjectionManager.targetGranualityStencil, ProjectionManager.targetGranualityMinZoomStencil)));
-                //this.tileMeshCache.push(this._createQuadMeshUsingSubdivision(context, zoom));
-            }
+    private getMeshKey(granuality: number, north: boolean, south: boolean): string {
+        return `${granuality.toString(36)}_${north ? 'n' : ''}${south ? 's' : ''}`;
+    }
+
+    public getMesh(context: Context, canonical: CanonicalTileID): Mesh {
+        const granuality = ProjectionManager.getGranualityForZoomLevel(canonical.z, ProjectionManager.targetGranualityStencil, ProjectionManager.targetGranualityMinZoomStencil);
+        const north = canonical.y === 0;
+        const south = canonical.y === (1 << canonical.z) - 1;
+        const key = this.getMeshKey(granuality, north, south);
+
+        if (key in this._tileMeshCache) {
+            return this._tileMeshCache[key];
         }
 
-        return this.tileMeshCache[Math.min(zoomLevel, ProjectionManager.targetGranualityMinZoom)];
+        const mesh = this._createQuadMesh(context, granuality, north, south);
+        this._tileMeshCache[key] = mesh;
+        return mesh;
     }
 
     public static getGranualityForZoomLevelForTiles(zoomLevel: number): number {
@@ -184,20 +190,35 @@ export class ProjectionManager {
      * @param granuality Mesh triangulation granuality: 1 for just a single quad, 3 for 3x3 quads.
      * @returns
      */
-    private _createQuadMesh(context: Context, granuality: number): Mesh {
-        const verticesPerAxis = granuality + 1;
-
+    private _createQuadMesh(context: Context, granuality: number, north: boolean, south: boolean): Mesh {
         const vertexArray = new PosArray();
         const indexArray = new TriangleIndexArray();
 
+        const quadsPerAxis = granuality + 2; // two extra quads for border
+        const verticesPerAxis = granuality + 3; // one more vertex than quads
+
         for (let y = 0; y < verticesPerAxis; y++) {
             for (let x = 0; x < verticesPerAxis; x++) {
-                vertexArray.emplaceBack(x / granuality * EXTENT, y / granuality * EXTENT);
+                let vx = (x - 1) / granuality * EXTENT;
+                if (x === 0) {
+                    vx = -EXTENT_STENCIL_BORDER;
+                }
+                if (x === verticesPerAxis - 1) {
+                    vx = EXTENT + EXTENT_STENCIL_BORDER;
+                }
+                let vy = (y - 1) / granuality * EXTENT;
+                if (y === 0) {
+                    vy = -EXTENT_STENCIL_BORDER;
+                }
+                if (y === verticesPerAxis - 1) {
+                    vy = EXTENT + EXTENT_STENCIL_BORDER;
+                }
+                vertexArray.emplaceBack(vx, vy);
             }
         }
 
-        for (let y = 0; y < granuality; y++) {
-            for (let x = 0; x < granuality; x++) {
+        for (let y = 0; y < quadsPerAxis; y++) {
+            for (let x = 0; x < quadsPerAxis; x++) {
                 const v0 = x + y * verticesPerAxis;
                 const v1 = (x + 1) + y * verticesPerAxis;
                 const v2 = x + (y + 1) * verticesPerAxis;
@@ -211,37 +232,30 @@ export class ProjectionManager {
             }
         }
 
-        const mesh = new Mesh(
-            context.createVertexBuffer(vertexArray, posAttributes.members),
-            context.createIndexBuffer(indexArray),
-            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        );
+        // Generate poles
+        const northXY = -32768;
+        const southXY = 32767;
 
-        return mesh;
-    }
+        if (north) {
+            const vNorthPole = vertexArray.length;
+            vertexArray.emplaceBack(northXY, northXY);
 
-    private _createQuadMeshUsingSubdivision(context: Context, zoomLevel: number): Mesh {
-        const flattenedVertices = [
-            0, 0,
-            EXTENT, 0,
-            0, EXTENT,
-            EXTENT, EXTENT,
-        ];
-        const indices = [
-            0, 2, 1,
-            2, 3, 1
-        ];
-
-        const subdivided = subdivideFill(flattenedVertices, indices, null, null, ProjectionManager.getGranualityForZoomLevelForTiles(zoomLevel));
-
-        const vertexArray = new PosArray();
-        const indexArray = new TriangleIndexArray();
-
-        for (let i = 0; i < subdivided.verticesFlattened.length; i += 2) {
-            vertexArray.emplaceBack(subdivided.verticesFlattened[i], subdivided.verticesFlattened[i + 1]);
+            for (let x = 0; x < quadsPerAxis; x++) {
+                const v0u = x;
+                const v1u = x + 1;
+                indexArray.emplaceBack(v0u, v1u, vNorthPole);
+            }
         }
-        for (let i = 0; i < subdivided.indicesTriangles.length; i += 3) {
-            indexArray.emplaceBack(subdivided.indicesTriangles[i], subdivided.indicesTriangles[i + 1], subdivided.indicesTriangles[i + 2]);
+
+        if (south) {
+            const vSouthPole = vertexArray.length;
+            vertexArray.emplaceBack(southXY, southXY);
+
+            for (let x = 0; x < quadsPerAxis; x++) {
+                const v0u = quadsPerAxis * verticesPerAxis + x;
+                const v1u = quadsPerAxis * verticesPerAxis + x + 1;
+                indexArray.emplaceBack(v1u, v0u, vSouthPole);
+            }
         }
 
         const mesh = new Mesh(

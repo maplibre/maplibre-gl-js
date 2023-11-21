@@ -800,6 +800,8 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
  * Mutates the supplies vertex and index arrays.
  * @param flattened - Flattened vertex coordinates, xyxyxy. This array is appended with new vertices.
  * @param indices - Triangle indices. This array is appended with new primitives.
+ * @param north - Whether to generate geometry for the north pole.
+ * @param south - Whether to generate geometry for the south pole.
  */
 function fillPoles(flattened: Array<number>, indices: Array<number>, north: boolean, south: boolean): void {
     // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
@@ -810,16 +812,16 @@ function fillPoles(flattened: Array<number>, indices: Array<number>, north: bool
     const northEdge = 0;
     const southEdge = EXTENT;
 
-    for (let i = 1; i < flattened.length; i += 2) {
-        const vx = flattened[i - 1];
-        const vy = flattened[i];
+    for (let i = 0; i < flattened.length; i += 2) {
+        const vx = flattened[i];
+        const vy = flattened[i + 1];
         if (north && vx === northXY && vy === northXY) {
             // Move slightly down
-            flattened[i] = northXY + 1;
+            flattened[i + 1] = northXY + 1;
         }
         if (south && vx === southXY && vy === southXY) {
             // Move slightly down
-            flattened[i] = southXY - 1;
+            flattened[i + 1] = southXY - 1;
         }
     }
 
