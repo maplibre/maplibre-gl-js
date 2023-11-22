@@ -102,7 +102,7 @@ export type MapOptions = {
      */
     attributionControl?: boolean;
     /**
-     * Attribuition text to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
+     * Attribution text to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
      */
     customAttribution?: string | Array<string>;
     /**
