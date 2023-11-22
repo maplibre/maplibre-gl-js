@@ -5,7 +5,7 @@ import {Cancelable} from '../types/cancelable';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {TileParameters, WorkerSource, WorkerTileCallback, WorkerTileParameters} from './worker_source';
-import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
+import {rtlWorkerPlugin as globalRTLTextPlugin} from './rtl_text_plugin';
 import {ActorTarget} from '../util/actor';
 
 const _self = {

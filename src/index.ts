@@ -18,7 +18,7 @@ import {Evented} from './util/evented';
 import {config} from './util/config';
 import {Debug} from './util/debug';
 import {isSafari} from './util/util';
-import {setRTLTextPlugin, getRTLTextPluginStatus} from './source/rtl_text_plugin';
+import {rtlMainThreadPlugin} from './source/rtl_plugin_main_thread';
 import {WorkerPool} from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {PerformanceUtils} from './util/performance';
@@ -82,7 +82,7 @@ class MapLibreGL {
      * ```
      * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
      */
-    static setRTLTextPlugin = setRTLTextPlugin;
+    static setRTLTextPlugin = rtlMainThreadPlugin.setRTLTextPlugin;
     /**
      * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
      * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
@@ -93,7 +93,7 @@ class MapLibreGL {
      * const pluginStatus = maplibregl.getRTLTextPluginStatus();
      * ```
      */
-    static getRTLTextPluginStatus = getRTLTextPluginStatus;
+    static getRTLTextPluginStatus = rtlMainThreadPlugin.getRTLTextPluginStatus;
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being

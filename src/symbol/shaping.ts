@@ -4,7 +4,7 @@ import {
     charInComplexShapingScript
 } from '../util/script_detection';
 import {verticalizePunctuation} from '../util/verticalize_punctuation';
-import {plugin as rtlTextPlugin} from '../source/rtl_text_plugin';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin';
 import ONE_EM from './one_em';
 import {warnOnce} from '../util/util';
 
@@ -268,7 +268,7 @@ function shapeText(
 
     let lines: Array<TaggedString>;
 
-    const {processBidirectionalText, processStyledBidirectionalText} = rtlTextPlugin;
+    const {processBidirectionalText, processStyledBidirectionalText} = rtlWorkerPlugin;
     if (processBidirectionalText && logicalInput.sections.length === 1) {
         // Bidi doesn't have to be style-aware
         lines = [];

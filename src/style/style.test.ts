@@ -6,11 +6,7 @@ import {extend} from '../util/util';
 import {RequestManager} from '../util/request_manager';
 import {Event, Evented} from '../util/evented';
 import {RGBAImage} from '../util/image';
-import {
-    setRTLTextPlugin,
-    clearRTLTextPlugin,
-    evented as rtlTextPluginEvented
-} from '../source/rtl_text_plugin';
+import {rtlMainThreadPlugin} from '../source/rtl_plugin_main_thread';
 import {browser} from '../util/browser';
 import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
@@ -95,14 +91,14 @@ afterEach(() => {
 
 describe('Style', () => {
     test('registers plugin state change listener', () => {
-        clearRTLTextPlugin();
+        rtlMainThreadPlugin.clearRTLTextPlugin();
 
-        jest.spyOn(Style, 'registerForPluginStateChange');
+        jest.spyOn(rtlMainThreadPlugin, 'registerForPluginStateChange');
         const style = new Style(getStubMap());
         const mockStyleDispatcherBroadcast = jest.spyOn(style.dispatcher, 'broadcast');
-        expect(Style.registerForPluginStateChange).toHaveBeenCalledTimes(1);
+        expect(rtlMainThreadPlugin.registerForPluginStateChange).toHaveBeenCalledTimes(1);
 
-        setRTLTextPlugin('/plugin.js', undefined);
+        rtlMainThreadPlugin.setRTLTextPlugin('/plugin.js', undefined);
         expect(mockStyleDispatcherBroadcast.mock.calls[0][0]).toBe('syncRTLPluginState');
         expect(mockStyleDispatcherBroadcast.mock.calls[0][1]).toEqual({
             pluginStatus: 'deferred',
@@ -111,9 +107,9 @@ describe('Style', () => {
     });
 
     test('loads plugin immediately if already registered', done => {
-        clearRTLTextPlugin();
+        rtlMainThreadPlugin.clearRTLTextPlugin();
         server.respondWith('/plugin.js', 'doesn\'t matter');
-        setRTLTextPlugin('/plugin.js', (error) => {
+        rtlMainThreadPlugin.setRTLTextPlugin('/plugin.js', (error) => {
             expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
             done();
         });
@@ -148,7 +144,7 @@ describe('Style', () => {
             jest.spyOn(style.sourceCaches['raster'], 'reload');
             jest.spyOn(style.sourceCaches['vector'], 'reload');
 
-            clearRTLTextPlugin();
+            rtlMainThreadPlugin.clearRTLTextPlugin();
             server.respondWith('/plugin.js', 'doesn\'t matter');
             const _broadcast = style.dispatcher.broadcast;
             style.dispatcher.broadcast = function (type, state, callback) {
@@ -159,10 +155,10 @@ describe('Style', () => {
                     _broadcast(type, state, callback);
                 }
             };
-            setRTLTextPlugin('/plugin.js', (error) => {
+            rtlMainThreadPlugin.setRTLTextPlugin('/plugin.js', (error) => {
                 expect(error).toBeUndefined();
                 setTimeout(() => {
-                    clearRTLTextPlugin();
+                    rtlMainThreadPlugin.clearRTLTextPlugin();
                     expect(style.sourceCaches['raster'].reload).not.toHaveBeenCalled();
                     expect(style.sourceCaches['vector'].reload).toHaveBeenCalled();
                     done();
@@ -651,7 +647,7 @@ describe('Style#_remove', () => {
         style.on('style.load', () => {
             style._remove();
 
-            rtlTextPluginEvented.fire(new Event('pluginStateChange'));
+            rtlMainThreadPlugin.fire(new Event('pluginStateChange'));
             expect(mockStyleDispatcherBroadcast).not.toHaveBeenCalledWith('syncRTLPluginState');
             done();
         });

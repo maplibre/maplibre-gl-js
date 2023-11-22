@@ -20,11 +20,7 @@ import {SourceCache} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, operations as diffOperations} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
-import {
-    registerForPluginStateChange,
-    evented as rtlTextPluginEvented,
-    triggerPluginCompletionEvent
-} from '../source/rtl_text_plugin';
+import {rtlMainThreadPlugin} from '../source/rtl_plugin_main_thread';
 import {PauseablePlacement} from './pauseable_placement';
 import {ZoomHistory} from './zoom_history';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
@@ -236,8 +232,6 @@ export class Style extends Evented {
     placement: Placement;
     z: number;
 
-    static registerForPluginStateChange: typeof registerForPluginStateChange;
-
     constructor(map: Map, options: StyleOptions = {}) {
         super();
 
@@ -263,13 +257,13 @@ export class Style extends Evented {
         this.dispatcher.broadcast('setReferrer', getReferrer());
 
         const self = this;
-        this._rtlTextPluginCallback = Style.registerForPluginStateChange((event) => {
+        this._rtlTextPluginCallback = rtlMainThreadPlugin.registerForPluginStateChange((event) => {
             const state = {
                 pluginStatus: event.pluginStatus,
                 pluginURL: event.pluginURL
             };
             self.dispatcher.broadcast('syncRTLPluginState', state, (err, results) => {
-                triggerPluginCompletionEvent(err);
+                rtlMainThreadPlugin.triggerPluginCompletionEvent(err);
                 if (results) {
                     const allComplete = results.every((elem) => elem);
                     if (allComplete) {
@@ -1469,7 +1463,7 @@ export class Style extends Evented {
             this._spriteRequest.cancel();
             this._spriteRequest = null;
         }
-        rtlTextPluginEvented.off('pluginStateChange', this._rtlTextPluginCallback);
+        rtlMainThreadPlugin.off('pluginStateChange', this._rtlTextPluginCallback);
         for (const layerId in this._layers) {
             const layer: StyleLayer = this._layers[layerId];
             layer.setEventedParent(null);
@@ -1741,5 +1735,3 @@ export class Style extends Evented {
         }
     }
 }
-
-Style.registerForPluginStateChange = registerForPluginStateChange;
