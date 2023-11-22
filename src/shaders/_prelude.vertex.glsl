@@ -158,7 +158,7 @@ uniform mat4 u_projection_matrix;
 uniform vec4 u_projection_tile_mercator_coords;
 uniform vec4 u_projection_clipping_plane;
 
-// get position inside the tile in range 0..8191 and project it onto the surface of a unit sphere
+// get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere
 vec4 projectTile(vec2 posInTile) {
     // JP: TODO: there could very well be a more efficient way to compute this if we take a deeper look at the geometric idea behind mercator
 
