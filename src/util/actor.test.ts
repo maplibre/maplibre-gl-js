@@ -64,7 +64,7 @@ describe('Actor', () => {
         expect(received).toBeFalsy();
     });
 
-    test('abort a request of will abort it', async () => {
+    test('aborting a request will successfully abort it', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         let gotAbortSignal = false;
         worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', (_mapId, _params, handlerAbortController) => {
