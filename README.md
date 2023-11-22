@@ -49,42 +49,6 @@ Check out the features through [examples](https://maplibre.org/maplibre-gl-js/do
 
 <br />
 
-## Migrating from mapbox-gl to maplibre
-The libraries are very similar but diverge with newer features happening from v2 in both libraries where Mapbox turned proprietary.
-
-The overall migration happens by uninstalling `mapbox-gl` and installing `maplibre-gl` in your node packages (or see below for CDN links), and replacing `mapboxgl` with `maplibregl` throughout your TypeScript, JavaScript and HTML/CSS.
-
-```diff
--    var map = new mapboxgl.Map({
-+    var map = new maplibregl.Map({
-
--    <button class="mapboxgl-ctrl">
-+    <button class="maplibregl-ctrl">
-```
-
-#### Compatibility branch
-
-MapLibre GL JS v1 is completely backward compatible with Mapbox GL JS v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. 
-
-#### CDN Links
-
-> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more information, please see [MapLibre GL JS is on unpkg.com](./developer-guides/README-unpkg.md).
-
-```diff
--    <script src="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.js"></script>
--    <link
--      href="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.css"
--      rel="stylesheet"
--    />
-
-     
-+    <script src="https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.js"></script>
-+    <link
-+      href="https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.css"
-+      rel="stylesheet"
-+    />
-
-```
 
 Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
