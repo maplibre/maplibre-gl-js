@@ -83,6 +83,11 @@ function checkEdgeDivide(e0x: number, e0y: number, e1x: number, e1y: number, div
     return Math.round(divideY);
 }
 
+// Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
+// First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
+const NORTH_POLE_XY = -32768;
+const SOUTH_POLE_XY = 32767;
+
 class Subdivider {
     /**
      * Flattened vertex positions (xyxyxy).
@@ -370,6 +375,216 @@ class Subdivider {
         return finalLineIndices;
     }
 
+    private ensureNoPoleVertices() {
+        const flattened = this._finalVertices;
+
+        // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
+        // First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
+        const northXY = -32768;
+        const southXY = 32767;
+
+        for (let i = 0; i < flattened.length; i += 2) {
+            const vx = flattened[i];
+            const vy = flattened[i + 1];
+            if (vx === northXY && vy === northXY) {
+                // Move slightly down
+                flattened[i + 1] = northXY + 1;
+            }
+            if (vx === southXY && vy === southXY) {
+                // Move slightly down
+                flattened[i + 1] = southXY - 1;
+            }
+        }
+    }
+
+    /**
+     * Detects edges that border the north or south tile edge
+     * and adds triangles that extend those edges to the poles.
+     * Only run this function on tiles that border the poles.
+     * Assumes that supplied geometry is clipped to the inclusive range of 0..EXTENT.
+     * Mutates the supplies vertex and index arrays.
+     * @param indices - Triangle indices. This array is appended with new primitives.
+     * @param north - Whether to generate geometry for the north pole.
+     * @param south - Whether to generate geometry for the south pole.
+     */
+    private fillPoles(indices: Array<number>, north: boolean, south: boolean): void {
+        const flattened = this._finalVertices;
+
+        const northEdge = 0;
+        const southEdge = EXTENT;
+
+        const numIndices = indices.length;
+        for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
+            const i0 = indices[primitiveIndex - 2];
+            const i1 = indices[primitiveIndex - 1];
+            const i2 = indices[primitiveIndex];
+            const v0y = flattened[i0 * 2 + 1];
+            const v1y = flattened[i1 * 2 + 1];
+            const v2y = flattened[i2 * 2 + 1];
+
+            if (north) {
+                if (v0y === northEdge && v1y === northEdge) {
+                    indices.push(i0);
+                    indices.push(i1);
+                    indices.push(this.getVertexIndex(NORTH_POLE_XY, NORTH_POLE_XY));
+                }
+                if (v1y === northEdge && v2y === northEdge) {
+                    indices.push(i1);
+                    indices.push(i2);
+                    indices.push(this.getVertexIndex(NORTH_POLE_XY, NORTH_POLE_XY));
+                }
+                if (v2y === northEdge && v0y === northEdge) {
+                    indices.push(i2);
+                    indices.push(i0);
+                    indices.push(this.getVertexIndex(NORTH_POLE_XY, NORTH_POLE_XY));
+                }
+            }
+            if (south) {
+                if (v0y === southEdge && v1y === southEdge) {
+                    indices.push(i0);
+                    indices.push(i1);
+                    indices.push(this.getVertexIndex(SOUTH_POLE_XY, SOUTH_POLE_XY));
+                }
+                if (v1y === southEdge && v2y === southEdge) {
+                    indices.push(i1);
+                    indices.push(i2);
+                    indices.push(this.getVertexIndex(SOUTH_POLE_XY, SOUTH_POLE_XY));
+                }
+                if (v2y === southEdge && v0y === southEdge) {
+                    indices.push(i2);
+                    indices.push(i0);
+                    indices.push(this.getVertexIndex(SOUTH_POLE_XY, SOUTH_POLE_XY));
+                }
+            }
+        }
+    }
+
+    /**
+     * Fixes axis-aligned T-joints in a triangle mesh. Appends new triangles to the supplied index array.
+     * A T-joint is when three triangles meet in such a way that their edges form a "T" shape:
+     * ```
+     *         C
+     *        / \
+     *      /     \
+     *    /         \
+     *  /    tri1     \
+     * A-------T-------B
+     *  \      |      /
+     *   \tri2 | tri3/
+     *    \    |    /
+     *     \   |   /
+     *      \  |  /
+     *       \ | /
+     *        \|/
+     *         D
+     * ```
+     * When a nontrivial projection is applied to such geometry, the vertex T might be projected
+     * slightly (one pixel) off the line formed by vertices A and B, producing a visible gap at this line.
+     * In other words, the line A-B does not match the lines A-T and T-B pixel-perfectly.
+     * The solution is to add an additional triangle A-T-B that will fill this gap,
+     * or to break up triangle 1 into triangles A-T-C and T-B-C, thus breaking up the line A-B.
+     * This function does the former.
+     * This function assumes that all axis-aligned "linear" triangles (when eg. the x coordinate of all vertices is the same) were removed first.
+     * @param indices - Triangle indices. This array is appended with new primitives.
+     */
+    private fixTjoints(indices: Array<number>): void {
+        const flattened = this._finalVertices;
+
+        const indicesByXthenY = indices.toSorted((a, b) => {
+            const ax = flattened[a * 2 + 0];
+            const ay = flattened[a * 2 + 1];
+            const bx = flattened[b * 2 + 0];
+            const by = flattened[b * 2 + 1];
+            if (ax === bx) {
+                return ay - by;
+            }
+            return ax - bx;
+        });
+        const indicesByYthenX = indices.toSorted((a, b) => {
+            const ax = flattened[a * 2 + 0];
+            const ay = flattened[a * 2 + 1];
+            const bx = flattened[b * 2 + 0];
+            const by = flattened[b * 2 + 1];
+            if (ay === by) {
+                return ax - bx;
+            }
+            return ay - by;
+        });
+
+        // map of "vertex index" -> "index of this vertex in indicesByXthenY"
+        const dictionaryByXthenY = {};
+        for (let i = 0; i < indicesByXthenY.length; i++) {
+            const index = indicesByXthenY[i];
+            dictionaryByXthenY[index.toString(36)] = i;
+        }
+        const dictionaryByYthenX = {};
+        for (let i = 0; i < indicesByYthenX.length; i++) {
+            const index = indicesByYthenX[i];
+            dictionaryByYthenX[index.toString(36)] = i;
+        }
+
+        // We assume that all "linear" triangles were removed first.
+        // Cases for T-joints in X axis (dashes are edges, letters are vertices):
+        //
+        // A------C----D--B
+        // A--------------B         <- T-joint detected (A-CD-B)
+        //
+        // A---------C------------D <- T-joint detected (C-B-D)
+        // A--------------B         <- T-joint detected (A-C-B)
+        //
+        // A---C----D---------E     <- T-joint detected (D-B-E)
+        // A--------------B         <- T-joint detected (A-CD-B)
+
+        const numIndices = indices.length;
+
+        function tryFixEdge(i0: number, i1: number, dict: {[_: string] : number}, orderedIndices: Array<number>) {
+            const orderedIndex0 = dict[i0.toString(36)];
+            const orderedIndex1 = dict[i1.toString(36)];
+
+            const orderedMin = Math.min(orderedIndex0, orderedIndex1);
+            const orderedMax = Math.max(orderedIndex0, orderedIndex1);
+
+            // If there is no vertex between 0 and 1, zero iterations are done
+            for (let i = orderedMin + 1; i < orderedMax; i++) {
+                indices.push(orderedIndices[orderedMax]);
+                indices.push(orderedIndices[i - 1]);
+                indices.push(orderedIndices[i]);
+            }
+        }
+
+        for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
+            const i0 = indices[primitiveIndex - 2];
+            const i1 = indices[primitiveIndex - 1];
+            const i2 = indices[primitiveIndex];
+            const v0x = flattened[i0 * 2];
+            const v0y = flattened[i0 * 2 + 1];
+            const v1x = flattened[i1 * 2];
+            const v1y = flattened[i1 * 2 + 1];
+            const v2x = flattened[i2 * 2];
+            const v2y = flattened[i2 * 2 + 1];
+
+            // for each triangle edge
+            if (v0x === v1x) {
+                tryFixEdge(i0, i1, dictionaryByXthenY, indicesByXthenY);
+            }
+            if (v1x === v2x) {
+                tryFixEdge(i1, i2, dictionaryByXthenY, indicesByXthenY);
+            }
+            if (v2x === v0x) {
+                tryFixEdge(i2, i0, dictionaryByXthenY, indicesByXthenY);
+            }
+            if (v0y === v1y) {
+                tryFixEdge(i0, i1, dictionaryByYthenX, indicesByYthenX);
+            }
+            if (v1y === v2y) {
+                tryFixEdge(i1, i2, dictionaryByYthenX, indicesByYthenX);
+            }
+            if (v2y === v0y) {
+                tryFixEdge(i2, i0, dictionaryByYthenX, indicesByYthenX);
+            }
+        }
+    }
+
     /**
      * Subdivides an input mesh. Imagine a regular square grid with the target granuality overlaid over the mesh - this is the subdivision's result.
      * Assumes a mesh of tile features - vertex coordinates are integers, visible range where subdivision happens is 0..8191.
@@ -378,7 +593,7 @@ class Subdivider {
      * @param granuality - Target granuality. If less or equal to 1, the input buffers are returned without modification.
      * @returns Vertex and index buffers with subdivision applied.
      */
-    public subdivide(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>): SubdivisionResult {
+    public subdivide(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, canonical: CanonicalTileID): SubdivisionResult {
         if (this._vertexDictionary) {
             console.error('Subdivider: multiple use not allowed.');
             return undefined;
@@ -401,6 +616,25 @@ class Subdivider {
             subdividedLines.push(this.subdivideLines(lines));
         }
 
+        this.fixTjoints(subdividedTriangles);
+        this.ensureNoPoleVertices();
+
+        let north = false;
+        let south = false;
+
+        if (canonical) {
+            if (canonical.y === 0) {
+                north = true;
+            }
+            if (canonical.y === (1 << canonical.z) - 1) {
+                south = true;
+            }
+        }
+
+        if (north || south) {
+            this.fillPoles(subdividedTriangles, north, south);
+        }
+
         return {
             verticesFlattened: this._finalVertices,
             indicesTriangles: subdividedTriangles,
@@ -412,26 +646,7 @@ class Subdivider {
 export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, canonical: CanonicalTileID, granuality: number): SubdivisionResult {
     // JP: TODO: handle 16bit indices overflow!
     const subdivider = new Subdivider(granuality);
-    const result = subdivider.subdivide(vertices, triangleIndices, lineIndices);
-    fixTjoints(result.verticesFlattened, result.indicesTriangles);
-
-    let north = false;
-    let south = false;
-
-    if (canonical) {
-        if (canonical.y === 0) {
-            north = true;
-        }
-        if (canonical.y === (1 << canonical.z) - 1) {
-            south = true;
-        }
-    }
-
-    if (north || south) {
-        fillPoles(result.verticesFlattened, result.indicesTriangles, north, south);
-    }
-
-    return result;
+    return subdivider.subdivide(vertices, triangleIndices, lineIndices, canonical);
 }
 
 /**
@@ -628,131 +843,6 @@ export function subdivideSimple(vertices: Array<number>, indices: Array<number>,
     };
 }
 
-/**
- * Fixes axis-aligned T-joints in a triangle mesh. Appends new triangles to the supplied index array.
- * A T-joint is when three triangles meet in such a way that their edges form a "T" shape:
- * ```
- *         C
- *        / \
- *      /     \
- *    /         \
- *  /    tri1     \
- * A-------T-------B
- *  \      |      /
- *   \tri2 | tri3/
- *    \    |    /
- *     \   |   /
- *      \  |  /
- *       \ | /
- *        \|/
- *         D
- * ```
- * When a nontrivial projection is applied to such geometry, the vertex T might be projected
- * slightly (one pixel) off the line formed by vertices A and B, producing a visible gap at this line.
- * In other words, the line A-B does not match the lines A-T and T-B pixel-perfectly.
- * The solution is to add an additional triangle A-T-B that will fill this gap,
- * or to break up triangle 1 into triangles A-T-C and T-B-C, thus breaking up the line A-B.
- * This function does the former.
- * This function assumes that all axis-aligned "linear" triangles (when eg. the x coordinate of all vertices is the same) were removed first.
- * @param flattened - Flattened vertex coordinates, xyxyxy.
- * @param indices - Triangle indices. This array is appended with new primitives.
- */
-function fixTjoints(flattened: Array<number>, indices: Array<number>): void {
-    const indicesByXthenY = indices.toSorted((a, b) => {
-        const ax = flattened[a * 2 + 0];
-        const ay = flattened[a * 2 + 1];
-        const bx = flattened[b * 2 + 0];
-        const by = flattened[b * 2 + 1];
-        if (ax === bx) {
-            return ay - by;
-        }
-        return ax - bx;
-    });
-    const indicesByYthenX = indices.toSorted((a, b) => {
-        const ax = flattened[a * 2 + 0];
-        const ay = flattened[a * 2 + 1];
-        const bx = flattened[b * 2 + 0];
-        const by = flattened[b * 2 + 1];
-        if (ay === by) {
-            return ax - bx;
-        }
-        return ay - by;
-    });
-
-    // map of "vertex index" -> "index of this vertex in indicesByXthenY"
-    const dictionaryByXthenY = {};
-    for (let i = 0; i < indicesByXthenY.length; i++) {
-        const index = indicesByXthenY[i];
-        dictionaryByXthenY[index.toString(36)] = i;
-    }
-    const dictionaryByYthenX = {};
-    for (let i = 0; i < indicesByYthenX.length; i++) {
-        const index = indicesByYthenX[i];
-        dictionaryByYthenX[index.toString(36)] = i;
-    }
-
-    // We assume that all "linear" triangles were removed first.
-    // Cases for T-joints in X axis (dashes are edges, letters are vertices):
-    //
-    // A------C----D--B
-    // A--------------B         <- T-joint detected (A-CD-B)
-    //
-    // A---------C------------D <- T-joint detected (C-B-D)
-    // A--------------B         <- T-joint detected (A-C-B)
-    //
-    // A---C----D---------E     <- T-joint detected (D-B-E)
-    // A--------------B         <- T-joint detected (A-CD-B)
-
-    const numIndices = indices.length;
-
-    function tryFixEdge(i0: number, i1: number, dict: {[_: string] : number}, orderedIndices: Array<number>) {
-        const orderedIndex0 = dict[i0.toString(36)];
-        const orderedIndex1 = dict[i1.toString(36)];
-
-        const orderedMin = Math.min(orderedIndex0, orderedIndex1);
-        const orderedMax = Math.max(orderedIndex0, orderedIndex1);
-
-        // If there is no vertex between 0 and 1, zero iterations are done
-        for (let i = orderedMin + 1; i < orderedMax; i++) {
-            indices.push(orderedIndices[orderedMax]);
-            indices.push(orderedIndices[i - 1]);
-            indices.push(orderedIndices[i]);
-        }
-    }
-
-    for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
-        const i0 = indices[primitiveIndex - 2];
-        const i1 = indices[primitiveIndex - 1];
-        const i2 = indices[primitiveIndex];
-        const v0x = flattened[i0 * 2];
-        const v0y = flattened[i0 * 2 + 1];
-        const v1x = flattened[i1 * 2];
-        const v1y = flattened[i1 * 2 + 1];
-        const v2x = flattened[i2 * 2];
-        const v2y = flattened[i2 * 2 + 1];
-
-        // for each triangle edge
-        if (v0x === v1x) {
-            tryFixEdge(i0, i1, dictionaryByXthenY, indicesByXthenY);
-        }
-        if (v1x === v2x) {
-            tryFixEdge(i1, i2, dictionaryByXthenY, indicesByXthenY);
-        }
-        if (v2x === v0x) {
-            tryFixEdge(i2, i0, dictionaryByXthenY, indicesByXthenY);
-        }
-        if (v0y === v1y) {
-            tryFixEdge(i0, i1, dictionaryByYthenX, indicesByYthenX);
-        }
-        if (v1y === v2y) {
-            tryFixEdge(i1, i2, dictionaryByYthenX, indicesByYthenX);
-        }
-        if (v2y === v0y) {
-            tryFixEdge(i2, i0, dictionaryByYthenX, indicesByYthenX);
-        }
-    }
-}
-
 export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
     const lineIndices = [];
 
@@ -773,102 +863,46 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
 }
 
 /**
- * Detects edges that border the north or south tile edge
- * and adds triangles that extend those edges to the poles.
- * Only run this function on tiles that border the poles.
- * Assumes that supplied geometry is clipped to the inclusive range of 0..EXTENT.
- * Mutates the supplies vertex and index arrays.
+ * Detects any polygons whose edge lies right at the left/right edge of the tile, and "expands" those polygons beyond the tile edge.
+ * This function mainly fixes a thin hole artifact seen around New Zealand, where the mercator tiles wrap around on the X axis.
+ * Some tile sources do not have proper border polygons for this edge, this fuction is used to address that.
+ * The north/south mercator edge does not have this problem, because the geometry there doesn't need to wrap around seamlessly,
+ * and fixed anyway by the pole polygons introduced elsewhere during subdivision.
+ * This function mutates the supplied vertex and index buffers.
+ * This function should be called before fixing T-joints.
  * @param flattened - Flattened vertex coordinates, xyxyxy. This array is appended with new vertices.
  * @param indices - Triangle indices. This array is appended with new primitives.
- * @param north - Whether to generate geometry for the north pole.
- * @param south - Whether to generate geometry for the south pole.
+ * @param left - Whether to add border at the left (west) edge of the tile.
+ * @param right  - Whether to add border at the right (east) edge of the tile.
  */
-function fillPoles(flattened: Array<number>, indices: Array<number>, north: boolean, south: boolean): void {
-    // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
-    // First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
-    const northXY = -32768;
-    const southXY = 32767;
-
-    const northEdge = 0;
-    const southEdge = EXTENT;
-
-    for (let i = 0; i < flattened.length; i += 2) {
-        const vx = flattened[i];
-        const vy = flattened[i + 1];
-        if (north && vx === northXY && vy === northXY) {
-            // Move slightly down
-            flattened[i + 1] = northXY + 1;
-        }
-        if (south && vx === southXY && vy === southXY) {
-            // Move slightly down
-            flattened[i + 1] = southXY - 1;
-        }
-    }
-
-    let vertexNorthPole: number | null = null;
-    let vertexSouthPole: number | null = null;
-
-    function getNorthPole() {
-        if (vertexNorthPole) {
-            return vertexNorthPole;
-        }
-        vertexNorthPole = flattened.length / 2;
-        flattened.push(northXY);
-        flattened.push(northXY);
-        return vertexNorthPole;
-    }
-    function getSouthPole() {
-        if (vertexSouthPole) {
-            return vertexSouthPole;
-        }
-        vertexSouthPole = flattened.length / 2;
-        flattened.push(southXY);
-        flattened.push(southXY);
-        return vertexSouthPole;
-    }
+function addPlaneEdgeBorders(flattened: Array<number>, indices: Array<number>, left: boolean, right: boolean): void {
+    const vertexDictionary = {};
 
     const numIndices = indices.length;
     for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
         const i0 = indices[primitiveIndex - 2];
         const i1 = indices[primitiveIndex - 1];
         const i2 = indices[primitiveIndex];
+        const v0x = flattened[i0 * 2 + 0];
         const v0y = flattened[i0 * 2 + 1];
+        const v1x = flattened[i1 * 2 + 0];
         const v1y = flattened[i1 * 2 + 1];
+        const v2x = flattened[i2 * 2 + 0];
         const v2y = flattened[i2 * 2 + 1];
 
-        if (north) {
-            if (v0y === northEdge && v1y === northEdge) {
-                indices.push(i0);
-                indices.push(i1);
-                indices.push(getNorthPole());
+        if (left) {
+            let upperY: number;
+            let lowerY: number;
+            let upperIndex: number;
+            let lowerIndex: number;
+
+            if (v0x === 0 && v1x === 0) {
+                upperY = Math.min(v0y, v1y);
+                lowerY = Math.max(v0y, v1y);
+                upperIndex = (upperY === v0y) ? i0 : i1;
+                lowerIndex = (upperY === v0y) ? i1 : i0;
             }
-            if (v1y === northEdge && v2y === northEdge) {
-                indices.push(i1);
-                indices.push(i2);
-                indices.push(getNorthPole());
-            }
-            if (v2y === northEdge && v0y === northEdge) {
-                indices.push(i2);
-                indices.push(i0);
-                indices.push(getNorthPole());
-            }
-        }
-        if (south) {
-            if (v0y === southEdge && v1y === southEdge) {
-                indices.push(i0);
-                indices.push(i1);
-                indices.push(getSouthPole());
-            }
-            if (v1y === southEdge && v2y === southEdge) {
-                indices.push(i1);
-                indices.push(i2);
-                indices.push(getSouthPole());
-            }
-            if (v2y === southEdge && v0y === southEdge) {
-                indices.push(i2);
-                indices.push(i0);
-                indices.push(getSouthPole());
-            }
+
         }
     }
 }
