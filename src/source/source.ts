@@ -12,7 +12,6 @@ import type {Event, Evented} from '../util/evented';
 import type {Map} from '../ui/map';
 import type {Tile} from './tile';
 import type {OverscaledTileID, CanonicalTileID} from './tile_id';
-import type {Callback} from '../types/callback';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
 
 const registeredSources = {} as {[key:string]: SourceClass};
@@ -33,9 +32,21 @@ export interface Source {
      * The id for the source. Must not be used by any existing source.
      */
     id: string;
+    /**
+     * The minimum zoom level for the source.
+     */
     minzoom: number;
+    /**
+     * The maximum zoom level for the source.
+     */
     maxzoom: number;
+    /**
+     * The tile size for the source.
+     */
     tileSize: number;
+    /**
+     * The attribution for the source.
+     */
     attribution?: string;
     /**
      * `true` if zoom levels are rounded to the nearest integer in the source data, `false` if they are floor-ed to the nearest integer.
@@ -51,22 +62,60 @@ export interface Source {
      */
     reparseOverscaled?: boolean;
     vectorLayerIds?: Array<string>;
+    /**
+     * True if the source has transiotion, false otherwise.
+     */
     hasTransition(): boolean;
+    /**
+     * True if the source is loaded, false otherwise.
+     */
     loaded(): boolean;
+    /**
+     * An ability to fire an event to all the listeners, see {@link Evented}
+     * @param event - The event to fire
+     */
     fire(event: Event): unknown;
-    readonly onAdd?: (map: Map) => void;
-    readonly onRemove?: (map: Map) => void;
-    loadTile(tile: Tile, callback: Callback<void>): void;
-    readonly hasTile?: (tileID: OverscaledTileID) => boolean;
-    readonly abortTile?: (tile: Tile, callback: Callback<void>) => void;
-    readonly unloadTile?: (tile: Tile, callback: Callback<void>) => void;
+    /**
+     * This method is called when the source is added to the map.
+     * @param map - The map instance
+     */
+    onAdd?(map: Map): void;
+    /**
+     * This method is called when the source is removed from the map.
+     * @param map - The map instance
+     */
+    onRemove?(map: Map): void;
+    /**
+     * This method does the heavy lifting of loading a tile.
+     * In most cases it will defer the work to the relevant worker source.
+     * @param tile - The tile to load
+     */
+    loadTile(tile: Tile): Promise<void>;
+    /**
+     * True is the tile is part of the source, false otherwise.
+     * @param tileID - The tile ID
+     */
+    hasTile?(tileID: OverscaledTileID): boolean;
+    /**
+     * Allows to abort a tile loading.
+     * @param tile - The tile to abort
+     */
+    abortTile?(tile: Tile): Promise<void>;
+    /**
+     * Allows to unload a tile.
+     * @param tile - The tile to unload
+     */
+    unloadTile?(tile: Tile): Promise<void>;
     /**
      * @returns A plain (stringifiable) JS object representing the current state of the source.
      * Creating a source using the returned object as the `options` should result in a Source that is
      * equivalent to this one.
      */
     serialize(): any;
-    readonly prepare?: () => void;
+    /**
+     * Allows to execute a prepare step before the source is used.
+     */
+    prepare?(): void;
 }
 
 /**

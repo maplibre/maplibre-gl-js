@@ -97,14 +97,12 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * can correctly serve up tiles.
      *
      * Defers to {@link GeoJSONWorkerSource#loadGeoJSON} for the fetching/parsing,
-     * expecting `callback(error, data)` to be called with either an error or a
-     * parsed GeoJSON object.
      *
      * When a `loadData` request comes in while a previous one is being processed,
      * the previous one is aborted.
      *
      * @param params - the parameters
-     * @returns a promise that resolves when the data is loaded
+     * @returns a promise that resolves when the data is loaded and parsed into a GeoJSON object
      */
     async loadData(params: LoadGeoJSONParameters): Promise<GeoJSONWorkerSourceLoadDataResult> {
         this._pendingRequest?.abort();
@@ -176,8 +174,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     /**
-     * Fetch and parse GeoJSON according to the given params.  Calls `callback`
-     * with `(err, data)`, where `data` is a parsed GeoJSON object.
+     * Fetch and parse GeoJSON according to the given params.
      *
      * GeoJSON is loaded and parsed from `params.url` if it exists, or else
      * expected as a literal (string or object) `params.data`.

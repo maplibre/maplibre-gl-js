@@ -97,9 +97,9 @@ describe('Worker register RTLTextPlugin', () => {
         };
 
         _self.registerRTLTextPlugin(rtlTextPlugin);
-        expect(globalRTLTextPlugin['applyArabicShaping']).toBe('test');
-        expect(globalRTLTextPlugin['processBidirectionalText']).toBe('test');
-        expect(globalRTLTextPlugin['processStyledBidirectionalText']).toBe('test');
+        expect(globalRTLTextPlugin.applyArabicShaping).toBe('test');
+        expect(globalRTLTextPlugin.processBidirectionalText).toBe('test');
+        expect(globalRTLTextPlugin.processStyledBidirectionalText).toBe('test');
     });
 
     test('should throw if already parsed', () => {

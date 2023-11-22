@@ -127,14 +127,15 @@ export class ImageSource extends Evented implements Source {
         this.options = options;
     }
 
-    load = (newCoordinates?: Coordinates, successCallback?: () => void) => {
+    async load(newCoordinates?: Coordinates): Promise<void> {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
 
         this.url = this.options.url;
 
         this._request = new AbortController();
-        ImageRequest.getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), this._request).then((image) => {
+        try {
+            const image = await ImageRequest.getImage(this.map._requestManager.transformRequest(this.url, ResourceType.Image), this._request);
             this._request = null;
             this._loaded = true;
 
@@ -143,16 +144,13 @@ export class ImageSource extends Evented implements Source {
                 if (newCoordinates) {
                     this.coordinates = newCoordinates;
                 }
-                if (successCallback) {
-                    successCallback();
-                }
                 this._finishLoading();
             }
-        }).catch((err) => {
+        } catch (err) {
             this._request = null;
             this.fire(new ErrorEvent(err));
-        });
-    };
+        }
+    }
 
     loaded(): boolean {
         return this._loaded;
@@ -176,7 +174,7 @@ export class ImageSource extends Evented implements Source {
         }
 
         this.options.url = options.url;
-        this.load(options.coordinates, () => { this.texture = null; });
+        this.load(options.coordinates).finally(() => { this.texture = null; });
         return this;
     }
 
@@ -246,7 +244,7 @@ export class ImageSource extends Evented implements Source {
         return this;
     }
 
-    prepare = () => {
+    prepare() {
         if (Object.keys(this.tiles).length === 0 || !this.image) {
             return;
         }
@@ -280,9 +278,9 @@ export class ImageSource extends Evented implements Source {
         if (newTilesLoaded) {
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
-    };
+    }
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
         // We have a single tile -- whose coordinates are this.tileID -- that
         // covers the image we want to render.  If that's the one being
         // requested, set it up with the image; otherwise, mark the tile as
@@ -292,20 +290,21 @@ export class ImageSource extends Evented implements Source {
         if (this.tileID && this.tileID.equals(tile.tileID.canonical)) {
             this.tiles[String(tile.tileID.wrap)] = tile;
             tile.buckets = {};
-            callback(null);
         } else {
             tile.state = 'errored';
-            callback(null);
+        }
+        if (callback) {
+            callback();
         }
     }
 
-    serialize = (): ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification => {
+    serialize(): ImageSourceSpecification | VideoSourceSpecification | CanvasSourceSpecification {
         return {
             type: 'image',
             url: this.options.url,
             coordinates: this.coordinates
         };
-    };
+    }
 
     hasTransition() {
         return false;

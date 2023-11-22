@@ -13,7 +13,6 @@ import type {OverscaledTileID} from './tile_id';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {Callback} from '../types/callback';
 import type {
     RasterSourceSpecification,
     RasterDEMSourceSpecification
@@ -86,11 +85,12 @@ export class RasterTileSource extends Evented implements Source {
         extend(this, pick(options, ['url', 'scheme', 'tileSize']));
     }
 
-    load() {
+    async load() {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = new AbortController();
-        loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest).then((tileJSON) => {
+        try {
+            const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest);
             this._tileJSONRequest = null;
             this._loaded = true;
             if (tileJSON) {
@@ -103,10 +103,10 @@ export class RasterTileSource extends Evented implements Source {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
-        }).catch((err) => {
+        } catch (err) {
             this._tileJSONRequest = null;
             this.fire(new ErrorEvent(err));
-        });
+        }
     }
 
     loaded(): boolean {
@@ -158,15 +158,17 @@ export class RasterTileSource extends Evented implements Source {
         return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
     }
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         tile.abortController = new AbortController();
-        ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles).then((response) => {
+        try {
+            const response = await ImageRequest.getImage(this.map._requestManager.transformRequest(url, ResourceType.Tile), tile.abortController, this.map._refreshExpiredTiles);
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                callback(null);
-            } else if (response && response.data) {
+                return;
+            }
+            if (response && response.data) {
                 if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
@@ -184,34 +186,30 @@ export class RasterTileSource extends Evented implements Source {
                         gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, context.extTextureFilterAnisotropicMax);
                     }
                 }
-
                 tile.state = 'loaded';
-
-                callback(null);
             }
-        }).catch((err) => {
+        } catch (err) {
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                callback(null);
             } else if (err) {
                 tile.state = 'errored';
-                callback(err);
+                throw err;
             }
-        });
+        }
     }
 
-    abortTile(tile: Tile, callback: Callback<void>) {
+    async abortTile(tile: Tile) {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
         }
-        callback();
     }
 
-    unloadTile(tile: Tile, callback: Callback<void>) {
-        if (tile.texture) this.map.painter.saveTileTexture(tile.texture);
-        callback();
+    async unloadTile(tile: Tile) {
+        if (tile.texture) {
+            this.map.painter.saveTileTexture(tile.texture);
+        }
     }
 
     hasTransition() {

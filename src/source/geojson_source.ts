@@ -187,9 +187,9 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    load = () => {
-        this._updateWorkerData();
-    };
+    async load() {
+        await this._updateWorkerData();
+    }
 
     onAdd(map: Map) {
         this.map = map;
@@ -372,7 +372,7 @@ export class GeoJSONSource extends Evented implements Source {
         return this._pendingLoads === 0;
     }
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile): Promise<void> {
         const message = !tile.actor ? 'loadTile' : 'reloadTile';
         tile.actor = this.actor;
         const params = {
@@ -389,21 +389,16 @@ export class GeoJSONSource extends Evented implements Source {
         };
 
         tile.abortController = new AbortController();
-        this.actor.sendAsync({type: message, data: params}, tile.abortController).then((data) => {
-            delete tile.abortController;
-            tile.unloadVectorData();
+        const data = await this.actor.sendAsync({type: message, data: params}, tile.abortController);
+        delete tile.abortController;
+        tile.unloadVectorData();
 
-            if (tile.aborted) {
-                return callback(null);
-            }
-
+        if (!tile.aborted) {
             tile.loadVectorData(data, this.map.painter, message === 'reloadTile');
-
-            return callback(null);
-        }).catch((err) => callback(err));
+        }
     }
 
-    abortTile(tile: Tile) {
+    async abortTile(tile: Tile) {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
@@ -411,9 +406,9 @@ export class GeoJSONSource extends Evented implements Source {
         tile.aborted = true;
     }
 
-    unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile) {
         tile.unloadVectorData();
-        this.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
+        await this.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
     }
 
     onRemove() {
@@ -421,12 +416,12 @@ export class GeoJSONSource extends Evented implements Source {
         this.actor.sendAsync({type: 'removeSource', data: {type: this.type, source: this.id}});
     }
 
-    serialize = (): GeoJSONSourceSpecification => {
+    serialize(): GeoJSONSourceSpecification {
         return extend({}, this._options, {
             type: this.type,
             data: this._data
         });
-    };
+    }
 
     hasTransition() {
         return false;

@@ -104,7 +104,7 @@ export const downloadRTLTextPlugin = () => {
 };
 
 export const plugin: {
-    applyArabicShaping: Function;
+    applyArabicShaping: (text: string) => string;
     processBidirectionalText: ((b: string, a: Array<number>) => Array<string>);
     processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>);
     isLoaded: () => boolean;

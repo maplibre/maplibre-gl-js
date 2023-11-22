@@ -13,7 +13,6 @@ import type {DEMEncoding} from '../data/dem_data';
 import type {Source} from './source';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {Callback} from '../types/callback';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
 import {RGBAImage} from '../util/image';
@@ -53,23 +52,25 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         this.baseShift = options.baseShift;
     }
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    override async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const request = this.map._requestManager.transformRequest(url, ResourceType.Tile);
         tile.neighboringTiles = this._getNeighboringTiles(tile.tileID);
         tile.abortController = new AbortController();
-        ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles).then(async (response) => {
+        try {
+            const response = await ImageRequest.getImage(request, tile.abortController, this.map._refreshExpiredTiles);
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                callback(null);
-            } else if (response && response.data) {
+                return;
+            }
+            if (response && response.data) {
                 const img = response.data;
                 if (this.map._refreshExpiredTiles && response.cacheControl && response.expires) {
                     tile.setExpiryData({cacheControl: response.cacheControl, expires: response.expires});
                 }
                 const transfer = isImageBitmap(img) && offscreenCanvasSupported();
-                const rawImageData = transfer ? img : await readImageNow(img);
+                const rawImageData = transfer ? img : await this.readImageNow(img);
                 const params = {
                     type: this.type,
                     uid: tile.uid,
@@ -85,43 +86,36 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
                     /* eslint-disable require-atomic-updates */
-                    try {
-                        const data = await tile.actor.sendAsync({type: 'loadDEMTile', data: params});
-                        tile.dem = data;
-                        tile.needsHillshadePrepare = true;
-                        tile.needsTerrainPrepare = true;
-                        tile.state = 'loaded';
-                        callback(null);
-                    } catch (err) {
-                        tile.state = 'errored';
-                        callback(err);
-                    }
+                    const data = await tile.actor.sendAsync({type: 'loadDEMTile', data: params});
+                    tile.dem = data;
+                    tile.needsHillshadePrepare = true;
+                    tile.needsTerrainPrepare = true;
+                    tile.state = 'loaded';
                     /* eslint-enable require-atomic-updates */
                 }
             }
-        }).catch((err) => {
+        } catch (err) {
             delete tile.abortController;
             if (tile.aborted) {
                 tile.state = 'unloaded';
-                callback(null);
             } else if (err) {
                 tile.state = 'errored';
-                callback(err);
+                throw err;
             }
-        });
-
-        async function readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
-            if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
-                const width = img.width + 2;
-                const height = img.height + 2;
-                try {
-                    return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
-                } catch (e) {
-                    // fall-back to browser canvas decoding
-                }
-            }
-            return browser.getImageData(img, 1);
         }
+    }
+
+    async readImageNow(img: ImageBitmap | HTMLImageElement): Promise<RGBAImage | ImageData> {
+        if (typeof VideoFrame !== 'undefined' && isOffscreenCanvasDistorted()) {
+            const width = img.width + 2;
+            const height = img.height + 2;
+            try {
+                return new RGBAImage({width, height}, await readImageUsingVideoFrame(img, -1, -1, width, height));
+            } catch (e) {
+                // fall-back to browser canvas decoding
+            }
+        }
+        return browser.getImageData(img, 1);
     }
 
     _getNeighboringTiles(tileID: OverscaledTileID) {
@@ -154,7 +148,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
         return neighboringTiles;
     }
 
-    unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile) {
         if (tile.demTexture) this.map.painter.saveTileTexture(tile.demTexture);
         if (tile.fbo) {
             tile.fbo.destroy();
@@ -165,7 +159,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
         tile.state = 'unloaded';
         if (tile.actor) {
-            tile.actor.sendAsync({type: 'removeDEMTile', data: {type: this.type, uid: tile.uid, source: this.id}});
+            await tile.actor.sendAsync({type: 'removeDEMTile', data: {type: this.type, uid: tile.uid, source: this.id}});
         }
     }
 }

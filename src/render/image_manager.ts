@@ -18,31 +18,37 @@ type Pattern = {
     position: ImagePosition;
 };
 
-// When copied into the atlas texture, image data is padded by one pixel on each side. Icon
-// images are padded with fully transparent pixels, while pattern images are padded with a
-// copy of the image data wrapped from the opposite side. In both cases, this ensures the
-// correct behavior of GL_LINEAR texture sampling mode.
+/**
+ * When copied into the atlas texture, image data is padded by one pixel on each side. Icon
+ * images are padded with fully transparent pixels, while pattern images are padded with a
+ * copy of the image data wrapped from the opposite side. In both cases, this ensures the
+ * correct behavior of GL_LINEAR texture sampling mode.
+ */
 const padding = 1;
 
-/*
-    ImageManager does three things:
-
-        1. Tracks requests for icon images from tile workers and sends responses when the requests are fulfilled.
-        2. Builds a texture atlas for pattern images.
-        3. Rerenders renderable images once per frame
-
-    These are disparate responsibilities and should eventually be handled by different classes. When we implement
-    data-driven support for `*-pattern`, we'll likely use per-bucket pattern atlases, and that would be a good time
-    to refactor this.
+/**
+ * ImageManager does three things:
+ *
+ * 1. Tracks requests for icon images from tile workers and sends responses when the requests are fulfilled.
+ * 2. Builds a texture atlas for pattern images.
+ * 3. Rerenders renderable images once per frame
+ *
+ * These are disparate responsibilities and should eventually be handled by different classes. When we implement
+ * data-driven support for `*-pattern`, we'll likely use per-bucket pattern atlases, and that would be a good time
+ * to refactor this.
 */
 export class ImageManager extends Evented {
     images: {[_: string]: StyleImage};
     updatedImages: {[_: string]: boolean};
     callbackDispatchedThisFrame: {[_: string]: boolean};
     loaded: boolean;
+    /**
+     * This is used to track requests for images that are not yet available. When the image is loaded,
+     * the requestors will be notified.
+     */
     requestors: Array<{
         ids: Array<string>;
-        callback: (value: GetImagesResponse) => void;
+        promiseResolve: (value: GetImagesResponse) => void;
     }>;
 
     patterns: {[_: string]: Pattern};
@@ -75,8 +81,8 @@ export class ImageManager extends Evented {
         this.loaded = loaded;
 
         if (loaded) {
-            for (const {ids, callback} of this.requestors) {
-                callback(this._getImagesForIds(ids));
+            for (const {ids, promiseResolve} of this.requestors) {
+                promiseResolve(this._getImagesForIds(ids));
             }
             this.requestors = [];
         }
@@ -193,7 +199,7 @@ export class ImageManager extends Evented {
             if (this.isLoaded() || hasAllDependencies) {
                 resolve(this._getImagesForIds(ids));
             } else {
-                this.requestors.push({ids, callback: resolve});
+                this.requestors.push({ids, promiseResolve: resolve});
             }
         });
     }

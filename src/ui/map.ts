@@ -3,7 +3,7 @@ import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
 
-import {getJSON} from '../util/ajax';
+import {GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
 import type {GetImageCallback} from '../util/image_request';
 
@@ -2304,23 +2304,25 @@ export class Map extends Camera {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @param callback - Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
+     * @param callback - if not provided, this method will return a promise, otherwise use `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
      *
      * @example
      * Load an image from an external URL.
      * ```ts
-     * map.loadImage('http://placekitten.com/50/50', function(error, image) {
-     *   if (error) throw error;
-     *   // Add the loaded image to the style's sprite with the ID 'kitten'.
-     *   map.addImage('kitten', image);
-     * });
+     * const response = await map.loadImage('http://placekitten.com/50/50');
+     * // Add the loaded image to the style's sprite with the ID 'kitten'.
+     * map.addImage('kitten', response.data);
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
      */
-    loadImage(url: string, callback: GetImageCallback) {
-        ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController())
-            .then((response) => callback(null, response.data, {cacheControl: response.cacheControl, expires: response.expires}))
-            .catch(callback);
+    loadImage(url: string, callback?: GetImageCallback): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
+        if (!callback) {
+            return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
+        } else {
+            ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController())
+                .then((response) => callback(null, response.data, {cacheControl: response.cacheControl, expires: response.expires}))
+                .catch(callback);
+        }
     }
 
     /**

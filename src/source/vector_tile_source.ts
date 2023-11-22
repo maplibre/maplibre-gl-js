@@ -10,7 +10,6 @@ import type {OverscaledTileID} from './tile_id';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {Callback} from '../types/callback';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from './worker_source';
 
@@ -101,11 +100,12 @@ export class VectorTileSource extends Evented implements Source {
         this.setEventedParent(eventedParent);
     }
 
-    load = () => {
+    async load() {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         this._tileJSONRequest = new AbortController();
-        loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest).then((tileJSON) => {
+        try {
+            const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest);
             this._tileJSONRequest = null;
             this._loaded = true;
             this.map.style.sourceCaches[this.id].clearTiles();
@@ -119,11 +119,11 @@ export class VectorTileSource extends Evented implements Source {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
-        }).catch((err) => {
+        } catch (err) {
             this._tileJSONRequest = null;
             this.fire(new ErrorEvent(err));
-        });
-    };
+        }
+    }
 
     loaded(): boolean {
         return this._loaded;
@@ -184,11 +184,11 @@ export class VectorTileSource extends Evented implements Source {
         }
     }
 
-    serialize = (): VectorSourceSpecification => {
+    serialize(): VectorSourceSpecification {
         return extend({}, this._options);
-    };
+    }
 
-    async loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -208,27 +208,33 @@ export class VectorTileSource extends Evented implements Source {
             tile.actor = this.dispatcher.getActor();
             messageType = 'loadTile';
         } else if (tile.state === 'loading') {
-            tile.reloadCallback = callback;
-            return;
+            return new Promise<void>((resolve, reject) => {
+                tile.reloadPromise = {resolve, reject};
+            });
         }
         tile.abortController = new AbortController();
         try {
             const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
-            this._afterTileLoadWorkerResponse(tile, callback, null, data);
+            delete tile.abortController;
+
+            if (tile.aborted) {
+                return;
+            }
+            this._afterTileLoadWorkerResponse(tile, data);
         } catch (err) {
-            this._afterTileLoadWorkerResponse(tile, callback, err, null);
+            delete tile.abortController;
+
+            if (tile.aborted) {
+                return;
+            }
+            if (err && err.status !== 404) {
+                throw err;
+            }
+            this._afterTileLoadWorkerResponse(tile, null);
         }
     }
 
-    private _afterTileLoadWorkerResponse(tile: Tile, callback: Callback<void>, err: Error & {status: number}, data: WorkerTileResult) {
-        delete tile.abortController;
-
-        if (tile.aborted) {
-            return callback(null);
-        }
-        if (err && err.status !== 404) {
-            return callback(err);
-        }
+    private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
         if (data && data.resourceTiming) {
             tile.resourceTiming = data.resourceTiming;
         }
@@ -238,30 +244,27 @@ export class VectorTileSource extends Evented implements Source {
         }
         tile.loadVectorData(data, this.map.painter);
 
-        callback(null);
-
-        if (tile.reloadCallback) {
-            const reloadCallback = tile.reloadCallback;
-            tile.reloadCallback = null;
-            this.loadTile(tile, reloadCallback);
+        if (tile.reloadPromise) {
+            const reloadPromise = tile.reloadPromise;
+            tile.reloadPromise = null;
+            this.loadTile(tile).then(reloadPromise.resolve).catch(reloadPromise.reject);
         }
-
     }
 
-    abortTile(tile: Tile) {
+    async abortTile(tile: Tile): Promise<void> {
         if (tile.abortController) {
             tile.abortController.abort();
             delete tile.abortController;
         }
         if (tile.actor) {
-            tile.actor.sendAsync({type: 'abortTile', data: {uid: tile.uid, type: this.type, source: this.id}});
+            await tile.actor.sendAsync({type: 'abortTile', data: {uid: tile.uid, type: this.type, source: this.id}});
         }
     }
 
-    unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         if (tile.actor) {
-            tile.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
+            await tile.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
         }
     }
 

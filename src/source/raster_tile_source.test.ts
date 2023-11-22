@@ -122,7 +122,7 @@ describe('RasterTileSource', () => {
                     loadVectorData () {},
                     setExpiryData() {}
                 } as any as Tile;
-                source.loadTile(tile, () => {});
+                source.loadTile(tile);
                 expect(transformSpy).toHaveBeenCalledTimes(1);
                 expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
                 expect(transformSpy.mock.calls[0][1]).toBe('Tile');
@@ -152,7 +152,7 @@ describe('RasterTileSource', () => {
                     tileID: new OverscaledTileID(10, 0, 10, 5, 5),
                     state: 'loading'
                 } as any as Tile;
-                source.loadTile(tile, () => {
+                source.loadTile(tile).then(() => {
                     expect(imageConstructorSpy).toHaveBeenCalledTimes(1);
                     expect(tile.state).toBe('loaded');
                     done();

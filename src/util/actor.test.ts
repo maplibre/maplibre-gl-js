@@ -64,7 +64,7 @@ describe('Actor', () => {
         expect(received).toBeFalsy();
     });
 
-    test('cancel a request of a cancelable registered callback will cancel it', async () => {
+    test('aborting a request will successfully abort it', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         let gotAbortSignal = false;
         worker.worker.actor.registerMessageHandler('getClusterExpansionZoom', (_mapId, _params, handlerAbortController) => {

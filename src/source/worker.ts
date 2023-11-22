@@ -74,16 +74,16 @@ export default class Worker {
 
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: {
-            applyArabicShaping: Function;
-            processBidirectionalText: ((b: string, a: Array<number>) => Array<string>);
-            processStyledBidirectionalText?: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>);
+            applyArabicShaping: typeof globalRTLTextPlugin.applyArabicShaping;
+            processBidirectionalText: typeof globalRTLTextPlugin.processBidirectionalText;
+            processStyledBidirectionalText?: typeof globalRTLTextPlugin.processStyledBidirectionalText;
         }) => {
             if (globalRTLTextPlugin.isParsed()) {
                 throw new Error('RTL text plugin already registered.');
             }
-            globalRTLTextPlugin['applyArabicShaping'] = rtlTextPlugin.applyArabicShaping;
-            globalRTLTextPlugin['processBidirectionalText'] = rtlTextPlugin.processBidirectionalText;
-            globalRTLTextPlugin['processStyledBidirectionalText'] = rtlTextPlugin.processStyledBidirectionalText;
+            globalRTLTextPlugin.applyArabicShaping = rtlTextPlugin.applyArabicShaping;
+            globalRTLTextPlugin.processBidirectionalText = rtlTextPlugin.processBidirectionalText;
+            globalRTLTextPlugin.processStyledBidirectionalText = rtlTextPlugin.processStyledBidirectionalText;
         };
 
         this.actor.registerMessageHandler('loadDEMTile', (mapId: string, params: WorkerDEMTileParameters) => {
