@@ -1,6 +1,8 @@
 site_name: MapLibre GL JS
 site_url: https://www.maplibre.org/maplibre-gl-js/docs/
 repo_url: https://github.com/maplibre/maplibre-gl-js/
+extra_css:
+  - assets/extra.css
 theme:
   name: 'material'
   favicon: https://maplibre.org/favicon.ico
