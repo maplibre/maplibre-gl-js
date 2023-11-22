@@ -187,8 +187,8 @@ export class GeoJSONSource extends Evented implements Source {
         }
     }
 
-    load() {
-        this._updateWorkerData();
+    async load() {
+        await this._updateWorkerData();
     }
 
     onAdd(map: Map) {
