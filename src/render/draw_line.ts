@@ -66,10 +66,14 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade) :
-                gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length) :
-                    lineUniformValues(painter, tile, layer);
+        const rttCoord = isRenderingToTexture ? coord : null;
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord, rttCoord ? rttCoord.posMatrix : tile.tileID.posMatrix);
+        const pixelRatio = painter.style.map.projectionManager.getPixelScale();
+
+        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, dasharray, crossfade) :
+                gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :
+                    lineUniformValues(painter, tile, layer, pixelRatio);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);
@@ -112,9 +116,6 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             context.activeTexture.set(gl.TEXTURE0);
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
-
-        const rttCoord = isRenderingToTexture ? coord : null;
-        const projectionData = painter.style.map.projectionManager.getProjectionData(coord, rttCoord ? rttCoord.posMatrix : tile.tileID.posMatrix);
 
         program.draw(context, gl.TRIANGLES, depthMode,
             painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,

@@ -98,12 +98,13 @@ const lineUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: LineStyleLayer,
+    ratioScale: number,
 ): UniformValues<LineUniformsType> => {
     const transform = painter.transform;
 
     return {
         'u_translation': calculateTranslation(painter, tile, layer),
-        'u_ratio': 1 / pixelsToTileUnits(tile, 1, transform.zoom),
+        'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, transform.zoom),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_units_to_pixels': [
             1 / transform.pixelsToGLUnits[0],
@@ -117,8 +118,9 @@ const lineGradientUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     imageHeight: number,
+    ratioScale: number,
 ): UniformValues<LineGradientUniformsType> => {
-    return extend(lineUniformValues(painter, tile, layer), {
+    return extend(lineUniformValues(painter, tile, layer, ratioScale), {
         'u_image': 0,
         'u_image_height': imageHeight,
     });
@@ -128,6 +130,7 @@ const linePatternUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: LineStyleLayer,
+    ratioScale: number,
     crossfade: CrossfadeParameters,
 ): UniformValues<LinePatternUniformsType> => {
     const transform = painter.transform;
@@ -136,7 +139,7 @@ const linePatternUniformValues = (
         'u_translation': calculateTranslation(painter, tile, layer),
         'u_texsize': tile.imageAtlasTexture.size,
         // camera zoom ratio
-        'u_ratio': 1 / pixelsToTileUnits(tile, 1, transform.zoom),
+        'u_ratio': ratioScale / pixelsToTileUnits(tile, 1, transform.zoom),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_image': 0,
         'u_scale': [tileZoomRatio, crossfade.fromScale, crossfade.toScale],
@@ -152,6 +155,7 @@ const lineSDFUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: LineStyleLayer,
+    ratioScale: number,
     dasharray: CrossFaded<Array<number>>,
     crossfade: CrossfadeParameters,
 ): UniformValues<LineSDFUniformsType> => {
@@ -167,7 +171,7 @@ const lineSDFUniformValues = (
     const widthA = posA.width * crossfade.fromScale;
     const widthB = posB.width * crossfade.toScale;
 
-    return extend(lineUniformValues(painter, tile, layer), {
+    return extend(lineUniformValues(painter, tile, layer, ratioScale), {
         'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
         'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
         'u_sdfgamma': lineAtlas.width / (Math.min(widthA, widthB) * 256 * painter.pixelRatio) / 2,

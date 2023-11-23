@@ -153,6 +153,14 @@ export class ProjectionManager {
         return data;
     }
 
+    public getPixelScale(): number {
+        if (this.map.globe) {
+            // JP: TODO: this is a magic value based on guesswork, find out how to calculate it!
+            return 2.5;
+        }
+        return 1.0;
+    }
+
     private setGlobeProjection(data: ProjectionData): void {
         data['u_projection_matrix'] = this.map.transform.globeProjMatrix;
     }
@@ -181,7 +189,7 @@ export class ProjectionManager {
     }
 
     private static getGranualityForZoomLevel(zoomLevel: number, target: number, minToom: number): number {
-        return target << Math.max(minToom - zoomLevel, 0);
+        return Math.max(target << Math.max(minToom - zoomLevel, 0), 1);
     }
 
     /**

@@ -158,6 +158,12 @@ uniform mat4 u_projection_matrix;
 uniform vec4 u_projection_tile_mercator_coords;
 uniform vec4 u_projection_clipping_plane;
 
+float projectThickness(vec2 posInTile) {
+    float mercator_pos_y = mix(u_projection_tile_mercator_coords.y, u_projection_tile_mercator_coords.w, posInTile.y / 8192.0);
+    float spherical_y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos_y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
+    return 1.0 / cos(spherical_y);
+}
+
 // get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere
 vec4 projectTile(vec2 posInTile) {
     // JP: TODO: there could very well be a more efficient way to compute this if we take a deeper look at the geometric idea behind mercator
@@ -225,6 +231,7 @@ vec4 projectTile(vec2 posInTile) {
 //     return result;
 // }
 #else
+#define projectThickness(p) (1.0)
 #define projectTile(p) (u_projection_matrix * vec4((p).x, (p).y, 0.0, 1.0))
 #define getDebugColor(p) (vec4(1.0, 0.0, 1.0, 1.0))
 #endif
