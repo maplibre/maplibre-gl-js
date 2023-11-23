@@ -8,6 +8,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     target: MessageBus;
     registerWorkerSource: any;
     registerRTLTextPlugin: any;
+    worker: any;
 
     constructor(addListeners: Array<EventListener>, postListeners: Array<EventListener>) {
         this.addListeners = addListeners;
@@ -47,16 +48,22 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     importScripts() { }
 }
 
-(global as any).Worker = function Worker(_: string) {
-    const parentListeners = [];
-    const workerListeners = [];
-    const parentBus = new MessageBus(workerListeners, parentListeners);
-    const workerBus = new MessageBus(parentListeners, workerListeners);
+export function setGlobalWorker(MockWorker: { new(...args: any): any}) {
+    (global as any).Worker = function Worker(_: string) {
+        const parentListeners = [];
+        const workerListeners = [];
+        const parentBus = new MessageBus(workerListeners, parentListeners);
+        const workerBus = new MessageBus(parentListeners, workerListeners);
 
-    parentBus.target = workerBus;
-    workerBus.target = parentBus;
+        parentBus.target = workerBus;
+        workerBus.target = parentBus;
 
-    new MapLibreWorker(workerBus);
+        const worker = new MockWorker(workerBus);
+        parentBus.worker = worker;
 
-    return parentBus;
-};
+        return parentBus;
+    };
+}
+
+setGlobalWorker(MapLibreWorker);
+

@@ -93,7 +93,7 @@ sequenceDiagram
         worker_tile->glyph manager: getImages
         glyph manager->>ajax: Fetch icon<br>images
         glyph manager-->>worker_tile: glyph/Image dependencies
-        worker_tile->>worker_tile: maybePrepare()
+        worker_tile->>worker_tile: wait for all requests to finish
         worker_tile->>worker_tile: create GlyphAtlas
         worker_tile->>worker_tile: create ImageAtlas
         worker_tile->>bucket: addFeatures
@@ -169,19 +169,19 @@ sequenceDiagram
     map->>painter: render(style)
     painter->>source_cache: prepare(context)
     loop for each tile
-    source_cache->>GPU: upload vertices
-    source_cache->>GPU: upload image textures
+        source_cache->>GPU: upload vertices
+        source_cache->>GPU: upload image textures
     end
     loop for each layer
-    painter->>layer: renderLayer(pass=offscreen)
-    painter->>layer: renderLayer(pass=opaque)
-    painter->>layer: renderLayer(pass=translucent)
-    painter->>layer: renderLayer(pass=debug)
-    loop renderLayer() call for each tile
-    layer->>GPU: load program
-    layer->>GPU: drawElements()
-    GPU->>user: display pixels
-    end
+        painter->>layer: renderLayer(pass=offscreen)
+        painter->>layer: renderLayer(pass=opaque)
+        painter->>layer: renderLayer(pass=translucent)
+        painter->>layer: renderLayer(pass=debug)
+        loop renderLayer() call for each tile
+            layer->>GPU: load program
+            layer->>GPU: drawElements()
+            GPU->>user: display pixels
+        end
     end
     map->>map: triggerRepaint()
 ```

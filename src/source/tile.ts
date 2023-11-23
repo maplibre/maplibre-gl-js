@@ -28,7 +28,6 @@ import type {OverscaledTileID} from './tile_id';
 import type {Framebuffer} from '../gl/framebuffer';
 import type {Transform} from '../geo/transform';
 import type {LayerFeatureStates} from './source_state';
-import type {Cancelable} from '../types/cancelable';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -47,7 +46,6 @@ import {ExpiryData} from '../util/ajax';
 export type TileState = 'loading' | 'loaded' | 'reloading' | 'unloaded' | 'errored' | 'expired';
 
 /**
- * @internal
  * A tile object is the combination of a Coordinate, which defines
  * its place, as well as a unique ID and data tracking for its content
  */
@@ -81,12 +79,12 @@ export class Tile {
     aborted: boolean;
     needsHillshadePrepare: boolean;
     needsTerrainPrepare: boolean;
-    request: Cancelable;
+    abortController: AbortController;
     texture: any;
     fbo: Framebuffer;
     demTexture: Texture;
     refreshedUponExpiration: boolean;
-    reloadCallback: any;
+    reloadPromise: {resolve: () => void; reject: () => void};
     resourceTiming: Array<PerformanceResourceTiming>;
     queryPadding: number;
 

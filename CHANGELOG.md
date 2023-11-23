@@ -1,9 +1,17 @@
 ## main
 
 ### ✨ Features and improvements
+
+- Changed `ImageRequest` to be `Promise` based ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
+- ⚠️ Changed the undeling worker communication from callbacks to promises. This has a breaking effect on the implementation of custom `WorkerSource` and how it behaves ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
+- ⚠️ Changed the `Source` interface to return promises instead of callbacks ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
+- ⚠️ Changed all the sources to be promises based. ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
+- ⚠️ Changed the `map.loadImage` method to return a `Promise` ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+- Fixes a security issue in `Actor` against XSS attacks in postMessage / onmessage ([#3239](https://github.com/maplibre/maplibre-gl-js/pull/3239))
 - _...Add new stuff here..._
 
 ## 3.6.2

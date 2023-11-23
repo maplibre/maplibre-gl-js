@@ -1,5 +1,5 @@
 import {Map, MapOptions} from './map';
-import {createMap, setErrorWebGlContext, beforeMapTest} from '../util/test/util';
+import {createMap, setErrorWebGlContext, beforeMapTest, sleep} from '../util/test/util';
 import {LngLat} from '../geo/lng_lat';
 import {Tile} from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
@@ -288,7 +288,7 @@ describe('Map', () => {
 
         });
 
-        test('setStyle back to the first style should work', done => {
+        test('setStyle back to the first style should work', async () => {
             const redStyle = {version: 8 as const, sources: {}, layers: [
                 {id: 'background', type: 'background' as const, paint: {'background-color': 'red'}},
             ]};
@@ -296,13 +296,13 @@ describe('Map', () => {
                 {id: 'background', type: 'background' as const, paint: {'background-color': 'blue'}},
             ]};
             const map = createMap({style: redStyle});
+            const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             map.setStyle(blueStyle);
-            map.once('style.load', () => {
-                map.setStyle(redStyle);
-                const serializedStyle =  map.style.serialize();
-                expect(serializedStyle.layers[0].paint['background-color']).toBe('red');
-                done();
-            });
+            await map.once('style.load');
+            map.setStyle(redStyle);
+            const serializedStyle =  map.style.serialize();
+            expect(serializedStyle.layers[0].paint['background-color']).toBe('red');
+            spy.mockRestore();
         });
 
         test('style transform overrides unmodified map transform', done => {
@@ -554,39 +554,42 @@ describe('Map', () => {
 
     describe('#is_Loaded', () => {
 
-        test('Map#isSourceLoaded', done => {
+        test('Map#isSourceLoaded', async () => {
             const style = createStyle();
             const map = createMap({style});
 
-            map.on('load', () => {
+            await map.once('load');
+            const promise = new Promise<void>((resolve) => {
                 map.on('data', (e) => {
                     if (e.dataType === 'source' && e.sourceDataType === 'idle') {
                         expect(map.isSourceLoaded('geojson')).toBe(true);
-                        done();
+                        resolve();
                     }
                 });
-                map.addSource('geojson', createStyleSource());
-                expect(map.isSourceLoaded('geojson')).toBe(false);
             });
+            map.addSource('geojson', createStyleSource());
+            expect(map.isSourceLoaded('geojson')).toBe(false);
+            await promise;
         });
 
-        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', done => {
+        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', async () => {
             const style = createStyle();
             const map = createMap({style});
 
-            map.on('load', () => {
-                map.on('data', (e) => {
+            await map.once('load');
+            const promise = new Promise<void>((resolve) => {
+                map.on('data', (e: MapSourceDataEvent) => {
                     if (e.dataType === 'source' && 'source' in e) {
-                        const sourceDataEvent = e as MapSourceDataEvent;
-                        expect(map.isSourceLoaded('geojson')).toBe(sourceDataEvent.isSourceLoaded);
-                        if (sourceDataEvent.sourceDataType === 'idle') {
-                            done();
+                        expect(map.isSourceLoaded('geojson')).toBe(e.isSourceLoaded);
+                        if (e.sourceDataType === 'idle') {
+                            resolve();
                         }
                     }
                 });
-                map.addSource('geojson', createStyleSource());
-                expect(map.isSourceLoaded('geojson')).toBe(false);
             });
+            map.addSource('geojson', createStyleSource());
+            expect(map.isSourceLoaded('geojson')).toBe(false);
+            await promise;
         });
 
         test('Map#isStyleLoaded', done => {
@@ -930,7 +933,7 @@ describe('Map', () => {
             observerCallback();
             observerCallback();
             expect(resizeSpy).toHaveBeenCalledTimes(1);
-            await new Promise((resolve) => { setTimeout(resolve, 100); });
+            await sleep(100);
             expect(resizeSpy).toHaveBeenCalledTimes(2);
         });
 
@@ -1519,6 +1522,7 @@ describe('Map', () => {
                 map.style.dispatcher.broadcast = function (key, value: any) {
                     expect(key).toBe('updateLayers');
                     expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
+                    return Promise.resolve({} as any);
                 };
 
                 map.setLayoutProperty('symbol', 'text-transform', 'lowercase');
@@ -2205,9 +2209,11 @@ describe('Map', () => {
 
     describe('error event', () => {
         test('logs errors to console when it has NO listeners', () => {
+            // to avoid seeing error in the console in Jest
+            let stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             const map = createMap();
-            const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             stub.mockReset();
+            stub = jest.spyOn(console, 'error').mockImplementation(() => {});
             const error = new Error('test');
             map.fire(new ErrorEvent(error));
             expect(stub).toHaveBeenCalledTimes(1);
@@ -2387,7 +2393,7 @@ describe('Map', () => {
 
     });
 
-    test('map fires `styleimagemissing` for missing icons', done => {
+    test('map fires `styleimagemissing` for missing icons', async () => {
         const map = createMap();
 
         const id = 'missing-image';
@@ -2402,14 +2408,12 @@ describe('Map', () => {
 
         expect(map.hasImage(id)).toBeFalsy();
 
-        map.style.imageManager.getImages([id], (alwaysNull, generatedImage) => {
-            expect(generatedImage[id].data.width).toEqual(sampleImage.width);
-            expect(generatedImage[id].data.height).toEqual(sampleImage.height);
-            expect(generatedImage[id].data.data).toEqual(sampleImage.data);
-            expect(called).toBe(id);
-            expect(map.hasImage(id)).toBeTruthy();
-            done();
-        });
+        const generatedImage = await map.style.imageManager.getImages([id]);
+        expect(generatedImage[id].data.width).toEqual(sampleImage.width);
+        expect(generatedImage[id].data.height).toEqual(sampleImage.height);
+        expect(generatedImage[id].data.data).toEqual(sampleImage.data);
+        expect(called).toBe(id);
+        expect(map.hasImage(id)).toBeTruthy();
     });
 
     test('map getImage matches addImage, uintArray', () => {

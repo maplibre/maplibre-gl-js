@@ -13,6 +13,8 @@
     "excludeExternals": true,
     "excludeInternal": true,
     "excludeNotDocumented": true,
+    "treatWarningsAsErrors": true,
+    "intentionallyNotExported": ["CollisionBoxArray"],
     "internalModule": "maplibregl",
     "entryPoints": ["./src/index.ts"],
     "navigation": {

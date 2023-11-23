@@ -6,8 +6,9 @@ import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
 import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'json'};
-import {getMockDispatcher, getWrapDispatcher} from '../util/test/util';
+import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
 import {Map} from '../ui/map';
+import {WorkerTileParameters} from './worker_source';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -19,9 +20,7 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         getPixelRatio() { return 1; }
     } as any as Map);
 
-    source.on('error', (e) => {
-        throw e.error;
-    });
+    source.on('error', () => { }); // to prevent console log of errors
 
     return source;
 }
@@ -37,7 +36,7 @@ describe('VectorTileSource', () => {
         server.restore();
     });
 
-    test('can be constructed from TileJSON', done => {
+    test('can be constructed from TileJSON', async () => {
         const source = createSource({
             minzoom: 1,
             maxzoom: 10,
@@ -45,33 +44,26 @@ describe('VectorTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
-                expect(source.minzoom).toBe(1);
-                expect(source.maxzoom).toBe(10);
-                expect((source as Source).attribution).toBe('MapLibre');
-                done();
-            }
-        });
+        await waitForMetadataEvent(source);
+        expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
+        expect(source.minzoom).toBe(1);
+        expect(source.maxzoom).toBe(10);
+        expect((source as Source).attribution).toBe('MapLibre');
     });
 
-    test('can be constructed from a TileJSON URL', done => {
+    test('can be constructed from a TileJSON URL', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
         const source = createSource({url: '/source.json'});
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
-                expect(source.minzoom).toBe(1);
-                expect(source.maxzoom).toBe(10);
-                expect((source as Source).attribution).toBe('MapLibre');
-                done();
-            }
-        });
-
+        const promise = waitForMetadataEvent(source);
         server.respond();
+
+        await promise;
+        expect(source.tiles).toEqual(['http://example.com/{z}/{x}/{y}.png']);
+        expect(source.minzoom).toBe(1);
+        expect(source.maxzoom).toBe(10);
+        expect((source as Source).attribution).toBe('MapLibre');
     });
 
     test('transforms the request for TileJSON URL', () => {
@@ -94,7 +86,7 @@ describe('VectorTileSource', () => {
         server.respond();
     });
 
-    test('fires "dataloading" event', done => {
+    test('fires "dataloading" event', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
         const evented = new Evented();
         let dataloadingFired = false;
@@ -102,13 +94,11 @@ describe('VectorTileSource', () => {
             dataloadingFired = true;
         });
         const source = createSource({url: '/source.json', eventedParent: evented});
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                if (!dataloadingFired) done('test failed: dataloading not fired');
-                done();
-            }
-        });
+        const promise = waitForMetadataEvent(source);
         server.respond();
+
+        await promise;
+        expect(dataloadingFired).toBeTruthy();
     });
 
     test('serialize URL', () => {
@@ -138,7 +128,7 @@ describe('VectorTileSource', () => {
     });
 
     function testScheme(scheme, expectedURL) {
-        test(`scheme "${scheme}"`, done => {
+        test(`scheme "${scheme}"`, async () => {
             const source = createSource({
                 minzoom: 1,
                 maxzoom: 10,
@@ -147,85 +137,150 @@ describe('VectorTileSource', () => {
                 scheme
             });
 
+            let receivedMessage = null;
+
             source.dispatcher = getWrapDispatcher()({
-                send(type, params) {
-                    expect(type).toBe('loadTile');
-                    expect(expectedURL).toBe(params.request.url);
-                    done();
+                sendAsync(message) {
+                    receivedMessage = message;
+                    return Promise.resolve({});
                 }
             });
 
-            source.on('data', (e) => {
-                if (e.sourceDataType === 'metadata') source.loadTile({
-                    tileID: new OverscaledTileID(10, 0, 10, 5, 5)
-                } as any as Tile, () => {});
-            });
+            await waitForMetadataEvent(source);
+            await source.loadTile({
+                loadVectorData() {},
+                tileID: new OverscaledTileID(10, 0, 10, 5, 5)
+            } as any as Tile);
+
+            expect(receivedMessage.type).toBe('loadTile');
+            expect(expectedURL).toBe((receivedMessage.data as WorkerTileParameters).request.url);
         });
     }
 
     testScheme('xyz', 'http://example.com/10/5/5.png');
     testScheme('tms', 'http://example.com/10/5/1018.png');
 
-    test('transforms tile urls before requesting', done => {
+    test('transforms tile urls before requesting', async () => {
         server.respondWith('/source.json', JSON.stringify(fixturesSource));
 
         const source = createSource({url: '/source.json'});
         const transformSpy = jest.spyOn(source.map._requestManager, 'transformRequest');
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                const tile = {
-                    tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-                    state: 'loading',
-                    loadVectorData () {},
-                    setExpiryData() {}
-                } as any as Tile;
-                source.loadTile(tile, () => {});
-                expect(transformSpy).toHaveBeenCalledTimes(1);
-                expect(transformSpy).toHaveBeenCalledWith('http://example.com/10/5/5.png', 'Tile');
-                done();
+        const promise = waitForMetadataEvent(source);
+        server.respond();
+        await promise;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        source.loadTile(tile);
+        expect(transformSpy).toHaveBeenCalledTimes(1);
+        expect(transformSpy).toHaveBeenCalledWith('http://example.com/10/5/5.png', 'Tile');
+    });
+
+    test('loads a tile even in case of 404', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+
+        const source = createSource({url: '/source.json'});
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message) {
+                const error = new Error();
+                (error as any).status = 404;
+                return Promise.reject(error);
+            }
+        });
+        const promise = waitForMetadataEvent(source);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: jest.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not load a tile in case of error', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+
+        const source = createSource({url: '/source.json'});
+        source.dispatcher = getWrapDispatcher()({
+            async sendAsync(_message) {
+                throw new Error('Error');
+            }
+        });
+        const promise = waitForMetadataEvent(source);
+        server.respond();
+        await promise;
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: jest.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+        await expect(source.loadTile(tile)).rejects.toThrow('Error');
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(0);
+    });
+
+    test('loads an empty tile received from worker', async () => {
+        server.respondWith('/source.json', JSON.stringify(fixturesSource));
+
+        const source = createSource({url: '/source.json'});
+        source.dispatcher = getWrapDispatcher()({
+            sendAsync(_message) {
+                return Promise.resolve(null);
             }
         });
 
+        const promise = waitForMetadataEvent(source);
         server.respond();
+        await promise;
+
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData: jest.fn(),
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+        expect(tile.loadVectorData).toHaveBeenCalledTimes(1);
     });
 
-    test('reloads a loading tile properly', done => {
+    test('reloads a loading tile properly', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png']
         });
         const events = [];
         source.dispatcher = getWrapDispatcher()({
-            send(type, params, cb) {
-                events.push(type);
-                if (cb) setTimeout(cb, 0);
-                return 1;
+            sendAsync(message) {
+                events.push(message.type);
+                return Promise.resolve({});
             }
         });
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                const tile = {
-                    tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-                    state: 'loading',
-                    loadVectorData () {
-                        this.state = 'loaded';
-                        events.push('tileLoaded');
-                    },
-                    setExpiryData() {}
-                } as any as Tile;
-                source.loadTile(tile, () => {});
-                expect(tile.state).toBe('loading');
-                source.loadTile(tile, () => {
-                    expect(events).toEqual(
-                        ['loadTile', 'tileLoaded', 'reloadTile', 'tileLoaded']
-                    );
-                    done();
-                });
-            }
-        });
+        await waitForMetadataEvent(source);
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData () {
+                this.state = 'loaded';
+                events.push('tileLoaded');
+            },
+            setExpiryData() {}
+        } as any as Tile;
+        const initialLoadPromise = source.loadTile(tile);
+
+        expect(tile.state).toBe('loading');
+        await source.loadTile(tile);
+        expect(events).toEqual(['loadTile', 'tileLoaded', 'reloadTile', 'tileLoaded']);
+        await expect(initialLoadPromise).resolves.toBeUndefined();
     });
 
-    test('respects TileJSON.bounds', done => {
+    test('respects TileJSON.bounds', async () => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
@@ -233,16 +288,13 @@ describe('VectorTileSource', () => {
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             bounds: [-47, -7, -45, -5]
         });
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
-                expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
-                done();
-            }
-        });
+        await waitForMetadataEvent(source);
+
+        expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
+        expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
     });
 
-    test('does not error on invalid bounds', done => {
+    test('does not error on invalid bounds', async () => {
         const source = createSource({
             minzoom: 0,
             maxzoom: 22,
@@ -251,15 +303,11 @@ describe('VectorTileSource', () => {
             bounds: [-47, -7, -45, 91]
         });
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                expect(source.tileBounds.bounds).toEqual({_sw: {lng: -47, lat: -7}, _ne: {lng: -45, lat: 90}});
-                done();
-            }
-        });
+        await waitForMetadataEvent(source);
+        expect(source.tileBounds.bounds).toEqual({_sw: {lng: -47, lat: -7}, _ne: {lng: -45, lat: 90}});
     });
 
-    test('respects TileJSON.bounds when loaded from TileJSON', done => {
+    test('respects TileJSON.bounds when loaded from TileJSON', async () => {
         server.respondWith('/source.json', JSON.stringify({
             minzoom: 0,
             maxzoom: 22,
@@ -269,51 +317,47 @@ describe('VectorTileSource', () => {
         }));
         const source = createSource({url: '/source.json'});
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
-                expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
-                done();
-            }
-        });
+        const promise = waitForMetadataEvent(source);
         server.respond();
+
+        await promise;
+        expect(source.hasTile(new OverscaledTileID(8, 0, 8, 96, 132))).toBeFalsy();
+        expect(source.hasTile(new OverscaledTileID(8, 0, 8, 95, 132))).toBeTruthy();
     });
 
-    test('respects collectResourceTiming parameter on source', done => {
+    test('respects collectResourceTiming parameter on source', async () => {
         const source = createSource({
             tiles: ['http://example.com/{z}/{x}/{y}.png'],
             collectResourceTiming: true
         });
+        let receivedMessage = null;
         source.dispatcher = getWrapDispatcher()({
-            send(type, params, cb) {
-                expect(params.request.collectResourceTiming).toBeTruthy();
-                setTimeout(cb, 0);
-                done();
+            sendAsync(message) {
+                receivedMessage = message;
 
                 // do nothing for cache size check dispatch
                 source.dispatcher = getMockDispatcher();
 
-                return 1;
+                return Promise.resolve({});
             }
         });
 
-        source.on('data', (e) => {
-            if (e.sourceDataType === 'metadata') {
-                const tile = {
-                    tileID: new OverscaledTileID(10, 0, 10, 5, 5),
-                    state: 'loading',
-                    loadVectorData () {},
-                    setExpiryData() {}
-                } as any as Tile;
-                source.loadTile(tile, () => {});
-            }
-        });
+        await waitForMetadataEvent(source);
+        const tile = {
+            tileID: new OverscaledTileID(10, 0, 10, 5, 5),
+            state: 'loading',
+            loadVectorData() {},
+            setExpiryData() {}
+        } as any as Tile;
+        await source.loadTile(tile);
+
+        expect((receivedMessage.data as WorkerTileParameters).request.collectResourceTiming).toBeTruthy();
     });
 
     test('cancels TileJSON request if removed', () => {
         const source = createSource({url: '/source.json'});
         source.onRemove();
-        expect((server as any).lastRequest.aborted).toBe(true);
+        expect((server.lastRequest as any).aborted).toBe(true);
     });
 
     test('supports url property updates', () => {
@@ -349,6 +393,7 @@ describe('VectorTileSource', () => {
         const source = createSource({tiles: ['http://example.com/{z}/{x}/{y}.pbf']}, undefined, clearTiles);
         source.setTiles(['http://example2.com/{z}/{x}/{y}.pbf']);
         expect(clearTiles.mock.calls).toHaveLength(0);
+        await sleep(0);
         await source.once('data');
         expect(clearTiles.mock.calls).toHaveLength(1);
     });

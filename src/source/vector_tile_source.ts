@@ -10,9 +10,8 @@ import type {OverscaledTileID} from './tile_id';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {Callback} from '../types/callback';
-import type {Cancelable} from '../types/cancelable';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {WorkerTileResult} from './worker_source';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -72,7 +71,7 @@ export class VectorTileSource extends Evented implements Source {
     tileBounds: TileBounds;
     reparseOverscaled: boolean;
     isTileClipped: boolean;
-    _tileJSONRequest: Cancelable;
+    _tileJSONRequest: AbortController;
     _loaded: boolean;
 
     constructor(id: string, options: VectorTileSourceOptions, dispatcher: Dispatcher, eventedParent: Evented) {
@@ -101,16 +100,16 @@ export class VectorTileSource extends Evented implements Source {
         this.setEventedParent(eventedParent);
     }
 
-    load = () => {
+    async load() {
         this._loaded = false;
         this.fire(new Event('dataloading', {dataType: 'source'}));
-        this._tileJSONRequest = loadTileJson(this._options, this.map._requestManager, (err, tileJSON) => {
+        this._tileJSONRequest = new AbortController();
+        try {
+            const tileJSON = await loadTileJson(this._options, this.map._requestManager, this._tileJSONRequest);
             this._tileJSONRequest = null;
             this._loaded = true;
             this.map.style.sourceCaches[this.id].clearTiles();
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (tileJSON) {
+            if (tileJSON) {
                 extend(this, tileJSON);
                 if (tileJSON.bounds) this.tileBounds = new TileBounds(tileJSON.bounds, this.minzoom, this.maxzoom);
 
@@ -120,8 +119,11 @@ export class VectorTileSource extends Evented implements Source {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'metadata'}));
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
-        });
-    };
+        } catch (err) {
+            this._tileJSONRequest = null;
+            this.fire(new ErrorEvent(err));
+        }
+    }
 
     loaded(): boolean {
         return this._loaded;
@@ -138,7 +140,7 @@ export class VectorTileSource extends Evented implements Source {
 
     setSourceProperty(callback: Function) {
         if (this._tileJSONRequest) {
-            this._tileJSONRequest.cancel();
+            this._tileJSONRequest.abort();
         }
 
         callback();
@@ -177,16 +179,16 @@ export class VectorTileSource extends Evented implements Source {
 
     onRemove() {
         if (this._tileJSONRequest) {
-            this._tileJSONRequest.cancel();
+            this._tileJSONRequest.abort();
             this._tileJSONRequest = null;
         }
     }
 
-    serialize = (): VectorSourceSpecification => {
+    serialize(): VectorSourceSpecification {
         return extend({}, this._options);
-    };
+    }
 
-    loadTile(tile: Tile, callback: Callback<void>) {
+    async loadTile(tile: Tile): Promise<void> {
         const url = tile.tileID.canonical.url(this.tiles, this.map.getPixelRatio(), this.scheme);
         const params = {
             request: this.map._requestManager.transformRequest(url, ResourceType.Tile),
@@ -201,56 +203,68 @@ export class VectorTileSource extends Evented implements Source {
             promoteId: this.promoteId
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
-
+        let messageType: 'loadTile' | 'reloadTile' = 'reloadTile';
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getActor();
-            tile.request = tile.actor.send('loadTile', params, done.bind(this));
+            messageType = 'loadTile';
         } else if (tile.state === 'loading') {
-            // schedule tile reloading after it has been loaded
-            tile.reloadCallback = callback;
-        } else {
-            tile.request = tile.actor.send('reloadTile', params, done.bind(this));
+            return new Promise<void>((resolve, reject) => {
+                tile.reloadPromise = {resolve, reject};
+            });
         }
+        tile.abortController = new AbortController();
+        try {
+            const data = await tile.actor.sendAsync({type: messageType, data: params}, tile.abortController);
+            delete tile.abortController;
 
-        function done(err, data) {
-            delete tile.request;
+            if (tile.aborted) {
+                return;
+            }
+            this._afterTileLoadWorkerResponse(tile, data);
+        } catch (err) {
+            delete tile.abortController;
 
-            if (tile.aborted)
-                return callback(null);
-
+            if (tile.aborted) {
+                return;
+            }
             if (err && err.status !== 404) {
-                return callback(err);
+                throw err;
             }
-
-            if (data && data.resourceTiming)
-                tile.resourceTiming = data.resourceTiming;
-
-            if (this.map._refreshExpiredTiles && data) tile.setExpiryData(data);
-            tile.loadVectorData(data, this.map.painter);
-
-            callback(null);
-
-            if (tile.reloadCallback) {
-                this.loadTile(tile, tile.reloadCallback);
-                tile.reloadCallback = null;
-            }
+            this._afterTileLoadWorkerResponse(tile, null);
         }
     }
 
-    abortTile(tile: Tile) {
-        if (tile.request) {
-            tile.request.cancel();
-            delete tile.request;
+    private _afterTileLoadWorkerResponse(tile: Tile, data: WorkerTileResult) {
+        if (data && data.resourceTiming) {
+            tile.resourceTiming = data.resourceTiming;
+        }
+
+        if (data && this.map._refreshExpiredTiles) {
+            tile.setExpiryData(data);
+        }
+        tile.loadVectorData(data, this.map.painter);
+
+        if (tile.reloadPromise) {
+            const reloadPromise = tile.reloadPromise;
+            tile.reloadPromise = null;
+            this.loadTile(tile).then(reloadPromise.resolve).catch(reloadPromise.reject);
+        }
+    }
+
+    async abortTile(tile: Tile): Promise<void> {
+        if (tile.abortController) {
+            tile.abortController.abort();
+            delete tile.abortController;
         }
         if (tile.actor) {
-            tile.actor.send('abortTile', {uid: tile.uid, type: this.type, source: this.id}, undefined);
+            await tile.actor.sendAsync({type: 'abortTile', data: {uid: tile.uid, type: this.type, source: this.id}});
         }
     }
 
-    unloadTile(tile: Tile) {
+    async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         if (tile.actor) {
-            tile.actor.send('removeTile', {uid: tile.uid, type: this.type, source: this.id}, undefined);
+            await tile.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
         }
     }
 
