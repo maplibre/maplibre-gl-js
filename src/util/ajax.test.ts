@@ -87,7 +87,7 @@ describe('ajax', () => {
         server.respondWith(request => {
             request.respond(204, undefined, undefined);
         });
-        postData({url: 'api.mapbox.com'}, (error) => {
+        postData({url: 'www.example.com'}, (error) => {
             expect(error).toBeNull();
             done();
         });
