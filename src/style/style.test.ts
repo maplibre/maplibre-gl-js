@@ -80,12 +80,13 @@ function createStyle(map = getStubMap()) {
 }
 
 let server: FakeServer;
-let mockConsoleError;
+let mockConsoleError: jest.SpyInstance;
 
 beforeEach(() => {
     global.fetch = null;
     server = fakeServer.create();
     mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => { });
+    clearRTLTextPlugin();
 });
 
 afterEach(() => {
@@ -95,12 +96,8 @@ afterEach(() => {
 
 describe('Style', () => {
     test('registers plugin state change listener', () => {
-        clearRTLTextPlugin();
-
-        jest.spyOn(Style, 'registerForPluginStateChange');
         const style = new Style(getStubMap());
         const mockStyleDispatcherBroadcast = jest.spyOn(style.dispatcher, 'broadcast');
-        expect(Style.registerForPluginStateChange).toHaveBeenCalledTimes(1);
 
         setRTLTextPlugin('/plugin.js', undefined);
         expect(mockStyleDispatcherBroadcast.mock.calls[0][0]).toBe('syncRTLPluginState');
@@ -111,7 +108,6 @@ describe('Style', () => {
     });
 
     test('loads plugin immediately if already registered', done => {
-        clearRTLTextPlugin();
         server.respondWith('/plugin.js', 'doesn\'t matter');
         setRTLTextPlugin('/plugin.js', (error) => {
             expect(error).toMatch(/Cannot set the state of the rtl-text-plugin when not in the web-worker context/);
@@ -151,13 +147,12 @@ describe('Style', () => {
             clearRTLTextPlugin();
             server.respondWith('/plugin.js', 'doesn\'t matter');
             const _broadcast = style.dispatcher.broadcast;
-            style.dispatcher.broadcast = function (type, state, callback) {
+            style.dispatcher.broadcast = function (type, state) {
                 if (type === 'syncRTLPluginState') {
                     // Mock a response from four workers saying they've loaded the plugin
-                    callback(undefined, [true, true, true, true]);
-                } else {
-                    _broadcast(type, state, callback);
+                    return Promise.resolve([true, true, true, true]) as any;
                 }
+                return _broadcast(type, state);
             };
             setRTLTextPlugin('/plugin.js', (error) => {
                 expect(error).toBeUndefined();
@@ -291,7 +286,7 @@ describe('Style#loadJSON', () => {
         });
     });
 
-    test('Validate sprite image extraction', done => {
+    test('Validate sprite image extraction', async () => {
         // Stubbing to bypass Web APIs that supported by jsdom:
         // * `URL.createObjectURL` in ajax.getImage (https://github.com/tmpvar/jsdom/issues/1721)
         // * `canvas.getContext('2d')` in browser.getImageData
@@ -311,25 +306,23 @@ describe('Style#loadJSON', () => {
             'sprite': 'http://example.com/sprite'
         });
 
-        style.once('data', (e) => {
-            expect(e.target).toBe(style);
-            expect(e.dataType).toBe('style');
+        const firstDataEvent = await style.once('data');
+        expect(firstDataEvent.target).toBe(style);
+        expect(firstDataEvent.dataType).toBe('style');
 
-            style.once('data', (e) => {
-                expect(e.target).toBe(style);
-                expect(e.dataType).toBe('style');
-                style.imageManager.getImages(['image1'], (error, response) => {
-                    const image = response['image1'];
-                    expect(image.data).toBeInstanceOf(RGBAImage);
-                    expect(image.data.width).toBe(1);
-                    expect(image.data.height).toBe(1);
-                    expect(image.pixelRatio).toBe(1);
-                    done();
-                });
-            });
+        const secondDataPromise = style.once('data');
 
-            server.respond();
-        });
+        server.respond();
+
+        const secondDateEvent = await secondDataPromise;
+        expect(secondDateEvent.target).toBe(style);
+        expect(secondDateEvent.dataType).toBe('style');
+        const response = await style.imageManager.getImages(['image1']);
+        const image = response['image1'];
+        expect(image.data).toBeInstanceOf(RGBAImage);
+        expect(image.data.width).toBe(1);
+        expect(image.data.height).toBe(1);
+        expect(image.pixelRatio).toBe(1);
     });
 
     test('validates the style', done => {
@@ -563,9 +556,10 @@ describe('Style#_load', () => {
         });
 
         const _broadcastSpyOn = jest.spyOn(style.dispatcher, 'broadcast')
-            .mockImplementation((type: string, data) => {
+            .mockImplementation((type, data) => {
                 dispatchType = type;
                 dispatchData = data;
+                return Promise.resolve({} as any);
             });
 
         style._load(styleSpec, {});
@@ -577,7 +571,7 @@ describe('Style#_load', () => {
         expect(dispatchData[0].id).toBe('background');
 
         // cleanup
-        _broadcastSpyOn.mockReset();
+        _broadcastSpyOn.mockRestore();
     });
 
     test('validate style when validate option is true', () => {
@@ -643,18 +637,16 @@ describe('Style#_remove', () => {
         });
     });
 
-    test('deregisters plugin listener', done => {
+    test('deregisters plugin listener', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());
         const mockStyleDispatcherBroadcast = jest.spyOn(style.dispatcher, 'broadcast');
 
-        style.on('style.load', () => {
-            style._remove();
+        await style.once('style.load');
+        style._remove();
 
-            rtlTextPluginEvented.fire(new Event('pluginStateChange'));
-            expect(mockStyleDispatcherBroadcast).not.toHaveBeenCalledWith('syncRTLPluginState');
-            done();
-        });
+        rtlTextPluginEvented.fire(new Event('pluginStateChange'));
+        expect(mockStyleDispatcherBroadcast).not.toHaveBeenCalledWith('syncRTLPluginState');
     });
 });
 
@@ -688,6 +680,7 @@ describe('Style#update', () => {
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
                 expect(value['removedIds']).toEqual(['second']);
                 done();
+                return Promise.resolve({} as any);
             };
 
             style.update({} as EvaluationParameters);
@@ -1972,6 +1965,7 @@ describe('Style#setFilter', () => {
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toEqual(['==', 'id', 1]);
                 done();
+                return Promise.resolve({} as any);
             };
 
             style.setFilter('symbol', ['==', 'id', 1]);
@@ -2010,6 +2004,7 @@ describe('Style#setFilter', () => {
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toEqual(['==', 'id', 2]);
                 done();
+                return Promise.resolve({} as any);
             };
             filter[2] = 2;
             style.setFilter('symbol', filter);
@@ -2069,6 +2064,7 @@ describe('Style#setFilter', () => {
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toBe('notafilter');
                 done();
+                return Promise.resolve({} as any);
             };
 
             style.setFilter('symbol', 'notafilter' as any as FilterSpecification, {validate: false});
@@ -2108,6 +2104,7 @@ describe('Style#setLayerZoomRange', () => {
                 expect(key).toBe('updateLayers');
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['symbol']);
                 done();
+                return Promise.resolve({} as any);
             };
             style.setLayerZoomRange('symbol', 5, 12);
             expect(style.getLayer('symbol').minzoom).toBe(5);
@@ -2516,6 +2513,7 @@ describe('Style#addSourceType', () => {
             if (type === 'loadWorkerSource') {
                 done('test failed');
             }
+            return Promise.resolve({} as any);
         };
 
         style.addSourceType('foo', sourceType, (arg1, arg2) => {
@@ -2532,9 +2530,9 @@ describe('Style#addSourceType', () => {
 
         style.dispatcher.broadcast = (type, params) => {
             if (type === 'loadWorkerSource') {
-                expect(params['name']).toBe('bar');
-                expect(params['url']).toBe('worker-source.js');
+                expect(params).toBe('worker-source.js');
                 done();
+                return Promise.resolve({} as any);
             }
         };
 

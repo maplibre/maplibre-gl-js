@@ -2,12 +2,11 @@ import {loadGlyphRange} from '../style/load_glyph_range';
 
 import TinySDF from '@mapbox/tiny-sdf';
 import {unicodeBlockLookup} from '../util/is_char_in_unicode_block';
-import {asyncAll} from '../util/util';
 import {AlphaImage} from '../util/image';
 
 import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
-import type {Callback} from '../types/callback';
+import type {GetGlyphsResponse} from '../util/actor_messages';
 
 type Entry = {
     // null means we've requested the range, but the glyph wasn't included in the result.
@@ -15,9 +14,7 @@ type Entry = {
         [id: number]: StyleGlyph | null;
     };
     requests: {
-        [range: number]: Array<Callback<{
-            [_: number]: StyleGlyph | null;
-        }>>;
+        [range: number]: Promise<{[_: number]: StyleGlyph | null}>;
     };
     ranges: {
         [range: number]: boolean | null;
@@ -28,9 +25,7 @@ type Entry = {
 export class GlyphManager {
     requestManager: RequestManager;
     localIdeographFontFamily: string;
-    entries: {
-        [_: string]: Entry;
-    };
+    entries: {[stack: string]: Entry};
     url: string;
 
     // exposed as statics to enable stubbing in unit tests
@@ -47,117 +42,81 @@ export class GlyphManager {
         this.url = url;
     }
 
-    getGlyphs(glyphs: {
-        [stack: string]: Array<number>;
-    }, callback: Callback<{
-        [stack: string]: {
-            [id: number]: StyleGlyph;
-        };
-    }>) {
-        const all = [];
+    async getGlyphs(glyphs: {[stack: string]: Array<number>}): Promise<GetGlyphsResponse> {
+        const glyphsPromises: Promise<{stack: string; id: number; glyph: StyleGlyph}>[] = [];
 
         for (const stack in glyphs) {
             for (const id of glyphs[stack]) {
-                all.push({stack, id});
+                glyphsPromises.push(this._getAndCacheGlyphsPromise(stack, id));
             }
         }
 
-        asyncAll(all, ({stack, id}, callback: Callback<{
-            stack: string;
-            id: number;
-            glyph: StyleGlyph;
-        }>) => {
-            let entry = this.entries[stack];
-            if (!entry) {
-                entry = this.entries[stack] = {
-                    glyphs: {},
-                    requests: {},
-                    ranges: {}
-                };
+        const updatedGlyphs = await Promise.all(glyphsPromises);
+
+        const result: GetGlyphsResponse = {};
+
+        for (const {stack, id, glyph} of updatedGlyphs) {
+            if (!result[stack]) {
+                result[stack] = {};
             }
+            // Clone the glyph so that our own copy of its ArrayBuffer doesn't get transferred.
+            result[stack][id] = glyph && {
+                id: glyph.id,
+                bitmap: glyph.bitmap.clone(),
+                metrics: glyph.metrics
+            };
+        }
 
-            let glyph = entry.glyphs[id];
-            if (glyph !== undefined) {
-                callback(null, {stack, id, glyph});
-                return;
+        return result;
+    }
+
+    async _getAndCacheGlyphsPromise(stack: string, id: number): Promise<{stack: string; id: number; glyph: StyleGlyph}> {
+        let entry = this.entries[stack];
+        if (!entry) {
+            entry = this.entries[stack] = {
+                glyphs: {},
+                requests: {},
+                ranges: {}
+            };
+        }
+
+        let glyph = entry.glyphs[id];
+        if (glyph !== undefined) {
+            return {stack, id, glyph};
+        }
+
+        glyph = this._tinySDF(entry, stack, id);
+        if (glyph) {
+            entry.glyphs[id] = glyph;
+            return {stack, id, glyph};
+        }
+
+        const range = Math.floor(id / 256);
+        if (range * 256 > 65535) {
+            throw new Error('glyphs > 65535 not supported');
+        }
+
+        if (entry.ranges[range]) {
+            return {stack, id, glyph};
+        }
+
+        if (!this.url) {
+            throw new Error('glyphsUrl is not set');
+        }
+
+        if (!entry.requests[range]) {
+            const promise = GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager);
+            entry.requests[range] = promise;
+        }
+
+        const response = await entry.requests[range];
+        for (const id in response) {
+            if (!this._doesCharSupportLocalGlyph(+id)) {
+                entry.glyphs[+id] = response[+id];
             }
-
-            glyph = this._tinySDF(entry, stack, id);
-            if (glyph) {
-                entry.glyphs[id] = glyph;
-                callback(null, {stack, id, glyph});
-                return;
-            }
-
-            const range = Math.floor(id / 256);
-            if (range * 256 > 65535) {
-                callback(new Error('glyphs > 65535 not supported'));
-                return;
-            }
-
-            if (entry.ranges[range]) {
-                callback(null, {stack, id, glyph});
-                return;
-            }
-
-            if (!this.url) {
-                callback(new Error('glyphsUrl is not set'));
-                return;
-            }
-
-            let requests = entry.requests[range];
-            if (!requests) {
-                requests = entry.requests[range] = [];
-                GlyphManager.loadGlyphRange(stack, range, this.url, this.requestManager,
-                    (err, response?: {
-                        [_: number]: StyleGlyph | null;
-                    } | null) => {
-                        if (response) {
-                            for (const id in response) {
-                                if (!this._doesCharSupportLocalGlyph(+id)) {
-                                    entry.glyphs[+id] = response[+id];
-                                }
-                            }
-                            entry.ranges[range] = true;
-                        }
-                        for (const cb of requests) {
-                            cb(err, response);
-                        }
-                        delete entry.requests[range];
-                    });
-            }
-
-            requests.push((err, result?: {
-                [_: number]: StyleGlyph | null;
-            } | null) => {
-                if (err) {
-                    callback(err);
-                } else if (result) {
-                    callback(null, {stack, id, glyph: result[id] || null});
-                }
-            });
-        }, (err, glyphs?: Array<{
-            stack: string;
-            id: number;
-            glyph: StyleGlyph;
-        }> | null) => {
-            if (err) {
-                callback(err);
-            } else if (glyphs) {
-                const result = {};
-
-                for (const {stack, id, glyph} of glyphs) {
-                    // Clone the glyph so that our own copy of its ArrayBuffer doesn't get transferred.
-                    (result[stack] || (result[stack] = {}))[id] = glyph && {
-                        id: glyph.id,
-                        bitmap: glyph.bitmap.clone(),
-                        metrics: glyph.metrics
-                    };
-                }
-
-                callback(null, result);
-            }
-        });
+        }
+        entry.ranges[range] = true;
+        return {stack, id, glyph: response[id] || null};
     }
 
     _doesCharSupportLocalGlyph(id: number): boolean {

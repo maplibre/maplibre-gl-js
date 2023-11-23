@@ -1,13 +1,11 @@
 import {
     getArrayBuffer,
     getJSON,
-    postData,
     AJAXError,
     sameOrigin
 } from './ajax';
 
 import {fakeServer, type FakeServer} from 'nise';
-import {destroyFetchMock, FetchMock, RequestMock, setupFetchMock} from './test/mock_fetch';
 
 function readAsText(blob) {
     return new Promise((resolve, reject) => {
@@ -28,70 +26,66 @@ describe('ajax', () => {
         server.restore();
     });
 
-    test('getArrayBuffer, 404', done => {
+    test('getArrayBuffer, 404', async () => {
         server.respondWith(request => {
             request.respond(404, undefined, '404 Not Found');
         });
-        getArrayBuffer({url: 'http://example.com/test.bin'}, async (error) => {
+
+        try {
+            const promise =  getArrayBuffer({url: 'http://example.com/test.bin'}, new AbortController());
+            server.respond();
+            await promise;
+        } catch (error) {
             const ajaxError = error as AJAXError;
             const body = await readAsText(ajaxError.body);
             expect(ajaxError.status).toBe(404);
             expect(ajaxError.statusText).toBe('Not Found');
             expect(ajaxError.url).toBe('http://example.com/test.bin');
             expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
+        }
     });
 
-    test('getJSON', done => {
+    test('getJSON', async () => {
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
         });
-        getJSON({url: ''}, (error, body) => {
-            expect(error).toBeFalsy();
-            expect(body).toEqual({foo: 'bar'});
-            done();
-        });
+        const promise = getJSON({url: ''}, new AbortController());
         server.respond();
+
+        const body = await promise;
+        expect(body.data).toEqual({foo: 'bar'});
     });
 
-    test('getJSON, invalid syntax', done => {
+    test('getJSON, invalid syntax', async () => {
         server.respondWith(request => {
             request.respond(200, {'Content-Type': 'application/json'}, 'how do i even');
         });
-        getJSON({url: ''}, (error) => {
-            expect(error).toBeTruthy();
-            done();
-        });
+        const promise = getJSON({url: ''}, new AbortController());
         server.respond();
+        try {
+            await promise;
+        } catch (error) {
+            expect(error).toBeTruthy();
+        }
     });
 
-    test('getJSON, 404', done => {
+    test('getJSON, 404', async () => {
         server.respondWith(request => {
             request.respond(404, undefined, '404 Not Found');
         });
-        getJSON({url: 'http://example.com/test.json'}, async (error) => {
+        const promise = getJSON({url: 'http://example.com/test.json'}, new AbortController());
+        server.respond();
+
+        try {
+            await promise;
+        } catch (error) {
             const ajaxError = error as AJAXError;
             const body = await readAsText(ajaxError.body);
             expect(ajaxError.status).toBe(404);
             expect(ajaxError.statusText).toBe('Not Found');
             expect(ajaxError.url).toBe('http://example.com/test.json');
             expect(body).toBe('404 Not Found');
-            done();
-        });
-        server.respond();
-    });
-
-    test('postData, 204(no content): no error', done => {
-        server.respondWith(request => {
-            request.respond(204, undefined, undefined);
-        });
-        postData({url: 'api.mapbox.com'}, (error) => {
-            expect(error).toBeNull();
-            done();
-        });
-        server.respond();
+        }
     });
 
     test('sameOrigin method', () => {
@@ -144,34 +138,34 @@ describe('ajax', () => {
     });
 
     describe('requests parameters', () => {
-        let fetch: FetchMock;
 
-        beforeEach(() => {
-            fetch = setupFetchMock();
+        test('should be provided to fetch API in getArrayBuffer function', async () => {
+            server.respondWith(new ArrayBuffer(1));
+
+            const promise = getArrayBuffer({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, new AbortController());
+            server.respond();
+            await promise;
+
+            expect(server.requests).toHaveLength(1);
+            expect(server.requests[0].url).toBe('http://example.com/test-params.json');
+            expect(server.requests[0].method).toBe('GET');
+            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
         });
 
-        afterEach(() => {
-            destroyFetchMock();
-        });
+        test('should be provided to fetch API in getJSON function', async () => {
 
-        test('should be provided to fetch API in getArrayBuffer function', (done) => {
-            getArrayBuffer({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {
-                expect(fetch).toHaveBeenCalledTimes(1);
-                expect(fetch).toHaveBeenCalledWith(expect.objectContaining({url: 'http://example.com/test-params.json', method: 'GET', cache: 'force-cache'}));
-                expect((fetch.mock.calls[0][0] as RequestMock).headers.get('Authorization')).toBe('Bearer 123');
-
-                done();
+            server.respondWith(request => {
+                request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
             });
-        });
 
-        test('should be provided to fetch API in getJSON function', (done) => {
-            getJSON({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, () => {
-                expect(fetch).toHaveBeenCalledTimes(1);
-                expect(fetch).toHaveBeenCalledWith(expect.objectContaining({url: 'http://example.com/test-params.json', method: 'GET', cache: 'force-cache'}));
-                expect((fetch.mock.calls[0][0] as RequestMock).headers.get('Authorization')).toBe('Bearer 123');
+            const promise = getJSON({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, new AbortController());
+            server.respond();
+            await promise;
 
-                done();
-            });
+            expect(server.requests).toHaveLength(1);
+            expect(server.requests[0].url).toBe('http://example.com/test-params.json');
+            expect(server.requests[0].method).toBe('GET');
+            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
         });
     });
 });

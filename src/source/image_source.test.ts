@@ -4,8 +4,7 @@ import {Transform} from '../geo/transform';
 import {extend} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {RequestManager} from '../util/request_manager';
-import {Dispatcher} from '../util/dispatcher';
-import {stubAjaxGetImage} from '../util/test/util';
+import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {VertexBuffer} from '../gl/vertex_buffer';
@@ -18,7 +17,7 @@ function createSource(options) {
         coordinates: [[0, 0], [1, 0], [1, 1], [0, 1]]
     }, options);
 
-    const source = new ImageSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);
+    const source = new ImageSource('id', options, {} as any, options.eventedParent);
     return source;
 }
 
@@ -61,13 +60,14 @@ describe('ImageSource', () => {
         expect(source.tileSize).toBe(512);
     });
 
-    test('fires dataloading event', () => {
+    test('fires dataloading event', async () => {
         const source = createSource({url: '/image.png'});
         source.on('dataloading', (e) => {
             expect(e.dataType).toBe('source');
         });
         source.onAdd(new StubMap() as any);
         server.respond();
+        await sleep(0);
         expect(source.image).toBeTruthy();
     });
 
@@ -110,7 +110,7 @@ describe('ImageSource', () => {
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
 
-    test('sets coordinates via updateImage', () => {
+    test('sets coordinates via updateImage', async () => {
         const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
         source.onAdd(map);
@@ -122,6 +122,7 @@ describe('ImageSource', () => {
             coordinates: [[0, 0], [-1, 0], [-1, -1], [0, -1]]
         });
         server.respond();
+        await sleep(0);
         const afterSerialized = source.serialize();
         expect(afterSerialized.coordinates).toEqual([[0, 0], [-1, 0], [-1, -1], [0, -1]]);
     });
@@ -164,7 +165,7 @@ describe('ImageSource', () => {
         source.tiles[String(tile.tileID.wrap)] = tile;
         source.image = new ImageBitmap();
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {} as VertexBuffer;
+        source.boundsBuffer = {destroy: () => {}} as VertexBuffer;
         source.boundsSegments = {} as SegmentVector;
         source.texture = {} as Texture;
         source.prepare();
@@ -179,22 +180,27 @@ describe('ImageSource', () => {
         expect(serialized.coordinates).toEqual([[0, 0], [1, 0], [1, 1], [0, 1]]);
     });
 
-    test('allows using updateImage before initial image is loaded', () => {
-        const source = createSource({url: '/image.png'});
+    test('allows using updateImage before initial image is loaded', async () => {
         const map = new StubMap() as any;
+        const source = createSource({url: '/image.png', eventedParent: map});
 
+        // Suppress errors because we're aborting when updating.
+        map.on('error', () => {});
         source.onAdd(map);
-
         expect(source.image).toBeUndefined();
         source.updateImage({url: '/image2.png'});
         server.respond();
+        await sleep(10);
+
         expect(source.image).toBeTruthy();
     });
 
     test('cancels request if updateImage is used', () => {
-        const source = createSource({url: '/image.png'});
         const map = new StubMap() as any;
+        const source = createSource({url: '/image.png', eventedParent: map});
 
+        // Suppress errors because we're aborting.
+        map.on('error', () => {});
         source.onAdd(map);
 
         const spy = jest.spyOn(server.requests[0] as any, 'abort');

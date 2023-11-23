@@ -438,7 +438,7 @@ export type MapStyleDataEvent = MapLibreEvent & {
  *
  * @group Event Related
  */
-export type MapSourceDataEvent = MapLibreEvent  & {
+export type MapSourceDataEvent = MapLibreEvent & {
     dataType: 'source';
     /**
      * True if the event has a `dataType` of `source` and the source has no outstanding network requests.

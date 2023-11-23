@@ -43,12 +43,10 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
 import type {Map} from '../ui/map';
 import type {Transform} from '../geo/transform';
 import type {StyleImage} from './style_image';
-import type {StyleGlyph} from './style_glyph';
 import type {Callback} from '../types/callback';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
-import type {Cancelable} from '../types/cancelable';
-import type {RequestParameters, ResponseCallback} from '../util/ajax';
+import type {GetResourceResponse, RequestParameters} from '../util/ajax';
 import type {
     LayerSpecification,
     FilterSpecification,
@@ -59,7 +57,7 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {GetGlyphsParamerters, GetGlyphsResponse, GetImagesParamerters, GetImagesResponse} from '../util/actor_messages';
 
 const supportedDiffOperations = pick(diffOperations, [
     'addLayer',
@@ -209,8 +207,9 @@ export class Style extends Evented {
     lineAtlas: LineAtlas;
     light: Light;
 
-    _request: Cancelable;
-    _spriteRequest: Cancelable;
+    _frameRequest: AbortController;
+    _loadStyleRequest: AbortController;
+    _spriteRequest: AbortController;
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: Array<string>;
@@ -236,13 +235,20 @@ export class Style extends Evented {
     placement: Placement;
     z: number;
 
-    static registerForPluginStateChange: typeof registerForPluginStateChange;
-
     constructor(map: Map, options: StyleOptions = {}) {
         super();
 
         this.map = map;
-        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), this, map._getMapId());
+        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
+        this.dispatcher.registerMessageHandler('getGlyphs', (mapId, params) => {
+            return this.getGlyphs(mapId, params);
+        });
+        this.dispatcher.registerMessageHandler('getImages', (mapId, params) => {
+            return this.getImages(mapId, params);
+        });
+        this.dispatcher.registerMessageHandler('getResource', (mapId, params, abortController) => {
+            return this.getResource(mapId, params, abortController);
+        });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
@@ -263,29 +269,31 @@ export class Style extends Evented {
         this.dispatcher.broadcast('setReferrer', getReferrer());
 
         const self = this;
-        this._rtlTextPluginCallback = Style.registerForPluginStateChange((event) => {
+        this._rtlTextPluginCallback = registerForPluginStateChange((event) => {
             const state = {
                 pluginStatus: event.pluginStatus,
                 pluginURL: event.pluginURL
             };
-            self.dispatcher.broadcast('syncRTLPluginState', state, (err, results) => {
-                triggerPluginCompletionEvent(err);
-                if (results) {
+            self.dispatcher.broadcast('syncRTLPluginState', state)
+                .then((results) => {
+                    triggerPluginCompletionEvent(undefined);
+                    if (!results) {
+                        return;
+                    }
                     const allComplete = results.every((elem) => elem);
-                    if (allComplete) {
-                        for (const id in self.sourceCaches) {
-                            const sourceType = self.sourceCaches[id].getSource().type;
-                            if (sourceType === 'vector' || sourceType === 'geojson') {
-                                // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
-                                // They also load more quickly, so they're more likely to have already displaying tiles
-                                // that would be unnecessarily booted by the plugin load event
-                                self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
-                            }
+                    if (!allComplete) {
+                        return;
+                    }
+                    for (const id in self.sourceCaches) {
+                        const sourceType = self.sourceCaches[id].getSource().type;
+                        if (sourceType === 'vector' || sourceType === 'geojson') {
+                            // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
+                            // They also load more quickly, so they're more likely to have already displaying tiles
+                            // that would be unnecessarily booted by the plugin load event
+                            self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
                         }
                     }
-                }
-
-            });
+                }).catch((err: string) => triggerPluginCompletionEvent(err));
         });
 
         this.on('data', (event) => {
@@ -319,12 +327,14 @@ export class Style extends Evented {
             options.validate : true;
 
         const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
-        this._request = getJSON(request, (error?: Error | null, json?: any | null) => {
-            this._request = null;
+        this._loadStyleRequest = new AbortController();
+        getJSON<StyleSpecification>(request, this._loadStyleRequest).then((response) => {
+            this._loadStyleRequest = null;
+            this._load(response.data, options, previousStyle);
+        }).catch((error) => {
+            this._loadStyleRequest = null;
             if (error) {
                 this.fire(new ErrorEvent(error));
-            } else if (json) {
-                this._load(json, options, previousStyle);
             }
         });
     }
@@ -332,11 +342,12 @@ export class Style extends Evented {
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
-        this._request = browser.frame(() => {
-            this._request = null;
+        this._frameRequest = new AbortController();
+        browser.frameAsync(this._frameRequest).then(() => {
+            this._frameRequest = null;
             options.validate = options.validate !== false;
             this._load(json, options, previousStyle);
-        });
+        }).catch(() => {}); // ignore abort
     }
 
     loadEmpty() {
@@ -396,11 +407,11 @@ export class Style extends Evented {
     _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
         this.imageManager.setLoaded(false);
 
-        this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
+        this._spriteRequest = new AbortController();
+        let err: Error;
+        loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
             this._spriteRequest = null;
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (images) {
+            if (images) {
                 for (const spriteId in images) {
                     this._spritesImagesIds[spriteId] = [];
 
@@ -428,7 +439,11 @@ export class Style extends Evented {
                     }
                 }
             }
-
+        }).catch((error) => {
+            this._spriteRequest = null;
+            err = error;
+            this.fire(new ErrorEvent(err));
+        }).finally(() => {
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
 
@@ -1411,10 +1426,7 @@ export class Style extends Evented {
             return callback(null, null);
         }
 
-        this.dispatcher.broadcast('loadWorkerSource', {
-            name,
-            url: SourceType.workerSourceURL
-        }, callback);
+        this.dispatcher.broadcast('loadWorkerSource', SourceType.workerSourceURL.toString()).then(() => callback()).catch(callback);
     }
 
     getLight() {
@@ -1461,12 +1473,16 @@ export class Style extends Evented {
     }
 
     _remove(mapRemoved: boolean = true) {
-        if (this._request) {
-            this._request.cancel();
-            this._request = null;
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
+        }
+        if (this._loadStyleRequest) {
+            this._loadStyleRequest.abort();
+            this._loadStyleRequest = null;
         }
         if (this._spriteRequest) {
-            this._spriteRequest.cancel();
+            this._spriteRequest.abort();
             this._spriteRequest = null;
         }
         rtlTextPluginEvented.off('pluginStateChange', this._rtlTextPluginCallback);
@@ -1583,17 +1599,8 @@ export class Style extends Evented {
 
     // Callbacks from web workers
 
-    getImages(
-        mapId: string,
-        params: {
-            icons: Array<string>;
-            source: string;
-            tileID: OverscaledTileID;
-            type: string;
-        },
-        callback: Callback<{[_: string]: StyleImage}>
-    ) {
-        this.imageManager.getImages(params.icons, callback);
+    async getImages(mapId: string | number, params: GetImagesParamerters): Promise<GetImagesResponse> {
+        const images = await this.imageManager.getImages(params.icons);
 
         // Apply queued image changes before setting the tile's dependencies so that the tile
         // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
@@ -1609,29 +1616,22 @@ export class Style extends Evented {
         if (sourceCache) {
             sourceCache.setDependencies(params.tileID.key, params.type, params.icons);
         }
+        return images;
     }
 
-    getGlyphs(
-        mapId: string,
-        params: {
-            stacks: {[_: string]: Array<number>};
-            source: string;
-            tileID: OverscaledTileID;
-            type: string;
-        },
-        callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
-    ) {
-        this.glyphManager.getGlyphs(params.stacks, callback);
+    async getGlyphs(mapId: string | number, params: GetGlyphsParamerters): Promise<GetGlyphsResponse> {
+        const glypgs = await this.glyphManager.getGlyphs(params.stacks);
         const sourceCache = this.sourceCaches[params.source];
         if (sourceCache) {
             // we are not setting stacks as dependencies since for now
             // we just need to know which tiles have glyph dependencies
             sourceCache.setDependencies(params.tileID.key, params.type, ['']);
         }
+        return glypgs;
     }
 
-    getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-        return makeRequest(params, callback);
+    getResource(mapId: string | number, params: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
+        return makeRequest(params, abortController);
     }
 
     getGlyphsUrl() {
@@ -1741,5 +1741,3 @@ export class Style extends Evented {
         }
     }
 }
-
-Style.registerForPluginStateChange = registerForPluginStateChange;
