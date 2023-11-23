@@ -8,7 +8,6 @@
 
 ## 3.6.2
 
-### ✨ Features and improvements
 
 ### 🐞 Bug fixes
 
