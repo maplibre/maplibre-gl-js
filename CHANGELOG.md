@@ -8,7 +8,6 @@
 
 ## 3.6.2
 
-
 ### 🐞 Bug fixes
 
 - Fix mapbox-gl-draw example ([#2601](https://github.com/maplibre/maplibre-gl-js/issues/2601), [#3394](https://github.com/maplibre/maplibre-gl-js/pull/3394))
