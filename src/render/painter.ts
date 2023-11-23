@@ -535,6 +535,20 @@ export class Painter {
     translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean): mat4 {
         if (!translate[0] && !translate[1]) return matrix;
 
+
+        const translation = this.translatePosition(tile, translate, translateAnchor, inViewportPixelUnitsUnits);
+        const translatedMatrix = new Float32Array(16);
+        mat4.translate(translatedMatrix, matrix, [translation[0], translation[1], 0]);
+        return translatedMatrix;
+    }
+
+    /**
+     * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
+     * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+     */
+    translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean): [number, number] {
+        if (!translate[0] && !translate[1]) return [0, 0];
+
         const angle = inViewportPixelUnitsUnits ?
             (translateAnchor === 'map' ? this.transform.angle : 0) :
             (translateAnchor === 'viewport' ? -this.transform.angle : 0);
@@ -548,15 +562,9 @@ export class Painter {
             ];
         }
 
-        const translation = [
+        return [
             inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], this.transform.zoom),
-            inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], this.transform.zoom),
-            0
-        ] as vec3;
-
-        const translatedMatrix = new Float32Array(16);
-        mat4.translate(translatedMatrix, matrix, translation);
-        return translatedMatrix;
+            inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], this.transform.zoom)];
     }
 
     saveTileTexture(texture: Texture) {

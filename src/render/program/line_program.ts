@@ -13,14 +13,14 @@ import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import {OverscaledTileID} from '../../source/tile_id';
 
 export type LineUniformsType = {
-    'u_matrix': UniformMatrix4f;
+    'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_units_to_pixels': Uniform2f;
 };
 
 export type LineGradientUniformsType = {
-    'u_matrix': UniformMatrix4f;
+    'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_units_to_pixels': Uniform2f;
@@ -29,7 +29,7 @@ export type LineGradientUniformsType = {
 };
 
 export type LinePatternUniformsType = {
-    'u_matrix': UniformMatrix4f;
+    'u_translation': Uniform2f;
     'u_texsize': Uniform2f;
     'u_ratio': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
@@ -40,7 +40,7 @@ export type LinePatternUniformsType = {
 };
 
 export type LineSDFUniformsType = {
-    'u_matrix': UniformMatrix4f;
+    'u_translation': Uniform2f;
     'u_ratio': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_units_to_pixels': Uniform2f;
@@ -54,14 +54,14 @@ export type LineSDFUniformsType = {
 };
 
 const lineUniforms = (context: Context, locations: UniformLocations): LineUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
+    'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels)
 });
 
 const lineGradientUniforms = (context: Context, locations: UniformLocations): LineGradientUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
+    'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
@@ -70,7 +70,7 @@ const lineGradientUniforms = (context: Context, locations: UniformLocations): Li
 });
 
 const linePatternUniforms = (context: Context, locations: UniformLocations): LinePatternUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
+    'u_translation': new Uniform2f(context, locations.u_translation),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
@@ -81,7 +81,7 @@ const linePatternUniforms = (context: Context, locations: UniformLocations): Lin
 });
 
 const lineSDFUniforms = (context: Context, locations: UniformLocations): LineSDFUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
+    'u_translation': new Uniform2f(context, locations.u_translation),
     'u_ratio': new Uniform1f(context, locations.u_ratio),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_units_to_pixels': new Uniform2f(context, locations.u_units_to_pixels),
@@ -98,12 +98,11 @@ const lineUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: LineStyleLayer,
-    coord: OverscaledTileID
 ): UniformValues<LineUniformsType> => {
     const transform = painter.transform;
 
     return {
-        'u_matrix': calculateMatrix(painter, tile, layer, coord),
+        'u_translation': calculateTranslation(painter, tile, layer),
         'u_ratio': 1 / pixelsToTileUnits(tile, 1, transform.zoom),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_units_to_pixels': [
@@ -118,9 +117,8 @@ const lineGradientUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     imageHeight: number,
-    coord: OverscaledTileID
 ): UniformValues<LineGradientUniformsType> => {
-    return extend(lineUniformValues(painter, tile, layer, coord), {
+    return extend(lineUniformValues(painter, tile, layer), {
         'u_image': 0,
         'u_image_height': imageHeight,
     });
@@ -131,12 +129,11 @@ const linePatternUniformValues = (
     tile: Tile,
     layer: LineStyleLayer,
     crossfade: CrossfadeParameters,
-    coord: OverscaledTileID
 ): UniformValues<LinePatternUniformsType> => {
     const transform = painter.transform;
     const tileZoomRatio = calculateTileRatio(tile, transform);
     return {
-        'u_matrix': calculateMatrix(painter, tile, layer, coord),
+        'u_translation': calculateTranslation(painter, tile, layer),
         'u_texsize': tile.imageAtlasTexture.size,
         // camera zoom ratio
         'u_ratio': 1 / pixelsToTileUnits(tile, 1, transform.zoom),
@@ -157,7 +154,6 @@ const lineSDFUniformValues = (
     layer: LineStyleLayer,
     dasharray: CrossFaded<Array<number>>,
     crossfade: CrossfadeParameters,
-    coord: OverscaledTileID
 ): UniformValues<LineSDFUniformsType> => {
     const transform = painter.transform;
     const lineAtlas = painter.lineAtlas;
@@ -171,7 +167,7 @@ const lineSDFUniformValues = (
     const widthA = posA.width * crossfade.fromScale;
     const widthB = posB.width * crossfade.toScale;
 
-    return extend(lineUniformValues(painter, tile, layer, coord), {
+    return extend(lineUniformValues(painter, tile, layer), {
         'u_patternscale_a': [tileRatio / widthA, -posA.height / 2],
         'u_patternscale_b': [tileRatio / widthB, -posB.height / 2],
         'u_sdfgamma': lineAtlas.width / (Math.min(widthA, widthB) * 256 * painter.pixelRatio) / 2,
@@ -186,9 +182,8 @@ function calculateTileRatio(tile: Tile, transform: Transform) {
     return 1 / pixelsToTileUnits(tile, 1, transform.tileZoom);
 }
 
-function calculateMatrix(painter: Painter, tile: Tile, layer: LineStyleLayer, coord: OverscaledTileID) {
-    return painter.translatePosMatrix(
-        coord ? coord.posMatrix : tile.tileID.posMatrix,
+function calculateTranslation(painter: Painter, tile: Tile, layer: LineStyleLayer) {
+    return painter.translatePosition(
         tile,
         layer.paint.get('line-translate'),
         layer.paint.get('line-translate-anchor')

@@ -66,11 +66,10 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const rttCoord = isRenderingToTexture ? coord : null;
-        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade, rttCoord) :
-            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade, rttCoord) :
-                gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length, rttCoord) :
-                    lineUniformValues(painter, tile, layer, rttCoord);
+        const uniformValues = image ? linePatternUniformValues(painter, tile, layer, crossfade) :
+            dasharray ? lineSDFUniformValues(painter, tile, layer, dasharray, crossfade) :
+                gradient ? lineGradientUniformValues(painter, tile, layer, bucket.lineClipsArray.length) :
+                    lineUniformValues(painter, tile, layer);
 
         if (image) {
             context.activeTexture.set(gl.TEXTURE0);
@@ -114,8 +113,12 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             gradientTexture.bind(layer.stepInterpolant ? gl.NEAREST : gl.LINEAR, gl.CLAMP_TO_EDGE);
         }
 
+        const rttCoord = isRenderingToTexture ? coord : null;
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+        projectionData['u_projection_matrix'] = rttCoord ? rttCoord.posMatrix : tile.tileID.posMatrix;
+
         program.draw(context, gl.TRIANGLES, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, null,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer, bucket.segments,
             layer.paint, painter.transform.zoom, programConfiguration, bucket.layoutVertexBuffer2);
 

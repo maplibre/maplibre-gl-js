@@ -9,7 +9,7 @@
 in vec2 a_pos_normal;
 in vec4 a_data;
 
-uniform mat4 u_matrix;
+uniform vec2 u_translation;
 uniform mediump float u_ratio;
 uniform vec2 u_units_to_pixels;
 uniform lowp float u_device_pixel_ratio;
@@ -73,8 +73,8 @@ void main() {
     mediump float t = 1.0 - abs(u);
     mediump vec2 offset2 = offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);
 
-    vec4 projected_extrude = u_matrix * vec4(dist / u_ratio, 0.0, 0.0);
-    gl_Position = u_matrix * vec4(pos + offset2 / u_ratio, 0.0, 1.0) + projected_extrude;
+    vec4 projected_extrude = u_projection_matrix * vec4(dist / u_ratio + u_translation, 0.0, 0.0);
+    gl_Position = u_projection_matrix * vec4(pos + offset2 / u_ratio + u_translation, 0.0, 1.0) + projected_extrude;
 
     // calculate how much the perspective view squishes or stretches the extrude
     #ifdef TERRAIN3D
