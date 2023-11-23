@@ -586,100 +586,13 @@ class Subdivider {
         }
     }
 
-    /**
-     * Detects any polygons whose edge lies right at the left/right edge of the tile, and "expands" those polygons beyond the tile edge.
-     * This function mainly fixes a thin hole artifact seen around New Zealand, where the mercator tiles wrap around on the X axis.
-     * Some tile sources do not have proper border polygons for this edge, this fuction is used to address that.
-     * The north/south mercator edge does not have this problem, because the geometry there doesn't need to wrap around seamlessly,
-     * and fixed anyway by the pole polygons introduced elsewhere during subdivision.
-     * This function mutates the supplied vertex and index buffers.
-     * Assumes there are no axis-aligned linear triangles.
-     * This function should be called before fixing T-joints.
-     * @param flattened - Flattened vertex coordinates, xyxyxy. This array is appended with new vertices.
-     * @param indices - Triangle indices. This array is appended with new primitives.
-     * @param left - Whether to add border at the left (west) edge of the tile.
-     * @param right  - Whether to add border at the right (east) edge of the tile.
-     */
-    private addPlaneEdgeBorders(indices: Array<number>, left: boolean, right: boolean): void {
-        const flattened = this._finalVertices;
-        const numIndices = indices.length;
-
-        const borderAmount = EXTENT_SUBDIVISION_BORDER;
-
-        const that = this;
-
-        const toleranceExtent = 0;
-
-        function expandEdgeLeft(i0: number, i1: number) {
-            const v0x = flattened[i0 * 2 + 0];
-            const v0y = flattened[i0 * 2 + 1];
-            const v1x = flattened[i1 * 2 + 0];
-            const v1y = flattened[i1 * 2 + 1];
-
-            if (v0x === v1x && v0x >= -toleranceExtent && v0x <= toleranceExtent) {
-                const upperY = Math.min(v0y, v1y);
-                const lowerY = Math.max(v0y, v1y);
-                const upperIndex = (upperY === v0y) ? i0 : i1;
-                const lowerIndex = (upperY === v0y) ? i1 : i0;
-
-                const upper2 = that.getVertexIndex(-borderAmount, upperY);
-                const lower2 = that.getVertexIndex(-borderAmount, lowerY);
-
-                indices.push(lower2);
-                indices.push(upperIndex);
-                indices.push(upper2);
-                indices.push(lower2);
-                indices.push(lowerIndex);
-                indices.push(upperIndex);
-            }
-        }
-
-        function expandEdgeRight(i0: number, i1: number) {
-            const v0x = flattened[i0 * 2 + 0];
-            const v0y = flattened[i0 * 2 + 1];
-            const v1x = flattened[i1 * 2 + 0];
-            const v1y = flattened[i1 * 2 + 1];
-
-            if (v0x === v1x && v0x >= EXTENT - toleranceExtent && v0x <= EXTENT + toleranceExtent) {
-                const upperY = Math.min(v0y, v1y);
-                const lowerY = Math.max(v0y, v1y);
-                const upperIndex = (upperY === v0y) ? i0 : i1;
-                const lowerIndex = (upperY === v0y) ? i1 : i0;
-
-                const upper2 = that.getVertexIndex(EXTENT + borderAmount, upperY);
-                const lower2 = that.getVertexIndex(EXTENT + borderAmount, lowerY);
-
-                indices.push(lower2);
-                indices.push(upper2);
-                indices.push(upperIndex);
-                indices.push(lower2);
-                indices.push(upperIndex);
-                indices.push(lowerIndex);
-            }
-        }
-
-        for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
-            const i0 = indices[primitiveIndex - 2];
-            const i1 = indices[primitiveIndex - 1];
-            const i2 = indices[primitiveIndex];
-            const v0x = flattened[i0 * 2 + 0];
-            const v0y = flattened[i0 * 2 + 1];
-            const v1x = flattened[i1 * 2 + 0];
-            const v1y = flattened[i1 * 2 + 1];
-            const v2x = flattened[i2 * 2 + 0];
-            const v2y = flattened[i2 * 2 + 1];
-
-            if (left) {
-                expandEdgeLeft(i0, i1);
-                expandEdgeLeft(i1, i2);
-                expandEdgeLeft(i2, i0);
-            }
-
-            if (right) {
-                expandEdgeRight(i0, i1);
-                expandEdgeRight(i1, i2);
-                expandEdgeRight(i2, i0);
-            }
+    private initializeVertices(vertices: Array<number>) {
+        this._finalVertices = [...vertices];
+        this._vertexDictionary = {};
+        for (let i = 0; i < vertices.length; i += 2) {
+            const index = i / 2;
+            const key = this.getKey(vertices[i], vertices[i + 1]);
+            this._vertexDictionary[key] = index;
         }
     }
 
@@ -698,27 +611,14 @@ class Subdivider {
         }
 
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
-        this._finalVertices = [...vertices];
-        this._vertexDictionary = {};
-        for (let i = 0; i < vertices.length; i += 2) {
-            const index = i / 2;
-            const key = this.getKey(vertices[i], vertices[i + 1]);
-            this._vertexDictionary[key] = index;
-        }
+        this.initializeVertices(vertices);
 
         // Subdivide triangles
         const subdividedTriangles = this.subdivideTriangles(triangleIndices);
         // Subdivide lines
         const subdividedLines = [];
-        for (const lines of lineIndices) {
-            subdividedLines.push(this.subdivideLines(lines));
-        }
-
-        // Fix seams at east/west mercator edges
-        const east = canonical.x === (1 << canonical.z) - 1;
-        const west = canonical.x === 0;
-        if (east || west) {
-            this.addPlaneEdgeBorders(subdividedTriangles, west, east);
+        for (const line of lineIndices) {
+            subdividedLines.push(this.subdivideLine(line));
         }
 
         // Fix horizontal/vertical seams at T-joints
