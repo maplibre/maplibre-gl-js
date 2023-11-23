@@ -1,3 +1,4 @@
+import Point from '@mapbox/point-geometry';
 import {EXTENT, EXTENT_SUBDIVISION_BORDER} from '../data/extent';
 import {webMercatorToSpherePoint} from '../geo/mercator_coordinate';
 import {CanonicalTileID} from '../source/tile_id';
@@ -293,7 +294,7 @@ class Subdivider {
         return finalTriangleIndices;
     }
 
-    private subdivideLines(lineIndices: Array<number>): Array<number> {
+    private subdivideLine(lineIndices: Array<number>): Array<number> {
         if (!lineIndices) {
             return [];
         }
@@ -325,14 +326,9 @@ class Subdivider {
 
             const subdividedLineIndices = [];
 
-            // Add original line vertices - but only if they lie within the tile, as for globe rendering
-            // we need to rely on software clipping done here instead of stencil clipping.
-            if (lineVertex0x >= 0 && lineVertex0x <= EXTENT && lineVertex0y >= 0 && lineVertex0y <= EXTENT) {
-                subdividedLineIndices.push(lineIndex0);
-            }
-            if (lineVertex1x >= 0 && lineVertex1x <= EXTENT && lineVertex1y >= 0 && lineVertex1y <= EXTENT) {
-                subdividedLineIndices.push(lineIndex1);
-            }
+            // Add original line vertices
+            subdividedLineIndices.push(lineIndex0);
+            subdividedLineIndices.push(lineIndex1);
 
             for (let cellX = Math.max(Math.floor((minX + this._granualityStep) / this._granualityStep), 0); cellX <= Math.min(Math.floor((maxX - 1) / this._granualityStep), this._granuality); cellX += 1) {
                 const cellEdgeX = cellX * this._granualityStep;
@@ -673,4 +669,92 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
     }
 
     return lineIndices;
+}
+
+export function subdivideVertexLine(linePoints: Array<Point>, granuality: number): Array<Point> {
+    if (!linePoints) {
+        return [];
+    }
+
+    if (granuality < 2) {
+        return linePoints;
+    }
+
+    const granualityStep = Math.floor(EXTENT / granuality);
+    const finalLineVertices: Array<Point> = [];
+
+    // Add first line vertex
+    finalLineVertices.push(linePoints[0]);
+
+    // Iterate over all input lines
+    for (let pointIndex = 1; pointIndex < linePoints.length; pointIndex++) {
+        const lineVertex0x = linePoints[pointIndex - 1].x;
+        const lineVertex0y = linePoints[pointIndex - 1].y;
+        const lineVertex1x = linePoints[pointIndex].x;
+        const lineVertex1y = linePoints[pointIndex].y;
+
+        // Get line AABB
+        const minX = Math.min(lineVertex0x, lineVertex1x);
+        const maxX = Math.max(lineVertex0x, lineVertex1x);
+        const minY = Math.min(lineVertex0y, lineVertex1y);
+        const maxY = Math.max(lineVertex0y, lineVertex1y);
+
+        const clampedMinX = Math.max(minX, 0);
+        const clampedMaxX = Math.min(maxX, EXTENT);
+        const clampedMinY = Math.max(minY, 0);
+        const clampedMaxY = Math.min(maxY, EXTENT);
+
+        const subdividedLinePoints = [];
+
+        // The first vertex of this line segment was already added in previous iteration or at the start of this function.
+        // Only add the second vertex of this segment.
+        subdividedLinePoints.push(linePoints[pointIndex]);
+
+        for (let cellX = Math.max(Math.floor((minX + granualityStep) / granualityStep), 0); cellX <= Math.min(Math.floor((maxX - 1) / granualityStep), granuality); cellX += 1) {
+            const cellEdgeX = cellX * granualityStep;
+            const y = checkEdgeDivide(lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX);
+            if (y !== undefined && y >= clampedMinX && y <= clampedMaxX) {
+                for (const p of subdividedLinePoints) {
+                    if (p.x === cellEdgeX && p.y === y) {
+                        return; // the vertex already exists in this line, do not add it
+                    }
+                }
+                subdividedLinePoints.push(new Point(cellEdgeX, y));
+            }
+        }
+
+        for (let cellY = Math.max(Math.floor((minY + granualityStep) / granualityStep), 0); cellY <= Math.min(Math.floor((maxY - 1) / granualityStep), granuality); cellY += 1) {
+            const cellEdgeY = cellY * granualityStep;
+            const x = checkEdgeDivide(lineVertex0y, lineVertex0x, lineVertex1y, lineVertex1x, cellEdgeY);
+            if (x !== undefined && x >= clampedMinY && x <= clampedMaxY) {
+                for (const p of subdividedLinePoints) {
+                    if (p.x === x && p.y === cellEdgeY) {
+                        return;
+                    }
+                }
+                subdividedLinePoints.push(new Point(x, cellEdgeY));
+            }
+        }
+
+        const edgeX = lineVertex1x - lineVertex0x;
+        const edgeY = lineVertex1y - lineVertex0y;
+
+        subdividedLinePoints.sort((a: Point, b: Point) => {
+            const aDist = a.x * edgeX + a.y * edgeY;
+            const bDist = b.x * edgeX + b.y * edgeY;
+            if (aDist < bDist) {
+                return -1;
+            }
+            if (aDist > bDist) {
+                return 1;
+            }
+            return 0;
+        });
+
+        for (let i = 0; i < subdividedLinePoints.length; i++) {
+            finalLineVertices.push(subdividedLinePoints[i]);
+        }
+    }
+
+    return finalLineVertices;
 }

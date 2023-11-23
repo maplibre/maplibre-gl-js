@@ -42,59 +42,59 @@ describe('LineBucket', () => {
 
             bucket.addLine([
                 new Point(0, 0)
-            ], line, undefined, undefined, undefined, undefined);
+            ], line, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addLine([
                 new Point(0, 0)
-            ], polygon, undefined, undefined, undefined, undefined);
-
-            bucket.addLine([
-                new Point(0, 0),
-                new Point(0, 0)
-            ], line, undefined, undefined, undefined, undefined);
+            ], polygon, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(0, 0)
-            ], polygon, undefined, undefined, undefined, undefined);
+            ], line, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addLine([
                 new Point(0, 0),
-                new Point(10, 10),
                 new Point(0, 0)
-            ], line, undefined, undefined, undefined, undefined);
+            ], polygon, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
                 new Point(0, 0)
-            ], polygon, undefined, undefined, undefined, undefined);
+            ], line, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
-                new Point(10, 20)
-            ], line, undefined, undefined, undefined, undefined);
+                new Point(0, 0)
+            ], polygon, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
                 new Point(10, 20)
-            ], polygon, undefined, undefined, undefined, undefined);
+            ], line, undefined, undefined, undefined, undefined, undefined);
+
+            bucket.addLine([
+                new Point(0, 0),
+                new Point(10, 10),
+                new Point(10, 20)
+            ], polygon, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
                 new Point(10, 20),
                 new Point(0, 0)
-            ], line, undefined, undefined, undefined, undefined);
+            ], line, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
                 new Point(10, 20),
                 new Point(0, 0)
-            ], polygon, undefined, undefined, undefined, undefined);
+            ], polygon, undefined, undefined, undefined, undefined, undefined);
 
             bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined);
         }).not.toThrow();

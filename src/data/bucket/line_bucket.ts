@@ -33,6 +33,8 @@ import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import {subdivideVertexLine} from '../../render/subdivision';
+import {ProjectionManager} from '../../render/projection_manager';
 
 // NOTE ON EXTRUDE SCALE:
 // scale the extrusion vector so that the normal length is this value.
@@ -252,16 +254,21 @@ export class LineBucket implements Bucket {
         this.lineClips = this.lineFeatureClips(feature);
 
         for (const line of geometry) {
-            this.addLine(line, feature, join, cap, miterLimit, roundLimit);
+            this.addLine(line, feature, join, cap, miterLimit, roundLimit, canonical);
         }
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }
 
-    addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number) {
+    addLine(vertices: Array<Point>, feature: BucketFeature, join: string, cap: string, miterLimit: number, roundLimit: number, canonical: CanonicalTileID | undefined) {
         this.distance = 0;
         this.scaledDistance = 0;
         this.totalDistance = 0;
+
+        const granuality = (canonical) ? ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z) : 1;
+
+        // First, subdivide the line for globe rendering
+        vertices = subdivideVertexLine(vertices, granuality);
 
         if (this.lineClips) {
             this.lineClipsArray.push(this.lineClips);
