@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.8">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.10">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.4b4a2bd9.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.fad675c6.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.356b1318.min.css">
@@ -47,6 +47,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../assets/extra.css">
     
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -297,6 +299,24 @@
           
   
   Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../guides/" class="md-tabs__link">
+          
+  
+  Guides
 
         </a>
       </li>
@@ -3871,651 +3891,837 @@
       
         <li class="md-nav__item">
   <a href="#display-buildings-in-3d" class="md-nav__link">
-    Display buildings in 3D
+    <span class="md-ellipsis">
+      Display buildings in 3D
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#extrude-polygons-for-3d-indoor-mapping" class="md-nav__link">
-    Extrude polygons for 3D indoor mapping
+    <span class="md-ellipsis">
+      Extrude polygons for 3D indoor mapping
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#3d-terrain" class="md-nav__link">
-    3D Terrain
+    <span class="md-ellipsis">
+      3D Terrain
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-3d-model-with-babylonjs" class="md-nav__link">
-    Add a 3D model with babylon.js
+    <span class="md-ellipsis">
+      Add a 3D model with babylon.js
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-3d-model-with-threejs" class="md-nav__link">
-    Add a 3D model with three.js
+    <span class="md-ellipsis">
+      Add a 3D model with three.js
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-default-marker" class="md-nav__link">
-    Add a default marker
+    <span class="md-ellipsis">
+      Add a default marker
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-an-animated-icon-to-the-map" class="md-nav__link">
-    Add an animated icon to the map
+    <span class="md-ellipsis">
+      Add an animated icon to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-generated-icon-to-the-map" class="md-nav__link">
-    Add a generated icon to the map
+    <span class="md-ellipsis">
+      Add a generated icon to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#generate-and-add-a-missing-icon-to-the-map" class="md-nav__link">
-    Generate and add a missing icon to the map
+    <span class="md-ellipsis">
+      Generate and add a missing icon to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-stretchable-image-to-the-map" class="md-nav__link">
-    Add a stretchable image to the map
+    <span class="md-ellipsis">
+      Add a stretchable image to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-an-icon-to-the-map" class="md-nav__link">
-    Add an icon to the map
+    <span class="md-ellipsis">
+      Add an icon to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-line" class="md-nav__link">
-    Animate a line
+    <span class="md-ellipsis">
+      Animate a line
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-map-camera-around-a-point" class="md-nav__link">
-    Animate map camera around a point
+    <span class="md-ellipsis">
+      Animate map camera around a point
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-series-of-images" class="md-nav__link">
-    Animate a series of images
+    <span class="md-ellipsis">
+      Animate a series of images
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-marker" class="md-nav__link">
-    Animate a marker
+    <span class="md-ellipsis">
+      Animate a marker
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-point" class="md-nav__link">
-    Animate a point
+    <span class="md-ellipsis">
+      Animate a point
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-point-along-a-route" class="md-nav__link">
-    Animate a point along a route
+    <span class="md-ellipsis">
+      Animate a point along a route
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-the-default-position-for-attribution" class="md-nav__link">
-    Change the default position for attribution
+    <span class="md-ellipsis">
+      Change the default position for attribution
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#customize-camera-animations" class="md-nav__link">
-    Customize camera animations
+    <span class="md-ellipsis">
+      Customize camera animations
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-canvas-source" class="md-nav__link">
-    Add a canvas source
+    <span class="md-ellipsis">
+      Add a canvas source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#center-the-map-on-a-clicked-symbol" class="md-nav__link">
-    Center the map on a clicked symbol
+    <span class="md-ellipsis">
+      Center the map on a clicked symbol
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-building-color-based-on-zoom-level" class="md-nav__link">
-    Change building color based on zoom level
+    <span class="md-ellipsis">
+      Change building color based on zoom level
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-the-case-of-labels" class="md-nav__link">
-    Change the case of labels
+    <span class="md-ellipsis">
+      Change the case of labels
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#check-if-maplibre-gl-js-is-supported" class="md-nav__link">
-    Check if MapLibre GL JS is supported
+    <span class="md-ellipsis">
+      Check if MapLibre GL JS is supported
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-html-clusters-with-custom-properties" class="md-nav__link">
-    Display HTML clusters with custom properties
+    <span class="md-ellipsis">
+      Display HTML clusters with custom properties
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-and-style-clusters" class="md-nav__link">
-    Create and style clusters
+    <span class="md-ellipsis">
+      Create and style clusters
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-a-layers-color-with-buttons" class="md-nav__link">
-    Change a layer's color with buttons
+    <span class="md-ellipsis">
+      Change a layer's color with buttons
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-contour-lines" class="md-nav__link">
-    Add Contour Lines
+    <span class="md-ellipsis">
+      Add Contour Lines
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#cooperative-gestures" class="md-nav__link">
-    Cooperative gestures
+    <span class="md-ellipsis">
+      Cooperative gestures
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-custom-icons-with-markers" class="md-nav__link">
-    Add custom icons with Markers
+    <span class="md-ellipsis">
+      Add custom icons with Markers
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-custom-style-layer" class="md-nav__link">
-    Add a custom style layer
+    <span class="md-ellipsis">
+      Add a custom style layer
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#style-lines-with-a-data-driven-property" class="md-nav__link">
-    Style lines with a data-driven property
+    <span class="md-ellipsis">
+      Style lines with a data-driven property
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#disable-map-rotation" class="md-nav__link">
-    Disable map rotation
+    <span class="md-ellipsis">
+      Disable map rotation
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#disable-scroll-zoom" class="md-nav__link">
-    Disable scroll zoom
+    <span class="md-ellipsis">
+      Disable scroll zoom
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-and-style-rich-text-labels" class="md-nav__link">
-    Display and style rich text labels
+    <span class="md-ellipsis">
+      Display and style rich text labels
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-draggable-marker" class="md-nav__link">
-    Create a draggable Marker
+    <span class="md-ellipsis">
+      Create a draggable Marker
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-draggable-point" class="md-nav__link">
-    Create a draggable point
+    <span class="md-ellipsis">
+      Create a draggable point
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#use-a-fallback-image" class="md-nav__link">
-    Use a fallback image
+    <span class="md-ellipsis">
+      Use a fallback image
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-pattern-to-a-polygon" class="md-nav__link">
-    Add a pattern to a polygon
+    <span class="md-ellipsis">
+      Add a pattern to a polygon
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#filter-symbols-by-text-input" class="md-nav__link">
-    Filter symbols by text input
+    <span class="md-ellipsis">
+      Filter symbols by text input
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#filter-symbols-by-toggling-a-list" class="md-nav__link">
-    Filter symbols by toggling a list
+    <span class="md-ellipsis">
+      Filter symbols by toggling a list
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#fit-a-map-to-a-bounding-box" class="md-nav__link">
-    Fit a map to a bounding box
+    <span class="md-ellipsis">
+      Fit a map to a bounding box
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#slowly-fly-to-a-location" class="md-nav__link">
-    Slowly fly to a location
+    <span class="md-ellipsis">
+      Slowly fly to a location
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#fly-to-a-location" class="md-nav__link">
-    Fly to a location
+    <span class="md-ellipsis">
+      Fly to a location
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#view-a-fullscreen-map" class="md-nav__link">
-    View a fullscreen map
+    <span class="md-ellipsis">
+      View a fullscreen map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#navigate-the-map-with-game-like-controls" class="md-nav__link">
-    Navigate the map with game-like controls
+    <span class="md-ellipsis">
+      Navigate the map with game-like controls
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#geocode-with-nominatim" class="md-nav__link">
-    Geocode with Nominatim
+    <span class="md-ellipsis">
+      Geocode with Nominatim
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-new-layer-below-labels" class="md-nav__link">
-    Add a new layer below labels
+    <span class="md-ellipsis">
+      Add a new layer below labels
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-geojson-line" class="md-nav__link">
-    Add a GeoJSON line
+    <span class="md-ellipsis">
+      Add a GeoJSON line
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#draw-geojson-points" class="md-nav__link">
-    Draw GeoJSON points
+    <span class="md-ellipsis">
+      Draw GeoJSON points
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-geojson-polygon" class="md-nav__link">
-    Add a GeoJSON polygon
+    <span class="md-ellipsis">
+      Add a GeoJSON polygon
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-heatmap-layer" class="md-nav__link">
-    Create a heatmap layer
+    <span class="md-ellipsis">
+      Create a heatmap layer
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-hover-effect" class="md-nav__link">
-    Create a hover effect
+    <span class="md-ellipsis">
+      Create a hover effect
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-non-interactive-map" class="md-nav__link">
-    Display a non-interactive map
+    <span class="md-ellipsis">
+      Display a non-interactive map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#jump-to-a-series-of-locations" class="md-nav__link">
-    Jump to a series of locations
+    <span class="md-ellipsis">
+      Jump to a series of locations
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-a-maps-language" class="md-nav__link">
-    Change a map's language
+    <span class="md-ellipsis">
+      Change a map's language
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-line-that-crosses-180th-meridian" class="md-nav__link">
-    Display line that crosses 180th meridian
+    <span class="md-ellipsis">
+      Display line that crosses 180th meridian
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-gradient-line-using-an-expression" class="md-nav__link">
-    Create a gradient line using an expression
+    <span class="md-ellipsis">
+      Create a gradient line using an expression
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-live-realtime-data" class="md-nav__link">
-    Add live realtime data
+    <span class="md-ellipsis">
+      Add live realtime data
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#update-a-feature-in-realtime" class="md-nav__link">
-    Update a feature in realtime
+    <span class="md-ellipsis">
+      Update a feature in realtime
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#view-local-geojson-experimental" class="md-nav__link">
-    View local GeoJSON (experimental)
+    <span class="md-ellipsis">
+      View local GeoJSON (experimental)
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#view-local-geojson" class="md-nav__link">
-    View local GeoJSON
+    <span class="md-ellipsis">
+      View local GeoJSON
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#use-locally-generated-ideographs" class="md-nav__link">
-    Use locally generated ideographs
+    <span class="md-ellipsis">
+      Use locally generated ideographs
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#locate-the-user" class="md-nav__link">
-    Locate the user
+    <span class="md-ellipsis">
+      Locate the user
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-raster-tile-source" class="md-nav__link">
-    Add a raster tile source
+    <span class="md-ellipsis">
+      Add a raster tile source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#show-drawn-polygon-area" class="md-nav__link">
-    Show drawn polygon area
+    <span class="md-ellipsis">
+      Show drawn polygon area
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-support-for-right-to-left-scripts" class="md-nav__link">
-    Add support for right-to-left scripts
+    <span class="md-ellipsis">
+      Add support for right-to-left scripts
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#measure-distances" class="md-nav__link">
-    Measure distances
+    <span class="md-ellipsis">
+      Measure distances
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#get-coordinates-of-the-mouse-pointer" class="md-nav__link">
-    Get coordinates of the mouse pointer
+    <span class="md-ellipsis">
+      Get coordinates of the mouse pointer
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-multiple-geometries-from-one-geojson-source" class="md-nav__link">
-    Add multiple geometries from one GeoJSON source
+    <span class="md-ellipsis">
+      Add multiple geometries from one GeoJSON source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-map-navigation-controls" class="md-nav__link">
-    Display map navigation controls
+    <span class="md-ellipsis">
+      Display map navigation controls
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#offset-the-vanishing-point-using-padding" class="md-nav__link">
-    Offset the vanishing point using padding
+    <span class="md-ellipsis">
+      Offset the vanishing point using padding
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#show-polygon-information-on-click" class="md-nav__link">
-    Show polygon information on click
+    <span class="md-ellipsis">
+      Show polygon information on click
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-popup-on-click" class="md-nav__link">
-    Display a popup on click
+    <span class="md-ellipsis">
+      Display a popup on click
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-popup-on-hover" class="md-nav__link">
-    Display a popup on hover
+    <span class="md-ellipsis">
+      Display a popup on hover
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-popup" class="md-nav__link">
-    Display a popup
+    <span class="md-ellipsis">
+      Display a popup
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#get-features-under-the-mouse-pointer" class="md-nav__link">
-    Get features under the mouse pointer
+    <span class="md-ellipsis">
+      Get features under the mouse pointer
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#render-world-copies" class="md-nav__link">
-    Render world copies
+    <span class="md-ellipsis">
+      Render world copies
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#restrict-map-panning-to-an-area" class="md-nav__link">
-    Restrict map panning to an area
+    <span class="md-ellipsis">
+      Restrict map panning to an area
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-satellite-map" class="md-nav__link">
-    Display a satellite map
+    <span class="md-ellipsis">
+      Display a satellite map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#fly-to-a-location-based-on-scroll-position" class="md-nav__link">
-    Fly to a location based on scroll position
+    <span class="md-ellipsis">
+      Fly to a location based on scroll position
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#set-pitch-and-bearing" class="md-nav__link">
-    Set pitch and bearing
+    <span class="md-ellipsis">
+      Set pitch and bearing
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#attach-a-popup-to-a-marker-instance" class="md-nav__link">
-    Attach a popup to a marker instance
+    <span class="md-ellipsis">
+      Attach a popup to a marker instance
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-map" class="md-nav__link">
-    Display a map
+    <span class="md-ellipsis">
+      Display a map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-time-slider" class="md-nav__link">
-    Create a time slider
+    <span class="md-ellipsis">
+      Create a time slider
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#toggle-interactions" class="md-nav__link">
-    Toggle interactions
+    <span class="md-ellipsis">
+      Toggle interactions
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#variable-label-placement" class="md-nav__link">
-    Variable label placement
+    <span class="md-ellipsis">
+      Variable label placement
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#variable-label-placement-with-offset" class="md-nav__link">
-    Variable label placement with offset
+    <span class="md-ellipsis">
+      Variable label placement with offset
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-vector-tile-source" class="md-nav__link">
-    Add a vector tile source
+    <span class="md-ellipsis">
+      Add a vector tile source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-video" class="md-nav__link">
-    Add a video
+    <span class="md-ellipsis">
+      Add a video
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#visualize-population-density" class="md-nav__link">
-    Visualize population density
+    <span class="md-ellipsis">
+      Visualize population density
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-wms-source" class="md-nav__link">
-    Add a WMS source
+    <span class="md-ellipsis">
+      Add a WMS source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#fit-to-the-bounds-of-a-linestring" class="md-nav__link">
-    Fit to the bounds of a LineString
+    <span class="md-ellipsis">
+      Fit to the bounds of a LineString
+    </span>
   </a>
   
 </li>
@@ -5095,7 +5301,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cooperated-gestures/" class="md-nav__link">
+      <a href="cooperative-gestures/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -6396,6 +6602,112 @@
   
 
     
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/large-data/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimising MapLibre Performance: Tips for Large GeoJSON Datasets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/mapbox-migration-guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    MapBox migration guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -6424,651 +6736,837 @@
       
         <li class="md-nav__item">
   <a href="#display-buildings-in-3d" class="md-nav__link">
-    Display buildings in 3D
+    <span class="md-ellipsis">
+      Display buildings in 3D
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#extrude-polygons-for-3d-indoor-mapping" class="md-nav__link">
-    Extrude polygons for 3D indoor mapping
+    <span class="md-ellipsis">
+      Extrude polygons for 3D indoor mapping
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#3d-terrain" class="md-nav__link">
-    3D Terrain
+    <span class="md-ellipsis">
+      3D Terrain
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-3d-model-with-babylonjs" class="md-nav__link">
-    Add a 3D model with babylon.js
+    <span class="md-ellipsis">
+      Add a 3D model with babylon.js
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-3d-model-with-threejs" class="md-nav__link">
-    Add a 3D model with three.js
+    <span class="md-ellipsis">
+      Add a 3D model with three.js
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-default-marker" class="md-nav__link">
-    Add a default marker
+    <span class="md-ellipsis">
+      Add a default marker
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-an-animated-icon-to-the-map" class="md-nav__link">
-    Add an animated icon to the map
+    <span class="md-ellipsis">
+      Add an animated icon to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-generated-icon-to-the-map" class="md-nav__link">
-    Add a generated icon to the map
+    <span class="md-ellipsis">
+      Add a generated icon to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#generate-and-add-a-missing-icon-to-the-map" class="md-nav__link">
-    Generate and add a missing icon to the map
+    <span class="md-ellipsis">
+      Generate and add a missing icon to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-stretchable-image-to-the-map" class="md-nav__link">
-    Add a stretchable image to the map
+    <span class="md-ellipsis">
+      Add a stretchable image to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-an-icon-to-the-map" class="md-nav__link">
-    Add an icon to the map
+    <span class="md-ellipsis">
+      Add an icon to the map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-line" class="md-nav__link">
-    Animate a line
+    <span class="md-ellipsis">
+      Animate a line
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-map-camera-around-a-point" class="md-nav__link">
-    Animate map camera around a point
+    <span class="md-ellipsis">
+      Animate map camera around a point
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-series-of-images" class="md-nav__link">
-    Animate a series of images
+    <span class="md-ellipsis">
+      Animate a series of images
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-marker" class="md-nav__link">
-    Animate a marker
+    <span class="md-ellipsis">
+      Animate a marker
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-point" class="md-nav__link">
-    Animate a point
+    <span class="md-ellipsis">
+      Animate a point
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#animate-a-point-along-a-route" class="md-nav__link">
-    Animate a point along a route
+    <span class="md-ellipsis">
+      Animate a point along a route
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-the-default-position-for-attribution" class="md-nav__link">
-    Change the default position for attribution
+    <span class="md-ellipsis">
+      Change the default position for attribution
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#customize-camera-animations" class="md-nav__link">
-    Customize camera animations
+    <span class="md-ellipsis">
+      Customize camera animations
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-canvas-source" class="md-nav__link">
-    Add a canvas source
+    <span class="md-ellipsis">
+      Add a canvas source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#center-the-map-on-a-clicked-symbol" class="md-nav__link">
-    Center the map on a clicked symbol
+    <span class="md-ellipsis">
+      Center the map on a clicked symbol
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-building-color-based-on-zoom-level" class="md-nav__link">
-    Change building color based on zoom level
+    <span class="md-ellipsis">
+      Change building color based on zoom level
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-the-case-of-labels" class="md-nav__link">
-    Change the case of labels
+    <span class="md-ellipsis">
+      Change the case of labels
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#check-if-maplibre-gl-js-is-supported" class="md-nav__link">
-    Check if MapLibre GL JS is supported
+    <span class="md-ellipsis">
+      Check if MapLibre GL JS is supported
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-html-clusters-with-custom-properties" class="md-nav__link">
-    Display HTML clusters with custom properties
+    <span class="md-ellipsis">
+      Display HTML clusters with custom properties
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-and-style-clusters" class="md-nav__link">
-    Create and style clusters
+    <span class="md-ellipsis">
+      Create and style clusters
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-a-layers-color-with-buttons" class="md-nav__link">
-    Change a layer's color with buttons
+    <span class="md-ellipsis">
+      Change a layer's color with buttons
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-contour-lines" class="md-nav__link">
-    Add Contour Lines
+    <span class="md-ellipsis">
+      Add Contour Lines
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#cooperative-gestures" class="md-nav__link">
-    Cooperative gestures
+    <span class="md-ellipsis">
+      Cooperative gestures
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-custom-icons-with-markers" class="md-nav__link">
-    Add custom icons with Markers
+    <span class="md-ellipsis">
+      Add custom icons with Markers
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-custom-style-layer" class="md-nav__link">
-    Add a custom style layer
+    <span class="md-ellipsis">
+      Add a custom style layer
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#style-lines-with-a-data-driven-property" class="md-nav__link">
-    Style lines with a data-driven property
+    <span class="md-ellipsis">
+      Style lines with a data-driven property
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#disable-map-rotation" class="md-nav__link">
-    Disable map rotation
+    <span class="md-ellipsis">
+      Disable map rotation
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#disable-scroll-zoom" class="md-nav__link">
-    Disable scroll zoom
+    <span class="md-ellipsis">
+      Disable scroll zoom
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-and-style-rich-text-labels" class="md-nav__link">
-    Display and style rich text labels
+    <span class="md-ellipsis">
+      Display and style rich text labels
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-draggable-marker" class="md-nav__link">
-    Create a draggable Marker
+    <span class="md-ellipsis">
+      Create a draggable Marker
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-draggable-point" class="md-nav__link">
-    Create a draggable point
+    <span class="md-ellipsis">
+      Create a draggable point
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#use-a-fallback-image" class="md-nav__link">
-    Use a fallback image
+    <span class="md-ellipsis">
+      Use a fallback image
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-pattern-to-a-polygon" class="md-nav__link">
-    Add a pattern to a polygon
+    <span class="md-ellipsis">
+      Add a pattern to a polygon
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#filter-symbols-by-text-input" class="md-nav__link">
-    Filter symbols by text input
+    <span class="md-ellipsis">
+      Filter symbols by text input
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#filter-symbols-by-toggling-a-list" class="md-nav__link">
-    Filter symbols by toggling a list
+    <span class="md-ellipsis">
+      Filter symbols by toggling a list
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#fit-a-map-to-a-bounding-box" class="md-nav__link">
-    Fit a map to a bounding box
+    <span class="md-ellipsis">
+      Fit a map to a bounding box
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#slowly-fly-to-a-location" class="md-nav__link">
-    Slowly fly to a location
+    <span class="md-ellipsis">
+      Slowly fly to a location
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#fly-to-a-location" class="md-nav__link">
-    Fly to a location
+    <span class="md-ellipsis">
+      Fly to a location
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#view-a-fullscreen-map" class="md-nav__link">
-    View a fullscreen map
+    <span class="md-ellipsis">
+      View a fullscreen map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#navigate-the-map-with-game-like-controls" class="md-nav__link">
-    Navigate the map with game-like controls
+    <span class="md-ellipsis">
+      Navigate the map with game-like controls
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#geocode-with-nominatim" class="md-nav__link">
-    Geocode with Nominatim
+    <span class="md-ellipsis">
+      Geocode with Nominatim
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-new-layer-below-labels" class="md-nav__link">
-    Add a new layer below labels
+    <span class="md-ellipsis">
+      Add a new layer below labels
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-geojson-line" class="md-nav__link">
-    Add a GeoJSON line
+    <span class="md-ellipsis">
+      Add a GeoJSON line
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#draw-geojson-points" class="md-nav__link">
-    Draw GeoJSON points
+    <span class="md-ellipsis">
+      Draw GeoJSON points
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-geojson-polygon" class="md-nav__link">
-    Add a GeoJSON polygon
+    <span class="md-ellipsis">
+      Add a GeoJSON polygon
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-heatmap-layer" class="md-nav__link">
-    Create a heatmap layer
+    <span class="md-ellipsis">
+      Create a heatmap layer
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-hover-effect" class="md-nav__link">
-    Create a hover effect
+    <span class="md-ellipsis">
+      Create a hover effect
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-non-interactive-map" class="md-nav__link">
-    Display a non-interactive map
+    <span class="md-ellipsis">
+      Display a non-interactive map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#jump-to-a-series-of-locations" class="md-nav__link">
-    Jump to a series of locations
+    <span class="md-ellipsis">
+      Jump to a series of locations
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#change-a-maps-language" class="md-nav__link">
-    Change a map's language
+    <span class="md-ellipsis">
+      Change a map's language
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-line-that-crosses-180th-meridian" class="md-nav__link">
-    Display line that crosses 180th meridian
+    <span class="md-ellipsis">
+      Display line that crosses 180th meridian
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-gradient-line-using-an-expression" class="md-nav__link">
-    Create a gradient line using an expression
+    <span class="md-ellipsis">
+      Create a gradient line using an expression
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-live-realtime-data" class="md-nav__link">
-    Add live realtime data
+    <span class="md-ellipsis">
+      Add live realtime data
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#update-a-feature-in-realtime" class="md-nav__link">
-    Update a feature in realtime
+    <span class="md-ellipsis">
+      Update a feature in realtime
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#view-local-geojson-experimental" class="md-nav__link">
-    View local GeoJSON (experimental)
+    <span class="md-ellipsis">
+      View local GeoJSON (experimental)
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#view-local-geojson" class="md-nav__link">
-    View local GeoJSON
+    <span class="md-ellipsis">
+      View local GeoJSON
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#use-locally-generated-ideographs" class="md-nav__link">
-    Use locally generated ideographs
+    <span class="md-ellipsis">
+      Use locally generated ideographs
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#locate-the-user" class="md-nav__link">
-    Locate the user
+    <span class="md-ellipsis">
+      Locate the user
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-raster-tile-source" class="md-nav__link">
-    Add a raster tile source
+    <span class="md-ellipsis">
+      Add a raster tile source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#show-drawn-polygon-area" class="md-nav__link">
-    Show drawn polygon area
+    <span class="md-ellipsis">
+      Show drawn polygon area
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-support-for-right-to-left-scripts" class="md-nav__link">
-    Add support for right-to-left scripts
+    <span class="md-ellipsis">
+      Add support for right-to-left scripts
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#measure-distances" class="md-nav__link">
-    Measure distances
+    <span class="md-ellipsis">
+      Measure distances
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#get-coordinates-of-the-mouse-pointer" class="md-nav__link">
-    Get coordinates of the mouse pointer
+    <span class="md-ellipsis">
+      Get coordinates of the mouse pointer
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-multiple-geometries-from-one-geojson-source" class="md-nav__link">
-    Add multiple geometries from one GeoJSON source
+    <span class="md-ellipsis">
+      Add multiple geometries from one GeoJSON source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-map-navigation-controls" class="md-nav__link">
-    Display map navigation controls
+    <span class="md-ellipsis">
+      Display map navigation controls
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#offset-the-vanishing-point-using-padding" class="md-nav__link">
-    Offset the vanishing point using padding
+    <span class="md-ellipsis">
+      Offset the vanishing point using padding
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#show-polygon-information-on-click" class="md-nav__link">
-    Show polygon information on click
+    <span class="md-ellipsis">
+      Show polygon information on click
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-popup-on-click" class="md-nav__link">
-    Display a popup on click
+    <span class="md-ellipsis">
+      Display a popup on click
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-popup-on-hover" class="md-nav__link">
-    Display a popup on hover
+    <span class="md-ellipsis">
+      Display a popup on hover
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-popup" class="md-nav__link">
-    Display a popup
+    <span class="md-ellipsis">
+      Display a popup
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#get-features-under-the-mouse-pointer" class="md-nav__link">
-    Get features under the mouse pointer
+    <span class="md-ellipsis">
+      Get features under the mouse pointer
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#render-world-copies" class="md-nav__link">
-    Render world copies
+    <span class="md-ellipsis">
+      Render world copies
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#restrict-map-panning-to-an-area" class="md-nav__link">
-    Restrict map panning to an area
+    <span class="md-ellipsis">
+      Restrict map panning to an area
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-satellite-map" class="md-nav__link">
-    Display a satellite map
+    <span class="md-ellipsis">
+      Display a satellite map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#fly-to-a-location-based-on-scroll-position" class="md-nav__link">
-    Fly to a location based on scroll position
+    <span class="md-ellipsis">
+      Fly to a location based on scroll position
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#set-pitch-and-bearing" class="md-nav__link">
-    Set pitch and bearing
+    <span class="md-ellipsis">
+      Set pitch and bearing
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#attach-a-popup-to-a-marker-instance" class="md-nav__link">
-    Attach a popup to a marker instance
+    <span class="md-ellipsis">
+      Attach a popup to a marker instance
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#display-a-map" class="md-nav__link">
-    Display a map
+    <span class="md-ellipsis">
+      Display a map
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#create-a-time-slider" class="md-nav__link">
-    Create a time slider
+    <span class="md-ellipsis">
+      Create a time slider
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#toggle-interactions" class="md-nav__link">
-    Toggle interactions
+    <span class="md-ellipsis">
+      Toggle interactions
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#variable-label-placement" class="md-nav__link">
-    Variable label placement
+    <span class="md-ellipsis">
+      Variable label placement
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#variable-label-placement-with-offset" class="md-nav__link">
-    Variable label placement with offset
+    <span class="md-ellipsis">
+      Variable label placement with offset
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-vector-tile-source" class="md-nav__link">
-    Add a vector tile source
+    <span class="md-ellipsis">
+      Add a vector tile source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-video" class="md-nav__link">
-    Add a video
+    <span class="md-ellipsis">
+      Add a video
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#visualize-population-density" class="md-nav__link">
-    Visualize population density
+    <span class="md-ellipsis">
+      Visualize population density
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#add-a-wms-source" class="md-nav__link">
-    Add a WMS source
+    <span class="md-ellipsis">
+      Add a WMS source
+    </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#fit-to-the-bounds-of-a-linestring" class="md-nav__link">
-    Fit to the bounds of a LineString
+    <span class="md-ellipsis">
+      Fit to the bounds of a LineString
+    </span>
   </a>
   
 </li>
@@ -7176,8 +7674,8 @@
 <h2 id="add-contour-lines"><a href="contour-lines/">Add Contour Lines</a></h2>
 <p><img alt="Add contour lines to your map from a raster-dem source." src="../assets/examples/contour-lines.png" /></p>
 <p>Add contour lines to your map from a raster-dem source.</p>
-<h2 id="cooperative-gestures"><a href="cooperated-gestures/">Cooperative gestures</a></h2>
-<p><img alt="Enable cooperative gestures with a specific language. See how it behaves in fullscreen mode." src="../assets/examples/cooperated-gestures.png" /></p>
+<h2 id="cooperative-gestures"><a href="cooperative-gestures/">Cooperative gestures</a></h2>
+<p><img alt="Enable cooperative gestures with a specific language. See how it behaves in fullscreen mode." src="../assets/examples/cooperative-gestures.png" /></p>
 <p>Enable cooperative gestures with a specific language. See how it behaves in fullscreen mode.</p>
 <h2 id="add-custom-icons-with-markers"><a href="custom-marker-icons/">Add custom icons with Markers</a></h2>
 <p><img alt="Add custom marker icons to your map." src="../assets/examples/custom-marker-icons.png" /></p>
@@ -7453,7 +7951,7 @@
     <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.81fa17fe.min.js"></script>
+      <script src="../assets/javascripts/bundle.6c14ae12.min.js"></script>
       
     
   </body>

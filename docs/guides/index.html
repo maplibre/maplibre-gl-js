@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/examples/cooperated-gestures/">
+        <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/guides/">
       
       
-        <link rel="prev" href="../contour-lines/">
+        <link rel="prev" href="../examples/zoomto-linestring/">
       
       
-        <link rel="next" href="../custom-marker-icons/">
+        <link rel="next" href="large-data/">
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.8">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.10">
     
     
       
-        <title>Cooperative gestures - MapLibre GL JS</title>
+        <title>Guides - MapLibre GL JS</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.4b4a2bd9.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.fad675c6.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.356b1318.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.356b1318.min.css">
       
       
 
@@ -48,7 +48,9 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+      <link rel="stylesheet" href="../assets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -77,7 +79,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cooperative-gestures" class="md-skip">
+        <a href="#guides" class="md-skip">
           Skip to content
         </a>
       
@@ -93,7 +95,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="MapLibre GL JS" class="md-header__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
+    <a href=".." title="MapLibre GL JS" class="md-header__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
       
   <img src="https://avatars.githubusercontent.com/u/75709127?s=48&v=4" alt="logo">
 
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Cooperative gestures
+              Guides
             
           </span>
         </div>
@@ -220,7 +222,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
     
@@ -237,7 +239,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../plugins/" class="md-tabs__link">
+      <a href="../plugins/" class="md-tabs__link">
         
   
     
@@ -254,7 +256,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../style-spec/" class="md-tabs__link">
+      <a href="../style-spec/" class="md-tabs__link">
         
   
     
@@ -273,10 +275,28 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../API/" class="md-tabs__link">
+        <a href="../API/" class="md-tabs__link">
           
   
   API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../examples/" class="md-tabs__link">
+          
+  
+  Examples
 
         </a>
       </li>
@@ -293,10 +313,10 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+        <a href="./" class="md-tabs__link">
           
   
-  Examples
+  Guides
 
         </a>
       </li>
@@ -332,7 +352,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="MapLibre GL JS" class="md-nav__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
+    <a href=".." title="MapLibre GL JS" class="md-nav__button md-logo" aria-label="MapLibre GL JS" data-md-component="logo">
       
   <img src="https://avatars.githubusercontent.com/u/75709127?s=48&v=4" alt="logo">
 
@@ -360,7 +380,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -379,7 +399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plugins/" class="md-nav__link">
+      <a href="../plugins/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -398,7 +418,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../style-spec/" class="md-nav__link">
+      <a href="../style-spec/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -456,7 +476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/" class="md-nav__link">
+      <a href="../API/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -512,7 +532,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/default/" class="md-nav__link">
+      <a href="../API/classes/default/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -532,7 +552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.AJAXError/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.AJAXError/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -552,7 +572,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Actor/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Actor/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -572,7 +592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.AttributionControl/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.AttributionControl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -592,7 +612,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.BoxZoomHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.BoxZoomHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -612,7 +632,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.CanonicalTileID/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.CanonicalTileID/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -632,7 +652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.CanvasSource/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.CanvasSource/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -652,7 +672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.CircleStyleLayer/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.CircleStyleLayer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -672,7 +692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.ClickZoomHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.ClickZoomHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -692,7 +712,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Dispatcher/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Dispatcher/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -712,7 +732,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.DoubleClickZoomHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.DoubleClickZoomHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -732,7 +752,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.DragPanHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.DragPanHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -752,7 +772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.DragRotateHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.DragRotateHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -772,7 +792,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.EdgeInsets/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.EdgeInsets/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -792,7 +812,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Event/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Event/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -812,7 +832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Evented/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Evented/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -832,7 +852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.FullscreenControl/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.FullscreenControl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -852,7 +872,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.GeoJSONFeature/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.GeoJSONFeature/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -872,7 +892,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.GeoJSONSource/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.GeoJSONSource/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -892,7 +912,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.GeolocateControl/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.GeolocateControl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -912,7 +932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Hash/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Hash/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -932,7 +952,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.HeatmapStyleLayer/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.HeatmapStyleLayer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -952,7 +972,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.ImageSource/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.ImageSource/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -972,7 +992,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.KeyboardHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.KeyboardHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -992,7 +1012,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Layout/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Layout/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1012,7 +1032,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.LngLat/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.LngLat/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1032,7 +1052,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.LngLatBounds/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.LngLatBounds/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1052,7 +1072,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.LogoControl/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.LogoControl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1072,7 +1092,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Map/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Map/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1092,7 +1112,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.MapMouseEvent/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.MapMouseEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1112,7 +1132,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.MapTouchEvent/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.MapTouchEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1132,7 +1152,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.MapWheelEvent/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.MapWheelEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1152,7 +1172,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Marker/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Marker/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1172,7 +1192,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.MercatorCoordinate/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.MercatorCoordinate/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1192,7 +1212,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.NavigationControl/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.NavigationControl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1212,7 +1232,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.OverscaledTileID/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.OverscaledTileID/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1232,7 +1252,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Popup/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Popup/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1252,7 +1272,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.RGBAImage/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.RGBAImage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1272,7 +1292,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.RasterDEMTileSource/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.RasterDEMTileSource/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1292,7 +1312,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.RasterTileSource/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.RasterTileSource/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1312,7 +1332,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.ScaleControl/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.ScaleControl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1332,7 +1352,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.ScrollZoomHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.ScrollZoomHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1352,7 +1372,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.Style/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.Style/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1372,7 +1392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.StyleLayer/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.StyleLayer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1392,7 +1412,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.TerrainControl/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.TerrainControl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1412,7 +1432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.ThrottledInvoker/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.ThrottledInvoker/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1432,7 +1452,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.TwoFingersTouchHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.TwoFingersTouchHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1452,7 +1472,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.TwoFingersTouchPitchHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.TwoFingersTouchPitchHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1472,7 +1492,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.TwoFingersTouchRotateHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.TwoFingersTouchRotateHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1492,7 +1512,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.TwoFingersTouchZoomHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.TwoFingersTouchZoomHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1512,7 +1532,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.TwoFingersTouchZoomRotateHandler/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.TwoFingersTouchZoomRotateHandler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1532,7 +1552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.VectorTileSource/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.VectorTileSource/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1552,7 +1572,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.VideoSource/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.VideoSource/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1572,7 +1592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/classes/maplibregl.WorkerPool/" class="md-nav__link">
+      <a href="../API/classes/maplibregl.WorkerPool/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1636,7 +1656,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/enums/maplibregl.ResourceType/" class="md-nav__link">
+      <a href="../API/enums/maplibregl.ResourceType/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1700,7 +1720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/maplibregl.AttributeBinder/" class="md-nav__link">
+      <a href="../API/interfaces/maplibregl.AttributeBinder/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1720,7 +1740,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/maplibregl.Bucket/" class="md-nav__link">
+      <a href="../API/interfaces/maplibregl.Bucket/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1740,7 +1760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/maplibregl.CustomLayerInterface/" class="md-nav__link">
+      <a href="../API/interfaces/maplibregl.CustomLayerInterface/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1760,7 +1780,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/maplibregl.Handler/" class="md-nav__link">
+      <a href="../API/interfaces/maplibregl.Handler/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1780,7 +1800,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/maplibregl.IControl/" class="md-nav__link">
+      <a href="../API/interfaces/maplibregl.IControl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1800,7 +1820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/maplibregl.Source/" class="md-nav__link">
+      <a href="../API/interfaces/maplibregl.Source/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1820,7 +1840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/maplibregl.StyleImageInterface/" class="md-nav__link">
+      <a href="../API/interfaces/maplibregl.StyleImageInterface/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1840,7 +1860,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/interfaces/maplibregl.WorkerSource/" class="md-nav__link">
+      <a href="../API/interfaces/maplibregl.WorkerSource/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1904,7 +1924,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/modules/maplibregl/" class="md-nav__link">
+      <a href="../API/modules/maplibregl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1968,7 +1988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.AddLayerObject/" class="md-nav__link">
+      <a href="../API/types/maplibregl.AddLayerObject/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1988,7 +2008,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Alignment/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Alignment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2008,7 +2028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.AnimationOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.AnimationOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2028,7 +2048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.AroundCenterOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.AroundCenterOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2048,7 +2068,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.AttributionOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.AttributionOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2068,7 +2088,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Callback/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Callback/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2088,7 +2108,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.CameraForBoundsOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.CameraForBoundsOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2108,7 +2128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.CameraOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.CameraOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2128,7 +2148,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.CameraUpdateTransformFunction/" class="md-nav__link">
+      <a href="../API/types/maplibregl.CameraUpdateTransformFunction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2148,7 +2168,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Cancelable/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Cancelable/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2168,7 +2188,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.CanvasSourceSpecification/" class="md-nav__link">
+      <a href="../API/types/maplibregl.CanvasSourceSpecification/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2188,7 +2208,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.CenterZoomBearing/" class="md-nav__link">
+      <a href="../API/types/maplibregl.CenterZoomBearing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2208,7 +2228,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Config/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2228,7 +2248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.ControlPosition/" class="md-nav__link">
+      <a href="../API/types/maplibregl.ControlPosition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2248,7 +2268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Coordinates/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Coordinates/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2268,7 +2288,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.CrossFaded/" class="md-nav__link">
+      <a href="../API/types/maplibregl.CrossFaded/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2288,7 +2308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.CustomRenderMethod/" class="md-nav__link">
+      <a href="../API/types/maplibregl.CustomRenderMethod/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2308,7 +2328,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.DashEntry/" class="md-nav__link">
+      <a href="../API/types/maplibregl.DashEntry/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2328,7 +2348,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.DistributiveKeys/" class="md-nav__link">
+      <a href="../API/types/maplibregl.DistributiveKeys/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2348,7 +2368,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.DistributiveOmit/" class="md-nav__link">
+      <a href="../API/types/maplibregl.DistributiveOmit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2368,7 +2388,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.DragPanOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.DragPanOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2388,7 +2408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.ErrorCallback/" class="md-nav__link">
+      <a href="../API/types/maplibregl.ErrorCallback/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2408,7 +2428,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.ExpiryData/" class="md-nav__link">
+      <a href="../API/types/maplibregl.ExpiryData/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2428,7 +2448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.FeatureIdentifier/" class="md-nav__link">
+      <a href="../API/types/maplibregl.FeatureIdentifier/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2448,7 +2468,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.FitBoundsOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.FitBoundsOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2468,7 +2488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.FlyToOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.FlyToOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2488,7 +2508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.FullscreenOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.FullscreenOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2508,7 +2528,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GeoJSONFeatureDiff/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GeoJSONFeatureDiff/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2528,7 +2548,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GeoJSONFeatureId/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GeoJSONFeatureId/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2548,7 +2568,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GeoJSONSourceDiff/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GeoJSONSourceDiff/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2568,7 +2588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GeolocateOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GeolocateOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2588,7 +2608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GestureOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GestureOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2608,7 +2628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GetImageCallback/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GetImageCallback/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2628,7 +2648,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GlyphPosition/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GlyphPosition/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2648,7 +2668,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GlyphPositions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GlyphPositions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2668,7 +2688,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.GridKey/" class="md-nav__link">
+      <a href="../API/types/maplibregl.GridKey/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2688,7 +2708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.HandlerResult/" class="md-nav__link">
+      <a href="../API/types/maplibregl.HandlerResult/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2708,7 +2728,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.JumpToOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.JumpToOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2728,7 +2748,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Listener/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Listener/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2748,7 +2768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.LngLatBoundsLike/" class="md-nav__link">
+      <a href="../API/types/maplibregl.LngLatBoundsLike/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2768,7 +2788,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.LngLatLike/" class="md-nav__link">
+      <a href="../API/types/maplibregl.LngLatLike/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2788,7 +2808,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.LogoOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.LogoOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2808,7 +2828,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapContextEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapContextEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2828,7 +2848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapDataEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapDataEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2848,7 +2868,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapEventType/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapEventType/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2868,7 +2888,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapGeoJSONFeature/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapGeoJSONFeature/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2888,7 +2908,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapLayerEventType/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapLayerEventType/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2908,7 +2928,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapLayerMouseEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapLayerMouseEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2928,7 +2948,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapLayerTouchEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapLayerTouchEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2948,7 +2968,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapLibreEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapLibreEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2968,7 +2988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapLibreZoomEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapLibreZoomEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2988,7 +3008,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3008,7 +3028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapSourceDataEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapSourceDataEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3028,7 +3048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapSourceDataType/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapSourceDataType/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3048,7 +3068,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapStyleDataEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapStyleDataEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3068,7 +3088,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapStyleImageMissingEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapStyleImageMissingEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3088,7 +3108,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MapTerrainEvent/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MapTerrainEvent/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3108,7 +3128,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.MarkerOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.MarkerOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3128,7 +3148,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.NavigationOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.NavigationOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3148,7 +3168,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Offset/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Offset/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3168,7 +3188,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.OverlapMode/" class="md-nav__link">
+      <a href="../API/types/maplibregl.OverlapMode/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3188,7 +3208,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.PaddingOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.PaddingOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3208,7 +3228,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.PointLike/" class="md-nav__link">
+      <a href="../API/types/maplibregl.PointLike/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3228,7 +3248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.PositionAnchor/" class="md-nav__link">
+      <a href="../API/types/maplibregl.PositionAnchor/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3248,7 +3268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.PossiblyEvaluatedValue/" class="md-nav__link">
+      <a href="../API/types/maplibregl.PossiblyEvaluatedValue/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3268,7 +3288,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.QueryRenderedFeaturesOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.QueryRenderedFeaturesOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3288,7 +3308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.QuerySourceFeatureOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.QuerySourceFeatureOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3308,7 +3328,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Rect/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Rect/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3328,7 +3348,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.RequestParameters/" class="md-nav__link">
+      <a href="../API/types/maplibregl.RequestParameters/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3348,7 +3368,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.RequestTransformFunction/" class="md-nav__link">
+      <a href="../API/types/maplibregl.RequestTransformFunction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3368,7 +3388,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.RequireAtLeastOne/" class="md-nav__link">
+      <a href="../API/types/maplibregl.RequireAtLeastOne/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3388,7 +3408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.ResponseCallback/" class="md-nav__link">
+      <a href="../API/types/maplibregl.ResponseCallback/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3408,7 +3428,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.ScaleOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.ScaleOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3428,7 +3448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.SerializedStructArray/" class="md-nav__link">
+      <a href="../API/types/maplibregl.SerializedStructArray/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3448,7 +3468,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.SetClusterOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.SetClusterOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3468,7 +3488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.SourceClass/" class="md-nav__link">
+      <a href="../API/types/maplibregl.SourceClass/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3488,7 +3508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.SourceStatics/" class="md-nav__link">
+      <a href="../API/types/maplibregl.SourceStatics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3508,7 +3528,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.SpriteOnDemandStyleImage/" class="md-nav__link">
+      <a href="../API/types/maplibregl.SpriteOnDemandStyleImage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3528,7 +3548,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.StyleImage/" class="md-nav__link">
+      <a href="../API/types/maplibregl.StyleImage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3548,7 +3568,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.StyleImageData/" class="md-nav__link">
+      <a href="../API/types/maplibregl.StyleImageData/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3568,7 +3588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.StyleImageMetadata/" class="md-nav__link">
+      <a href="../API/types/maplibregl.StyleImageMetadata/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3588,7 +3608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.StyleOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.StyleOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3608,7 +3628,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.StyleSetterOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.StyleSetterOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3628,7 +3648,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.StyleSwapOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.StyleSwapOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3648,7 +3668,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.SymbolQuad/" class="md-nav__link">
+      <a href="../API/types/maplibregl.SymbolQuad/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3668,7 +3688,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.TileState/" class="md-nav__link">
+      <a href="../API/types/maplibregl.TileState/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3688,7 +3708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Transferable/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Transferable/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3708,7 +3728,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.TransformStyleFunction/" class="md-nav__link">
+      <a href="../API/types/maplibregl.TransformStyleFunction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3728,7 +3748,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.Unit/" class="md-nav__link">
+      <a href="../API/types/maplibregl.Unit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3748,7 +3768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../API/types/maplibregl.UpdateImageOptions/" class="md-nav__link">
+      <a href="../API/types/maplibregl.UpdateImageOptions/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3781,8 +3801,6 @@
       
   
   
-    
-  
   
     
     
@@ -3792,12 +3810,12 @@
       
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -3811,7 +3829,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Examples
@@ -3824,7 +3842,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../examples/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3844,7 +3862,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../3d-buildings/" class="md-nav__link">
+      <a href="../examples/3d-buildings/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3864,7 +3882,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../3d-extrusion-floorplan/" class="md-nav__link">
+      <a href="../examples/3d-extrusion-floorplan/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3884,7 +3902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../3d-terrain/" class="md-nav__link">
+      <a href="../examples/3d-terrain/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3904,7 +3922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-3d-model-babylon/" class="md-nav__link">
+      <a href="../examples/add-3d-model-babylon/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3924,7 +3942,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-3d-model/" class="md-nav__link">
+      <a href="../examples/add-3d-model/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3944,7 +3962,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-a-marker/" class="md-nav__link">
+      <a href="../examples/add-a-marker/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3964,7 +3982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-image-animated/" class="md-nav__link">
+      <a href="../examples/add-image-animated/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -3984,7 +4002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-image-generated/" class="md-nav__link">
+      <a href="../examples/add-image-generated/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4004,7 +4022,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-image-missing-generated/" class="md-nav__link">
+      <a href="../examples/add-image-missing-generated/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4024,7 +4042,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-image-stretchable/" class="md-nav__link">
+      <a href="../examples/add-image-stretchable/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4044,7 +4062,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../add-image/" class="md-nav__link">
+      <a href="../examples/add-image/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4064,7 +4082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-a-line/" class="md-nav__link">
+      <a href="../examples/animate-a-line/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4084,7 +4102,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-camera-around-point/" class="md-nav__link">
+      <a href="../examples/animate-camera-around-point/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4104,7 +4122,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-images/" class="md-nav__link">
+      <a href="../examples/animate-images/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4124,7 +4142,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-marker/" class="md-nav__link">
+      <a href="../examples/animate-marker/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4144,7 +4162,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-point-along-line/" class="md-nav__link">
+      <a href="../examples/animate-point-along-line/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4164,7 +4182,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../animate-point-along-route/" class="md-nav__link">
+      <a href="../examples/animate-point-along-route/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4184,7 +4202,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../attribution-position/" class="md-nav__link">
+      <a href="../examples/attribution-position/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4204,7 +4222,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../camera-animation/" class="md-nav__link">
+      <a href="../examples/camera-animation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4224,7 +4242,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../canvas-source/" class="md-nav__link">
+      <a href="../examples/canvas-source/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4244,7 +4262,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../center-on-symbol/" class="md-nav__link">
+      <a href="../examples/center-on-symbol/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4264,7 +4282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../change-building-color-based-on-zoom-level/" class="md-nav__link">
+      <a href="../examples/change-building-color-based-on-zoom-level/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4284,7 +4302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../change-case-of-labels/" class="md-nav__link">
+      <a href="../examples/change-case-of-labels/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4304,7 +4322,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../check-for-support/" class="md-nav__link">
+      <a href="../examples/check-for-support/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4324,7 +4342,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cluster-html/" class="md-nav__link">
+      <a href="../examples/cluster-html/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4344,7 +4362,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cluster/" class="md-nav__link">
+      <a href="../examples/cluster/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4364,7 +4382,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../color-switcher/" class="md-nav__link">
+      <a href="../examples/color-switcher/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4384,7 +4402,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contour-lines/" class="md-nav__link">
+      <a href="../examples/contour-lines/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -4397,6 +4415,1354 @@
   
 
               
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/cooperative-gestures/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cooperative gestures
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/custom-marker-icons/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add custom icons with Markers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/custom-style-layer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a custom style layer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/data-driven-lines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Style lines with a data-driven property
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/disable-rotation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Disable map rotation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/disable-scroll-zoom/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Disable scroll zoom
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/display-and-style-rich-text-labels/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display and style rich text labels
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/drag-a-marker/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a draggable Marker
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/drag-a-point/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a draggable point
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/fallback-image/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use a fallback image
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/fill-pattern/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a pattern to a polygon
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/filter-markers-by-input/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Filter symbols by text input
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/filter-markers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Filter symbols by toggling a list
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/fitbounds/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fit a map to a bounding box
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/flyto-options/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Slowly fly to a location
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/flyto/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fly to a location
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/fullscreen/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    View a fullscreen map
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/game-controls/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Navigate the map with game-like controls
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/geocoder/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Geocode with Nominatim
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/geojson-layer-in-stack/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a new layer below labels
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/geojson-line/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a GeoJSON line
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/geojson-markers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Draw GeoJSON points
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/geojson-polygon/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a GeoJSON polygon
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/heatmap-layer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a heatmap layer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/hover-styles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a hover effect
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/interactive-false/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display a non-interactive map
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/jump-to/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Jump to a series of locations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/language-switch/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Change a map's language
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/line-across-180th-meridian/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display line that crosses 180th meridian
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/line-gradient/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a gradient line using an expression
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/live-geojson/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add live realtime data
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/live-update-feature/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Update a feature in realtime
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/local-geojson-experimental/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    View local GeoJSON (experimental)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/local-geojson/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    View local GeoJSON
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/local-ideographs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use locally generated ideographs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/locate-user/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Locate the user
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/map-tiles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a raster tile source
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/mapbox-gl-draw/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Show drawn polygon area
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/mapbox-gl-rtl-text/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add support for right-to-left scripts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/measure/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Measure distances
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/mouse-position/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Get coordinates of the mouse pointer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/multiple-geometries/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add multiple geometries from one GeoJSON source
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/navigation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display map navigation controls
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/offset-vanishing-point-with-padding/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Offset the vanishing point using padding
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/polygon-popup-on-click/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Show polygon information on click
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/popup-on-click/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display a popup on click
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/popup-on-hover/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display a popup on hover
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/popup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display a popup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/queryrenderedfeatures/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Get features under the mouse pointer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/render-world-copies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Render world copies
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/restrict-bounds/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Restrict map panning to an area
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/satellite-map/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display a satellite map
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/scroll-fly-to/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fly to a location based on scroll position
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/set-perspective/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Set pitch and bearing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/set-popup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Attach a popup to a marker instance
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/simple-map/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Display a map
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/timeline-animation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a time slider
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/toggle-interaction-handlers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Toggle interactions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/variable-label-placement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Variable label placement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/variable-offset-label-placement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Variable label placement with offset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/vector-source/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a vector tile source
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/video-on-a-map/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a video
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/visualize-population-density/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Visualize population density
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/wms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Add a WMS source
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/zoomto-linestring/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Fit to the bounds of a LineString
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -4417,7 +5783,7 @@
         
   
   <span class="md-ellipsis">
-    Cooperative gestures
+    Guides
   </span>
   
 
@@ -4434,11 +5800,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../custom-marker-icons/" class="md-nav__link">
+      <a href="large-data/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Add custom icons with Markers
+    Optimising MapLibre Performance: Tips for Large GeoJSON Datasets
   </span>
   
 
@@ -4454,1251 +5820,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../custom-style-layer/" class="md-nav__link">
+      <a href="mapbox-migration-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Add a custom style layer
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../data-driven-lines/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Style lines with a data-driven property
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../disable-rotation/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Disable map rotation
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../disable-scroll-zoom/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Disable scroll zoom
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../display-and-style-rich-text-labels/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display and style rich text labels
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../drag-a-marker/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Create a draggable Marker
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../drag-a-point/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Create a draggable point
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fallback-image/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Use a fallback image
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fill-pattern/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add a pattern to a polygon
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../filter-markers-by-input/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Filter symbols by text input
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../filter-markers/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Filter symbols by toggling a list
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fitbounds/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Fit a map to a bounding box
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../flyto-options/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Slowly fly to a location
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../flyto/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Fly to a location
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../fullscreen/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    View a fullscreen map
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../game-controls/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Navigate the map with game-like controls
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../geocoder/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Geocode with Nominatim
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../geojson-layer-in-stack/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add a new layer below labels
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../geojson-line/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add a GeoJSON line
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../geojson-markers/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Draw GeoJSON points
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../geojson-polygon/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add a GeoJSON polygon
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../heatmap-layer/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Create a heatmap layer
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../hover-styles/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Create a hover effect
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../interactive-false/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display a non-interactive map
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../jump-to/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Jump to a series of locations
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../language-switch/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Change a map's language
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../line-across-180th-meridian/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display line that crosses 180th meridian
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../line-gradient/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Create a gradient line using an expression
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../live-geojson/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add live realtime data
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../live-update-feature/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Update a feature in realtime
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../local-geojson-experimental/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    View local GeoJSON (experimental)
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../local-geojson/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    View local GeoJSON
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../local-ideographs/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Use locally generated ideographs
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../locate-user/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Locate the user
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../map-tiles/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add a raster tile source
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../mapbox-gl-draw/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Show drawn polygon area
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../mapbox-gl-rtl-text/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add support for right-to-left scripts
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../measure/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Measure distances
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../mouse-position/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Get coordinates of the mouse pointer
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../multiple-geometries/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add multiple geometries from one GeoJSON source
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../navigation/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display map navigation controls
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../offset-vanishing-point-with-padding/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Offset the vanishing point using padding
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../polygon-popup-on-click/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Show polygon information on click
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../popup-on-click/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display a popup on click
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../popup-on-hover/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display a popup on hover
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../popup/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display a popup
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../queryrenderedfeatures/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Get features under the mouse pointer
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../render-world-copies/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Render world copies
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../restrict-bounds/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Restrict map panning to an area
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../satellite-map/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display a satellite map
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../scroll-fly-to/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Fly to a location based on scroll position
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../set-perspective/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Set pitch and bearing
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../set-popup/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Attach a popup to a marker instance
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../simple-map/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Display a map
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../timeline-animation/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Create a time slider
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../toggle-interaction-handlers/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Toggle interactions
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../variable-label-placement/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Variable label placement
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../variable-offset-label-placement/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Variable label placement with offset
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../vector-source/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add a vector tile source
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../video-on-a-map/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add a video
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../visualize-population-density/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Visualize population density
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../wms/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Add a WMS source
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../zoomto-linestring/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Fit to the bounds of a LineString
+    MapBox migration guide
   </span>
   
 
@@ -5751,45 +5877,11 @@
   
 
 
-<h1 id="cooperative-gestures">Cooperative gestures</h1>
-<p>Enable cooperative gestures with a specific language. See how it behaves in fullscreen mode.</p>
-<iframe src="../cooperated-gestures.html" width="100%" style="border:none; height:400px"></iframe>
-
-<div class="language-html highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cp">&lt;!DOCTYPE html&gt;</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">&quot;en&quot;</span><span class="p">&gt;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Cooperative gestures<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">property</span><span class="o">=</span><span class="s">&quot;og:description&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;Enable cooperative gestures with a specific language. See how it behaves in fullscreen mode.&quot;</span> <span class="p">/&gt;</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">&gt;</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;width=device-width, initial-scale=1&quot;</span><span class="p">&gt;</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&#39;stylesheet&#39;</span> <span class="na">href</span><span class="o">=</span><span class="s">&#39;https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css&#39;</span> <span class="p">/&gt;</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&#39;https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js&#39;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">        </span><span class="nt">body</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">margin</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">        </span><span class="nt">html</span><span class="o">,</span><span class="w"> </span><span class="nt">body</span><span class="o">,</span><span class="w"> </span><span class="p">#</span><span class="nn">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="kt">%</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;map&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">        </span><span class="nx">container</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;map&#39;</span><span class="p">,</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">        </span><span class="nx">style</span><span class="o">:</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">        </span><span class="s1">&#39;https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL&#39;</span><span class="p">,</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">        </span><span class="nx">center</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="o">-</span><span class="mf">74.5</span><span class="p">,</span><span class="w"> </span><span class="mf">40</span><span class="p">],</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">        </span><span class="nx">cooperativeGestures</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">            </span><span class="nx">windowsHelpText</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Utilice Ctrl + desplazamiento para hacer zoom en el mapa.&#39;</span><span class="p">,</span>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">            </span><span class="nx">macHelpText</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Use ⌘ + desplazamiento para hacer zoom en el mapa.&#39;</span><span class="p">,</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">            </span><span class="nx">mobileHelpText</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Usa dos dedos para mover el mapa.&#39;</span><span class="p">,</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">        </span><span class="p">},</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">        </span><span class="nx">zoom</span><span class="o">:</span><span class="w"> </span><span class="mf">9</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">    </span><span class="p">});</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">    </span><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">maplibregl</span><span class="p">.</span><span class="nx">FullscreenControl</span><span class="p">());</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
-</span></code></pre></div>
+<h1 id="guides">Guides</h1>
+<p>This section of the docs' site is dedicated to some more complex examples and totorials.
+If you have something you would like to share with the community that is not straight forward and might be beneficial to others, this is the place!</p>
+<p>Things that are short enough and/or with lower complexity are probably already in the <a href="../examples/">Examples</a> section, but if not, feel free to add there.</p>
+<p>The process of adding examples or guides is pretty straight forward, see our <code>docs</code> folder in the <a href="https://github.com/maplibre/maplibre-gl-js/tree/main/docs">MpaLibre GL JS repo</a> for more information.</p>
 
 
 
@@ -5869,10 +5961,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.81fa17fe.min.js"></script>
+      <script src="../assets/javascripts/bundle.6c14ae12.min.js"></script>
       
     
   </body>
