@@ -142,6 +142,10 @@ class Subdivider {
             return [];
         }
 
+        if (this._granuality < 2) {
+            return triangleIndices;
+        }
+
         const finalTriangleIndices = [];
 
         // Iterate over all input triangles
@@ -299,6 +303,10 @@ class Subdivider {
             return [];
         }
 
+        if (this._granuality < 2) {
+            return lineIndices;
+        }
+
         // JP: TODO: adapt for subdivision with border
 
         const finalLineIndices = [];
@@ -319,25 +327,33 @@ class Subdivider {
             const minY = Math.min(lineVertex0y, lineVertex1y);
             const maxY = Math.max(lineVertex0y, lineVertex1y);
 
-            const clampedMinX = Math.max(minX, 0);
-            const clampedMaxX = Math.min(maxX, EXTENT);
-            const clampedMinY = Math.max(minY, 0);
-            const clampedMaxY = Math.min(maxY, EXTENT);
+            // Compute the relevant cell range so that only the cells inside the actual tile + border are covered
+            const borderCells = Math.floor((EXTENT_SUBDIVISION_BORDER + this._granualityStep - 1) / this._granualityStep);
+            const cellRangeXmin = Math.max(Math.floor(minX / this._granualityStep + 1), -borderCells + 1);
+            const cellRangeYmin = Math.max(Math.floor(minY / this._granualityStep + 1), -borderCells + 1);
+            const cellRangeXmax = Math.min(Math.floor((maxX - 1) / this._granualityStep), this._granuality - 1 + borderCells);
+            const cellRangeYmax = Math.min(Math.floor((maxY - 1) / this._granualityStep), this._granuality - 1 + borderCells);
 
             const subdividedLineIndices = [];
 
             // Add original line vertices
-            subdividedLineIndices.push(lineIndex0);
-            subdividedLineIndices.push(lineIndex1);
-
-            for (let cellX = Math.max(Math.floor((minX + this._granualityStep) / this._granualityStep), 0); cellX <= Math.min(Math.floor((maxX - 1) / this._granualityStep), this._granuality); cellX += 1) {
-                const cellEdgeX = cellX * this._granualityStep;
-                this.checkEdgeSubdivisionX(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, clampedMinX, clampedMaxX);
+            const extentMin = -borderCells * this._granualityStep;
+            const extentMax = EXTENT + borderCells * this._granualityStep;
+            if (lineVertex0x >= extentMin && lineVertex0x <= extentMax && lineVertex0y >= extentMin && lineVertex0y <= extentMax) {
+                subdividedLineIndices.push(lineIndex0);
+            }
+            if (lineVertex1x >= extentMin && lineVertex1x <= extentMax && lineVertex1y >= extentMin && lineVertex1y <= extentMax) {
+                subdividedLineIndices.push(lineIndex1);
             }
 
-            for (let cellY = Math.max(Math.floor((minY + this._granualityStep) / this._granualityStep), 0); cellY <= Math.min(Math.floor((maxY - 1) / this._granualityStep), this._granuality); cellY += 1) {
+            for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
+                const cellEdgeX = cellX * this._granualityStep;
+                this.checkEdgeSubdivisionX(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, minY, maxY);
+            }
+
+            for (let cellY = cellRangeYmin; cellY <= cellRangeYmax; cellY += 1) {
                 const cellEdgeY = cellY * this._granualityStep;
-                this.checkEdgeSubdivisionY(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, clampedMinY, clampedMaxY);
+                this.checkEdgeSubdivisionY(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, minX, maxX);
             }
 
             const edgeX = lineVertex1x - lineVertex0x;

@@ -35,7 +35,7 @@ export class ProjectionManager {
      * Mercator tiles will be subdivided to this degree of granuality in order to allow for a curved projection.
      * Should be a power of 2.
      */
-    private static readonly targetGranuality = 4;
+    private static readonly targetGranuality = 1;
 
     /**
      * The granuality specified by `targetGranuality` will be used for zoom levels from this value onwards.
@@ -43,7 +43,7 @@ export class ProjectionManager {
      * This ensures that then looking at the entire earth, it will be subdivided enough give the illusion of an actual sphere
      * (and not a poorly tesselated triangular mesh). This also ensures that higher zoom levels are not needlessly subdivided.
      */
-    private static readonly targetGranualityMinZoom = 4;
+    private static readonly targetGranualityMinZoom = 6;
 
     // At targetGranuality=8 and minzoom=4 (base tile granuality of 128) the sphere appears almost perfectly smooth
     // triangulation is invisible, apart from slight pixel shimmering at the equator
