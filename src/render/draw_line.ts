@@ -114,8 +114,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         }
 
         const rttCoord = isRenderingToTexture ? coord : null;
-        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
-        projectionData['u_projection_matrix'] = rttCoord ? rttCoord.posMatrix : tile.tileID.posMatrix;
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord, rttCoord ? rttCoord.posMatrix : tile.tileID.posMatrix);
 
         program.draw(context, gl.TRIANGLES, depthMode,
             painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,

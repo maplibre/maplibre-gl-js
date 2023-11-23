@@ -128,7 +128,7 @@ export class ProjectionManager {
         this._cachedClippingPlane = [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    public getProjectionData(tileID: OverscaledTileID): ProjectionData {
+    public getProjectionData(tileID: OverscaledTileID, fallBackMatrix?: mat4): ProjectionData {
         const identity = mat4.identity(Float32Array as any);
         const data: ProjectionData = {
             'u_projection_matrix': identity,
@@ -137,7 +137,7 @@ export class ProjectionManager {
         };
 
         if (tileID) {
-            data['u_projection_matrix'] = tileID.posMatrix;
+            data['u_projection_matrix'] = fallBackMatrix ? fallBackMatrix : tileID.posMatrix;
             data['u_projection_tile_mercator_coords'] = [
                 tileID.canonical.x / (1 << tileID.canonical.z),
                 tileID.canonical.y / (1 << tileID.canonical.z),
