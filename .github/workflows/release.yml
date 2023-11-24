@@ -33,6 +33,7 @@ jobs:
           else
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
+          
     outputs:
       publish: ${{ steps.check.outputs.changed }}
 
