@@ -25,8 +25,14 @@ jobs:
 
       - name: Check if version changed
         id: check
-        uses: EndBug/version-check@v2
-
+        run: |
+          latestNpmPackageVersion=$( npm view maplibre-gl version )
+          currentVersion=$( node -e "console.log(require('./package.json').version)" )
+          if [ "$latestNpmPackageVersion" == "$currentVersion" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
     outputs:
       publish: ${{ steps.check.outputs.changed }}
 
