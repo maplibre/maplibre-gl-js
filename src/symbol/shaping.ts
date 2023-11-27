@@ -4,7 +4,7 @@ import {
     charInComplexShapingScript
 } from '../util/script_detection';
 import {verticalizePunctuation} from '../util/verticalize_punctuation';
-import {rtlWorkerPlugin} from '../source/rtl_text_plugin';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 import ONE_EM from './one_em';
 import {warnOnce} from '../util/util';
 

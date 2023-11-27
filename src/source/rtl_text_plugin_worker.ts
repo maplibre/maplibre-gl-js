@@ -1,15 +1,27 @@
-import {PluginState, RTLPlginStatus} from "./rtl_plugin_status";
+import {PluginState, RTLPlginStatus} from './rtl_text_plugin_status';
 
-class RTLWorkerPlugin {
+export interface RTLTextPlugin {
+    applyArabicShaping: (a: string) => string;
+    processBidirectionalText: ((b: string, a: Array<number>) => Array<string>);
+    processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>);
+}
+
+class RTLWorkerPlugin implements RTLTextPlugin {
     applyArabicShaping: (a: string) => string = null;
     processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) = null;
     processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) = null;
     pluginStatus: RTLPlginStatus = 'unavailable';
     pluginURL: string = null;
 
-    setState(state: PluginState) { // Worker thread only: this tells the worker threads that the plugin is available on the Main thread
+    setState(state: PluginState) {
         this.pluginStatus = state.pluginStatus;
         this.pluginURL = state.pluginURL;
+    }
+
+    setMethods(rtlTextPlugin: RTLTextPlugin) {
+        this.applyArabicShaping = rtlTextPlugin.applyArabicShaping;
+        this.processBidirectionalText = rtlTextPlugin.processBidirectionalText;
+        this.processStyledBidirectionalText = rtlTextPlugin.processStyledBidirectionalText;
     }
 
     isParsed(): boolean {
@@ -17,7 +29,7 @@ class RTLWorkerPlugin {
             this.processBidirectionalText != null &&
             this.processStyledBidirectionalText != null;
     }
-    
+
     getPluginURL(): string {
         return this.pluginURL;
     }

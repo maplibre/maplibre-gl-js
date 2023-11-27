@@ -1,4 +1,4 @@
-import {rtlWorkerPlugin} from '../source/rtl_text_plugin';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';

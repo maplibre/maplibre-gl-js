@@ -3,7 +3,7 @@ import {browser} from './browser';
 import {isSafari} from './util';
 import {ActorTarget} from './actor';
 
-export const PRELOAD_POOL_ID = 'mapboxgl_preloaded_worker_pool';
+export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
 
 /**
  * Constructs a worker pool.
@@ -22,7 +22,7 @@ export class WorkerPool {
 
     acquire(mapId: number | string): Array<ActorTarget> {
         if (!this.workers) {
-            // Lazily look up the value of mapboxgl.workerCount so that
+            // Lazily look up the value of maplibregl.workerCount so that
             // client code has had a chance to set it.
             this.workers = [];
             while (this.workers.length < WorkerPool.workerCount) {

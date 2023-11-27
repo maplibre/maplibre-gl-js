@@ -2,7 +2,7 @@ import {Actor, ActorTarget} from '../util/actor';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
-import {rtlWorkerPlugin as globalRTLTextPlugin} from './rtl_text_plugin';
+import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 
@@ -16,7 +16,7 @@ import type {
 
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {PluginState} from './rtl_plugin_status';
+import type {PluginState} from './rtl_text_plugin_status';
 import type {ClusterIDAndSource, GetClusterLeavesParams, RemoveSourceParams, UpdateLayersParamaeters} from '../util/actor_messages';
 
 /**
@@ -73,17 +73,11 @@ export default class Worker {
         };
 
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
-        this.self.registerRTLTextPlugin = (rtlTextPlugin: {
-            applyArabicShaping: typeof globalRTLTextPlugin.applyArabicShaping;
-            processBidirectionalText: typeof globalRTLTextPlugin.processBidirectionalText;
-            processStyledBidirectionalText?: typeof globalRTLTextPlugin.processStyledBidirectionalText;
-        }) => {
-            if (globalRTLTextPlugin.isParsed()) {
+        this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {
+            if (rtlWorkerPlugin.isParsed()) {
                 throw new Error('RTL text plugin already registered.');
             }
-            globalRTLTextPlugin.applyArabicShaping = rtlTextPlugin.applyArabicShaping;
-            globalRTLTextPlugin.processBidirectionalText = rtlTextPlugin.processBidirectionalText;
-            globalRTLTextPlugin.processStyledBidirectionalText = rtlTextPlugin.processStyledBidirectionalText;
+            rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
 
         this.actor.registerMessageHandler('loadDEMTile', (mapId: string, params: WorkerDEMTileParameters) => {
@@ -150,12 +144,7 @@ export default class Worker {
         });
 
         this.actor.registerMessageHandler('loadWorkerSource', async (_mapId: string, params: string) => {
-            try {
-                this.self.importScripts(params);
-            } catch (ex) {
-                // This is done since some error messages are not serializable
-                throw ex.toString();
-            }
+            this.self.importScripts(params);
         });
 
         this.actor.registerMessageHandler('setImages', (mapId: string, params: string[]) => {
@@ -182,23 +171,17 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
-        try {
-            globalRTLTextPlugin.setState(state);
-            const pluginURL = globalRTLTextPlugin.getPluginURL();
-            if (state.pluginStatus == "loaded" && !globalRTLTextPlugin.isParsed() && pluginURL != null) {
-                this.self.importScripts(pluginURL);
-                const complete = globalRTLTextPlugin.isParsed();
-                if (complete) {
-                    return complete;
-                }
-                throw new Error(`RTL Text Plugin failed to import scripts from ${pluginURL}`);
+        rtlWorkerPlugin.setState(state);
+        const pluginURL = rtlWorkerPlugin.getPluginURL();
+        if (state.pluginStatus === 'loaded' && !rtlWorkerPlugin.isParsed() && pluginURL != null) {
+            this.self.importScripts(pluginURL);
+            const complete = rtlWorkerPlugin.isParsed();
+            if (complete) {
+                return complete;
             }
-            return false;
-        } catch (ex) {
-            // This is done since some error messages are not serializable
-            throw ex.toString();
-
+            throw new Error(`RTL Text Plugin failed to import scripts from ${pluginURL}`);
         }
+        return false;
     }
 
     private _getAvailableImages(mapId: string) {
