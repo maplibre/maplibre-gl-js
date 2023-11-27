@@ -2,6 +2,8 @@ import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
 import {setWebGlContext} from './mock_webgl';
+import {IActor} from '../actor';
+import type {Evented} from '../evented';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -96,10 +98,10 @@ export function beforeMapTest() {
 }
 
 export function getWrapDispatcher() {
-    const wrapDispatcher = (dispatcher) => {
+    const wrapDispatcher = (actor: IActor) => {
         return {
             getActor() {
-                return dispatcher;
+                return actor;
             }
         } as any as Dispatcher;
     };
@@ -111,7 +113,7 @@ export function getMockDispatcher() {
     const wrapDispatcher = getWrapDispatcher();
 
     const mockDispatcher = wrapDispatcher({
-        send() {}
+        sendAsync() { return Promise.resolve({}); },
     });
 
     return mockDispatcher;
@@ -128,7 +130,9 @@ export function stubAjaxGetImage(createImageBitmap) {
         set(url: string) {
             if (url === 'error') {
                 this.onerror();
-            } else this.onload();
+            } else if (this.onload) {
+                this.onload();
+            }
         }
     });
 }
@@ -143,4 +147,23 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
     const view = new Uint8Array(newBuffer);
     data.copy(view);
     return view.buffer;
+}
+
+/**
+ * This allows test to wait for a certain amount of time before continuing.
+ * @param milliseconds - the amount of time to wait in milliseconds
+ * @returns - a promise that resolves after the specified amount of time
+ */
+export const sleep = (milliseconds: number = 0) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+};
+
+export function waitForMetadataEvent(source: Evented): Promise<void> {
+    return new Promise((resolve) => {
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                resolve();
+            }
+        });
+    });
 }

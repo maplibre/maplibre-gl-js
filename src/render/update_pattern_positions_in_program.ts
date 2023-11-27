@@ -33,6 +33,10 @@ export function updatePatternPositionsInProgram(
     let posTo = patternPositions[constantPattern.to.toString()];
     let posFrom = patternPositions[constantPattern.from.toString()];
 
+    // https://github.com/maplibre/maplibre-gl-js/issues/3377
+    if (!posTo && posFrom) posTo = posFrom;
+    if (!posFrom && posTo) posFrom = posTo;
+
     // try again in case patternPositions has been updated by worker
     if (!posTo || !posFrom) {
         const transitioned = layer.getPaintProperty(propertyName) as string;

@@ -69,14 +69,12 @@ class RTLMainThreadPlugin extends Evented {
         }
         this.pluginStatus = 'loading';
         this._sendPluginStateToWorker();
-        getArrayBuffer({url: this.pluginURL}, (error) => {
-            if (error) {
-                this.triggerPluginCompletionEvent(error);
-            } else {
-                this.pluginStatus = 'loaded';
-                this._sendPluginStateToWorker();
-            }
-        });
+        getArrayBuffer({url: this.pluginURL}, new AbortController()).then(() => {
+            this.pluginStatus = 'loaded';
+            this._sendPluginStateToWorker();
+        }).catch((error) => {
+            this.triggerPluginCompletionEvent(error);
+        });;
     };
 
     lazyLoadRTLTextPlugin() {

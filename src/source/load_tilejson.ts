@@ -1,42 +1,36 @@
 import {pick, extend} from '../util/util';
-
 import {getJSON} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 
 import type {RequestManager} from '../util/request_manager';
-import type {Callback} from '../types/callback';
 import type {TileJSON} from '../types/tilejson';
-import type {Cancelable} from '../types/cancelable';
 import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
-export function loadTileJson(
+export async function loadTileJson(
     options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,
     requestManager: RequestManager,
-    callback: Callback<TileJSON>
-): Cancelable {
-    const loaded = function(err: Error, tileJSON: any) {
-        if (err) {
-            return callback(err);
-        } else if (tileJSON) {
-            const result: any = pick(
-                // explicit source options take precedence over TileJSON
-                extend(tileJSON, options),
-                ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
-            );
-
-            if (tileJSON.vector_layers) {
-                result.vectorLayers = tileJSON.vector_layers;
-                result.vectorLayerIds = result.vectorLayers.map((layer) => { return layer.id; });
-            }
-
-            callback(null, result);
-        }
-    };
-
+    abortController: AbortController,
+): Promise<TileJSON> {
+    let tileJSON: any = options;
     if (options.url) {
-        return getJSON(requestManager.transformRequest(options.url, ResourceType.Source), loaded);
+        const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
+        tileJSON = response.data;
     } else {
-        return browser.frame(() => loaded(null, options));
+        await browser.frameAsync(abortController);
+    }
+    if (tileJSON) {
+        const result: TileJSON = pick(
+            // explicit source options take precedence over TileJSON
+            extend(tileJSON, options),
+            ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
+        );
+
+        if (tileJSON.vector_layers) {
+            result.vectorLayers = tileJSON.vector_layers;
+            result.vectorLayerIds = result.vectorLayers.map((layer) => { return layer.id; });
+        }
+
+        return result;
     }
 }

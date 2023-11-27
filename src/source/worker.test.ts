@@ -1,46 +1,50 @@
 import {fakeServer} from 'nise';
 import Worker from './worker';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {Cancelable} from '../types/cancelable';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
-import {TileParameters, WorkerSource, WorkerTileCallback, WorkerTileParameters} from './worker_source';
+import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {rtlWorkerPlugin as globalRTLTextPlugin} from './rtl_text_plugin';
-import {ActorTarget} from '../util/actor';
-
-const _self = {
-    addEventListener() {}
-} as any as WorkerGlobalScopeInterface & ActorTarget;
+import {ActorTarget, IActor} from '../util/actor';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];
-    constructor(private actor: any) {}
-    loadTile(_: WorkerTileParameters, __: WorkerTileCallback): void {
-        this.actor.send('main thread task', {}, () => {}, null);
+    constructor(private actor: IActor) {}
+    loadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
+        return this.actor.sendAsync({type: 'loadTile', data: {} as any}, new AbortController());
     }
-    reloadTile(_: WorkerTileParameters, __: WorkerTileCallback): void {
+    reloadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
         throw new Error('Method not implemented.');
     }
-    abortTile(_: TileParameters, __: WorkerTileCallback): void {
+    abortTile(_: WorkerTileParameters): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    removeTile(_: TileParameters, __: WorkerTileCallback): void {
+    removeTile(_: WorkerTileParameters): Promise<void> {
         throw new Error('Method not implemented.');
     }
 }
 
-describe('load tile', () => {
-    test('calls callback on error', done => {
-        const server = fakeServer.create();
+describe('Worker register RTLTextPlugin', () => {
+    let worker: Worker;
+    let _self: WorkerGlobalScopeInterface & ActorTarget;
+
+    beforeEach(() => {
+        _self = {
+            addEventListener() {}
+        } as any;
+        worker = new Worker(_self);
         global.fetch = null;
-        const worker = new Worker(_self);
-        worker.loadTile('0', {
+    });
+
+    test('should validate handlers execution in worker for load tile', done => {
+        const server = fakeServer.create();
+        worker.actor.messageHandlers['loadTile']('0', {
             type: 'vector',
             source: 'source',
             uid: '0',
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0} as CanonicalTileID} as any as OverscaledTileID,
             request: {url: '/error'}// Sinon fake server gives 404 responses by default
-        } as WorkerTileParameters & { type: string }, (err) => {
+        } as WorkerTileParameters).catch((err) => {
             expect(err).toBeTruthy();
             server.restore();
             done();
@@ -49,42 +53,38 @@ describe('load tile', () => {
     });
 
     test('isolates different instances\' data', () => {
-        const worker = new Worker(_self);
-
-        worker.setLayers('0', [
+        worker.actor.messageHandlers['setLayers']('0', [
             {id: 'one', type: 'circle'} as LayerSpecification
-        ], () => {});
+        ]);
 
-        worker.setLayers('1', [
+        worker.actor.messageHandlers['setLayers']('1', [
             {id: 'one', type: 'circle'} as LayerSpecification,
             {id: 'two', type: 'circle'} as LayerSpecification,
-        ], () => {});
+        ]);
 
         expect(worker.layerIndexes[0]).not.toBe(worker.layerIndexes[1]);
     });
 
     test('worker source messages dispatched to the correct map instance', done => {
-        const worker = new Worker(_self);
-        const workerName = 'test';
+        const extenalSourceName = 'test';
 
-        worker.actor.send = (type, data, callback, mapId): Cancelable => {
-            expect(type).toBe('main thread task');
-            expect(mapId).toBe('999');
+        worker.actor.sendAsync = (message, abortController) => {
+            expect(message.type).toBe('loadTile');
+            expect(message.targetMapId).toBe('999');
+            expect(abortController).toBeDefined();
             done();
-            return {cancel: () => {}};
+            return Promise.resolve({} as any);
         };
 
-        _self.registerWorkerSource(workerName, WorkerSourceMock);
+        _self.registerWorkerSource(extenalSourceName, WorkerSourceMock);
 
         expect(() => {
-            _self.registerWorkerSource(workerName, WorkerSourceMock);
-        }).toThrow(`Worker source with name "${workerName}" already registered.`);
+            _self.registerWorkerSource(extenalSourceName, WorkerSourceMock);
+        }).toThrow(`Worker source with name "${extenalSourceName}" already registered.`);
 
-        worker.loadTile('999', {type: 'test'} as WorkerTileParameters & { type: string }, () => {});
+        worker.actor.messageHandlers['loadTile']('999', {type: extenalSourceName} as WorkerTileParameters);
     });
-});
 
-describe('register RTLTextPlugin', () => {
     test('should not throw and set values in plugin', () => {
         jest.spyOn(globalRTLTextPlugin, 'isParsed').mockImplementation(() => {
             return false;
@@ -97,9 +97,9 @@ describe('register RTLTextPlugin', () => {
         };
 
         _self.registerRTLTextPlugin(rtlTextPlugin);
-        expect(globalRTLTextPlugin['applyArabicShaping']).toBe('test');
-        expect(globalRTLTextPlugin['processBidirectionalText']).toBe('test');
-        expect(globalRTLTextPlugin['processStyledBidirectionalText']).toBe('test');
+        expect(globalRTLTextPlugin.applyArabicShaping).toBe('test');
+        expect(globalRTLTextPlugin.processBidirectionalText).toBe('test');
+        expect(globalRTLTextPlugin.processStyledBidirectionalText).toBe('test');
     });
 
     test('should throw if already parsed', () => {
@@ -117,37 +117,25 @@ describe('register RTLTextPlugin', () => {
             _self.registerRTLTextPlugin(rtlTextPlugin);
         }).toThrow('RTL text plugin already registered.');
     });
-});
 
-describe('set Referrer', () => {
     test('Referrer is set', () => {
-        const worker = new Worker(_self);
-        worker.setReferrer('fakeId', 'myMap');
+        worker.actor.messageHandlers['setReferrer']('fakeId', 'myMap');
         expect(worker.referrer).toBe('myMap');
     });
-});
 
-describe('load worker source', () => {
     test('calls callback on error', done => {
         const server = fakeServer.create();
-        global.fetch = null;
-        const worker = new Worker(_self);
-        worker.loadWorkerSource('0', {
-            url: '/error',
-        }, (err) => {
+        worker.actor.messageHandlers['loadWorkerSource']('0', '/error').catch((err) => {
             expect(err).toBeTruthy();
             server.restore();
             done();
         });
         server.respond();
     });
-});
 
-describe('set images', () => {
     test('set images', () => {
-        const worker = new Worker(_self);
         expect(worker.availableImages['0']).toBeUndefined();
-        worker.setImages('0', ['availableImages'], () => {});
+        worker.actor.messageHandlers['setImages']('0', ['availableImages']);
         expect(worker.availableImages['0']).toEqual(['availableImages']);
     });
 });
