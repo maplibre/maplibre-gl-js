@@ -63,7 +63,7 @@
     "@types/minimist": "^1.2.5",
     "@types/murmurhash-js": "^1.0.6",
     "@types/nise": "^1.4.4",
-    "@types/node": "^20.9.2",
+    "@types/node": "^20.10.0",
     "@types/offscreencanvas": "^2019.7.3",
     "@types/pixelmatch": "^5.2.6",
     "@types/pngjs": "^6.0.4",
