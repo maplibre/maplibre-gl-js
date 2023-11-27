@@ -72,7 +72,7 @@
     "@types/request": "^2.48.12",
     "@types/shuffle-seed": "^1.1.2",
     "@types/window-or-global": "^1.0.6",
-    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "address": "^2.0.1",
     "benchmark": "^2.1.4",
