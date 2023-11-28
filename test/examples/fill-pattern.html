@@ -23,7 +23,7 @@
         zoom: 1
     });
 
-    map.on('load', () => {
+    map.on('load', async () => {
         // Add GeoJSON data
         map.addSource('source', {
             'type': 'geojson',
@@ -46,26 +46,19 @@
         });
 
         // Load an image to use as the pattern
-        map.loadImage(
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/64px-Cat_silhouette.svg.png',
-            (err, image) => {
-                // Throw an error if something went wrong
-                if (err) throw err;
+        const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/64px-Cat_silhouette.svg.png');
+        // Declare the image
+        map.addImage('pattern', image.data);
 
-                // Declare the image
-                map.addImage('pattern', image);
-
-                // Use it
-                map.addLayer({
-                    'id': 'pattern-layer',
-                    'type': 'fill',
-                    'source': 'source',
-                    'paint': {
-                        'fill-pattern': 'pattern'
-                    }
-                });
+        // Use it
+        map.addLayer({
+            'id': 'pattern-layer',
+            'type': 'fill',
+            'source': 'source',
+            'paint': {
+                'fill-pattern': 'pattern'
             }
-        );
+        });
     });
 </script>
 </body>

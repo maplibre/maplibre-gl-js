@@ -1,14 +1,9 @@
-import {RequestParameters, ExpiryData, makeRequest, sameOrigin, getProtocolAction, GetResourceResponse} from './ajax';
+import {RequestParameters, makeRequest, sameOrigin, getProtocolAction, GetResourceResponse} from './ajax';
 
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
 import {webpSupported} from './webp_supported';
 import {config} from './config';
 import {createAbortError} from './abort_error';
-
-/**
- * The callback that is being called after an image was fetched
- */
-export type GetImageCallback = (error?: Error | null, image?: HTMLImageElement | ImageBitmap | null, expiry?: ExpiryData | null) => void;
 
 type ImageQueueThrottleControlCallback = () => boolean;
 
