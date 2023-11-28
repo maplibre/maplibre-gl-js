@@ -28,7 +28,7 @@ import {TaskQueue} from '../util/task_queue';
 import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
-import {Source, SourceClass} from '../source/source';
+import {Source} from '../source/source';
 import {StyleLayer} from '../style/style_layer';
 
 import type {RequestTransformFunction} from '../util/request_manager';
@@ -57,7 +57,6 @@ import type {
     TerrainSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 
-import {Callback} from '../types/callback';
 import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import {Terrain} from '../render/terrain';
@@ -2042,18 +2041,6 @@ export class Map extends Camera {
             }
         }
         return true;
-    }
-
-    /**
-     * Adds a [custom source type](#Custom Sources), making it available for use with
-     * {@link Map#addSource}.
-     * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
-     * @param SourceType - A {@link Source} constructor.
-     * @param callback - Called when the source type is ready or with an error argument if there is an error.
-     */
-    addSourceType(name: string, SourceType: SourceClass, callback: Callback<void>) {
-        this._lazyInitEmptyStyle();
-        return this.style.addSourceType(name, SourceType, callback);
     }
 
     /**

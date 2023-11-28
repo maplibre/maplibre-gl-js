@@ -17,7 +17,6 @@ import {fakeServer, type FakeServer} from 'nise';
 
 import {EvaluationParameters} from './evaluation_parameters';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {SourceClass} from '../source/source';
 import {GeoJSONSource} from '../source/geojson_source';
 
 function createStyleJSON(properties?) {
@@ -2500,52 +2499,6 @@ describe('Style#query*Features', () => {
         serializedStyle = style.serialize();
         expect(serializedStyle.layers).toHaveLength(1);
 
-    });
-});
-
-describe('Style#addSourceType', () => {
-    test('adds factory function', done => {
-        const style = new Style(getStubMap());
-        const sourceType = function () {} as any as SourceClass;
-
-        // expect no call to load worker source
-        style.dispatcher.broadcast = function (type) {
-            if (type === 'loadWorkerSource') {
-                done('test failed');
-            }
-            return Promise.resolve({} as any);
-        };
-
-        style.addSourceType('foo', sourceType, (arg1, arg2) => {
-            expect(arg1).toBeNull();
-            expect(arg2).toBeNull();
-            done();
-        });
-    });
-
-    test('triggers workers to load worker source code', done => {
-        const style = new Style(getStubMap());
-        const sourceType = function () {} as any as SourceClass;
-        sourceType.workerSourceURL = 'worker-source.js' as any as URL;
-
-        style.dispatcher.broadcast = (type, params) => {
-            if (type === 'loadWorkerSource') {
-                expect(params).toBe('worker-source.js');
-                done();
-                return Promise.resolve({} as any);
-            }
-        };
-
-        style.addSourceType('bar', sourceType, (err) => { expect(err).toBeFalsy(); });
-    });
-
-    test('refuses to add new type over existing name', done => {
-        const style = new Style(getStubMap());
-        const sourceType = function () {} as any as SourceClass;
-        style.addSourceType('canvas', sourceType, (err) => {
-            expect(err).toBeTruthy();
-            done();
-        });
     });
 });
 

@@ -1,5 +1,5 @@
 import {SourceCache} from './source_cache';
-import {Source, setSourceType} from './source';
+import {Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Transform} from '../geo/transform';
@@ -75,7 +75,7 @@ function createSource(id: string, sourceOptions: any, _dispatcher: any, eventedP
     return source;
 }
 
-setSourceType('mock-source-type', createSource as any);
+addSourceType('mock-source-type', createSource as any);
 
 function createSourceCache(options?, used?) {
     const sc = new SourceCache('id', extend({
