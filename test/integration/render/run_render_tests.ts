@@ -469,7 +469,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 return;
             }
             for (const operation of testData.operations) {
-                console.log("Running operation: " + JSON.stringify(operation));
+                console.log(`Running operation: ${JSON.stringify(operation)}`);
                 switch (operation[0]) {
                     case 'wait':
                         if (operation.length <= 1) {
@@ -905,4 +905,3 @@ async function executeRenderTests() {
 
 // start testing here
 executeRenderTests();
-
