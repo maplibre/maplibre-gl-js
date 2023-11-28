@@ -95,22 +95,16 @@
         });
 
         // inspect a cluster on click
-        map.on('click', 'clusters', (e) => {
+        map.on('click', 'clusters', async (e) => {
             const features = map.queryRenderedFeatures(e.point, {
                 layers: ['clusters']
             });
             const clusterId = features[0].properties.cluster_id;
-            map.getSource('earthquakes').getClusterExpansionZoom(
-                clusterId,
-                (err, zoom) => {
-                    if (err) return;
-
-                    map.easeTo({
-                        center: features[0].geometry.coordinates,
-                        zoom
-                    });
-                }
-            );
+            const zoom = await map.getSource('earthquakes').getClusterExpansionZoom(clusterId);
+            map.easeTo({
+                center: features[0].geometry.coordinates,
+                zoom
+            });
         });
 
         // When a click event occurs on a feature in
