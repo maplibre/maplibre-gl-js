@@ -32,8 +32,7 @@ import {RasterDEMTileSource} from './source/raster_dem_tile_source';
 import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
-import {addSourceType} from './source/source';
-
+import {addSourceType, type SourceClass} from './source/source';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -237,10 +236,10 @@ class MapLibreGL {
      * Adds a [custom source type](#Custom Sources), making it available for use with
      * {@link Map#addSource}.
      * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
-     * @param SourceType - A {@link Source} constructor.
+     * @param SourceType - A {@link SourceClass} - which is a constructor for the {@link Source} interface.
      * @returns a promise that is resolved when the source type is ready or with an error argument if there is an error.
      */
-    static addSourceType = addSourceType;
+    static addSourceType = (name: string, sourceType: SourceClass) => addSourceType(name, sourceType);
 }
 
 //This gets automatically stripped out in production builds.
