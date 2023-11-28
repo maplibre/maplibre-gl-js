@@ -2304,7 +2304,7 @@ export class Map extends Camera {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @param callback - if not provided, this method will return a promise, otherwise use `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
+     * @returns a promise that is resolved when the image is loaded
      *
      * @example
      * Load an image from an external URL.
@@ -2315,14 +2315,8 @@ export class Map extends Camera {
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
      */
-    loadImage(url: string, callback?: GetImageCallback): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
-        if (!callback) {
-            return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
-        } else {
-            ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController())
-                .then((response) => callback(null, response.data, {cacheControl: response.cacheControl, expires: response.expires}))
-                .catch(callback);
-        }
+    loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
+        return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
     }
 
     /**
