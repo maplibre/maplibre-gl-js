@@ -469,6 +469,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 return;
             }
             for (const operation of testData.operations) {
+                console.log("Running operation: " + JSON.stringify(operation));
                 switch (operation[0]) {
                     case 'wait':
                         if (operation.length <= 1) {
@@ -488,6 +489,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                                 map._render();
                             }
                         }
+                        console.log('done waiting');
                         break;
                     case 'idle':
                         map.repaint = false;
@@ -495,9 +497,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                             console.log('idle is true');
                             break;
                         }
-                        console.log('waiting for idle');
                         await map.once('idle');
-                        console.log('done for idle');
+                        console.log('done waiting for idle');
                         break;
                     case 'sleep':
                         await new Promise<void>((resolve) => {
