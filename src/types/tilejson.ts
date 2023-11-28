@@ -13,5 +13,4 @@ export type TileJSON = {
     bounds?: [number, number, number, number];
     center?: [number, number, number];
     vector_layers: [{id: string}]; // this is partial but enough for what we need
-    vectorLayerIds: Array<string>;
 };
