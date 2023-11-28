@@ -81,7 +81,7 @@ class MapLibreGL {
      * ```
      * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
      */
-    static setRTLTextPlugin = (pluginURL: string, lazy: boolean) => { rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy); };
+    static setRTLTextPlugin = (pluginURL: string, lazy: boolean) => rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy);
     /**
      * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
      * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
