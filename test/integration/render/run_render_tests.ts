@@ -492,9 +492,12 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                     case 'idle':
                         map.repaint = false;
                         if (idle) {
+                            console.log('idle is true');
                             break;
                         }
+                        console.log('waiting for idle');
                         await map.once('idle');
+                        console.log('done for idle');
                         break;
                     case 'sleep':
                         await new Promise<void>((resolve) => {
