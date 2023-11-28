@@ -15,7 +15,8 @@
 - ⚠️ Changed the undeling worker communication from callbacks to promises. This has a breaking effect on the implementation of custom `WorkerSource` and how it behaves ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - ⚠️ Changed the `Source` interface to return promises instead of callbacks ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - ⚠️ Changed all the sources to be promises based. ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
-- ⚠️ Changed the `map.loadImage` method to return a `Promise` ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
+- ⚠️ Changed the `map.loadImage` method to return a `Promise` instead of a callback usage ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
+- ⚠️ Changed the `GeoJSONSource`'s `getClusterExpansionZoom`, `getClusterChildren`, `getClusterLeaves` methods to return a `Promise` instead of a callback usage ([#](https://github.com/maplibre/maplibre-gl-js/pull/))
 
 ### 🐞 Bug fixes
 
