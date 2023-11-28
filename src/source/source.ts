@@ -5,9 +5,10 @@ import {GeoJSONSource} from '../source/geojson_source';
 import {VideoSource} from '../source/video_source';
 import {ImageSource} from '../source/image_source';
 import {CanvasSource} from '../source/canvas_source';
+import {Dispatcher} from '../util/dispatcher';
+import {getGlobalWorkerPool} from '../util/global_worker_pool';
 
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Dispatcher} from '../util/dispatcher';
 import type {Event, Evented} from '../util/evented';
 import type {Map} from '../ui/map';
 import type {Tile} from './tile';
@@ -159,7 +160,7 @@ export const create = (id: string, specification: SourceSpecification | CanvasSo
     return source;
 };
 
-export const getSourceType = (name: string): SourceClass => {
+const getSourceType = (name: string): SourceClass => {
     switch (name) {
         case 'geojson':
             return GeoJSONSource;
@@ -179,6 +180,21 @@ export const getSourceType = (name: string): SourceClass => {
     return registeredSources[name];
 };
 
-export const setSourceType = (name: string, type: SourceClass) => {
+const setSourceType = (name: string, type: SourceClass) => {
     registeredSources[name] = type;
+};
+
+export const addSourceType = async (name: string, SourceType: SourceClass): Promise<void> => {
+    if (getSourceType(name)) {
+        throw new Error(`A source type called "${name}" already exists.`);
+    }
+
+    setSourceType(name, SourceType);
+
+    if (!SourceType.workerSourceURL) {
+        return;
+    }
+    const dispatcher = new Dispatcher(getGlobalWorkerPool(), 'add-custom-source-dispatcher');
+    await dispatcher.broadcast('loadWorkerSource', SourceType.workerSourceURL.toString());
+    dispatcher.remove();
 };
