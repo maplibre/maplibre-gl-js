@@ -2,13 +2,12 @@
   "version": 8,
   "metadata": {
     "test": {
-        "continuesRepaint" : false,
         "fadeDuration": 100,
         "width": 512,
         "height": 512,
         "description": "Chinese character rendering on initial map loading.",
         "operations": [
-          ["wait", "idle"]
+          ["idle"]
         ]
     }
   },
