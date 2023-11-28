@@ -5,7 +5,6 @@ import packageJSON from '../../package.json' assert {type: 'json'};
 
 import {GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
-import type {GetImageCallback} from '../util/image_request';
 
 import {RequestManager, ResourceType} from '../util/request_manager';
 import {Style, StyleSwapOptions} from '../style/style';
