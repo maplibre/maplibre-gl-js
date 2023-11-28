@@ -495,6 +495,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                             break;
                         }
                         await map.once('idle');
+                        break;
                     case 'sleep':
                         await new Promise<void>((resolve) => {
                             setTimeout(() => {
@@ -606,7 +607,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             });
 
             let idle = false;
-            map.on('idle', () => idle = true);
+            map.on('idle', () => { idle = true; });
             // Configure the map to never stop the render loop
             map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
 
@@ -792,7 +793,7 @@ async function executeRenderTests() {
     }
 
     const browser = await puppeteer.launch({headless: options.openBrowser ? false : 'new', args: ['--enable-webgl', '--no-sandbox',
-    '--disable-web-security']});
+        '--disable-web-security']});
 
     const server = http.createServer(
         st({

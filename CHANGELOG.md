@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- ⚠️ Changed the `setRTLTextPlugin` function to return a promise instead of using callback ([#3418](https://github.com/maplibre/maplibre-gl-js/pull/3418)) this also changes how the rtl pluing code is handled intenally.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
