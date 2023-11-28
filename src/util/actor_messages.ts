@@ -3,7 +3,7 @@ import type {TileParameters, WorkerDEMTileParameters, WorkerTileParameters, Work
 import type {DEMData} from '../data/dem_data';
 import type {StyleImage} from '../style/style_image';
 import type {StyleGlyph} from '../style/style_glyph';
-import type {PluginState} from '../source/rtl_text_plugin';
+import type {PluginState} from '../source/rtl_text_plugin_status';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';

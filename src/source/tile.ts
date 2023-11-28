@@ -11,7 +11,7 @@ import {browser} from '../util/browser';
 import {toEvaluationFeature} from '../data/evaluation_feature';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {SourceFeatureState} from '../source/source_state';
-import {lazyLoadRTLTextPlugin} from './rtl_text_plugin';
+import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
@@ -199,7 +199,7 @@ export class Tile {
                 if (bucket instanceof SymbolBucket) {
                     if (bucket.hasRTLText) {
                         this.hasRTLText = true;
-                        lazyLoadRTLTextPlugin();
+                        rtlMainThreadPluginFactory().lazyLoadRTLTextPlugin();
                         break;
                     }
                 }
