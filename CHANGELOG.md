@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- ⚠️ Removed callback usage from `map.loadImage` in continue to below change ([#3422](https://github.com/maplibre/maplibre-gl-js/pull/3422))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
