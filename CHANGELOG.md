@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- ⚠️ Moved the `addSrouceType` to be a part of the global maplibregl object instead of being per map object ([#3420](https://github.com/maplibre/maplibre-gl-js/pull/3420))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
