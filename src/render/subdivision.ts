@@ -729,7 +729,7 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
         for (let cellX = Math.max(Math.floor((minX + granualityStep) / granualityStep), 0); cellX <= Math.min(Math.floor((maxX - 1) / granualityStep), granuality); cellX += 1) {
             const cellEdgeX = cellX * granualityStep;
             const y = checkEdgeDivide(lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX);
-            if (y !== undefined && y >= clampedMinX && y <= clampedMaxX) {
+            if (y !== undefined && y >= clampedMinY && y <= clampedMaxY) {
                 for (const p of subdividedLinePoints) {
                     if (p.x === cellEdgeX && p.y === y) {
                         return; // the vertex already exists in this line, do not add it
@@ -742,7 +742,7 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
         for (let cellY = Math.max(Math.floor((minY + granualityStep) / granualityStep), 0); cellY <= Math.min(Math.floor((maxY - 1) / granualityStep), granuality); cellY += 1) {
             const cellEdgeY = cellY * granualityStep;
             const x = checkEdgeDivide(lineVertex0y, lineVertex0x, lineVertex1y, lineVertex1x, cellEdgeY);
-            if (x !== undefined && x >= clampedMinY && x <= clampedMaxY) {
+            if (x !== undefined && x >= clampedMinX && x <= clampedMaxX) {
                 for (const p of subdividedLinePoints) {
                     if (p.x === x && p.y === cellEdgeY) {
                         return;
