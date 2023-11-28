@@ -1,12 +1,12 @@
 import {getArrayBuffer} from '../util/ajax';
 import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
-import {RTLPlginStatus, PluginState} from './rtl_text_plugin_status';
+import {RTLPluginStatus, PluginState} from './rtl_text_plugin_status';
 import {Dispatcher} from '../util/dispatcher';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
 
 class RTLMainThreadPlugin extends Evented {
-    pluginStatus: RTLPlginStatus = 'unavailable';
+    pluginStatus: RTLPluginStatus = 'unavailable';
     pluginURL: string = null;
     dispatcher: Dispatcher = new Dispatcher(getGlobalWorkerPool(), 'rtl-text-plugin-dispacher');
     queue: PluginState[] = [];

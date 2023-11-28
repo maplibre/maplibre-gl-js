@@ -1,4 +1,4 @@
-import {PluginState, RTLPlginStatus} from './rtl_text_plugin_status';
+import {PluginState, RTLPluginStatus} from './rtl_text_plugin_status';
 
 export interface RTLTextPlugin {
     applyArabicShaping: (a: string) => string;
@@ -10,7 +10,7 @@ class RTLWorkerPlugin implements RTLTextPlugin {
     applyArabicShaping: (a: string) => string = null;
     processBidirectionalText: ((b: string, a: Array<number>) => Array<string>) = null;
     processStyledBidirectionalText: ((c: string, b: Array<number>, a: Array<number>) => Array<[string, Array<number>]>) = null;
-    pluginStatus: RTLPlginStatus = 'unavailable';
+    pluginStatus: RTLPluginStatus = 'unavailable';
     pluginURL: string = null;
 
     setState(state: PluginState) {

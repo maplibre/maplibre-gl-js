@@ -11,12 +11,12 @@
  *
  *  `error`: The plugin failed to load
  */
-export type RTLPlginStatus = 'unavailable' | 'deferred' | 'loading' | 'loaded' | 'error';
+export type RTLPluginStatus = 'unavailable' | 'deferred' | 'loading' | 'loaded' | 'error';
 
 /**
  * The RTL plugin state
  */
 export type PluginState = {
-    pluginStatus: RTLPlginStatus;
+    pluginStatus: RTLPluginStatus;
     pluginURL: string;
 };
