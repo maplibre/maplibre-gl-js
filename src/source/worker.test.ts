@@ -4,7 +4,7 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {WorkerGlobalScopeInterface} from '../util/web_worker';
 import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
-import {plugin as globalRTLTextPlugin} from './rtl_text_plugin';
+import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 import {ActorTarget, IActor} from '../util/actor';
 
 class WorkerSourceMock implements WorkerSource {
@@ -86,7 +86,7 @@ describe('Worker register RTLTextPlugin', () => {
     });
 
     test('should not throw and set values in plugin', () => {
-        jest.spyOn(globalRTLTextPlugin, 'isParsed').mockImplementation(() => {
+        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
             return false;
         });
 
@@ -97,13 +97,13 @@ describe('Worker register RTLTextPlugin', () => {
         };
 
         _self.registerRTLTextPlugin(rtlTextPlugin);
-        expect(globalRTLTextPlugin.applyArabicShaping).toBe('test');
-        expect(globalRTLTextPlugin.processBidirectionalText).toBe('test');
-        expect(globalRTLTextPlugin.processStyledBidirectionalText).toBe('test');
+        expect(rtlWorkerPlugin.applyArabicShaping).toBe('test');
+        expect(rtlWorkerPlugin.processBidirectionalText).toBe('test');
+        expect(rtlWorkerPlugin.processStyledBidirectionalText).toBe('test');
     });
 
     test('should throw if already parsed', () => {
-        jest.spyOn(globalRTLTextPlugin, 'isParsed').mockImplementation(() => {
+        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
             return true;
         });
 

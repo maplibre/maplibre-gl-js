@@ -47,7 +47,7 @@ type TestData = {
     operations: any[];
     queryGeometry: PointLike;
     queryOptions: any;
-    error: Error;
+    error?: Error;
     maxPitch: number;
     continuesRepaint: boolean;
     // Crop PNG results if they're too large
@@ -66,6 +66,7 @@ type RenderOptions = {
     skipreport: boolean;
     seed: string;
     debug: boolean;
+    openBrowser: boolean;
 }
 
 type StyleWithTestData = StyleSpecification & {
@@ -248,9 +249,6 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
         });
     return sequence;
 }
-
-const browser = await puppeteer.launch({headless: 'new', args: ['--enable-webgl', '--no-sandbox',
-    '--disable-web-security']});
 
 /**
  * It creates the map and applies the operations to create an image
@@ -466,11 +464,12 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
          * @param operations - The operations
          * @param callback - The callback to use when all the operations are executed
          */
-        async function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[]) {
-            if (!operations || operations.length === 0) {
+        async function applyOperations(testData: TestData, map: Map & { _render: () => void}, idle: boolean) {
+            if (!testData.operations || testData.operations.length === 0) {
                 return;
             }
-            for (const operation of operations) {
+            for (const operation of testData.operations) {
+                console.log(`Running operation: ${JSON.stringify(operation)}`);
                 switch (operation[0]) {
                     case 'wait':
                         if (operation.length <= 1) {
@@ -490,6 +489,16 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                                 map._render();
                             }
                         }
+                        console.log('done waiting');
+                        break;
+                    case 'idle':
+                        map.repaint = false;
+                        if (idle) {
+                            console.log('idle is true');
+                            break;
+                        }
+                        await map.once('idle');
+                        console.log('done waiting for idle');
                         break;
                     case 'sleep':
                         await new Promise<void>((resolve) => {
@@ -578,7 +587,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
                 maplibregl.setRTLTextPlugin(
                     'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
-                    undefined,
                     false // Don't lazy load the plugin
                 );
             }
@@ -602,6 +610,8 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 maxCanvasSize: [8192, 8192]
             });
 
+            let idle = false;
+            map.on('idle', () => { console.log('idle'); idle = true; });
             // Configure the map to never stop the render loop
             map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
 
@@ -621,7 +631,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 }
             }
 
-            await applyOperations(options, map as any, options.operations);
+            await applyOperations(options, map as any, idle);
             const viewport = gl.getParameter(gl.VIEWPORT);
             const w = options.reportWidth ?? viewport[2];
             const h = options.reportHeight ?? viewport[3];
@@ -748,6 +758,7 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     let index = 0;
     for (const style of testStyles) {
         try {
+            style.metadata.test.error = undefined;
             //@ts-ignore
             const data = await getImageFromStyle(style, page);
             compareRenderResults(directory, style.metadata.test, data);
@@ -768,13 +779,13 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
  * it exits with 1.
  */
 async function executeRenderTests() {
-
     const options: RenderOptions = {
         tests: [],
         recycleMap: false,
         skipreport: false,
         seed: makeHash(),
-        debug: false
+        debug: false,
+        openBrowser: false
     };
 
     if (process.argv.length > 2) {
@@ -783,7 +794,11 @@ async function executeRenderTests() {
         options.skipreport = checkParameter(options, '--skip-report');
         options.seed = checkValueParameter(options, options.seed, '--seed');
         options.debug = checkParameter(options, '--debug');
+        options.openBrowser = checkParameter(options, '--open-browser');
     }
+
+    const browser = await puppeteer.launch({headless: options.openBrowser ? false : 'new', args: ['--enable-webgl', '--no-sandbox',
+        '--disable-web-security']});
 
     const server = http.createServer(
         st({
@@ -891,4 +906,3 @@ async function executeRenderTests() {
 
 // start testing here
 executeRenderTests();
-

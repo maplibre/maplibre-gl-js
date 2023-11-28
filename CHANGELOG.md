@@ -1,7 +1,9 @@
 ## main
 
 ### ✨ Features and improvements
+
 - ⚠️ Removed callback usage from `map.loadImage` in continue to below change ([#3422](https://github.com/maplibre/maplibre-gl-js/pull/3422))
+- ⚠️ Changed the `setRTLTextPlugin` function to return a promise instead of using callback ([#3418](https://github.com/maplibre/maplibre-gl-js/pull/3418)) this also changed how the RTL pluing code is handled internally by splitting the main thread and worker thread code.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

@@ -10,7 +10,7 @@ import type {DEMEncoding} from '../data/dem_data';
 import type {StyleGlyph} from '../style/style_glyph';
 import type {StyleImage} from '../style/style_image';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {RemoveSourceParams as RemoveSourceParameters} from '../util/actor_messages';
+import type {RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
 
@@ -113,5 +113,5 @@ export interface WorkerSource {
      * The foreground Source is responsible for ensuring that 'removeSource' is
      * the last message sent to the WorkerSource.
      */
-    removeSource?: (params: RemoveSourceParameters) => Promise<void>;
+    removeSource?: (params: RemoveSourceParams) => Promise<void>;
 }
