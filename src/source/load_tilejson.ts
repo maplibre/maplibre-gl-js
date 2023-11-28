@@ -12,7 +12,7 @@ export async function loadTileJson(
     requestManager: RequestManager,
     abortController: AbortController,
 ): Promise<TileJSON> {
-    let tileJSON: any = options;
+    let tileJSON: TileJSON | typeof options = options;
     if (options.url) {
         const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
         tileJSON = response.data;
@@ -26,9 +26,8 @@ export async function loadTileJson(
             ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
         );
 
-        if (tileJSON.vector_layers) {
-            result.vectorLayers = tileJSON.vector_layers;
-            result.vectorLayerIds = result.vectorLayers.map((layer) => { return layer.id; });
+        if ('vector_layers' in tileJSON) {
+            result.vectorLayerIds = tileJSON.vector_layers.map((layer) => { return layer.id; });
         }
 
         return result;
