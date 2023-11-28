@@ -47,7 +47,7 @@ type TestData = {
     operations: any[];
     queryGeometry: PointLike;
     queryOptions: any;
-    error: Error;
+    error?: Error;
     maxPitch: number;
     continuesRepaint: boolean;
     // Crop PNG results if they're too large
@@ -758,6 +758,7 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     let index = 0;
     for (const style of testStyles) {
         try {
+            style.metadata.test.error = undefined;
             //@ts-ignore
             const data = await getImageFromStyle(style, page);
             compareRenderResults(directory, style.metadata.test, data);
