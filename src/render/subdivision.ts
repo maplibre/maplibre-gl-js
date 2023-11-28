@@ -730,12 +730,16 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
             const cellEdgeX = cellX * granualityStep;
             const y = checkEdgeDivide(lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX);
             if (y !== undefined && y >= clampedMinY && y <= clampedMaxY) {
+                let add = true;
                 for (const p of subdividedLinePoints) {
                     if (p.x === cellEdgeX && p.y === y) {
-                        return; // the vertex already exists in this line, do not add it
+                        add = false; // the vertex already exists in this line, do not add it
+                        break;
                     }
                 }
-                subdividedLinePoints.push(new Point(cellEdgeX, y));
+                if (add) {
+                    subdividedLinePoints.push(new Point(cellEdgeX, y));
+                }
             }
         }
 
@@ -743,12 +747,16 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
             const cellEdgeY = cellY * granualityStep;
             const x = checkEdgeDivide(lineVertex0y, lineVertex0x, lineVertex1y, lineVertex1x, cellEdgeY);
             if (x !== undefined && x >= clampedMinX && x <= clampedMaxX) {
+                let add = true;
                 for (const p of subdividedLinePoints) {
                     if (p.x === x && p.y === cellEdgeY) {
-                        return;
+                        add = false;
+                        break;
                     }
                 }
-                subdividedLinePoints.push(new Point(x, cellEdgeY));
+                if (add) {
+                    subdividedLinePoints.push(new Point(x, cellEdgeY));
+                }
             }
         }
 
