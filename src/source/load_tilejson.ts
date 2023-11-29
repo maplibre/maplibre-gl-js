@@ -12,8 +12,8 @@ export type LoadTileJsonResponse = {
     minzoom: number;
     maxzoom: number;
     attribution: string;
-    bounds: RasterDEMSourceSpecification['bounds'];
-    scheme: VectorSourceSpecification['scheme'];
+    bounds: RasterSourceSpecification['bounds'];
+    scheme: RasterSourceSpecification['scheme'];
     tileSize: number;
     encoding: RasterDEMSourceSpecification['encoding'];
     vectorLayerIds?: Array<string>;
@@ -23,7 +23,7 @@ export async function loadTileJson(
     options: RasterSourceSpecification | RasterDEMSourceSpecification | VectorSourceSpecification,
     requestManager: RequestManager,
     abortController: AbortController,
-): Promise<LoadTileJsonResponse> {
+): Promise<LoadTileJsonResponse | null> {
     let tileJSON: TileJSON | typeof options = options;
     if (options.url) {
         const response = await getJSON<TileJSON>(requestManager.transformRequest(options.url, ResourceType.Source), abortController);
@@ -31,17 +31,18 @@ export async function loadTileJson(
     } else {
         await browser.frameAsync(abortController);
     }
-    if (tileJSON) {
-        const result: LoadTileJsonResponse = pick(
-            // explicit source options take precedence over TileJSON
-            extend(tileJSON, options),
-            ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
-        );
-
-        if ('vector_layers' in tileJSON && tileJSON.vector_layers) {
-            result.vectorLayerIds = tileJSON.vector_layers.map((layer) => { return layer.id; });
-        }
-
-        return result;
+    if (!tileJSON) {
+        return null;
     }
+    const result: LoadTileJsonResponse = pick(
+        // explicit source options take precedence over TileJSON
+        extend(tileJSON, options),
+        ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
+    );
+
+    if ('vector_layers' in tileJSON && tileJSON.vector_layers) {
+        result.vectorLayerIds = tileJSON.vector_layers.map((layer) => { return layer.id; });
+    }
+
+    return result;
 }
