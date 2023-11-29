@@ -38,6 +38,33 @@ out vec3 v_data1;
 #pragma mapbox: define lowp float halo_width
 #pragma mapbox: define lowp float halo_blur
 
+// Summary of all transformations that happen here:
+// There are three matrices here:
+// - u_matrix:
+//     - tile.coord.posMatrix, translated by "translate" property
+//         - anchor translation rotated by -angle if translateAnchor == viewport
+// - u_label_plane_matrix:
+//     - identity if symbols along line
+//     - if pitchWithMap
+//         - scales from tile units to pixels
+//         - if not rotateWithMap, rotated by angle
+//     - else
+//         - tile.coord.posMatrix and scaling from pixels to -1..1
+// - u_coord_matrix:
+//     - if pitchWithMap
+//         - tile.coord.posMatrix scaled from pixels to tile units
+//         - if not rotateWithMap, rotated by -angle
+//     - else
+//         - matrix from pixels to -1..1
+//         - rotated by +angle if translateAnchor == map
+//     - all that with translateanchor applied
+//         - anchor translation rotated by angle if translateAnchor==map
+// Matrices are used in the following way:
+// projectedPoint = u_matrix * a_pos   <------ only used for helper calculations (rotation angle, distance from camera)
+// gl_Position = u_coord_matrix * (u_label_plane_matrix * a_projected_pos);
+//
+// Note that when symbols follow a line, u_label_plane_matrix is identity and a_projected_pos is pre-transformed
+
 void main() {
     #pragma mapbox: initialize highp vec4 fill_color
     #pragma mapbox: initialize highp vec4 halo_color
