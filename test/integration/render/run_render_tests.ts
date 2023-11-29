@@ -736,8 +736,14 @@ function getReportItem(test: TestData) {
 
 function applyDebugParameter(options: RenderOptions, page: Page) {
     if (options.debug) {
-        page.on('console', message =>
-            console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`));
+        page.on('console', async (message) => {
+            if (message.text() != "JSHandle@error") {
+                console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`);
+                return;
+            }
+            const messages = await Promise.all(message.args().map((arg) => arg.getProperty("message")));            
+            console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
+        });
 
         page.on('pageerror', ({message}) => console.error(message));
 
