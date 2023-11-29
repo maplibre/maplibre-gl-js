@@ -9,6 +9,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix zooming outside the central globe when terrain 3D is enabled ([#3425](https://github.com/maplibre/maplibre-gl-js/pull/3425))
 - _...Add new stuff here..._
 
 ## 4.0.0-pre.1

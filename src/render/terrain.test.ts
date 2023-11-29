@@ -52,22 +52,27 @@ describe('Terrain', () => {
         expect(coordinate).not.toBeNull();
     });
 
-    const setupMercatorOverflow = (centerLng: number) => {
+    const setupMercatorOverflow = () => {
         const WORLD_WIDTH = 4;
         const painter = {
             context: new Context(gl(WORLD_WIDTH, 1) as any),
             width: WORLD_WIDTH,
             height: 1,
-            transform: {center: {lng: centerLng}}
         } as any as Painter;
         const sourceCache = {} as SourceCache;
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
-        const mockTile = {tileID: {canonical: {x: 0, y: 0, z: 0}}};
-        terrain.sourceCache.getTileByID = () => mockTile as any as Tile;
+        const tileIdsToWraps = {a: -1, b: 0, c: 1, d: 2};
+        terrain.sourceCache.getTileByID = (id) => {
+            return {
+                tileID: {
+                    canonical: {x: 0, y: 0, z: 0},
+                    wrap: tileIdsToWraps[id]
+                }
+            } as any as Tile;
+        };
         terrain.getElevation = () => 0;
-        terrain.coordsIndex = ['abcd'];
-        terrain._coordsTextureSize = WORLD_WIDTH;
-        const pixels = new Uint8Array([2, 0, 0, 255, 3, 0, 0, 255, 0, 0, 0, 255, 1, 0, 0, 255]);
+        terrain.coordsIndex = Object.keys(tileIdsToWraps);
+        const pixels = new Uint8Array([0, 0, 0, 255, 0, 0, 0, 254, 0, 0, 0, 253, 0, 0, 0, 252]);
         const image = new RGBAImage({width: WORLD_WIDTH, height: 1}, pixels);
         const imageTexture = new Texture(painter.context, image, painter.context.gl.RGBA);
         terrain.getFramebuffer('coords'); // allow init of frame buffers
@@ -77,32 +82,26 @@ describe('Terrain', () => {
 
     test(
         `pointCoordiate should return negative mercator x
-        if center.lng is to the right of 180 meridian
-        and a given point is to the left of 180`,
+        if the point is on the LEFT outside the central globe`,
         () => {
-            expect.assertions(2);
-            const centerLng = -170;
-            const pointX = 1; // x in the left half of the 4-px world
-            const terrain = setupMercatorOverflow(centerLng);
+            expect.assertions(1);
+            const pointX = 0;
+            const terrain = setupMercatorOverflow();
             const coordinate = terrain.pointCoordinate(new Point(pointX, 0));
 
-            expect(coordinate.x).toBeLessThan(0);
-            expect(coordinate.x).toBeGreaterThan(-1);
+            expect(coordinate.x).toBe(-1);
         });
 
     test(
         `pointCoordiate should return mercator x greater than 1
-        if center.lng is to the left of 180 meridian
-        and a given point is to the right of 180`,
+        if the point is on the RIGHT outside the central globe`,
         () => {
-            expect.assertions(2);
-            const centerLng = 170;
-            const pointX = 3; // x in the right half of the 4-px world
-            const terrain = setupMercatorOverflow(centerLng);
+            expect.assertions(1);
+            const pointX = 3;
+            const terrain = setupMercatorOverflow();
             const coordinate = terrain.pointCoordinate(new Point(pointX, 0));
 
-            expect(coordinate.x).toBeGreaterThan(1);
-            expect(coordinate.x).toBeLessThan(2);
+            expect(coordinate.x).toBe(2);
         });
 
     test('Calculate tile minimum and maximum elevation', () => {
