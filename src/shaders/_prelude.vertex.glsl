@@ -167,9 +167,9 @@ float projectThickness(vec2 posInTile) {
 // JP: TODO: a function that returns tangent and cotangent vectors for the sphere when given mercator or inside-tile coordiantes
 
 // get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere
-vec4 projectTile(vec2 posInTile) {
+vec3 projectToSphere(vec2 posInTile) {
     // JP: TODO: there could very well be a more efficient way to compute this if we take a deeper look at the geometric idea behind mercator
-
+    
     // Compute position in range 0..1 of the base tile of web mercator
     vec2 mercator_pos = mix(u_projection_tile_mercator_coords.xy, u_projection_tile_mercator_coords.zw, posInTile / 8192.0);
 
@@ -185,22 +185,26 @@ vec4 projectTile(vec2 posInTile) {
     spherical.y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos.y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
 
     float len = cos(spherical.y);
-    vec4 pos = vec4(
+    vec3 pos = vec3(
         sin(spherical.x) * len,
         sin(spherical.y),
-        cos(spherical.x) * len,
-        1.0
+        cos(spherical.x) * len
     );
 
     // North pole
     if(posInTile.x < -32767.5 && posInTile.y < -32767.5) {
-        pos.xyz = vec3(0.0, 1.0, 0.0);
+        pos = vec3(0.0, 1.0, 0.0);
     }
     // South pole
     if(posInTile.x > 32766.5 && posInTile.y > 32766.5) {
-        pos.xyz = vec3(0.0, -1.0, 0.0);
+        pos = vec3(0.0, -1.0, 0.0);
     }
 
+    return pos;
+}
+
+vec4 projectTile(vec2 posInTile) {
+    vec4 pos = vec4(projectToSphere(posInTile), 1.0);
     vec4 result = u_projection_matrix * pos;
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
     result.z = (1.0 - (dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * result.w;
