@@ -188,8 +188,8 @@ export class ProjectionManager {
         return ProjectionManager.getGranualityForZoomLevel(zoomLevel, ProjectionManager.targetGranuality, ProjectionManager.targetGranualityMinZoom);
     }
 
-    private static getGranualityForZoomLevel(zoomLevel: number, target: number, minToom: number): number {
-        return Math.max(target << Math.max(minToom - zoomLevel, 0), 1);
+    private static getGranualityForZoomLevel(zoomLevel: number, target: number, minZoom: number): number {
+        return Math.max(target << Math.max(minZoom - zoomLevel, 0), 1);
     }
 
     /**
