@@ -38,7 +38,7 @@ export async function loadTileJson(
             ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
         );
 
-        if ('vector_layers' in tileJSON) {
+        if ('vector_layers' in tileJSON && tileJSON.vector_layers) {
             result.vectorLayerIds = tileJSON.vector_layers.map((layer) => { return layer.id; });
         }
 
