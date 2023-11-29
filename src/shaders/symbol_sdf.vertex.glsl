@@ -113,9 +113,13 @@ out vec3 v_data1;
 //             - all that with translateanchor applied
 //                 - anchor translation rotated by angle if translateAnchor==map
 
-// Plan of action to convert glyphs for globe:
+// Plan of action to convert symbols for globe:
 //
-// - unify all coordiantes spaces vertices are in after u_label_plane_matrix / before u_coord_matrix into a single coordinate space
+// - unify all coordinate spaces that vertices may be in after u_label_plane_matrix / before u_coord_matrix into a single coordinate space
+//     - unified coordinate space = "real 3D space"
+//     - when globe is enabled, the map is a unit sphere in this space
+//     - when flat rendering is used, the map is the XY plane
+//     - TODO: what about scale? flat map must work well with all zooms, without loss of precision
 // - calculate proper tangent and bitangent vectors according to desired glyph placement:
 //     - map pixel space           pitch-alignment=map         rotation-alignment=map
 //         - planet north + east, scaling TODO
@@ -124,6 +128,8 @@ out vec3 v_data1;
 //     - viewport pixel space      pitch-alignment=viewport    rotation-alignment=*
 //         - camera plane-aligned up and right vectors, scaling to screenspace pixels
 // - then project the resulting vertices using the main transform/projection matrix
+
+// Note: I probably want to keep the semantics of "u_coord_matrix" the same - whatever those are (translate by pixels, correct rotation, projection)
 
 
 void main() {
