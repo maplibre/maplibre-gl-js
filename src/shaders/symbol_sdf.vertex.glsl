@@ -49,14 +49,13 @@ out vec3 v_data1;
 //         - scales from tile units to pixels
 //         - if not rotateWithMap, rotated by angle
 //     - else
-//         - tile.coord.posMatrix and scaling from pixels to -1..1
+//         - tile.coord.posMatrix and scaling from -1..1 to pixels
 // - u_coord_matrix:
 //     - if pitchWithMap
 //         - tile.coord.posMatrix scaled from pixels to tile units
 //         - if not rotateWithMap, rotated by -angle
 //     - else
 //         - matrix from pixels to -1..1
-//         - rotated by +angle if translateAnchor == map
 //     - all that with translateanchor applied
 //         - anchor translation rotated by angle if translateAnchor==map
 // Matrices are used in the following way:
@@ -64,6 +63,68 @@ out vec3 v_data1;
 // gl_Position = u_coord_matrix * (u_label_plane_matrix * a_projected_pos);
 //
 // Note that when symbols follow a line, u_label_plane_matrix is identity and a_projected_pos is pre-transformed
+// Note that tile.coord.posMatrix contains the main projection matrix
+//
+// This gives us two main "transform" paths:
+//
+// pitchWithMap == true:
+// - u_label_plane_matrix:
+//     - scales from tile units to pixels
+//     - if not rotateWithMap, rotated by angle
+// - u_coord_matrix:
+//     - tile.coord.posMatrix scaled from pixels to tile units
+//     - if not rotateWithMap, rotated by -angle
+//     - all that with translateanchor applied
+//         - anchor translation rotated by angle if translateAnchor==map
+//
+// pitchWithMap == false:
+// - u_label_plane_matrix:
+//     - tile.coord.posMatrix and scaling from -1..1 to pixels
+// - u_coord_matrix:
+//     - matrix from pixels to -1..1
+//     - all that with translateanchor applied
+//         - anchor translation rotated by angle if translateAnchor==map
+
+// Transforms for different symbol coordinate spaces:
+//
+//     - map pixel space           pitch-alignment=map         rotation-alignment=map
+//         - u_label_plane_matrix:
+//             - scales from tile units to pixels
+//         - u_coord_matrix:
+//             - tile.coord.posMatrix scaled from pixels to tile units
+//             - all that with translateanchor applied
+//                 - anchor translation rotated by angle if translateAnchor==map
+//
+//     - rotated map pixel space   pitch-alignment=map         rotation-alignment=viewport
+//         - u_label_plane_matrix:
+//             - scales from tile units to pixels
+//             - rotated by angle
+//         - u_coord_matrix:
+//             - tile.coord.posMatrix scaled from pixels to tile units
+//             - rotated by -angle
+//             - all that with translateanchor applied
+//                 - anchor translation rotated by angle if translateAnchor==map
+//
+//     - viewport pixel space      pitch-alignment=viewport    rotation-alignment=*
+//         - u_label_plane_matrix:
+//             - tile.coord.posMatrix and scaling from -1..1 to pixels
+//         - u_coord_matrix:
+//             - matrix from pixels to -1..1
+//             - all that with translateanchor applied
+//                 - anchor translation rotated by angle if translateAnchor==map
+
+// Plan of action to convert glyphs for globe:
+//
+// - unify all coordiantes spaces vertices are in after u_label_plane_matrix / before u_coord_matrix into a single coordinate space
+// - calculate proper tangent and bitangent vectors according to desired glyph placement:
+//     - map pixel space           pitch-alignment=map         rotation-alignment=map
+//         - planet north + east, scaling TODO
+//     - rotated map pixel space   pitch-alignment=map         rotation-alignment=viewport
+//         - planet north + east, rotated with transform.angle, scaling TODO
+//     - viewport pixel space      pitch-alignment=viewport    rotation-alignment=*
+//         - camera plane-aligned up and right vectors, scaling to screenspace pixels
+// - then project the resulting vertices using the main transform/projection matrix
+
 
 void main() {
     #pragma mapbox: initialize highp vec4 fill_color

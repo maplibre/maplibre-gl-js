@@ -164,6 +164,8 @@ float projectThickness(vec2 posInTile) {
     return 1.0 / cos(spherical_y);
 }
 
+// JP: TODO: a function that returns tangent and cotangent vectors for the sphere when given mercator or inside-tile coordiantes
+
 // get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere
 vec4 projectTile(vec2 posInTile) {
     // JP: TODO: there could very well be a more efficient way to compute this if we take a deeper look at the geometric idea behind mercator

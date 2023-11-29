@@ -102,6 +102,7 @@ function getGlCoordMatrix(posMatrix: mat4,
     }
 }
 
+// JP: TODO: change this for globe?
 function project(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
     let pos;
     if (getElevation) { // slow because of handle z-index
@@ -201,7 +202,7 @@ function updateLineLabels(bucket: SymbolBucket,
         const pitchScaledFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
 
         const tileAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const anchorPoint = project(tileAnchorPoint, labelPlaneMatrix, getElevation).point;
+        const anchorPoint = project(tileAnchorPoint, labelPlaneMatrix, getElevation).point; // JP: TODO: explore this for globe
         const projectionCache = {projections: {}, offsets: {}};
 
         const placeUnflipped: any = placeGlyphsAlongLine(symbol, pitchScaledFontSize, false /*unflipped*/, keepUpright, posMatrix, labelPlaneMatrix, glCoordMatrix,
@@ -433,6 +434,7 @@ type ProjectionArgs = {
     absOffsetX: number;
 };
 
+// JP: TODO: this is used by placeGlyphAlongLine, change this for globe
 /**
  * Transform a vertex from tile coordinates to label plane coordinates
  * @param index - index of vertex to project
@@ -530,6 +532,7 @@ type PlacedGlyph = {
     path: Array<Point>;
 };
 
+// JP: TODO: change this to make it work with globe and other projections
 /*
  * Place a single glyph along its line, projected into the label plane, by iterating outward
  * from the anchor point until the distance traversed in the label plane equals the glyph's
