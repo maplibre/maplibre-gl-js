@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Adding 3D models with three.js, accounting for terrain</title>
+    <meta property="og:description"
+        content="Use a custom style layer with three.js to add 3D models to a map with 3d terrain." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://unpkg.com/three@0.147.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+    <div id="map"></div>
+    <script>
+        const THREE = window.THREE;
+
+
+        async function main() {
+
+            const map = new maplibregl.Map({
+                container: 'map',
+                center: [11.5315, 47.669],
+                zoom: 16,
+                pitch: 60,
+                bearing: -90,
+                antialias: true, // create the gl context with MSAA antialiasing, so custom layers are antialiased
+                style: {
+                    version: 8,
+                    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+                    layers: [
+                        {
+                            id: 'baseColor', // hides edges of terrain tiles, which have 'walls' going down to 0
+                            type: 'background',
+                            paint: {
+                                'background-color': '#fff',
+                                'background-opacity': 1.0,
+                            },
+                        }, {
+                            id: 'hills',
+                            type: 'hillshade',
+                            source: 'hillshadeSource',
+                            layout: { visibility: 'visible' },
+                            paint: { 'hillshade-shadow-color': '#473B24' }
+                        }
+                    ],
+                    terrain: {
+                        source: 'terrainSource',
+                        exaggeration: 1,
+                    },
+                    sources: {
+                        terrainSource: {
+                            type: 'raster-dem',
+                            url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                            tileSize: 256
+                        },
+                        hillshadeSource: {
+                            type: 'raster-dem',
+                            url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                            tileSize: 256
+                        }
+                    },
+                }
+            });
+
+            // helper function used to get threejs-scene-coordinates from mercator coordinates
+            function calculateDistanceMercatorToMeters(from, to) {
+                const mercatorPerMeter = from.meterInMercatorCoordinateUnits();
+                const dx = to.x - from.x;
+                const dxMeter = dx / mercatorPerMeter;
+                const dy = to.y - from.y;
+                const dyMeter = dy / mercatorPerMeter;
+                return { dxMeter, dyMeter };
+            }
+
+            async function loadModel() {
+                const loader = new THREE.GLTFLoader();
+                const gltf = await loader.loadAsync('https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf');
+                const model = gltf.scene;
+                return model;
+            }
+
+            const model1 = await loadModel();
+            const model2 = model1.clone();
+
+            const sceneOrigin = new maplibregl.LngLat(11.53, 47.67);
+            const model1Location = new maplibregl.LngLat(11.531, 47.67);
+            const model2Location = new maplibregl.LngLat(11.5245, 47.6675);
+
+            // configuration of the custom layer for a 3D model
+            const customLayer = {
+                id: '3d-model',
+                type: 'custom',
+                renderingMode: '3d',
+
+                onAdd(map, gl) {
+                    this.camera = new THREE.Camera();
+                    this.scene = new THREE.Scene();
+
+                    const light = new THREE.DirectionalLight(0xffffff);
+                    light.position.set(0, 70, 100).normalize();
+                    this.scene.add(light);
+
+                    // getting model elevations relative to scene origin
+                    const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
+                    const model1Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model1Location, map.getZoom()) : 0;
+                    const model2Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model2Location, map.getZoom()) : 0;
+                    const model1z = model1Elevation - sceneElevation;
+                    const model2z = model2Elevation - sceneElevation;
+
+                    // getting model x, y, relative to scene origin
+                    const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin);
+                    const model1Mercator = maplibregl.MercatorCoordinate.fromLngLat(model1Location);
+                    const model2Mercator = maplibregl.MercatorCoordinate.fromLngLat(model2Location);
+                    const { dxMeter: model1x, dyMeter: model1y } = calculateDistanceMercatorToMeters(sceneOriginMercator, model1Mercator);
+                    const { dxMeter: model2x, dyMeter: model2y } = calculateDistanceMercatorToMeters(sceneOriginMercator, model2Mercator);
+
+                    // note -y axis
+                    model1.position.set(model1x, -model1y, model1z);
+                    model2.position.set(model2x, -model2y, model2z);
+                    // rotating models around x - gltf's often have z-axis up, but threejs wants y-axis up.
+                    model1.rotateX(Math.PI / 2);
+                    model2.rotateX(Math.PI / 2);
+
+                    this.scene.add(model1);
+                    this.scene.add(model2);
+
+
+                    // use the MapLibre GL JS map canvas for three.js
+                    this.renderer = new THREE.WebGLRenderer({
+                        canvas: map.getCanvas(),
+                        context: gl,
+                        antialias: true
+                    });
+
+                    this.renderer.autoClear = false;
+                },
+
+                render(gl, mercatorMatrix) {
+
+                    const offsetFromTerrainHeight = 0;
+                    const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin, offsetFromTerrainHeight);
+
+                    // calculating the difference between center-elevation and model-elevation
+                    const terrainCenterElevation = map.transform.elevation;
+                    const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
+                    const deltaMetersZ = sceneElevation - terrainCenterElevation;
+                    const mercatorPerMeter = sceneOriginMercator.meterInMercatorCoordinateUnits();
+                    const deltaMercatorZ = deltaMetersZ * mercatorPerMeter;
+
+                    const sceneTransform = {
+                        translateX: sceneOriginMercator.x,
+                        translateY: sceneOriginMercator.y,
+                        translateZ: sceneOriginMercator.z + deltaMercatorZ,
+                        scale: sceneOriginMercator.meterInMercatorCoordinateUnits()
+                    };
+
+                    const m = new THREE.Matrix4().fromArray(mercatorMatrix);
+                    const l = new THREE.Matrix4()
+                        .makeTranslation(sceneTransform.translateX, sceneTransform.translateY, sceneTransform.translateZ)
+                        .scale(new THREE.Vector3(sceneTransform.scale, -sceneTransform.scale, sceneTransform.scale));
+
+                    this.camera.projectionMatrix = m.multiply(l);
+                    this.renderer.resetState();
+                    this.renderer.render(this.scene, this.camera);
+                    map.triggerRepaint();
+                }
+            };
+
+            map.on('load', () => {
+                map.addLayer(customLayer);
+            });
+        }
+
+        main();
+
+
+    </script>
+</body>
+
+</html>
