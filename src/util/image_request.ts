@@ -133,7 +133,7 @@ export namespace ImageRequest {
 
     const arrayBufferToCanvasImageSource = (data: ArrayBuffer): Promise<HTMLImageElement | ImageBitmap | null> => {
         const imageBitmapSupported = typeof createImageBitmap === 'function';
-        if (imageBitmapSupported) {
+        if (imageBitmapSupported && data.byteLength) {
             return arrayBufferToImageBitmap(data);
         } else {
             return arrayBufferToImage(data);
