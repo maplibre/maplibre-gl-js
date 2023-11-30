@@ -2655,12 +2655,6 @@ describe('Map', () => {
 
             expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen').getAttribute('aria-hidden')).toBeTruthy();
         });
-
-        test('cooperativeGesture container element is not available when scrollZoom disabled', () => {
-            const map = createMap({cooperativeGestures: true});
-            map.scrollZoom.disable();
-            expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen')).toBeFalsy();
-        });
     });
 
     describe('getCameraTargetElevation', () => {

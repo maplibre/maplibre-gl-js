@@ -34,6 +34,7 @@ describe('CoopGesturesHandler', () => {
         // simulate a single 'wheel' event
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeDefined();
 
         now += 400;
         browserNow.mockReturnValue(now);
@@ -89,6 +90,25 @@ describe('CoopGesturesHandler', () => {
 
         const endZoom = map.getZoom();
         expect(endZoom - startZoom).toBeCloseTo(0.0285, 3);
+
+        map.remove();
+    });
+
+    test('Does not show message if scrollZoom is disabled', () => {
+        // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
+        const browserNow = jest.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap(true);
+        map.scrollZoom.disable();
+        map._renderTaskQueue.run();
+
+        const startZoom = map.getZoom();
+        // simulate a single 'wheel' event
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeFalsy();
 
         map.remove();
     });

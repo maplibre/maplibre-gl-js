@@ -4,7 +4,7 @@ import {Handler} from '../handler_manager';
 import type {Map} from '../map';
 
 /**
- * The {@link CooperativeGestureHandler} options object
+ * The {@link CooperativeGesturesHandler} options object
  */
 /**
  * An options object for the gesture settings
@@ -40,11 +40,11 @@ export type GestureOptions = {
  * ```
  * @see [Example: cooperative gestures](https://maplibre.org/maplibre-gl-js-docs/example/cooperative-gestures/)
  **/
-export class CooperativeGestureHandler implements Handler {
+export class CooperativeGesturesHandler implements Handler {
     _options: boolean | GestureOptions;
     _map: Map;
     _container: HTMLElement;
-    _metaKey: keyof MouseEvent = navigator.userAgent.indexOf('Mac') !== -1 ? 'metaKey' : 'ctrlKey';
+    _metaKey: 'metaKey' | 'ctrlKey' = navigator.userAgent.indexOf('Mac') !== -1 ? 'metaKey' : 'ctrlKey';
     _enabled: boolean;
 
     constructor(map: Map, options: boolean | GestureOptions = {}) {
@@ -111,7 +111,10 @@ export class CooperativeGestureHandler implements Handler {
     }
 
     wheel(e: WheelEvent) {
-        this._onCooperativeGesture(e['originalEvent'][this._metaKey]);
+        if (!this._map.scrollZoom.isEnabled()) {
+            return;
+        }
+        this._onCooperativeGesture(e[this._metaKey]);
     }
 
     _onCooperativeGesture(metaPress:boolean) {

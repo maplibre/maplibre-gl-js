@@ -43,7 +43,7 @@ import type {BoxZoomHandler} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type {DragRotateHandler} from './handler/shim/drag_rotate';
 import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
-import type {CooperativeGestureHandler, GestureOptions} from './handler/cooperative_gesture';
+import type {CooperativeGesturesHandler, GestureOptions} from './handler/cooperative_gestures';
 import type {KeyboardHandler} from './handler/keyboard';
 import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
 import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
@@ -531,9 +531,9 @@ export class Map extends Camera {
     touchPitch: TwoFingersTouchPitchHandler;
 
     /**
-     * The map's {@link CooperativeGestureHandler}, which allows the user to see cooperative gesture info when user tries to zoom in/out.
+     * The map's {@link CooperativeGesturesHandler}, which allows the user to see cooperative gesture info when user tries to zoom in/out.
      */
-    cooperativeGestures: CooperativeGestureHandler;
+    cooperativeGestures: CooperativeGesturesHandler;
 
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);

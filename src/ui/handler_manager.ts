@@ -16,7 +16,7 @@ import {TapDragZoomHandler} from './handler/tap_drag_zoom';
 import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
-import {CooperativeGestureHandler} from './handler/cooperative_gesture';
+import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
@@ -283,7 +283,7 @@ export class HandlerManager {
 
         this._add('blockableMapEvent', new BlockableMapEventHandler(map));
 
-        const cooperativeGestures = map.cooperativeGestures = new CooperativeGestureHandler(map, options.cooperativeGestures);
+        const cooperativeGestures = map.cooperativeGestures = new CooperativeGesturesHandler(map, options.cooperativeGestures);
         this._add('cooperativeGestures', cooperativeGestures);
         if (options.cooperativeGestures) {
             cooperativeGestures.enable();
