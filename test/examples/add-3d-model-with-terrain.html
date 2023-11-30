@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Adding 3D models with three.js, accounting for terrain</title>
+    <title>Adding 3D models with three.js on terrain</title>
     <meta property="og:description"
         content="Use a custom style layer with three.js to add 3D models to a map with 3d terrain." />
     <meta charset='utf-8'>
@@ -39,13 +39,13 @@
                 zoom: 15,
                 pitch: 60,
                 bearing: -45,
-                antialias: true, // create the gl context with MSAA antialiasing, so custom layers are antialiased
+                antialias: true,
                 style: {
                     version: 8,
                     glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
                     layers: [
                         {
-                            id: 'baseColor', // hides edges of terrain tiles, which have 'walls' going down to 0
+                            id: 'baseColor', // Hides edges of terrain tiles, which have 'walls' going down to 0.
                             type: 'background',
                             paint: {
                                 'background-color': '#fff',
@@ -78,7 +78,7 @@
                 }
             });
 
-            // helper function used to get threejs-scene-coordinates from mercator coordinates
+            // Helper function used to get threejs-scene-coordinates from mercator coordinates.
             function calculateDistanceMercatorToMeters(from, to) {
                 const mercatorPerMeter = from.meterInMercatorCoordinateUnits();
                 const dx = to.x - from.x;
@@ -102,7 +102,7 @@
             const model1Location = new maplibregl.LngLat(11.531, 47.67);
             const model2Location = new maplibregl.LngLat(11.5245, 47.6675);
 
-            // configuration of the custom layer for a 3D model
+            // Configuration of the custom layer for a 3D model, implementing `CustomLayerInterface`.
             const customLayer = {
                 id: '3d-model',
                 type: 'custom',
@@ -116,24 +116,24 @@
                     light.position.set(0, 70, 100).normalize();
                     this.scene.add(light);
 
-                    // getting model elevations relative to scene origin
+                    // Getting model elevations relative to scene origin.
                     const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
                     const model1Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model1Location, map.getZoom()) : 0;
                     const model2Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model2Location, map.getZoom()) : 0;
                     const model1z = model1Elevation - sceneElevation;
                     const model2z = model2Elevation - sceneElevation;
 
-                    // getting model x, y, relative to scene origin
+                    // Getting model x, y, relative to scene origin.
                     const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin);
                     const model1Mercator = maplibregl.MercatorCoordinate.fromLngLat(model1Location);
                     const model2Mercator = maplibregl.MercatorCoordinate.fromLngLat(model2Location);
                     const { dxMeter: model1x, dyMeter: model1y } = calculateDistanceMercatorToMeters(sceneOriginMercator, model1Mercator);
                     const { dxMeter: model2x, dyMeter: model2y } = calculateDistanceMercatorToMeters(sceneOriginMercator, model2Mercator);
 
-                    // note -y axis
+                    // Note negative y axis.
                     model1.position.set(model1x, -model1y, model1z);
                     model2.position.set(model2x, -model2y, model2z);
-                    // rotating models around x - gltf's often have z-axis up, but threejs wants y-axis up.
+                    // Rotating models around x - gltf's often have z-axis up, but threejs wants y-axis up.
                     model1.rotateX(Math.PI / 2);
                     model2.rotateX(Math.PI / 2);
 
@@ -141,7 +141,7 @@
                     this.scene.add(model2);
 
 
-                    // use the MapLibre GL JS map canvas for three.js
+                    // Use the MapLibre GL JS map canvas for three.js.
                     this.renderer = new THREE.WebGLRenderer({
                         canvas: map.getCanvas(),
                         context: gl,
@@ -156,7 +156,7 @@
                     const offsetFromTerrainHeight = 0;
                     const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin, offsetFromTerrainHeight);
 
-                    // calculating the difference between center-elevation and model-elevation
+                    // Calculating the difference between center-elevation and model-elevation.
                     const terrainCenterElevation = map.transform.elevation;
                     const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
                     const deltaMetersZ = sceneElevation - terrainCenterElevation;
