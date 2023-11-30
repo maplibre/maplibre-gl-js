@@ -1,6 +1,7 @@
 uniform vec2 u_pixel_coord_upper;
 uniform vec2 u_pixel_coord_lower;
 uniform vec3 u_scale;
+uniform vec2 u_fill_translate;
 
 in vec2 a_pos;
 
@@ -31,7 +32,7 @@ void main() {
 
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
-    gl_Position = projectTile(a_pos);
+    gl_Position = projectTile(a_pos + u_fill_translate);
 
     v_pos_a = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, fromScale * display_size_a, tileZoomRatio, a_pos);
     v_pos_b = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, toScale * display_size_b, tileZoomRatio, a_pos);

@@ -3,6 +3,7 @@ import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {ColorMode} from '../gl/color_mode';
 import {
+    fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
@@ -103,22 +104,31 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        //const tileMatrix = painter.translatePosMatrix(coord.posMatrix, tile,
-        //    layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));
-
         const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+
+        const propertyFillTranslate = layer.paint.get('fill-translate');
+        const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
+        let translateForUniforms: [number, number] = [0, 0];
+        if (propertyFillTranslateAnchor === 'map') {
+            // If the translate property is map-relative, translate prior to the mercator->globe->perspective transform
+            translateForUniforms = painter.translatePosition(tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        } else {
+            // Else, apply the translation after the perspective projection, in screenspace
+            projectionData['u_projection_matrix'] = painter.translatePosMatrix(projectionData['u_projection_matrix'],
+                tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        }
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile) : null;
+            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize) :
-                fillOutlineUniformValues(drawingBufferSize);
+                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
+                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
 
         program.draw(painter.context, drawMode, depthMode,
