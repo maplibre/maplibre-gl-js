@@ -30,7 +30,6 @@
     <script>
         const THREE = window.THREE;
 
-
         async function main() {
 
             const map = new maplibregl.Map({
@@ -55,8 +54,8 @@
                             id: 'hills',
                             type: 'hillshade',
                             source: 'hillshadeSource',
-                            layout: { visibility: 'visible' },
-                            paint: { 'hillshade-shadow-color': '#473B24' }
+                            layout: {visibility: 'visible'},
+                            paint: {'hillshade-shadow-color': '#473B24'}
                         }
                     ],
                     terrain: {
@@ -85,7 +84,7 @@
                 const dxMeter = dx / mercatorPerMeter;
                 const dy = to.y - from.y;
                 const dyMeter = dy / mercatorPerMeter;
-                return { dxMeter, dyMeter };
+                return {dxMeter, dyMeter};
             }
 
             async function loadModel() {
@@ -127,8 +126,8 @@
                     const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin);
                     const model1Mercator = maplibregl.MercatorCoordinate.fromLngLat(model1Location);
                     const model2Mercator = maplibregl.MercatorCoordinate.fromLngLat(model2Location);
-                    const { dxMeter: model1x, dyMeter: model1y } = calculateDistanceMercatorToMeters(sceneOriginMercator, model1Mercator);
-                    const { dxMeter: model2x, dyMeter: model2y } = calculateDistanceMercatorToMeters(sceneOriginMercator, model2Mercator);
+                    const {dxMeter: model1x, dyMeter: model1y} = calculateDistanceMercatorToMeters(sceneOriginMercator, model1Mercator);
+                    const {dxMeter: model2x, dyMeter: model2y} = calculateDistanceMercatorToMeters(sceneOriginMercator, model2Mercator);
 
                     // Note negative y axis.
                     model1.position.set(model1x, -model1y, model1z);
@@ -139,7 +138,6 @@
 
                     this.scene.add(model1);
                     this.scene.add(model2);
-
 
                     // Use the MapLibre GL JS map canvas for three.js.
                     this.renderer = new THREE.WebGLRenderer({
@@ -188,8 +186,6 @@
         }
 
         main();
-
-
     </script>
 </body>
 
