@@ -2652,8 +2652,18 @@ describe('Map', () => {
     describe('cooperativeGestures option', () => {
         test('cooperativeGesture container element is hidden from a11y tree', () => {
             const map = createMap({cooperativeGestures: true});
-
             expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen').getAttribute('aria-hidden')).toBeTruthy();
+        });
+
+        test('cooperativeGesture container element is not available when cooperativeGestures not initialized', () => {
+            const map = createMap({cooperativeGestures: false});
+            expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen')).toBeFalsy();
+        });
+
+        test('cooperativeGesture container element is not available when cooperativeGestures disabled', () => {
+            const map = createMap({cooperativeGestures: true});
+            map.cooperativeGestures.disable();
+            expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen')).toBeFalsy();
         });
     });
 

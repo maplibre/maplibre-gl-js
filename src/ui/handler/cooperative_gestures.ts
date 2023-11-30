@@ -53,8 +53,7 @@ export class CooperativeGesturesHandler implements Handler {
         this._enabled = false;
     }
     isActive(): boolean {
-        // HM TODO: check this?
-        return true;
+        return false;
     }
     reset(): void {}
 
@@ -106,6 +105,7 @@ export class CooperativeGesturesHandler implements Handler {
         return this._enabled;
     }
 
+    // HM TODO: this is prevented by other handlers
     touchmove(_e: TouchEvent) {
         this._onCooperativeGesture(false);
     }

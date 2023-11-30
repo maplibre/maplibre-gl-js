@@ -42,6 +42,11 @@ export interface Handler {
     enable(): void;
     disable(): void;
     isEnabled(): boolean;
+    /**
+     * This is used to indicate if the handler is currently active or not.
+     * In case a handler is active, it will block other handlers from gettting the relevant events.
+     * There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.
+     */
     isActive(): boolean;
     /**
      * `reset` can be called by the manager at any time and must reset everything to it's original state
@@ -224,6 +229,12 @@ export class HandlerManager {
             boxZoom.enable();
         }
 
+        const cooperativeGestures = map.cooperativeGestures = new CooperativeGesturesHandler(map, options.cooperativeGestures);
+        this._add('cooperativeGestures', cooperativeGestures);
+        if (options.cooperativeGestures) {
+            cooperativeGestures.enable();
+        }
+
         const tapZoom = new TapZoomHandler(map);
         const clickZoom = new ClickZoomHandler(map);
         map.doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
@@ -282,12 +293,6 @@ export class HandlerManager {
         }
 
         this._add('blockableMapEvent', new BlockableMapEventHandler(map));
-
-        const cooperativeGestures = map.cooperativeGestures = new CooperativeGesturesHandler(map, options.cooperativeGestures);
-        this._add('cooperativeGestures', cooperativeGestures);
-        if (options.cooperativeGestures) {
-            cooperativeGestures.enable();
-        }
     }
 
     _add(handlerName: string, handler: Handler, allowed?: Array<string>) {
