@@ -51,7 +51,7 @@ describe('CoopGesturesHandler', () => {
         browserNow.mockReturnValue(now);
 
         const map = createMap(true);
-        map.setCooperativeGestures(false);
+        map.cooperativeGestures.disable();
         map._renderTaskQueue.run();
 
         const startZoom = map.getZoom();
@@ -125,7 +125,7 @@ describe('CoopGesturesHandler', () => {
 
     test('Pans on touchmove with a single touch after disabling cooperative gestures', () => {
         const map = createMap(true);
-        map.setCooperativeGestures(false);
+        map.cooperativeGestures.disable();
         const target = map.getCanvas();
         const startCenter = map.getCenter();
         map._renderTaskQueue.run();
@@ -236,7 +236,7 @@ describe('CoopGesturesHandler', () => {
         expect(midZoom - startZoom).toBeCloseTo(0.0285, 3);
 
         // Enable cooperative gestures
-        map.setCooperativeGestures(true);
+        map.cooperativeGestures.enable();
 
         // This 'wheel' event should not zoom
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});

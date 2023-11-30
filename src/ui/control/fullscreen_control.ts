@@ -3,7 +3,7 @@ import {DOM} from '../../util/dom';
 import {warnOnce} from '../../util/util';
 
 import {Event, Evented} from '../../util/evented';
-import type {Map, GestureOptions} from '../map';
+import type {Map} from '../map';
 import type {IControl} from './control';
 
 /**
@@ -44,7 +44,7 @@ export class FullscreenControl extends Evented implements IControl {
     _fullscreenchange: string;
     _fullscreenButton: HTMLButtonElement;
     _container: HTMLElement;
-    _prevCooperativeGestures: boolean | GestureOptions;
+    _prevCooperativeGesturesEnabled: boolean;
 
     constructor(options: FullscreenOptions = {}) {
         super();
@@ -128,15 +128,12 @@ export class FullscreenControl extends Evented implements IControl {
 
         if (this._fullscreen) {
             this.fire(new Event('fullscreenstart'));
-            if (this._map._cooperativeGestures) {
-                this._prevCooperativeGestures = this._map._cooperativeGestures;
-                this._map.setCooperativeGestures();
-            }
+            this._prevCooperativeGesturesEnabled = this._map.cooperativeGestures.isEnabled();
+            this._map.cooperativeGestures.disable();
         } else {
             this.fire(new Event('fullscreenend'));
-            if (this._prevCooperativeGestures) {
-                this._map.setCooperativeGestures(this._prevCooperativeGestures);
-                delete this._prevCooperativeGestures;
+            if (this._prevCooperativeGesturesEnabled) {
+                this._map.cooperativeGestures.enable();
             }
         }
     }
