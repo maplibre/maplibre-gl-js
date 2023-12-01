@@ -126,23 +126,22 @@
                     /**
                      * Setting up three.js scene.
                      * We're placing model1 and model2 in such a way in the scene that the whole scene fits over the terrain.
-                     * We're leaving the overal scene the way it is here, but placing the objects in it to match the terrain.
-                     * Alternatively, one could rotate the whole scene such that three's y points along maplibre's up
-                     * and mirror three's z such that it points along maplibre's north.
                      */
 
                     this.camera = new THREE.Camera();
                     this.scene = new THREE.Scene();
-                    // this.scene.rotateX(Math.PI / 2);  // in threejs, y points up - but in maplibre, z does.
-                    // this.scene.scale.multiply(new THREE.Vector3(1, -1, 1));
+                    // In threejs, y points up - we're rotating the scene such that it's y points along maplibre's up.
+                    this.scene.rotateX(Math.PI / 2);  
+                    // In threejs, z points toward the viewer - mirroring it such that z points along maplibre's north.
+                    this.scene.scale.multiply(new THREE.Vector3(1, 1, -1));
+                    // We now have a scene with (x=east, y=up, z=north)
 
                     const light = new THREE.DirectionalLight(0xffffff);
-                    light.position.set(0, 70, 100).normalize();
+                    // Making it just before noon - light coming from south-east.
+                    light.position.set(50, 70, -30).normalize();  
                     this.scene.add(light);
 
                     // Axes helper to show how threejs scene is oriented.
-                    // In threejs, the axes are (x: right, y: up, z: out)
-                    // Projected into maplibre, this becomes (x: east, y: north, z: up)
                     const axesHelper = new THREE.AxesHelper(100);
                     this.scene.add(axesHelper);
 
@@ -150,22 +149,18 @@
                     const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
                     const model1Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model1Location, map.getZoom()) : 0;
                     const model2Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model2Location, map.getZoom()) : 0;
-                    const model1z = model1Elevation - sceneElevation;
-                    const model2z = model2Elevation - sceneElevation;
+                    const model1up = model1Elevation - sceneElevation;
+                    const model2up = model2Elevation - sceneElevation;
 
                     // Getting model x and y (in meters) relative to scene origin.
                     const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin);
                     const model1Mercator = maplibregl.MercatorCoordinate.fromLngLat(model1Location);
                     const model2Mercator = maplibregl.MercatorCoordinate.fromLngLat(model2Location);
-                    const {dEastMeter: model1x, dNorthMeter: model1y} = calculateDistanceMercatorToMeters(sceneOriginMercator, model1Mercator);
-                    const {dEastMeter: model2x, dNorthMeter: model2y} = calculateDistanceMercatorToMeters(sceneOriginMercator, model2Mercator);
+                    const {dEastMeter: model1east, dNorthMeter: model1north} = calculateDistanceMercatorToMeters(sceneOriginMercator, model1Mercator);
+                    const {dEastMeter: model2east, dNorthMeter: model2north} = calculateDistanceMercatorToMeters(sceneOriginMercator, model2Mercator);
 
-                    model1.position.set(model1x, model1y, model1z);
-                    model2.position.set(model2x, model2y, model2z);
-                    // Rotating models around x - they're still pointing towards three.js' old up direction (y),
-                    // but we're placing the scene such that up is z.
-                    model1.rotateX(Math.PI / 2);
-                    model2.rotateX(Math.PI / 2);
+                    model1.position.set(model1east, model1up, model1north);
+                    model2.position.set(model2east, model2up, model2north);
 
                     this.scene.add(model1);
                     this.scene.add(model2);
