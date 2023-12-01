@@ -146,9 +146,9 @@
                     this.scene.add(axesHelper);
 
                     // Getting model elevations (in meters) relative to scene origin from maplibre's terrain.
-                    const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
-                    const model1Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model1Location, map.getZoom()) : 0;
-                    const model2Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model2Location, map.getZoom()) : 0;
+                    const sceneElevation = map.queryTerrainElevation(sceneOrigin) || 0;
+                    const model1Elevation = map.queryTerrainElevation(model1Location) || 0;
+                    const model2Elevation = map.queryTerrainElevation(model2Location) || 0;
                     const model1up = model1Elevation - sceneElevation;
                     const model2up = model2Elevation - sceneElevation;
 
@@ -177,21 +177,18 @@
 
                 render(gl, mercatorMatrix) {
 
-                    const offsetFromTerrainHeight = 0;
-                    const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin, offsetFromTerrainHeight);
-
-                    // Calculating the difference between center-elevation and model-elevation.
-                    const terrainCenterElevation = map.transform.elevation;
-                    // const sceneElevation = map.queryTerrainElevation(sceneOrigin);
-                    const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
-                    const deltaMetersZ = sceneElevation - terrainCenterElevation;
-                    const mercatorPerMeter = sceneOriginMercator.meterInMercatorCoordinateUnits();
-                    const deltaMercatorZ = deltaMetersZ * mercatorPerMeter;
+                    // `queryTerrainElevation` gives us the elevation of a point on the terrain
+                    // **relative to the elevation of `center`**,
+                    // where `center` is the point on the terrain that the middle of the camera points at.
+                    // If we didn't account for that offset, and the scene lay on a point on the terrain that is
+                    // below `center`, then the scene would appear to float in the air.
+                    const offsetFromCenterElevation = map.queryTerrainElevation(sceneOrigin) || 0;
+                    const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin, offsetFromCenterElevation);
 
                     const sceneTransform = {
                         translateX: sceneOriginMercator.x,
                         translateY: sceneOriginMercator.y,
-                        translateZ: sceneOriginMercator.z + deltaMercatorZ,
+                        translateZ: sceneOriginMercator.z,
                         scale: sceneOriginMercator.meterInMercatorCoordinateUnits()
                     };
 
