@@ -547,7 +547,6 @@ export class Marker extends Evented {
         // call this logic in setTimeout with a timeout of 100ms to save performance in map-movement
         if (this._map.terrain) {
             if (!this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
-                console.log('updating 3d marker opacity');
                 const lnglat = this._map.unproject(this._pos);
                 const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI / 180)) / Math.pow(2, this._map.transform.tileZoom + 8);
                 this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
