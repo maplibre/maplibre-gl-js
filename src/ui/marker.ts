@@ -552,9 +552,8 @@ export class Marker extends Evented {
                 this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
                 this._opacityTimeout = null;
             }, 100);
-        }
-        // When switching back to 2d, make the marker fully opaque.
-        else if (this._element.style.opacity === '0.2') {
+        } else if (this._element.style.opacity === '0.2') {
+            // When switching back to 2d, make the marker fully opaque.
             console.log('start timer! opacity is', this._element.style.opacity);
             setTimeout(() => {
                 this._element.style.opacity = '1.0';
