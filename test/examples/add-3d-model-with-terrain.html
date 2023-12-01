@@ -28,9 +28,16 @@
     <script src="https://unpkg.com/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
     <div id="map"></div>
     <script>
-        const THREE = window.THREE;
-
+        /**
+         * Objective: 
+         * Given two known world-locations `model1Location` and `model2Location`,
+         * place two three.js objects on those locations at the appropriate height of 
+         * the terrain.
+         */
+    
         async function main() {
+
+            const THREE = window.THREE;
 
             const map = new maplibregl.Map({
                 container: 'map',
@@ -77,14 +84,21 @@
                 }
             });
 
-            // Helper function used to get threejs-scene-coordinates from mercator coordinates.
+            /*
+            * Helper function used to get threejs-scene-coordinates from mercator coordinates.
+            * This is just a quick and dirty solution - it won't work if points are far away from each other
+            * because a meter near the north-pole covers more mercator-units
+            * than a meter near the equator.
+            */
             function calculateDistanceMercatorToMeters(from, to) {
                 const mercatorPerMeter = from.meterInMercatorCoordinateUnits();
-                const dx = to.x - from.x;
-                const dxMeter = dx / mercatorPerMeter;
-                const dy = to.y - from.y;
-                const dyMeter = dy / mercatorPerMeter;
-                return {dxMeter, dyMeter};
+                // mercator x: 0=west, 1=east
+                const dEast = to.x - from.x;
+                const dEastMeter = dEast / mercatorPerMeter;
+                // mercator y: 0=north, 1=south
+                const dNorth = from.y - to.y;
+                const dNorthMeter = dNorth / mercatorPerMeter;
+                return {dEastMeter, dNorthMeter};
             }
 
             async function loadModel() {
@@ -97,6 +111,7 @@
             const model1 = await loadModel();
             const model2 = model1.clone();
 
+            // Known locations. We'll infer the elevation of those locations once terrain is loaded.
             const sceneOrigin = new maplibregl.LngLat(11.53, 47.67);
             const model1Location = new maplibregl.LngLat(11.531, 47.67);
             const model2Location = new maplibregl.LngLat(11.5245, 47.6675);
@@ -108,31 +123,47 @@
                 renderingMode: '3d',
 
                 onAdd(map, gl) {
+                    /**
+                     * Setting up three.js scene.
+                     * We're placing model1 and model2 in such a way in the scene that the whole scene fits over the terrain.
+                     * We're leaving the overal scene the way it is here, but placing the objects in it to match the terrain.
+                     * Alternatively, one could rotate the whole scene such that three's y points along maplibre's up
+                     * and mirror three's z such that it points along maplibre's north.
+                     */
+
                     this.camera = new THREE.Camera();
                     this.scene = new THREE.Scene();
+                    // this.scene.rotateX(Math.PI / 2);  // in threejs, y points up - but in maplibre, z does.
+                    // this.scene.scale.multiply(new THREE.Vector3(1, -1, 1));
 
                     const light = new THREE.DirectionalLight(0xffffff);
                     light.position.set(0, 70, 100).normalize();
                     this.scene.add(light);
 
-                    // Getting model elevations relative to scene origin.
+                    // Axes helper to show how threejs scene is oriented.
+                    // In threejs, the axes are (x: right, y: up, z: out)
+                    // Projected into maplibre, this becomes (x: east, y: north, z: up)
+                    const axesHelper = new THREE.AxesHelper(100);
+                    this.scene.add(axesHelper);
+
+                    // Getting model elevations (in meters) relative to scene origin from maplibre's terrain.
                     const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
                     const model1Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model1Location, map.getZoom()) : 0;
                     const model2Elevation = map.terrain ? map.terrain.getElevationForLngLatZoom(model2Location, map.getZoom()) : 0;
                     const model1z = model1Elevation - sceneElevation;
                     const model2z = model2Elevation - sceneElevation;
 
-                    // Getting model x, y, relative to scene origin.
+                    // Getting model x and y (in meters) relative to scene origin.
                     const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin);
                     const model1Mercator = maplibregl.MercatorCoordinate.fromLngLat(model1Location);
                     const model2Mercator = maplibregl.MercatorCoordinate.fromLngLat(model2Location);
-                    const {dxMeter: model1x, dyMeter: model1y} = calculateDistanceMercatorToMeters(sceneOriginMercator, model1Mercator);
-                    const {dxMeter: model2x, dyMeter: model2y} = calculateDistanceMercatorToMeters(sceneOriginMercator, model2Mercator);
+                    const {dEastMeter: model1x, dNorthMeter: model1y} = calculateDistanceMercatorToMeters(sceneOriginMercator, model1Mercator);
+                    const {dEastMeter: model2x, dNorthMeter: model2y} = calculateDistanceMercatorToMeters(sceneOriginMercator, model2Mercator);
 
-                    // Note negative y axis.
-                    model1.position.set(model1x, -model1y, model1z);
-                    model2.position.set(model2x, -model2y, model2z);
-                    // Rotating models around x - gltf's often have z-axis up, but threejs wants y-axis up.
+                    model1.position.set(model1x, model1y, model1z);
+                    model2.position.set(model2x, model2y, model2z);
+                    // Rotating models around x - they're still pointing towards three.js' old up direction (y),
+                    // but we're placing the scene such that up is z.
                     model1.rotateX(Math.PI / 2);
                     model2.rotateX(Math.PI / 2);
 
@@ -156,6 +187,7 @@
 
                     // Calculating the difference between center-elevation and model-elevation.
                     const terrainCenterElevation = map.transform.elevation;
+                    // const sceneElevation = map.queryTerrainElevation(sceneOrigin);
                     const sceneElevation = map.terrain ? map.terrain.getElevationForLngLatZoom(sceneOrigin, map.getZoom()) : 0;
                     const deltaMetersZ = sceneElevation - terrainCenterElevation;
                     const mercatorPerMeter = sceneOriginMercator.meterInMercatorCoordinateUnits();
@@ -180,9 +212,8 @@
                 }
             };
 
-            map.on('load', () => {
-                map.addLayer(customLayer);
-            });
+            await map.once('load');
+            map.addLayer(customLayer);
         }
 
         main();
