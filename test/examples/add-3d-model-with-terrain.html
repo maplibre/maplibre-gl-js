@@ -29,12 +29,12 @@
     <div id="map"></div>
     <script>
         /**
-         * Objective: 
+         * Objective:
          * Given two known world-locations `model1Location` and `model2Location`,
-         * place two three.js objects on those locations at the appropriate height of 
+         * place two three.js objects on those locations at the appropriate height of
          * the terrain.
          */
-    
+
         async function main() {
 
             const THREE = window.THREE;
@@ -131,14 +131,14 @@
                     this.camera = new THREE.Camera();
                     this.scene = new THREE.Scene();
                     // In threejs, y points up - we're rotating the scene such that it's y points along maplibre's up.
-                    this.scene.rotateX(Math.PI / 2);  
+                    this.scene.rotateX(Math.PI / 2);
                     // In threejs, z points toward the viewer - mirroring it such that z points along maplibre's north.
                     this.scene.scale.multiply(new THREE.Vector3(1, 1, -1));
                     // We now have a scene with (x=east, y=up, z=north)
 
                     const light = new THREE.DirectionalLight(0xffffff);
                     // Making it just before noon - light coming from south-east.
-                    light.position.set(50, 70, -30).normalize();  
+                    light.position.set(50, 70, -30).normalize();
                     this.scene.add(light);
 
                     // Axes helper to show how threejs scene is oriented.
