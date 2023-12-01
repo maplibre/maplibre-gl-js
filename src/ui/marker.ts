@@ -554,12 +554,7 @@ export class Marker extends Evented {
             }, 100);
         } else if (this._element.style.opacity === '0.2') {
             // When switching back to 2d, make the marker fully opaque.
-            console.log('start timer! opacity is', this._element.style.opacity);
-            setTimeout(() => {
-                this._element.style.opacity = '1.0';
-                console.log('timer go!');
-
-            }, 100);
+            setTimeout(() => { this._element.style.opacity = '1.0'; }, 100);
         }
     };
 
