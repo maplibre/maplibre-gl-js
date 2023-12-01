@@ -545,12 +545,24 @@ export class Marker extends Evented {
 
         // in case of 3D, ask the terrain coords-framebuffer for this pos and check if the marker is visible
         // call this logic in setTimeout with a timeout of 100ms to save performance in map-movement
-        if (this._map.terrain && !this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
-            const lnglat = this._map.unproject(this._pos);
-            const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI / 180)) / Math.pow(2, this._map.transform.tileZoom + 8);
-            this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
-            this._opacityTimeout = null;
-        }, 100);
+        if (this._map.terrain) {
+            if (!this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
+                console.log('updating 3d marker opacity');
+                const lnglat = this._map.unproject(this._pos);
+                const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI / 180)) / Math.pow(2, this._map.transform.tileZoom + 8);
+                this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
+                this._opacityTimeout = null;
+            }, 100);
+        }
+        // When switching back to 2d, make the marker fully opaque.
+        else if (this._element.style.opacity === '0.2') {
+            console.log('start timer! opacity is', this._element.style.opacity);
+            setTimeout(() => {
+                this._element.style.opacity = '1.0';
+                console.log('timer go!');
+
+            }, 100);
+        }
     };
 
     /**
