@@ -4,10 +4,8 @@ import {Handler} from '../handler_manager';
 import type {Map} from '../map';
 
 /**
- * The {@link CooperativeGesturesHandler} options object
- */
-/**
- * An options object for the gesture settings
+ * The {@link CooperativeGesturesHandler} options object for the gesture settings
+ *
  * @example
  * ```ts
  * let options = {
@@ -26,7 +24,7 @@ export type GestureOptions = {
 /**
  * A `CooperativeGestureHandler` is a control that adds cooperative gesture info when user tries to zoom in/out.
  *
- * @group Markers and Controls
+ * @group Handlers
  *
  * @example
  * ```ts
@@ -105,7 +103,6 @@ export class CooperativeGesturesHandler implements Handler {
         return this._enabled;
     }
 
-    // HM TODO: this is prevented by other handlers
     touchmove(_e: TouchEvent) {
         this._onCooperativeGesture(false);
     }
