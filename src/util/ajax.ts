@@ -1,9 +1,6 @@
 import {extend, isWorker} from './util';
 import {config} from './config';
 import {createAbortError} from './abort_error';
-
-import type {Cancelable} from '../types/cancelable';
-
 /**
  * A type used to store the tile's expiration date and cache control definition
  */
@@ -126,7 +123,7 @@ export const getReferrer = () => isWorker(self) ?
     self.worker && self.worker.referrer :
     (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
-export const getProtocolAction = url => config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf('://'))];
+export const getProtocolAction = (url: string) => config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf('://'))];
 
 /**
  * Determines whether a URL is a file:// URL. This is obviously the case if it begins
@@ -229,7 +226,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters}, abortController);
         }
         if (!isWorker(self) && getProtocolAction(requestParameters.url)) {
-            return promiseFromAddProtocolCallback(getProtocolAction(requestParameters.url))(requestParameters, abortController);
+            return getProtocolAction(requestParameters.url)(requestParameters, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {
@@ -250,25 +247,6 @@ function silenceOnAbort<T>(promise: Promise<T>, abortController: AbortController
             .then(result => { if (!abortController.signal.aborted) resolve(result); })
             .catch(error => { if (!abortController.signal.aborted) reject(error); });
     });
-}
-
-function promiseFromAddProtocolCallback(method: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable): (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>> {
-    return (requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> => {
-        return new Promise<GetResourceResponse<any>>((resolve, reject) => {
-            const callback = (err: Error, data: any, cacheControl: string | null, expires: string | null) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({data, cacheControl, expires});
-                }
-            };
-            const canelable = method(requestParameters, callback);
-            abortController.signal.addEventListener('abort', () => {
-                canelable.cancel();
-                reject(createAbortError());
-            });
-        });
-    };
 }
 
 export const getJSON = <T>(requestParameters: RequestParameters, abortController: AbortController): Promise<{data: T} & ExpiryData> => {
