@@ -37,6 +37,7 @@ import type {Transform} from '../geo/transform';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
+import {ProjectionData} from './projection_manager';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -46,6 +47,7 @@ type SymbolTileRenderState = {
         program: Program<any>;
         buffers: SymbolBuffers;
         uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>;
+        projectionData: ProjectionData;
         atlasTexture: Texture;
         atlasTextureIcon: Texture | null;
         atlasInterpolation: GLenum;
@@ -328,8 +330,9 @@ function drawLayerSymbols(
         }
 
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
-        const glCoordMatrix = symbolProjection.getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+        const identity = mat4.create();
+        const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(identity, pitchWithMap, rotateWithMap, painter.transform, s);
+        const glCoordMatrix = symbolProjection.getGlCoordMatrix(identity, pitchWithMap, rotateWithMap, painter.transform, s);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
@@ -365,10 +368,13 @@ function drawLayerSymbols(
                 uLabelPlaneMatrix, uglCoordMatrix, isText, texSize);
         }
 
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+
         const state = {
             program,
             buffers,
             uniformValues,
+            projectionData,
             atlasTexture,
             atlasTextureIcon,
             atlasInterpolation,
@@ -420,11 +426,11 @@ function drawLayerSymbols(
             const uniformValues = state.uniformValues;
             if (state.hasHalo) {
                 uniformValues['u_is_halo'] = 1;
-                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, segmentState.terrainData);
+                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, state.projectionData, segmentState.terrainData);
             }
             uniformValues['u_is_halo'] = 0;
         }
-        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, segmentState.terrainData);
+        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, state.projectionData, segmentState.terrainData);
     }
 }
 
@@ -438,11 +444,12 @@ function drawSymbolElements(
     stencilMode: StencilMode,
     colorMode: Readonly<ColorMode>,
     uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>,
+    projectionData: ProjectionData,
     terrainData: TerrainData) {
     const context = painter.context;
     const gl = context.gl;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        uniformValues, terrainData, null, layer.id, buffers.layoutVertexBuffer,
+        uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
