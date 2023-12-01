@@ -192,7 +192,8 @@ class MapLibreGL {
      * maplibregl.addProtocol('custom', async (params, abortController) => {
             const t = await fetch(`https://${params.url.split("://")[1]}`);
             if (t.status == 200) {
-                return t.arrayBuffer();
+                const buffer = await t.arrayBuffer();
+                return {data: buffer}
             } else {
                 throw new Error(`Tile fetch error: ${t.statusText}`));
             }
