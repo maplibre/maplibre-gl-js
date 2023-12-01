@@ -108,15 +108,7 @@ function drawFillTiles(
 
         const propertyFillTranslate = layer.paint.get('fill-translate');
         const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
-        let translateForUniforms: [number, number] = [0, 0];
-        if (propertyFillTranslateAnchor === 'map') {
-            // If the translate property is map-relative, translate prior to the mercator->globe->perspective transform
-            translateForUniforms = painter.translatePosition(tile, propertyFillTranslate, propertyFillTranslateAnchor);
-        } else {
-            // Else, apply the translation after the perspective projection, in screenspace
-            projectionData['u_projection_matrix'] = painter.translatePosMatrix(projectionData['u_projection_matrix'],
-                tile, propertyFillTranslate, propertyFillTranslateAnchor);
-        }
+        const translateForUniforms = painter.style.map.projectionManager.translatePosition(painter, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;

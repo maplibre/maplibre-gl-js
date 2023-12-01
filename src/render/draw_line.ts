@@ -70,13 +70,6 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const projectionData = painter.style.map.projectionManager.getProjectionData(coord, rttCoord ? rttCoord.posMatrix : tile.tileID.posMatrix);
         const pixelRatio = painter.style.map.projectionManager.getPixelScale();
 
-        const translateAnchor = layer.paint.get('line-translate-anchor');
-        if (translateAnchor === 'viewport') {
-            // Translate the line post-transform. The translateAnchor === 'map' case is handled in line_program.ts
-            projectionData['u_projection_matrix'] = painter.translatePosMatrix(
-                projectionData['u_projection_matrix'], tile, layer.paint.get('line-translate'), translateAnchor);
-        }
-
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
             dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, dasharray, crossfade) :
                 gradient ? lineGradientUniformValues(painter, tile, layer, pixelRatio, bucket.lineClipsArray.length) :

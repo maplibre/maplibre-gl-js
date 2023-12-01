@@ -187,19 +187,13 @@ function calculateTileRatio(tile: Tile, transform: Transform) {
 }
 
 function calculateTranslation(painter: Painter, tile: Tile, layer: LineStyleLayer): [number, number] {
-    const translateAnchor = layer.paint.get('line-translate-anchor');
-
-    if (translateAnchor === 'map') {
-        // Translate line points prior to any transformation
-        return painter.translatePosition(
-            tile,
-            layer.paint.get('line-translate'),
-            translateAnchor
-        );
-    } else {
-        // translateAnchor === 'viewport' is handled in draw_line.ts
-        return [0, 0];
-    }
+    // Translate line points prior to any transformation
+    return painter.style.map.projectionManager.translatePosition(
+        painter,
+        tile,
+        layer.paint.get('line-translate'),
+        layer.paint.get('line-translate-anchor')
+    );
 }
 
 export {

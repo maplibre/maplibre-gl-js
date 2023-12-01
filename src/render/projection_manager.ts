@@ -9,6 +9,8 @@ import {EXTENT, EXTENT_STENCIL_BORDER} from '../data/extent';
 import {SegmentVector} from '../data/segment';
 import posAttributes from '../data/pos_attributes';
 import {Transform} from '../geo/transform';
+import {Painter} from './painter';
+import {Tile} from '../source/tile';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
@@ -182,6 +184,12 @@ export class ProjectionManager {
         const mesh = this._createQuadMesh(context, granuality, north, south);
         this._tileMeshCache[key] = mesh;
         return mesh;
+    }
+
+    public translatePosition(painter: Painter, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+        // In the future, some better translation for globe and other weird projections should be implemented here,
+        // especially for the translateAnchor==='viewport' case.
+        return painter.translatePosition(tile, translate, translateAnchor);
     }
 
     public static getGranualityForZoomLevelForTiles(zoomLevel: number): number {
