@@ -1,6 +1,6 @@
 import {interpolates, Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
-import {extend, sphericalToCartesian} from '../util/util';
+import {sphericalToCartesian} from '../util/util';
 import {Evented} from '../util/evented';
 import {
     validateStyle,
