@@ -8,11 +8,12 @@ import {getGlobalWorkerPool} from '../util/global_worker_pool';
 class RTLMainThreadPlugin extends Evented {
     pluginStatus: RTLPluginStatus = 'unavailable';
     pluginURL: string = null;
-    dispatcher: Dispatcher = new Dispatcher(getGlobalWorkerPool(), 'rtl-text-plugin-dispacher');
     queue: PluginState[] = [];
 
     async _sendPluginStateToWorker() {
-        await this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL});
+        const dispatcher = new Dispatcher(getGlobalWorkerPool(), 'rtl-text-plugin-dispacher');
+        await dispatcher.broadcast('syncRTLPluginState', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL});
+        dispatcher.remove();
         this.fire(new Event('pluginStateChange', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL}));
     }
 
