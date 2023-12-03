@@ -175,10 +175,10 @@ describe('Browser tests', () => {
     }, 20000);
 
     test('Marker scaled: correct drag', async () => {
-        const startPosition = await page.evaluate(() => {
+        await page.evaluate(() => {
             document.getElementById('map')!.style.transform = 'scale(0.5)';
             const markerMapPosition = map.getCenter();
-            (window as any).marker = new maplibregl.Marker({draggable:true})
+            (window as any).marker = new maplibregl.Marker({draggable: true})
                 .setLngLat(markerMapPosition)
                 .addTo(map);
             return map.getCenter();
