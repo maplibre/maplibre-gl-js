@@ -107,7 +107,7 @@ export class CooperativeGesturesHandler implements Handler {
     }
 
     touchmove(e: TouchEvent) {
-        this._onCooperativeGesture(e.touches.length == 1);
+        this._onCooperativeGesture(e.touches.length === 1);
     }
 
     wheel(e: WheelEvent) {
