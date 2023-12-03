@@ -1,4 +1,4 @@
-import {Actor, ActorTarget} from '../util/actor';
+import {Actor, ActorTarget, IActor} from '../util/actor';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {VectorTileWorkerSource} from './vector_tile_worker_source';
 import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
@@ -218,7 +218,7 @@ export default class Worker {
         if (!this.workerSources[mapId][sourceType][sourceName]) {
             // use a wrapped actor so that we can attach a target mapId param
             // to any messages invoked by the WorkerSource, this is very important when there are multiple maps
-            const actor = {
+            const actor: IActor = {
                 sendAsync: (message, abortController) => {
                     message.targetMapId = mapId;
                     return this.actor.sendAsync(message, abortController);
