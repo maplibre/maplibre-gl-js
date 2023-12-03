@@ -2,6 +2,7 @@ import {FakeServer, fakeServer} from 'nise';
 import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 import {sleep} from '../util/test/util';
 import {browser} from '../util/browser';
+import {Dispatcher} from '../util/dispatcher';
 
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
@@ -13,7 +14,7 @@ describe('RTLMainThreadPlugin', () => {
         global.fetch = null;
         // Reset the singleton instance before each test
         rtlMainThreadPlugin.clearRTLTextPlugin();
-        broadcastSpy = jest.spyOn(rtlMainThreadPlugin.dispatcher, 'broadcast').mockImplementation(() => { return Promise.resolve({} as any); });
+        broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(() => { return Promise.resolve({} as any); });
     });
 
     afterEach(() => {

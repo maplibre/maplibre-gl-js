@@ -1,5 +1,4 @@
 import {createAbortError} from './abort_error';
-import type {Cancelable} from '../types/cancelable';
 
 const now = typeof performance !== 'undefined' && performance && performance.now ?
     performance.now.bind(performance) :
@@ -16,11 +15,6 @@ export const browser = {
      * or a fallback to Date.now()
      */
     now,
-
-    frame(fn: (paintStartTimestamp: number) => void): Cancelable {
-        const frame = requestAnimationFrame(fn);
-        return {cancel: () => cancelAnimationFrame(frame)};
-    },
 
     frameAsync(abortController: AbortController): Promise<number> {
         return new Promise((resolve, reject) => {

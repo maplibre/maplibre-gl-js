@@ -8,7 +8,7 @@ import {Light} from './light';
 import {LineAtlas} from '../render/line_atlas';
 import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
-import {getJSON, getReferrer, makeRequest} from '../util/ajax';
+import {getJSON, getReferrer} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
@@ -40,7 +40,6 @@ import type {Transform} from '../geo/transform';
 import type {StyleImage} from './style_image';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
-import type {GetResourceResponse, RequestParameters} from '../util/ajax';
 import type {
     LayerSpecification,
     FilterSpecification,
@@ -238,9 +237,6 @@ export class Style extends Evented {
         });
         this.dispatcher.registerMessageHandler('getImages', (mapId, params) => {
             return this.getImages(mapId, params);
-        });
-        this.dispatcher.registerMessageHandler('getResource', (mapId, params, abortController) => {
-            return this.getResource(mapId, params, abortController);
         });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
@@ -1592,10 +1588,6 @@ export class Style extends Evented {
             sourceCache.setDependencies(params.tileID.key, params.type, ['']);
         }
         return glypgs;
-    }
-
-    getResource(mapId: string | number, params: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
-        return makeRequest(params, abortController);
     }
 
     getGlyphsUrl() {

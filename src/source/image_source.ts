@@ -14,7 +14,6 @@ import type {CanvasSourceSpecification} from './canvas_source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {Callback} from '../types/callback';
 import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
@@ -280,7 +279,7 @@ export class ImageSource extends Evented implements Source {
         }
     }
 
-    async loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
+    async loadTile(tile: Tile): Promise<void> {
         // We have a single tile -- whose coordinates are this.tileID -- that
         // covers the image we want to render.  If that's the one being
         // requested, set it up with the image; otherwise, mark the tile as
@@ -292,9 +291,6 @@ export class ImageSource extends Evented implements Source {
             tile.buckets = {};
         } else {
             tile.state = 'errored';
-        }
-        if (callback) {
-            callback();
         }
     }
 

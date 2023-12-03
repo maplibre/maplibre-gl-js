@@ -20,7 +20,7 @@ describe('maplibre', () => {
         const protocolName = 'custom';
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
 
-        maplibre.addProtocol(protocolName, () => { return {cancel: () => { }}; });
+        maplibre.addProtocol(protocolName, async () => Promise.resolve({} as any));
         expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
     });
 
@@ -28,7 +28,7 @@ describe('maplibre', () => {
         const protocolName = 'custom';
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
 
-        maplibre.addProtocol(protocolName, () => { return {cancel: () => { }}; });
+        maplibre.addProtocol(protocolName, () => Promise.resolve({} as any));
         expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
 
         maplibre.removeProtocol(protocolName);
@@ -37,10 +37,9 @@ describe('maplibre', () => {
 
     test('#addProtocol - getJSON', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', (reqParam, callback) => {
+        maplibre.addProtocol('custom', () => {
             protocolCallbackCalled = true;
-            callback(null, {'foo': 'bar'});
-            return {cancel: () => {}};
+            return Promise.resolve({data: {'foo': 'bar'}});
         });
         const response = await getJSON({url: 'custom://test/url/json'}, new AbortController());
         expect(response.data).toEqual({foo: 'bar'});
@@ -49,10 +48,9 @@ describe('maplibre', () => {
 
     test('#addProtocol - getArrayBuffer', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', (_reqParam, callback) => {
+        maplibre.addProtocol('custom', () => {
             protocolCallbackCalled = true;
-            callback(null, new ArrayBuffer(1), 'cache-control', 'expires');
-            return {cancel: () => {}};
+            return Promise.resolve({data: new ArrayBuffer(1), cacheControl: 'cache-control', expires: 'expires'});
         });
         const response = await getArrayBuffer({url: 'custom://test/url/getArrayBuffer'}, new AbortController());
         expect(response.data).toBeInstanceOf(ArrayBuffer);
@@ -63,10 +61,9 @@ describe('maplibre', () => {
 
     test('#addProtocol - returning ImageBitmap for getImage', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', (_reqParam, callback) => {
+        maplibre.addProtocol('custom', () => {
             protocolCallbackCalled = true;
-            callback(null, new ImageBitmap());
-            return {cancel: () => {}};
+            return Promise.resolve({data: new ImageBitmap()});
         });
 
         const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
@@ -76,10 +73,9 @@ describe('maplibre', () => {
 
     test('#addProtocol - returning HTMLImageElement for getImage', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', (reqParam, callback) => {
+        maplibre.addProtocol('custom', () => {
             protocolCallbackCalled = true;
-            callback(null, new Image());
-            return {cancel: () => {}};
+            return Promise.resolve({data: new Image()});
         });
         const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
         expect(img.data).toBeInstanceOf(HTMLImageElement);
@@ -87,10 +83,7 @@ describe('maplibre', () => {
     });
 
     test('#addProtocol - error', () => {
-        maplibre.addProtocol('custom', (reqParam, callback) => {
-            callback(new Error('error'));
-            return {cancel: () => { }};
-        });
+        maplibre.addProtocol('custom', () => Promise.reject(new Error('test error')));
 
         getJSON({url: 'custom://test/url/json'}, new AbortController()).catch((error) => {
             expect(error).toBeTruthy();
@@ -99,10 +92,11 @@ describe('maplibre', () => {
 
     test('#addProtocol - Cancel request', async () => {
         let cancelCalled = false;
-        maplibre.addProtocol('custom', () => {
-            return {cancel: () => {
+        maplibre.addProtocol('custom', (_req, abortController) => {
+            abortController.signal.addEventListener('abort', () => {
                 cancelCalled = true;
-            }};
+            });
+            return Promise.resolve({} as any);
         });
         const abortController = new AbortController();
         const promise = getJSON({url: 'custom://test/url/json'}, abortController);

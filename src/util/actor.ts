@@ -54,7 +54,7 @@ export class Actor implements IActor {
     mapId: string | number | null;
     resolveRejects: { [x: string]: ResolveReject};
     name: string;
-    tasks: { [x: number]: MessageData };
+    tasks: { [x: string]: MessageData };
     taskQueue: Array<string>;
     abortControllers: { [x: number | string]: AbortController };
     invoker: ThrottledInvoker;
@@ -205,7 +205,7 @@ export class Actor implements IActor {
             return;
         }
         if (!this.messageHandlers[task.type]) {
-            this.completeTask(id, new Error(`Could not find a registered handler for ${task.type}`));
+            this.completeTask(id, new Error(`Could not find a registered handler for ${task.type}, map ID: ${this.mapId}, available handlers: ${Object.keys(this.messageHandlers).join(', ')}`));
             return;
         }
         const params = deserialize(task.data) as RequestResponseMessageMap[MessageType][0];
