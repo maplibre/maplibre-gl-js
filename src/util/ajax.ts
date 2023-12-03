@@ -1,6 +1,12 @@
 import {extend, isWorker} from './util';
 import {config} from './config';
 import {createAbortError} from './abort_error';
+
+/**
+ * This is used to identify the global dispatcher id when sending a message from the worker without a target map id.
+ */
+export const GLOBAL_DISPATCHER_ID = 'global-dispatcher';
+
 /**
  * A type used to store the tile's expiration date and cache control definition
  */
@@ -223,7 +229,7 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
 export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
         if (isWorker(self) && self.worker && self.worker.actor) {
-            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters}, abortController);
+            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
         }
         if (!isWorker(self) && getProtocolAction(requestParameters.url)) {
             return getProtocolAction(requestParameters.url)(requestParameters, abortController);
@@ -234,7 +240,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
             return silenceOnAbort(makeFetchRequest(requestParameters, abortController), abortController);
         }
         if (isWorker(self) && self.worker && self.worker.actor) {
-            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: true}, abortController);
+            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: true, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
         }
     }
     return makeXMLHttpRequest(requestParameters, abortController);

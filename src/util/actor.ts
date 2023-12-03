@@ -54,7 +54,7 @@ export class Actor implements IActor {
     mapId: string | number | null;
     resolveRejects: { [x: string]: ResolveReject};
     name: string;
-    tasks: { [x: number]: MessageData };
+    tasks: { [x: string]: MessageData };
     taskQueue: Array<string>;
     abortControllers: { [x: number | string]: AbortController };
     invoker: ThrottledInvoker;

@@ -2,18 +2,16 @@ import {getArrayBuffer} from '../util/ajax';
 import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
 import {RTLPluginStatus, PluginState} from './rtl_text_plugin_status';
-import {Dispatcher} from '../util/dispatcher';
-import {getGlobalWorkerPool} from '../util/global_worker_pool';
+import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
 
 class RTLMainThreadPlugin extends Evented {
     pluginStatus: RTLPluginStatus = 'unavailable';
     pluginURL: string = null;
+    dispatcher: Dispatcher = getGlobalDispatcher();
     queue: PluginState[] = [];
 
     async _sendPluginStateToWorker() {
-        const dispatcher = new Dispatcher(getGlobalWorkerPool(), 'rtl-text-plugin-dispacher');
-        await dispatcher.broadcast('syncRTLPluginState', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL});
-        dispatcher.remove();
+        await this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL});
         this.fire(new Event('pluginStateChange', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL}));
     }
 
