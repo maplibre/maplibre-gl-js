@@ -93,8 +93,8 @@ export class DOM {
     private static getScale(element: HTMLElement): ScaleReturnValue {
         const rect = element.getBoundingClientRect();
         return {
-            x: rect.width / element.offsetWidth || 1,
-            y: rect.height / element.offsetHeight || 1,
+            x: (rect.width / element.offsetWidth) || 1,
+            y: (rect.height / element.offsetHeight) || 1,
             boundingClientRect: rect,
         };
     }
