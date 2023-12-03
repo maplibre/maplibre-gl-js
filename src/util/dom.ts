@@ -94,7 +94,7 @@ export class DOM {
         const rect = element.getBoundingClientRect();
         return {
             x: (rect.width / element.offsetWidth) || 1,
-            y: rect.height / element.offsetHeight || 1,
+            y: (rect.height / element.offsetHeight) || 1,
             boundingClientRect: rect,
         };
     }
