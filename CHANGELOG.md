@@ -15,6 +15,7 @@
 - Fix cursor being shown indefinitely as a pointer when removing a popup with its `trackPointer` method active ([#3434](https://github.com/maplibre/maplibre-gl-js/pull/3434))
 - Fix a bug in showing cooperative gestures when scroll zoom is disabled ([#2498](https://github.com/maplibre/maplibre-gl-js/pull/2498))
 - Handle loading of empty raster tiles (204 No Content) ([#3428](https://github.com/maplibre/maplibre-gl-js/pull/3428))
+- Fix the shifted mouse events after a css transform scale on the map container ([#3437](https://github.com/maplibre/maplibre-gl-js/pull/3437))
 - _...Add new stuff here..._
 
 ## 4.0.0-pre.1
