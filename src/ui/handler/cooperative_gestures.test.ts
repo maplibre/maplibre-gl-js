@@ -172,11 +172,11 @@ describe('CoopGesturesHandler', () => {
         map.remove();
     });
 
-    test('Does pan on touchmove with a double touch', () => {
-        // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
+    test('Does pan on touchmove with a double touch but does not change pitch', () => {
         const map = createMap(true);
         const target = map.getCanvas();
         const startCenter = map.getCenter();
+        const startPitch = map.getPitch();
         map._renderTaskQueue.run();
 
         simulate.touchstart(target, {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 1, clientY: 1}]});
@@ -185,12 +185,15 @@ describe('CoopGesturesHandler', () => {
         simulate.touchmove(target, {touches: [{target, clientX: 10, clientY: 10}, {target, clientX: 11, clientY: 11}]});
         map._renderTaskQueue.run();
 
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
+
         simulate.touchend(target);
         map._renderTaskQueue.run();
 
         const endCenter = map.getCenter();
         expect(endCenter.lng).toBeGreaterThan(startCenter.lng);
         expect(endCenter.lat).toBeGreaterThan(startCenter.lat);
+        expect(startPitch).toBe(map.getPitch());
 
         map.remove();
     });
@@ -207,6 +210,8 @@ describe('CoopGesturesHandler', () => {
 
         simulate.touchmove(target, {touches: [{target, clientX: 0, clientY: -10}, {target, clientX: 1, clientY: -11}, {target, clientX: 2, clientY: -12}]});
         map._renderTaskQueue.run();
+
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
 
         simulate.touchend(target);
         map._renderTaskQueue.run();

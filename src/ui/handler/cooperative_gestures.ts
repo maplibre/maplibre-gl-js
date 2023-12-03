@@ -42,7 +42,10 @@ export class CooperativeGesturesHandler implements Handler {
     _options: boolean | GestureOptions;
     _map: Map;
     _container: HTMLElement;
-    _metaKey: 'metaKey' | 'ctrlKey' = navigator.userAgent.indexOf('Mac') !== -1 ? 'metaKey' : 'ctrlKey';
+    /**
+     * This is the key that will allow to bypass the cooperative gesture protection
+     */
+    _bypassKey: 'metaKey' | 'ctrlKey' = navigator.userAgent.indexOf('Mac') !== -1 ? 'metaKey' : 'ctrlKey';
     _enabled: boolean;
 
     constructor(map: Map, options: boolean | GestureOptions = {}) {
@@ -62,10 +65,10 @@ export class CooperativeGesturesHandler implements Handler {
         mapCanvasContainer.classList.add('maplibregl-cooperative-gestures');
         this._container = DOM.create('div', 'maplibregl-cooperative-gesture-screen', mapCanvasContainer);
         let desktopMessage = typeof this._options !== 'boolean' && this._options.windowsHelpText ? this._options.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
-        if (this._metaKey === 'metaKey') {
+        if (this._bypassKey === 'metaKey') {
             desktopMessage = typeof this._options !== 'boolean' && this._options.macHelpText ? this._options.macHelpText : 'Use ⌘ + scroll to zoom the map';
         }
-        const mobileMessage = typeof this._options !== 'boolean' && this._options.mobileHelpText ? this._options.mobileHelpText : 'Use two fingers to move the map';
+        const mobileMessage = typeof this._options !== 'boolean' && this._options.mobileHelpText ? this._options.mobileHelpText : 'Use two fingers to move the map, three to pitch';
         // Create and append the desktop message div
         const desktopDiv = document.createElement('div');
         desktopDiv.className = 'maplibregl-desktop-message';
@@ -103,26 +106,23 @@ export class CooperativeGesturesHandler implements Handler {
         return this._enabled;
     }
 
-    touchmove(_e: TouchEvent) {
-        this._onCooperativeGesture(false);
+    touchmove(e: TouchEvent) {
+        this._onCooperativeGesture(e.touches.length == 1);
     }
 
     wheel(e: WheelEvent) {
         if (!this._map.scrollZoom.isEnabled()) {
             return;
         }
-        this._onCooperativeGesture(e[this._metaKey]);
+        this._onCooperativeGesture(!e[this._bypassKey]);
     }
 
-    _onCooperativeGesture(metaPress:boolean) {
-        if (!this._enabled) return false;
-        if (!metaPress) {
-            // Alert user how to scroll/pan
-            this._container.classList.add('maplibregl-show');
-            setTimeout(() => {
-                this._container.classList.remove('maplibregl-show');
-            }, 100);
-        }
-        return false;
+    _onCooperativeGesture(showNotification: boolean) {
+        if (!this._enabled || !showNotification) return;
+        // Alert user how to scroll/pan
+        this._container.classList.add('maplibregl-show');
+        setTimeout(() => {
+            this._container.classList.remove('maplibregl-show');
+        }, 100);
     }
 }
