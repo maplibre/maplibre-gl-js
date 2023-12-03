@@ -1,5 +1,5 @@
 ## main
-
+ 
 ### ✨ Features and improvements
 
 - ⚠️ Changes `addProtocol` to be promise-based without the usage of callbacks and cancelable ([#3433](https://github.com/maplibre/maplibre-gl-js/pull/3433))
