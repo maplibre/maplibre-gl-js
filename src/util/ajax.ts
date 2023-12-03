@@ -234,7 +234,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
     }
     if (!isFileURL(requestParameters.url)) {
         if (fetch && Request && AbortController && Object.prototype.hasOwnProperty.call(Request.prototype, 'signal')) {
-            return silenceOnAbort(makeFetchRequest(requestParameters, abortController), abortController);
+            return makeFetchRequest(requestParameters, abortController);
         }
         if (isWorker(self) && self.worker && self.worker.actor) {
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: true}, abortController);
@@ -242,15 +242,6 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
     }
     return makeXMLHttpRequest(requestParameters, abortController);
 };
-
-// This needs to be removed in general, see #3308
-function silenceOnAbort<T>(promise: Promise<T>, abortController: AbortController): Promise<T> {
-    return new Promise((resolve, reject) => {
-        promise
-            .then(result => { if (!abortController.signal.aborted) resolve(result); })
-            .catch(error => { if (!abortController.signal.aborted) reject(error); });
-    });
-}
 
 function promiseFromAddProtocolCallback(method: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable): (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>> {
     return (requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> => {
