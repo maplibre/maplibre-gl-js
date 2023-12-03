@@ -3,7 +3,10 @@
   "metadata": {
     "test": {
       "height": 256,
-      "operations": [["idle"]]
+      "operations": [
+        ["idle"],
+        ["wait", 100]
+      ]
     }
   },
   "center": [

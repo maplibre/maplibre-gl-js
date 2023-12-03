@@ -153,12 +153,8 @@ export class ScrollZoomHandler implements Handler {
 
     wheel(e: WheelEvent) {
         if (!this.isEnabled()) return;
-        if (this._map._cooperativeGestures) {
-            if (e[this._map._metaKey]) {
-                e.preventDefault();
-            } else {
-                return;
-            }
+        if (this._map.cooperativeGestures.isEnabled() && !e[this._map.cooperativeGestures._bypassKey]) {
+            return;
         }
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
         const now = browser.now(),
