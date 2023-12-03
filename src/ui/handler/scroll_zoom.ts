@@ -31,7 +31,6 @@ const maxScalePerFrame = 2;
 export class ScrollZoomHandler implements Handler {
     _map: Map;
     _tr: TransformProvider;
-    _el: HTMLElement;
     _enabled: boolean;
     _active: boolean;
     _zooming: boolean;
@@ -66,7 +65,6 @@ export class ScrollZoomHandler implements Handler {
     constructor(map: Map, triggerRenderFrame: () => void) {
         this._map = map;
         this._tr = new TransformProvider(map);
-        this._el = map.getCanvasContainer();
         this._triggerRenderFrame = triggerRenderFrame;
 
         this._delta = 0;
@@ -232,7 +230,7 @@ export class ScrollZoomHandler implements Handler {
             delete this._finishTimeout;
         }
 
-        const pos = DOM.mousePos(this._el, e);
+        const pos = DOM.mousePos(this._map.getCanvas(), e);
         const tr = this._tr;
 
         this._around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));

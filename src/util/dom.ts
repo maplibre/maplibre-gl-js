@@ -1,5 +1,11 @@
 import Point from '@mapbox/point-geometry';
 
+type ScaleReturnValue = {
+    x: number;
+    y: number;
+    boundingClientRect: DOMRect;
+};
+
 export class DOM {
     private static readonly docStyle = typeof window !== 'undefined' && window.document && window.document.documentElement.style;
 
@@ -84,22 +90,35 @@ export class DOM {
         }, 0);
     }
 
-    public static mousePos(el: HTMLElement, e: MouseEvent | Touch) {
-        const rect = el.getBoundingClientRect();
+    private static getScale(element: HTMLElement): ScaleReturnValue {
+        const rect = element.getBoundingClientRect();
+        return {
+            x: rect.width / element.offsetWidth || 1,
+            y: rect.height / element.offsetHeight || 1,
+            boundingClientRect: rect,
+        };
+    }
+
+    private static getPoint(el: HTMLElement, scale: ScaleReturnValue, e: MouseEvent | Touch): Point {
+        const rect = scale.boundingClientRect;
         return new Point(
-            e.clientX - rect.left - el.clientLeft,
-            e.clientY - rect.top - el.clientTop
+            // rect.left/top values are in page scale (like clientX/Y),
+            // whereas clientLeft/Top (border width) values are the original values (before CSS scale applies).
+            ((e.clientX - rect.left) / scale.x) - el.clientLeft,
+            ((e.clientY - rect.top) / scale.y) - el.clientTop
         );
     }
 
+    public static mousePos(el: HTMLElement, e: MouseEvent | Touch): Point {
+        const scale = DOM.getScale(el);
+        return DOM.getPoint(el, scale, e);
+    }
+
     public static touchPos(el: HTMLElement, touches: TouchList) {
-        const rect = el.getBoundingClientRect();
         const points: Point[] = [];
+        const scale = DOM.getScale(el);
         for (let i = 0; i < touches.length; i++) {
-            points.push(new Point(
-                touches[i].clientX - rect.left - el.clientLeft,
-                touches[i].clientY - rect.top - el.clientTop
-            ));
+            points.push(DOM.getPoint(el, scale, touches[i]));
         }
         return points;
     }
