@@ -93,7 +93,11 @@ export function keysDifference<S, T>(
  * @param dest - destination object
  * @param sources - sources from which properties are pulled
  */
-export function extend(dest: any, ...sources: Array<any>): any {
+export function extend<T extends {}, U>(dest: T, source: U): T & U;
+export function extend<T extends {}, U, V>(dest: T, source1: U, source2: V): T & U & V;
+export function extend<T extends {}, U, V, W>(dest: T, source1: U, source2: V, source3: W): T & U & V & W;
+export function extend(dest: object, ...sources: Array<any>): any;
+export function extend(dest: object, ...sources: Array<any>): any {
     for (const src of sources) {
         for (const k in src) {
             dest[k] = src[k];
@@ -457,6 +461,9 @@ export function isImageBitmap(image: any): image is ImageBitmap {
  * @returns - A  promise resolved when the conversion is finished
  */
 export const arrayBufferToImageBitmap = async (data: ArrayBuffer): Promise<ImageBitmap> => {
+    if (data.byteLength === 0) {
+        return createImageBitmap(new ImageData(1, 1));
+    }
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
     try {
         return createImageBitmap(blob);

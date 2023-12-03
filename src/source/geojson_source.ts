@@ -17,6 +17,7 @@ import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: GeoJSONWorkerOptions;
     collectResourceTiming?: boolean;
+    data: GeoJSON.GeoJSON | string;
 }
 
 export type GeoJsonSourceOptions = {
@@ -312,7 +313,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @param diff - the diff object
      */
     async _updateWorkerData(diff?: GeoJSONSourceDiff) {
-        const options: LoadGeoJSONParameters = extend({}, this.workerOptions);
+        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
         if (diff) {
             options.dataDiff = diff;
         } else if (typeof this._data === 'string') {
@@ -321,7 +322,6 @@ export class GeoJSONSource extends Evented implements Source {
         } else {
             options.data = JSON.stringify(this._data);
         }
-        options.type = this.type;
         this._pendingLoads++;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         try {
