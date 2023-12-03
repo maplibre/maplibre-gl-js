@@ -16,6 +16,7 @@ import {TapDragZoomHandler} from './handler/tap_drag_zoom';
 import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
+import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
@@ -41,6 +42,11 @@ export interface Handler {
     enable(): void;
     disable(): void;
     isEnabled(): boolean;
+    /**
+     * This is used to indicate if the handler is currently active or not.
+     * In case a handler is active, it will block other handlers from gettting the relevant events.
+     * There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.
+     */
     isActive(): boolean;
     /**
      * `reset` can be called by the manager at any time and must reset everything to it's original state
@@ -221,6 +227,12 @@ export class HandlerManager {
         this._add('boxZoom', boxZoom);
         if (options.interactive && options.boxZoom) {
             boxZoom.enable();
+        }
+
+        const cooperativeGestures = map.cooperativeGestures = new CooperativeGesturesHandler(map, options.cooperativeGestures);
+        this._add('cooperativeGestures', cooperativeGestures);
+        if (options.cooperativeGestures) {
+            cooperativeGestures.enable();
         }
 
         const tapZoom = new TapZoomHandler(map);
