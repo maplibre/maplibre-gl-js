@@ -246,6 +246,7 @@ export class Popup extends Evented {
             this._map.off('mousemove', this._onMouseMove);
             this._map.off('mouseup', this._onMouseUp);
             this._map.off('drag', this._onDrag);
+            this._map._canvasContainer.classList.remove('maplibregl-track-pointer');
             delete this._map;
         }
 
