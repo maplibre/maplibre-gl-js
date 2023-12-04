@@ -800,8 +800,10 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         map.terrain = {
-            getElevationForLngLatZoom: () => 0
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .9
         } as any as Terrain;
+        map.transform.lngLatToCameraDepth = () => .95;
 
         marker.setOffset([10, 10]);
 
@@ -837,18 +839,22 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker changes opacity when terrain is enabled', () => {
-        jest.spyOn(global, 'setTimeout');
-        jest.spyOn(global, 'clearTimeout');
+    test('Marker changes opacity behind terrain and when terrain is removed', () => {
         const map = createMap();
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .9 // Mocking distance to terrain
+        } as any as Terrain;
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0
-        } as any as Terrain;
 
-        expect(marker.getElement().style.opacity).toMatch('1.0');
+        expect(marker.getElement().style.opacity).toMatch('.2');
+
+        map.terrain = null;
+        map.fire('terrain');
+        expect(marker.getElement().style.opacity).toMatch('1');
 
         map.remove();
     });
