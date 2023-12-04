@@ -9,7 +9,6 @@ import {Event, ErrorEvent, Evented} from '../util/evented';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
-import {Callback} from '../types/callback';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
 
@@ -22,7 +21,7 @@ class SourceMock extends Evented implements Source {
     type: string;
     tileSize: number;
 
-    constructor(id: string, sourceOptions: any, _dispatcher, eventedParent: Evented) {
+    constructor(id: string, sourceOptions: any, _dispatcher: Dispatcher, eventedParent: Evented) {
         super();
         this.id = id;
         this.minzoom = 0;
@@ -34,18 +33,13 @@ class SourceMock extends Evented implements Source {
             this.hasTile = sourceOptions.hasTile;
         }
     }
-    loadTile(tile: Tile, callback?: Callback<void>): Promise<void> {
+    loadTile(tile: Tile): Promise<void> {
         if (this.sourceOptions.expires) {
             tile.setExpiryData({
                 expires: this.sourceOptions.expires
             });
         }
-        if (callback) {
-            setTimeout(callback, 0);
-        } else {
-            return new Promise(resolve => setTimeout(resolve, 0));
-        }
-
+        return new Promise(resolve => setTimeout(resolve, 0));
     }
     loaded() {
         return true;

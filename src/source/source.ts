@@ -5,8 +5,7 @@ import {GeoJSONSource} from '../source/geojson_source';
 import {VideoSource} from '../source/video_source';
 import {ImageSource} from '../source/image_source';
 import {CanvasSource} from '../source/canvas_source';
-import {Dispatcher} from '../util/dispatcher';
-import {getGlobalWorkerPool} from '../util/global_worker_pool';
+import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
 
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Event, Evented} from '../util/evented';
@@ -194,7 +193,6 @@ export const addSourceType = async (name: string, SourceType: SourceClass): Prom
     if (!SourceType.workerSourceURL) {
         return;
     }
-    const dispatcher = new Dispatcher(getGlobalWorkerPool(), 'add-custom-source-dispatcher');
+    const dispatcher = getGlobalDispatcher();
     await dispatcher.broadcast('loadWorkerSource', SourceType.workerSourceURL.toString());
-    dispatcher.remove();
 };

@@ -1,22 +1,31 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
 
+### 🐞 Bug fixes
+
+- Fix the shifted mouse events after a css transform scale on the map container ([#3437](https://github.com/maplibre/maplibre-gl-js/pull/3437))
+- _...Add new stuff here..._
+
+## 4.0.0-pre.2
+
+### ✨ Features and improvements
+
+- ⚠️ Changes `addProtocol` to be promise-based without the usage of callbacks and cancelable ([#3433](https://github.com/maplibre/maplibre-gl-js/pull/3433))
 - ⚠️ Moved the `addSrouceType` to be a part of the global maplibregl object instead of being per map object ([#3420](https://github.com/maplibre/maplibre-gl-js/pull/3420))
 - ⚠️ Removed callback usage from `map.loadImage` in continue to below change ([#3422](https://github.com/maplibre/maplibre-gl-js/pull/3422))
 - ⚠️ Changed the `GeoJSONSource`'s `getClusterExpansionZoom`, `getClusterChildren`, `getClusterLeaves` methods to return a `Promise` instead of a callback usage ([#3421](https://github.com/maplibre/maplibre-gl-js/pull/3421))
 - ⚠️ Changed the `setRTLTextPlugin` function to return a promise instead of using callback ([#3418](https://github.com/maplibre/maplibre-gl-js/pull/3418)) this also changed how the RTL pluing code is handled internally by splitting the main thread and worker thread code.
 - ⚠️ Remove `setCooperativeGestures` and `getCooperativeGestures` functions in favor of `cooperativeGestures` handler which now has an `enabled()` or `disabled()` methods ([#3430](https://github.com/maplibre/maplibre-gl-js/pull/3430))
 - Created a new example showing how to place a threejs scene as a `CustomLayer` over maplibre 3d-terrain ([#3429](https://github.com/maplibre/maplibre-gl-js/pull/3429))
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - Fix zooming outside the central globe when terrain 3D is enabled ([#3425](https://github.com/maplibre/maplibre-gl-js/pull/3425))
 - Fix cursor being shown indefinitely as a pointer when removing a popup with its `trackPointer` method active ([#3434](https://github.com/maplibre/maplibre-gl-js/pull/3434))
 - Fix a bug in showing cooperative gestures when scroll zoom is disabled ([#2498](https://github.com/maplibre/maplibre-gl-js/pull/2498))
 - Handle loading of empty raster tiles (204 No Content) ([#3428](https://github.com/maplibre/maplibre-gl-js/pull/3428))
-- Fix the shifted mouse events after a css transform scale on the map container ([#3437](https://github.com/maplibre/maplibre-gl-js/pull/3437))
-- _...Add new stuff here..._
 
 ## 4.0.0-pre.1
 

@@ -1,4 +1,6 @@
 import {Actor, MessageHandler} from './actor';
+import {getGlobalWorkerPool} from './global_worker_pool';
+import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax';
 
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
@@ -59,4 +61,16 @@ export class Dispatcher {
             actor.registerMessageHandler(type, handler);
         }
     }
+}
+
+let globalDispatcher: Dispatcher;
+
+export function getGlobalDispatcher(): Dispatcher {
+    if (!globalDispatcher) {
+        globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
+        globalDispatcher.registerMessageHandler('getResource', (_mapId, params, abortController) => {
+            return makeRequest(params, abortController);
+        });
+    }
+    return globalDispatcher;
 }
