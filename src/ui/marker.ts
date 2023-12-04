@@ -521,13 +521,27 @@ export class Marker extends Evented {
             }, 100);
         }
 
+        const map = this._map;
+
         // Read depth framebuffer, getting position of terrain in line of sight to marker
-        const terrainDistance = this._map.terrain.depthAtPoint(this._map.project(this._lngLat));
+        const terrainDistance = map.terrain.depthAtPoint(this._pos);
         // Transform marker position to GL coordinates
-        const markerDistance = this._map.transform.lngLatToCameraDepth(this._lngLat, this._map.terrain);
+        const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
+        const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
 
         const forgiveness = .01;
-        this._element.style.opacity = (markerDistance - terrainDistance > forgiveness) ? '0.2' : '1.0';
+        console.log(markerDistance - terrainDistance);
+        if (markerDistance - terrainDistance < forgiveness) {
+            this._element.style.opacity = '1';
+            return;
+        }
+        // If the base is obscured, use the offset to check if the marker's center is obscured.
+        const metersToCenter = -this._offset.y / map.transform._pixelPerMeter;
+        const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
+        const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
+        const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
+        // Display at full opacity if center is visible.
+        this._element.style.opacity = (markerDistanceCenter - terrainDistanceCenter > forgiveness) ? '0.2' : '1.0';
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {

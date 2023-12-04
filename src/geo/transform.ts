@@ -962,12 +962,11 @@ export class Transform {
      * This can be compared to the value from the depth buffer (terrain.depthAtPoint)
      * to determine whether a point is occluded.
      * @param lngLat - the point
-     * @param terrain - the terrain object
+     * @param elevation - the point's elevation
      * @returns value between 0 and 1
      */
-    lngLatToCameraDepth(lngLat: LngLat, terrain: Terrain) {
+    lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
         const coord = this.locationCoordinate(lngLat);
-        const elevation = terrain.getElevationForLngLatZoom(lngLat, this.tileZoom);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, this.projMatrix);
         return (p[2] / p[3]);
