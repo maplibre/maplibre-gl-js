@@ -4,6 +4,8 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+- Fix the shifted mouse events after a css transform scale on the map container ([#3437](https://github.com/maplibre/maplibre-gl-js/pull/3437))
 - _...Add new stuff here..._
 
 ## 4.0.0-pre.2
