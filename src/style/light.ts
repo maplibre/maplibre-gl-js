@@ -1,6 +1,6 @@
 import {interpolates, Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
-import {extend, sphericalToCartesian} from '../util/util';
+import {sphericalToCartesian} from '../util/util';
 import {Evented} from '../util/evented';
 import {
     validateStyle,
@@ -125,11 +125,11 @@ export class Light extends Evented {
             return false;
         }
 
-        return emitValidationErrors(this, validate.call(validateStyle, extend({
+        return emitValidationErrors(this, validate.call(validateStyle, {
             value,
             // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
             style: {glyphs: true, sprite: true},
             styleSpec
-        })));
+        }));
     }
 }

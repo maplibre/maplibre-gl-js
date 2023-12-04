@@ -2649,67 +2649,21 @@ describe('Map', () => {
         });
     });
 
-    describe('#setCooperativeGestures', () => {
-        test('returns self', () => {
-            const map = createMap();
-            expect(map.setCooperativeGestures(true)).toBe(map);
-        });
-
-        test('can be called more than once', () => {
-            const map = createMap();
-            map.setCooperativeGestures(true);
-            map.setCooperativeGestures(true);
-        });
-
-        test('calling set with no arguments turns cooperative gestures off', done => {
-            const map = createMap({cooperativeGestures: true});
-            map.on('load', () => {
-                map.setCooperativeGestures();
-                expect(map.getCooperativeGestures()).toBeFalsy();
-                done();
-            });
-        });
-    });
-
-    describe('#getCooperativeGestures', () => {
-        test('returns the cooperative gestures option', done => {
-            const map = createMap({cooperativeGestures: true});
-
-            map.on('load', () => {
-                expect(map.getCooperativeGestures()).toBe(true);
-                done();
-            });
-        });
-
-        test('returns falsy if cooperative gestures option is not specified', done => {
-            const map = createMap();
-
-            map.on('load', () => {
-                expect(map.getCooperativeGestures()).toBeFalsy();
-                done();
-            });
-        });
-
-        test('returns the cooperative gestures option with custom messages', done => {
-            const option = {
-                'windowsHelpText': 'Custom message',
-                'macHelpText': 'Custom message',
-                'mobileHelpText': 'Custom message',
-            };
-            const map = createMap({cooperativeGestures: option});
-
-            map.on('load', () => {
-                expect(map.getCooperativeGestures()).toEqual(option);
-                done();
-            });
-        });
-    });
-
     describe('cooperativeGestures option', () => {
         test('cooperativeGesture container element is hidden from a11y tree', () => {
             const map = createMap({cooperativeGestures: true});
-
             expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen').getAttribute('aria-hidden')).toBeTruthy();
+        });
+
+        test('cooperativeGesture container element is not available when cooperativeGestures not initialized', () => {
+            const map = createMap({cooperativeGestures: false});
+            expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen')).toBeFalsy();
+        });
+
+        test('cooperativeGesture container element is not available when cooperativeGestures disabled', () => {
+            const map = createMap({cooperativeGestures: true});
+            map.cooperativeGestures.disable();
+            expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen')).toBeFalsy();
         });
     });
 

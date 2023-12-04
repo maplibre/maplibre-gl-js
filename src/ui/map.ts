@@ -2,10 +2,8 @@ import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-
 import {GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
-
 import {RequestManager, ResourceType} from '../util/request_manager';
 import {Style, StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -19,7 +17,6 @@ import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {AttributionControl} from './control/attribution_control';
 import {LogoControl} from './control/logo_control';
-
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
@@ -29,6 +26,10 @@ import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
 import {Source} from '../source/source';
 import {StyleLayer} from '../style/style_layer';
+import {Terrain} from '../render/terrain';
+import {RenderToTexture} from '../render/render_to_texture';
+import {config} from '../util/config';
+import {defaultLocale} from './default_locale';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -41,12 +42,11 @@ import type {ScrollZoomHandler} from './handler/scroll_zoom';
 import type {BoxZoomHandler} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type {DragRotateHandler} from './handler/shim/drag_rotate';
-import {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
-
+import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
+import type {CooperativeGesturesHandler, GestureOptions} from './handler/cooperative_gestures';
 import type {KeyboardHandler} from './handler/keyboard';
 import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
 import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
-import {defaultLocale} from './default_locale';
 import type {TaskID} from '../util/task_queue';
 import type {
     FilterSpecification,
@@ -55,12 +55,8 @@ import type {
     SourceSpecification,
     TerrainSpecification
 } from '@maplibre/maplibre-gl-style-spec';
-
-import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import {Terrain} from '../render/terrain';
-import {RenderToTexture} from '../render/render_to_texture';
-import {config} from '../util/config';
+import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 
 const version = packageJSON.version;
@@ -325,23 +321,6 @@ export type MapOptions = {
     maxCanvasSize?: [number, number];
 };
 
-/**
- * An options object for the gesture settings
- * @example
- * ```ts
- * let options = {
- *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
- *   macHelpText: "Use ⌘ + scroll to zoom the map",
- *   mobileHelpText: "Use two fingers to move the map",
- * }
- * ```
- */
-export type GestureOptions = {
-    windowsHelpText?: string;
-    macHelpText?: string;
-    mobileHelpText?: string;
-};
-
 export type AddImageOptions = {
 
 }
@@ -385,7 +364,7 @@ const defaultOptions = {
     doubleClickZoom: true,
     touchZoomRotate: true,
     touchPitch: true,
-    cooperativeGestures: undefined,
+    cooperativeGestures: false,
 
     bearingSnap: 7,
     clickTolerance: 3,
@@ -453,9 +432,6 @@ export class Map extends Camera {
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
-    _cooperativeGestures: boolean | GestureOptions;
-    _cooperativeGesturesScreen: HTMLElement;
-    _metaKey: keyof MouseEvent;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -554,6 +530,12 @@ export class Map extends Camera {
      */
     touchPitch: TwoFingersTouchPitchHandler;
 
+    /**
+     * The map's {@link CooperativeGesturesHandler}, which allows the user to see cooperative gesture info when user tries to zoom in/out.
+     * Find more details and examples using `cooperativeGestures` in the {@link CooperativeGesturesHandler} section.
+     */
+    cooperativeGestures: CooperativeGesturesHandler;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -579,8 +561,6 @@ export class Map extends Camera {
         super(transform, {bearingSnap: options.bearingSnap});
 
         this._interactive = options.interactive;
-        this._cooperativeGestures = options.cooperativeGestures;
-        this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._maxTileCacheSize = options.maxTileCacheSize;
         this._maxTileCacheZoomLevels = options.maxTileCacheZoomLevels;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
@@ -652,10 +632,6 @@ export class Map extends Camera {
         }
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
-
-        if (this._cooperativeGestures) {
-            this._setupCooperativeGestures();
-        }
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
         this._hash = options.hash && (new Hash(hashName)).addTo(this);
@@ -1153,32 +1129,6 @@ export class Map extends Camera {
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.renderWorldCopies = renderWorldCopies;
         return this._update();
-    }
-
-    /**
-     * Gets the map's cooperativeGestures option
-     *
-     * @returns The gestureOptions
-     */
-    getCooperativeGestures(): boolean | GestureOptions {
-        return this._cooperativeGestures;
-    }
-
-    /**
-     * Sets or clears the map's cooperativeGestures option
-     *
-     * @param gestureOptions - If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
-     * @returns `this`
-     */
-    setCooperativeGestures(gestureOptions?: GestureOptions | boolean | null): Map {
-        this._cooperativeGestures = gestureOptions;
-        if (this._cooperativeGestures) {
-            this._setupCooperativeGestures();
-        } else {
-            this._destroyCooperativeGestures();
-        }
-
-        return this;
     }
 
     /**
@@ -2937,39 +2887,6 @@ export class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _cooperativeGesturesOnWheel = (event: WheelEvent) => {
-        this._onCooperativeGesture(event, event[this._metaKey], 1);
-    };
-
-    _setupCooperativeGestures() {
-        const container = this._container;
-        this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
-        if (navigator.platform.indexOf('Mac') === 0) {
-            desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
-        }
-        const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
-        this._cooperativeGesturesScreen.innerHTML = `
-            <div class="maplibregl-desktop-message">${desktopMessage}</div>
-            <div class="maplibregl-mobile-message">${mobileMessage}</div>
-        `;
-
-        // Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
-        this._cooperativeGesturesScreen.setAttribute('aria-hidden', 'true');
-
-        // Add event to canvas container since gesture container is pointer-events: none
-        this._canvasContainer.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-
-        // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
-        this._canvasContainer.classList.add('maplibregl-cooperative-gestures');
-    }
-
-    _destroyCooperativeGestures() {
-        DOM.remove(this._cooperativeGesturesScreen);
-        this._canvasContainer.removeEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-        this._canvasContainer.classList.remove('maplibregl-cooperative-gestures');
-    }
-
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = Math.floor(pixelRatio * width);
@@ -3043,17 +2960,6 @@ export class Map extends Camera {
         this._container.scrollLeft = 0;
         return false;
     };
-
-    _onCooperativeGesture(event: any, metaPress, touches) {
-        if (!metaPress && touches < 2) {
-            // Alert user how to scroll/pan
-            this._cooperativeGesturesScreen.classList.add('maplibregl-show');
-            setTimeout(() => {
-                this._cooperativeGesturesScreen.classList.remove('maplibregl-show');
-            }, 100);
-        }
-        return false;
-    }
 
     /**
      * Returns a Boolean indicating whether the map is fully loaded.
@@ -3282,9 +3188,6 @@ export class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
-        if (this._cooperativeGestures) {
-            this._destroyCooperativeGestures();
-        }
         this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();

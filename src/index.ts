@@ -15,7 +15,7 @@ import {LngLatBounds} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
-import {config} from './util/config';
+import {AddProtocolAction, config} from './util/config';
 import {Debug} from './util/debug';
 import {isSafari} from './util/util';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
@@ -23,8 +23,6 @@ import {WorkerPool} from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {PerformanceUtils} from './util/performance';
 import {AJAXError} from './util/ajax';
-import type {RequestParameters, ResponseCallback} from './util/ajax';
-import type {Cancelable} from './types/cancelable';
 import {GeoJSONSource} from './source/geojson_source';
 import {CanvasSource} from './source/canvas_source';
 import {ImageSource} from './source/image_source';
@@ -191,30 +189,22 @@ class MapLibreGL {
      * @example
      * This will fetch a file using the fetch API (this is obviously a non interesting example...)
      * ```ts
-     * maplibregl.addProtocol('custom', (params, callback) => {
-            fetch(`https://${params.url.split("://")[1]}`)
-                .then(t => {
-                    if (t.status == 200) {
-                        t.arrayBuffer().then(arr => {
-                            callback(null, arr, null, null);
-                        });
-                    } else {
-                        callback(new Error(`Tile fetch error: ${t.statusText}`));
-                    }
-                })
-                .catch(e => {
-                    callback(new Error(e));
-                });
-            return { cancel: () => { } };
+     * maplibregl.addProtocol('custom', async (params, abortController) => {
+            const t = await fetch(`https://${params.url.split("://")[1]}`);
+            if (t.status == 200) {
+                const buffer = await t.arrayBuffer();
+                return {data: buffer}
+            } else {
+                throw new Error(`Tile fetch error: ${t.statusText}`));
+            }
         });
      * // the following is an example of a way to return an error when trying to load a tile
-     * maplibregl.addProtocol('custom2', (params, callback) => {
-     *      callback(new Error('someErrorMessage'));
-     *      return { cancel: () => { } };
+     * maplibregl.addProtocol('custom2', async (params, abortController) => {
+     *      throw new Error('someErrorMessage'));
      * });
      * ```
      */
-    static addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
+    static addProtocol(customProtocol: string, loadFn: AddProtocolAction) {
         config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
     }
 

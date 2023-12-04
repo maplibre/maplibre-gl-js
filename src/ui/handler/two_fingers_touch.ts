@@ -287,7 +287,7 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
 
     _move(points: [Point, Point], center: Point, e: TouchEvent) {
         // If cooperative gestures is enabled, we need a 3-finger minimum for this gesture to register
-        if (this._map._cooperativeGestures && this._currentTouchCount < 3) {
+        if (this._map.cooperativeGestures.isEnabled() && this._currentTouchCount < 3) {
             return;
         }
 

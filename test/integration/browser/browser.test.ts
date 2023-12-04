@@ -174,6 +174,36 @@ describe('Browser tests', () => {
         expect(zoom).toBe(2);
     }, 20000);
 
+    test('Marker scaled: correct drag', async () => {
+        await page.evaluate(() => {
+            document.getElementById('map')!.style.transform = 'scale(0.5)';
+            const markerMapPosition = map.getCenter();
+            (window as any).marker = new maplibregl.Marker({draggable: true})
+                .setLngLat(markerMapPosition)
+                .addTo(map);
+            return map.getCenter();
+        });
+        const canvas = await page.$('.maplibregl-canvas');
+        const canvasBB = await canvas?.boundingBox()!;
+        const dragToLeft = async () => {
+            await page.mouse.move(canvasBB!.x + canvasBB!.width / 2, canvasBB!.y + canvasBB!.height / 2);
+            await page.mouse.down();
+            await page.mouse.move(canvasBB!.x, canvasBB!.y, {
+                steps: 100
+            });
+            await page.mouse.up();
+            await sleep(200);
+
+            return page.evaluate(() => {
+                const afterMove = (window as any).marker.getLngLat();
+                return map.project(afterMove);
+            });
+        };
+        const newPosition = await dragToLeft();
+        expect(newPosition.x).toBeCloseTo(0);
+        expect(newPosition.y).toBeCloseTo(0);
+    });
+
     test('Marker: correct position', async () => {
         const markerScreenPosition = await page.evaluate(() => {
             const markerMapPosition = [11.40, 47.30] as [number, number];

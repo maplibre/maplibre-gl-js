@@ -1,4 +1,4 @@
-import simulate, {window} from '../../test/unit/lib/simulate_interaction';
+import simulate from '../../test/unit/lib/simulate_interaction';
 import {StyleLayer} from '../style/style_layer';
 import {createMap, beforeMapTest} from '../util/test/util';
 import {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -670,7 +670,6 @@ describe('map events', () => {
         map.on('click', click);
         const canvas = map.getCanvas();
 
-        const MouseEvent = window(canvas).MouseEvent;
         const event = new MouseEvent('click', {bubbles: true, clientX: 100, clientY: 100});
         canvas.dispatchEvent(event);
         expect(click).toHaveBeenCalled();
@@ -686,7 +685,6 @@ describe('map events', () => {
         map.on('click', () => { click = map.isMoving(); });
 
         const canvas = map.getCanvas();
-        const MouseEvent = window(canvas).MouseEvent;
 
         canvas.dispatchEvent(new MouseEvent('mousedown', {bubbles: true, clientX: 100, clientY: 100}));
         expect(mousedown).toBe(false);
