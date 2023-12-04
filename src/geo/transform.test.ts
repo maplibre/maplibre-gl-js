@@ -419,8 +419,8 @@ describe('transform', () => {
         expect(transform.zoom).toBeCloseTo(14.127997275621933, 10);
         expect(transform.elevation).toBe(400);
 
-        expect(transform._center.lng).toBeCloseTo(10.000000000000, 10);
-        expect(transform._center.lat).toBe(50.00000000000017);
+        expect(transform._center.lng).toBeCloseTo(10, 10);
+        expect(transform._center.lat).toBeCloseTo(50, 10);
 
         // expect new zoom because of elevation change to point below sea level
         terrain.getElevationForLngLatZoom = () => -200;
