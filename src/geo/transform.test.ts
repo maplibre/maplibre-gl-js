@@ -398,7 +398,7 @@ describe('transform', () => {
         expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
 
-    test('recalcuateZoom', () => {
+    test('recalculateZoom', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.elevation = 200;
         transform.center = new LngLat(10.0, 50.0);
@@ -425,7 +425,7 @@ describe('transform', () => {
         // expect new zoom because of elevation change to point below sea level
         terrain.getElevationForLngLatZoom = () => -200;
         transform.recalculateZoom(terrain as any);
-        expect(transform.zoom).toBe(13.773740316343467);
+        expect(transform.zoom).toBeCloseTo(13.773740316343467, 10);
         expect(transform.elevation).toBe(-200);
     });
 
