@@ -836,4 +836,20 @@ describe('marker', () => {
         expect(map._oneTimeListeners.render).toHaveLength(0);
         map.remove();
     });
+
+    test('Marker changes opacity when terrain is enabled', () => {
+        jest.spyOn(global, 'setTimeout');
+        jest.spyOn(global, 'clearTimeout');
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0
+        } as any as Terrain;
+
+        expect(marker.getElement().style.opacity).toMatch('1.0');
+
+        map.remove();
+    });
 });
