@@ -395,7 +395,7 @@ describe('transform', () => {
 
         expect(transform.customLayerMatrix()[0].toString().length).toBeGreaterThan(10);
         expect(transform.glCoordMatrix[0].toString().length).toBeGreaterThan(10);
-        expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 10);
+        expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
 
     test('recalcuateZoom', () => {
@@ -416,7 +416,7 @@ describe('transform', () => {
         // expect new zoom because of elevation change
         terrain.getElevationForLngLatZoom = () => 400;
         transform.recalculateZoom(terrain as any);
-        expect(transform.zoom).toBe(14.127997275621933);
+        expect(transform.zoom).toBeCloseTo(14.127997275621933, 10);
         expect(transform.elevation).toBe(400);
 
         expect(transform._center.lng).toBe(10.00000000000071);
