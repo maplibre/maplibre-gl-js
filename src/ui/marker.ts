@@ -530,7 +530,6 @@ export class Marker extends Evented {
         const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
 
         const forgiveness = .01;
-        console.log(markerDistance - terrainDistance);
         if (markerDistance - terrainDistance < forgiveness) {
             this._element.style.opacity = '1';
             return;
