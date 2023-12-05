@@ -351,7 +351,7 @@ export class Terrain {
     /**
      * Reads the depth value from the depth-framebuffer at a given screen pixel
      * @param p - Screen-Coordinate
-     * @returns depth value for a given screen pixel
+     * @returns Depth value in GL space (between 0 and 1)
      */
 
     depthAtPoint(p: Point): number {

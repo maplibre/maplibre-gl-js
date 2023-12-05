@@ -840,7 +840,7 @@ export class Transform {
         // without major clipping of buildings too close to the camera.
         const nearZ = this.height / 15;
 
-        // matrix for conversion from location to GL coordinates (-1 .. 1)
+        // matrix for conversion from location to clip space(-1 .. 1)
         m = new Float64Array(16) as any;
         mat4.perspective(m, this._fov, this.width / this.height, nearZ, farZ);
 
@@ -855,7 +855,7 @@ export class Transform {
         mat4.translate(m, m, [-x, -y, 0]);
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
-        // ([0, 0] nw, [1, 1] se) to GL coordinates.
+        // ([0, 0] nw, [1, 1] se) to clip space.
         this.mercatorMatrix = mat4.scale([] as any, m, [this.worldSize, this.worldSize, this.worldSize]);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
@@ -864,7 +864,7 @@ export class Transform {
         // matrix for conversion from world space to screen coordinates in 2D
         this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
-        // matrix for conversion from world space to GL coordinates (-1 .. 1)
+        // matrix for conversion from world space to clip space (-1 .. 1)
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([] as any, m);
@@ -958,12 +958,12 @@ export class Transform {
         }
     }
     /**
-     * Return the distance to the camera in GL coordinates from a LngLat.
+     * Return the distance to the camera in clip space from a LngLat.
      * This can be compared to the value from the depth buffer (terrain.depthAtPoint)
      * to determine whether a point is occluded.
      * @param lngLat - the point
      * @param elevation - the point's elevation
-     * @returns value between 0 and 1
+     * @returns depth value in GL space (between 0 and 1)
      */
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
         const coord = this.locationCoordinate(lngLat);
