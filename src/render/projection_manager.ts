@@ -143,8 +143,8 @@ export class ProjectionManager {
             data['u_projection_tile_mercator_coords'] = [
                 tileID.canonical.x / (1 << tileID.canonical.z),
                 tileID.canonical.y / (1 << tileID.canonical.z),
-                (tileID.canonical.x + 1) / (1 << tileID.canonical.z),
-                (tileID.canonical.y + 1) / (1 << tileID.canonical.z)
+                1.0 / (1 << tileID.canonical.z) / EXTENT,
+                1.0 / (1 << tileID.canonical.z) / EXTENT
             ];
         }
 

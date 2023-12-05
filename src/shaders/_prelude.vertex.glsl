@@ -159,7 +159,7 @@ uniform vec4 u_projection_tile_mercator_coords;
 uniform vec4 u_projection_clipping_plane;
 
 float projectThickness(vec2 posInTile) {
-    float mercator_pos_y = mix(u_projection_tile_mercator_coords.y, u_projection_tile_mercator_coords.w, posInTile.y / 8192.0);
+    float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * posInTile.y;
     float spherical_y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos_y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
     return 1.0 / cos(spherical_y);
 }
@@ -171,7 +171,7 @@ vec3 projectToSphere(vec2 posInTile) {
     // JP: TODO: there could very well be a more efficient way to compute this if we take a deeper look at the geometric idea behind mercator
     
     // Compute position in range 0..1 of the base tile of web mercator
-    vec2 mercator_pos = mix(u_projection_tile_mercator_coords.xy, u_projection_tile_mercator_coords.zw, posInTile / 8192.0);
+    vec2 mercator_pos = u_projection_tile_mercator_coords.xy + u_projection_tile_mercator_coords.zw * posInTile;
 
     // Now compute angular coordinates on the surface of a perfect sphere
 
