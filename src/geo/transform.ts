@@ -835,10 +835,10 @@ export class Transform {
         // - the more depth precision is available for features (good)
         // - clipping starts appearing sooner when the camera is close to 3d features (bad)
         //
-        // With a smaller value, we see precision issues detecting when markers are behind terrain.
-        // This value was experimentally chosen and provides enough precision for markers
-        // without major clipping of buildings too close to the camera.
-        const nearZ = this.height / 15;
+        // Other values work for mapbox-gl-js but deckgl was encountering precision issues
+        // when rendering custom layers. This value was experimentally chosen and
+        // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
+        const nearZ = this.height / 50;
 
         // matrix for conversion from location to clip space(-1 .. 1)
         m = new Float64Array(16) as any;
