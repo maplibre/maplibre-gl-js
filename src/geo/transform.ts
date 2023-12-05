@@ -963,7 +963,7 @@ export class Transform {
      * to determine whether a point is occluded.
      * @param lngLat - the point
      * @param elevation - the point's elevation
-     * @returns depth value in GL space (between 0 and 1)
+     * @returns depth value in clip space (between 0 and 1)
      */
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
         const coord = this.locationCoordinate(lngLat);
