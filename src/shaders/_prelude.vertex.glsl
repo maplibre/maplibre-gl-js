@@ -211,6 +211,10 @@ vec4 projectTile(vec2 posInTile) {
     return result;
 }
 
+vec4 projectTileWithElevation(vec3 posInTileWithElevation) {
+    return projectTile(posInTileWithElevation.xy);
+}
+
 // vec4 getDebugColor(vec2 posInTile) {
 //     vec2 mercator_pos = mix(u_projection_tile_mercator_coords.xy, u_projection_tile_mercator_coords.zw, posInTile / 8192.0);
 //     vec2 spherical;
@@ -239,5 +243,6 @@ vec4 projectTile(vec2 posInTile) {
 #else
 #define projectThickness(p) (1.0)
 #define projectTile(p) (u_projection_matrix * vec4((p).x, (p).y, 0.0, 1.0))
+#define projectTileWithElevation(p) (u_projection_matrix * vec4((p).x, (p).y, (p).z, 1.0))
 #define getDebugColor(p) (vec4(1.0, 0.0, 1.0, 1.0))
 #endif
