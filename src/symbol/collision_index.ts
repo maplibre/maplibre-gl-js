@@ -361,24 +361,16 @@ export class CollisionIndex {
     }
 
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation?: (x: number, y: number) => number) {
-        let p;
-        if (getElevation) { // slow because of handle z-index
-            p = [x, y, getElevation(x, y), 1] as vec4;
-            vec4.transformMat4(p, p, posMatrix);
-        } else { // fast because of ignore z-index
-            p = [x, y, 0, 1] as vec4;
-            projection.xyTransformMat4(p, p, posMatrix);
-        }
-        const a = new Point(
-            (((p[0] / p[3] + 1) / 2) * this.transform.width) + viewportPadding,
-            (((-p[1] / p[3] + 1) / 2) * this.transform.height) + viewportPadding
-        );
+        const projected = projection.project(new Point(x, y), posMatrix, getElevation);
         return {
-            point: a,
+            point: new Point(
+                (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
+                (((-projected.point.y + 1) / 2) * this.transform.height) + viewportPadding
+            ),
             // See perspective ratio comment in symbol_sdf.vertex
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
-            perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / p[3])
+            perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera)
         };
     }
 
