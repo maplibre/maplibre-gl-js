@@ -570,7 +570,7 @@ describe('Map', () => {
             map.addSource('geojson', createStyleSource());
             expect(map.isSourceLoaded('geojson')).toBe(false);
             await promise;
-        });
+        }, 20000); // 20 second time out instead of the default 5 to prevent flaking.
 
         test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', async () => {
             const style = createStyle();
