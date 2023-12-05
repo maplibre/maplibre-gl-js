@@ -888,19 +888,22 @@ export class Transform {
         // matrix for conversion from location to screen coordinates in 2D
         this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
-        // JP: TODO: dependency on tile size and viewport pixel size here is bad - remove it
+        // We want zoom levels to be consistent between globe and flat views.
+        // This means that the pixel size of features at the map center point
+        // should be the same for both globe and flat view.
+        const globeRadiusPixels = this.worldSize / (2.0 * Math.PI) / Math.cos(this.center.lat * Math.PI / 180);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = new Float64Array(16) as any;
-        mat4.perspective(globeMatrix, this._fov, this.width / this.height, 0.5, this.cameraToCenterDistance + this.worldSize); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        mat4.perspective(globeMatrix, this._fov, this.width / this.height, 0.5, this.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -this._pitch);
         mat4.rotateZ(globeMatrix, globeMatrix, -this.angle);
-        mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -0.5 * this.worldSize]);
+        mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
         mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
-        mat4.scale(globeMatrix, globeMatrix, [0.5 * this.worldSize, 0.5 * this.worldSize, 0.5 * this.worldSize]); // Scale the unit sphere to a sphere with diameter of 1
+        mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         this.globeProjMatrix = globeMatrix;
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.

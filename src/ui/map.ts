@@ -2035,12 +2035,15 @@ export class Map extends Camera {
     }
 
     setGlobe(enabled: boolean = true): void {
-        if (enabled) {
+        if (enabled && !this.globe) {
             this.globe = new Globe();
             this._updateRenderToTexture();
-        } else {
+            this._update(true);
+        }
+        if (!enabled && this.globe) {
             this.globe = null;
             this._updateRenderToTexture();
+            this._update(true);
         }
     }
 
@@ -2061,10 +2064,12 @@ export class Map extends Camera {
             // Enable rtt
             this.painter.renderToTexture = new RenderToTexture(this.painter);
             this._renderToTextureCallback = e => {
-                if (e.dataType === 'style') {
-                    this.painter.renderToTexture.freeRtt();
-                } else if (e.dataType === 'source' && e.tile) {
-                    this.painter.renderToTexture.freeRtt(e.tile.tileID);
+                if (this.painter.renderToTexture) {
+                    if (e.dataType === 'style') {
+                        this.painter.renderToTexture.freeRtt();
+                    } else if (e.dataType === 'source' && e.tile) {
+                        this.painter.renderToTexture.freeRtt(e.tile.tileID);
+                    }
                 }
             };
             this.style.on('data', this._renderToTextureCallback);
@@ -3254,9 +3259,9 @@ export class Map extends Camera {
             this.globe.update(this.transform, rttCoveringTiles, this.painter.context, preferGlobe);
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
-
         this.projectionManager.updateProjection(this.painter.transform);
+
+        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
         let rttOptions;
 

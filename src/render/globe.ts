@@ -31,6 +31,8 @@ export class Globe {
         this._ensureMeshes(context);
 
         const degreesToRadians = Math.PI / 180.0;
+
+        // OBSOLETE: this computes the projection matrix for RTT globe
         const m = new Float64Array(16) as any;
         mat4.identity(m);
         // undo translation from transform's projection matrix

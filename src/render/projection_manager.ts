@@ -155,10 +155,9 @@ export class ProjectionManager {
         return data;
     }
 
-    public getPixelScale(): number {
+    public getPixelScale(transform: Transform): number {
         if (this.map.globe) {
-            // JP: TODO: this is a magic value based on guesswork, find out how to calculate it!
-            return 2.5;
+            return 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
         }
         return 1.0;
     }
