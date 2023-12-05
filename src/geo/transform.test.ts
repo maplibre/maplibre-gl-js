@@ -461,4 +461,15 @@ describe('transform', () => {
         expect(top).toBeCloseTo(79.1823898251593, 10);
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
     });
+
+    test('lngLatToCameraDepth', () => {
+        const transform = new Transform(0, 22, 0, 85, true);
+        transform.resize(500, 500);
+        transform.center = new LngLat(10.0, 50.0);
+
+        expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9997324396231673);
+        transform.pitch = 60;
+        expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9865782165762236);
+
+    });
 });

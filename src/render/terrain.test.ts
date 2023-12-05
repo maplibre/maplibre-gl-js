@@ -14,7 +14,7 @@ import {mat4} from 'gl-matrix';
 import {LngLat} from '../geo/lng_lat';
 
 describe('Terrain', () => {
-    test('pointCoordiate should not return null', () => {
+    test('pointCoordinate should not return null', () => {
         expect.assertions(1);
         const painter = {
             context: new Context(gl(1, 1) as any),
@@ -81,7 +81,7 @@ describe('Terrain', () => {
     };
 
     test(
-        `pointCoordiate should return negative mercator x
+        `pointCoordinate should return negative mercator x
         if the point is on the LEFT outside the central globe`,
         () => {
             expect.assertions(1);
@@ -93,7 +93,7 @@ describe('Terrain', () => {
         });
 
     test(
-        `pointCoordiate should return mercator x greater than 1
+        `pointCoordinate should return mercator x greater than 1
         if the point is on the RIGHT outside the central globe`,
         () => {
             expect.assertions(1);
