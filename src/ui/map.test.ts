@@ -1,9 +1,9 @@
 import {Map, MapOptions} from './map';
-import {createMap, setErrorWebGlContext, beforeMapTest, sleep} from '../util/test/util';
+import {createMap, beforeMapTest, sleep} from '../util/test/util';
 import {LngLat} from '../geo/lng_lat';
 import {Tile} from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
-import {Event, ErrorEvent} from '../util/evented';
+import {Event as EventedEvent, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
 import {GeoJSONSourceSpecification, LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -248,7 +248,7 @@ describe('Map', () => {
         });
 
         test('fires *data and *dataloading events', () => {
-            createMap({}, (error, map) => {
+            createMap({}, (error, map: Map) => {
                 expect(error).toBeFalsy();
 
                 const events = [];
@@ -261,12 +261,12 @@ describe('Map', () => {
                 map.on('tiledata', recordEvent);
                 map.on('tiledataloading', recordEvent);
 
-                map.style.fire(new Event('data', {dataType: 'style'}));
-                map.style.fire(new Event('dataloading', {dataType: 'style'}));
-                map.style.fire(new Event('data', {dataType: 'source'}));
-                map.style.fire(new Event('dataloading', {dataType: 'source'}));
-                map.style.fire(new Event('data', {dataType: 'tile'}));
-                map.style.fire(new Event('dataloading', {dataType: 'tile'}));
+                map.style.fire(new EventedEvent('data', {dataType: 'style'}));
+                map.style.fire(new EventedEvent('dataloading', {dataType: 'style'}));
+                map.style.fire(new EventedEvent('data', {dataType: 'source'}));
+                map.style.fire(new EventedEvent('dataloading', {dataType: 'source'}));
+                map.style.fire(new EventedEvent('data', {dataType: 'tile'}));
+                map.style.fire(new EventedEvent('dataloading', {dataType: 'tile'}));
 
                 expect(events).toEqual([
                     'styledata',
@@ -2611,7 +2611,7 @@ describe('Map', () => {
     test('fires sourcedataabort event on dataabort event', async () => {
         const map = createMap();
         const sourcePromise = map.once('sourcedataabort');
-        map.fire(new Event('dataabort'));
+        map.fire(new EventedEvent('dataabort'));
         await sourcePromise;
     });
 
@@ -2791,7 +2791,15 @@ describe('Map', () => {
 
     describe('webgl errors', () => {
         test('WebGL error while creating map', () => {
-            setErrorWebGlContext();
+            const original = HTMLCanvasElement.prototype.getContext;
+            HTMLCanvasElement.prototype.getContext = function (type: string) {
+                if (type === 'webgl2' || type === 'webgl') {
+                    const errorEvent = new Event('webglcontextcreationerror');
+                    (errorEvent as any).statusMessage = 'mocked webglcontextcreationerror message';
+                    (this as HTMLCanvasElement).dispatchEvent(errorEvent);
+                    return null;
+                }
+            }
             try {
                 createMap();
             } catch (e) {
@@ -2802,8 +2810,9 @@ describe('Map', () => {
 
                 // this is from test mock
                 expect(errorMessageObject.statusMessage).toBe('mocked webglcontextcreationerror message');
+            } finally {
+                HTMLCanvasElement.prototype.getContext = original;
             }
-
         });
         test('Hit WebGL max drawing buffer limit', () => {
             // Simulate a device with MAX_TEXTURE_SIZE=16834 and max rendering area of ~32Mpx
@@ -2826,6 +2835,8 @@ describe('Map', () => {
             const container = window.document.createElement('div');
             Object.defineProperty(container, 'clientWidth', {value: 2048});
             Object.defineProperty(container, 'clientHeight', {value: 2048});
+            jest.spyOn(WebGLRenderingContext.prototype, 'drawingBufferWidth', 'get').mockReturnValue(8192);
+            jest.spyOn(WebGLRenderingContext.prototype, 'drawingBufferHeight', 'get').mockReturnValue(8192);
             const map = createMap({container, maxCanvasSize: [8192, 8192], pixelRatio: 5});
             map.resize();
             expect(map.getCanvas().width).toBe(8192);
@@ -2836,6 +2847,8 @@ describe('Map', () => {
             const container = window.document.createElement('div');
             Object.defineProperty(container, 'clientWidth', {value: 1024});
             Object.defineProperty(container, 'clientHeight', {value: 2048});
+            jest.spyOn(WebGLRenderingContext.prototype, 'drawingBufferWidth', 'get').mockReturnValue(8192);
+            jest.spyOn(WebGLRenderingContext.prototype, 'drawingBufferHeight', 'get').mockReturnValue(4096);
             const map = createMap({container, maxCanvasSize: [8192, 4096], pixelRatio: 3});
             map.resize();
             expect(map.getCanvas().width).toBe(2048);
@@ -2846,6 +2859,8 @@ describe('Map', () => {
             const container = window.document.createElement('div');
             Object.defineProperty(container, 'clientWidth', {value: 12834});
             Object.defineProperty(container, 'clientHeight', {value: 9000});
+            jest.spyOn(WebGLRenderingContext.prototype, 'drawingBufferWidth', 'get').mockReturnValue(4096);
+            jest.spyOn(WebGLRenderingContext.prototype, 'drawingBufferHeight', 'get').mockReturnValue(8192);
             const map = createMap({container, maxCanvasSize: [4096, 8192], pixelRatio: 1});
             map.resize();
             expect(map.getCanvas().width).toBe(4096);
@@ -2856,6 +2871,8 @@ describe('Map', () => {
             const container = window.document.createElement('div');
             Object.defineProperty(container, 'clientWidth', {value: 2048});
             Object.defineProperty(container, 'clientHeight', {value: 2048});
+            jest.spyOn(WebGLRenderingContext.prototype, 'drawingBufferWidth', 'get').mockReturnValue(3072);
+            jest.spyOn(WebGLRenderingContext.prototype, 'drawingBufferHeight', 'get').mockReturnValue(3072);
             const map = createMap({container, maxCanvasSize: [3072, 3072], pixelRatio: 1.25});
             map.resize();
             expect(map.getCanvas().width).toBe(2560);
