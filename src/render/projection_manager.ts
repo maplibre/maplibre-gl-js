@@ -92,7 +92,7 @@ export class ProjectionManager {
         // - "T" is any point where a tangent line from "cam" touches the globe surface
         // - elevation is assumed to be zero - globe rendering must be separate from terrain rendering anyway
 
-        const globeRadiusInTransformUnits = transform.worldSize * 0.5;
+        const globeRadiusInTransformUnits = transform.globeRadius;
         const pitch = transform.pitch * Math.PI / 180.0;
         // scale things so that the globe radius is 1
         const distanceCameraToB = transform.cameraToCenterDistance / globeRadiusInTransformUnits;
@@ -124,7 +124,8 @@ export class ProjectionManager {
         vec3.rotateZ(planeVector, planeVector, [0, 0, 0], transform.angle);
         vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * transform.center.lat * Math.PI / 180.0);
         vec3.rotateY(planeVector, planeVector, [0, 0, 0], transform.center.lng * Math.PI / 180.0);
-        // Scale the plane vector down
+        // Scale the plane vector up
+        // we don't want the actually visible parts of the sphere to end up beyond distance 1 from the plane - otherwise they would be clipped by the near plane.
         const scale = 0.25;
         vec3.scale(planeVector, planeVector, scale);
         this._cachedClippingPlane = [...planeVector, -tangentPlaneDistanceToC * scale];
@@ -154,6 +155,10 @@ export class ProjectionManager {
 
         return data;
     }
+
+    // public projectSymbolAnchor() {
+    //     // TODO
+    // }
 
     public getPixelScale(transform: Transform): number {
         if (this.map.globe) {

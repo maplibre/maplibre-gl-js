@@ -74,6 +74,7 @@ export class Transform {
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
     _minEleveationForCurrentTile: number;
+    _globeRadius: number;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
@@ -259,6 +260,8 @@ export class Transform {
     get centerPoint(): Point {
         return this._edgeInsets.getCenter(this.width, this.height);
     }
+
+    get globeRadius(): number { return this._globeRadius; }
 
     /**
      * Returns if the padding params match
@@ -892,6 +895,7 @@ export class Transform {
         // This means that the pixel size of features at the map center point
         // should be the same for both globe and flat view.
         const globeRadiusPixels = this.worldSize / (2.0 * Math.PI) / Math.cos(this.center.lat * Math.PI / 180);
+        this._globeRadius = globeRadiusPixels;
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = new Float64Array(16) as any;

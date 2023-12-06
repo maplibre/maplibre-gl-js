@@ -155,8 +155,8 @@ uniform mat4 u_projection_matrix;
 
 #define GLOBE_PI 3.1415926535897932384626433832795
 
-uniform vec4 u_projection_tile_mercator_coords;
-uniform vec4 u_projection_clipping_plane;
+uniform highp vec4 u_projection_tile_mercator_coords;
+uniform highp vec4 u_projection_clipping_plane;
 
 float projectThickness(vec2 posInTile) {
     float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * posInTile.y;
