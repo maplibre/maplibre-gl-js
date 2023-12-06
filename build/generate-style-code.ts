@@ -196,7 +196,6 @@ import {StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
             ${overridables.reduce((imports, prop) => { imports.push(runtimeType(prop)); return imports; }, []).join(',\n    ')}
         } from '@maplibre/maplibre-gl-style-spec';
         `;
-        console.log(overridesArray);
         output.push(overridesArray);
     }
 

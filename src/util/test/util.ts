@@ -1,7 +1,6 @@
 import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
-import {setWebGlContext} from './mock_webgl';
 import {IActor} from '../actor';
 import type {Evented} from '../evented';
 
@@ -41,24 +40,6 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
     return test.equal(expectedRounded, actualRounded, message, extra);
 }
 
-// mock failed webgl context by dispatching "webglcontextcreationerror" event
-// and returning null
-export function setErrorWebGlContext() {
-    const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
-
-    function imitateErrorWebGlGetContext(type, attributes) {
-        if (type === 'webgl2' || type === 'webgl') {
-            const errorEvent = new Event('webglcontextcreationerror');
-            (errorEvent as any).statusMessage = 'mocked webglcontextcreationerror message';
-            this.dispatchEvent(errorEvent);
-            return null;
-        }
-        // Fallback to existing HTMLCanvasElement getContext behaviour
-        return originalGetContext.call(this, type, attributes);
-    }
-    global.HTMLCanvasElement.prototype.getContext = imitateErrorWebGlGetContext;
-}
-
 export function setPerformance() {
     window.performance.mark = jest.fn();
     window.performance.clearMeasures = jest.fn();
@@ -92,9 +73,21 @@ function setResizeObserver() {
 
 export function beforeMapTest() {
     setPerformance();
-    setWebGlContext();
     setMatchMedia();
     setResizeObserver();
+    // remove the following when the following is merged and released: https://github.com/Adamfsk/jest-webgl-canvas-mock/pull/5
+    (WebGLRenderingContext.prototype as any).bindVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').bindVertexArrayOES;
+    (WebGLRenderingContext.prototype as any).createVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').createVertexArrayOES;
+    if (!WebGLRenderingContext.prototype.drawingBufferHeight && !WebGLRenderingContext.prototype.drawingBufferWidth) {
+        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferWidth', {
+            get: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferHeight', {
+            get: jest.fn(),
+            configurable: true,
+        });
+    }
 }
 
 export function getWrapDispatcher() {

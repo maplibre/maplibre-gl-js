@@ -1,10 +1,15 @@
 import {VertexBuffer} from './vertex_buffer';
 import {StructArrayLayout3i6} from '../data/array_types.g';
 import {Context} from '../gl/context';
-import gl from 'gl';
 import {StructArrayMember} from '../util/struct_array';
 
 describe('VertexBuffer', () => {
+    let gl: WebGLRenderingContext;
+
+    beforeEach(() => {
+        gl = document.createElement('canvas').getContext('webgl');
+    });
+
     class TestArray extends StructArrayLayout3i6 {}
     const attributes = [
         {name: 'map', components: 1, type: 'Int16', offset: 0},
@@ -12,7 +17,7 @@ describe('VertexBuffer', () => {
     ] as StructArrayMember[];
 
     test('constructs itself', () => {
-        const context = new Context(gl(10, 10) as any);
+        const context = new Context(gl);
         const array = new TestArray();
         array.emplaceBack(1, 1, 1);
         array.emplaceBack(1, 1, 1);
@@ -29,7 +34,7 @@ describe('VertexBuffer', () => {
     });
 
     test('enableAttributes', () => {
-        const context = new Context(gl(10, 10) as any);
+        const context = new Context(gl);
         const array = new TestArray();
         const buffer = new VertexBuffer(context, array, attributes);
         const spy = jest.spyOn(context.gl, 'enableVertexAttribArray').mockImplementation(() => {});
@@ -38,7 +43,7 @@ describe('VertexBuffer', () => {
     });
 
     test('setVertexAttribPointers', () => {
-        const context = new Context(gl(10, 10) as any);
+        const context = new Context(gl);
         const array = new TestArray();
         const buffer = new VertexBuffer(context, array, attributes);
         const spy = jest.spyOn(context.gl, 'vertexAttribPointer').mockImplementation(() => {});
