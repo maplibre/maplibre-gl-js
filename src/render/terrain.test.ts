@@ -1,9 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {Terrain} from './terrain';
-import gl from 'gl';
 import {Context} from '../gl/context';
 import {RGBAImage} from '../util/image';
-import {Texture} from './texture';
 import type {SourceCache} from '../source/source_cache';
 import {OverscaledTileID} from '../source/tile_id';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
@@ -14,10 +12,27 @@ import {mat4} from 'gl-matrix';
 import {LngLat} from '../geo/lng_lat';
 
 describe('Terrain', () => {
+    let gl: WebGLRenderingContext;
+
+    beforeEach(() => {
+        gl = document.createElement('canvas').getContext('webgl');
+        jest.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+        jest.spyOn(gl, 'readPixels').mockImplementation((_1, _2, _3, _4, _5, _6, rgba) => {
+            rgba[0] = 0;
+            rgba[1] = 0;
+            rgba[2] = 255;
+            rgba[3] = 255;
+        });
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     test('pointCoordiate should not return null', () => {
         expect.assertions(1);
         const painter = {
-            context: new Context(gl(1, 1) as any),
+            context: new Context(gl),
             width: 1,
             height: 1,
             transform: {center: {lng: 0}}
@@ -39,12 +54,6 @@ describe('Terrain', () => {
         };
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
         terrain.sourceCache.getTileByID = getTileByID;
-        const context = painter.context as Context;
-        const pixels = new Uint8Array([0, 0, 255, 255]);
-        const image = new RGBAImage({width: 1, height: 1}, pixels);
-        const imageTexture = new Texture(context, image, context.gl.RGBA);
-        terrain.getFramebuffer('coords'); // allow init of frame buffers
-        terrain._fboCoordsTexture.texture = imageTexture.texture;
         terrain.coordsIndex.push('abcd');
 
         const coordinate = terrain.pointCoordinate(new Point(0, 0));
@@ -55,7 +64,7 @@ describe('Terrain', () => {
     const setupMercatorOverflow = () => {
         const WORLD_WIDTH = 4;
         const painter = {
-            context: new Context(gl(WORLD_WIDTH, 1) as any),
+            context: new Context(gl),
             width: WORLD_WIDTH,
             height: 1,
         } as any as Painter;
@@ -72,11 +81,12 @@ describe('Terrain', () => {
         };
         terrain.getElevation = () => 0;
         terrain.coordsIndex = Object.keys(tileIdsToWraps);
-        const pixels = new Uint8Array([0, 0, 0, 255, 0, 0, 0, 254, 0, 0, 0, 253, 0, 0, 0, 252]);
-        const image = new RGBAImage({width: WORLD_WIDTH, height: 1}, pixels);
-        const imageTexture = new Texture(painter.context, image, painter.context.gl.RGBA);
-        terrain.getFramebuffer('coords'); // allow init of frame buffers
-        terrain._fboCoordsTexture.texture = imageTexture.texture;
+        jest.spyOn(gl, 'readPixels').mockImplementation((x, _2, _3, _4, _5, _6, rgba) => {
+            rgba[0] = 0;
+            rgba[1] = 0;
+            rgba[2] = 0;
+            rgba[3] = 255 - x;
+        });
         return terrain;
     };
 
@@ -114,7 +124,7 @@ describe('Terrain', () => {
             getUnpackVector: () => [6553.6, 25.6, 0.1, 10000.0],
         } as any as DEMData;
         const painter = {
-            context: new Context(gl(1, 1) as any),
+            context: new Context(gl),
             width: 1,
             height: 1,
             getTileTexture: () => null
@@ -142,7 +152,7 @@ describe('Terrain', () => {
     test('Return null elevation values when no tile', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const painter = {
-            context: new Context(gl(1, 1) as any),
+            context: new Context(gl),
             width: 1,
             height: 1,
             getTileTexture: () => null
@@ -169,7 +179,7 @@ describe('Terrain', () => {
         const tile = new Tile(tileID, 256);
         tile.dem = null as any as DEMData;
         const painter = {
-            context: new Context(gl(1, 1) as any),
+            context: new Context(gl),
             width: 1,
             height: 1,
             getTileTexture: () => null
