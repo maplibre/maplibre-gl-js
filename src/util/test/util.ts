@@ -1,7 +1,6 @@
 import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
-import {setWebGlContext} from './mock_webgl';
 import {IActor} from '../actor';
 import type {Evented} from '../evented';
 
@@ -92,9 +91,10 @@ function setResizeObserver() {
 
 export function beforeMapTest() {
     setPerformance();
-    setWebGlContext();
     setMatchMedia();
     setResizeObserver();
+    //(WebGLRenderingContext.prototype as any).bindVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').bindVertexArrayOES;
+    //(WebGLRenderingContext.prototype as any).createVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').createVertexArrayOES;
 }
 
 export function getWrapDispatcher() {

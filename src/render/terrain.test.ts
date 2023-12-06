@@ -1,6 +1,5 @@
 import Point from '@mapbox/point-geometry';
 import {Terrain} from './terrain';
-import gl from 'gl';
 import {Context} from '../gl/context';
 import {RGBAImage} from '../util/image';
 import {Texture} from './texture';
@@ -14,10 +13,17 @@ import {mat4} from 'gl-matrix';
 import {LngLat} from '../geo/lng_lat';
 
 describe('Terrain', () => {
+    let gl: WebGLRenderingContext;
+
+    beforeEach(() => {
+        const gl = document.createElement('canvas').getContext('webgl');
+        jest.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+    });
+
     test('pointCoordiate should not return null', () => {
         expect.assertions(1);
         const painter = {
-            context: new Context(gl(1, 1) as any),
+            context: new Context(gl),
             width: 1,
             height: 1,
             transform: {center: {lng: 0}}
@@ -39,7 +45,7 @@ describe('Terrain', () => {
         };
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
         terrain.sourceCache.getTileByID = getTileByID;
-        const context = painter.context as Context;
+        const context = painter.context;
         const pixels = new Uint8Array([0, 0, 255, 255]);
         const image = new RGBAImage({width: 1, height: 1}, pixels);
         const imageTexture = new Texture(context, image, context.gl.RGBA);
@@ -55,7 +61,7 @@ describe('Terrain', () => {
     const setupMercatorOverflow = () => {
         const WORLD_WIDTH = 4;
         const painter = {
-            context: new Context(gl(WORLD_WIDTH, 1) as any),
+            context: new Context(gl),
             width: WORLD_WIDTH,
             height: 1,
         } as any as Painter;
@@ -114,7 +120,7 @@ describe('Terrain', () => {
             getUnpackVector: () => [6553.6, 25.6, 0.1, 10000.0],
         } as any as DEMData;
         const painter = {
-            context: new Context(gl(1, 1) as any),
+            context: new Context(gl),
             width: 1,
             height: 1,
             getTileTexture: () => null
@@ -142,7 +148,7 @@ describe('Terrain', () => {
     test('Return null elevation values when no tile', () => {
         const tileID = new OverscaledTileID(5, 0, 5, 17, 11);
         const painter = {
-            context: new Context(gl(1, 1) as any),
+            context: new Context(gl),
             width: 1,
             height: 1,
             getTileTexture: () => null
@@ -169,7 +175,7 @@ describe('Terrain', () => {
         const tile = new Tile(tileID, 256);
         tile.dem = null as any as DEMData;
         const painter = {
-            context: new Context(gl(1, 1) as any),
+            context: new Context(gl),
             width: 1,
             height: 1,
             getTileTexture: () => null

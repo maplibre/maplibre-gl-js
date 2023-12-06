@@ -2,12 +2,11 @@ import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask,
 import {Context} from './context';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {deepEqual} from '../util/util';
-import gl from 'gl';
-import {setupMockWebGLContext} from '../util/test/mock_webgl';
 
-const context = new Context(gl(10, 10) as any);
-
-setupMockWebGLContext(context.gl);
+const gl = document.createElement('canvas').getContext('webgl');
+//(gl as any).createVertexArray = gl.getExtension('OES_vertex_array_object')?.createVertexArrayOES;
+//(gl as any).bindVertexArray = gl.getExtension('OES_vertex_array_object')?.bindVertexArrayOES;
+const context = new Context(gl);
 
 const valueTest = (Constructor: new (...args:any[]) => any, options) => {
     test('#constructor', () => {
