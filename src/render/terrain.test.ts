@@ -16,8 +16,18 @@ describe('Terrain', () => {
     let gl: WebGLRenderingContext;
 
     beforeEach(() => {
-        const gl = document.createElement('canvas').getContext('webgl');
+        gl = document.createElement('canvas').getContext('webgl');
         jest.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
+        jest.spyOn(gl, 'readPixels').mockImplementation((_1, _2, _3, _4, _5, _6, rgba) => {
+            rgba[0] = 0;
+            rgba[1] = 0;
+            rgba[2] = 255;
+            rgba[3] = 255;
+        });
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     test('pointCoordiate should not return null', () => {
@@ -45,12 +55,6 @@ describe('Terrain', () => {
         };
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
         terrain.sourceCache.getTileByID = getTileByID;
-        const context = painter.context;
-        const pixels = new Uint8Array([0, 0, 255, 255]);
-        const image = new RGBAImage({width: 1, height: 1}, pixels);
-        const imageTexture = new Texture(context, image, context.gl.RGBA);
-        terrain.getFramebuffer('coords'); // allow init of frame buffers
-        terrain._fboCoordsTexture.texture = imageTexture.texture;
         terrain.coordsIndex.push('abcd');
 
         const coordinate = terrain.pointCoordinate(new Point(0, 0));
@@ -78,11 +82,12 @@ describe('Terrain', () => {
         };
         terrain.getElevation = () => 0;
         terrain.coordsIndex = Object.keys(tileIdsToWraps);
-        const pixels = new Uint8Array([0, 0, 0, 255, 0, 0, 0, 254, 0, 0, 0, 253, 0, 0, 0, 252]);
-        const image = new RGBAImage({width: WORLD_WIDTH, height: 1}, pixels);
-        const imageTexture = new Texture(painter.context, image, painter.context.gl.RGBA);
-        terrain.getFramebuffer('coords'); // allow init of frame buffers
-        terrain._fboCoordsTexture.texture = imageTexture.texture;
+        jest.spyOn(gl, 'readPixels').mockImplementation((x, _2, _3, _4, _5, _6, rgba) => {
+            rgba[0] = 0;
+            rgba[1] = 0;
+            rgba[2] = 0;
+            rgba[3] = 255 - x;
+        });
         return terrain;
     };
 
