@@ -237,7 +237,7 @@ export class FillBucket implements Bucket {
             triangleSegment.vertexLength += numVertices;
             triangleSegment.primitiveLength += finalIndicesTriangles.length / 3;
 
-            let lineSegment = this.segments2.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray2);
+            const lineSegment = this.segments2.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray2);
             const lineIndicesStart = lineSegment.vertexLength;
             lineSegment.vertexLength += numVertices;
 
@@ -246,10 +246,6 @@ export class FillBucket implements Bucket {
             }
 
             for (let listIndex = 0; listIndex < finalIndicesLineList.length; listIndex++) {
-                if (listIndex > 0) {
-                    // All new vertices were added to the first line segment -> pass 0 as numVertices here.
-                    lineSegment = this.segments2.prepareSegment(0, this.layoutVertexArray, this.indexArray2);
-                }
                 const lineIndices = finalIndicesLineList[listIndex];
 
                 for (let i = 1; i < lineIndices.length; i += 2) {
