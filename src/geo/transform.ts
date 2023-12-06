@@ -458,7 +458,11 @@ export class Transform {
     zoomScale(zoom: number) { return Math.pow(2, zoom); }
     scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
-    // Convert from LngLat to world coordinates (Mercator coordinates scaled by 512)
+    /**
+     * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512)
+     * @param lngLat - the lngLat
+     * @returns Point
+     */
     project(lnglat: LngLat) {
         const lat = clamp(lnglat.lat, -this.maxValidLatitude, this.maxValidLatitude);
         return new Point(
@@ -466,7 +470,11 @@ export class Transform {
             mercatorYfromLat(lat) * this.worldSize);
     }
 
-    // Convert from world coordinates to LngLat
+    /**
+     * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90])
+     * @param point - world coordinate
+     * @returns LngLat
+     */
     unproject(point: Point): LngLat {
         return new MercatorCoordinate(point.x / this.worldSize, point.y / this.worldSize).toLngLat();
     }
