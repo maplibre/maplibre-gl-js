@@ -194,5 +194,5 @@ export const addSourceType = async (name: string, SourceType: SourceClass): Prom
         return;
     }
     const dispatcher = getGlobalDispatcher();
-    await dispatcher.broadcast('loadWorkerSource', SourceType.workerSourceURL.toString());
+    await dispatcher.broadcast('importScript', SourceType.workerSourceURL.toString());
 };

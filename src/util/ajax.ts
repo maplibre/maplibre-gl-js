@@ -228,11 +228,11 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
  */
 export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+        if (getProtocolAction(requestParameters.url)) {
+            return getProtocolAction(requestParameters.url)(requestParameters, abortController);
+        }
         if (isWorker(self) && self.worker && self.worker.actor) {
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
-        }
-        if (!isWorker(self) && getProtocolAction(requestParameters.url)) {
-            return getProtocolAction(requestParameters.url)(requestParameters, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {

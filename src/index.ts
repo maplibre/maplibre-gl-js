@@ -15,7 +15,7 @@ import {LngLatBounds} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
-import {AddProtocolAction, config} from './util/config';
+import {config} from './util/config';
 import {Debug} from './util/debug';
 import {isSafari} from './util/util';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
@@ -31,6 +31,7 @@ import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
 import {addSourceType, type SourceClass} from './source/source';
+import {addProtocol, removeProtocol} from './source/add_protocol';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -185,31 +186,46 @@ class MapLibreGL {
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
      *
      * @param customProtocol - the protocol to hook, for example 'custom'
-     * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
+     * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol, or a url to a worker script
      * @example
-     * This will fetch a file using the fetch API (this is obviously a non interesting example...)
      * ```ts
+     * // This will fetch a file using the fetch API (this is obviously a non interesting example...)
      * maplibregl.addProtocol('custom', async (params, abortController) => {
-            const t = await fetch(`https://${params.url.split("://")[1]}`);
-            if (t.status == 200) {
-                const buffer = await t.arrayBuffer();
-                return {data: buffer}
-            } else {
-                throw new Error(`Tile fetch error: ${t.statusText}`));
-            }
-        });
+     *      const t = await fetch(`https://${params.url.split("://")[1]}`);
+     *      if (t.status == 200) {
+     *          const buffer = await t.arrayBuffer();
+     *          return {data: buffer}
+     *      } else {
+     *          throw new Error(`Tile fetch error: ${t.statusText}`);
+     *      }
+     *  });
      * // the following is an example of a way to return an error when trying to load a tile
      * maplibregl.addProtocol('custom2', async (params, abortController) => {
      *      throw new Error('someErrorMessage'));
      * });
+     * // below is an example of sending a js file to the worker to load the method there
+     * // Note that you'll need to call the global function `addProtocol` in the worker to register the protocol there.
+     *
+     * // add-protocol-worker.js
+     * async function loadFn(params, abortController) {
+     *     const t = await fetch(`https://${params.url.split("://")[1]}`);
+     *     if (t.status == 200) {
+     *         const buffer = await t.arrayBuffer();
+     *         return {data: buffer}
+     *     } else {
+     *         throw new Error(`Tile fetch error: ${t.statusText}`);
+     *     }
+     * }
+     * addPRotocol('custom', loadFn);
+     *
+     * // main.js
+     * maplibregl.addProtocol('custom', 'add-protocol-worker.js');
      * ```
      */
-    static addProtocol(customProtocol: string, loadFn: AddProtocolAction) {
-        config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
-    }
+    static addProtocol = addProtocol;
 
     /**
-     * Removes a previously added protocol
+     * Removes a previously added protocol - this only works on protocols added to main thread and not on worker threads.
      *
      * @param customProtocol - the custom protocol to remove registration for
      * @example
@@ -217,9 +233,7 @@ class MapLibreGL {
      * maplibregl.removeProtocol('custom');
      * ```
      */
-    static removeProtocol(customProtocol: string) {
-        delete config.REGISTERED_PROTOCOLS[customProtocol];
-    }
+    static removeProtocol = removeProtocol;
 
     /**
      * Adds a [custom source type](#Custom Sources), making it available for use with

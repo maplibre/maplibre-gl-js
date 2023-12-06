@@ -5,6 +5,7 @@ import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
 import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
+import {AddProtocolAction, config} from '../util/config';
 
 import type {
     WorkerSource,
@@ -70,6 +71,10 @@ export default class Worker {
                 throw new Error(`Worker source with name "${name}" already registered.`);
             }
             this.externalWorkerSourceTypes[name] = WorkerSource;
+        };
+
+        this.self.addProtocol = (customProtocol: string, loadFn: AddProtocolAction) => {
+            config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
         };
 
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
@@ -143,7 +148,7 @@ export default class Worker {
             return this._syncRTLPluginState(mapId, params);
         });
 
-        this.actor.registerMessageHandler('loadWorkerSource', async (_mapId: string, params: string) => {
+        this.actor.registerMessageHandler('importScript', async (_mapId: string, params: string) => {
             this.self.importScripts(params);
         });
 

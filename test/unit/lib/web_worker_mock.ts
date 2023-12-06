@@ -1,13 +1,15 @@
+import MapLibreWorker from '../../../src/source/worker';
 import type {WorkerGlobalScopeInterface} from '../../../src/util/web_worker';
 import type {ActorTarget} from '../../../src/util/actor';
-import MapLibreWorker from '../../../src/source/worker';
 
 export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     addListeners: Array<EventListener>;
     postListeners: Array<EventListener>;
     target: MessageBus;
+
     registerWorkerSource: any;
     registerRTLTextPlugin: any;
+    addProtocol: any;
     worker: any;
 
     constructor(addListeners: Array<EventListener>, postListeners: Array<EventListener>) {

@@ -35,7 +35,7 @@ describe('addSourceType', () => {
         const spy = jest.spyOn(Dispatcher.prototype, 'broadcast');
 
         await addSourceType('bar', sourceType);
-        expect(spy).toHaveBeenCalledWith('loadWorkerSource', 'worker-source.js');
+        expect(spy).toHaveBeenCalledWith('importScript', 'worker-source.js');
     });
 
     test('refuses to add new type over existing name', async () => {
