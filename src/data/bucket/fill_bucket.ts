@@ -222,43 +222,82 @@ export class FillBucket implements Bucket {
             // const finalIndicesTriangles = indices;
             // const finalIndicesLineList = lineList;
 
-            const numVertices = finalVertices.length / 2;
 
-            const triangleSegment = this.segments.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray);
-            const triangleIndex = triangleSegment.vertexLength;
-
-            for (let i = 0; i < finalIndicesTriangles.length; i += 3) {
-                this.indexArray.emplaceBack(
-                    triangleIndex + finalIndicesTriangles[i],
-                    triangleIndex + finalIndicesTriangles[i + 1],
-                    triangleIndex + finalIndicesTriangles[i + 2]);
-            }
-
-            triangleSegment.vertexLength += numVertices;
-            triangleSegment.primitiveLength += finalIndicesTriangles.length / 3;
-
-            const lineSegment = this.segments2.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray2);
-            const lineIndicesStart = lineSegment.vertexLength;
-            lineSegment.vertexLength += numVertices;
-
-            for (let i = 0; i < finalVertices.length; i += 2) {
-                this.layoutVertexArray.emplaceBack(finalVertices[i], finalVertices[i + 1]);
-            }
-
-            for (let listIndex = 0; listIndex < finalIndicesLineList.length; listIndex++) {
-                const lineIndices = finalIndicesLineList[listIndex];
-
-                for (let i = 1; i < lineIndices.length; i += 2) {
-                    this.indexArray2.emplaceBack(
-                        lineIndicesStart + lineIndices[i - 1],
-                        lineIndicesStart + lineIndices[i]);
-                }
-
-                lineSegment.primitiveLength += lineIndices.length / 2;
-            }
+            fillArrays(
+                this.segments,
+                this.segments2,
+                this.layoutVertexArray,
+                this.indexArray,
+                this.indexArray2,
+                finalVertices,
+                finalIndicesTriangles,
+                finalIndicesLineList
+            );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }
 }
 
 register('FillBucket', FillBucket, {omit: ['layers', 'patternFeatures']});
+
+/**
+ * This function will take any "mesh" and fill in into vertex buffers, breaking it up into multiple drawcalls as needed
+ * if too many vertices are used.
+ * Sometimes subdivision might generate more vertices than what fits into 16 bit indices (MAX_VERTEX_ARRAY_LENGTH).
+ */
+function fillArrays(
+    segmentsTriangles: SegmentVector,
+    segmentsLines: SegmentVector,
+    vertexArray: FillLayoutArray,
+    triangleIndexArray: TriangleIndexArray,
+    lineIndexArray: LineIndexArray,
+    flattened: Array<number>,
+    triangleIndices: Array<number>,
+    lineList: Array<Array<number>>) {
+
+    const numVertices = flattened.length / 2;
+
+    if (numVertices < SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
+        // The fast path - no segmentation needed
+        const triangleSegment = segmentsTriangles.prepareSegment(numVertices, vertexArray, triangleIndexArray);
+        const triangleIndex = triangleSegment.vertexLength;
+
+        for (let i = 0; i < triangleIndices.length; i += 3) {
+            triangleIndexArray.emplaceBack(
+                triangleIndex + triangleIndices[i],
+                triangleIndex + triangleIndices[i + 1],
+                triangleIndex + triangleIndices[i + 2]);
+        }
+
+        triangleSegment.vertexLength += numVertices;
+        triangleSegment.primitiveLength += triangleIndices.length / 3;
+
+        const lineSegment = segmentsLines.prepareSegment(numVertices, vertexArray, lineIndexArray);
+        const lineIndicesStart = lineSegment.vertexLength;
+        lineSegment.vertexLength += numVertices;
+
+        for (let i = 0; i < flattened.length; i += 2) {
+            vertexArray.emplaceBack(flattened[i], flattened[i + 1]);
+        }
+
+        for (let listIndex = 0; listIndex < lineList.length; listIndex++) {
+            const lineIndices = lineList[listIndex];
+
+            for (let i = 1; i < lineIndices.length; i += 2) {
+                lineIndexArray.emplaceBack(
+                    lineIndicesStart + lineIndices[i - 1],
+                    lineIndicesStart + lineIndices[i]);
+            }
+
+            lineSegment.primitiveLength += lineIndices.length / 2;
+        }
+    } else {
+        // Assumption: the incoming triangle indices use vertices in roughly linear order,
+        // for example a grid of quads where vertices are created row by row would satisfy this.
+        // Some completely random arbitrary vertex order would not.
+        // Thus, if we encounter a vertex that doesn't fit into MAX_VERTEX_ARRAY_LENGTH,
+        // we can just stop appending into the old segment and start a new segment,
+        // copying vertices that are already present in the old segment into the new segment,
+        // because there will not be too many of those vertices.
+    }
+}
