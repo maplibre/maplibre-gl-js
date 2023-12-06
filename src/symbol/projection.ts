@@ -25,9 +25,10 @@ export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, pro
  * The points for both anchors and lines are stored in tile units. Each tile has it's own
  * coordinate space going from (0, 0) at the top left to (EXTENT, EXTENT) at the bottom right.
  *
- * ## GL coordinate space
- * At the end of everything, the vertex shader needs to produce a position in GL coordinate space,
+ * ## Clip space (GL coordinate space)
+ * At the end of everything, the vertex shader needs to produce a position in clip space,
  * which is (-1, 1) at the top left and (1, -1) in the bottom right.
+ * In the depth buffer, values are between 0 (near plane) to 1 (far plane).
  *
  * ## Map pixel coordinate spaces
  * Each tile has a pixel coordinate space. It's just the tile units scaled so that one unit is
@@ -51,7 +52,7 @@ export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, pro
  *      - viewport pixel space      pitch-alignment=viewport    rotation-alignment=*
  * 2. if the label follows a line, find the point along the line that is the correct distance from the anchor.
  * 3. add the glyph's corner offset to the point from step 3
- * 4. convert from the label coordinate space to gl coordinates
+ * 4. convert from the label coordinate space to clip space
  *
  * For horizontal labels we want to do step 1 in the shader for performance reasons (no cpu work).
  *      This is what `u_label_plane_matrix` is used for.
@@ -83,7 +84,7 @@ function getLabelPlaneMatrix(posMatrix: mat4,
 }
 
 /*
- * Returns a matrix for converting from the correct label coordinate space to gl coords.
+ * Returns a matrix for converting from the correct label coordinate space to clip space.
  */
 function getGlCoordMatrix(posMatrix: mat4,
     pitchWithMap: boolean,

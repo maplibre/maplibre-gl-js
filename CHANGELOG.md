@@ -1,11 +1,14 @@
 ## main
 
 ### ✨ Features and improvements
+
+- Improved precision and added a subtle fade transition to marker opacity changes ([#3431](https://github.com/maplibre/maplibre-gl-js/pull/3431))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
 - Fix the shifted mouse events after a css transform scale on the map container ([#3437](https://github.com/maplibre/maplibre-gl-js/pull/3437))
+- Fix markers remaining transparent when disabling terrain ([#3431](https://github.com/maplibre/maplibre-gl-js/pull/3431))
 - _...Add new stuff here..._
 
 ## 4.0.0-pre.2
@@ -51,6 +54,7 @@
 ## 3.6.1
 
 ### 🐞 Bug fixes
+
 - Fix `undefined` `_onEaseFrame` call in `Camera._renderFrameCallback()` while doing `Camera.jumpTo` during a `Camera.easeTo` ([#3332](https://github.com/maplibre/maplibre-gl-js/pull/3332))
 
 ## 3.6.0

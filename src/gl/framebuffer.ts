@@ -25,7 +25,7 @@ export class Framebuffer {
         if (hasDepth) {
             this.depthAttachment = hasStencil ? new DepthStencilAttachment(context, fbo) : new DepthAttachment(context, fbo);
         } else if (hasStencil) {
-            throw new Error('Stencil cannot be setted without depth');
+            throw new Error('Stencil cannot be set without depth');
         }
         if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
             throw new Error('Framebuffer is not complete');
