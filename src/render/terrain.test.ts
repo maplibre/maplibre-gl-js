@@ -2,7 +2,6 @@ import Point from '@mapbox/point-geometry';
 import {Terrain} from './terrain';
 import {Context} from '../gl/context';
 import {RGBAImage} from '../util/image';
-import {Texture} from './texture';
 import type {SourceCache} from '../source/source_cache';
 import {OverscaledTileID} from '../source/tile_id';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
