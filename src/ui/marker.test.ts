@@ -841,17 +841,29 @@ describe('marker', () => {
 
     test('Marker changes opacity behind terrain and when terrain is removed', () => {
         const map = createMap();
-        map.terrain = {
-            getElevationForLngLatZoom: () => 0,
-            depthAtPoint: () => .9 // Mocking distance to terrain
-        } as any as Terrain;
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
 
+        expect(marker.getElement().style.opacity).toMatch('');
+
+        // Add terrain, not blocking marker
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .95 // Mocking distance to terrain
+        } as any as Terrain;
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('1');
+
+        // Terrain blocks marker
+        map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
+        map.fire('moveend');
+
         expect(marker.getElement().style.opacity).toMatch('.2');
 
+        // Remove terrain
         map.terrain = null;
         map.fire('terrain');
         expect(marker.getElement().style.opacity).toMatch('1');
