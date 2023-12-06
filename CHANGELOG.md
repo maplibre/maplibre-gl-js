@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Upgraded to use Node JS 20 and removed the dependency of `gl` package from the tests to allow easier develpment setup.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
