@@ -334,6 +334,9 @@ function drawLayerSymbols(
         const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(identity, pitchWithMap, rotateWithMap, painter.transform, s);
         const glCoordMatrix = symbolProjection.getGlCoordMatrix(identity, pitchWithMap, rotateWithMap, painter.transform, s);
 
+        const translation = painter.translatePosition(tile, translate, translateAnchor);
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
             hasVariableAnchors &&
@@ -345,9 +348,9 @@ function drawLayerSymbols(
             symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, getElevation);
         }
 
-        const matrix = painter.translatePosMatrix(coord.posMatrix, tile, translate, translateAnchor),
-            uLabelPlaneMatrix = (alongLine || (isText && hasVariablePlacement) || updateTextFitIcon) ? identityMat4 : labelPlaneMatrix,
-            uglCoordMatrix = painter.translatePosMatrix(glCoordMatrix, tile, translate, translateAnchor, true);
+        const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
+        const uLabelPlaneMatrix = (alongLine || (isText && hasVariablePlacement) || updateTextFitIcon) ? identityMat4 : labelPlaneMatrix;
+        const uglCoordMatrix = glCoordMatrix; // formerly also incorporated translate and translate-anchor
 
         const hasHalo = isSDF && layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(1) !== 0;
 
@@ -356,19 +359,17 @@ function drawLayerSymbols(
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, true);
+                    uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, texSize, texSizeIcon);
+                    uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
                 size, rotateInShader, pitchWithMap, painter, matrix,
-                uLabelPlaneMatrix, uglCoordMatrix, isText, texSize);
+                uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize);
         }
-
-        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
 
         const state = {
             program,

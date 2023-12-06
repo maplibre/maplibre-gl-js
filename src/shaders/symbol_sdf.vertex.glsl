@@ -28,6 +28,7 @@ uniform highp float u_aspect_ratio;
 uniform highp float u_camera_to_center_distance;
 uniform float u_fade_change;
 uniform vec2 u_texsize;
+uniform vec2 u_translation;
 
 out vec2 v_data0;
 out vec3 v_data1;
@@ -155,7 +156,7 @@ void main() {
         size = u_size;
     }
 
-    vec4 projectedPoint = projectTileWithElevation(vec3(a_pos, ele)); // TODO: this does not take translate-anchor etc into account at all!
+    vec4 projectedPoint = projectTileWithElevation(vec3(a_pos + u_translation, ele));
     highp float camera_to_anchor_distance = projectedPoint.w;
     // If the label is pitched with the map, layout is done in pitched space,
     // which makes labels in the distance smaller relative to viewport space.
@@ -180,7 +181,7 @@ void main() {
         // Point labels with 'rotation-alignment: map' are horizontal with respect to tile units
         // To figure out that angle in projected space, we draw a short horizontal line in tile
         // space, project it, and measure its angle in projected space.
-        vec4 offsetProjectedPoint = projectTileWithElevation(vec3(a_pos + vec2(1, 0), ele));
+        vec4 offsetProjectedPoint = projectTileWithElevation(vec3(a_pos + u_translation + vec2(1, 0), ele));
 
         vec2 a = projectedPoint.xy / projectedPoint.w;
         vec2 b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
@@ -195,9 +196,9 @@ void main() {
     // JP: TODO: asi je dobrý první krok upravit shader?
     vec4 projected_pos;
     if(u_pitch_with_map) {
-        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, ele, 1.0);
+        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
     } else {
-        projected_pos = u_label_plane_matrix * projectTileWithElevation(vec3(a_projected_pos.xy, ele));
+        projected_pos = u_label_plane_matrix * projectTileWithElevation(vec3(a_projected_pos.xy + u_translation, ele));
     }
 
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
