@@ -2799,7 +2799,7 @@ describe('Map', () => {
                     (this as HTMLCanvasElement).dispatchEvent(errorEvent);
                     return null;
                 }
-            }
+            };
             try {
                 createMap();
             } catch (e) {
