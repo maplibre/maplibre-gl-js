@@ -22,7 +22,7 @@ beforeEach(() => {
 describe('LogoControl', () => {
     test('does not appear by default', async () => {
         const map = createMap(undefined, undefined);
-        await map.once('load')
+        await map.once('load');
         expect(map.getContainer().querySelectorAll(
             '.maplibregl-ctrl-logo'
         )).toHaveLength(0);
