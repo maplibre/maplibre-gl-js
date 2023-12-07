@@ -293,11 +293,93 @@ function fillArrays(
         }
     } else {
         // Assumption: the incoming triangle indices use vertices in roughly linear order,
-        // for example a grid of quads where vertices are created row by row would satisfy this.
-        // Some completely random arbitrary vertex order would not.
+        // for example a grid of quads where both vertices and quads are created row by row would satisfy this.
+        // Some completely random arbitrary vertex/triangle order would not.
         // Thus, if we encounter a vertex that doesn't fit into MAX_VERTEX_ARRAY_LENGTH,
-        // we can just stop appending into the old segment and start a new segment,
-        // copying vertices that are already present in the old segment into the new segment,
-        // because there will not be too many of those vertices.
+        // we can just stop appending into the old segment and start a new segment and only append to the new segment,
+        // copying vertices that are already present in the old segment into the new segment if needed,
+        // because there will not be too many of such vertices.
+
+        // Normally, (out)lines share the same vertex buffer as triangles, but since we need to somehow split it into several drawcalls,
+        // it is easier to just consider (out)lines separately and duplicate their vertices.
+
+        // Array, or rather a map of [vertex index in the original data] -> index of the latest copy of this vertex in the final vertex buffer.
+        const actualVertexIndices: Array<number> = [];
+        for (let i = 0; i < numVertices; i++) {
+            actualVertexIndices.push(-1);
+        }
+
+        let totalVerticesCreated = 0;
+
+        let currentSegmentCutoff = 0;
+
+        let segment = segmentsTriangles.getOrCreateLatestSegment(vertexArray, triangleIndexArray);
+
+        let baseVertex = segment.vertexLength;
+
+        for (let primitiveEndIndex = 2; primitiveEndIndex < triangleIndices.length; primitiveEndIndex += 3) {
+            const i0 = triangleIndices[primitiveEndIndex - 2];
+            const i1 = triangleIndices[primitiveEndIndex - 1];
+            const i2 = triangleIndices[primitiveEndIndex];
+
+            let i0needsVextexCopy = actualVertexIndices[i0] < currentSegmentCutoff;
+            let i1needsVextexCopy = actualVertexIndices[i1] < currentSegmentCutoff;
+            let i2needsVextexCopy = actualVertexIndices[i2] < currentSegmentCutoff;
+
+            const vertexCopyCount = (i0needsVextexCopy ? 1 : 0) + (i1needsVextexCopy ? 1 : 0) + (i2needsVextexCopy ? 1 : 0);
+
+            // Will needed vertex copies fit into this segment?
+            if (segment.vertexLength + vertexCopyCount > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
+                // Break up into a new segment if not.
+                segment = segmentsTriangles.createNewSegment(vertexArray, triangleIndexArray);
+                currentSegmentCutoff = totalVerticesCreated;
+                i0needsVextexCopy = true;
+                i1needsVextexCopy = true;
+                i2needsVextexCopy = true;
+                baseVertex = 0;
+            }
+
+            let actualIndex0 = -1;
+            let actualIndex1 = -1;
+            let actualIndex2 = -1;
+
+            if (i0needsVextexCopy) {
+                actualIndex0 = totalVerticesCreated;
+                vertexArray.emplaceBack(flattened[i0 * 2], flattened[i0 * 2 + 1]);
+                actualVertexIndices[i0] = totalVerticesCreated;
+                totalVerticesCreated++;
+                segment.vertexLength++;
+            } else {
+                actualIndex0 = actualVertexIndices[i0];
+            }
+
+            if (i1needsVextexCopy) {
+                actualIndex1 = totalVerticesCreated;
+                vertexArray.emplaceBack(flattened[i1 * 2], flattened[i1 * 2 + 1]);
+                actualVertexIndices[i1] = totalVerticesCreated;
+                totalVerticesCreated++;
+                segment.vertexLength++;
+            } else {
+                actualIndex1 = actualVertexIndices[i1];
+            }
+
+            if (i2needsVextexCopy) {
+                actualIndex2 = totalVerticesCreated;
+                vertexArray.emplaceBack(flattened[i2 * 2], flattened[i2 * 2 + 1]);
+                actualVertexIndices[i2] = totalVerticesCreated;
+                totalVerticesCreated++;
+                segment.vertexLength++;
+            } else {
+                actualIndex2 = actualVertexIndices[i2];
+            }
+
+            triangleIndexArray.emplaceBack(
+                baseVertex + actualIndex0 - currentSegmentCutoff,
+                baseVertex + actualIndex1 - currentSegmentCutoff,
+                baseVertex + actualIndex2 - currentSegmentCutoff
+            );
+
+            segment.primitiveLength++;
+        }
     }
 }
