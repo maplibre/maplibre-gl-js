@@ -25,6 +25,7 @@ export type Segment = {
 export class SegmentVector {
     static MAX_VERTEX_ARRAY_LENGTH: number;
     segments: Array<Segment>;
+    private _invalidateLast: boolean = false;
 
     constructor(segments: Array<Segment> = []) {
         this.segments = segments;
@@ -46,7 +47,7 @@ export class SegmentVector {
             warnOnce(`Max vertices per segment is ${SegmentVector.MAX_VERTEX_ARRAY_LENGTH}: bucket requested ${numVertices}`);
         }
 
-        if (!lastSegment || lastSegment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH || lastSegment.sortKey !== sortKey) {
+        if (!lastSegment || lastSegment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH || lastSegment.sortKey !== sortKey || this._invalidateLast) {
             return this.createNewSegment(layoutVertexArray, indexArray, sortKey);
         } else {
             return lastSegment;
@@ -72,6 +73,7 @@ export class SegmentVector {
             segment.sortKey = sortKey;
         }
 
+        this._invalidateLast = false;
         this.segments.push(segment);
         return segment;
     }
@@ -85,6 +87,10 @@ export class SegmentVector {
         sortKey?: number
     ): Segment {
         return this.prepareSegment(0, layoutVertexArray, indexArray, sortKey);
+    }
+
+    invalidateLast() {
+        this._invalidateLast = true;
     }
 
     get() {
