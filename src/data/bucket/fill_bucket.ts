@@ -4,7 +4,6 @@ import {members as layoutAttributes} from './fill_attributes';
 import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type';
-import earcut from 'earcut';
 import {classifyRings} from '../../util/classify_rings';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
@@ -203,8 +202,6 @@ export class FillBucket implements Bucket {
                 lineList.push(lineIndices);
             }
 
-            const indices = earcut(flattened, holeIndices);
-
             // const subdivided = {
             //     vertices: flattened,
             //     indices,
@@ -213,7 +210,7 @@ export class FillBucket implements Bucket {
             //const subdividedLines = subdivideLines(subdividedTris.vertices, lineIndices, subdividedTris.vertexDictionary, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
             //const subdivided = subdivideSimple(flattened, indices, ProjectionManager.getGranualityForZoomLevel(canonical.z), canonical);
 
-            const subdivided = subdivideFill(flattened, indices, lineList, canonical, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
+            const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
             const finalVertices = subdivided.verticesFlattened;
             const finalIndicesTriangles = subdivided.indicesTriangles;
             const finalIndicesLineList = subdivided.indicesLineList;

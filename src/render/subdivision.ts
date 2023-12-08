@@ -2,6 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {EXTENT, EXTENT_SUBDIVISION_BORDER} from '../data/extent';
 import {webMercatorToSpherePoint} from '../geo/mercator_coordinate';
 import {CanonicalTileID} from '../source/tile_id';
+import earcut from 'earcut';
 
 type SubdivisionResult = {
     verticesFlattened: Array<number>;
@@ -616,7 +617,7 @@ class Subdivider {
      * @param granuality - Target granuality. If less or equal to 1, the input buffers are returned without modification.
      * @returns Vertex and index buffers with subdivision applied.
      */
-    public subdivide(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, canonical: CanonicalTileID): SubdivisionResult {
+    public subdivide(vertices: Array<number>, holeIndices: Array<number>, lineIndices: Array<Array<number>>, canonical: CanonicalTileID): SubdivisionResult {
         if (this._vertexDictionary) {
             console.error('Subdivider: multiple use not allowed.');
             return undefined;
@@ -624,6 +625,8 @@ class Subdivider {
 
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
         this.initializeVertices(vertices);
+
+        const triangleIndices = earcut(vertices, holeIndices);
 
         // Subdivide triangles
         const subdividedTriangles = this.subdivideTriangles(triangleIndices);
@@ -662,10 +665,9 @@ class Subdivider {
     }
 }
 
-export function subdivideFill(vertices: Array<number>, triangleIndices: Array<number>, lineIndices: Array<Array<number>>, canonical: CanonicalTileID, granuality: number): SubdivisionResult {
-    // JP: TODO: handle 16bit indices overflow!
+export function subdivideFill(vertices: Array<number>, holeIndices: Array<number>, lineList: Array<Array<number>>, canonical: CanonicalTileID, granuality: number): SubdivisionResult {
     const subdivider = new Subdivider(granuality);
-    return subdivider.subdivide(vertices, triangleIndices, lineIndices, canonical);
+    return subdivider.subdivide(vertices, holeIndices, lineList, canonical);
 }
 
 export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {

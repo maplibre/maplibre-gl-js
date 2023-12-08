@@ -7,7 +7,7 @@ import earcut from 'earcut';
 
 export default class Subdivide extends Benchmark {
     flattened: Array<number>;
-    triangleIndices: Array<number>;
+    holeIndices: Array<number>;
     lineList: Array<Array<number>>;
     tileID: CanonicalTileID;
     granuality: number;
@@ -45,12 +45,12 @@ export default class Subdivide extends Benchmark {
         generateHole(0.0, 0.1, 0.05, 4 * vertexCountMultiplier);
 
         this.flattened = vertices;
-        this.triangleIndices = earcut(vertices, holeIndices);
+        this.holeIndices = holeIndices;
         this.lineList = lineList;
     }
 
     async bench() {
-        subdivideFill(this.flattened, this.triangleIndices, this.lineList, this.tileID, this.granuality);
+        subdivideFill(this.flattened, this.holeIndices, this.lineList, this.tileID, this.granuality);
     }
 }
 
