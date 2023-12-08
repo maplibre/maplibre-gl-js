@@ -1,8 +1,8 @@
 import Layout from './layout';
-import { subdivideFill } from '../../../src/render/subdivision';
-import { CanonicalTileID } from '../../../src/source/tile_id';
+import {subdivideFill} from '../../../src/render/subdivision';
+import {CanonicalTileID} from '../../../src/source/tile_id';
 import Benchmark from '../lib/benchmark';
-import { EXTENT } from '../../../src/data/extent';
+import {EXTENT} from '../../../src/data/extent';
 import earcut from 'earcut';
 
 export default class Subdivide extends Benchmark {
@@ -20,7 +20,7 @@ export default class Subdivide extends Benchmark {
         // granuality = 64
 
         const vertexCountMultiplier = 11;
-        
+
         this.granuality = 64;
 
         // Use web mercator base tile, as it borders both north and south poles,
@@ -58,7 +58,7 @@ export default class Subdivide extends Benchmark {
 function generateRing(cx: number, cy: number, radius: number, vertexCount: number, target: Array<number>): Array<number> {
     const lineIndices = [];
     const baseVertex = target.length / 2;
-    
+
     for (let i = 0; i < vertexCount; i++) {
         const angle = i / vertexCount * 2.0 * Math.PI;
         // round to emulate integer vertex coordinates
