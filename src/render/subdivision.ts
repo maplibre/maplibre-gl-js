@@ -637,7 +637,7 @@ class Subdivider {
         }
 
         // Fix horizontal/vertical seams at T-joints
-        this.fixTjoints(subdividedTriangles);
+        //this.fixTjoints(subdividedTriangles);
 
         // Ensure no vertex has the special value used for pole vertices
         this.ensureNoPoleVertices();
