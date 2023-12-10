@@ -181,9 +181,10 @@ class MapLibreGL {
     }
 
     /**
-     * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.
+     * Registered a custom load resource function that will be called when using a URL that starts with a custom url schema.
+     * This will happen in the main thread, and workers might call it if they don't know how to handle the protocol.
      * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
-     * The function passed will receive the request parameters and should call the callback with the resulting request,
+     * The function passed will receive the request parameters and should return with the resulting resource,
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
      *
      * @param customProtocol - the protocol to hook, for example 'custom'
@@ -209,7 +210,7 @@ class MapLibreGL {
     static addProtocol = addProtocol;
 
     /**
-     * Removes a previously added protocol - this only works on protocols added to main thread and not on worker threads.
+     * Removes a previously added protocol in the main thread.
      *
      * @param customProtocol - the custom protocol to remove registration for
      * @example
