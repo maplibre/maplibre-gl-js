@@ -181,7 +181,7 @@ class MapLibreGL {
     }
 
     /**
-     * Registered a custom load resource function that will be called when using a URL that starts with a custom url schema.
+     * Adds a custom load resource function that will be called when using a URL that starts with a custom url schema.
      * This will happen in the main thread, and workers might call it if they don't know how to handle the protocol.
      * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
      * The function passed will receive the request parameters and should return with the resulting resource,
