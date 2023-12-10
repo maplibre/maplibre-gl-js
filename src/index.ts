@@ -187,7 +187,7 @@ class MapLibreGL {
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
      *
      * @param customProtocol - the protocol to hook, for example 'custom'
-     * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol, or a url to a worker script
+     * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
      * ```ts
      * // This will fetch a file using the fetch API (this is obviously a non interesting example...)
