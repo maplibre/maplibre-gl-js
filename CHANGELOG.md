@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- ⚠️ Add the ability to import a script in the worker thread and call `addProtocol` and `removeProtocol` there ([#3459](https://github.com/maplibre/maplibre-gl-js/pull/3459)) - this also changed how `addSrouceType` works since now you'll need to load the script with `maplibregl.importScriptInWorkers`.
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
