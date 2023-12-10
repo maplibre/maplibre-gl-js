@@ -10,6 +10,7 @@ export class MessageBus implements WorkerGlobalScopeInterface, ActorTarget {
     registerWorkerSource: any;
     registerRTLTextPlugin: any;
     addProtocol: any;
+    removeProtocol: any;
     worker: any;
 
     constructor(addListeners: Array<EventListener>, postListeners: Array<EventListener>) {

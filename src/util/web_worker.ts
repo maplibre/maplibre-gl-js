@@ -7,6 +7,7 @@ export interface WorkerGlobalScopeInterface {
     registerWorkerSource: (sourceName: string, sourceConstrucor: WorkerSourceConstructor) => void;
     registerRTLTextPlugin: (_: any) => void;
     addProtocol: (customProtocol: string, loadFn: AddProtocolAction) => void;
+    removeProtocol: (customProtocol: string) => void;
     worker: MaplibreWorker;
 }
 

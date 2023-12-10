@@ -5,7 +5,7 @@ import {GeoJSONSource} from '../source/geojson_source';
 import {VideoSource} from '../source/video_source';
 import {ImageSource} from '../source/image_source';
 import {CanvasSource} from '../source/canvas_source';
-import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
+import {Dispatcher} from '../util/dispatcher';
 
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Event, Evented} from '../util/evented';
@@ -119,22 +119,11 @@ export interface Source {
 }
 
 /**
- * A supporting type to the source definition
- */
-type SourceStatics = {
-    /*
-     * An optional URL to a script which, when run by a Worker, registers a {@link WorkerSource}
-     * implementation for this Source type by calling `self.registerWorkerSource(workerSource: WorkerSource)`.
-     */
-    workerSourceURL?: URL;
-};
-
-/**
  * A general definition of a {@link Source} class for factory usage
  */
 export type SourceClass = {
     new (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source;
-} & SourceStatics;
+}
 
 /**
  * Creates a tiled data source instance given an options object.
@@ -187,12 +176,5 @@ export const addSourceType = async (name: string, SourceType: SourceClass): Prom
     if (getSourceType(name)) {
         throw new Error(`A source type called "${name}" already exists.`);
     }
-
     setSourceType(name, SourceType);
-
-    if (!SourceType.workerSourceURL) {
-        return;
-    }
-    const dispatcher = getGlobalDispatcher();
-    await dispatcher.broadcast('importScript', SourceType.workerSourceURL.toString());
 };

@@ -5,7 +5,7 @@ import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
 import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
-import {AddProtocolAction, config} from '../util/config';
+import {addProtocol, removeProtocol} from './add_protocol';
 
 import type {
     WorkerSource,
@@ -73,9 +73,8 @@ export default class Worker {
             this.externalWorkerSourceTypes[name] = WorkerSource;
         };
 
-        this.self.addProtocol = (customProtocol: string, loadFn: AddProtocolAction) => {
-            config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
-        };
+        this.self.addProtocol = addProtocol;
+        this.self.removeProtocol = removeProtocol;
 
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {
