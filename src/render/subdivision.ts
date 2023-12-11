@@ -847,8 +847,8 @@ class Subdivider {
 }
 
 export function subdivideFill(vertices: Array<number>, holeIndices: Array<number>, lineList: Array<Array<number>>, canonical: CanonicalTileID, granuality: number): SubdivisionResult {
-    const subdivider = new Subdivider(granuality);
-    return subdivider.subdivide(vertices, holeIndices, lineList, canonical);
+    const subdivider = new Subdivider(granuality, canonical);
+    return subdivider.subdivide(vertices, holeIndices, lineList);
 }
 
 export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
