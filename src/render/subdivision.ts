@@ -100,12 +100,15 @@ class Subdivider {
      */
     private _vertexDictionary: {[_: string]: number};
 
+    private readonly _canonical: CanonicalTileID;
+
     private readonly _granuality;
     private readonly _granualityStep;
 
-    constructor(granuality: number) {
+    constructor(granuality: number, canonical: CanonicalTileID) {
         this._granuality = granuality;
         this._granualityStep = EXTENT / granuality;
+        this._canonical = canonical;
     }
 
     private getKey(x: number, y: number): string {
@@ -150,7 +153,8 @@ class Subdivider {
         const finalTriangleIndices = [];
 
         // Iterate over all input triangles
-        for (let primitiveIndex = 0; primitiveIndex < triangleIndices.length; primitiveIndex += 3) {
+        const numIndices = triangleIndices.length;
+        for (let primitiveIndex = 0; primitiveIndex < numIndices; primitiveIndex += 3) {
             const triangle = [
                 triangleIndices[primitiveIndex + 0], // v0
                 triangleIndices[primitiveIndex + 1], // v1
@@ -179,9 +183,17 @@ class Subdivider {
             const cellRangeXmax = Math.min(Math.floor((maxX - 1) / this._granualityStep), this._granuality - 1 + borderCells);
             const cellRangeYmax = Math.min(Math.floor((maxY - 1) / this._granualityStep), this._granuality - 1 + borderCells);
 
+            // Early exit for triangles that are entirely within one cell
+            if (cellRangeXmax - cellRangeXmin <= 1 && cellRangeYmax - cellRangeYmin <= 1) {
+                finalTriangleIndices.push(triangle[0]);
+                finalTriangleIndices.push(triangle[1]);
+                finalTriangleIndices.push(triangle[2]);
+                continue;
+            }
+
             // Iterate over all the "granuality grid" cells that might intersect this triangle
-            for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
-                for (let cellY = cellRangeYmin; cellY <= cellRangeYmax; cellY += 1) {
+            for (let cellY = cellRangeYmin; cellY <= cellRangeYmax; cellY += 1) {
+                for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
                     // Cell AABB
                     const cellMinX = cellX * this._granualityStep;
                     const cellMinY = cellY * this._granualityStep;
@@ -193,15 +205,15 @@ class Subdivider {
 
                     // Check all original triangle vertices
                     if (triangleVertices[0] >= cellMinX && triangleVertices[0] <= cellMaxX &&
-                    triangleVertices[1] >= cellMinY && triangleVertices[1] <= cellMaxY) {
+                        triangleVertices[1] >= cellMinY && triangleVertices[1] <= cellMaxY) {
                         addUnique(indicesInsideCell, triangle[0]);
                     }
                     if (triangleVertices[2] >= cellMinX && triangleVertices[2] <= cellMaxX &&
-                    triangleVertices[3] >= cellMinY && triangleVertices[3] <= cellMaxY) {
+                        triangleVertices[3] >= cellMinY && triangleVertices[3] <= cellMaxY) {
                         addUnique(indicesInsideCell, triangle[1]);
                     }
                     if (triangleVertices[4] >= cellMinX && triangleVertices[4] <= cellMaxX &&
-                    triangleVertices[5] >= cellMinY && triangleVertices[5] <= cellMaxY) {
+                        triangleVertices[5] >= cellMinY && triangleVertices[5] <= cellMaxY) {
                         addUnique(indicesInsideCell, triangle[2]);
                     }
 
@@ -264,7 +276,8 @@ class Subdivider {
                     });
 
                     // Now we finally generate triangles
-                    for (let i = 2; i < indicesInsideCell.length; i++) {
+                    const inCellIndices = indicesInsideCell.length;
+                    for (let i = 2; i < inCellIndices; i++) {
                         const ax = this._finalVertices[indicesInsideCell[i - 1] * 2 + 0] - this._finalVertices[indicesInsideCell[0] * 2 + 0];
                         const ay = this._finalVertices[indicesInsideCell[i - 1] * 2 + 1] - this._finalVertices[indicesInsideCell[0] * 2 + 1];
                         const bx = this._finalVertices[indicesInsideCell[i] * 2 + 0] - this._finalVertices[indicesInsideCell[0] * 2 + 0];
@@ -599,6 +612,141 @@ class Subdivider {
         }
     }
 
+    /**
+     * Returns the angular length of an edge projected onto a sphere, in radians. The edge is specified in in-tile coordinates (0..EXTENT) in a given web mercator tile.
+     * @param e0x - Edge start x.
+     * @param e0y - Edge start y.
+     * @param e1x -  Edge end x.
+     * @param e1y - Edge end y.
+     * @returns Length of the edge in radians.
+     */
+    private edgeLengthMercator(e0x: number, e0y: number, e1x: number, e1y: number): number {
+        const e0 = webMercatorToSpherePoint(this._canonical.x + e0x / EXTENT, this._canonical.y + e0y / EXTENT, this._canonical.z);
+        const e1 = webMercatorToSpherePoint(this._canonical.x + e1x / EXTENT, this._canonical.y + e1y / EXTENT, this._canonical.z);
+        return Math.acos(e0[0] * e1[0] + e0[1] * e1[1] + e0[2] * e1[2]);
+    }
+
+    private subdivideSimple(indices: Array<number>): Array<number> {
+        if (this._granuality <= 1) {
+            return indices;
+        }
+
+        const that = this;
+
+        function createMidpointVertex(i0: number, i1: number): number {
+            const v0x = that._finalVertices[i0 * 2 + 0];
+            const v0y = that._finalVertices[i0 * 2 + 1];
+            const v1x = that._finalVertices[i1 * 2 + 0];
+            const v1y = that._finalVertices[i1 * 2 + 1];
+            return that.getVertexIndex(Math.floor((v0x + v1x) / 2), Math.floor((v0y + v1y) / 2));
+        }
+
+        const finalIndices = [];
+        const queueIndices = [...indices];
+
+        const tileLen0 = this.edgeLengthMercator(0, 0, EXTENT, 0);
+        const tileLen1 = this.edgeLengthMercator(EXTENT, 0, EXTENT, EXTENT);
+        const tileLen2 = this.edgeLengthMercator(EXTENT, EXTENT, 0, EXTENT);
+        const tileLen3 = this.edgeLengthMercator(0, EXTENT, 0, 0);
+
+        const maxAngularLength = Math.max(tileLen0, tileLen1, tileLen2, tileLen3) / this._granuality;
+
+        console.log(`Granuality: ${this._granuality} Initial queue: ${queueIndices.length / 3} MaxAngle: ${maxAngularLength * 180.0 / Math.PI}°`);
+
+        while (queueIndices.length > 0) {
+            const i2 = queueIndices.pop();
+            const i1 = queueIndices.pop();
+            const i0 = queueIndices.pop();
+            const triangleVertices = [
+                that._finalVertices[i0 * 2 + 0], // v0.x
+                that._finalVertices[i0 * 2 + 1], // v0.y
+                that._finalVertices[i1 * 2 + 0], // v1.x
+                that._finalVertices[i1 * 2 + 1], // v1.y
+                that._finalVertices[i2 * 2 + 0], // v2.x
+                that._finalVertices[i2 * 2 + 1], // v2.y
+            ];
+
+            if (i0 === i1 || i0 === i2 || i1 === i2) {
+                continue;
+            }
+
+            const tooLong0 = that.edgeLengthMercator(triangleVertices[0], triangleVertices[1], triangleVertices[2], triangleVertices[3]) > maxAngularLength;
+            const tooLong1 = that.edgeLengthMercator(triangleVertices[2], triangleVertices[3], triangleVertices[4], triangleVertices[5]) > maxAngularLength;
+            const tooLong2 = that.edgeLengthMercator(triangleVertices[4], triangleVertices[5], triangleVertices[0], triangleVertices[1]) > maxAngularLength;
+
+            const tooLongCount = Number(tooLong0) + Number(tooLong1) + Number(tooLong2);
+
+            //            i1
+            //          /   \
+            // edge0  i0b  c  i1b  edge1
+            //        /       \
+            //      i0 - i2b - i2
+            //          edge2
+
+            if (tooLongCount > 1) {
+                const i0b = createMidpointVertex(i0, i1);
+                const i1b = createMidpointVertex(i1, i2);
+                const i2b = createMidpointVertex(i2, i0);
+                queueIndices.push(i0, i0b, i2b);
+                queueIndices.push(i0b, i1, i1b);
+                queueIndices.push(i0b, i1b, i2b);
+                queueIndices.push(i2b, i1b, i2);
+            } else if (tooLongCount === 2) {
+                // introduction of this center point is an attempt to avoid infinite (or very deep) recursion,
+                // but it doesn't help...
+                const c = that.getVertexIndex(Math.floor((triangleVertices[0] + triangleVertices[2] + triangleVertices[4]) / 3), Math.floor((triangleVertices[1] + triangleVertices[3] + triangleVertices[5]) / 3));
+                if (!tooLong0) {
+                    const i1b = createMidpointVertex(i1, i2);
+                    const i2b = createMidpointVertex(i2, i0);
+                    queueIndices.push(i0, i1, c);
+                    queueIndices.push(i1, i1b, c);
+                    queueIndices.push(i1b, i2, c);
+                    queueIndices.push(c, i2, i2b);
+                    queueIndices.push(i0, c, i2b);
+                } else if (!tooLong1) {
+                    const i0b = createMidpointVertex(i0, i1);
+                    const i2b = createMidpointVertex(i2, i0);
+                    queueIndices.push(i0, i0b, c);
+                    queueIndices.push(i0b, i1, c);
+                    queueIndices.push(c, i1, i2);
+                    queueIndices.push(c, i2, i2b);
+                    queueIndices.push(i0, c, i2b);
+                } else {
+                    const i0b = createMidpointVertex(i0, i1);
+                    const i1b = createMidpointVertex(i1, i2);
+                    queueIndices.push(i0, i0b, c);
+                    queueIndices.push(i0b, i1, c);
+                    queueIndices.push(c, i1, i1b);
+                    queueIndices.push(c, i1b, i2);
+                    queueIndices.push(i0, c, i2);
+                }
+            } else if (tooLongCount === 1) {
+                if (tooLong0) {
+                    const i0b = createMidpointVertex(i0, i1);
+                    queueIndices.push(i0, i0b, i2);
+                    queueIndices.push(i0b, i1, i2);
+                } else if (tooLong1) {
+                    const i1b = createMidpointVertex(i1, i2);
+                    queueIndices.push(i0, i1, i1b);
+                    queueIndices.push(i0, i1b, i2);
+                } else {
+                    const i2b = createMidpointVertex(i2, i0);
+                    queueIndices.push(i0, i1, i2b);
+                    queueIndices.push(i2b, i1, i2);
+                }
+            } else {
+                // Triangle is final
+                finalIndices.push(i0);
+                finalIndices.push(i1);
+                finalIndices.push(i2);
+            }
+        }
+
+        console.log(`Resulting tris: ${finalIndices.length / 3}`);
+
+        return finalIndices;
+    }
+
     private initializeVertices(vertices: Array<number>) {
         this._finalVertices = [...vertices];
         this._vertexDictionary = {};
@@ -606,6 +754,32 @@ class Subdivider {
             const index = i / 2;
             const key = this.getKey(vertices[i], vertices[i + 1]);
             this._vertexDictionary[key] = index;
+        }
+    }
+
+    private generateSteinerPointGrid(vertices: Array<number>, holeIndices: Array<number>) {
+        let minX = EXTENT;
+        let minY = EXTENT;
+        let maxX = 0;
+        let maxY = 0;
+        for (let i = 0; i < vertices.length; i += 2) {
+            minX = Math.min(minX, vertices[i]);
+            maxX = Math.max(maxX, vertices[i]);
+            minY = Math.min(minY, vertices[i + 1]);
+            maxY = Math.max(maxY, vertices[i + 1]);
+        }
+
+        const startX = Math.floor((Math.max(minX, 0) + this._granualityStep - 1) / this._granualityStep) * this._granualityStep;
+        const startY = Math.floor((Math.max(minY, 0) + this._granualityStep - 1) / this._granualityStep) * this._granualityStep;
+        const endX = Math.floor(Math.min(maxX, EXTENT) / this._granualityStep) * this._granualityStep;
+        const endY = Math.floor(Math.min(maxY, EXTENT) / this._granualityStep) * this._granualityStep;
+
+        for (let y = startY; y <= endY; y += this._granualityStep) {
+            for (let x = startX; x <= endX; x += this._granualityStep) {
+                holeIndices.push(vertices.length / 2);
+                vertices.push(x);
+                vertices.push(y);
+            }
         }
     }
 
@@ -617,19 +791,26 @@ class Subdivider {
      * @param granuality - Target granuality. If less or equal to 1, the input buffers are returned without modification.
      * @returns Vertex and index buffers with subdivision applied.
      */
-    public subdivide(vertices: Array<number>, holeIndices: Array<number>, lineIndices: Array<Array<number>>, canonical: CanonicalTileID): SubdivisionResult {
+    public subdivide(vertices: Array<number>, holeIndices: Array<number>, lineIndices: Array<Array<number>>): SubdivisionResult {
         if (this._vertexDictionary) {
             console.error('Subdivider: multiple use not allowed.');
             return undefined;
         }
 
+        // Attempted to generate subdivided polygons directly with earcut by adding Steiner points
+        // along the grid. The approach ended up being terribly slow though.
+        //this.generateSteinerPointGrid(vertices, holeIndices);
+
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
         this.initializeVertices(vertices);
 
         const triangleIndices = earcut(vertices, holeIndices);
+        //const subdividedTriangles = triangleIndices;
 
         // Subdivide triangles
-        const subdividedTriangles = this.subdivideTriangles(triangleIndices);
+        //const subdividedTriangles = this.subdivideTriangles(triangleIndices);
+        const subdividedTriangles = this.subdivideSimple(triangleIndices);
+
         // Subdivide lines
         const subdividedLines = [];
         for (const line of lineIndices) {
@@ -645,11 +826,11 @@ class Subdivider {
         // Add pole vertices if the tile is at north/south mercator edge
         let north = false;
         let south = false;
-        if (canonical) {
-            if (canonical.y === 0) {
+        if (this._canonical) {
+            if (this._canonical.y === 0) {
                 north = true;
             }
-            if (canonical.y === (1 << canonical.z) - 1) {
+            if (this._canonical.y === (1 << this._canonical.z) - 1) {
                 south = true;
             }
         }
