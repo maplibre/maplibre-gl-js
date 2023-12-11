@@ -965,3 +965,61 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
 
     return finalLineVertices;
 }
+
+function polygonTileBounds(flattened: Array<number>, length?: number, cellSize: number) {
+    if (!length) {
+        length = flattened.length / 2;
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    // Compute AABB
+    for (let i = 0; i < length; i++) {
+        const vx = flattened[i * 2];
+        const vy = flattened[i * 2 + 1];
+        minX = Math.min(minX, vx);
+        maxX = Math.max(maxX, vx);
+        minY = Math.min(minY, vy);
+        maxY = Math.max(maxY, vy);
+    }
+
+    const cellStartY = Math.floor(minY / cellSize);
+    const cellEndY = Math.floor((minY + cellSize - 1) / cellSize);
+
+    const boundaries: Array<{min: number; max: number}> = [];
+
+    for (let y = cellStartY; y <= cellEndY; y++) {
+        boundaries.push({
+            min: Infinity,
+            max: -Infinity,
+        });
+    }
+
+    // Iterate over all edges
+    for (let i = 0; i < length; i++) {
+        const v0x = i > 0 ? flattened[i * 2 - 2] : flattened[length - 2];
+        const v0y = i > 0 ? flattened[i * 2 - 1] : flattened[length - 1];
+        const v1x = flattened[i * 2];
+        const v1y = flattened[i * 2 + 1];
+
+        // update boundaries
+    }
+}
+
+// A faster? subdivision approach:
+// - subdivide small features using the old approach? everything larger gets the new approach
+// - "rasterize" the outside ring - get a min and max extent for each cell row
+// - traverse *every* ring and split it along cell boundaries during traversal
+//     - store each segment into a dictionary indexed by hash of cell coordinates
+// - iterate over all "rasterized" cells
+//     - fetch all ring segments belonging to this cell
+//     - connect them along cell edges into outside rings for polygons
+//         - we may encounter more than one resulting polygon ring per cell - this is ok
+//     - unsubdivided rings that form holes added to polygons they *actually* intersect - collision test needed
+//     - resulting polygons + holes triangualted with earcut
+//     - furthermore, after each cell we remember whether the leaving cell edge was inside the main polygon or not
+//         - if we encounter cell with no ring segments, and last edge was inside, we fill the cell with a quad
+//         - otherwise we leave cell empty (it is inside a large hole)
