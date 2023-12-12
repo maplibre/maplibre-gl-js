@@ -5,7 +5,7 @@
       "height": 256,
       "operations": [
         ["idle"],
-        ["wait", 100]
+        ["wait", 500]
       ]
     }
   },
