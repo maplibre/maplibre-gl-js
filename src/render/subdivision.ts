@@ -152,6 +152,8 @@ class Subdivider {
 
         const finalTriangleIndices = [];
 
+        const borderCells = Math.floor((EXTENT_SUBDIVISION_BORDER + this._granualityStep - 1) / this._granualityStep);
+
         // Iterate over all input triangles
         const numIndices = triangleIndices.length;
         for (let primitiveIndex = 0; primitiveIndex < numIndices; primitiveIndex += 3) {
@@ -170,29 +172,14 @@ class Subdivider {
                 this._finalVertices[triangleIndices[primitiveIndex + 2] * 2 + 1], // v2.y
             ];
 
-            // Get triangle AABB
-            const minX = Math.min(triangleVertices[0], triangleVertices[2], triangleVertices[4]);
-            const maxX = Math.max(triangleVertices[0], triangleVertices[2], triangleVertices[4]);
-            const minY = Math.min(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
-            const maxY = Math.max(triangleVertices[1], triangleVertices[3], triangleVertices[5]);
-
-            // Compute the relevant cell range so that only the cells inside the actual tile + border are covered
-            const borderCells = Math.floor((EXTENT_SUBDIVISION_BORDER + this._granualityStep - 1) / this._granualityStep);
-            const cellRangeXmin = Math.max(Math.floor(minX / this._granualityStep), -borderCells);
-            const cellRangeYmin = Math.max(Math.floor(minY / this._granualityStep), -borderCells);
-            const cellRangeXmax = Math.min(Math.floor((maxX - 1) / this._granualityStep), this._granuality - 1 + borderCells);
-            const cellRangeYmax = Math.min(Math.floor((maxY - 1) / this._granualityStep), this._granuality - 1 + borderCells);
-
-            // Early exit for triangles that are entirely within one cell
-            if (cellRangeXmax - cellRangeXmin <= 1 && cellRangeYmax - cellRangeYmin <= 1) {
-                finalTriangleIndices.push(triangle[0]);
-                finalTriangleIndices.push(triangle[1]);
-                finalTriangleIndices.push(triangle[2]);
-                continue;
-            }
+            const boundaries = polygonTileBounds(this._granualityStep, triangleVertices, 0, 3);
 
             // Iterate over all the "granuality grid" cells that might intersect this triangle
-            for (let cellY = cellRangeYmin; cellY <= cellRangeYmax; cellY += 1) {
+            for (let cellY = Math.max(boundaries.startCellY, -borderCells); cellY <= Math.min(boundaries.endCellY, this._granuality + borderCells - 1); cellY += 1) {
+                const bounds = boundaries.rowMinMaxX[cellY - boundaries.startCellY];
+                const cellRangeXmin = Math.max(Math.floor(bounds.min / this._granualityStep), -borderCells);
+                const cellRangeXmax = Math.min(Math.floor((bounds.max - 1) / this._granualityStep), this._granuality - 1 + borderCells);
+
                 for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
                     // Cell AABB
                     const cellMinX = cellX * this._granualityStep;
@@ -808,8 +795,8 @@ class Subdivider {
         //const subdividedTriangles = triangleIndices;
 
         // Subdivide triangles
-        //const subdividedTriangles = this.subdivideTriangles(triangleIndices);
-        const subdividedTriangles = this.subdivideSimple(triangleIndices);
+        const subdividedTriangles = this.subdivideTriangles(triangleIndices);
+        //const subdividedTriangles = this.subdivideSimple(triangleIndices);
 
         // Subdivide lines
         const subdividedLines = [];
@@ -987,6 +974,7 @@ function polygonTileBounds(cellSize: number, flattened: Array<number>, start?: n
     if (!length) {
         length = flattened.length / 2 - start;
     }
+    const end = start + length;
 
     let minX = Infinity;
     let minY = Infinity;
@@ -994,7 +982,7 @@ function polygonTileBounds(cellSize: number, flattened: Array<number>, start?: n
     let maxY = -Infinity;
 
     // Compute AABB
-    for (let i = 0; i < length; i++) {
+    for (let i = start; i < end; i++) {
         const vx = flattened[i * 2];
         const vy = flattened[i * 2 + 1];
         minX = Math.min(minX, vx);
@@ -1004,7 +992,7 @@ function polygonTileBounds(cellSize: number, flattened: Array<number>, start?: n
     }
 
     const cellStartY = Math.floor(minY / cellSize);
-    const cellEndY = Math.floor((minY + cellSize - 1) / cellSize);
+    const cellEndY = Math.floor((maxY + cellSize - 1) / cellSize);
 
     const boundaries: Array<{min: number; max: number}> = [];
 
@@ -1016,9 +1004,9 @@ function polygonTileBounds(cellSize: number, flattened: Array<number>, start?: n
     }
 
     // Iterate over all edges and update boundaries
-    for (let i = 0; i < length; i++) {
-        let v0x = i > 0 ? flattened[i * 2 - 2] : flattened[length - 2];
-        let v0y = i > 0 ? flattened[i * 2 - 1] : flattened[length - 1];
+    for (let i = start; i < end; i++) {
+        let v0x = i > start ? flattened[i * 2 - 2] : flattened[end * 2 - 2];
+        let v0y = i > start ? flattened[i * 2 - 1] : flattened[end * 2 - 1];
         let v1x = flattened[i * 2];
         let v1y = flattened[i * 2 + 1];
 
