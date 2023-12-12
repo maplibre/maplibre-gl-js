@@ -962,7 +962,7 @@ type PolygonTileBounds = {
 /**
  * For a given polygon, computes its total cell extent in Y axis, and for each cell row,
  * computes its min and max extent in the X axis.
- * @param cellSize Size of one cell, in tile units. This should equal EXTENT / granuality.
+ * @param cellSize Size of one cell, in tile units. This should equal `EXTENT / granuality`.
  * @param flattened Flattened vertex coordinates, xyxyxy.
  * @param start First vertex to process from the array. Defaults to 0.
  * @param length Number of vertices to process from the flattened array. Leave unassigned to process all vertices from start parameter to the end of the array.
@@ -1089,3 +1089,27 @@ function polygonTileBounds(cellSize: number, flattened: Array<number>, start?: n
 //     - furthermore, after each cell we remember whether the leaving cell edge was inside the main polygon or not
 //         - if we encounter cell with no ring segments, and last edge was inside, we fill the cell with a quad
 //         - otherwise we leave cell empty (it is inside a large hole)
+
+// Exterior rings are CW, holes are CCW, use that!
+
+type RingSegmentDict = {
+    // Maps cell coordinates to ring segment array
+    [cellID: string]: Array<{
+        // True for hole rings, false for exterior rings
+        isHole: boolean;
+        // Ring vertices that intersect this cell, including vertices created by clipping the original ring against this cell.
+        // Vertices are in the same order as they appear in the original ring.
+        vertices: Array<{
+            x: number;
+            y: number;
+        }>;
+    }>;
+};
+
+function cellIDtoKey(cellX: number, cellY: number): string {
+    return `${cellX.toString(36)}_${cellY.toString(36)}`;
+}
+
+function splitRings(flattened: Array<number>, holeIndices: Array<number>, cellSize: number): RingSegmentDict {
+
+}
