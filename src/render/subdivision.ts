@@ -966,9 +966,26 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
     return finalLineVertices;
 }
 
-function polygonTileBounds(flattened: Array<number>, length?: number, cellSize: number) {
+type PolygonTileBounds = {
+    startCellY: number;
+    endCellY: number;
+    rowMinMaxX: Array<{min: number; max: number}>;
+};
+
+/**
+ * For a given polygon, computes its total cell extent in Y axis, and for each cell row,
+ * computes its min and max extent in the X axis.
+ * @param cellSize Size of one cell, in tile units. This should equal EXTENT / granuality.
+ * @param flattened Flattened vertex coordinates, xyxyxy.
+ * @param start First vertex to process from the array. Defaults to 0.
+ * @param length Number of vertices to process from the flattened array. Leave unassigned to process all vertices from start parameter to the end of the array.
+ */
+function polygonTileBounds(cellSize: number, flattened: Array<number>, start?: number, length?: number): PolygonTileBounds {
+    if (!start) {
+        start = 0;
+    }
     if (!length) {
-        length = flattened.length / 2;
+        length = flattened.length / 2 - start;
     }
 
     let minX = Infinity;
@@ -998,15 +1015,76 @@ function polygonTileBounds(flattened: Array<number>, length?: number, cellSize: 
         });
     }
 
-    // Iterate over all edges
+    // Iterate over all edges and update boundaries
     for (let i = 0; i < length; i++) {
-        const v0x = i > 0 ? flattened[i * 2 - 2] : flattened[length - 2];
-        const v0y = i > 0 ? flattened[i * 2 - 1] : flattened[length - 1];
-        const v1x = flattened[i * 2];
-        const v1y = flattened[i * 2 + 1];
+        let v0x = i > 0 ? flattened[i * 2 - 2] : flattened[length - 2];
+        let v0y = i > 0 ? flattened[i * 2 - 1] : flattened[length - 1];
+        let v1x = flattened[i * 2];
+        let v1y = flattened[i * 2 + 1];
 
-        // update boundaries
+        if(v0y > v1y) {
+            const tempX = v0x;
+            const tempY = v0y;
+            v0x = v1x;
+            v0y = v1y;
+            v1x = tempX;
+            v1y = tempY;
+        }
+
+        // Handle special case of an edge parallel with the X axis
+        // This avoids division by zero later in the code
+        if (v0y === v1y) {
+            const cellY = Math.min(Math.floor(v0y / cellSize), cellEndY);
+            const bound = boundaries[cellY - cellStartY];
+            bound.min = Math.min(bound.min, v0x, v1x);
+            bound.max = Math.max(bound.max, v0x, v1x);
+            continue;
+        }
+
+        const edgeStartCellY = Math.floor(v0y / cellSize);
+        const edgeEndCellY = Math.floor((v1y + cellSize - 1) / cellSize);
+
+        // Account for the edge's vertices
+        const boundStart = boundaries[edgeStartCellY - cellStartY];
+        boundStart.min = Math.min(boundStart.min, v0x);
+        boundStart.max = Math.max(boundStart.max, v0x);
+        const boundEnd = boundaries[edgeEndCellY - cellStartY];
+        boundEnd.min = Math.min(boundEnd.min, v1x);
+        boundEnd.max = Math.max(boundEnd.max, v1x);
+
+        const edgeSlope = (v1x - v0x) / (v1y - v0y);
+
+        // Iterate over cell edges that bisect this edge
+        //            v0  cell0
+        //            /
+        // ----------/---- <- iterate
+        //          /
+        //         /  cell1
+        //        /
+        // ------/-------- <- iterate
+        //      /
+        //     /   cell2
+        //    /
+        // --/------------ <- iterate
+        //  v1
+        //      cell3
+        for (let cellY = edgeStartCellY + 1; cellY <= edgeEndCellY; cellY++) {
+            const y = cellY * cellSize;
+            const x = v0x + (y - v0y) * edgeSlope;
+            const boundaryUpper = boundaries[cellY - cellStartY - 1];
+            boundaryUpper.min = Math.min(boundaryUpper.min, x);
+            boundaryUpper.max = Math.max(boundaryUpper.max, x);
+            const boundaryLower = boundaries[cellY - cellStartY];
+            boundaryLower.min = Math.min(boundaryLower.min, x);
+            boundaryLower.max = Math.max(boundaryLower.max, x);
+        }
     }
+
+    return {
+        startCellY: cellStartY,
+        endCellY: cellEndY,
+        rowMinMaxX: boundaries,
+    };
 }
 
 // A faster? subdivision approach:
