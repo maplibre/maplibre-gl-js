@@ -1,9 +1,9 @@
-import {RequestParameters, makeRequest, sameOrigin, getProtocolAction, GetResourceResponse} from './ajax';
-
+import {RequestParameters, makeRequest, sameOrigin, GetResourceResponse} from './ajax';
 import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
 import {webpSupported} from './webp_supported';
 import {config} from './config';
 import {createAbortError} from './abort_error';
+import {getProtocol} from '../source/protocol_crud';
 
 type ImageQueueThrottleControlCallback = () => boolean;
 
@@ -154,7 +154,7 @@ export namespace ImageRequest {
         // - HtmlImageElement request automatically adds accept header for all the browser supported images
         const canUseHTMLImageElement = supportImageRefresh === false &&
             !isWorker(self) &&
-            !getProtocolAction(requestParameters.url) &&
+            !getProtocol(requestParameters.url) &&
             (!requestParameters.headers ||
                 Object.keys(requestParameters.headers).reduce((acc, item) => acc && item === 'accept', true));
 

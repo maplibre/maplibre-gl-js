@@ -1,6 +1,6 @@
 import {extend, isWorker} from './util';
 import {createAbortError} from './abort_error';
-import {getProtocol} from '../source/add_protocol';
+import {getProtocol} from '../source/protocol_crud';
 
 /**
  * This is used to identify the global dispatcher id when sending a message from the worker without a target map id.
@@ -226,8 +226,9 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
  */
 export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
-        if (getProtocol(requestParameters.url)) {
-            return getProtocol(requestParameters.url)(requestParameters, abortController);
+        const protocolLoadFn = getProtocol(requestParameters.url);
+        if (protocolLoadFn) {
+            return protocolLoadFn(requestParameters, abortController);
         }
         if (isWorker(self) && self.worker && self.worker.actor) {
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);

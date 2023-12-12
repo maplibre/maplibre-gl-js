@@ -31,7 +31,7 @@ import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
 import {addSourceType, type SourceClass} from './source/source';
-import {addProtocol, removeProtocol} from './source/add_protocol';
+import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {getGlobalDispatcher} from './util/dispatcher';
 const version = packageJSON.version;
 

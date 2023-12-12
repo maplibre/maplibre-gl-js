@@ -5,7 +5,7 @@ import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
 import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
-import {addProtocol, removeProtocol} from './add_protocol';
+import {addProtocol, removeProtocol} from './protocol_crud';
 
 import type {
     WorkerSource,
