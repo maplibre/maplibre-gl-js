@@ -192,11 +192,11 @@ vec3 projectToSphere(vec2 posInTile) {
     );
 
     // North pole
-    if(posInTile.x < -32767.5 && posInTile.y < -32767.5) {
+    if (posInTile.x < -32767.5 && posInTile.y < -32767.5) {
         pos = vec3(0.0, 1.0, 0.0);
     }
     // South pole
-    if(posInTile.x > 32766.5 && posInTile.y > 32766.5) {
+    if (posInTile.x > 32766.5 && posInTile.y > 32766.5) {
         pos = vec3(0.0, -1.0, 0.0);
     }
 
@@ -241,8 +241,22 @@ vec4 projectTileWithElevation(vec3 posInTileWithElevation) {
 //     return result;
 // }
 #else
+vec4 projectTile(vec2 p) {
+    // Kill pole vertices and triangles by placing the pole vertex so far in Z that
+    // the clipping hardware kills the entire triangle.
+    vec4 result = u_projection_matrix * vec4(p, 0.0, 1.0);
+    if ((p.x < -32767.5 && p.y < -32767.5) || (p.x > 32766.5 && p.y > 32766.5)) {
+        result.z = -10000000.0;
+    }
+    return result;
+}
+
+vec4 projectTileWithElevation(vec3 p) {
+    // This function is only used in symbol vertex shaders and symbols never use pole vertices,
+    // so no need to detect them.
+    return u_projection_matrix * vec4(p, 1.0);
+}
+
 #define projectThickness(p) (1.0)
-#define projectTile(p) (u_projection_matrix * vec4((p).x, (p).y, 0.0, 1.0))
-#define projectTileWithElevation(p) (u_projection_matrix * vec4((p).x, (p).y, (p).z, 1.0))
 #define getDebugColor(p) (vec4(1.0, 0.0, 1.0, 1.0))
 #endif
