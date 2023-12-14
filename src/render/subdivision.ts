@@ -1104,11 +1104,8 @@ type RingSegmentDict = {
         // True for hole rings, false for exterior rings
         isHole: boolean;
         // Ring vertices that intersect this cell, including vertices created by clipping the original ring against this cell.
-        // Vertices are in the same order as they appear in the original ring.
-        vertices: Array<{
-            x: number;
-            y: number;
-        }>;
+        // Vertices are in the same order as they appear in the original ring. Coordinates are flattened.
+        vertices: Array<number>;
     }>;
 };
 
@@ -1116,6 +1113,134 @@ function cellIDtoKey(cellX: number, cellY: number): string {
     return `${cellX.toString(36)}_${cellY.toString(36)}`;
 }
 
-function splitRings(flattened: Array<number>, holeIndices: Array<number>, cellSize: number): RingSegmentDict {
+/**
+ * Splits rings along cell borders, assign each resulting segment to its corresponding cell.
+ * @param subdividedRings Array of rings, each ring is a list of vertices with flattened coordinates, xyxyxy. There is an implicit line between last and first vertex (they are not duplicate).
+ * @param cellSize Size of the subdivision cell.
+ * @returns Dictionary mapping cell coordinates to a list of ring segments that intersect it.
+ */
+function splitRings(subdividedRings: Array<Array<number>>, cellSize: number): RingSegmentDict {
+    for (let ringIndex = 0; ringIndex < subdividedRings.length; ringIndex++) {
+        const isHole = ringIndex > 0;
+        const ring = subdividedRings[ringIndex];
+
+        if (ring.length < 6) {
+            // Skip rings that do not form a polygon, just in case
+            continue;
+        }
+
+        let lineIndex = 0;
+
+        // Possible edge cases:
+        // - line goes along cell border
+        //     - solution: detect cells entirely inside a hole, then I can just throw away lines along cell edges
+        // - entire polygon goes around cell borders
+        //     - solution: same as above
+        // - line goes through cell corner (say 0,0)
+        //     - solution: no need for special consideration
+        // - ???
+
+        while (true) {
+            const v0x =
+
+            lineIndex++;
+        }
+    }
+
+    return {};
+}
+
+function triangulatePolygonSubdivide(vertices: Array<number>, holeIndices: Array<number>, cellSize: number) {
+    // subdivide all rings
+    // split rings into cell segments
+
+    const exteriorBounds = polygonTileBounds(cellSize, vertices, 0, (holeIndices && holeIndices.length > 0) ? holeIndices[0] : vertices.length / 2);
+
+    // mock
+    const ringSegments: RingSegmentDict = {};
 
 }
+
+// ID of cell to the bottom right of a corner -> is it inside?
+type CellCornerDict = {[cellID: string]: boolean};
+
+/**
+ * For each cell that might cover the supplied polygon with holes, computes for every corner of such set of cells whether this corner is inside the polygon or not.
+ * Cell corners that lie on the polygon's or hole's edges are considered to be inside the polygon.
+ * Cell corners inside holes are considered to NOT be inside the polygon.
+ * @param vertices
+ * @param holeIndices
+ * @param cellSize
+ * @param exteriorBounds
+ */
+function computeCellCornersInsidePolygon(vertices: Array<number>, holeIndices: Array<number>, cellSize: number, exteriorBounds: PolygonTileBounds): CellCornerDict {
+    if (!holeIndices) {
+        holeIndices = [];
+    }
+
+    // Stores X coordinates of edge intersections for each cell border.
+    const intersections: Array<Array<number>> = [];
+    // Stores tuples of the edge X coordinates of any line segment along each cell border.
+    const parallelLines: Array<Array<number>> = [];
+
+    const cellCount = exteriorBounds.endCellY - exteriorBounds.startCellY + 1;
+    for (let rowIndex = 0; rowIndex <= cellCount; rowIndex++) {
+        intersections.push([]);
+        parallelLines.push([]);
+    }
+
+    for (let ringIndex = 0; ringIndex <= holeIndices.length; ringIndex++) {
+        const ringStart = ringIndex > 0 ? holeIndices[ringIndex - 1] : 0;
+        // inclusive end vertex index
+        const ringEnd = ringIndex < holeIndices.length ? (holeIndices[ringIndex] - 1) : (vertices.length / 2 - 1);
+
+        for (let vertexIndex = ringStart; vertexIndex <= ringEnd; vertexIndex++) {
+            const v0x = vertices[vertexIndex * 2];
+            const v0y = vertices[vertexIndex * 2 + 1];
+            const nextVertex = (vertexIndex < ringEnd) ? (vertexIndex + 1) : ringStart;
+            const v1x = vertexIndex[nextVertex * 2];
+            const v1y = vertexIndex[nextVertex * 2 + 1];
+
+            // Skip all edges parallel with cell row edges
+            if (v0y === v1y) {
+                if (Math.abs(v0y % cellSize) === 0) {
+                    const cellRow = Math.floor(v0y / cellSize);
+                    parallelLines[v0y].push(Math.min(v0x, v1x), Math.max(v0x, v1x));
+                }
+                continue;
+            }
+
+        }
+    }
+
+    for (let rowIndex = 0; rowIndex <= cellCount; rowIndex++) {
+        const row = rowIndex + exteriorBounds.startCellY;
+        const rowX = row * cellSize;
+        let minX = Infinity;
+        let maxX = Infinity;
+
+        if (rowIndex > 0) {
+            const upperRowBounds = exteriorBounds.rowMinMaxX[rowIndex - 1];
+            minX = Math.min(minX, upperRowBounds.min);
+            maxX = Math.max(maxX, upperRowBounds.max);
+        }
+
+        if (rowIndex < cellCount) {
+            const lowerRowBounds = exteriorBounds.rowMinMaxX[rowIndex];
+            minX = Math.min(minX, lowerRowBounds.min);
+            maxX = Math.max(maxX, lowerRowBounds.max);
+        }
+    }
+}
+
+// "quadtree" approach:
+// 1. identify polygon minmax bounds for every row
+// 2. identify all cells that are intersected by *any* polygon edge (exterior + hole) in any way
+// 3. compute wheter cell center points are inside polygon, for all cells inside the polygon minamx bounds
+// 4. get all cells that are fully inside the polygon
+//     - those are all cells NOT intersected by an edge AND whose center is inside
+// 5. get all cells fully outside in the same way
+// 6. store all edge cells in a quadtree
+// 7. for each triangle, use the quadtree to mark all edge cells intersected by it
+//     - now we have a list of edge cells, and for each we have a list of intersecting triangles
+// 8. generate geometry for every edge cell the same way as in first subdivision approach (clip triangles against cell edges)
