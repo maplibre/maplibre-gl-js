@@ -98,7 +98,7 @@ class Subdivider {
     /**
      * Map of "vertex x and y coordinate" to "index of such vertex".
      */
-    private _vertexDictionary: {[_: string]: number};
+    private _vertexDictionary: Map<number, number>;
 
     private readonly _canonical: CanonicalTileID;
 
@@ -111,17 +111,20 @@ class Subdivider {
         this._canonical = canonical;
     }
 
-    private getKey(x: number, y: number): string {
-        return `${Math.floor(x).toString(36)}_${Math.floor(y).toString(36)}`;
+    private getKey(x: number, y: number): number {
+        x = x + 32768;
+        y = y + 32768;
+        return (x << 16) | (y << 0);
     }
 
     private getVertexIndex(x: number, y: number): number {
+
         const key = this.getKey(x, y);
-        if (key in this._vertexDictionary) {
-            return this._vertexDictionary[key];
+        if (this._vertexDictionary.has(key)) {
+            return this._vertexDictionary.get(key);
         }
         const index = this._finalVertices.length / 2;
-        this._vertexDictionary[key] = index;
+        this._vertexDictionary.set(key, index);
         this._finalVertices.push(x);
         this._finalVertices.push(y);
         return index;
@@ -728,11 +731,11 @@ class Subdivider {
 
     private initializeVertices(vertices: Array<number>) {
         this._finalVertices = [...vertices];
-        this._vertexDictionary = {};
+        this._vertexDictionary = new Map<number, number>();
         for (let i = 0; i < vertices.length; i += 2) {
             const index = i / 2;
             const key = this.getKey(vertices[i], vertices[i + 1]);
-            this._vertexDictionary[key] = index;
+            this._vertexDictionary.set(key, index);
         }
     }
 
