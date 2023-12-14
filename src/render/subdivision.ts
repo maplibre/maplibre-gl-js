@@ -177,8 +177,19 @@ class Subdivider {
 
             const boundaries = polygonTileBounds(this._granualityStep, triangleVertices, 0, 3);
 
+            // Skip triangles that are entirely inside a cell
+            if (boundaries.startCellY === boundaries.endCellY && Math.floor(boundaries.rowMinMaxX[0].min / this._granualityStep) === Math.floor(boundaries.rowMinMaxX[0].max / this._granualityStep)) {
+                finalTriangleIndices.push(
+                    triangleIndices[primitiveIndex + 0],
+                    triangleIndices[primitiveIndex + 1],
+                    triangleIndices[primitiveIndex + 2],
+                );
+                continue;
+            }
+
             // Iterate over all the "granuality grid" cells that might intersect this triangle
-            for (let cellY = Math.max(boundaries.startCellY, -borderCells); cellY <= Math.min(boundaries.endCellY, this._granuality + borderCells - 1); cellY += 1) {
+            const cellYrangeMax = Math.min(boundaries.endCellY, this._granuality + borderCells - 1);
+            for (let cellY = Math.max(boundaries.startCellY, -borderCells); cellY <= cellYrangeMax; cellY += 1) {
                 const bounds = boundaries.rowMinMaxX[cellY - boundaries.startCellY];
                 const cellRangeXmin = Math.max(Math.floor(bounds.min / this._granualityStep), -borderCells);
                 const cellRangeXmax = Math.min(Math.floor((bounds.max - 1) / this._granualityStep), this._granuality - 1 + borderCells);
@@ -241,59 +252,45 @@ class Subdivider {
                     let avgX = 0;
                     let avgY = 0;
 
-                    for (let i = 0; i < indicesInsideCell.length; i++) {
+                    const insideCellLength = indicesInsideCell.length;
+                    for (let i = 0; i < insideCellLength; i++) {
                         avgX += this._finalVertices[indicesInsideCell[i] * 2 + 0];
                         avgY += this._finalVertices[indicesInsideCell[i] * 2 + 1];
                     }
 
-                    avgX /= indicesInsideCell.length;
-                    avgY /= indicesInsideCell.length;
+                    avgX /= insideCellLength;
+                    avgY /= insideCellLength;
 
-                    indicesInsideCell.sort((a: number, b: number) => {
-                        const ax = this._finalVertices[a * 2 + 0] - avgX;
-                        const ay = this._finalVertices[a * 2 + 1] - avgY;
-                        const bx = this._finalVertices[b * 2 + 0] - avgX;
-                        const by = this._finalVertices[b * 2 + 1] - avgY;
-                        const angleA = angle(ax, ay);
-                        const angleB = angle(bx, by);
-                        if (angleA < angleB) {
-                            return -1;
+                    const angles = [];
+
+                    for (let i = 0; i < insideCellLength; i++) {
+                        angles[i] = angle(this._finalVertices[indicesInsideCell[i] * 2] - avgX, this._finalVertices[indicesInsideCell[i] * 2 + 1] - avgY);
+                    }
+
+                    // Selectsort (we can never have more than ~7 vertices to sort anyway)
+                    for (let i = 0; i < insideCellLength - 1; i++) {
+                        let minIndex = i;
+                        let minAngle = angles[i];
+                        for (let j = i + 1; j < insideCellLength; j++) {
+                            if (angles[j] < minAngle) {
+                                minAngle = angles[j];
+                                minIndex = j;
+                            }
                         }
-                        if (angleA > angleB) {
-                            return 1;
+                        if (minIndex !== i) {
+                            const index = indicesInsideCell[minIndex];
+                            indicesInsideCell[minIndex] = indicesInsideCell[i];
+                            indicesInsideCell[i] = index;
+                            angles[minIndex] = angles[i];
+                            angles[i] = minAngle;
                         }
-                        return 0;
-                    });
+                    }
 
                     // Now we finally generate triangles
-                    const inCellIndices = indicesInsideCell.length;
-                    for (let i = 2; i < inCellIndices; i++) {
-                        const ax = this._finalVertices[indicesInsideCell[i - 1] * 2 + 0] - this._finalVertices[indicesInsideCell[0] * 2 + 0];
-                        const ay = this._finalVertices[indicesInsideCell[i - 1] * 2 + 1] - this._finalVertices[indicesInsideCell[0] * 2 + 1];
-                        const bx = this._finalVertices[indicesInsideCell[i] * 2 + 0] - this._finalVertices[indicesInsideCell[0] * 2 + 0];
-                        const by = this._finalVertices[indicesInsideCell[i] * 2 + 1] - this._finalVertices[indicesInsideCell[0] * 2 + 1];
-
-                        const c = cross(ax, ay, bx, by);
-
-                        // Skip degenerate (linear) triangles
-                        if (c === 0 ||
-                            (this._finalVertices[indicesInsideCell[0] * 2 + 0] === this._finalVertices[indicesInsideCell[i] * 2 + 0] && this._finalVertices[indicesInsideCell[0] * 2 + 0] === this._finalVertices[indicesInsideCell[i - 1] * 2 + 0]) ||
-                            (this._finalVertices[indicesInsideCell[0] * 2 + 1] === this._finalVertices[indicesInsideCell[i] * 2 + 1] && this._finalVertices[indicesInsideCell[0] * 2 + 1] === this._finalVertices[indicesInsideCell[i - 1] * 2 + 1])) {
-                            //continue;
-                        }
-
-                        // Ensure CCW order
-                        if (c > 0) {
-                            finalTriangleIndices.push(indicesInsideCell[0]);
-                            finalTriangleIndices.push(indicesInsideCell[i]);
-                            finalTriangleIndices.push(indicesInsideCell[i - 1]);
-                        }
-
-                        if (c < 0) {
-                            finalTriangleIndices.push(indicesInsideCell[0]);
-                            finalTriangleIndices.push(indicesInsideCell[i - 1]);
-                            finalTriangleIndices.push(indicesInsideCell[i]);
-                        }
+                    for (let i = 2; i < insideCellLength; i++) {
+                        finalTriangleIndices.push(indicesInsideCell[0]);
+                        finalTriangleIndices.push(indicesInsideCell[i]);
+                        finalTriangleIndices.push(indicesInsideCell[i - 1]);
                     }
                 }
             }
@@ -773,7 +770,7 @@ class Subdivider {
      * @param granuality - Target granuality. If less or equal to 1, the input buffers are returned without modification.
      * @returns Vertex and index buffers with subdivision applied.
      */
-    public subdivide(vertices: Array<number>, holeIndices: Array<number>, lineIndices: Array<Array<number>>): SubdivisionResult {
+    public subdivideFillInternal(vertices: Array<number>, holeIndices: Array<number>, lineIndices: Array<Array<number>>): SubdivisionResult {
         if (this._vertexDictionary) {
             console.error('Subdivider: multiple use not allowed.');
             return undefined;
@@ -830,7 +827,7 @@ class Subdivider {
 
 export function subdivideFill(vertices: Array<number>, holeIndices: Array<number>, lineList: Array<Array<number>>, canonical: CanonicalTileID, granuality: number): SubdivisionResult {
     const subdivider = new Subdivider(granuality, canonical);
-    return subdivider.subdivide(vertices, holeIndices, lineList);
+    return subdivider.subdivideFillInternal(vertices, holeIndices, lineList);
 }
 
 export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
