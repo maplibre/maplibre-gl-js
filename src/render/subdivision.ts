@@ -308,8 +308,6 @@ class Subdivider {
             return lineIndices;
         }
 
-        // JP: TODO: adapt for subdivision with border
-
         const finalLineIndices = [];
 
         // Iterate over all input lines
@@ -328,24 +326,16 @@ class Subdivider {
             const minY = Math.min(lineVertex0y, lineVertex1y);
             const maxY = Math.max(lineVertex0y, lineVertex1y);
 
-            // Compute the relevant cell range so that only the cells inside the actual tile + border are covered
-            const borderCells = Math.floor((EXTENT_SUBDIVISION_BORDER + this._granualityStep - 1) / this._granualityStep);
-            const cellRangeXmin = Math.max(Math.floor(minX / this._granualityStep + 1), -borderCells + 1);
-            const cellRangeYmin = Math.max(Math.floor(minY / this._granualityStep + 1), -borderCells + 1);
-            const cellRangeXmax = Math.min(Math.floor((maxX - 1) / this._granualityStep), this._granuality - 1 + borderCells);
-            const cellRangeYmax = Math.min(Math.floor((maxY - 1) / this._granualityStep), this._granuality - 1 + borderCells);
+            const cellRangeXmin = Math.floor(minX / this._granualityStep + 1);
+            const cellRangeYmin = Math.floor(minY / this._granualityStep + 1);
+            const cellRangeXmax = Math.floor((maxX - 1) / this._granualityStep);
+            const cellRangeYmax = Math.floor((maxY - 1) / this._granualityStep);
 
             const subdividedLineIndices = [];
 
             // Add original line vertices
-            const extentMin = -borderCells * this._granualityStep;
-            const extentMax = EXTENT + borderCells * this._granualityStep;
-            if (lineVertex0x >= extentMin && lineVertex0x <= extentMax && lineVertex0y >= extentMin && lineVertex0y <= extentMax) {
-                subdividedLineIndices.push(lineIndex0);
-            }
-            if (lineVertex1x >= extentMin && lineVertex1x <= extentMax && lineVertex1y >= extentMin && lineVertex1y <= extentMax) {
-                subdividedLineIndices.push(lineIndex1);
-            }
+            subdividedLineIndices.push(lineIndex0);
+            subdividedLineIndices.push(lineIndex1);
 
             for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
                 const cellEdgeX = cellX * this._granualityStep;
@@ -363,6 +353,8 @@ class Subdivider {
             if (subdividedLineIndices.length < 2) {
                 continue;
             }
+
+            // JP: TODO: this could be done without sorting
 
             subdividedLineIndices.sort((a: number, b: number) => {
                 const ax = this._finalVertices[a * 2 + 0] - lineVertex0x;
@@ -954,14 +946,26 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
 }
 
 type PolygonTileBounds = {
+    /**
+     * Y coordinate (in cells) of the first cell of the polygon.
+     */
     startCellY: number;
+
+    /**
+     * Y coordinate (in cells) of the last cell of the polygon (inclusive).
+     */
     endCellY: number;
+
+    /**
+     * An inclusive min and max X coordinate in each cell row, stored in vertex coordinate units (NOT in cell units). This array has `endCellY - startCellY + 1` elements.
+     */
     rowMinMaxX: Array<{min: number; max: number}>;
 };
 
 /**
  * For a given polygon, computes its total cell extent in Y axis, and for each cell row,
  * computes its min and max extent in the X axis.
+ * Assumes that the last processed vertex is connected to the first one with a line segment.
  * @param cellSize Size of one cell, in tile units. This should equal `EXTENT / granuality`.
  * @param flattened Flattened vertex coordinates, xyxyxy.
  * @param start First vertex to process from the array. Defaults to 0.
@@ -1010,7 +1014,7 @@ function polygonTileBounds(cellSize: number, flattened: Array<number>, start?: n
         let v1x = flattened[i * 2];
         let v1y = flattened[i * 2 + 1];
 
-        if(v0y > v1y) {
+        if (v0y > v1y) {
             const tempX = v0x;
             const tempY = v0y;
             v0x = v1x;
@@ -1042,20 +1046,22 @@ function polygonTileBounds(cellSize: number, flattened: Array<number>, start?: n
 
         const edgeSlope = (v1x - v0x) / (v1y - v0y);
 
-        // Iterate over cell edges that bisect this edge
-        //            v0  cell0
+        // Iterate over cell edges that intersect this edge
+        //
+        //            v0  cell row 0
         //            /
         // ----------/---- <- iterate
         //          /
-        //         /  cell1
+        //         /  cell row 1
         //        /
         // ------/-------- <- iterate
         //      /
-        //     /   cell2
+        //     /   cell row 2
         //    /
         // --/------------ <- iterate
         //  v1
-        //      cell3
+        //      cell row 3
+        //
         for (let cellY = edgeStartCellY + 1; cellY <= edgeEndCellY; cellY++) {
             const y = cellY * cellSize;
             const x = v0x + (y - v0y) * edgeSlope;
