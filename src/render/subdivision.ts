@@ -103,11 +103,11 @@ class Subdivider {
     private readonly _canonical: CanonicalTileID;
 
     private readonly _granuality;
-    private readonly _granualityStep;
+    private readonly _granualityCellSize;
 
     constructor(granuality: number, canonical: CanonicalTileID) {
         this._granuality = granuality;
-        this._granualityStep = EXTENT / granuality;
+        this._granualityCellSize = EXTENT / granuality;
         this._canonical = canonical;
     }
 
@@ -145,17 +145,13 @@ class Subdivider {
     }
 
     private subdivideTriangles(triangleIndices: Array<number>): Array<number> {
-        if (!triangleIndices) {
-            return [];
-        }
-
         if (this._granuality < 2) {
             return triangleIndices;
         }
 
         const finalTriangleIndices = [];
 
-        const borderCells = Math.floor((EXTENT_SUBDIVISION_BORDER + this._granualityStep - 1) / this._granualityStep);
+        const borderCells = Math.floor((EXTENT_SUBDIVISION_BORDER + this._granualityCellSize - 1) / this._granualityCellSize);
 
         // Iterate over all input triangles
         const numIndices = triangleIndices.length;
@@ -175,10 +171,10 @@ class Subdivider {
                 this._finalVertices[triangleIndices[primitiveIndex + 2] * 2 + 1], // v2.y
             ];
 
-            const boundaries = polygonTileBounds(this._granualityStep, triangleVertices, 0, 3);
+            const boundaries = polygonTileBounds(this._granualityCellSize, triangleVertices, 0, 3);
 
             // Skip triangles that are entirely inside a cell
-            if (boundaries.startCellY === boundaries.endCellY && Math.floor(boundaries.rowMinMaxX[0].min / this._granualityStep) === Math.floor(boundaries.rowMinMaxX[0].max / this._granualityStep)) {
+            if (boundaries.startCellY === boundaries.endCellY && Math.floor(boundaries.rowMinMaxX[0].min / this._granualityCellSize) === Math.floor(boundaries.rowMinMaxX[0].max / this._granualityCellSize)) {
                 finalTriangleIndices.push(
                     triangleIndices[primitiveIndex + 0],
                     triangleIndices[primitiveIndex + 1],
@@ -188,18 +184,19 @@ class Subdivider {
             }
 
             // Iterate over all the "granuality grid" cells that might intersect this triangle
+            const cellYrangeMin = Math.max(boundaries.startCellY, -borderCells);
             const cellYrangeMax = Math.min(boundaries.endCellY, this._granuality + borderCells - 1);
-            for (let cellY = Math.max(boundaries.startCellY, -borderCells); cellY <= cellYrangeMax; cellY += 1) {
+            for (let cellY = cellYrangeMin; cellY <= cellYrangeMax; cellY += 1) {
                 const bounds = boundaries.rowMinMaxX[cellY - boundaries.startCellY];
-                const cellRangeXmin = Math.max(Math.floor(bounds.min / this._granualityStep), -borderCells);
-                const cellRangeXmax = Math.min(Math.floor((bounds.max - 1) / this._granualityStep), this._granuality - 1 + borderCells);
+                const cellRangeXmin = Math.max(Math.floor(bounds.min / this._granualityCellSize), -borderCells);
+                const cellRangeXmax = Math.min(Math.floor((bounds.max - 1) / this._granualityCellSize), this._granuality - 1 + borderCells);
 
                 for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
                     // Cell AABB
-                    const cellMinX = cellX * this._granualityStep;
-                    const cellMinY = cellY * this._granualityStep;
-                    const cellMaxX = (cellX + 1) * this._granualityStep;
-                    const cellMaxY = (cellY + 1) * this._granualityStep;
+                    const cellMinX = cellX * this._granualityCellSize;
+                    const cellMinY = cellY * this._granualityCellSize;
+                    const cellMaxX = (cellX + 1) * this._granualityCellSize;
+                    const cellMaxY = (cellY + 1) * this._granualityCellSize;
 
                     // Find all vertices (and their indices) that are inside this cell.
                     const indicesInsideCell = [];
@@ -326,10 +323,10 @@ class Subdivider {
             const minY = Math.min(lineVertex0y, lineVertex1y);
             const maxY = Math.max(lineVertex0y, lineVertex1y);
 
-            const cellRangeXmin = Math.floor(minX / this._granualityStep + 1);
-            const cellRangeYmin = Math.floor(minY / this._granualityStep + 1);
-            const cellRangeXmax = Math.floor((maxX - 1) / this._granualityStep);
-            const cellRangeYmax = Math.floor((maxY - 1) / this._granualityStep);
+            const cellRangeXmin = Math.floor(minX / this._granualityCellSize + 1);
+            const cellRangeYmin = Math.floor(minY / this._granualityCellSize + 1);
+            const cellRangeXmax = Math.floor((maxX - 1) / this._granualityCellSize);
+            const cellRangeYmax = Math.floor((maxY - 1) / this._granualityCellSize);
 
             const subdividedLineIndices = [];
 
@@ -338,12 +335,12 @@ class Subdivider {
             subdividedLineIndices.push(lineIndex1);
 
             for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
-                const cellEdgeX = cellX * this._granualityStep;
+                const cellEdgeX = cellX * this._granualityCellSize;
                 this.checkEdgeSubdivisionX(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, minY, maxY);
             }
 
             for (let cellY = cellRangeYmin; cellY <= cellRangeYmax; cellY += 1) {
-                const cellEdgeY = cellY * this._granualityStep;
+                const cellEdgeY = cellY * this._granualityCellSize;
                 this.checkEdgeSubdivisionY(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, minX, maxX);
             }
 
@@ -748,13 +745,13 @@ class Subdivider {
             maxY = Math.max(maxY, vertices[i + 1]);
         }
 
-        const startX = Math.floor((Math.max(minX, 0) + this._granualityStep - 1) / this._granualityStep) * this._granualityStep;
-        const startY = Math.floor((Math.max(minY, 0) + this._granualityStep - 1) / this._granualityStep) * this._granualityStep;
-        const endX = Math.floor(Math.min(maxX, EXTENT) / this._granualityStep) * this._granualityStep;
-        const endY = Math.floor(Math.min(maxY, EXTENT) / this._granualityStep) * this._granualityStep;
+        const startX = Math.floor((Math.max(minX, 0) + this._granualityCellSize - 1) / this._granualityCellSize) * this._granualityCellSize;
+        const startY = Math.floor((Math.max(minY, 0) + this._granualityCellSize - 1) / this._granualityCellSize) * this._granualityCellSize;
+        const endX = Math.floor(Math.min(maxX, EXTENT) / this._granualityCellSize) * this._granualityCellSize;
+        const endY = Math.floor(Math.min(maxY, EXTENT) / this._granualityCellSize) * this._granualityCellSize;
 
-        for (let y = startY; y <= endY; y += this._granualityStep) {
-            for (let x = startX; x <= endX; x += this._granualityStep) {
+        for (let y = startY; y <= endY; y += this._granualityCellSize) {
+            for (let x = startX; x <= endX; x += this._granualityCellSize) {
                 holeIndices.push(vertices.length / 2);
                 vertices.push(x);
                 vertices.push(y);
@@ -776,19 +773,13 @@ class Subdivider {
             return undefined;
         }
 
-        // Attempted to generate subdivided polygons directly with earcut by adding Steiner points
-        // along the grid. The approach ended up being terribly slow though.
-        //this.generateSteinerPointGrid(vertices, holeIndices);
-
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
         this.initializeVertices(vertices);
 
         const triangleIndices = earcut(vertices, holeIndices);
-        //const subdividedTriangles = triangleIndices;
 
         // Subdivide triangles
         const subdividedTriangles = this.subdivideTriangles(triangleIndices);
-        //const subdividedTriangles = this.subdivideSimple(triangleIndices);
 
         // Subdivide lines
         const subdividedLines = [];
