@@ -52,7 +52,7 @@ jobs:
       - run: npm run jest-ci -- --coverage --coverageReporters json text html-spa --selectProjects unit
       - name: Upload unit test coverage
         if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: unit-test-coverage
           path: ${{ github.workspace }}/coverage
@@ -76,7 +76,7 @@ jobs:
           node-version-file: '.nvmrc'
       - run: npm ci
       - run: npm run build-dist
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: success()
         with:
           name: build-dist
@@ -114,7 +114,7 @@ jobs:
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: render-test-report-${{ matrix.os }}-${{ matrix.split }}
           path: ${{ github.workspace }}/test/integration/render/results.html
@@ -147,7 +147,7 @@ jobs:
         if: success() || failure()
       - name: Upload render test failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: render-test-report-${{ matrix.os }}-${{ matrix.split }}
           path: ${{ github.workspace }}/test/integration/render/results.html
