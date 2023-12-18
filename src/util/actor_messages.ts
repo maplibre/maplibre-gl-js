@@ -100,7 +100,7 @@ export type RequestResponseMessageMap = {
     'syncRTLPluginState': [PluginState, boolean];
     'setReferrer': [string, void];
     'removeSource': [RemoveSourceParams, void];
-    'loadWorkerSource': [string, void];
+    'importScript': [string, void];
     'removeTile': [TileParameters, void];
     'abortTile': [TileParameters, void];
     'removeDEMTile': [TileParameters, void];

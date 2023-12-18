@@ -125,7 +125,7 @@ describe('Worker register RTLTextPlugin', () => {
 
     test('calls callback on error', done => {
         const server = fakeServer.create();
-        worker.actor.messageHandlers['loadWorkerSource']('0', '/error').catch((err) => {
+        worker.actor.messageHandlers['importScript']('0', '/error').catch((err) => {
             expect(err).toBeTruthy();
             server.restore();
             done();

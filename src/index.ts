@@ -15,7 +15,7 @@ import {LngLatBounds} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
-import {AddProtocolAction, config} from './util/config';
+import {config} from './util/config';
 import {Debug} from './util/debug';
 import {isSafari} from './util/util';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
@@ -31,6 +31,8 @@ import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
 import {addSourceType, type SourceClass} from './source/source';
+import {addProtocol, removeProtocol} from './source/protocol_crud';
+import {getGlobalDispatcher} from './util/dispatcher';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -179,37 +181,36 @@ class MapLibreGL {
     }
 
     /**
-     * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.
+     * Adds a custom load resource function that will be called when using a URL that starts with a custom url schema.
+     * This will happen in the main thread, and workers might call it if they don't know how to handle the protocol.
      * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
-     * The function passed will receive the request parameters and should call the callback with the resulting request,
+     * The function passed will receive the request parameters and should return with the resulting resource,
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
      *
      * @param customProtocol - the protocol to hook, for example 'custom'
      * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
-     * This will fetch a file using the fetch API (this is obviously a non interesting example...)
      * ```ts
+     * // This will fetch a file using the fetch API (this is obviously a non interesting example...)
      * maplibregl.addProtocol('custom', async (params, abortController) => {
-            const t = await fetch(`https://${params.url.split("://")[1]}`);
-            if (t.status == 200) {
-                const buffer = await t.arrayBuffer();
-                return {data: buffer}
-            } else {
-                throw new Error(`Tile fetch error: ${t.statusText}`));
-            }
-        });
+     *      const t = await fetch(`https://${params.url.split("://")[1]}`);
+     *      if (t.status == 200) {
+     *          const buffer = await t.arrayBuffer();
+     *          return {data: buffer}
+     *      } else {
+     *          throw new Error(`Tile fetch error: ${t.statusText}`);
+     *      }
+     *  });
      * // the following is an example of a way to return an error when trying to load a tile
      * maplibregl.addProtocol('custom2', async (params, abortController) => {
      *      throw new Error('someErrorMessage'));
      * });
      * ```
      */
-    static addProtocol(customProtocol: string, loadFn: AddProtocolAction) {
-        config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
-    }
+    static addProtocol = addProtocol;
 
     /**
-     * Removes a previously added protocol
+     * Removes a previously added protocol in the main thread.
      *
      * @param customProtocol - the custom protocol to remove registration for
      * @example
@@ -217,9 +218,7 @@ class MapLibreGL {
      * maplibregl.removeProtocol('custom');
      * ```
      */
-    static removeProtocol(customProtocol: string) {
-        delete config.REGISTERED_PROTOCOLS[customProtocol];
-    }
+    static removeProtocol = removeProtocol;
 
     /**
      * Adds a [custom source type](#Custom Sources), making it available for use with
@@ -229,6 +228,41 @@ class MapLibreGL {
      * @returns a promise that is resolved when the source type is ready or with an error argument if there is an error.
      */
     static addSourceType = (name: string, sourceType: SourceClass) => addSourceType(name, sourceType);
+
+    /**
+     * Allows loading javascript code in the worker thread.
+     * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
+     *
+     * It can be useful for the following examples:
+     * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
+     * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which sould come with `addSourceType` usually.
+     * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
+     * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
+     * @returns
+     *
+     * @example
+     * ```ts
+     * // below is an example of sending a js file to the worker to load the method there
+     * // Note that you'll need to call the global function `addProtocol` in the worker to register the protocol there.
+     * // add-protocol-worker.js
+     * async function loadFn(params, abortController) {
+     *     const t = await fetch(`https://${params.url.split("://")[1]}`);
+     *     if (t.status == 200) {
+     *         const buffer = await t.arrayBuffer();
+     *         return {data: buffer}
+     *     } else {
+     *         throw new Error(`Tile fetch error: ${t.statusText}`);
+     *     }
+     * }
+     * self.addPRotocol('custom', loadFn);
+     *
+     * // main.js
+     * maplibregl.importScriptInWorkers('add-protocol-worker.js');
+     * ```
+     */
+    static importScriptInWorkers = (workerUrl: string) => {
+        return getGlobalDispatcher().broadcast('importScript', workerUrl);
+    };
 }
 
 //This gets automatically stripped out in production builds.

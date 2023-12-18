@@ -1,6 +1,6 @@
 import {extend, isWorker} from './util';
-import {config} from './config';
 import {createAbortError} from './abort_error';
+import {getProtocol} from '../source/protocol_crud';
 
 /**
  * This is used to identify the global dispatcher id when sending a message from the worker without a target map id.
@@ -129,8 +129,6 @@ export const getReferrer = () => isWorker(self) ?
     self.worker && self.worker.referrer :
     (window.location.protocol === 'blob:' ? window.parent : window).location.href;
 
-export const getProtocolAction = (url: string) => config.REGISTERED_PROTOCOLS[url.substring(0, url.indexOf('://'))];
-
 /**
  * Determines whether a URL is a file:// URL. This is obviously the case if it begins
  * with file://. Relative URLs are also file:// URLs iff the original document was loaded
@@ -228,11 +226,12 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
  */
 export const makeRequest = function(requestParameters: RequestParameters, abortController: AbortController): Promise<GetResourceResponse<any>> {
     if (/:\/\//.test(requestParameters.url) && !(/^https?:|^file:/.test(requestParameters.url))) {
+        const protocolLoadFn = getProtocol(requestParameters.url);
+        if (protocolLoadFn) {
+            return protocolLoadFn(requestParameters, abortController);
+        }
         if (isWorker(self) && self.worker && self.worker.actor) {
             return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
-        }
-        if (!isWorker(self) && getProtocolAction(requestParameters.url)) {
-            return getProtocolAction(requestParameters.url)(requestParameters, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {

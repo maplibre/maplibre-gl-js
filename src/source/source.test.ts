@@ -28,16 +28,6 @@ describe('addSourceType', () => {
         expect(sourceType).toHaveBeenCalled();
     });
 
-    test('triggers workers to load worker source code', async () => {
-        const sourceType = function () {} as any as SourceClass;
-        sourceType.workerSourceURL = 'worker-source.js' as any as URL;
-
-        const spy = jest.spyOn(Dispatcher.prototype, 'broadcast');
-
-        await addSourceType('bar', sourceType);
-        expect(spy).toHaveBeenCalledWith('loadWorkerSource', 'worker-source.js');
-    });
-
     test('refuses to add new type over existing name', async () => {
         const sourceType = function () {} as any as SourceClass;
         await expect(addSourceType('canvas', sourceType)).rejects.toThrow();
