@@ -519,12 +519,12 @@ export class HandlerManager {
                 (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
                 // When starting to drag or move, flag it and register moveend to clear flagging
                 this._terrainMovement = true;
-                this._map._elevationFreeze = true;
+                //this._map._elevationFreeze = true;
                 tr.setLocationAtPoint(loc, around);
                 this._map.once('moveend', () => {
-                    this._map._elevationFreeze = false;
+                    //this._map._elevationFreeze = false;
                     this._terrainMovement = false;
-                    tr.recalculateZoom(map.terrain);
+                    //tr.recalculateZoom(map.terrain);
                 });
             } else if (combinedEventsInProgress.drag && this._terrainMovement) {
                 // drag map

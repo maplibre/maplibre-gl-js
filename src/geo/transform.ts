@@ -500,6 +500,7 @@ export class Transform {
      * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
      * @param terrain - the terrain
      */
+    /*
     recalculateZoom(terrain: Terrain) {
         // find position the camera is looking on
         const center = this.pointLocation(this.centerPoint, terrain);
@@ -522,6 +523,7 @@ export class Transform {
         this._center = center;
         this.zoom = zoom;
     }
+    */
 
     setLocationAtPoint(lnglat: LngLat, point: Point) {
         const a = this.pointCoordinate(point);
@@ -873,7 +875,7 @@ export class Transform {
         this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
         // matrix for conversion from world space to clip space (-1 .. 1)
-        mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
+        //mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([] as any, m);
 

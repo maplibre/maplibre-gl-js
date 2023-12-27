@@ -266,25 +266,25 @@ export abstract class Camera extends Evented {
      * @internal
      * holds the geographical coordinate of the target
      */
-    _elevationCenter: LngLat;
+    //_elevationCenter: LngLat;
     /**
      * @internal
      * holds the targ altitude value, = center elevation of the target.
      * This value may changes during flight, because new terrain-tiles loads during flight.
      */
-    _elevationTarget: number;
+    //_elevationTarget: number;
     /**
      * @internal
      * holds the start altitude value, = center elevation before animation begins
      * this value will recalculated during flight in respect of changing _elevationTarget values,
      * so the linear interpolation between start and target keeps smooth and without jumps.
      */
-    _elevationStart: number;
+    //_elevationStart: number;
     /**
      * @internal
      * Saves the current state of the elevation freeze - this is used during map movement to prevent "rocky" camera movement.
      */
-    _elevationFreeze: boolean;
+    //_elevationFreeze: boolean;
     /**
      * @internal
      * Used to track accumulated changes during continuous interaction
@@ -998,7 +998,7 @@ export abstract class Camera extends Evented {
 
         this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
-        if (this.terrain) this._prepareElevation(center);
+        //if (this.terrain) this._prepareElevation(center);
 
         this._ease((k) => {
             if (this._zooming) {
@@ -1017,7 +1017,7 @@ export abstract class Camera extends Evented {
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+            //if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
             if (around) {
                 tr.setLocationAtPoint(around, aroundPoint);
@@ -1036,7 +1036,7 @@ export abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            if (this.terrain) this._finalizeElevation();
+            //if (this.terrain) this._finalizeElevation();
             this._afterEase(eventData, interruptingEaseId);
         }, options as any);
 
@@ -1059,6 +1059,7 @@ export abstract class Camera extends Evented {
         }
     }
 
+    /*
     _prepareElevation(center: LngLat) {
         this._elevationCenter = center;
         this._elevationStart = this.transform.elevation;
@@ -1083,6 +1084,7 @@ export abstract class Camera extends Evented {
         this._elevationFreeze = false;
         this.transform.recalculateZoom(this.terrain);
     }
+    */
 
     /**
      * @internal
@@ -1331,7 +1333,7 @@ export abstract class Camera extends Evented {
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         this._prepareEase(eventData, false);
-        if (this.terrain) this._prepareElevation(center);
+        //if (this.terrain) this._prepareElevation(center);
 
         this._ease((k) => {
             // s: The distance traveled along the flight path, measured in ρ-screenfuls.
@@ -1352,7 +1354,7 @@ export abstract class Camera extends Evented {
                 pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             }
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+            //if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
             const newCenter = k === 1 ? center : tr.unproject(from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
@@ -1362,7 +1364,7 @@ export abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, () => {
-            if (this.terrain) this._finalizeElevation();
+            //if (this.terrain) this._finalizeElevation();
             this._afterEase(eventData);
         }, options);
 

@@ -1943,7 +1943,7 @@ export class Map extends Camera {
                 if (e.dataType === 'style') {
                     this.terrain.sourceCache.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
-                    if (e.sourceId === options.source && !this._elevationFreeze) {
+                    if (e.sourceId === options.source /*&& !this._elevationFreeze*/) {
                         this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                         this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                     }
@@ -3071,9 +3071,9 @@ export class Map extends Camera {
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
-            if (!this._elevationFreeze) {
+            //if (!this._elevationFreeze) {
                 this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
-            }
+            //}
         } else {
             this.transform._minEleveationForCurrentTile = 0;
             this.transform.elevation = 0;
