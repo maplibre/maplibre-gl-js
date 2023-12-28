@@ -47,8 +47,7 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
-    DiffOperations,
-    DiffOperationsMap,
+    DiffOperations
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -753,7 +752,7 @@ export class Style extends Evented {
         return {
             operations,
             unimplemented
-        }
+        };
     }
 
     addImage(id: string, image: StyleImage) {
