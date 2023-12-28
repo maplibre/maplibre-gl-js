@@ -13,6 +13,7 @@
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
   "dependencies": {
+    "@kninnug/constrainautor": "^4.0.0",
     "@mapbox/geojson-rewind": "^0.5.2",
     "@mapbox/jsonlint-lines-primitives": "^2.0.2",
     "@mapbox/point-geometry": "^0.1.0",

@@ -3,6 +3,7 @@ import {EXTENT, EXTENT_SUBDIVISION_BORDER} from '../data/extent';
 import {webMercatorToSpherePoint} from '../geo/mercator_coordinate';
 import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
+import { line } from 'd3';
 
 type SubdivisionResult = {
     verticesFlattened: Array<number>;
@@ -776,16 +777,16 @@ class Subdivider {
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
         this.initializeVertices(vertices);
 
-        const triangleIndices = earcut(vertices, holeIndices);
-
-        // Subdivide triangles
-        const subdividedTriangles = this.subdivideTriangles(triangleIndices);
-
         // Subdivide lines
         const subdividedLines = [];
         for (const line of lineIndices) {
             subdividedLines.push(this.subdivideLine(line));
         }
+
+        //const triangleIndices = earcut(vertices, holeIndices);
+        //// Subdivide triangles
+        //const subdividedTriangles = this.subdivideTriangles(triangleIndices);
+        const subdividedTriangles = this.subdivideConstrainautor(subdividedLines);
 
         // Fix horizontal/vertical seams at T-joints
         //this.fixTjoints(subdividedTriangles);
@@ -813,6 +814,135 @@ class Subdivider {
             indicesTriangles: subdividedTriangles,
             indicesLineList: subdividedLines,
         };
+    }
+
+    private subdivideConstrainautor(lineIndicesSubdivided: Array<Array<number>>): Array<number> {
+        
+        // Merge with all line points
+        // Mark all "hole edge" vertices - mark which hole which vertex belongs to
+        // Mark all exterior ring vertices in ascending order
+        // Generate constrained delaunay trinagulation (preserve ring edges)
+        // Remove any trinagles inside holes (where all 3 vertices have same hole index)
+        // TODO: how to detect and remove triangles outside the exterior ring?
+
+        // Generate grid of points (at cell corners) inside original polygon.
+        this.generateInterionPointsForConstrainautor(lineIndicesSubdivided);
+        // Now, this._finalVertices contains all subdivided ring vertices and the generated intertior vertices
+
+        // Mark with vertex belongs to which ring
+        // Positive numbers are ascending order in exterio ring
+        // Negative number is index of hole ring
+        // Initialize the array with zeroes
+        const vertexMarks = Array.from({length: this._finalVertices.length / 2}, (v, i) => 0);
+
+        for(let i = 0; i < lineIndicesSubdivided[0].length; i += 2) {
+            vertexMarks[lineIndicesSubdivided[0][i]] = i+1;
+        }
+
+        for(let holeIndex = 1; holeIndex < lineIndicesSubdivided.length; holeIndex++) {
+            for(let i = 0; i < lineIndicesSubdivided[holeIndex].length; i += 2) {
+                vertexMarks[lineIndicesSubdivided[holeIndex][i]] = -holeIndex;
+            }
+        }
+
+        // Now generate constrained delaunay triangulation
+    }
+
+    private generateInterionPointsForConstrainautor(lineIndicesSubdivided: Array<Array<number>>): void {
+        let xmin = Infinity;
+        let xmax = -Infinity;
+
+        for(let i = 0; i < lineIndicesSubdivided[0].length; i += 2) {
+            const vertexIndex = lineIndicesSubdivided[0][i];
+            const x = this._finalVertices[vertexIndex * 2];
+            if (x % this._granualityCellSize !== 0) {
+                // Only consider vertices that lie on cell boundaries.
+                // Since we operate on subdivided rings, those vertices are guaranteed to be present.
+                continue;
+            }
+            xmin = Math.min(xmin, x);
+            xmax = Math.max(xmax, x);
+        }
+
+        // We will iterate over all x coordinate divisible by cell size
+        // and for each such x we will find all points that lie inside the polygon.
+        // To do that, we will first find all "boundary" points on the exterior and hole rings
+        // that lie on this x coordinate. We will iterate those points from top to bottom,
+        // and on each point the "insideness/outsideness" in the polygon will switch.
+
+        // Map of x -> y coordinates of boundary points
+        const boundaryPointsByX = new Map<number, number[]>();
+
+        // Find boundary points by x
+        for (let ringIndex = 0; ringIndex < lineIndicesSubdivided.length; ringIndex++) {
+            const ringLines = lineIndicesSubdivided[ringIndex];
+            const ringLinesLength = ringLines.length;
+            for (let i = 0; i < ringLinesLength; i += 2) {
+                const vertexIndex = ringLines[i];
+                const x = this._finalVertices[vertexIndex * 2];
+                if (x % this._granualityCellSize !== 0) {
+                    // Only consider vertices that lie on cell boundaries.
+                    // Since we operate on subdivided rings, those vertices are guaranteed to be present.
+                    continue;
+                }
+
+                const prevX = (i > 0) ? this._finalVertices[ringLines[i - 2]] : this._finalVertices[ringLines[ringLinesLength - 2]];
+                const nextX = this._finalVertices[ringIndex[i + 1]];
+
+                if((prevX < x && nextX < x) || (prevX > x && nextX > x) || (prevX === x && nextX === x)) {
+                    // This point is not a boundary point if both neighbours lie to the left/right from this point,
+                    // or if both neighbours are directly above/below this point (then this point lies on a Y-parallel subdivided line).
+                    continue;
+                }
+
+                const y = this._finalVertices[vertexIndex * 2 + 1];
+
+                if (boundaryPointsByX.has(x)) {
+                    boundaryPointsByX.get(x).push(y);
+                } else {
+                    boundaryPointsByX.set(x, [y]);
+                }
+            }
+        }
+
+        // Iterate over boundaries
+        for(let x = xmin; x <= xmax; x += this._granualityCellSize) {
+            if (!boundaryPointsByX.has(x)) {
+                continue;
+            }
+
+            const boundaries = boundaryPointsByX.get(x);
+
+            // Sort boundary points by Y with selectsort (assume there are few boundary points)
+            for(let i = 0; i < boundaries.length - 1; i++) {
+                let minIndex = 0;
+
+                for(let j = i + 1; j < boundaries.length; j++) {
+                    if(boundaries[j] < boundaries[minIndex]) {
+                        minIndex = j;
+                    }
+                }
+
+                const tmp = boundaries[i];
+                boundaries[i] = boundaries[minIndex];
+                boundaries[minIndex] = tmp;
+            }
+
+            if(boundaries.length % 2 !== 0) {
+                console.error("Odd number of boundary points - something is wrong!");
+            }
+
+            // Iterate over boundary point pairs
+            for(let i = 1; i < boundaries.length; i += 2) {
+                const ymin = (Math.floor(boundaries[i] / this._granualityCellSize) + 1) * this._granualityCellSize;
+                const ymax = Math.floor((boundaries[i] + this._granualityCellSize - 1) / this._granualityCellSize) * this._granualityCellSize;
+
+                // Generate new vertices between the boundary pair
+                for(let y = ymin; y <= ymax; y += this._granualityCellSize) {
+                    this.getVertexIndex(x ,y);
+                }
+            }
+        }
     }
 }
 
