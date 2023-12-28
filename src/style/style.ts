@@ -47,6 +47,8 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
+    DiffOperations,
+    DiffOperationsMap,
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -691,7 +693,7 @@ export class Style extends Evented {
         return true;
     }
 
-    _getOperationsToPerform(diff: DiffCommand[]) {
+    _getOperationsToPerform(diff: DiffCommand<DiffOperations>[]) {
         const operations: Function[] = [];
         const unimplemented: string[] = [];
         for (const op of diff) {
