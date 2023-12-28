@@ -3,7 +3,8 @@ import {EXTENT, EXTENT_SUBDIVISION_BORDER} from '../data/extent';
 import {webMercatorToSpherePoint} from '../geo/mercator_coordinate';
 import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
-import { line } from 'd3';
+import Constrainautor from '@kninnug/constrainautor';
+import Delaunator from 'delaunator';
 
 type SubdivisionResult = {
     verticesFlattened: Array<number>;
@@ -817,13 +818,11 @@ class Subdivider {
     }
 
     private subdivideConstrainautor(lineIndicesSubdivided: Array<Array<number>>): Array<number> {
-        
         // Merge with all line points
         // Mark all "hole edge" vertices - mark which hole which vertex belongs to
         // Mark all exterior ring vertices in ascending order
         // Generate constrained delaunay trinagulation (preserve ring edges)
         // Remove any trinagles inside holes (where all 3 vertices have same hole index)
-        // TODO: how to detect and remove triangles outside the exterior ring?
 
         // Generate grid of points (at cell corners) inside original polygon.
         this.generateInterionPointsForConstrainautor(lineIndicesSubdivided);
@@ -835,17 +834,60 @@ class Subdivider {
         // Initialize the array with zeroes
         const vertexMarks = Array.from({length: this._finalVertices.length / 2}, (v, i) => 0);
 
-        for(let i = 0; i < lineIndicesSubdivided[0].length; i += 2) {
-            vertexMarks[lineIndicesSubdivided[0][i]] = i+1;
+        // Flatten edges at the same time
+        const flatEdges = [];
+
+        for (let i = 0; i < lineIndicesSubdivided[0].length; i += 2) {
+            vertexMarks[lineIndicesSubdivided[0][i]] = i + 1; // positive mark, increasing along the ring
+            flatEdges.push([
+                lineIndicesSubdivided[0][i],
+                lineIndicesSubdivided[0][i + 1]
+            ]);
         }
 
-        for(let holeIndex = 1; holeIndex < lineIndicesSubdivided.length; holeIndex++) {
+        for (let holeIndex = 1; holeIndex < lineIndicesSubdivided.length; holeIndex++) {
             for(let i = 0; i < lineIndicesSubdivided[holeIndex].length; i += 2) {
-                vertexMarks[lineIndicesSubdivided[holeIndex][i]] = -holeIndex;
+                vertexMarks[lineIndicesSubdivided[holeIndex][i]] = -holeIndex; // negative mark, same value for the same hole
+                flatEdges.push([
+                    lineIndicesSubdivided[holeIndex][i],
+                    lineIndicesSubdivided[holeIndex][i + 1]
+                ]);
             }
         }
 
         // Now generate constrained delaunay triangulation
+        const del = new Delaunator(this._finalVertices);
+        const con = new Constrainautor(del);
+        con.constrainAll(flatEdges);
+
+        // Filter out hole and exterior triangles
+        const delaunayTriangles = del.triangles;
+        const finalTriangles = [];
+
+        for (let i = 0; i < delaunayTriangles.length; i += 3) {
+            const i0 = delaunayTriangles[i];
+            const i1 = delaunayTriangles[i + 1];
+            const i2 = delaunayTriangles[i + 2];
+            const mark0 = vertexMarks[i0];
+            const mark1 = vertexMarks[i1];
+            const mark2 = vertexMarks[i2];
+
+            if (mark0 === mark1 && mark1 === mark2 && mark0 < 0) {
+                continue; // triangle is inside a hole (same mark on all vertices, negative mark)
+            }
+
+            if (mark0 > 0 && mark1 > 0 && mark2 > 0) {
+                const areMarksIncreasing = ((mark0 < mark1 && mark1 < mark2) || (mark0 < mark1 && mark2 < mark0)) || (mark1 < mark2 && mark2 < mark0);
+                if (areMarksIncreasing) {
+                    // Triangle is exterior
+                    continue; // JP: TODO: I have NO idea if this even works
+                }
+            }
+
+            finalTriangles.push(i0, i1, i2);
+        }
+        
+        return finalTriangles;
     }
 
     private generateInterionPointsForConstrainautor(lineIndicesSubdivided: Array<Array<number>>): void {
