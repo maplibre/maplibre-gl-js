@@ -4,6 +4,7 @@
 - ⚠️ Add the ability to import a script in the worker thread and call `addProtocol` and `removeProtocol` there ([#3459](https://github.com/maplibre/maplibre-gl-js/pull/3459)) - this also changed how `addSourceType` works since now you'll need to load the script with `maplibregl.importScriptInWorkers`.
 - Upgraded to use Node JS 20 and removed the dependency of `gl` package from the tests to allow easier develpment setup.
 - Improved precision and added a subtle fade transition to marker opacity changes ([#3431](https://github.com/maplibre/maplibre-gl-js/pull/3431))
+- Adds support for terrain in `setStyle` with diff method ([#3515](https://github.com/maplibre/maplibre-gl-js/pull/3515), [#3463](https://github.com/maplibre/maplibre-gl-js/pull/3463))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
