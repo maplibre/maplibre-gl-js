@@ -15,6 +15,7 @@ import type {WorkerTileResult} from './worker_source';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
+    tileSize?: number;
 }
 
 /**

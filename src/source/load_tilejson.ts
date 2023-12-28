@@ -34,11 +34,11 @@ export async function loadTileJson(
     if (!tileJSON) {
         return null;
     }
-    const result: LoadTileJsonResponse = pick(
+    const result = pick(
         // explicit source options take precedence over TileJSON
         extend(tileJSON, options),
         ['tiles', 'minzoom', 'maxzoom', 'attribution', 'bounds', 'scheme', 'tileSize', 'encoding']
-    );
+    ) as LoadTileJsonResponse;
 
     if ('vector_layers' in tileJSON && tileJSON.vector_layers) {
         result.vectorLayerIds = tileJSON.vector_layers.map((layer) => { return layer.id; });
