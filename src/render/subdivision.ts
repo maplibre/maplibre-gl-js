@@ -846,7 +846,7 @@ class Subdivider {
         }
 
         for (let holeIndex = 1; holeIndex < lineIndicesSubdivided.length; holeIndex++) {
-            for(let i = 0; i < lineIndicesSubdivided[holeIndex].length; i += 2) {
+            for (let i = 0; i < lineIndicesSubdivided[holeIndex].length; i += 2) {
                 vertexMarks[lineIndicesSubdivided[holeIndex][i]] = -holeIndex; // negative mark, same value for the same hole
                 flatEdges.push([
                     lineIndicesSubdivided[holeIndex][i],
@@ -886,7 +886,7 @@ class Subdivider {
 
             finalTriangles.push(i0, i1, i2);
         }
-        
+
         return finalTriangles;
     }
 
@@ -894,7 +894,7 @@ class Subdivider {
         let xmin = Infinity;
         let xmax = -Infinity;
 
-        for(let i = 0; i < lineIndicesSubdivided[0].length; i += 2) {
+        for (let i = 0; i < lineIndicesSubdivided[0].length; i += 2) {
             const vertexIndex = lineIndicesSubdivided[0][i];
             const x = this._finalVertices[vertexIndex * 2];
             if (x % this._granualityCellSize !== 0) {
@@ -931,7 +931,7 @@ class Subdivider {
                 const prevX = (i > 0) ? this._finalVertices[ringLines[i - 2]] : this._finalVertices[ringLines[ringLinesLength - 2]];
                 const nextX = this._finalVertices[ringIndex[i + 1]];
 
-                if((prevX < x && nextX < x) || (prevX > x && nextX > x) || (prevX === x && nextX === x)) {
+                if ((prevX < x && nextX < x) || (prevX > x && nextX > x) || (prevX === x && nextX === x)) {
                     // This point is not a boundary point if both neighbours lie to the left/right from this point,
                     // or if both neighbours are directly above/below this point (then this point lies on a Y-parallel subdivided line).
                     continue;
@@ -948,7 +948,7 @@ class Subdivider {
         }
 
         // Iterate over boundaries
-        for(let x = xmin; x <= xmax; x += this._granualityCellSize) {
+        for (let x = xmin; x <= xmax; x += this._granualityCellSize) {
             if (!boundaryPointsByX.has(x)) {
                 continue;
             }
@@ -956,11 +956,11 @@ class Subdivider {
             const boundaries = boundaryPointsByX.get(x);
 
             // Sort boundary points by Y with selectsort (assume there are few boundary points)
-            for(let i = 0; i < boundaries.length - 1; i++) {
+            for (let i = 0; i < boundaries.length - 1; i++) {
                 let minIndex = 0;
 
-                for(let j = i + 1; j < boundaries.length; j++) {
-                    if(boundaries[j] < boundaries[minIndex]) {
+                for (let j = i + 1; j < boundaries.length; j++) {
+                    if (boundaries[j] < boundaries[minIndex]) {
                         minIndex = j;
                     }
                 }
@@ -970,18 +970,18 @@ class Subdivider {
                 boundaries[minIndex] = tmp;
             }
 
-            if(boundaries.length % 2 !== 0) {
-                console.error("Odd number of boundary points - something is wrong!");
+            if (boundaries.length % 2 !== 0) {
+                console.error('Odd number of boundary points - something is wrong!');
             }
 
             // Iterate over boundary point pairs
-            for(let i = 1; i < boundaries.length; i += 2) {
+            for (let i = 1; i < boundaries.length; i += 2) {
                 const ymin = (Math.floor(boundaries[i] / this._granualityCellSize) + 1) * this._granualityCellSize;
                 const ymax = Math.floor((boundaries[i] + this._granualityCellSize - 1) / this._granualityCellSize) * this._granualityCellSize;
 
                 // Generate new vertices between the boundary pair
-                for(let y = ymin; y <= ymax; y += this._granualityCellSize) {
-                    this.getVertexIndex(x ,y);
+                for (let y = ymin; y <= ymax; y += this._granualityCellSize) {
+                    this.getVertexIndex(x, y);
                 }
             }
         }
