@@ -40,9 +40,9 @@ export default class Subdivide extends Benchmark {
             lineList.push(generateRing(cx * EXTENT, cy * EXTENT, r * EXTENT, vertexCount, vertices));
         }
 
-        generateHole(0.25, 0.0, 0.15, 16 * vertexCountMultiplier);
-        generateHole(0.75, 0.0, 0.15, 2 * vertexCountMultiplier);
-        generateHole(0.0, 0.1, 0.05, 4 * vertexCountMultiplier);
+        generateHole(0.25, 0.5, 0.15, 16 * vertexCountMultiplier);
+        generateHole(0.75, 0.5, 0.15, 2 * vertexCountMultiplier);
+        generateHole(0.5, 0.1, 0.05, 4 * vertexCountMultiplier);
 
         this.flattened = vertices;
         this.holeIndices = holeIndices;
