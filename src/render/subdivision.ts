@@ -726,12 +726,10 @@ class Subdivider {
     }
 
     private initializeVertices(vertices: Array<number>) {
-        this._finalVertices = [...vertices];
+        this._finalVertices = [];
         this._vertexDictionary = new Map<number, number>();
         for (let i = 0; i < vertices.length; i += 2) {
-            const index = i / 2;
-            const key = this.getKey(vertices[i], vertices[i + 1]);
-            this._vertexDictionary.set(key, index);
+            this.getVertexIndex(vertices[i], vertices[i + 1]);
         }
     }
 
