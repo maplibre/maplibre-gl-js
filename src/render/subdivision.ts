@@ -955,7 +955,7 @@ class Subdivider {
 
             // Sort boundary points by Y with selectsort (assume there are few boundary points)
             for (let i = 0; i < boundaries.length - 1; i++) {
-                let minIndex = 0;
+                let minIndex = i;
 
                 for (let j = i + 1; j < boundaries.length; j++) {
                     if (boundaries[j] < boundaries[minIndex]) {
@@ -968,14 +968,22 @@ class Subdivider {
                 boundaries[minIndex] = tmp;
             }
 
-            if (boundaries.length % 2 !== 0) {
+            // remove duplicates
+            const filteredBoundaries = [boundaries[0]];
+            for (let i = 1; i < boundaries.length; i++) {
+                if (boundaries[i] !== boundaries[i - 1]) {
+                    filteredBoundaries.push(boundaries[i]);
+                }
+            }
+
+            if (filteredBoundaries.length % 2 !== 0) {
                 console.error('Odd number of boundary points - something is wrong!');
             }
 
             // Iterate over boundary point pairs
-            for (let i = 1; i < boundaries.length; i += 2) {
-                const ymin = (Math.floor(boundaries[i] / this._granualityCellSize) + 1) * this._granualityCellSize;
-                const ymax = Math.floor((boundaries[i] + this._granualityCellSize - 1) / this._granualityCellSize) * this._granualityCellSize;
+            for (let i = 1; i < filteredBoundaries.length; i += 2) {
+                const ymin = (Math.floor(filteredBoundaries[i] / this._granualityCellSize) + 1) * this._granualityCellSize;
+                const ymax = Math.floor((filteredBoundaries[i] + this._granualityCellSize - 1) / this._granualityCellSize) * this._granualityCellSize;
 
                 // Generate new vertices between the boundary pair
                 for (let y = ymin; y <= ymax; y += this._granualityCellSize) {
