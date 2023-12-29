@@ -984,6 +984,58 @@ class Subdivider {
             }
         }
     }
+
+    private getDebugSvg(triangles?: Array<number>, edges?: Array<Array<number>>): string {
+        const svg = [];
+
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+
+        for (let i = 0; i < this._finalVertices.length; i += 2) {
+            const x = this._finalVertices[i];
+            const y = this._finalVertices[i + 1];
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+
+        svg.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX - 10} ${minY - 10} ${maxX - minX + 20} ${maxY - minY + 20}">`);
+
+        for (let i = 0; i < this._finalVertices.length; i += 2) {
+            const x = this._finalVertices[i];
+            const y = this._finalVertices[i + 1];
+            const isOnCellEdge = (x % this._granualityCellSize === 0) || (y % this._granualityCellSize === 0);
+            svg.push(`<circle cx="${x}" cy="${y}" r="1.0" fill="${isOnCellEdge ? 'red' : 'black'}" stroke="none"/>`);
+            svg.push(`<text x="${x + 2}" y="${y - 2}" style="font: 2px sans-serif;">${(i / 2).toString()}</text>`);
+        }
+
+        if (triangles) {
+            for (let i = 0; i < triangles.length; i += 3) {
+                const i0 = triangles[i];
+                const i1 = triangles[i + 1];
+                const i2 = triangles[i + 2];
+
+                for (const edge of [[i0, i1], [i1, i2], [i2, i0]]) {
+                    svg.push(`<line x1="${this._finalVertices[edge[0] * 2]}" y1="${this._finalVertices[edge[0] * 2 + 1]}" x2="${this._finalVertices[edge[1] * 2]}" y2="${this._finalVertices[edge[1] * 2 + 1]}" stroke="black" stroke-width="0.5"/>`);
+                }
+            }
+        }
+
+        if (edges) {
+            for (const edgeList of edges) {
+                for (let i = 0; i < edgeList.length; i += 2) {
+                    svg.push(`<line x1="${this._finalVertices[edgeList[i] * 2]}" y1="${this._finalVertices[edgeList[i] * 2 + 1]}" x2="${this._finalVertices[edgeList[i + 1] * 2]}" y2="${this._finalVertices[edgeList[i + 1] * 2 + 1]}" stroke="green" stroke-width="0.25"/>`);
+                }
+            }
+        }
+
+        svg.push('</svg>');
+
+        return svg.join('');
+    }
 }
 
 export function subdivideFill(vertices: Array<number>, holeIndices: Array<number>, lineList: Array<Array<number>>, canonical: CanonicalTileID, granuality: number): SubdivisionResult {
