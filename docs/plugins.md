@@ -174,6 +174,7 @@ Provides an [Angular](https://angular.io/) integration.
 #### vue-maplibre-gl
 Provide a [VueJS](https://vuejs.org/) integration.
 <br/><small>[View on GitHub](https://github.com/razorness/vue-maplibre-gl)</small>
+
 #### elm-mapbox
 Provides an [Elm](https://elm-lang.org) integration.
 <br/><small>[View on GitHub](https://package.elm-lang.org/packages/gampleman/elm-mapbox/latest/)</small>
@@ -181,6 +182,10 @@ Provides an [Elm](https://elm-lang.org) integration.
 #### ember-mapbox-gl
 Provides an [Ember](http://emberjs.com) integration.
 <br/><small>[View on GitHub](https://github.com/kturney/ember-mapbox-gl)</small>
+
+#### jekyll-maplibre
+Provides a [Jekyll](https://jekyllrb.com/) integration (plug-in).
+<br/><small>[View on GitHub](https://github.com/rriemann/jekyll-maplibre)</small>
 
 #### svelte-maplibre
 Provides a [Svelte](https://svelte.dev) integration.
