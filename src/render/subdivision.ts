@@ -815,6 +815,14 @@ class Subdivider {
         };
     }
 
+    /**
+     * Sometimes the supplies vertex and index array has duplicate vertices - same coordinates that are referenced by multiple different indices.
+     * That is not allowed for purposes of subdivision, duplicates are removed in `this.initializeVertices`.
+     * This function checks all indices, and replaces any index that references a duplicate vertex with the an index that vertex that is actually valid in `this._finalVertices`.
+     * @param vertices Flattened vertex array used by the indices. This may contain duplicate vertices.
+     * @param oldIndices Indices into the supplied vertex array.
+     * @returns Indices transformed so that they are valid indices into `this._finalVertices` (with duplicates removed).
+     */
     private convertIndices(vertices: Array<number>, oldIndices: Array<number>): Array<number> {
         const newIndices = [];
         for (let i = 0; i < oldIndices.length; i++) {
@@ -999,7 +1007,7 @@ class Subdivider {
             // Iterate over boundary point pairs
             for (let i = 1; i < filteredBoundaries.length; i += 2) {
                 const ymin = (Math.floor(filteredBoundaries[i - 1] / this._granualityCellSize) + 1) * this._granualityCellSize;
-                const ymax = Math.floor((filteredBoundaries[i] + this._granualityCellSize - 1) / this._granualityCellSize) * this._granualityCellSize;
+                const ymax = Math.floor((filteredBoundaries[i] - 1) / this._granualityCellSize) * this._granualityCellSize;
 
                 // Generate new vertices between the boundary pair
                 for (let y = ymin; y <= ymax; y += this._granualityCellSize) {
