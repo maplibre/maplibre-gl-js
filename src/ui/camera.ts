@@ -716,8 +716,8 @@ export abstract class Camera extends Evented {
             return undefined;
         }
 
-        var z = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
-        const zoom = options.snapToIntegerZoom ? Math.round(z) : z;
+        const floatZoom = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
+        const zoom = options.snapToIntegerZoom ? Math.round(floatZoom) : floatZoom;
 
         // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of padding.
         const offset = Point.convert(options.offset);
