@@ -779,12 +779,12 @@ class Subdivider {
         // Subdivide lines
         const subdividedLines = [];
         for (const line of lineIndices) {
-            subdividedLines.push(this.subdivideLine(line));
+            subdividedLines.push(this.subdivideLine(this.convertIndices(vertices, line)));
         }
 
-        //const triangleIndices = earcut(vertices, holeIndices);
-        //// Subdivide triangles
-        //const subdividedTriangles = this.subdivideTriangles(triangleIndices);
+        // Subdivide triangles
+        //const subdividedTriangles = this.convertIndices(vertices, earcut(vertices, holeIndices));
+        //const subdividedTriangles = this.subdivideTriangles(this.convertIndices(vertices, earcut(vertices, holeIndices)));
         const subdividedTriangles = this.subdivideConstrainautor(subdividedLines);
 
         // Fix horizontal/vertical seams at T-joints
@@ -813,6 +813,16 @@ class Subdivider {
             indicesTriangles: subdividedTriangles,
             indicesLineList: subdividedLines,
         };
+    }
+
+    private convertIndices(vertices: Array<number>, oldIndices: Array<number>): Array<number> {
+        const newIndices = [];
+        for (let i = 0; i < oldIndices.length; i++) {
+            const x = vertices[oldIndices[i] * 2];
+            const y = vertices[oldIndices[i] * 2 + 1];
+            newIndices.push(this.getVertexIndex(x, y));
+        }
+        return newIndices;
     }
 
     private subdivideConstrainautor(lineIndicesSubdivided: Array<Array<number>>): Array<number> {
@@ -982,7 +992,7 @@ class Subdivider {
 
             // Iterate over boundary point pairs
             for (let i = 1; i < filteredBoundaries.length; i += 2) {
-                const ymin = (Math.floor(filteredBoundaries[i] / this._granualityCellSize) + 1) * this._granualityCellSize;
+                const ymin = (Math.floor(filteredBoundaries[i - 1] / this._granualityCellSize) + 1) * this._granualityCellSize;
                 const ymax = Math.floor((filteredBoundaries[i] + this._granualityCellSize - 1) / this._granualityCellSize) * this._granualityCellSize;
 
                 // Generate new vertices between the boundary pair
@@ -993,7 +1003,7 @@ class Subdivider {
         }
     }
 
-    private getDebugSvg(triangles?: Array<number>, edges?: Array<Array<number>>): string {
+    public getDebugSvg(triangles?: Array<number>, edges?: Array<Array<number>>): string {
         const svg = [];
 
         let minX = Infinity;
