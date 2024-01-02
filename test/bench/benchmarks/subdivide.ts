@@ -25,7 +25,7 @@ export default class Subdivide extends Benchmark {
 
         // Use web mercator base tile, as it borders both north and south poles,
         // so we also benchmark pole geometry generation.
-        this.tileID = new CanonicalTileID(0, 0, 0);
+        this.tileID = new CanonicalTileID(2, 1, 1); // tile avoids north and south mercator edges
 
         const vertices = [];
         const holeIndices = [];
