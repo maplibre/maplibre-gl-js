@@ -114,6 +114,8 @@ export type CameraForBoundsOptions = CameraOptions & {
      * The maximum zoom level to allow when the camera would transition to the specified bounds.
      */
     maxZoom?: number;
+
+    snapToIntegerZoom?: boolean;
 }
 
 /**
@@ -714,7 +716,8 @@ export abstract class Camera extends Evented {
             return undefined;
         }
 
-        const zoom = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
+        var z = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
+        const zoom = options.snapToIntegerZoom ? Math.round(z) : z;
 
         // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of padding.
         const offset = Point.convert(options.offset);

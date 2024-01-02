@@ -54,7 +54,7 @@ export class TapZoomHandler implements Handler {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: tr.zoom + 1,
+                    zoom: Math.round(tr.zoom + 1),
                     around: tr.unproject(zoomInPoint)
                 }, {originalEvent: e})
             };
@@ -65,7 +65,7 @@ export class TapZoomHandler implements Handler {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: tr.zoom - 1,
+                    zoom: Math.round(tr.zoom - 1),
                     around: tr.unproject(zoomOutPoint)
                 }, {originalEvent: e})
             };

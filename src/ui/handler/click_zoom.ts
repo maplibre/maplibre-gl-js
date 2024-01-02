@@ -24,12 +24,14 @@ export class ClickZoomHandler implements Handler {
     }
 
     dblclick(e: MouseEvent, point: Point) {
+        console.log(this._tr.unproject(point));
         e.preventDefault();
         return {
             cameraAnimation: (map: Map) => {
+                let zoomTarget = this._tr.zoom + (e.shiftKey ? -1 : 1);
                 map.easeTo({
                     duration: 300,
-                    zoom: this._tr.zoom + (e.shiftKey ? -1 : 1),
+                    zoom: map.getSnapToIntegerZoom() ? Math.round(zoomTarget) : zoomTarget,
                     around: this._tr.unproject(point)
                 }, {originalEvent: e});
             }

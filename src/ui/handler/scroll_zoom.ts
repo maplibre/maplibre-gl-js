@@ -150,11 +150,32 @@ export class ScrollZoomHandler implements Handler {
     }
 
     wheel(e: WheelEvent) {
+        console.log(e)
         if (!this.isEnabled()) return;
         if (this._map.cooperativeGestures.isEnabled() && !e[this._map.cooperativeGestures._bypassKey]) {
             return;
         }
+
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
+
+        if (this._map.getSnapToIntegerZoom()) {
+            //let around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
+            const pos = DOM.mousePos(this._map.getCanvas(), e);
+            const around = this._tr.unproject(pos);
+            e.preventDefault();
+            return {
+                cameraAnimation: (map: Map) => {
+                    var zoomTarget = value > 0 ? this._map.getZoom() - 1 : this._map.getZoom() + 1;
+
+                    map.easeTo({
+                        duration: 300,
+                        zoom: map.getSnapToIntegerZoom() ? Math.round(zoomTarget) : zoomTarget,
+                        around: around
+                    }, {originalEvent: e});
+                }
+            };
+        }
+
         const now = browser.now(),
             timeDelta = now - (this._lastWheelEventTime || 0);
 
@@ -274,8 +295,11 @@ export class ScrollZoomHandler implements Handler {
             this._delta = 0;
         }
 
-        const targetZoom = typeof this._targetZoom === 'number' ?
+        var __targetZoom = typeof this._targetZoom === 'number' ?
             this._targetZoom : tr.zoom;
+        const targetZoom = this._targetZoom > tr.zoom ? Math.ceil(this._targetZoom) : Math.floor(this._targetZoom);
+
+        console.log(this._targetZoom, tr.zoom, targetZoom);
         const startZoom = this._startZoom;
         const easing = this._easing;
 

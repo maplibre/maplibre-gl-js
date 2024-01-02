@@ -148,6 +148,9 @@ export type MapOptions = {
      * @defaultValue 22
      */
     maxZoom?: number | null;
+
+    snapToIntegerZoom?: boolean;
+
     /**
      * The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * @defaultValue 0
@@ -351,6 +354,7 @@ const defaultOptions = {
 
     minZoom: defaultMinZoom,
     maxZoom: defaultMaxZoom,
+    snapToIntegerZoom: false,
 
     minPitch: defaultMinPitch,
     maxPitch: defaultMaxPitch,
@@ -474,6 +478,7 @@ export class Map extends Camera {
     _overridePixelRatio: number | null;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+    _snapToIntegerZoom: boolean;
 
     /**
      * @internal
@@ -581,6 +586,7 @@ export class Map extends Camera {
         this._overridePixelRatio = options.pixelRatio;
         this._maxCanvasSize = options.maxCanvasSize;
         this.transformCameraUpdate = options.transformCameraUpdate;
+        this._snapToIntegerZoom = options.snapToIntegerZoom;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -1009,6 +1015,8 @@ export class Map extends Camera {
         } else throw new Error('maxZoom must be greater than the current minZoom');
     }
 
+    setSnapToIntegerZoom(snap: boolean): Map { this._snapToIntegerZoom = snap; return this; }
+
     /**
      * Returns the map's maximum allowable zoom level.
      *
@@ -1019,6 +1027,8 @@ export class Map extends Camera {
      * ```
      */
     getMaxZoom(): number { return this.transform.maxZoom; }
+
+    getSnapToIntegerZoom(): boolean { return this._snapToIntegerZoom; }
 
     /**
      * Sets or clears the map's minimum pitch.
