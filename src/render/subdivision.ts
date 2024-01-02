@@ -864,10 +864,16 @@ class Subdivider {
         }
 
         // Now generate constrained delaunay triangulation
-        const del = new Delaunator(this._finalVertices);
-        const con = new Constrainautor(del);
-        con.constrainAll(flatEdges);
+        const del = new Delaunator(Int32Array.from(this._finalVertices));
 
+        try {
+            const con = new Constrainautor(del);
+            con.constrainAll(flatEdges);
+        } catch (e) {
+            console.error(e);
+            console.log(this.getDebugSvg(del.triangles, lineIndicesSubdivided));
+            return [];
+        }
         // Filter out hole and exterior triangles
         const delaunayTriangles = del.triangles;
         const finalTriangles = [];
