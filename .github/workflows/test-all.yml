@@ -75,7 +75,7 @@ jobs:
         if: success() || failure()
 
   render-tests-ubuntu:
-    name: Render Tests Ubuntu
+    name: Render tests
     env:
       SPLIT_COUNT: 2
     strategy:
@@ -108,7 +108,7 @@ jobs:
           path: ${{ github.workspace }}/test/integration/render/results.html
 
   render-tests-windows:
-    name: Render Tests Windows
+    name: Render tests
     env:
       SPLIT_COUNT: 3
     strategy:
