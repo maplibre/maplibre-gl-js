@@ -141,12 +141,7 @@ function getTouchById(mapTouches: Array<Touch>, points: Array<Point>, identifier
 
 const ZOOM_THRESHOLD = 0.1;
 
-function getZoomDelta(distance: number, lastDistance: number | undefined): number {
-    if (typeof lastDistance === 'undefined') {
-        // error
-        return NaN;
-    }
-
+function getZoomDelta(distance: number, lastDistance: number): number {
     return Math.log(distance / lastDistance) / Math.LN2;
 }
 
@@ -171,6 +166,10 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
     }
 
     _move(points: [Point, Point], pinchAround: Point | null): ReturnType<typeof TwoFingersTouchHandler.prototype._move> {
+        if (typeof this._distance == 'undefined' || typeof this._startDistance === 'undefined')  {
+            console.assert(false, `failed precondition - _distance: ${this._distance}, startDistance: ${this._startDistance}`);
+            return;
+        }
         const lastDistance = this._distance;
         this._distance = points[0].dist(points[1]);
         if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance)) < ZOOM_THRESHOLD) return;
@@ -186,12 +185,7 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
 
 const ROTATION_THRESHOLD = 25; // pixels along circumference of touch circle
 
-function getBearingDelta(a: Point, b: Point | undefined): number {
-    if (typeof b === 'undefined') {
-        // error
-        return NaN;
-    }
-
+function getBearingDelta(a: Point, b: Point): number {
     return a.angleWith(b) * 180 / Math.PI;
 }
 
@@ -216,6 +210,11 @@ export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
     }
 
     _move(points: [Point, Point], pinchAround: Point | null, _e: TouchEvent): ReturnType<typeof TwoFingersTouchHandler.prototype._move> {
+        if (typeof this._vector === 'undefined') {
+            console.assert(false, `failed precondition - _vector: ${this._vector}`);
+            return;
+        }
+
         const lastVector = this._vector;
         this._vector = points[0].sub(points[1]);
 
@@ -240,11 +239,15 @@ export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
          */
 
         if (typeof this._minDiameter === 'undefined') {
-            // error
-            this._minDiameter = NaN;
-        } else {
-            this._minDiameter = Math.min(this._minDiameter, vector.mag());
+            console.assert(false, `failed precondition - _minDiameter: ${this._minDiameter}`);
+            return false;
         }
+        if (typeof this._startVector === 'undefined') {
+            console.assert(false, `failed precondition - _startVector: ${this._startVector}`);
+            return false;
+        }
+
+        this._minDiameter = Math.min(this._minDiameter, vector.mag());
         const circumference = Math.PI * this._minDiameter;
         const threshold = ROTATION_THRESHOLD / circumference * 360;
 
@@ -306,8 +309,8 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
             return;
         }
 
-        // error
         if (!this._lastPoints || this._lastPoints.length < 2) {
+            console.assert(false, `failed precondition - _lastPoints: ${this._lastPoints}`);
             return;
         }
 
