@@ -777,11 +777,17 @@ class Subdivider {
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
         this.initializeVertices(vertices);
 
-        // Subdivide lines
+        const nonIntersectingLines = this.fixPolygonRings(vertices, holeIndices);
         const subdividedLines = [];
-        for (const line of lineIndices) {
-            subdividedLines.push(this.subdivideLine(this.convertIndices(vertices, line)));
+        for (const line of nonIntersectingLines) {
+            subdividedLines.push(this.subdivideLine(line));
         }
+
+        // Subdivide lines
+        // const subdividedLines = [];
+        // for (const line of lineIndices) {
+        //     subdividedLines.push(this.subdivideLine(this.convertIndices(vertices, line)));
+        // }
 
         // Subdivide triangles
         //const subdividedTriangles = this.convertIndices(vertices, earcut(vertices, holeIndices));
@@ -1060,6 +1066,8 @@ class Subdivider {
         if (edges) {
             for (const edgeList of edges) {
                 for (let i = 0; i < edgeList.length; i += 2) {
+                    svg.push(`<circle cx="${this._finalVertices[edgeList[i] * 2]}" cy="${this._finalVertices[edgeList[i] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
+                    svg.push(`<circle cx="${this._finalVertices[edgeList[i + 1] * 2]}" cy="${this._finalVertices[edgeList[i + 1] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
                     svg.push(`<line x1="${this._finalVertices[edgeList[i] * 2]}" y1="${this._finalVertices[edgeList[i] * 2 + 1]}" x2="${this._finalVertices[edgeList[i + 1] * 2]}" y2="${this._finalVertices[edgeList[i + 1] * 2 + 1]}" stroke="green" stroke-width="0.25"/>`);
                 }
             }
