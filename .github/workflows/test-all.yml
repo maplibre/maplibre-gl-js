@@ -83,7 +83,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         split: [0, 1, 2]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
