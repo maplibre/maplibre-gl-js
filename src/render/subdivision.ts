@@ -5,6 +5,7 @@ import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
 import Constrainautor from '@kninnug/constrainautor';
 import Delaunator from 'delaunator';
+import SweeplineIntersectionsClass from 'sweepline-intersections/dist/SweeplineIntersectionsClass';
 
 type SubdivisionResult = {
     verticesFlattened: Array<number>;
@@ -1067,6 +1068,109 @@ class Subdivider {
         svg.push('</svg>');
 
         return svg.join('');
+    }
+
+    private fixPolygonRings(vertices: Array<number>, holeIndices: Array<number>) {
+        // https://github.com/rowanwins/sweepline-intersections
+
+        const polygon = [];
+
+        for (let ringIndex = 0; ringIndex <= holeIndices.length; ringIndex++) {
+            const firstIndex = (ringIndex === 0) ? 0 : holeIndices[ringIndex - 1];
+            const nextHoleIndex = (holeIndices.length > ringIndex) ? holeIndices[ringIndex] : vertices.length / 2;
+
+            const ring = [];
+
+            for (let i = firstIndex; i < nextHoleIndex; i++) {
+                const x = vertices[i * 2];
+                const y = vertices[i * 2 + 1];
+                ring.push([x, y]);
+            }
+            ring.push([vertices[firstIndex * 2], vertices[firstIndex * 2 + 1]]);
+
+            polygon.push(ring);
+        }
+
+        const sl = new SweeplineIntersectionsClass();
+        sl.addData({type: 'Polygon', coordinates: polygon});
+        const intersectionPoints = sl.getIntersections(true);
+
+        const epsilon = 0.01;
+
+        const processEdge = (x1: number, y1: number, x2: number, y2: number, destination: Array<number>) => {
+            // Get edge normalized direction and normal for determining point distance from this edge
+            const dxRaw = x2 - x1;
+            const dyRaw = y2 - y1;
+            const length = Math.sqrt(dxRaw * dxRaw + dyRaw * dyRaw);
+            const dx = dxRaw / length;
+            const dy = dyRaw / length;
+            const nx = dy;
+            const ny = -dx;
+            const baseNormal = x1 * nx + y1 * ny;
+            const baseDir = x1 * dx + y1 * dy;
+
+            for (const intersection of intersectionPoints) {
+                const ix = intersection[0];
+                const iy = intersection[1];
+                // distance of intersection from the edge line
+                const distFromLine = ix * nx + iy * ny - baseNormal;
+                // squared distance of intersection from edge start point
+                const distSquaredFrom1 = (ix - x1) * (ix - x1) + (iy - y1) * (iy - y1);
+                // squared distance of intersection from edge end point
+                const distSquaredFrom2 = (ix - x1) * (ix - x1) + (iy - y1) * (iy - y1);
+
+                const distAlongEdge = ix * dx + iy * dy - baseDir;
+
+                // This edge is intersected if:
+                // - intersection point lies in this edge's line
+                // - intersection point is NOT the start point of this edge
+                // - intersection point is NOT the end point of this edge
+                // - intersection point is between start and end of this edge
+                if (distFromLine < epsilon &&
+                    distSquaredFrom1 > epsilon * epsilon &&
+                    distSquaredFrom2 > epsilon * epsilon &&
+                    distAlongEdge > 0 &&
+                    distAlongEdge < length) {
+                    // Intersection point lies on this edge -> break this edge up and recurse (for multiple intersections per edge)
+                    processEdge(x1, y1, ix, iy, destination);
+                    processEdge(ix, iy, x2, y2, destination);
+                    return;
+                }
+            }
+
+            // If we made it this far, there was no intersection on this edge
+            // Add edge to destination array
+            destination.push(this.getVertexIndex(x1, y1));
+            destination.push(this.getVertexIndex(x2, y2));
+        };
+
+        const nonIntersectingLinesList = [];
+
+        for (let ringIndex = 0; ringIndex <= holeIndices.length; ringIndex++) {
+            const firstIndex = (ringIndex === 0) ? 0 : holeIndices[ringIndex - 1];
+            const nextHoleIndex = (holeIndices.length > ringIndex) ? holeIndices[ringIndex] : vertices.length / 2;
+
+            const lineList = [];
+
+            for (let i = firstIndex + 1; i < nextHoleIndex; i++) {
+                const x1 = vertices[(i - 1) * 2];
+                const y1 = vertices[(i - 1) * 2 + 1];
+                const x2 = vertices[i * 2];
+                const y2 = vertices[i * 2 + 1];
+                processEdge(x1, y1, x2, y2, lineList);
+            }
+
+            const xlast = vertices[(nextHoleIndex - 1) * 2];
+            const ylast = vertices[(nextHoleIndex - 1) * 2 + 1];
+            const xfirst = vertices[firstIndex * 2];
+            const yfirst = vertices[firstIndex * 2 + 1];
+
+            processEdge(xlast, ylast, xfirst, yfirst, lineList);
+
+            nonIntersectingLinesList.push(lineList);
+        }
+
+        return nonIntersectingLinesList;
     }
 }
 
