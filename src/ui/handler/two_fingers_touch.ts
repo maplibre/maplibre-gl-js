@@ -131,10 +131,11 @@ abstract class TwoFingersTouchHandler implements Handler {
     }
 }
 
-function getTouchById(mapTouches: Array<Touch>, points: Array<Point>, identifier: number): Point | void {
+function getTouchById(mapTouches: Array<Touch>, points: Array<Point>, identifier: number): Point | undefined {
     for (let i = 0; i < mapTouches.length; i++) {
         if (mapTouches[i].identifier === identifier) return points[i];
     }
+    return undefined;
 }
 
 /* ZOOM */
