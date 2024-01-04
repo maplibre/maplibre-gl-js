@@ -38,7 +38,7 @@ abstract class TwoFingersTouchHandler implements Handler {
     }
 
     abstract _start(points: [Point, Point]): void;
-    abstract _move(points: [Point, Point], pinchAround: Point | null, e: TouchEvent): HandlerResult | undefined;
+    abstract _move(points: [Point, Point], pinchAround: Point | null, e: TouchEvent): HandlerResult | void;
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): void {
         //log('touchstart', points, e.target.innerHTML, e.targetTouches.length ? e.targetTouches[0].target.innerHTML: undefined);
@@ -53,7 +53,7 @@ abstract class TwoFingersTouchHandler implements Handler {
         this._start([points[0], points[1]]);
     }
 
-    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): ReturnType<typeof TwoFingersTouchHandler.prototype._move> {
+    touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): HandlerResult | void {
         if (!this._firstTwoTouches) return;
 
         e.preventDefault();
@@ -166,7 +166,7 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
         this._startDistance = this._distance = points[0].dist(points[1]);
     }
 
-    _move(points: [Point, Point], pinchAround: Point | null): ReturnType<typeof TwoFingersTouchHandler.prototype._move> {
+    _move(points: [Point, Point], pinchAround: Point | null): HandlerResult | void {
         const lastDistance = this._distance!;
         this._distance = points[0].dist(points[1]);
         if (!this._active && Math.abs(getZoomDelta(this._distance, this._startDistance!)) < ZOOM_THRESHOLD) return;
@@ -206,7 +206,7 @@ export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
         this._minDiameter = points[0].dist(points[1]);
     }
 
-    _move(points: [Point, Point], pinchAround: Point | null, _e: TouchEvent): ReturnType<typeof TwoFingersTouchHandler.prototype._move> {
+    _move(points: [Point, Point], pinchAround: Point | null, _e: TouchEvent): HandlerResult | void {
         const lastVector = this._vector!;
         this._vector = points[0].sub(points[1]);
 
@@ -285,7 +285,7 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
         }
     }
 
-    _move(points: [Point, Point], center: Point | null, e: TouchEvent): ReturnType<typeof TwoFingersTouchHandler.prototype._move> {
+    _move(points: [Point, Point], center: Point | null, e: TouchEvent): HandlerResult | void {
         // If cooperative gestures is enabled, we need a 3-finger minimum for this gesture to register
         if (this._map.cooperativeGestures.isEnabled() && this._currentTouchCount < 3) {
             return;
