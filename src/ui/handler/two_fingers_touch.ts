@@ -168,7 +168,7 @@ export class TwoFingersTouchZoomHandler extends TwoFingersTouchHandler {
     _move(points: [Point, Point], pinchAround: Point | null): ReturnType<typeof TwoFingersTouchHandler.prototype._move> {
         if (typeof this._distance == 'undefined' || typeof this._startDistance === 'undefined')  {
             console.assert(false, `failed precondition - _distance: ${this._distance}, startDistance: ${this._startDistance}`);
-            return;
+            this._startDistance = this._distance = points[0].dist(points[1]);
         }
         const lastDistance = this._distance;
         this._distance = points[0].dist(points[1]);
@@ -212,7 +212,7 @@ export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
     _move(points: [Point, Point], pinchAround: Point | null, _e: TouchEvent): ReturnType<typeof TwoFingersTouchHandler.prototype._move> {
         if (typeof this._vector === 'undefined') {
             console.assert(false, `failed precondition - _vector: ${this._vector}`);
-            return;
+            this._startVector = this._vector = points[0].sub(points[1]);
         }
 
         const lastVector = this._vector;
@@ -240,11 +240,11 @@ export class TwoFingersTouchRotateHandler extends TwoFingersTouchHandler {
 
         if (typeof this._minDiameter === 'undefined') {
             console.assert(false, `failed precondition - _minDiameter: ${this._minDiameter}`);
-            return false;
+            this._minDiameter = vector.mag();
         }
         if (typeof this._startVector === 'undefined') {
             console.assert(false, `failed precondition - _startVector: ${this._startVector}`);
-            return false;
+            this._startVector = vector;
         }
 
         this._minDiameter = Math.min(this._minDiameter, vector.mag());
@@ -299,7 +299,6 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
         if (isVertical(points[0].sub(points[1]))) {
             // fingers are more horizontal than vertical
             this._valid = false;
-
         }
     }
 
@@ -311,7 +310,7 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
 
         if (!this._lastPoints || this._lastPoints.length < 2) {
             console.assert(false, `failed precondition - _lastPoints: ${this._lastPoints}`);
-            return;
+            this._lastPoints = points;
         }
 
         const vectorA = points[0].sub(this._lastPoints[0]);
