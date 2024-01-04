@@ -291,8 +291,8 @@ export class TwoFingersTouchPitchHandler extends TwoFingersTouchHandler {
             return;
         }
 
-        const vectorA = points[0].sub(this._lastPoints![0]!);
-        const vectorB = points[1].sub(this._lastPoints![1]!);
+        const vectorA = points[0].sub(this._lastPoints![0]);
+        const vectorB = points[1].sub(this._lastPoints![1]);
 
         this._valid = this.gestureBeginsVertically(vectorA, vectorB, e.timeStamp);
         if (!this._valid) return;
