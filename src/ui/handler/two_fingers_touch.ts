@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {DOM} from '../../util/dom';
 import type {Map} from '../map';
-import {Handler} from '../handler_manager';
+import {Handler, HandlerResult} from '../handler_manager';
 
 /**
  * An options object sent to the enable function of some of the handlers
@@ -38,7 +38,7 @@ abstract class TwoFingersTouchHandler implements Handler {
     }
 
     abstract _start(points: [Point, Point]): void;
-    abstract _move(points: [Point, Point], pinchAround: Point | null, e: TouchEvent): { zoomDelta: number; pinchAround: Point | null } | { bearingDelta: number; pinchAround: Point | null } | { pitchDelta: number } | void;
+    abstract _move(points: [Point, Point], pinchAround: Point | null, e: TouchEvent): HandlerResult | undefined;
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>): void {
         //log('touchstart', points, e.target.innerHTML, e.targetTouches.length ? e.targetTouches[0].target.innerHTML: undefined);
