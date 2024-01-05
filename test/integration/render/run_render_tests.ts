@@ -16,7 +16,6 @@ import type {CanvasSource} from '../../../src/source/canvas_source';
 import type {Map} from '../../../src/ui/map';
 import type {PointLike} from '../../../src/ui/camera';
 
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 type TestData = {
@@ -779,7 +778,7 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
 }
 
 async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
-    let page = await browser.newPage();
+    const page = await browser.newPage();
     page.coverage.startJSCoverage({includeRawScriptCoverage: true});
     applyDebugParameter(options, page);
     await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
@@ -791,9 +790,9 @@ async function closePageAndFinish(page: Page, retry: boolean = false) {
     const coverage = await page.coverage.stopJSCoverage();
     await page.close();
     if (!retry) {
-        const converter = v8toIstanbul('./dist/maplibre-gl-dev.js')
+        const converter = v8toIstanbul('./dist/maplibre-gl-dev.js');
         await converter.load(); // this is required due to async file reading.
-        converter.applyCoverage(coverage.map(c=> c.rawScriptCoverage!.functions).flat());
+        converter.applyCoverage(coverage.map(c => c.rawScriptCoverage!.functions).flat());
         const coverageReport = converter.toIstanbul();
         const report = JSON.stringify(coverageReport);
         fs.mkdirSync('./coverage', {recursive: true});
