@@ -8,6 +8,7 @@ import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import {Terrain} from '../render/terrain';
 import {LngLat, LngLatLike} from '../geo/lng_lat';
 import {Event} from '../util/evented';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 
 beforeEach(() => {
     setMatchMedia();
@@ -2000,6 +2001,23 @@ describe('#cameraForBounds', () => {
 
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -103.3761, lat: 43.0929});
     });
+
+    test('bearing using LngLatBounds instance', () => {
+        const transform = new Transform(2, 10, 0, 60, false);
+        transform.resize(2048, 512);
+
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+        camera._update = () => {};
+
+        const bb = new LngLatBounds();
+        bb.extend([-66.9326, 49.5904]);
+        bb.extend([-125.0011, 24.9493]);
+
+        const noBearingTransform = camera.cameraForBounds(bb);
+        const bearingTransform = camera.cameraForBounds(bb, {bearing: 45});
+
+        expect(noBearingTransform.zoom).toBeGreaterThan(bearingTransform.zoom);
+    })
 });
 
 describe('#fitBounds', () => {
