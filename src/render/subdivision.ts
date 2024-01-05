@@ -187,6 +187,10 @@ class Subdivider {
                 maxY = Math.max(maxY, vy);
             }
 
+            if (minX === maxX || minY === maxY) {
+                continue; // Skip degenerate linear axis-aligned triangles
+            }
+
             const cellXmin = Math.floor(minX / this._granualityCellSize);
             const cellXmax = Math.ceil(maxX / this._granualityCellSize);
             const cellYmin = Math.floor(minY / this._granualityCellSize);
@@ -217,15 +221,23 @@ class Subdivider {
                     // Edge direction
                     const dirX = bX - aX;
                     const dirY = bY - aY;
+
+                    // Edges parallel with either axis will need special handling later.
+                    const isParallelY = dirX === 0;
+                    const isParallelX = dirY === 0;
+
                     // Distance along edge where it enters/exits current cell row
                     const tTop = (cellRowYTop - aY) / dirY;
                     const tBottom = (cellRowYBottom - aY) / dirY;
                     const tEnter = Math.min(tTop, tBottom);
                     const tExit = Math.max(tTop, tBottom);
 
-                    if (tEnter >= 1 || tExit <= 0) {
-                        // Edge lies entirely outside the cell row, skip it
-                        // Just make sure to add its original triangle vertex if needed.
+                    // Determine if edge lies entirely outside this cell row.
+                    // Check entry and exit points, or if edge is parallel with X, check its Y coordinate.
+                    if ((!isParallelX && (tEnter >= 1 || tExit <= 0)) ||
+                        (isParallelX && (aY > cellRowYTop || aY < cellRowYBottom))) {
+                        // Skip this edge
+                        // But make sure to add its endpoint vertex if needed.
                         if (bY >= cellRowYTop && bY <= cellRowYBottom) {
                             // The edge endpoint is withing this row, add it to the ring
                             ring.push(triangleIndices[(edgeIndex + 1) % 3]);
@@ -233,44 +245,53 @@ class Subdivider {
                         continue;
                     }
 
-                    const enterX = aX + dirX * tEnter;
-                    const exitX = aX + dirX * tExit;
-
                     // Do not add original triangle vertices now, those are handled separately later
 
                     // Special case: edge vertex for entry into cell row
-                    if (tEnter > 0) {
+                    // If edge is parallel with X axis, there is no entry vertex
+                    if (!isParallelX && tEnter > 0) {
                         ring.push(this.getVertexIndex(aX + dirX * tEnter, aY + dirY * tEnter));
                     }
 
-                    // Generate edge interior vertices
-                    const subdivisionStartX = Math.floor(Math.min(enterX, exitX) / this._granualityCellSize) + 1;
-                    const subdivisionEndX = Math.ceil(Math.max(enterX, exitX) / this._granualityCellSize) - 1;
+                    const enterX = aX + dirX * tEnter;
+                    const exitX = aX + dirX * tExit;
+                    const leftX = isParallelX ? Math.min(aX, bX) : Math.min(enterX, exitX);
+                    const rightX = isParallelX ? Math.max(aX, bX) : Math.max(enterX, exitX);
 
-                    if (enterX < exitX) {
-                        // Left to right
-                        for (let cellX = subdivisionStartX; cellX <= subdivisionEndX; cellX++) {
-                            const x = cellX * this._granualityCellSize;
-                            const y = aY + dirY * (x - aX) / dirX;
-                            ring.push(this.getVertexIndex(x, y));
-                        }
-                    } else {
-                        // Right to left
-                        for (let cellX = subdivisionEndX; cellX >= subdivisionStartX; cellX--) {
-                            const x = cellX * this._granualityCellSize;
-                            const y = aY + dirY * (x - aX) / dirX;
-                            ring.push(this.getVertexIndex(x, y));
+                    // No need to subdivide (along X) edges that are parallel with Y
+                    if (!isParallelY) {
+                        // Generate edge interior vertices
+                        const edgeSubdivisionLeftX = Math.floor(leftX / this._granualityCellSize) + 1;
+                        const edgeSubdivisionRightX = Math.ceil(rightX / this._granualityCellSize) - 1;
+
+                        const isEdgeLeftToRight = isParallelX ? (aX < bX) : (enterX < exitX);
+                        if (isEdgeLeftToRight) {
+                            // Left to right
+                            for (let cellX = edgeSubdivisionLeftX; cellX <= edgeSubdivisionRightX; cellX++) {
+                                const x = cellX * this._granualityCellSize;
+                                const y = aY + dirY * (x - aX) / dirX;
+                                ring.push(this.getVertexIndex(x, y));
+                            }
+                        } else {
+                            // Right to left
+                            for (let cellX = edgeSubdivisionRightX; cellX >= edgeSubdivisionLeftX; cellX--) {
+                                const x = cellX * this._granualityCellSize;
+                                const y = aY + dirY * (x - aX) / dirX;
+                                ring.push(this.getVertexIndex(x, y));
+                            }
                         }
                     }
 
                     // Special case: edge vertex for exit from cell row
-                    if (tExit < 1) {
+                    if (!isParallelX && tExit < 1) {
                         ring.push(this.getVertexIndex(aX + dirX * tExit, aY + dirY * tExit));
                     }
 
-                    // Split inter-edge or add original vertex
-                    if (bY >= cellRowYTop && bY <= cellRowYBottom) {
-                        // The edge endpoint is withing this row, add it to the ring
+                    // Split tob/bottow row boundary (region between edges), or add original vertex
+                    if (isParallelX || (bY >= cellRowYTop && bY <= cellRowYBottom)) {
+                        // No row boundary to split for edges parallel with X
+                        // Also no boundary for edges that do not cross the row boundary
+                        // Add the edge endpoint vertex
                         ring.push(triangleIndices[(edgeIndex + 1) % 3]);
                     } else {
                         const dir2X = cX - bX;
@@ -279,33 +300,51 @@ class Subdivider {
                         const t2Bottom = (cellRowYBottom - bY) / dir2Y;
                         const t2Enter = Math.min(t2Top, t2Bottom);
                         const enter2X = bX + dir2X * t2Enter;
-                        let segmentStartX = Math.floor(Math.min(enter2X, exitX) / this._granualityCellSize) + 1;
-                        let segmentEndX = Math.ceil(Math.max(enter2X, exitX) / this._granualityCellSize) - 1;
-                        let y = t2Enter === t2Top ? cellRowYTop : cellRowYBottom;
+                        let boundarySubdivisionLeftX = Math.floor(Math.min(enter2X, exitX) / this._granualityCellSize) + 1;
+                        let boundarySubdivisionRightX = Math.ceil(Math.max(enter2X, exitX) / this._granualityCellSize) - 1;
+                        let isBoundaryLeftToRight = exitX < enter2X;
 
-                        if (t2Enter >= 1) {
-                            // The next edge lies entirely outside this cell row
-                            // Find entry point for the edge after that instead
+                        const isParallelX2 = dir2Y === 0;
+                        if (isParallelX2 || t2Enter >= 1) {
+                            // The next edge (b->c) lies entirely outside this cell row
+                            // Find entry point for the edge after that instead (c->a)
+
+                            // There may be at most 1 edge that is parallel to X in a triangle.
+                            // The main "a->b" edge must not be parallel at this point in the code.
+                            // We know that "a->b" crosses the current cell row boundary, such that point "b" is beyond the boundary.
+                            // If "b->c" is parallel to X, then "c->a" must not be parallel and must cross the cell row boundary back:
+                            //      a
+                            //      |\
+                            // -----|-\--cell row boundary----
+                            //      |  \
+                            //      c---b
+                            // If "b->c" is not parallel to X and doesn't cross the cell row boundary,
+                            // then c->a must also not be parallel to X and must cross the cell boundary back,
+                            // since points "a" and "c" lie on different sides of the boundary and on different Y coordinates.
+                            //
+                            // Thus there is no need for "parallel with X" checks inside this condition branch.
+
                             const dir3X = aX - cX;
                             const dir3Y = aY - cY;
                             const t3Top = (cellRowYTop - cY) / dir3Y;
                             const t3Bottom = (cellRowYBottom - cY) / dir3Y;
                             const t3Enter = Math.min(t3Top, t3Bottom);
                             const enter3X = cX + dir3X * t3Enter;
-                            segmentStartX = Math.floor(Math.min(enter3X, exitX) / this._granualityCellSize) + 1;
-                            segmentEndX = Math.ceil(Math.max(enter3X, exitX) / this._granualityCellSize) - 1;
-                            y = t3Enter === t3Top ? cellRowYTop : cellRowYBottom;
+                            boundarySubdivisionLeftX = Math.floor(Math.min(enter3X, exitX) / this._granualityCellSize) + 1;
+                            boundarySubdivisionRightX = Math.ceil(Math.max(enter3X, exitX) / this._granualityCellSize) - 1;
+                            isBoundaryLeftToRight = exitX < enter3X;
                         }
 
-                        if (exitX < enter2X) {
+                        const boundaryY = dirY > 0 ? cellRowYBottom : cellRowYTop;
+                        if (isBoundaryLeftToRight) {
                             // Left to right
-                            for (let cellX = segmentStartX; cellX <= segmentEndX; cellX++) {
-                                ring.push(this.getVertexIndex(cellX * this._granualityCellSize, y));
+                            for (let cellX = boundarySubdivisionLeftX; cellX <= boundarySubdivisionRightX; cellX++) {
+                                ring.push(this.getVertexIndex(cellX * this._granualityCellSize, boundaryY));
                             }
                         } else {
                             // Right to left
-                            for (let cellX = segmentEndX; cellX >= segmentStartX; cellX--) {
-                                ring.push(this.getVertexIndex(cellX * this._granualityCellSize, y));
+                            for (let cellX = boundarySubdivisionRightX; cellX >= boundarySubdivisionLeftX; cellX--) {
+                                ring.push(this.getVertexIndex(cellX * this._granualityCellSize, boundaryY));
                             }
                         }
                     }
@@ -319,7 +358,7 @@ class Subdivider {
                 }
 
                 // First find the leftmost vertex
-                let leftmostIndex = 0; // todo: discover leftmost index while constructing the ring
+                let leftmostIndex = 0;
                 let leftmostX = Infinity;
                 const ringVertexLength = ring.length;
                 for (let i = 0; i < ringVertexLength; i++) {
@@ -335,7 +374,7 @@ class Subdivider {
                 let lastEdgeA = leftmostIndex;
                 let lastEdgeB = (lastEdgeA + 1) % ringVertexLength;
 
-                while (true) { // TODO: tohle navždy spinuje wtf
+                while (true) {
                     const candidateIndexA = (lastEdgeA - 1) >= 0 ? (lastEdgeA - 1) : (ringVertexLength - 1);
                     const candidateIndexB = (lastEdgeB + 1) % ringVertexLength;
 
