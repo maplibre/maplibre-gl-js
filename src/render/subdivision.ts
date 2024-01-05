@@ -147,6 +147,238 @@ class Subdivider {
         }
     }
 
+    private subdivideTrianglesScanline(triangleIndices: Array<number>): Array<number> {
+        if (this._granuality < 2) {
+            return triangleIndices;
+        }
+
+        const finalTriangleIndices = [];
+
+        // Iterate over all input triangles
+        const numIndices = triangleIndices.length;
+        for (let primitiveIndex = 0; primitiveIndex < numIndices; primitiveIndex += 3) {
+            const triangle = [
+                triangleIndices[primitiveIndex + 0], // v0
+                triangleIndices[primitiveIndex + 1], // v1
+                triangleIndices[primitiveIndex + 2], // v2
+            ];
+
+            const triangleVertices = [
+                this._finalVertices[triangleIndices[primitiveIndex + 0] * 2 + 0], // v0.x
+                this._finalVertices[triangleIndices[primitiveIndex + 0] * 2 + 1], // v0.y
+                this._finalVertices[triangleIndices[primitiveIndex + 1] * 2 + 0], // v1.x
+                this._finalVertices[triangleIndices[primitiveIndex + 1] * 2 + 1], // v1.y
+                this._finalVertices[triangleIndices[primitiveIndex + 2] * 2 + 0], // v2.x
+                this._finalVertices[triangleIndices[primitiveIndex + 2] * 2 + 1], // v2.y
+            ];
+
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
+
+            // Compute AABB
+            for (let i = 0; i < 3; i++) {
+                const vx = triangleVertices[i * 2];
+                const vy = triangleVertices[i * 2 + 1];
+                minX = Math.min(minX, vx);
+                maxX = Math.max(maxX, vx);
+                minY = Math.min(minY, vy);
+                maxY = Math.max(maxY, vy);
+            }
+
+            const cellXmin = Math.floor(minX / this._granualityCellSize);
+            const cellXmax = Math.ceil(maxX / this._granualityCellSize);
+            const cellYmin = Math.floor(minY / this._granualityCellSize);
+            const cellYmax = Math.ceil(maxY / this._granualityCellSize);
+            
+            // Skip trinagles that do not span multiple cells
+            if (cellXmin === cellXmax && cellYmin === cellYmax) {
+                finalTriangleIndices.push(...triangle);
+                continue;
+            }
+
+            // Iterate over cell rows that intersect this triangle
+            for (let cellRow = cellYmin; cellRow < cellYmax; cellRow++) {
+                const cellRowYTop = cellRow * this._granualityCellSize;
+                const cellRowYBottom = cellRowYTop + this._granualityCellSize;
+                let ring = [];
+
+                // Generate the vertex ring
+                for (let edgeIndex = 0; edgeIndex < 3; edgeIndex++) {
+                    // Current edge that will be subdivided: a --> b
+                    // The remaining vertex of the triangle: c
+                    const aX = triangleVertices[edgeIndex * 2];
+                    const aY = triangleVertices[edgeIndex * 2 + 1];
+                    const bX = triangleVertices[((edgeIndex + 1) * 2) % 6];
+                    const bY = triangleVertices[((edgeIndex + 1) * 2) % 6 + 1];
+                    const cX = triangleVertices[((edgeIndex + 2) * 2) % 6];
+                    const cY = triangleVertices[((edgeIndex + 2) * 2) % 6 + 1];
+                    // Edge direction
+                    const dirX = bX - aX;
+                    const dirY = bY - aY;
+                    // Distance along edge where it enters/exits current cell row
+                    const tTop = (cellRowYTop - aY) / dirY;
+                    const tBottom = (cellRowYBottom - aY) / dirY;
+                    const tEnter = Math.min(tTop, tBottom);
+                    const tExit = Math.max(tTop, tBottom);
+
+                    if (tEnter >= 1 || tExit <= 0) {
+                        // Edge lies entirely outside the cell row, skip it
+                        // Just make sure to add its original triangle vertex if needed.
+                        if (bY >= cellRowYTop && bY <= cellRowYBottom) {
+                            // The edge endpoint is withing this row, add it to the ring
+                            ring.push(triangleIndices[(edgeIndex + 1) % 3]);
+                        }
+                        continue;
+                    }
+
+                    const enterX = aX + dirX * tEnter;
+                    const exitX = aX + dirX * tExit;
+
+                    // Do not add original triangle vertices now, those are handled separately later
+
+                    // Special case: edge vertex for entry into cell row
+                    if (tEnter > 0) {
+                        ring.push(this.getVertexIndex(aX + dirX * tEnter, aY + dirY * tEnter));
+                    }
+
+                    // Generate edge interior vertices
+                    const subdivisionStartX = Math.floor(Math.min(enterX, exitX) / this._granualityCellSize) + 1;
+                    const subdivisionEndX = Math.ceil(Math.max(enterX, exitX) / this._granualityCellSize) - 1;
+
+                    if (enterX < exitX) {
+                        // Left to right
+                        for (let cellX = subdivisionStartX; cellX <= subdivisionEndX; cellX++) {
+                            const x = cellX * this._granualityCellSize;
+                            const y = aY + dirY * (x - aX) / dirX;
+                            ring.push(this.getVertexIndex(x, y));
+                        }
+                    } else {
+                        // Right to left
+                        for (let cellX = subdivisionEndX; cellX >= subdivisionStartX; cellX--) {
+                            const x = cellX * this._granualityCellSize;
+                            const y = aY + dirY * (x - aX) / dirX;
+                            ring.push(this.getVertexIndex(x, y));
+                        }
+                    }
+
+                    // Special case: edge vertex for exit from cell row
+                    if (tExit < 1) {
+                        ring.push(this.getVertexIndex(aX + dirX * tExit, aY + dirY * tExit));
+                    }
+
+                    // Split inter-edge or add original vertex
+                    if (bY >= cellRowYTop && bY <= cellRowYBottom) {
+                        // The edge endpoint is withing this row, add it to the ring
+                        ring.push(triangleIndices[(edgeIndex + 1) % 3]);
+                    } else {
+                        const dir2X = cX - bX;
+                        const dir2Y = cY - bY;
+                        const t2Top = (cellRowYTop - bY) / dir2Y;
+                        const t2Bottom = (cellRowYBottom - bY) / dir2Y;
+                        const t2Enter = Math.min(t2Top, t2Bottom);
+                        const enter2X = bX + dir2X * t2Enter;
+                        let segmentStartX = Math.floor(Math.min(enter2X, exitX) / this._granualityCellSize) + 1;
+                        let segmentEndX = Math.ceil(Math.max(enter2X, exitX) / this._granualityCellSize) - 1;
+                        let y = t2Enter === t2Top ? cellRowYTop : cellRowYBottom;
+
+                        if (t2Enter >= 1) {
+                            // The next edge lies entirely outside this cell row
+                            // Find entry point for the edge after that instead
+                            const dir3X = aX - cX;
+                            const dir3Y = aY - cY;
+                            const t3Top = (cellRowYTop - cY) / dir3Y;
+                            const t3Bottom = (cellRowYBottom - cY) / dir3Y;
+                            const t3Enter = Math.min(t3Top, t3Bottom);
+                            const enter3X = cX + dir3X * t3Enter;
+                            segmentStartX = Math.floor(Math.min(enter3X, exitX) / this._granualityCellSize) + 1;
+                            segmentEndX = Math.ceil(Math.max(enter3X, exitX) / this._granualityCellSize) - 1;
+                            y = t3Enter === t3Top ? cellRowYTop : cellRowYBottom;
+                        }
+
+                        if (exitX < enter2X) {
+                            // Left to right
+                            for (let cellX = segmentStartX; cellX <= segmentEndX; cellX++) {
+                                ring.push(this.getVertexIndex(cellX * this._granualityCellSize, y));
+                            }
+                        } else {
+                            // Right to left
+                            for (let cellX = segmentEndX; cellX >= segmentStartX; cellX--) {
+                                ring.push(this.getVertexIndex(cellX * this._granualityCellSize, y));
+                            }
+                        }
+                    }
+                }
+
+                // Triangulate the ring
+                // It is guaranteed to be convex and ordered
+                if (ring.length === 0) {
+                    console.error("Subdivision vertex ring length 0, smells like a bug!");
+                    continue;
+                }
+                
+                // First find the leftmost vertex
+                let leftmostIndex = 0; // todo: discover leftmost index while constructing the ring
+                let leftmostX = Infinity;
+                const ringVertexLength = ring.length;
+                for (let i = 0; i < ringVertexLength; i++) {
+                    const x = this._finalVertices[ring[i] * 2];
+                    if (x < leftmostX) {
+                        leftmostIndex = i;
+                        leftmostX = x;
+                    }
+                }
+
+                // Traverse the ring in both directions from the leftmost vertex
+                // Assume ring is in CCW order (to produce CCW triangles)
+                let lastEdgeA = leftmostIndex;
+                let lastEdgeB = (lastEdgeA + 1) % ringVertexLength;
+                
+                while(true) { // TODO: tohle navždy spinuje wtf
+                    const candidateIndexA = (lastEdgeA - 1) >= 0 ? (lastEdgeA - 1) : (ringVertexLength - 1);
+                    const candidateIndexB = (lastEdgeB + 1) % ringVertexLength;
+
+                    // Pick candidate, move edge
+                    const candidateXA = this._finalVertices[ring[candidateIndexA] * 2];
+                    const candidateXB = this._finalVertices[ring[candidateIndexB] * 2];
+
+                    if (candidateXA < candidateXB) {
+                        // Pick candidate A
+                        const c = ring[candidateIndexA];
+                        const a = ring[lastEdgeA];
+                        const b = ring[lastEdgeB];
+                        if (c !== a && c !== b && a !== b) {
+                            finalTriangleIndices.push(a, b, c);
+                        }
+                        lastEdgeA--;
+                        if (lastEdgeA < 0) {
+                            lastEdgeA = ringVertexLength - 1;
+                        }
+                    } else {
+                        // Pick candidate B
+                        const c = ring[candidateIndexB];
+                        const a = ring[lastEdgeA];
+                        const b = ring[lastEdgeB];
+                        if (c !== a && c !== b && a !== b) {
+                            finalTriangleIndices.push(b, a, c);
+                        }
+                        lastEdgeB++;
+                        if (lastEdgeB >= ringVertexLength) {
+                            lastEdgeB = 0;
+                        }
+                    }
+
+                    if (candidateIndexA === candidateIndexB) {
+                        break; // We ran out of ring vertices
+                    }
+                }
+            }
+        }
+
+        return finalTriangleIndices;
+    }
+
     private subdivideTriangles(triangleIndices: Array<number>): Array<number> {
         if (this._granuality < 2) {
             return triangleIndices;
@@ -777,22 +1009,29 @@ class Subdivider {
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
         this.initializeVertices(vertices);
 
-        const nonIntersectingLines = this.fixPolygonRings(vertices, holeIndices);
-        const subdividedLines = [];
-        for (const line of nonIntersectingLines) {
-            subdividedLines.push(this.subdivideLine(line));
-        }
+        // const nonIntersectingLines = this.fixPolygonRings(vertices, holeIndices);
+        // const subdividedLines = [];
+        // for (const line of nonIntersectingLines) {
+        //     subdividedLines.push(this.subdivideLine(line));
+        // }
 
         // Subdivide lines
-        // const subdividedLines = [];
-        // for (const line of lineIndices) {
-        //     subdividedLines.push(this.subdivideLine(this.convertIndices(vertices, line)));
-        // }
+        const subdividedLines = [];
+        for (const line of lineIndices) {
+            subdividedLines.push(this.subdivideLine(this.convertIndices(vertices, line)));
+        }
 
         // Subdivide triangles
         //const subdividedTriangles = this.convertIndices(vertices, earcut(vertices, holeIndices));
         //const subdividedTriangles = this.subdivideTriangles(this.convertIndices(vertices, earcut(vertices, holeIndices)));
-        const subdividedTriangles = this.subdivideConstrainautor(subdividedLines);
+        let subdividedTriangles;
+        try {
+            subdividedTriangles = this.subdivideTrianglesScanline(this.convertIndices(vertices, earcut(vertices, holeIndices)));
+        } catch (e) {
+            console.error(e);
+        }
+        
+        //const subdividedTriangles = this.subdivideConstrainautor(subdividedLines);
 
         // Fix horizontal/vertical seams at T-joints
         //this.fixTjoints(subdividedTriangles);
