@@ -859,14 +859,13 @@ async function executeRenderTests() {
 
     let page = await createPageAndStart(browser, testStyles, directory, options);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
+    await closePageAndFinish(page, failedTests.length > 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
-        await closePageAndFinish(page, false);
         options.debug = true;
         page = await createPageAndStart(browser, failedTests, directory, options);
+        await closePageAndFinish(page, false);
     }
-
-    await closePageAndFinish(page, failedTests.length > 0);
 
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
     const testStats: TestStats = {
