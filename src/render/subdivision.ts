@@ -191,7 +191,7 @@ class Subdivider {
             const cellXmax = Math.ceil(maxX / this._granualityCellSize);
             const cellYmin = Math.floor(minY / this._granualityCellSize);
             const cellYmax = Math.ceil(maxY / this._granualityCellSize);
-            
+
             // Skip trinagles that do not span multiple cells
             if (cellXmin === cellXmax && cellYmin === cellYmax) {
                 finalTriangleIndices.push(...triangle);
@@ -202,7 +202,7 @@ class Subdivider {
             for (let cellRow = cellYmin; cellRow < cellYmax; cellRow++) {
                 const cellRowYTop = cellRow * this._granualityCellSize;
                 const cellRowYBottom = cellRowYTop + this._granualityCellSize;
-                let ring = [];
+                const ring = [];
 
                 // Generate the vertex ring
                 for (let edgeIndex = 0; edgeIndex < 3; edgeIndex++) {
@@ -314,10 +314,10 @@ class Subdivider {
                 // Triangulate the ring
                 // It is guaranteed to be convex and ordered
                 if (ring.length === 0) {
-                    console.error("Subdivision vertex ring length 0, smells like a bug!");
+                    console.error('Subdivision vertex ring length 0, smells like a bug!');
                     continue;
                 }
-                
+
                 // First find the leftmost vertex
                 let leftmostIndex = 0; // todo: discover leftmost index while constructing the ring
                 let leftmostX = Infinity;
@@ -334,8 +334,8 @@ class Subdivider {
                 // Assume ring is in CCW order (to produce CCW triangles)
                 let lastEdgeA = leftmostIndex;
                 let lastEdgeB = (lastEdgeA + 1) % ringVertexLength;
-                
-                while(true) { // TODO: tohle navždy spinuje wtf
+
+                while (true) { // TODO: tohle navždy spinuje wtf
                     const candidateIndexA = (lastEdgeA - 1) >= 0 ? (lastEdgeA - 1) : (ringVertexLength - 1);
                     const candidateIndexB = (lastEdgeB + 1) % ringVertexLength;
 
@@ -1030,7 +1030,7 @@ class Subdivider {
         } catch (e) {
             console.error(e);
         }
-        
+
         //const subdividedTriangles = this.subdivideConstrainautor(subdividedLines);
 
         // Fix horizontal/vertical seams at T-joints
