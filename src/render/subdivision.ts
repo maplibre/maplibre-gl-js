@@ -215,9 +215,9 @@ class Subdivider {
                     const aX = triangleVertices[edgeIndex * 2];
                     const aY = triangleVertices[edgeIndex * 2 + 1];
                     const bX = triangleVertices[((edgeIndex + 1) * 2) % 6];
-                    const bY = triangleVertices[((edgeIndex + 1) * 2) % 6 + 1];
+                    const bY = triangleVertices[((edgeIndex + 1) * 2 + 1) % 6];
                     const cX = triangleVertices[((edgeIndex + 2) * 2) % 6];
-                    const cY = triangleVertices[((edgeIndex + 2) * 2) % 6 + 1];
+                    const cY = triangleVertices[((edgeIndex + 2) * 2 + 1) % 6];
                     // Edge direction
                     const dirX = bX - aX;
                     const dirY = bY - aY;
@@ -235,7 +235,7 @@ class Subdivider {
                     // Determine if edge lies entirely outside this cell row.
                     // Check entry and exit points, or if edge is parallel with X, check its Y coordinate.
                     if ((!isParallelX && (tEnter >= 1 || tExit <= 0)) ||
-                        (isParallelX && (aY > cellRowYTop || aY < cellRowYBottom))) {
+                        (isParallelX && (aY < cellRowYTop || aY > cellRowYBottom))) {
                         // Skip this edge
                         // But make sure to add its endpoint vertex if needed.
                         if (bY >= cellRowYTop && bY <= cellRowYBottom) {
@@ -253,28 +253,28 @@ class Subdivider {
                         ring.push(this.getVertexIndex(aX + dirX * tEnter, aY + dirY * tEnter));
                     }
 
-                    const enterX = aX + dirX * tEnter;
-                    const exitX = aX + dirX * tExit;
+                    const enterX = aX + dirX * Math.max(tEnter, 0);
+                    const exitX = aX + dirX * Math.min(tExit, 1);
                     const leftX = isParallelX ? Math.min(aX, bX) : Math.min(enterX, exitX);
                     const rightX = isParallelX ? Math.max(aX, bX) : Math.max(enterX, exitX);
 
                     // No need to subdivide (along X) edges that are parallel with Y
                     if (!isParallelY) {
                         // Generate edge interior vertices
-                        const edgeSubdivisionLeftX = Math.floor(leftX / this._granualityCellSize) + 1;
-                        const edgeSubdivisionRightX = Math.ceil(rightX / this._granualityCellSize) - 1;
+                        const edgeSubdivisionLeftCellX = Math.floor(leftX / this._granualityCellSize) + 1;
+                        const edgeSubdivisionRightCellX = Math.ceil(rightX / this._granualityCellSize) - 1;
 
                         const isEdgeLeftToRight = isParallelX ? (aX < bX) : (enterX < exitX);
                         if (isEdgeLeftToRight) {
                             // Left to right
-                            for (let cellX = edgeSubdivisionLeftX; cellX <= edgeSubdivisionRightX; cellX++) {
+                            for (let cellX = edgeSubdivisionLeftCellX; cellX <= edgeSubdivisionRightCellX; cellX++) {
                                 const x = cellX * this._granualityCellSize;
                                 const y = aY + dirY * (x - aX) / dirX;
                                 ring.push(this.getVertexIndex(x, y));
                             }
                         } else {
                             // Right to left
-                            for (let cellX = edgeSubdivisionRightX; cellX >= edgeSubdivisionLeftX; cellX--) {
+                            for (let cellX = edgeSubdivisionRightCellX; cellX >= edgeSubdivisionLeftCellX; cellX--) {
                                 const x = cellX * this._granualityCellSize;
                                 const y = aY + dirY * (x - aX) / dirX;
                                 ring.push(this.getVertexIndex(x, y));
@@ -287,7 +287,7 @@ class Subdivider {
                         ring.push(this.getVertexIndex(aX + dirX * tExit, aY + dirY * tExit));
                     }
 
-                    // Split tob/bottow row boundary (region between edges), or add original vertex
+                    // Split tob/bottom row boundary (region between edges), or add original vertex
                     if (isParallelX || (bY >= cellRowYTop && bY <= cellRowYBottom)) {
                         // No row boundary to split for edges parallel with X
                         // Also no boundary for edges that do not cross the row boundary
@@ -299,13 +299,14 @@ class Subdivider {
                         const t2Top = (cellRowYTop - bY) / dir2Y;
                         const t2Bottom = (cellRowYBottom - bY) / dir2Y;
                         const t2Enter = Math.min(t2Top, t2Bottom);
+                        const t2Exit = Math.max(t2Top, t2Bottom);
                         const enter2X = bX + dir2X * t2Enter;
-                        let boundarySubdivisionLeftX = Math.floor(Math.min(enter2X, exitX) / this._granualityCellSize) + 1;
-                        let boundarySubdivisionRightX = Math.ceil(Math.max(enter2X, exitX) / this._granualityCellSize) - 1;
+                        let boundarySubdivisionLeftCellX = Math.floor(Math.min(enter2X, exitX) / this._granualityCellSize) + 1;
+                        let boundarySubdivisionRightCellX = Math.ceil(Math.max(enter2X, exitX) / this._granualityCellSize) - 1;
                         let isBoundaryLeftToRight = exitX < enter2X;
 
                         const isParallelX2 = dir2Y === 0;
-                        if (isParallelX2 || t2Enter >= 1) {
+                        if (isParallelX2 || t2Enter >= 1 || t2Exit <= 0) {
                             // The next edge (b->c) lies entirely outside this cell row
                             // Find entry point for the edge after that instead (c->a)
 
@@ -330,21 +331,23 @@ class Subdivider {
                             const t3Bottom = (cellRowYBottom - cY) / dir3Y;
                             const t3Enter = Math.min(t3Top, t3Bottom);
                             const enter3X = cX + dir3X * t3Enter;
-                            boundarySubdivisionLeftX = Math.floor(Math.min(enter3X, exitX) / this._granualityCellSize) + 1;
-                            boundarySubdivisionRightX = Math.ceil(Math.max(enter3X, exitX) / this._granualityCellSize) - 1;
+                            boundarySubdivisionLeftCellX = Math.floor(Math.min(enter3X, exitX) / this._granualityCellSize) + 1;
+                            boundarySubdivisionRightCellX = Math.ceil(Math.max(enter3X, exitX) / this._granualityCellSize) - 1;
                             isBoundaryLeftToRight = exitX < enter3X;
                         }
 
                         const boundaryY = dirY > 0 ? cellRowYBottom : cellRowYTop;
                         if (isBoundaryLeftToRight) {
                             // Left to right
-                            for (let cellX = boundarySubdivisionLeftX; cellX <= boundarySubdivisionRightX; cellX++) {
-                                ring.push(this.getVertexIndex(cellX * this._granualityCellSize, boundaryY));
+                            for (let cellX = boundarySubdivisionLeftCellX; cellX <= boundarySubdivisionRightCellX; cellX++) {
+                                const x = cellX * this._granualityCellSize;
+                                ring.push(this.getVertexIndex(x, boundaryY));
                             }
                         } else {
                             // Right to left
-                            for (let cellX = boundarySubdivisionRightX; cellX >= boundarySubdivisionLeftX; cellX--) {
-                                ring.push(this.getVertexIndex(cellX * this._granualityCellSize, boundaryY));
+                            for (let cellX = boundarySubdivisionRightCellX; cellX >= boundarySubdivisionLeftCellX; cellX--) {
+                                const x = cellX * this._granualityCellSize;
+                                ring.push(this.getVertexIndex(x, boundaryY));
                             }
                         }
                     }
