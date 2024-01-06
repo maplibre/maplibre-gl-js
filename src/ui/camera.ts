@@ -641,7 +641,13 @@ export abstract class Camera extends Evented {
     cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing {
         bounds = LngLatBounds.convert(bounds);
         const bearing = options && options.bearing || 0;
-        return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
+
+        const nwToSETransform = this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
+        const neToSWTransform = this._cameraForBoxAndBearing(bounds.getNorthEast(), bounds.getSouthWest(), bearing, options);
+
+        return extend(nwToSETransform, {
+            zoom: Math.min(nwToSETransform.zoom, neToSWTransform.zoom)
+        })
     }
 
     /**

@@ -1931,7 +1931,7 @@ describe('#cameraForBounds', () => {
         const transform = camera.cameraForBounds(bb, {bearing: 175});
 
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
-        expect(fixedNum(transform.zoom, 3)).toBe(2.558);
+        expect(fixedNum(transform.zoom, 3)).toBe(2.396);
         expect(transform.bearing).toBe(175);
     });
 
@@ -1941,7 +1941,7 @@ describe('#cameraForBounds', () => {
         const transform = camera.cameraForBounds(bb, {bearing: -30});
 
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
-        expect(fixedNum(transform.zoom, 3)).toBe(2.392);
+        expect(fixedNum(transform.zoom, 3)).toBe(2.222);
         expect(transform.bearing).toBe(-30);
     });
 
