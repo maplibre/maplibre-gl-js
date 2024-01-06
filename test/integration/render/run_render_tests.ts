@@ -786,18 +786,19 @@ async function createPageAndStart(browser: Browser, testStyles: StyleWithTestDat
     return page;
 }
 
-async function closePageAndFinish(page: Page, retry: boolean = false) {
+async function closePageAndFinish(page: Page, reportCoverage: boolean) {
     const coverage = await page.coverage.stopJSCoverage();
     await page.close();
-    if (!retry) {
-        const converter = v8toIstanbul('./dist/maplibre-gl-dev.js');
-        await converter.load(); // this is required due to async file reading.
-        converter.applyCoverage(coverage.map(c => c.rawScriptCoverage!.functions).flat());
-        const coverageReport = converter.toIstanbul();
-        const report = JSON.stringify(coverageReport);
-        fs.mkdirSync('./coverage', {recursive: true});
-        fs.writeFileSync(`./coverage/coverage-render${process.env.CURRENT_SPLIT_INDEX}.json`, report, {});
+    if (!reportCoverage) {
+        return;
     }
+    const converter = v8toIstanbul('./dist/maplibre-gl-dev.js');
+    await converter.load();
+    converter.applyCoverage(coverage.map(c => c.rawScriptCoverage!.functions).flat());
+    const coverageReport = converter.toIstanbul();
+    const report = JSON.stringify(coverageReport);
+    fs.mkdirSync('./coverage', {recursive: true});
+    fs.writeFileSync('./coverage/coverage-render.json', report);
 }
 
 /**
@@ -858,12 +859,12 @@ async function executeRenderTests() {
 
     let page = await createPageAndStart(browser, testStyles, directory, options);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
-    await closePageAndFinish(page, failedTests.length > 0);
+    await closePageAndFinish(page, failedTests.length === 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
         options.debug = true;
         page = await createPageAndStart(browser, failedTests, directory, options);
-        await closePageAndFinish(page, false);
+        await closePageAndFinish(page, true);
     }
 
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
