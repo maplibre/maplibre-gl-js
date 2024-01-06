@@ -7,13 +7,15 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
+import puppeteer, {Page, Browser} from 'puppeteer';
+import v8toIstanbul from 'v8-to-istanbul';
 import {localizeURLs} from '../lib/localize-urls';
 import maplibregl from '../../../src/index';
+import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {CanvasSource} from '../../../src/source/canvas_source';
 import type {Map} from '../../../src/ui/map';
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {PointLike} from '../../../src/ui/camera';
-import puppeteer, {Page} from 'puppeteer';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 type TestData = {
@@ -775,6 +777,30 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     }
 }
 
+async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
+    const page = await browser.newPage();
+    page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+    applyDebugParameter(options, page);
+    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+    await runTests(page, testStyles, directory);
+    return page;
+}
+
+async function closePageAndFinish(page: Page, reportCoverage: boolean) {
+    const coverage = await page.coverage.stopJSCoverage();
+    await page.close();
+    if (!reportCoverage) {
+        return;
+    }
+    const converter = v8toIstanbul('./dist/maplibre-gl-dev.js');
+    await converter.load();
+    converter.applyCoverage(coverage.map(c => c.rawScriptCoverage!.functions).flat());
+    const coverageReport = converter.toIstanbul();
+    const report = JSON.stringify(coverageReport);
+    fs.mkdirSync('./coverage', {recursive: true});
+    fs.writeFileSync('./coverage/coverage-render.json', report);
+}
+
 /**
  * Entry point to run the render test suite, compute differences to expected values (making exceptions based on
  * implementation vagaries), print results to standard output, write test artifacts to the
@@ -831,24 +857,15 @@ async function executeRenderTests() {
         testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    let page = await browser.newPage();
-    applyDebugParameter(options, page);
-    await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-
-    await runTests(page, testStyles, directory);
-
+    let page = await createPageAndStart(browser, testStyles, directory, options);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
+    await closePageAndFinish(page, failedTests.length === 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
-        page.close();
-        page = await browser.newPage();
         options.debug = true;
-        applyDebugParameter(options, page);
-        await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-        await runTests(page, failedTests, directory);
+        page = await createPageAndStart(browser, failedTests, directory, options);
+        await closePageAndFinish(page, true);
     }
-
-    page.close();
 
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
     const testStats: TestStats = {
