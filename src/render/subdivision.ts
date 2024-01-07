@@ -121,15 +121,15 @@ class Subdivider {
     }
 
     private getVertexIndex(x: number, y: number): number {
-
-        const key = this.getKey(x, y);
+        const xInt = x | 0;
+        const yInt = y | 0;
+        const key = this.getKey(xInt, yInt);
         if (this._vertexDictionary.has(key)) {
             return this._vertexDictionary.get(key);
         }
         const index = this._finalVertices.length / 2;
         this._vertexDictionary.set(key, index);
-        this._finalVertices.push(x);
-        this._finalVertices.push(y);
+        this._finalVertices.push(xInt, yInt);
         return index;
     }
 
