@@ -163,11 +163,15 @@ export class ScrollZoomHandler implements Handler {
             e.preventDefault();
             return {
                 cameraAnimation: (map: Map) => {
-                    const zoomTarget = value > 0 ? this._map.getZoom() - 1 : this._map.getZoom() + 1;
+
+                    const zoomTarget = value > 100 ? this._map.getZoom() - 2 :
+                        value > 0 ? this._map.getZoom() - 1 :
+                        value > -100 ? this._map.getZoom() + 1 :
+                        value < -100 ? this._map.getZoom() + 2 : 0;
 
                     map.easeTo({
-                        duration: 300,
-                        zoom: map.getSnapToIntegerZoom() ? Math.round(zoomTarget) : zoomTarget,
+                        duration: 150,
+                        zoom: Math.round(zoomTarget),
                         around: this._tr.unproject(pos)
                     }, {originalEvent: e});
                 }
@@ -293,9 +297,8 @@ export class ScrollZoomHandler implements Handler {
             this._delta = 0;
         }
 
-        const t = typeof this._targetZoom === 'number' ?
+        const targetZoom = typeof this._targetZoom === 'number' ?
             this._targetZoom : tr.zoom;
-        const targetZoom = this._targetZoom > tr.zoom ? Math.ceil(t) : Math.floor(t);
 
         const startZoom = this._startZoom;
         const easing = this._easing;
