@@ -121,8 +121,8 @@ class Subdivider {
     }
 
     private getVertexIndex(x: number, y: number): number {
-        const xInt = x | 0;
-        const yInt = y | 0;
+        const xInt = Math.round(x) | 0;
+        const yInt = Math.round(y) | 0;
         const key = this.getKey(xInt, yInt);
         if (this._vertexDictionary.has(key)) {
             return this._vertexDictionary.get(key);
@@ -201,6 +201,8 @@ class Subdivider {
                 finalIndices.push(...triangleIndices);
                 continue;
             }
+
+            const initialFinalIndicesLength = finalIndices.length;
 
             // Iterate over cell rows that intersect this triangle
             for (let cellRow = cellYmin; cellRow < cellYmax; cellRow++) {
@@ -415,6 +417,34 @@ class Subdivider {
                         break; // We ran out of ring vertices
                     }
                 }
+            }
+
+            // Sanity check - the sum of areas of newly generated triangles should match the area of the original triangle.
+            const getAreaDoubled = (i0, i1, i2) => {
+                const x0 = this._finalVertices[i0 * 2];
+                const y0 = this._finalVertices[i0 * 2 + 1];
+                const x1 = this._finalVertices[i1 * 2];
+                const y1 = this._finalVertices[i1 * 2 + 1];
+                const x2 = this._finalVertices[i2 * 2];
+                const y2 = this._finalVertices[i2 * 2 + 1];
+
+                return Math.abs(x0 * y1 + x1 * y2 + x2 * y0 - x0 * y2 - x1 * y0 - x2 * y1); // no division by 2 to make all math use integers
+            };
+            
+            const originalArea = getAreaDoubled(triangleIndices[0], triangleIndices[1], triangleIndices[2]);
+
+            let newAreaSum = 0;
+            let actualNewIndices = [];
+
+            for (let i = initialFinalIndicesLength; i < finalIndices.length; i += 3) {
+                actualNewIndices.push(finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]);
+                newAreaSum += getAreaDoubled(finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]);
+            }
+
+            if (newAreaSum * 3 < originalArea && originalArea > 200) {
+                console.log(`Triangle area mismatch: ${originalArea} new: ${newAreaSum} granuality: ${this._granuality} cellsize: ${this._granualityCellSize}`);
+                console.log(`${this._finalVertices[triangleIndices[0] * 2]}, ${this._finalVertices[triangleIndices[0] * 2 + 1]}, ${this._finalVertices[triangleIndices[1] * 2]}, ${this._finalVertices[triangleIndices[1] * 2 + 1]}, ${this._finalVertices[triangleIndices[2] * 2]}, ${this._finalVertices[triangleIndices[2] * 2 + 1]}`);
+                console.log(this.getDebugSvg(actualNewIndices, [[triangleIndices[0], triangleIndices[1], triangleIndices[1], triangleIndices[2], triangleIndices[2], triangleIndices[0]]]));
             }
         }
 
@@ -1315,9 +1345,9 @@ class Subdivider {
         let maxX = -Infinity;
         let maxY = -Infinity;
 
-        for (let i = 0; i < this._finalVertices.length; i += 2) {
-            const x = this._finalVertices[i];
-            const y = this._finalVertices[i + 1];
+        for (let i = 0; i < triangles.length; i++) {
+            const x = this._finalVertices[triangles[i] * 2];
+            const y = this._finalVertices[triangles[i] * 2 + 1];
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);
             maxX = Math.max(maxX, x);
@@ -1326,19 +1356,19 @@ class Subdivider {
 
         svg.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX - 10} ${minY - 10} ${maxX - minX + 20} ${maxY - minY + 20}">`);
 
-        for (let i = 0; i < this._finalVertices.length; i += 2) {
-            const x = this._finalVertices[i];
-            const y = this._finalVertices[i + 1];
-            const isOnCellEdge = (x % this._granualityCellSize === 0) || (y % this._granualityCellSize === 0);
-            svg.push(`<circle cx="${x}" cy="${y}" r="1.0" fill="${isOnCellEdge ? 'red' : 'black'}" stroke="none"/>`);
-            svg.push(`<text x="${x + 2}" y="${y - 2}" style="font: 2px sans-serif;">${(i / 2).toString()}</text>`);
-        }
-
         if (triangles) {
             for (let i = 0; i < triangles.length; i += 3) {
                 const i0 = triangles[i];
                 const i1 = triangles[i + 1];
                 const i2 = triangles[i + 2];
+
+                for (let index of [i0, i1, i2]) {
+                    const x = this._finalVertices[index * 2];
+                    const y = this._finalVertices[index * 2 + 1];
+                    const isOnCellEdge = (x % this._granualityCellSize === 0) || (y % this._granualityCellSize === 0);
+                    svg.push(`<circle cx="${x}" cy="${y}" r="1.0" fill="${isOnCellEdge ? 'red' : 'black'}" stroke="none"/>`);
+                    svg.push(`<text x="${x + 2}" y="${y - 2}" style="font: 2px sans-serif;">${(index).toString()}</text>`);
+                }
 
                 for (const edge of [[i0, i1], [i1, i2], [i2, i0]]) {
                     svg.push(`<line x1="${this._finalVertices[edge[0] * 2]}" y1="${this._finalVertices[edge[0] * 2 + 1]}" x2="${this._finalVertices[edge[1] * 2]}" y2="${this._finalVertices[edge[1] * 2 + 1]}" stroke="black" stroke-width="0.5"/>`);
