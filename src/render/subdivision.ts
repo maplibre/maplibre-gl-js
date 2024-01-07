@@ -147,29 +147,29 @@ class Subdivider {
         }
     }
 
-    private subdivideTrianglesScanline(triangleIndices: Array<number>): Array<number> {
+    private subdivideTrianglesScanline(inputIndices: Array<number>): Array<number> {
         if (this._granuality < 2) {
-            return triangleIndices;
+            return inputIndices;
         }
 
-        const finalTriangleIndices = [];
+        const finalIndices = [];
 
         // Iterate over all input triangles
-        const numIndices = triangleIndices.length;
+        const numIndices = inputIndices.length;
         for (let primitiveIndex = 0; primitiveIndex < numIndices; primitiveIndex += 3) {
-            const triangle = [
-                triangleIndices[primitiveIndex + 0], // v0
-                triangleIndices[primitiveIndex + 1], // v1
-                triangleIndices[primitiveIndex + 2], // v2
+            const triangleIndices = [
+                inputIndices[primitiveIndex + 0], // v0
+                inputIndices[primitiveIndex + 1], // v1
+                inputIndices[primitiveIndex + 2], // v2
             ];
 
             const triangleVertices = [
-                this._finalVertices[triangleIndices[primitiveIndex + 0] * 2 + 0], // v0.x
-                this._finalVertices[triangleIndices[primitiveIndex + 0] * 2 + 1], // v0.y
-                this._finalVertices[triangleIndices[primitiveIndex + 1] * 2 + 0], // v1.x
-                this._finalVertices[triangleIndices[primitiveIndex + 1] * 2 + 1], // v1.y
-                this._finalVertices[triangleIndices[primitiveIndex + 2] * 2 + 0], // v2.x
-                this._finalVertices[triangleIndices[primitiveIndex + 2] * 2 + 1], // v2.y
+                this._finalVertices[inputIndices[primitiveIndex + 0] * 2 + 0], // v0.x
+                this._finalVertices[inputIndices[primitiveIndex + 0] * 2 + 1], // v0.y
+                this._finalVertices[inputIndices[primitiveIndex + 1] * 2 + 0], // v1.x
+                this._finalVertices[inputIndices[primitiveIndex + 1] * 2 + 1], // v1.y
+                this._finalVertices[inputIndices[primitiveIndex + 2] * 2 + 0], // v2.x
+                this._finalVertices[inputIndices[primitiveIndex + 2] * 2 + 1], // v2.y
             ];
 
             let minX = Infinity;
@@ -198,7 +198,7 @@ class Subdivider {
 
             // Skip trinagles that do not span multiple cells
             if (cellXmin === cellXmax && cellYmin === cellYmax) {
-                finalTriangleIndices.push(...triangle);
+                finalIndices.push(...triangleIndices);
                 continue;
             }
 
@@ -391,7 +391,7 @@ class Subdivider {
                         const a = ring[lastEdgeA];
                         const b = ring[lastEdgeB];
                         if (c !== a && c !== b && a !== b) {
-                            finalTriangleIndices.push(a, b, c);
+                            finalIndices.push(a, b, c);
                         }
                         lastEdgeA--;
                         if (lastEdgeA < 0) {
@@ -403,7 +403,7 @@ class Subdivider {
                         const a = ring[lastEdgeA];
                         const b = ring[lastEdgeB];
                         if (c !== a && c !== b && a !== b) {
-                            finalTriangleIndices.push(b, a, c);
+                            finalIndices.push(b, a, c);
                         }
                         lastEdgeB++;
                         if (lastEdgeB >= ringVertexLength) {
@@ -418,7 +418,7 @@ class Subdivider {
             }
         }
 
-        return finalTriangleIndices;
+        return finalIndices;
     }
 
     private subdivideTriangles(triangleIndices: Array<number>): Array<number> {
@@ -1068,7 +1068,9 @@ class Subdivider {
         //const subdividedTriangles = this.subdivideTriangles(this.convertIndices(vertices, earcut(vertices, holeIndices)));
         let subdividedTriangles;
         try {
-            subdividedTriangles = this.subdivideTrianglesScanline(this.convertIndices(vertices, earcut(vertices, holeIndices)));
+            const cut = this.convertIndices(vertices, earcut(vertices, holeIndices));
+            //subdividedTriangles = cut;
+            subdividedTriangles = this.subdivideTrianglesScanline(cut);
         } catch (e) {
             console.error(e);
         }
