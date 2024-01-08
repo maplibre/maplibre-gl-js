@@ -3067,6 +3067,8 @@ export class Map extends Camera {
             this.style._updateSources(this.transform);
         }
 
+        let elevationChanged = false;
+
         // update terrain stuff
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
@@ -3074,8 +3076,7 @@ export class Map extends Camera {
             if (!this._elevationFreeze) {
                 const beforeElevation = this.transform.elevation;
                 this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
-                if (beforeElevation !== this.transform.elevation)
-                    this.terrain.sourceCache.sourceCache.reload();
+                elevationChanged = (beforeElevation !== this.transform.elevation);
             }
         } else {
             this.transform.minElevationForCurrentTile = 0;
@@ -3094,6 +3095,11 @@ export class Map extends Camera {
             fadeDuration,
             showPadding: this.showPadding,
         });
+
+        if (elevationChanged) {
+            this.painter.terrainFacilitator.dirty = true;
+            this.terrain.sourceCache.sourceCache.reload();
+        }
 
         this.fire(new Event('render'));
 
