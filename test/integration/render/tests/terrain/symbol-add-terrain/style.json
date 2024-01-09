@@ -2,21 +2,20 @@
     "version": 8,
     "sprite": "local://sprites/sprite",
     "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "timeout": 60000,
     "metadata": {
         "test": {
             "height": 512,
             "width": 512,
             "operations": [
                 [
-                    "wait",
-                    3000
+                    "wait"
                 ],
                 [
                     "setTerrain"
                 ],
                 [
-                    "wait",
-                    1000
+                    "wait"
                 ],
                 [
                     "setTerrain",
@@ -26,8 +25,7 @@
                     }
                 ],
                 [
-                    "wait",
-                    1000
+                    "wait"
                 ]
             ]
         }
