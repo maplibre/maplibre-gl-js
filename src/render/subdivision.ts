@@ -58,7 +58,7 @@ class Subdivider {
     /**
      * Map of "vertex x and y coordinate" to "index of such vertex".
      */
-    private _vertexDictionary: Map<string, number>;
+    private _vertexDictionary: Map<number, number>;
 
     private readonly _canonical: CanonicalTileID;
 
@@ -74,8 +74,7 @@ class Subdivider {
     private getKey(x: number, y: number) {
         x = x + 32768;
         y = y + 32768;
-        return `${x.toString(36)}_${y.toString(36)}`;
-        //return (x << 16) | (y << 0);
+        return (x << 16) | (y << 0);
     }
 
     private getVertexIndex(x: number, y: number): number {
@@ -159,8 +158,6 @@ class Subdivider {
                 finalIndices.push(...triangleIndices);
                 continue;
             }
-
-            const initialFinalIndicesLength = finalIndices.length;
 
             // Iterate over cell rows that intersect this triangle
             for (let cellRow = cellYmin; cellRow < cellYmax; cellRow++) {
@@ -651,7 +648,7 @@ class Subdivider {
 
     private initializeVertices(vertices: Array<number>) {
         this._finalVertices = [];
-        this._vertexDictionary = new Map<string, number>();
+        this._vertexDictionary = new Map<number, number>();
         for (let i = 0; i < vertices.length; i += 2) {
             this.getVertexIndex(vertices[i], vertices[i + 1]);
         }
@@ -674,12 +671,6 @@ class Subdivider {
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
         this.initializeVertices(vertices);
 
-        // const nonIntersectingLines = this.fixPolygonRings(vertices, holeIndices);
-        // const subdividedLines = [];
-        // for (const line of nonIntersectingLines) {
-        //     subdividedLines.push(this.subdivideLine(line));
-        // }
-
         // Subdivide lines
         const subdividedLines = [];
         for (const line of lineIndices) {
@@ -687,8 +678,6 @@ class Subdivider {
         }
 
         // Subdivide triangles
-        //const subdividedTriangles = this.convertIndices(vertices, earcut(vertices, holeIndices));
-        //const subdividedTriangles = this.subdivideTriangles(this.convertIndices(vertices, earcut(vertices, holeIndices)));
         let subdividedTriangles;
         try {
             const cut = this.convertIndices(vertices, earcut(vertices, holeIndices));
@@ -697,11 +686,6 @@ class Subdivider {
         } catch (e) {
             console.error(e);
         }
-
-        //const subdividedTriangles = this.subdivideConstrainautor(subdividedLines);
-
-        // Fix horizontal/vertical seams at T-joints
-        //this.fixTjoints(subdividedTriangles);
 
         // Ensure no vertex has the special value used for pole vertices
         this.ensureNoPoleVertices();
@@ -732,8 +716,8 @@ class Subdivider {
      * Sometimes the supplies vertex and index array has duplicate vertices - same coordinates that are referenced by multiple different indices.
      * That is not allowed for purposes of subdivision, duplicates are removed in `this.initializeVertices`.
      * This function checks all indices, and replaces any index that references a duplicate vertex with the an index that vertex that is actually valid in `this._finalVertices`.
-     * @param vertices Flattened vertex array used by the indices. This may contain duplicate vertices.
-     * @param oldIndices Indices into the supplied vertex array.
+     * @param vertices - Flattened vertex array used by the indices. This may contain duplicate vertices.
+     * @param oldIndices - Indices into the supplied vertex array.
      * @returns Indices transformed so that they are valid indices into `this._finalVertices` (with duplicates removed).
      */
     private convertIndices(vertices: Array<number>, oldIndices: Array<number>): Array<number> {
@@ -746,6 +730,12 @@ class Subdivider {
         return newIndices;
     }
 
+    /**
+     * Returns a SVG image (as string) that displays the supplied triangles and lines. Only vertices used by the triangles are included in the svg.
+     * @param triangles - Array of triangle indices.
+     * @param edges - List of arrays of edge indices. Every pair of indices forms a line. A triangle would look like `[0 1 1 2 2 0]`.
+     * @returns SVG image as string.
+     */
     public getDebugSvg(triangles?: Array<number>, edges?: Array<Array<number>>): string {
         const svg = [];
 
