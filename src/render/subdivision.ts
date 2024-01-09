@@ -98,10 +98,11 @@ class Subdivider {
      * Flattened vertex positions (xyxyxy).
      */
     private _finalVertices: Array<number>;
+
     /**
      * Map of "vertex x and y coordinate" to "index of such vertex".
      */
-    private _vertexDictionary: Map<number, number>;
+    private _vertexDictionary: Map<string, number>;
 
     private readonly _canonical: CanonicalTileID;
 
@@ -114,10 +115,11 @@ class Subdivider {
         this._canonical = canonical;
     }
 
-    private getKey(x: number, y: number): number {
+    private getKey(x: number, y: number) {
         x = x + 32768;
         y = y + 32768;
-        return (x << 16) | (y << 0);
+        return x.toString(36) + '_' + y.toString(36);
+        //return (x << 16) | (y << 0);
     }
 
     private getVertexIndex(x: number, y: number): number {
@@ -210,6 +212,9 @@ class Subdivider {
                 const cellRowYBottom = cellRowYTop + this._granualityCellSize;
                 const ring = [];
 
+                let leftmostIndex = 0;
+                let leftmostX = Infinity;
+
                 // Generate the vertex ring
                 for (let edgeIndex = 0; edgeIndex < 3; edgeIndex++) {
                     // Current edge that will be subdivided: a --> b
@@ -242,6 +247,10 @@ class Subdivider {
                         // But make sure to add its endpoint vertex if needed.
                         if (bY >= cellRowYTop && bY <= cellRowYBottom) {
                             // The edge endpoint is withing this row, add it to the ring
+                            if (bX < leftmostX) {
+                                leftmostX = bX;
+                                leftmostIndex = ring.length;
+                            }
                             ring.push(triangleIndices[(edgeIndex + 1) % 3]);
                         }
                         continue;
@@ -252,7 +261,13 @@ class Subdivider {
                     // Special case: edge vertex for entry into cell row
                     // If edge is parallel with X axis, there is no entry vertex
                     if (!isParallelX && tEnter > 0) {
-                        ring.push(this.getVertexIndex(aX + dirX * tEnter, aY + dirY * tEnter));
+                        const x = aX + dirX * tEnter;
+                        const y = aY + dirY * tEnter;
+                        if (x < leftmostX) {
+                            leftmostX = x;
+                            leftmostIndex = ring.length;
+                        }
+                        ring.push(this.getVertexIndex(x, y));
                     }
 
                     const enterX = aX + dirX * Math.max(tEnter, 0);
@@ -286,7 +301,13 @@ class Subdivider {
 
                     // Special case: edge vertex for exit from cell row
                     if (!isParallelX && tExit < 1) {
-                        ring.push(this.getVertexIndex(aX + dirX * tExit, aY + dirY * tExit));
+                        const x = aX + dirX * tExit;
+                        const y = aY + dirY * tExit;
+                        if (x < leftmostX) {
+                            leftmostX = x;
+                            leftmostIndex = ring.length;
+                        }
+                        ring.push(this.getVertexIndex(x, y));
                     }
 
                     // When to split inter-edge boundary segments?
@@ -314,6 +335,10 @@ class Subdivider {
 
                     // Add endpoint vertex
                     if (isParallelX || (bY >= cellRowYTop && bY <= cellRowYBottom)) {
+                        if (bX < leftmostX) {
+                            leftmostX = bX;
+                            leftmostIndex = ring.length;
+                        }
                         ring.push(triangleIndices[(edgeIndex + 1) % 3]);
                     }
                     // Any edge that has endpoint outside this row or on its boundary gets
@@ -394,20 +419,9 @@ class Subdivider {
                     continue;
                 }
 
-                // First find the leftmost vertex
-                let leftmostIndex = 0;
-                let leftmostX = Infinity;
-                const ringVertexLength = ring.length;
-                for (let i = 0; i < ringVertexLength; i++) {
-                    const x = this._finalVertices[ring[i] * 2];
-                    if (x < leftmostX) {
-                        leftmostIndex = i;
-                        leftmostX = x;
-                    }
-                }
-
                 // Traverse the ring in both directions from the leftmost vertex
                 // Assume ring is in CCW order (to produce CCW triangles)
+                const ringVertexLength = ring.length;
                 let lastEdgeA = leftmostIndex;
                 let lastEdgeB = (lastEdgeA + 1) % ringVertexLength;
 
@@ -1094,7 +1108,7 @@ class Subdivider {
 
     private initializeVertices(vertices: Array<number>) {
         this._finalVertices = [];
-        this._vertexDictionary = new Map<number, number>();
+        this._vertexDictionary = new Map<string, number>();
         for (let i = 0; i < vertices.length; i += 2) {
             this.getVertexIndex(vertices[i], vertices[i + 1]);
         }
