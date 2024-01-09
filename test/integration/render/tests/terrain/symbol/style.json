@@ -1,0 +1,85 @@
+{
+    "version": 8,
+    "sprite": "local://sprites/sprite",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "metadata": {
+        "test": {
+            "height": 512,
+            "width": 512
+        }
+    },
+    "center": [
+        35.384566,
+        31.556437
+    ],
+    "zoom": 16.25,
+    "pitch": 53,
+    "bearing": 81.6,
+    "sources": {
+        "repeat": {
+            "type": "raster",
+            "tiles": [
+                "local://tiles/white-with-x.png"
+            ],
+            "tileSize": 256
+        },
+        "terrain": {
+            "type": "raster-dem",
+            "tiles": [
+                "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+            ],
+            "minzoom": 7,
+            "maxzoom": 12,
+            "tileSize": 256
+        },
+        "geometry": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {},
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                35.384566,
+                                31.556437
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "osm",
+            "type": "raster",
+            "source": "repeat"
+        },
+        {
+            "id": "geometry",
+            "type": "symbol",
+            "source": "geometry",
+            "layout": {
+                "icon-image": "rocket-12",
+                "text-field": "MapLibre",
+                "text-font": [
+                    "Open Sans Semibold",
+                    "Arial Unicode MS Bold"
+                ],
+                "text-allow-overlap": true,
+                "text-ignore-placement": true,
+                "text-offset": [
+                    0,
+                    1
+                ]
+            }
+        }
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 1
+    }
+}
