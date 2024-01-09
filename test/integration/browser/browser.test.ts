@@ -273,13 +273,13 @@ describe('Browser tests', () => {
             return new Promise<any>((resolve) => {
                 console.log('waiting for idle');
                 map.once('idle', () => {
-                    map.once('idle', () => {
+                    setTimeout(() => {
                         const markerBounding = marker.getElement().getBoundingClientRect();
                         resolve({
                             x: markerBounding.x,
                             y: markerBounding.y
                         });
-                    });
+                    }, 3000);
                     console.log('setting terrain');
                     map.setTerrain({source: 'terrainSource'});
                 });
