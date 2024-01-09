@@ -254,7 +254,6 @@ export class GeoJSONSource extends Evented implements Source {
      * For clustered sources, fetches the zoom at which the given cluster expands.
      *
      * @param clusterId - The value of the cluster's `cluster_id` property.
-     * @param callback - A callback to be called when the zoom value is retrieved (`(error, zoom) => { ... }`).
      * @returns a promise that is resolved with the zoom number
      */
     getClusterExpansionZoom(clusterId: number): Promise<number> {
