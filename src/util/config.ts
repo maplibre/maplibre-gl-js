@@ -2,7 +2,7 @@ import type {RequestParameters, GetResourceResponse} from './ajax';
 
 /**
  * This method type is used to register a protocol handler.
- * Use the about controller to register for aborting requests.
+ * Use the abort controller for aborting requests.
  * Return a promise with the relevant resource response.
  */
 export type AddProtocolAction = (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>
