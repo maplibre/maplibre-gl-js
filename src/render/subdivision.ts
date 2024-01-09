@@ -289,13 +289,37 @@ class Subdivider {
                         ring.push(this.getVertexIndex(aX + dirX * tExit, aY + dirY * tExit));
                     }
 
-                    // Split tob/bottom row boundary (region between edges), or add original vertex
+                    // When to split inter-edge boundary segments?
+                    // When the boundary doesn't intersect a vertex, its easy. But what if it does?
+
+                    //      a
+                    //     /|
+                    //    / |
+                    // --c--|--boundary
+                    //    \ |
+                    //     \|
+                    //      b
+                    //
+                    // Inter-edge region should be generated when processing the a-b edge.
+                    // This happens fine for the top row, for the bottom row,
+                    // 
+
+                    //      x
+                    //     /|
+                    //    / |
+                    // --x--x--boundary
+                    //
+                    // Edge that lies on boundary should be subdivided in its edge phase.
+                    // The inter-edge phase will correctly skip it.
+
+                    // Add endpoint vertex
                     if (isParallelX || (bY >= cellRowYTop && bY <= cellRowYBottom)) {
-                        // No row boundary to split for edges parallel with X
-                        // Also no boundary for edges that do not cross the row boundary
-                        // Add the edge endpoint vertex
                         ring.push(triangleIndices[(edgeIndex + 1) % 3]);
-                    } else {
+                    }
+                    // Any edge that has endpoint outside this row or on its boundary gets
+                    // inter-edge vertices.
+                    // No row boundary to split for edges parallel with X
+                    if (!isParallelX && (bY <= cellRowYTop || bY >= cellRowYBottom)) {
                         const dir2X = cX - bX;
                         const dir2Y = cY - bY;
                         const t2Top = (cellRowYTop - bY) / dir2Y;
@@ -308,6 +332,14 @@ class Subdivider {
                         let isBoundaryLeftToRight = exitX < enter2X;
 
                         const isParallelX2 = dir2Y === 0;
+
+                        if (isParallelX2 && (cY === cellRowYTop || cY === cellRowYBottom)) {
+                            // Special case when edge b->c that lies on the cell boundary.
+                            // Do not generate any inter-edge vertices in this case,
+                            // this b->c edge gets subdivided when it is itself processed.
+                            continue;
+                        }
+
                         if (isParallelX2 || t2Enter >= 1 || t2Exit <= 0) {
                             // The next edge (b->c) lies entirely outside this cell row
                             // Find entry point for the edge after that instead (c->a)
@@ -419,33 +451,63 @@ class Subdivider {
                 }
             }
 
-            // Sanity check - the sum of areas of newly generated triangles should match the area of the original triangle.
-            const getAreaDoubled = (i0, i1, i2) => {
-                const x0 = this._finalVertices[i0 * 2];
-                const y0 = this._finalVertices[i0 * 2 + 1];
-                const x1 = this._finalVertices[i1 * 2];
-                const y1 = this._finalVertices[i1 * 2 + 1];
-                const x2 = this._finalVertices[i2 * 2];
-                const y2 = this._finalVertices[i2 * 2 + 1];
-
-                return Math.abs(x0 * y1 + x1 * y2 + x2 * y0 - x0 * y2 - x1 * y0 - x2 * y1); // no division by 2 to make all math use integers
-            };
-            
-            const originalArea = getAreaDoubled(triangleIndices[0], triangleIndices[1], triangleIndices[2]);
-
-            let newAreaSum = 0;
-            let actualNewIndices = [];
-
+            // Sanity check - no generated triangle should span multiple cells
             for (let i = initialFinalIndicesLength; i < finalIndices.length; i += 3) {
-                actualNewIndices.push(finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]);
-                newAreaSum += getAreaDoubled(finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]);
+                const indices = [finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]];
+                let minX = Infinity;
+                let minY = Infinity;
+                let maxX = -Infinity;
+                let maxY = -Infinity;
+
+                // Compute AABB
+                for (let i = 0; i < 3; i++) {
+                    const vx = this._finalVertices[indices[i] * 2];
+                    const vy = this._finalVertices[indices[i] * 2 + 1];
+                    minX = Math.min(minX, vx);
+                    maxX = Math.max(maxX, vx);
+                    minY = Math.min(minY, vy);
+                    maxY = Math.max(maxY, vy);
+                }
+
+                const cellXmin = Math.floor(minX / this._granualityCellSize);
+                const cellXmax = Math.ceil(maxX / this._granualityCellSize);
+                const cellYmin = Math.floor(minY / this._granualityCellSize);
+                const cellYmax = Math.ceil(maxY / this._granualityCellSize);
+
+                if (cellXmin + 1 < cellXmax || cellYmin + 1 < cellYmax) {
+                    console.log(`Triangle cellspan: cellXmin ${cellXmin} cellXmax ${cellXmax}  cellYmin ${cellYmin}  cellYmax ${cellYmax} granuality ${this._granuality} cellsize: ${this._granualityCellSize}`);
+                    console.log(`${this._finalVertices[triangleIndices[0] * 2]}, ${this._finalVertices[triangleIndices[0] * 2 + 1]}, ${this._finalVertices[triangleIndices[1] * 2]}, ${this._finalVertices[triangleIndices[1] * 2 + 1]}, ${this._finalVertices[triangleIndices[2] * 2]}, ${this._finalVertices[triangleIndices[2] * 2 + 1]}`);
+                    break;
+                }
             }
 
-            if (newAreaSum * 3 < originalArea && originalArea > 200) {
-                console.log(`Triangle area mismatch: ${originalArea} new: ${newAreaSum} granuality: ${this._granuality} cellsize: ${this._granualityCellSize}`);
-                console.log(`${this._finalVertices[triangleIndices[0] * 2]}, ${this._finalVertices[triangleIndices[0] * 2 + 1]}, ${this._finalVertices[triangleIndices[1] * 2]}, ${this._finalVertices[triangleIndices[1] * 2 + 1]}, ${this._finalVertices[triangleIndices[2] * 2]}, ${this._finalVertices[triangleIndices[2] * 2 + 1]}`);
-                console.log(this.getDebugSvg(actualNewIndices, [[triangleIndices[0], triangleIndices[1], triangleIndices[1], triangleIndices[2], triangleIndices[2], triangleIndices[0]]]));
-            }
+            // // Sanity check - the sum of areas of newly generated triangles should match the area of the original triangle.
+            // const getAreaDoubled = (i0, i1, i2) => {
+            //     const x0 = this._finalVertices[i0 * 2];
+            //     const y0 = this._finalVertices[i0 * 2 + 1];
+            //     const x1 = this._finalVertices[i1 * 2];
+            //     const y1 = this._finalVertices[i1 * 2 + 1];
+            //     const x2 = this._finalVertices[i2 * 2];
+            //     const y2 = this._finalVertices[i2 * 2 + 1];
+
+            //     return Math.abs(x0 * y1 + x1 * y2 + x2 * y0 - x0 * y2 - x1 * y0 - x2 * y1); // no division by 2 to make all math use integers
+            // };
+            
+            // const originalArea = getAreaDoubled(triangleIndices[0], triangleIndices[1], triangleIndices[2]);
+
+            // let newAreaSum = 0;
+            // let actualNewIndices = [];
+
+            // for (let i = initialFinalIndicesLength; i < finalIndices.length; i += 3) {
+            //     actualNewIndices.push(finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]);
+            //     newAreaSum += getAreaDoubled(finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]);
+            // }
+
+            // if (newAreaSum * 3 < originalArea && originalArea > 200) {
+            //     console.log(`Triangle area mismatch: ${originalArea} new: ${newAreaSum} granuality: ${this._granuality} cellsize: ${this._granualityCellSize}`);
+            //     console.log(`${this._finalVertices[triangleIndices[0] * 2]}, ${this._finalVertices[triangleIndices[0] * 2 + 1]}, ${this._finalVertices[triangleIndices[1] * 2]}, ${this._finalVertices[triangleIndices[1] * 2 + 1]}, ${this._finalVertices[triangleIndices[2] * 2]}, ${this._finalVertices[triangleIndices[2] * 2 + 1]}`);
+            //     console.log(this.getDebugSvg(actualNewIndices, [[triangleIndices[0], triangleIndices[1], triangleIndices[1], triangleIndices[2], triangleIndices[2], triangleIndices[0]]]));
+            // }
         }
 
         return finalIndices;
