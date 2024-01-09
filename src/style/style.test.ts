@@ -1996,7 +1996,7 @@ describe('Style#setFilter', () => {
         const style = createStyle();
 
         await style.once('style.load');
-        const promise = style.once('error')
+        const promise = style.once('error');
         style.setFilter('non-existant', ['==', 'id', 1]);
         const {error} = await promise;
         expect(error.message).toMatch(/Cannot filter non-existing layer "non-existant"./);
