@@ -205,6 +205,14 @@ describe('Browser tests', () => {
     });
 
     test('Marker: correct position', async () => {
+        page.on('console', async (message) => {
+            if (message.text() !== 'JSHandle@error') {
+                console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`);
+                return;
+            }
+            const messages = await Promise.all(message.args().map((arg) => arg.getProperty('message')));
+            console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
+        });
         const markerScreenPosition = await page.evaluate(() => {
             const markerMapPosition = [11.40, 47.30] as [number, number];
             const marker = new maplibregl.Marker()
@@ -263,8 +271,8 @@ describe('Browser tests', () => {
             });
 
             return new Promise<any>((resolve) => {
+                console.log('waiting for idle');
                 map.once('idle', () => {
-                    map.setTerrain({source: 'terrainSource'});
                     map.once('idle', () => {
                         const markerBounding = marker.getElement().getBoundingClientRect();
                         resolve({
@@ -272,6 +280,8 @@ describe('Browser tests', () => {
                             y: markerBounding.y
                         });
                     });
+                    console.log('setting terrain');
+                    map.setTerrain({source: 'terrainSource'});
                 });
             });
         });
