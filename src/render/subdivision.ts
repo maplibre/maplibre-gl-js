@@ -74,7 +74,7 @@ class Subdivider {
     private getKey(x: number, y: number) {
         x = x + 32768;
         y = y + 32768;
-        return x.toString(36) + '_' + y.toString(36);
+        return `${x.toString(36)}_${y.toString(36)}`;
         //return (x << 16) | (y << 0);
     }
 
@@ -279,7 +279,7 @@ class Subdivider {
                     //
                     // Inter-edge region should be generated when processing the a-b edge.
                     // This happens fine for the top row, for the bottom row,
-                    // 
+                    //
 
                     //      x
                     //     /|
@@ -462,7 +462,7 @@ class Subdivider {
 
             //     return Math.abs(x0 * y1 + x1 * y2 + x2 * y0 - x0 * y2 - x1 * y0 - x2 * y1); // no division by 2 to make all math use integers
             // };
-            
+
             // const originalArea = getAreaDoubled(triangleIndices[0], triangleIndices[1], triangleIndices[2]);
 
             // let newAreaSum = 0;
@@ -771,7 +771,7 @@ class Subdivider {
                 const i1 = triangles[i + 1];
                 const i2 = triangles[i + 2];
 
-                for (let index of [i0, i1, i2]) {
+                for (const index of [i0, i1, i2]) {
                     const x = this._finalVertices[index * 2];
                     const y = this._finalVertices[index * 2 + 1];
                     const isOnCellEdge = (x % this._granualityCellSize === 0) || (y % this._granualityCellSize === 0);
