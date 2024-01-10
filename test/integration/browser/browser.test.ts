@@ -264,7 +264,6 @@ describe('Browser tests', () => {
 
             return new Promise<any>((resolve) => {
                 map.once('idle', () => {
-                    map.setTerrain({source: 'terrainSource'});
                     map.once('idle', () => {
                         const markerBounding = marker.getElement().getBoundingClientRect();
                         resolve({
@@ -272,6 +271,7 @@ describe('Browser tests', () => {
                             y: markerBounding.y
                         });
                     });
+                    map.setTerrain({source: 'terrainSource'});
                 });
             });
         });
