@@ -96,10 +96,9 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
             const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
             const rttCoord = isRenderingToTexture ? coord : null;
             const posMatrix = rttCoord ? rttCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
-            const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer,
+            const projectionData = painter.style.map.projectionManager.getProjectionData(coord, posMatrix);
+            const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer,
                 (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
-
-            const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
 
             let vertexBuffer = painter.rasterBoundsBufferPosOnly;
             let indexBuffer = painter.quadTriangleIndexBuffer;

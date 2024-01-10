@@ -1,13 +1,11 @@
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f, UniformMatrix4f} from '../uniform_binding';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f} from '../uniform_binding';
 
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
-import {mat4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 
 export type RasterUniformsType = {
-    'u_matrix': UniformMatrix4f;
     'u_tl_parent': Uniform2f;
     'u_scale_parent': Uniform1f;
     'u_buffer_scale': Uniform1f;
@@ -25,7 +23,6 @@ export type RasterUniformsType = {
 };
 
 const rasterUniforms = (context: Context, locations: UniformLocations): RasterUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_tl_parent': new Uniform2f(context, locations.u_tl_parent),
     'u_scale_parent': new Uniform1f(context, locations.u_scale_parent),
     'u_buffer_scale': new Uniform1f(context, locations.u_buffer_scale),
@@ -43,7 +40,6 @@ const rasterUniforms = (context: Context, locations: UniformLocations): RasterUn
 });
 
 const rasterUniformValues = (
-    matrix: mat4,
     parentTL: [number, number],
     parentScaleBy: number,
     fade: {
@@ -53,7 +49,6 @@ const rasterUniformValues = (
     layer: RasterStyleLayer,
     cornerCoords: Array<Point>,
 ): UniformValues<RasterUniformsType> => ({
-    'u_matrix': matrix,
     'u_tl_parent': parentTL,
     'u_scale_parent': parentScaleBy,
     // If u_buffer_scale is ever something else than a constant 1,
