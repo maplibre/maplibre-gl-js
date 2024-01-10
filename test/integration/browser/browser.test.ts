@@ -264,13 +264,13 @@ describe('Browser tests', () => {
 
             return new Promise<any>((resolve) => {
                 map.once('idle', () => {
-                    setTimeout(() => {
+                    map.once('idle', () => {
                         const markerBounding = marker.getElement().getBoundingClientRect();
                         resolve({
                             x: markerBounding.x,
                             y: markerBounding.y
                         });
-                    }, 3000);
+                    });
                     map.setTerrain({source: 'terrainSource'});
                 });
             });
