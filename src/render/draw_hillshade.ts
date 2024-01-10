@@ -59,8 +59,8 @@ function renderHillshade(
 
     const rttCoord = isRenderingToTexture ? coord : null;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        hillshadeUniformValues(painter, tile, layer, rttCoord), terrainData, null, layer.id, painter.rasterBoundsBuffer,
-        painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
+        hillshadeUniformValues(painter, tile, layer, rttCoord), terrainData, null, layer.id, painter.rasterBoundsBufferPosOnly,
+        painter.quadTriangleIndexBuffer, painter.rasterBoundsSegmentsPosOnly);
 
 }
 
