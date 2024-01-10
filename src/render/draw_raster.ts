@@ -1,4 +1,4 @@
-import {clamp, warnOnce} from '../util/util';
+import {clamp} from '../util/util';
 
 import {ImageSource} from '../source/image_source';
 import {browser} from '../util/browser';
@@ -34,70 +34,91 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     const globe = painter.style.map.globe;
 
     const colorMode = painter.colorModeForRenderPass();
+    const align = !painter.options.moving;
 
-    const [stencilModes, coords] = source instanceof ImageSource ? [{}, tileIDs] :
-        painter.stencilConfigForOverlap(tileIDs);
+    // When rendering globe, two passes are needed.
+    // Subdivided tiles with different granualities might have tiny gaps between them.
+    // To combat this, tile meshes for globe have a slight border region.
+    // However tiles borders will overlap, and a part of a tile often
+    // gets hidden by its neighbour's border, which displays an ugly stretched texture.
+    // To both hide this and still avoid tiny gaps, tiles are first drawn without borders (with gaps),
+    // and then any missing pixels (not marker in stencil) get overdrawn with tile borders.
+    // Stencil and two-pass is not used for ImageSource sources.
+    const passCount = (globe && !(source instanceof ImageSource)) ? 2 : 1;
+
+    let stencilModesLow, stencilModesHigh, coords;
+
+    if (passCount > 1) {
+        [stencilModesHigh, stencilModesLow, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
+    } else {
+        [stencilModesHigh, coords] = source instanceof ImageSource ? [{}, tileIDs] : painter.stencilConfigForOverlap(tileIDs);
+    }
 
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
-    const align = !painter.options.moving;
-    for (const coord of coords) {
-        // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
-        // Use gl.LESS to prevent double drawing in areas where tiles overlap.
-        const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ,
-            layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
+    for (let pass = 0; pass < passCount; pass++) {
+        const stencilModes = pass === 0 ? stencilModesHigh : stencilModesLow;
+        const useBorder = pass > 0;
 
-        const tile = sourceCache.getTile(coord);
+        // Draw all tiles
+        for (const coord of coords) {
+            // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
+            // Use gl.LESS to prevent double drawing in areas where tiles overlap.
+            const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ,
+                layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
-        tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
+            const tile = sourceCache.getTile(coord);
 
-        const parentTile = sourceCache.findLoadedParent(coord, 0),
-            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, isRenderingToTexture);
+            tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
-        let parentScaleBy, parentTL;
+            const parentTile = sourceCache.findLoadedParent(coord, 0),
+                fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, isRenderingToTexture);
 
-        const textureFilter = layer.paint.get('raster-resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
+            let parentScaleBy, parentTL;
 
-        context.activeTexture.set(gl.TEXTURE0);
-        tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+            const textureFilter = layer.paint.get('raster-resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
 
-        context.activeTexture.set(gl.TEXTURE1);
-
-        if (parentTile) {
-            parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-            parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
-            parentTL = [tile.tileID.canonical.x * parentScaleBy % 1, tile.tileID.canonical.y * parentScaleBy % 1];
-        } else {
+            context.activeTexture.set(gl.TEXTURE0);
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-        }
 
-        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const rttCoord = isRenderingToTexture ? coord : null;
-        const posMatrix = rttCoord ? rttCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
-        const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer,
-            (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
+            context.activeTexture.set(gl.TEXTURE1);
 
-        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+            if (parentTile) {
+                parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+                parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
+                parentTL = [tile.tileID.canonical.x * parentScaleBy % 1, tile.tileID.canonical.y * parentScaleBy % 1];
+            } else {
+                tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+            }
 
-        let vertexBuffer = painter.rasterBoundsBufferPosOnly;
-        let indexBuffer = painter.quadTriangleIndexBuffer;
-        let segments = painter.rasterBoundsSegmentsPosOnly;
+            const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+            const rttCoord = isRenderingToTexture ? coord : null;
+            const posMatrix = rttCoord ? rttCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
+            const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer,
+                (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
 
-        if (globe) {
-            const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical);
-            vertexBuffer = mesh.vertexBuffer;
-            indexBuffer = mesh.indexBuffer;
-            segments = mesh.segments;
-        }
+            const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
 
-        if (source instanceof ImageSource) {
-            program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, projectionData, layer.id, vertexBuffer,
-                indexBuffer, segments);
-        } else {
-            program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, projectionData, layer.id, vertexBuffer,
-                indexBuffer, segments);
+            let vertexBuffer = painter.rasterBoundsBufferPosOnly;
+            let indexBuffer = painter.quadTriangleIndexBuffer;
+            let segments = painter.rasterBoundsSegmentsPosOnly;
+
+            if (globe) {
+                const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical, useBorder);
+                vertexBuffer = mesh.vertexBuffer;
+                indexBuffer = mesh.indexBuffer;
+                segments = mesh.segments;
+            }
+
+            if (source instanceof ImageSource) {
+                program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.disabled,
+                    uniformValues, terrainData, projectionData, layer.id, vertexBuffer,
+                    indexBuffer, segments);
+            } else {
+                program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
+                    uniformValues, terrainData, projectionData, layer.id, vertexBuffer,
+                    indexBuffer, segments);
+            }
         }
     }
 }

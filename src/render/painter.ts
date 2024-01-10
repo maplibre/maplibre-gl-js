@@ -272,7 +272,7 @@ export class Painter {
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
             const projectionData = this.style.map.projectionManager.getProjectionData(tileID);
-            const mesh = this.style.map.projectionManager.getMeshFromTileID(this.context, tileID.canonical);
+            const mesh = this.style.map.projectionManager.getMeshFromTileID(this.context, tileID.canonical, true);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -330,6 +330,41 @@ export class Painter {
             return [zToStencilMode, coords];
         }
         return [{[minTileZ]: StencilMode.disabled}, coords];
+    }
+
+    stencilConfigForOverlapTwoPass(tileIDs: Array<OverscaledTileID>): [
+        { [_: number]: Readonly<StencilMode> }, // borderless tiles - high priority & high stencil values
+        { [_: number]: Readonly<StencilMode> }, // tiles with border - low priority
+        Array<OverscaledTileID>
+    ] {
+        const gl = this.context.gl;
+        const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
+        const minTileZ = coords[coords.length - 1].overscaledZ;
+        const stencilValues = coords[0].overscaledZ - minTileZ + 1;
+
+        this.clearStencil();
+
+        if (stencilValues > 1) {
+            const zToStencilModeHigh = {};
+            const zToStencilModeLow = {};
+            for (let i = 0; i < stencilValues; i++) {
+                zToStencilModeHigh[i + minTileZ] = new StencilMode({func: gl.GEQUAL, mask: 0xFF}, stencilValues + 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+                zToStencilModeLow[i + minTileZ] = new StencilMode({func: gl.GEQUAL, mask: 0xFF}, 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+            }
+            this.nextStencilID = stencilValues * 2 + 1;
+            return [
+                zToStencilModeHigh,
+                zToStencilModeLow,
+                coords
+            ];
+        } else {
+            this.nextStencilID = 3;
+            return [
+                {[minTileZ]: new StencilMode({func: gl.GEQUAL, mask: 0xFF}, 2, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                {[minTileZ]: new StencilMode({func: gl.GEQUAL, mask: 0xFF}, 1, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                coords
+            ];
+        }
     }
 
     colorModeForRenderPass(): Readonly<ColorMode> {

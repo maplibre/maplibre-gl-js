@@ -171,25 +171,25 @@ export class ProjectionManager {
         data['u_projection_matrix'] = this.map.transform.globeProjMatrix;
     }
 
-    private getMeshKey(granuality: number, north: boolean, south: boolean): string {
-        return `${granuality.toString(36)}_${north ? 'n' : ''}${south ? 's' : ''}`;
+    private getMeshKey(granuality: number, border: boolean, north: boolean, south: boolean): string {
+        return `${granuality.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
-    public getMeshFromTileID(context: Context, canonical: CanonicalTileID): Mesh {
+    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh {
         const granuality = ProjectionManager.getGranualityForZoomLevel(canonical.z, ProjectionManager.targetGranualityStencil, ProjectionManager.targetGranualityMinZoomStencil);
         const north = canonical.y === 0;
         const south = canonical.y === (1 << canonical.z) - 1;
-        return this.getMesh(context, granuality, north, south);
+        return this.getMesh(context, granuality, hasBorder, north, south);
     }
 
-    public getMesh(context: Context, granuality: number, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
-        const key = this.getMeshKey(granuality, hasNorthEdge, hasSouthEdge);
+    public getMesh(context: Context, granuality: number, hasBorder: boolean, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
+        const key = this.getMeshKey(granuality, hasBorder, hasNorthEdge, hasSouthEdge);
 
         if (key in this._tileMeshCache) {
             return this._tileMeshCache[key];
         }
 
-        const mesh = this._createQuadMesh(context, granuality, hasNorthEdge, hasSouthEdge);
+        const mesh = this._createQuadMesh(context, granuality, hasBorder, hasNorthEdge, hasSouthEdge);
         this._tileMeshCache[key] = mesh;
         return mesh;
     }
@@ -210,34 +210,44 @@ export class ProjectionManager {
 
     /**
      * Creates a quad mesh covering positions in range 0..EXTENT, for tile clipping.
-     * @param context MapLibre's rendering context object.
-     * @param granuality Mesh triangulation granuality: 1 for just a single quad, 3 for 3x3 quads.
+     * @param context - MapLibre's rendering context object.
+     * @param granuality - Mesh triangulation granuality: 1 for just a single quad, 3 for 3x3 quads.
      * @returns
      */
-    private _createQuadMesh(context: Context, granuality: number, north: boolean, south: boolean): Mesh {
+    private _createQuadMesh(context: Context, granuality: number, border: boolean, north: boolean, south: boolean): Mesh {
         const vertexArray = new PosArray();
         const indexArray = new TriangleIndexArray();
 
-        const quadsPerAxis = granuality + 2; // two extra quads for border
-        const verticesPerAxis = granuality + 3; // one more vertex than quads
+        const quadsPerAxis = border ? granuality + 2 : granuality; // two extra quads for border
+        const verticesPerAxis = quadsPerAxis + 1; // one more vertex than quads
 
-        for (let y = 0; y < verticesPerAxis; y++) {
-            for (let x = 0; x < verticesPerAxis; x++) {
-                let vx = (x - 1) / granuality * EXTENT;
-                if (x === 0) {
-                    vx = -EXTENT_STENCIL_BORDER;
+        if (border) {
+            for (let y = 0; y < verticesPerAxis; y++) {
+                for (let x = 0; x < verticesPerAxis; x++) {
+                    let vx = (x - 1) / granuality * EXTENT;
+                    if (x === 0) {
+                        vx = -EXTENT_STENCIL_BORDER;
+                    }
+                    if (x === verticesPerAxis - 1) {
+                        vx = EXTENT + EXTENT_STENCIL_BORDER;
+                    }
+                    let vy = (y - 1) / granuality * EXTENT;
+                    if (y === 0) {
+                        vy = -EXTENT_STENCIL_BORDER;
+                    }
+                    if (y === verticesPerAxis - 1) {
+                        vy = EXTENT + EXTENT_STENCIL_BORDER;
+                    }
+                    vertexArray.emplaceBack(vx, vy);
                 }
-                if (x === verticesPerAxis - 1) {
-                    vx = EXTENT + EXTENT_STENCIL_BORDER;
+            }
+        } else {
+            for (let y = 0; y < verticesPerAxis; y++) {
+                for (let x = 0; x < verticesPerAxis; x++) {
+                    const vx = x / granuality * EXTENT;
+                    const vy = y / granuality * EXTENT;
+                    vertexArray.emplaceBack(vx, vy);
                 }
-                let vy = (y - 1) / granuality * EXTENT;
-                if (y === 0) {
-                    vy = -EXTENT_STENCIL_BORDER;
-                }
-                if (y === verticesPerAxis - 1) {
-                    vy = EXTENT + EXTENT_STENCIL_BORDER;
-                }
-                vertexArray.emplaceBack(vx, vy);
             }
         }
 
