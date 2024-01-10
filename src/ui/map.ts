@@ -1928,7 +1928,8 @@ export class Map extends Camera {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
-            sourceCache.reload();
+            // Update terrain tiles when adding new terrain
+            if (this.terrain === null) sourceCache.reload();
             // Warn once if user is using the same source for hillshade and terrain
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
