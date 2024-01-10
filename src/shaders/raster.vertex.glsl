@@ -15,7 +15,7 @@ void main() {
     // Interpolate the actual desired coordinates to get the final position.
     vec2 fractionalPos = a_pos / 8192.0;
     vec2 position = mix(mix(u_coords_top.xy, u_coords_top.zw, fractionalPos.x), mix(u_coords_bottom.xy, u_coords_bottom.zw, fractionalPos.x), fractionalPos.y);
-    gl_Position = u_matrix * vec4(position, 0, 1);
+    gl_Position = projectTile(position);
     // We are using Int16 for texture position coordinates to give us enough precision for
     // fractional coordinates. We use 8192 to scale the texture coordinates in the buffer
     // as an arbitrarily high number to preserve adequate precision when rendering.

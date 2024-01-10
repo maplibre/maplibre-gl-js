@@ -31,12 +31,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     const source = sourceCache.getSource();
     const program = painter.useProgram('raster');
 
-    const globe = false && painter.style.map.globe;
-
-    if (source instanceof ImageSource && globe) {
-        warnOnce(`Source with id ${source.id} is not supported when globe rendering is enabled.`);
-        return;
-    }
+    const globe = painter.style.map.globe;
 
     const colorMode = painter.colorModeForRenderPass();
 
@@ -82,23 +77,27 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
         const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer,
             (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
 
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+
+        let vertexBuffer = painter.rasterBoundsBufferPosOnly;
+        let indexBuffer = painter.quadTriangleIndexBuffer;
+        let segments = painter.rasterBoundsSegmentsPosOnly;
+
+        if (globe) {
+            const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical);
+            vertexBuffer = mesh.vertexBuffer;
+            indexBuffer = mesh.indexBuffer;
+            segments = mesh.segments;
+        }
+
         if (source instanceof ImageSource) {
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, null, layer.id, painter.rasterBoundsBufferPosOnly,
-                painter.quadTriangleIndexBuffer, painter.rasterBoundsSegmentsPosOnly);
+                uniformValues, terrainData, projectionData, layer.id, vertexBuffer,
+                indexBuffer, segments);
         } else {
-            if (globe) {
-                // Draw a subdivided quad
-                const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical);
-                program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
-                    uniformValues, terrainData, null, layer.id, mesh.vertexBuffer,
-                    mesh.indexBuffer, mesh.segments);
-            } else {
-                // Draw a simple 0..EXTENT quad
-                program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
-                    uniformValues, terrainData, null, layer.id, painter.rasterBoundsBufferPosOnly,
-                    painter.quadTriangleIndexBuffer, painter.rasterBoundsSegmentsPosOnly);
-            }
+            program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
+                uniformValues, terrainData, projectionData, layer.id, vertexBuffer,
+                indexBuffer, segments);
         }
     }
 }
