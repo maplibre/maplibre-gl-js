@@ -35,7 +35,7 @@ This documentation is divided into several sections:
 
 Each section describes classes or objects as well as their **properties**, **parameters**, **instance members**, and associated **events**. Many sections also include inline code examples and related resources.
 
-In the examples, we use vector tiles our [Demo tiles repository](https://github.com/maplibre/demotiles) and from [MapTiler](https://maptiler.com). Get your own API key if you want to use MapTiler data in your project.
+In the examples, we use vector tiles from our [Demo tiles repository](https://github.com/maplibre/demotiles) and from [MapTiler](https://maptiler.com). Get your own API key if you want to use MapTiler data in your project.
 
 ## CSP Directives
 
