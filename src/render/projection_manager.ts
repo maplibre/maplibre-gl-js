@@ -51,7 +51,7 @@ export class ProjectionManager {
     // triangulation is invisible, apart from slight pixel shimmering at the equator
 
     private static readonly targetGranualityStencil = 8;
-    private static readonly targetGranualityMinZoomStencil = 3;
+    private static readonly targetGranualityMinZoomStencil = 5;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
     private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
@@ -175,17 +175,21 @@ export class ProjectionManager {
         return `${granuality.toString(36)}_${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
-    public getMesh(context: Context, canonical: CanonicalTileID): Mesh {
+    public getMeshFromTileID(context: Context, canonical: CanonicalTileID): Mesh {
         const granuality = ProjectionManager.getGranualityForZoomLevel(canonical.z, ProjectionManager.targetGranualityStencil, ProjectionManager.targetGranualityMinZoomStencil);
         const north = canonical.y === 0;
         const south = canonical.y === (1 << canonical.z) - 1;
-        const key = this.getMeshKey(granuality, north, south);
+        return this.getMesh(context, granuality, north, south);
+    }
+
+    public getMesh(context: Context, granuality: number, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
+        const key = this.getMeshKey(granuality, hasNorthEdge, hasSouthEdge);
 
         if (key in this._tileMeshCache) {
             return this._tileMeshCache[key];
         }
 
-        const mesh = this._createQuadMesh(context, granuality, north, south);
+        const mesh = this._createQuadMesh(context, granuality, hasNorthEdge, hasSouthEdge);
         this._tileMeshCache[key] = mesh;
         return mesh;
     }

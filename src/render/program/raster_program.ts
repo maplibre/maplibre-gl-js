@@ -1,9 +1,10 @@
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, Uniform4f, UniformMatrix4f} from '../uniform_binding';
 
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
 import {mat4} from 'gl-matrix';
+import Point from '@mapbox/point-geometry';
 
 export type RasterUniformsType = {
     'u_matrix': UniformMatrix4f;
@@ -19,6 +20,8 @@ export type RasterUniformsType = {
     'u_saturation_factor': Uniform1f;
     'u_contrast_factor': Uniform1f;
     'u_spin_weights': Uniform3f;
+    'u_coords_top': Uniform4f;
+    'u_coords_bottom': Uniform4f;
 };
 
 const rasterUniforms = (context: Context, locations: UniformLocations): RasterUniformsType => ({
@@ -34,7 +37,9 @@ const rasterUniforms = (context: Context, locations: UniformLocations): RasterUn
     'u_brightness_high': new Uniform1f(context, locations.u_brightness_high),
     'u_saturation_factor': new Uniform1f(context, locations.u_saturation_factor),
     'u_contrast_factor': new Uniform1f(context, locations.u_contrast_factor),
-    'u_spin_weights': new Uniform3f(context, locations.u_spin_weights)
+    'u_spin_weights': new Uniform3f(context, locations.u_spin_weights),
+    'u_coords_top': new Uniform4f(context, locations.u_coords_top),
+    'u_coords_bottom': new Uniform4f(context, locations.u_coords_bottom)
 });
 
 const rasterUniformValues = (
@@ -45,7 +50,8 @@ const rasterUniformValues = (
         mix: number;
         opacity: number;
     },
-    layer: RasterStyleLayer
+    layer: RasterStyleLayer,
+    cornerCoords: Array<Point>,
 ): UniformValues<RasterUniformsType> => ({
     'u_matrix': matrix,
     'u_tl_parent': parentTL,
@@ -59,7 +65,9 @@ const rasterUniformValues = (
     'u_brightness_high': layer.paint.get('raster-brightness-max'),
     'u_saturation_factor': saturationFactor(layer.paint.get('raster-saturation')),
     'u_contrast_factor': contrastFactor(layer.paint.get('raster-contrast')),
-    'u_spin_weights': spinWeights(layer.paint.get('raster-hue-rotate'))
+    'u_spin_weights': spinWeights(layer.paint.get('raster-hue-rotate')),
+    'u_coords_top': [cornerCoords[0].x, cornerCoords[0].y, cornerCoords[1].x, cornerCoords[1].y],
+    'u_coords_bottom': [cornerCoords[3].x, cornerCoords[3].y, cornerCoords[2].x, cornerCoords[2].y]
 });
 
 function spinWeights(angle) {

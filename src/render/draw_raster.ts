@@ -1,4 +1,4 @@
-import {clamp} from '../util/util';
+import {clamp, warnOnce} from '../util/util';
 
 import {ImageSource} from '../source/image_source';
 import {browser} from '../util/browser';
@@ -11,6 +11,15 @@ import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
+import Point from '@mapbox/point-geometry';
+import {EXTENT} from '../data/extent';
+
+const cornerCoords = [
+    new Point(0, 0),
+    new Point(EXTENT, 0),
+    new Point(EXTENT, EXTENT),
+    new Point(0, EXTENT),
+];
 
 export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
     if (painter.renderPass !== 'translucent') return;
@@ -21,6 +30,13 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     const gl = context.gl;
     const source = sourceCache.getSource();
     const program = painter.useProgram('raster');
+
+    const globe = false && painter.style.map.globe;
+
+    if (source instanceof ImageSource && globe) {
+        warnOnce(`Source with id ${source.id} is not supported when globe rendering is enabled.`);
+        return;
+    }
 
     const colorMode = painter.colorModeForRenderPass();
 
@@ -56,7 +72,6 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
             parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
             parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
             parentTL = [tile.tileID.canonical.x * parentScaleBy % 1, tile.tileID.canonical.y * parentScaleBy % 1];
-
         } else {
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
         }
@@ -64,16 +79,26 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const rttCoord = isRenderingToTexture ? coord : null;
         const posMatrix = rttCoord ? rttCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
-        const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer);
+        const uniformValues = rasterUniformValues(posMatrix, parentTL || [0, 0], parentScaleBy || 1, fade, layer,
+            (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
 
         if (source instanceof ImageSource) {
             program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, null, layer.id, source.boundsBuffer,
-                painter.quadTriangleIndexBuffer, source.boundsSegments);
+                uniformValues, terrainData, null, layer.id, painter.rasterBoundsBufferPosOnly,
+                painter.quadTriangleIndexBuffer, painter.rasterBoundsSegmentsPosOnly);
         } else {
-            program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, null, layer.id, painter.rasterBoundsBuffer,
-                painter.quadTriangleIndexBuffer, painter.rasterBoundsSegments);
+            if (globe) {
+                // Draw a subdivided quad
+                const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical);
+                program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
+                    uniformValues, terrainData, null, layer.id, mesh.vertexBuffer,
+                    mesh.indexBuffer, mesh.segments);
+            } else {
+                // Draw a simple 0..EXTENT quad
+                program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
+                    uniformValues, terrainData, null, layer.id, painter.rasterBoundsBufferPosOnly,
+                    painter.quadTriangleIndexBuffer, painter.rasterBoundsSegmentsPosOnly);
+            }
         }
     }
 }

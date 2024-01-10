@@ -90,6 +90,8 @@ export class Painter {
     debugSegments: SegmentVector;
     rasterBoundsBuffer: VertexBuffer;
     rasterBoundsSegments: SegmentVector;
+    rasterBoundsBufferPosOnly: VertexBuffer;
+    rasterBoundsSegmentsPosOnly: SegmentVector;
     viewportBuffer: VertexBuffer;
     viewportSegments: SegmentVector;
     quadTriangleIndexBuffer: IndexBuffer;
@@ -179,6 +181,14 @@ export class Painter {
         this.rasterBoundsBuffer = context.createVertexBuffer(rasterBoundsArray, rasterBoundsAttributes.members);
         this.rasterBoundsSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 
+        const rasterBoundsArrayPosOnly = new PosArray();
+        rasterBoundsArrayPosOnly.emplaceBack(0, 0);
+        rasterBoundsArrayPosOnly.emplaceBack(EXTENT, 0);
+        rasterBoundsArrayPosOnly.emplaceBack(0, EXTENT);
+        rasterBoundsArrayPosOnly.emplaceBack(EXTENT, EXTENT);
+        this.rasterBoundsBufferPosOnly = context.createVertexBuffer(rasterBoundsArrayPosOnly, posAttributes.members);
+        this.rasterBoundsSegmentsPosOnly = SegmentVector.simpleSegment(0, 0, 4, 5);
+
         const viewportArray = new PosArray();
         viewportArray.emplaceBack(0, 0);
         viewportArray.emplaceBack(1, 0);
@@ -262,7 +272,7 @@ export class Painter {
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
             const projectionData = this.style.map.projectionManager.getProjectionData(tileID);
-            const mesh = this.style.map.projectionManager.getMesh(this.context, tileID.canonical);
+            const mesh = this.style.map.projectionManager.getMeshFromTileID(this.context, tileID.canonical);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
