@@ -56,6 +56,10 @@ const rasterUniformValues = (
     'u_matrix': matrix,
     'u_tl_parent': parentTL,
     'u_scale_parent': parentScaleBy,
+    // If u_buffer_scale is ever something else than a constant 1,
+    // the north/south pole handling in the vertex shader might need modification
+    // so that the texture coordinares for poles always lie beyond the edge of the texture.
+    // Right now the coordinates are placed right at the texture border.
     'u_buffer_scale': 1,
     'u_fade_t': fade.mix,
     'u_opacity': fade.opacity * layer.paint.get('raster-opacity'),
