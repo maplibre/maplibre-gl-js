@@ -348,8 +348,8 @@ export class Painter {
             const zToStencilModeHigh = {};
             const zToStencilModeLow = {};
             for (let i = 0; i < stencilValues; i++) {
-                zToStencilModeHigh[i + minTileZ] = new StencilMode({func: gl.GEQUAL, mask: 0xFF}, stencilValues + 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
-                zToStencilModeLow[i + minTileZ] = new StencilMode({func: gl.GEQUAL, mask: 0xFF}, 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+                zToStencilModeHigh[i + minTileZ] = new StencilMode({func: gl.GREATER, mask: 0xFF}, stencilValues + 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+                zToStencilModeLow[i + minTileZ] = new StencilMode({func: gl.GREATER, mask: 0xFF}, 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
             }
             this.nextStencilID = stencilValues * 2 + 1;
             return [
@@ -360,8 +360,8 @@ export class Painter {
         } else {
             this.nextStencilID = 3;
             return [
-                {[minTileZ]: new StencilMode({func: gl.GEQUAL, mask: 0xFF}, 2, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
-                {[minTileZ]: new StencilMode({func: gl.GEQUAL, mask: 0xFF}, 1, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                {[minTileZ]: new StencilMode({func: gl.GREATER, mask: 0xFF}, 2, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                {[minTileZ]: new StencilMode({func: gl.GREATER, mask: 0xFF}, 1, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
                 coords
             ];
         }

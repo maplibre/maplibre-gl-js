@@ -41,15 +41,19 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
             // Globe needs two-pass rendering to avoid artifacts when rendering texture tiles.
             // See comments in draw_raster.ts for more details.
             const [stencilModesHigh, stencilModesLow, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
+
+            // Draw borderless tile meshes
             for (const coord of coords) {
                 const tile = sourceCache.getTile(coord);
                 const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical, false);
                 renderHillshade(painter, coord, tile, layer, depthMode, stencilModesHigh[coord.overscaledZ], colorMode, isRenderingToTexture,
                     mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
             }
+
+            // Fill gaps with meshes with borders
             for (const coord of coords) {
                 const tile = sourceCache.getTile(coord);
-                const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical, false);
+                const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical, true);
                 renderHillshade(painter, coord, tile, layer, depthMode, stencilModesLow[coord.overscaledZ], colorMode, isRenderingToTexture,
                     mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
             }

@@ -3,7 +3,7 @@ import {Context} from '../gl/context';
 import {Map} from '../ui/map';
 import {Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
 import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
-import {Pos3dArray, PosArray, TriangleIndexArray} from '../data/array_types.g';
+import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import {Mesh} from './mesh';
 import {EXTENT, EXTENT_STENCIL_BORDER} from '../data/extent';
 import {SegmentVector} from '../data/segment';
@@ -104,8 +104,6 @@ export class ProjectionManager {
         const distanceAtoC = (Math.cos(pitch) * distanceCameraToB + radius);
         // Distance from camera to "C" - the globe center
         const distanceCameraToC = Math.sqrt(distanceCameraToA * distanceCameraToA + distanceAtoC * distanceAtoC);
-        // Distance from camera to T points (any of them)
-        const distanceCameraT = Math.sqrt(distanceCameraToC * distanceCameraToC - radius * radius);
         // cam - C - T angle cosine (at C)
         const camCTcosine = radius / distanceCameraToC;
         // Distance from globe center to the plane defined by all possible "T" points
@@ -175,10 +173,10 @@ export class ProjectionManager {
         return `${granuality.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
-    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh {
+    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, disablePoles?: boolean): Mesh {
         const granuality = ProjectionManager.getGranualityForZoomLevel(canonical.z, ProjectionManager.targetGranualityStencil, ProjectionManager.targetGranualityMinZoomStencil);
-        const north = canonical.y === 0;
-        const south = canonical.y === (1 << canonical.z) - 1;
+        const north = !disablePoles && (canonical.y === 0);
+        const south = !disablePoles && (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granuality, hasBorder, north, south);
     }
 
