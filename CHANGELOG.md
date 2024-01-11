@@ -10,7 +10,6 @@
 ## 4.0.0-pre.4
 
 
-
 ### 🐞 Bug fixes
 
 - Fix missing export `Map` type in the `d.ts` file ([#3564](https://github.com/maplibre/maplibre-gl-js/pull/3564))
