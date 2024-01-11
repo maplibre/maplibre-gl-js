@@ -73,12 +73,8 @@ jobs:
 
       - name: Build
         run: |
-          npm run build-prod
-          npm run build-csp
-          npm run build-dev
-          npm run build-css
+          npm run build-dist
           npm run build-benchmarks
-          npm run generate-typings
 
       - name: Publish NPM package (regular)
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
