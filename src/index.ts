@@ -33,6 +33,7 @@ import {VideoSource} from './source/video_source';
 import {addSourceType, type SourceClass} from './source/source';
 import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {getGlobalDispatcher} from './util/dispatcher';
+import {MapMouseEvent, MapTouchEvent, MapWheelEvent} from './ui/events';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -267,5 +268,35 @@ class MapLibreGL {
 
 //This gets automatically stripped out in production builds.
 Debug.extend(MapLibreGL, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
+
+export {
+    Map,
+    NavigationControl,
+    GeolocateControl,
+    AttributionControl,
+    LogoControl,
+    ScaleControl,
+    FullscreenControl,
+    TerrainControl,
+    Popup,
+    Marker,
+    Style,
+    LngLat,
+    LngLatBounds,
+    Point,
+    MercatorCoordinate,
+    Evented,
+    AJAXError,
+    CanvasSource,
+    GeoJSONSource,
+    ImageSource,
+    RasterDEMTileSource,
+    RasterTileSource,
+    VectorTileSource,
+    VideoSource,
+    MapMouseEvent,
+    MapTouchEvent,
+    MapWheelEvent
+}
 
 export default MapLibreGL;
