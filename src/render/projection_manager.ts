@@ -1,7 +1,7 @@
 import {mat4, vec3} from 'gl-matrix';
 import {Context} from '../gl/context';
 import {Map} from '../ui/map';
-import {Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
+import {Uniform1f, Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
 import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import {Mesh} from './mesh';
@@ -11,24 +11,39 @@ import posAttributes from '../data/pos_attributes';
 import {Transform} from '../geo/transform';
 import {Painter} from './painter';
 import {Tile} from '../source/tile';
+import {browser} from '../util/browser';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
     'u_projection_tile_mercator_coords': Uniform4f;
     'u_projection_clipping_plane': Uniform4f;
+    'u_projection_globeness': Uniform1f;
+    'u_projection_fallback_matrix': UniformMatrix4f;
 };
 
 export const projectionUniforms = (context: Context, locations: UniformLocations): ProjectionPreludeUniformsType => ({
     'u_projection_matrix': new UniformMatrix4f(context, locations.u_projection_matrix),
     'u_projection_tile_mercator_coords': new Uniform4f(context, locations.u_projection_tile_mercator_coords),
-    'u_projection_clipping_plane': new Uniform4f(context, locations.u_projection_clipping_plane)
+    'u_projection_clipping_plane': new Uniform4f(context, locations.u_projection_clipping_plane),
+    'u_projection_globeness': new Uniform1f(context, locations.u_projection_globeness),
+    'u_projection_fallback_matrix': new UniformMatrix4f(context, locations.u_projection_fallback_matrix)
 });
 
 export type ProjectionData = {
     'u_projection_matrix': mat4;
     'u_projection_tile_mercator_coords': [number, number, number, number];
     'u_projection_clipping_plane': [number, number, number, number];
+    'u_projection_globeness': number;
+    'u_projection_fallback_matrix': mat4;
 }
+
+function lerp(a: number, b: number, mix: number): number {
+    return a * (1.0 - mix) + b * mix;
+}
+
+const globeTransitionTimeSeconds = 0.5;
+const zoomTransitionTimeSeconds = 0.2;
+const maxGlobeZoom = 11.0;
 
 export class ProjectionManager {
     map: Map;
@@ -56,11 +71,47 @@ export class ProjectionManager {
     private _tileMeshCache: {[_: string]: Mesh} = {};
     private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
 
+    // Transition handling
+    private _lastGlobeStateEnabled: boolean = false;
+    private _lastGlobeChangeTime: number = -1000.0;
+    private _lastLargeZoomStateChange: number = -1000.0;
+    private _lastLargeZoomState: boolean = false;
+    private _globeness: number;
+
+    get useGlobeRendering(): boolean {
+        return this._globeness > 0.0;
+    }
+
+    get isRenderingDirty(): boolean {
+        const now = browser.now();
+        return (now - this._lastGlobeChangeTime) / 1000.0 < globeTransitionTimeSeconds + 0.2;
+    }
+
     constructor(map: Map) {
         this.map = map;
     }
 
     public updateProjection(transform: Transform): void {
+        // Update globe transition animation
+        const globeState = this.map._globeEnabled;
+        const currentTime = browser.now();
+        if (globeState !== this._lastGlobeStateEnabled) {
+            this._lastGlobeChangeTime = currentTime;
+            this._lastGlobeStateEnabled = globeState;
+        }
+        // Transition parameter, where 0 is the start and 1 is end.
+        const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeTransitionTimeSeconds, 0.0), 1.0);
+        this._globeness = globeState ? globeTransition : (1.0 - globeTransition);
+
+        // Update globe zoom transition
+        const currentZoomState = transform.zoom >= maxGlobeZoom;
+        if (currentZoomState !== this._lastLargeZoomState) {
+            this._lastLargeZoomState = currentZoomState;
+            this._lastLargeZoomStateChange = currentTime;
+        }
+        const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / zoomTransitionTimeSeconds, 0.0), 1.0);
+        const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
+        this._globeness = Math.min(this._globeness, zoomGlobenessBound);
 
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
@@ -130,11 +181,13 @@ export class ProjectionManager {
     }
 
     public getProjectionData(tileID: OverscaledTileID, fallBackMatrix?: mat4): ProjectionData {
-        const identity = mat4.identity(Float32Array as any);
+        const identity = mat4.create();
         const data: ProjectionData = {
             'u_projection_matrix': identity,
             'u_projection_tile_mercator_coords': [0, 0, 1, 1],
             'u_projection_clipping_plane': [...this._cachedClippingPlane],
+            'u_projection_globeness': this._globeness,
+            'u_projection_fallback_matrix': identity,
         };
 
         if (tileID) {
@@ -146,8 +199,10 @@ export class ProjectionManager {
                 1.0 / (1 << tileID.canonical.z) / EXTENT
             ];
         }
+        data['u_projection_fallback_matrix'] = data['u_projection_matrix'];
 
-        if (this.map.globe) {
+        // Set 'u_projection_matrix' to actual globe transform
+        if (this.useGlobeRendering) {
             this.setGlobeProjection(data);
         }
 
@@ -159,10 +214,13 @@ export class ProjectionManager {
     // }
 
     public getPixelScale(transform: Transform): number {
-        if (this.map.globe) {
-            return 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
+        const globePixelScale = 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
+        const flatPixelScale = 1.0;
+        if (this.useGlobeRendering) {
+            return globePixelScale;
         }
-        return 1.0;
+        return flatPixelScale;
+        //return lerp(flatPixelScale, globePixelScale, this._globeness);
     }
 
     private setGlobeProjection(data: ProjectionData): void {

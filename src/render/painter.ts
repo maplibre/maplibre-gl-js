@@ -417,7 +417,7 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
-        const isGlobeActive = !!style.map.globe; // JP: TODO: this should be always false for large zooms!
+        const isGlobeActive = style.map.projectionManager.useGlobeRendering; // JP: TODO: this should be always false for large zooms!
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -649,7 +649,7 @@ export class Painter {
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, allowProjection?: boolean): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
-        const useGlobe = (!!this.style.map.globe) && ((typeof allowProjection !== 'undefined') ? allowProjection : true);
+        const useGlobe = this.style.map.projectionManager.useGlobeRendering && ((typeof allowProjection !== 'undefined') ? allowProjection : true);
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             (this._showOverdrawInspector ? '/overdraw' : '') +

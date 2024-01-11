@@ -67,8 +67,6 @@ import {config} from '../util/config';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {drawTerrain} from '../render/draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
-import {Globe} from '../render/globe';
-import {drawGlobe} from '../render/draw_globe';
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../data/extent';
 import {ProjectionManager} from '../render/projection_manager';
@@ -457,9 +455,9 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
-    globe: Globe;
     projectionManager: ProjectionManager;
 
+    _globeEnabled: boolean = false;
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
@@ -2035,13 +2033,13 @@ export class Map extends Camera {
     }
 
     setGlobe(enabled: boolean = true): void {
-        if (enabled && !this.globe) {
-            this.globe = new Globe();
+        if (enabled && !this._globeEnabled) {
+            this._globeEnabled = true;
             this._updateRenderToTexture();
             this._update(true);
         }
-        if (!enabled && this.globe) {
-            this.globe = null;
+        if (!enabled && this._globeEnabled) {
+            this._globeEnabled = false;
             this._updateRenderToTexture();
             this._update(true);
         }
@@ -2051,7 +2049,7 @@ export class Map extends Camera {
      * Enables or disables render-to-texture, depending on whether globe and/or terrain is enabled.
      */
     private _updateRenderToTexture(): void {
-        if (!this.terrain && !this.globe) {
+        if (!this.terrain && !this._globeEnabled) {
             // Disable rtt
             if (this._renderToTextureCallback) {
                 this.style.off('data', this._renderToTextureCallback);
@@ -3218,8 +3216,7 @@ export class Map extends Camera {
             this.style._updateSources(this.transform);
         }
 
-        const preferGlobe = !!this.globe;
-        const useRtt = (this.globe && this.globe.useRtt) || !!this.terrain;
+        const useRtt = !!this.terrain;
 
         let rttCoveringTiles;
 
@@ -3234,7 +3231,6 @@ export class Map extends Camera {
                 maxzoom: rttMaxZoom,
                 reparseOverscaled: false,
                 terrain: this.terrain,
-                globe: this.globe,
             });
 
             for (const tileID of rttCoveringTiles) {
@@ -3255,10 +3251,6 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
-        if (this.globe) {
-            this.globe.update(this.transform, rttCoveringTiles, this.painter.context, preferGlobe);
-        }
-
         this.projectionManager.updateProjection(this.painter.transform);
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
@@ -3266,21 +3258,12 @@ export class Map extends Camera {
         let rttOptions;
 
         if (useRtt) {
-            if (preferGlobe) {
-                rttOptions = {
-                    rttTiles: rttCoveringTiles,
-                    drawFunc: (painter: Painter, rttTiles: OverscaledTileID[]) => {
-                        drawGlobe(painter, this.globe, rttTiles);
-                    },
-                };
-            } else {
-                rttOptions = {
-                    rttTiles: rttCoveringTiles,
-                    drawFunc: (painter: Painter, rttTiles: OverscaledTileID[]) => {
-                        drawTerrain(painter, this.terrain, rttTiles);
-                    },
-                };
-            }
+            rttOptions = {
+                rttTiles: rttCoveringTiles,
+                drawFunc: (painter: Painter, rttTiles: OverscaledTileID[]) => {
+                    drawTerrain(painter, this.terrain, rttTiles);
+                },
+            };
         }
 
         if (this.painter.renderToTexture) {
@@ -3322,7 +3305,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projectionManager.isRenderingDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

@@ -12,7 +12,6 @@ import {EdgeInsets} from './edge_insets';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
-import {Globe} from '../render/globe';
 
 /**
  * @internal
@@ -351,7 +350,6 @@ export class Transform {
             reparseOverscaled?: boolean;
             renderWorldCopies?: boolean;
             terrain?: Terrain;
-            globe?: Globe;
         }
     ): Array<OverscaledTileID> {
         let z = this.coveringZoomLevel(options);

@@ -157,6 +157,8 @@ uniform mat4 u_projection_matrix;
 
 uniform highp vec4 u_projection_tile_mercator_coords;
 uniform highp vec4 u_projection_clipping_plane;
+uniform highp float u_projection_globeness;
+uniform mat4 u_projection_fallback_matrix;
 
 float projectThickness(vec2 posInTile) {
     float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * posInTile.y;
@@ -208,6 +210,15 @@ vec4 projectTile(vec2 posInTile) {
     vec4 result = u_projection_matrix * pos;
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
     result.z = (1.0 - (dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * result.w;
+
+    if (u_projection_globeness < 0.995) {
+        vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, 0.0, 1.0);
+        if ((posInTile.x < -32767.5 && posInTile.y < -32767.5) || (posInTile.x > 32766.5 && posInTile.y > 32766.5)) {
+            flatPosition.z = -10000000.0;
+        }
+        result = mix(flatPosition, result, u_projection_globeness);
+    }
+
     return result;
 }
 

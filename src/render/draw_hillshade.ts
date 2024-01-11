@@ -35,7 +35,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
         context.viewport.set([0, 0, painter.width, painter.height]);
     } else if (painter.renderPass === 'translucent') {
         // Render tiles
-        const globe = painter.style.map.globe;
+        const globe = painter.style.map.projectionManager.useGlobeRendering;
 
         if (globe) {
             // Globe needs two-pass rendering to avoid artifacts when rendering texture tiles.
