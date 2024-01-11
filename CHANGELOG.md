@@ -9,7 +9,6 @@
 
 ## 4.0.0-pre.4
 
-### ✨ Features and improvements
 
 
 ### 🐞 Bug fixes
