@@ -5,9 +5,13 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 4.0.0-pre.4
+
+### 🐞 Bug fixes
 
 - Fix missing export `Map` type in the `d.ts` file ([#3564](https://github.com/maplibre/maplibre-gl-js/pull/3564))
-- _...Add new stuff here..._
 
 ## 4.0.0-pre.3
 
