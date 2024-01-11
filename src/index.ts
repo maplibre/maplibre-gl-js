@@ -297,6 +297,6 @@ export {
     MapMouseEvent,
     MapTouchEvent,
     MapWheelEvent
-}
+};
 
 export default MapLibreGL;
