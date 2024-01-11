@@ -10,13 +10,10 @@ import http from 'http';
 import puppeteer, {Page, Browser} from 'puppeteer';
 import v8toIstanbul from 'v8-to-istanbul';
 import {localizeURLs} from '../lib/localize-urls';
-import maplibregl from '../../../src/index';
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {CanvasSource} from '../../../src/source/canvas_source';
-import type {Map} from '../../../src/ui/map';
-import type {PointLike} from '../../../src/ui/camera';
+import type {default as MapLibreGL, Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+let maplibregl: typeof MapLibreGL;
 
 type TestData = {
     id: string;
