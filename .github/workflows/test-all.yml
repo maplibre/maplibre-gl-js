@@ -98,7 +98,7 @@ jobs:
         if: runner.os == 'Linux'
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm run build-dev
+      - run: npm run build-dist
       - run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}

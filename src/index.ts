@@ -24,7 +24,7 @@ import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {PerformanceUtils} from './util/performance';
 import {AJAXError} from './util/ajax';
 import {GeoJSONSource} from './source/geojson_source';
-import {CanvasSource} from './source/canvas_source';
+import {CanvasSource, CanvasSourceSpecification} from './source/canvas_source';
 import {ImageSource} from './source/image_source';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source';
 import {RasterTileSource} from './source/raster_tile_source';
@@ -33,6 +33,15 @@ import {VideoSource} from './source/video_source';
 import {addSourceType, type SourceClass} from './source/source';
 import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {getGlobalDispatcher} from './util/dispatcher';
+import {MapContextEvent, MapMouseEvent, MapTouchEvent, MapWheelEvent} from './ui/events';
+import {IControl} from './ui/control/control';
+import {ScrollZoomHandler} from './ui/handler/scroll_zoom';
+import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch';
+import {DragPanHandler} from './ui/handler/shim/drag_pan';
+import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
+import {BoxZoomHandler} from './ui/handler/box_zoom';
+import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
+import {CustomLayerInterface} from './style/style_layer/custom_style_layer';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -267,5 +276,45 @@ class MapLibreGL {
 
 //This gets automatically stripped out in production builds.
 Debug.extend(MapLibreGL, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
+
+export {
+    type Map,
+    type NavigationControl,
+    type GeolocateControl,
+    type AttributionControl,
+    type LogoControl,
+    type ScaleControl,
+    type FullscreenControl,
+    type TerrainControl,
+    type Popup,
+    type Marker,
+    type Style,
+    type LngLat,
+    type LngLatBounds,
+    type Point,
+    type MercatorCoordinate,
+    type Evented,
+    type AJAXError,
+    type CanvasSource,
+    type GeoJSONSource,
+    type ImageSource,
+    type RasterDEMTileSource,
+    type RasterTileSource,
+    type VectorTileSource,
+    type VideoSource,
+    type MapMouseEvent,
+    type MapTouchEvent,
+    type MapWheelEvent,
+    type MapContextEvent,
+    type IControl,
+    type ScrollZoomHandler,
+    type TwoFingersTouchZoomRotateHandler,
+    type DragPanHandler,
+    type DoubleClickZoomHandler,
+    type BoxZoomHandler,
+    type DragRotateHandler,
+    type CustomLayerInterface,
+    type CanvasSourceSpecification
+};
 
 export default MapLibreGL;
