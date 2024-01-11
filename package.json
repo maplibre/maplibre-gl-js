@@ -147,7 +147,7 @@
     "generate-typings": "dts-bundle-generator --umd-module-name=maplibregl -o ./dist/maplibre-gl.d.ts ./src/index.ts",
     "generate-docs": "typedoc && node --no-warnings --loader ts-node/esm build/generate-docs.ts",
     "generate-images": "node --no-warnings --loader ts-node/esm build/generate-doc-images.ts",
-    "build-dist": "npm run generate-typings && run-p --print-label build-dev build-prod build-csp build-csp-dev build-css",
+    "build-dist": "run-p --print-label build-css generate-typings && run-p --print-label build-dev build-csp-dev && run-p --print-label build-prod build-csp",
     "build-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev",
     "watch-dev": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:dev --watch",
     "build-prod": "rollup --configPlugin @rollup/plugin-typescript -c --environment BUILD:production",
