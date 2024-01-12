@@ -115,7 +115,7 @@ export class FullscreenControl extends Evented implements IControl {
             (window.document as any).webkitFullscreenElement ||
             (window.document as any).msFullscreenElement;
 
-        while (fullscreenElement.shadowRoot) {
+        while (fullscreenElement?.shadowRoot?.fullscreenElement) {
             fullscreenElement = fullscreenElement.shadowRoot.fullscreenElement;
         }
 
