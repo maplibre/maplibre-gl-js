@@ -7,6 +7,8 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+- Fix issue with `FullscreenControl` when MapLibre is within a [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) ([#3573](https://github.com/maplibre/maplibre-gl-js/pull/3573))
+
 ## 4.0.0-pre.4
 
 ### 🐞 Bug fixes
