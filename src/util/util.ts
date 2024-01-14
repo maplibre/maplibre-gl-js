@@ -676,3 +676,13 @@ export function subscribe(target: Subscriber, message: keyof WindowEventMap, lis
         }
     };
 }
+
+/**
+ * This method converts degrees to radians.
+ * The return value is the radian value.
+ * @param degrees - The number of degrees
+ * @returns radians
+ */
+export function degreesToRadians(degrees: number): number {
+    return degrees * Math.PI / 180;
+}

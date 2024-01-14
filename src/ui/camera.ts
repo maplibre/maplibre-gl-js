@@ -6,6 +6,7 @@ import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Terrain} from '../render/terrain';
+import {degreesToRadians} from '../util/util';
 
 import type {Transform} from '../geo/transform';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -641,13 +642,7 @@ export abstract class Camera extends Evented {
     cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing {
         bounds = LngLatBounds.convert(bounds);
         const bearing = options && options.bearing || 0;
-
-        const nwToSETransform = this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
-        const neToSWTransform = this._cameraForBoxAndBearing(bounds.getNorthEast(), bounds.getSouthWest(), bearing, options);
-
-        return extend(nwToSETransform, {
-            zoom: Math.min(nwToSETransform.zoom, neToSWTransform.zoom)
-        })
+        return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
     }
 
     /**
@@ -698,15 +693,30 @@ export abstract class Camera extends Evented {
         const tr = this.transform;
         const edgePadding = tr.padding;
 
-        // We want to calculate the upper right and lower left of the box defined by p0 and p1
-        // in a coordinate system rotate to match the destination bearing.
-        const p0world = tr.project(LngLat.convert(p0));
-        const p1world = tr.project(LngLat.convert(p1));
-        const p0rotated = p0world.rotate(-bearing * Math.PI / 180);
-        const p1rotated = p1world.rotate(-bearing * Math.PI / 180);
+        // Consider all corners of the rotated bounding box derived from the given points
+        // when find the camera position that fits the given points.
+        const bounds = new LngLatBounds(p0, p1);
+        const nwWorld = tr.project(bounds.getNorthWest());
+        const neWorld = tr.project(bounds.getNorthEast());
+        const seWorld = tr.project(bounds.getSouthEast());
+        const swWorld = tr.project(bounds.getSouthWest());
 
-        const upperRight = new Point(Math.max(p0rotated.x, p1rotated.x), Math.max(p0rotated.y, p1rotated.y));
-        const lowerLeft = new Point(Math.min(p0rotated.x, p1rotated.x), Math.min(p0rotated.y, p1rotated.y));
+        const bearingRadians = degreesToRadians(-bearing);
+
+        const nwRotatedWorld = nwWorld.rotate(bearingRadians);
+        const neRotatedWorld = neWorld.rotate(bearingRadians);
+        const seRotatedWorld = seWorld.rotate(bearingRadians);
+        const swRotatedWorld = swWorld.rotate(bearingRadians);
+
+        const upperRight = new Point(
+            Math.max(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
+            Math.max(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
+        );
+
+        const lowerLeft = new Point(
+            Math.min(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
+            Math.min(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
+        );
 
         // Calculate zoom: consider the original bbox and padding.
         const size = upperRight.sub(lowerLeft);
@@ -727,11 +737,13 @@ export abstract class Camera extends Evented {
         const paddingOffsetX = (options.padding.left - options.padding.right) / 2;
         const paddingOffsetY = (options.padding.top - options.padding.bottom) / 2;
         const paddingOffset = new Point(paddingOffsetX, paddingOffsetY);
-        const rotatedPaddingOffset = paddingOffset.rotate(bearing * Math.PI / 180);
+        const rotatedPaddingOffset = paddingOffset.rotate(degreesToRadians(bearing));
         const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
         const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
 
-        const center =  tr.unproject(p0world.add(p1world).div(2).sub(offsetAtFinalZoom));
+        const center = tr.unproject(
+            neWorld.add(swWorld).div(2).sub(offsetAtFinalZoom)
+        );
 
         return {
             center,
