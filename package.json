@@ -171,7 +171,7 @@
     "test-render": "node --no-warnings --loader ts-node/esm test/integration/render/run_render_tests.ts",
     "test-unit": "jest --selectProjects=unit",
     "test-watch-roots": "jest --watch",
-    "codegen": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders generate-typings",
+    "codegen": "run-p generate-dist-package generate-style-code generate-struct-arrays generate-shaders && generate-typings",
     "benchmark": "node --no-warnings --loader ts-node/esm test/bench/run-benchmarks.ts",
     "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
