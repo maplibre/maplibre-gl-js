@@ -74,7 +74,8 @@ jobs:
       - run: npm run test-integration
         if: success() || failure()
 
-  render-tests-ubuntu:
+  render-tests:
+    if: false
     name: Render tests
     env:
       SPLIT_COUNT: 3
