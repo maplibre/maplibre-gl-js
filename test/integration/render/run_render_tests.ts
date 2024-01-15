@@ -792,10 +792,10 @@ async function closePageAndFinish(page: Page, reportCoverage: boolean) {
     const converter = v8toIstanbul('./dist/maplibre-gl-dev.js');
     await converter.load();
     converter.applyCoverage(coverage.map(c => c.rawScriptCoverage!.functions).flat());
-    const coverageReport = converter.toIstanbul();
-    const report = JSON.stringify(coverageReport);
+    //const coverageReport = converter.toIstanbul();
+    //const report = JSON.stringify(coverageReport);
     fs.mkdirSync('./coverage', {recursive: true});
-    fs.writeFileSync('./coverage/coverage-render.json', report);
+    //fs.writeFileSync('./coverage/coverage-render.json', report);
 }
 
 /**
