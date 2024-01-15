@@ -1,4 +1,4 @@
-import {extend, warnOnce, clamp, wrap, defaultEasing, pick} from '../util/util';
+import {extend, warnOnce, clamp, wrap, defaultEasing, pick, degreesToRadians} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
@@ -6,7 +6,6 @@ import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Terrain} from '../render/terrain';
-import {degreesToRadians} from '../util/util';
 
 import type {Transform} from '../geo/transform';
 import type {LngLatLike} from '../geo/lng_lat';

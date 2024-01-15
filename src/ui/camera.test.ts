@@ -2018,7 +2018,7 @@ describe('#cameraForBounds', () => {
         expect(fixedLngLat(rotatedTransform.center, 4)).toEqual({lng: -95.9669, lat: 38.3048});
         expect(fixedNum(rotatedTransform.zoom, 3)).toBe(2.507);
         expect(rotatedTransform.bearing).toBe(45);
-    })
+    });
 });
 
 describe('#fitBounds', () => {
