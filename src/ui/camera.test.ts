@@ -2002,7 +2002,7 @@ describe('#cameraForBounds', () => {
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -103.3761, lat: 43.0929});
     });
 
-    test('bearing using LngLatBounds instance', () => {
+    test('asymmetrical transform using LngLatBounds instance', () => {
         const transform = new Transform(2, 10, 0, 60, false);
         transform.resize(2048, 512);
 
@@ -2013,10 +2013,11 @@ describe('#cameraForBounds', () => {
         bb.extend([-66.9326, 49.5904]);
         bb.extend([-125.0011, 24.9493]);
 
-        const noBearingTransform = camera.cameraForBounds(bb);
-        const bearingTransform = camera.cameraForBounds(bb, {bearing: 45});
+        const rotatedTransform = camera.cameraForBounds(bb, {bearing: 45});
 
-        expect(noBearingTransform.zoom).toBeGreaterThan(bearingTransform.zoom);
+        expect(fixedLngLat(rotatedTransform.center, 4)).toEqual({lng: -95.9669, lat: 38.3048});
+        expect(fixedNum(rotatedTransform.zoom, 3)).toBe(2.507);
+        expect(rotatedTransform.bearing).toBe(45);
     })
 });
 

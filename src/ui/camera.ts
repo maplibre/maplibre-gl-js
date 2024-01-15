@@ -742,7 +742,8 @@ export abstract class Camera extends Evented {
         const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
 
         const center = tr.unproject(
-            neWorld.add(swWorld).div(2).sub(offsetAtFinalZoom)
+            // either world diagonal can be used (NW-SE or NE-SW)
+            nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
         );
 
         return {
