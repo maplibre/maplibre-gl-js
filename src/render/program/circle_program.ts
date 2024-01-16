@@ -7,6 +7,7 @@ import type {OverscaledTileID} from '../../source/tile_id';
 import type {Tile} from '../../source/tile';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
 import type {Painter} from '../painter';
+import { EXTENT } from '../../data/extent';
 
 export type CircleUniformsType = {
     'u_camera_to_center_distance': Uniform1f;
@@ -14,6 +15,7 @@ export type CircleUniformsType = {
     'u_pitch_with_map': Uniform1i;
     'u_extrude_scale': Uniform2f;
     'u_device_pixel_ratio': Uniform1f;
+    'u_globe_extrude_scale': Uniform1f;
 };
 
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({
@@ -22,6 +24,7 @@ const circleUniforms = (context: Context, locations: UniformLocations): CircleUn
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
     'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
+    'u_globe_extrude_scale': new Uniform1f(context, locations.u_globe_extrude_scale),
 });
 
 const circleUniformValues = (
@@ -32,10 +35,17 @@ const circleUniformValues = (
     const transform = painter.transform;
 
     let pitchWithMap: boolean, extrudeScale: [number, number];
+    let globeExtrudeScale: number = 0;
     if (layer.paint.get('circle-pitch-alignment') === 'map') {
         const pixelRatio = pixelsToTileUnits(tile, 1, transform.zoom);
         pitchWithMap = true;
         extrudeScale = [pixelRatio, pixelRatio];
+
+        // Pixel scale at equator converted to radians (for globe circles), scaled by sqrt(2) because
+        // globe-aligned circle quad is rotated by 45 degrees, so that each corner offset is done on a single,
+        // easy to compute axis (rotating by axis angle is expensive, only do it once in the shader).
+        // the whole calculation: (one pixel in tile units) / (earth circumference in tile units) * (2PI radians) * sqrt(2)
+        globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI * Math.SQRT2;
     } else {
         pitchWithMap = false;
         extrudeScale = transform.pixelsToGLUnits;
@@ -46,7 +56,8 @@ const circleUniformValues = (
         'u_scale_with_map': +(layer.paint.get('circle-pitch-scale') === 'map'),
         'u_pitch_with_map': +(pitchWithMap),
         'u_device_pixel_ratio': painter.pixelRatio,
-        'u_extrude_scale': extrudeScale
+        'u_extrude_scale': extrudeScale,
+        'u_globe_extrude_scale': globeExtrudeScale,
     };
 };
 

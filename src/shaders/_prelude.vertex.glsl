@@ -72,6 +72,19 @@ vec2 get_pattern_pos(const vec2 pixel_coord_upper, const vec2 pixel_coord_lower,
     return (tile_units_to_pixels * pos + offset) / pattern_size;
 }
 
+// Axis must be a normalized vector
+// Angle is in radians
+mat3 rotationMatrixFromAxisAngle(vec3 u, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    float c2 = 1.0 - c;
+    return mat3(
+        u.x*u.x * c2 +       c, u.x*u.y * c2 - u.z*s, u.x*u.z * c2 + u.y*s,
+        u.y*u.x * c2 + u.z * s, u.y*u.y * c2 +     c, u.y*u.z * c2 - u.x*s,
+        u.z*u.x * c2 - u.y * s, u.z*u.y * c2 + u.x*s, u.z*u.z * c2 +     c
+    );
+}
+
 // logic for terrain 3d
 
 #ifdef TERRAIN3D
@@ -205,8 +218,8 @@ vec3 projectToSphere(vec2 posInTile) {
     return pos;
 }
 
-vec4 projectTile(vec2 posInTile) {
-    vec4 pos = vec4(projectToSphere(posInTile), 1.0);
+vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
+    vec4 pos = vec4(spherePos, 1.0);
     vec4 result = u_projection_matrix * pos;
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
     result.z = (1.0 - (dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * result.w;
@@ -220,6 +233,10 @@ vec4 projectTile(vec2 posInTile) {
     }
 
     return result;
+}
+
+vec4 projectTile(vec2 posInTile) {
+    return interpolateProjection(posInTile, projectToSphere(posInTile));
 }
 
 vec4 projectTileWithElevation(vec3 posInTileWithElevation) {

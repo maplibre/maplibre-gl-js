@@ -1,6 +1,7 @@
 uniform bool u_scale_with_map;
 uniform bool u_pitch_with_map;
 uniform vec2 u_extrude_scale;
+uniform highp float u_globe_extrude_scale;
 uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
 
@@ -36,19 +37,49 @@ void main(void) {
     v_visibility = calculate_visibility(projectTileWithElevation(vec3(circle_center, ele)));
 
     if (u_pitch_with_map) {
+#ifdef GLOBE
+        vec3 center_vector = projectToSphere(circle_center);
+
+        // Default axis for vertical rotation
+        vec3 axis = vec3(-center_vector.z, 0.0, center_vector.x); // Equivalent to cross(center_vector, vec3(0.0, 1.0, 0.0))
+        if ((extrude.x > 0.0) != (extrude.y > 0.0)) {
+            // Move corner horizontally instead of vertically
+            axis = cross(center_vector, axis);
+        }
+        axis = normalize(axis);
+        float angle = (extrude.x > 0.0) ? u_globe_extrude_scale : -u_globe_extrude_scale; // TODO maybe wrong sign
+
+        // Keep track of "2D" corner position to allow smooth interpolation between globe and mercator
         vec2 corner_position = circle_center;
-        float mercator_scale = projectThickness(circle_center);
         if (u_scale_with_map) {
-            corner_position += extrude * u_extrude_scale * mercator_scale * (radius + stroke_width);
+            angle *= (radius + stroke_width);
+            corner_position += extrude * u_extrude_scale * (radius + stroke_width);
+        } else {
+            // Pitching the circle with the map effectively scales it with the map
+            // To counteract the effect for pitch-scale: viewport, we rescale the
+            // whole circle based on the pitch scaling effect at its central point
+            vec4 projected_center = interpolateProjection(circle_center, center_vector);
+            angle *= (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
+            corner_position += extrude * u_extrude_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
+        }
+
+        mat3 m = rotationMatrixFromAxisAngle(axis, angle);
+        vec3 corner_vector = m * center_vector;
+
+        gl_Position = interpolateProjection(circle_center, corner_vector);
+#else
+        vec2 corner_position = circle_center;
+        if (u_scale_with_map) {
+            corner_position += extrude * u_extrude_scale * (radius + stroke_width);
         } else {
             // Pitching the circle with the map effectively scales it with the map
             // To counteract the effect for pitch-scale: viewport, we rescale the
             // whole circle based on the pitch scaling effect at its central point
             vec4 projected_center = projectTile(circle_center);
-            corner_position += extrude * u_extrude_scale * mercator_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
+            corner_position += extrude * u_extrude_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
         }
-
         gl_Position = projectTileWithElevation(vec3(corner_position, ele));
+#endif
     } else {
         gl_Position = projectTileWithElevation(vec3(circle_center, ele));
 
