@@ -37,14 +37,15 @@ void main(void) {
 
     if (u_pitch_with_map) {
         vec2 corner_position = circle_center;
+        float mercator_scale = projectThickness(circle_center);
         if (u_scale_with_map) {
-            corner_position += extrude * (radius + stroke_width) * u_extrude_scale;
+            corner_position += extrude * u_extrude_scale * mercator_scale * (radius + stroke_width);
         } else {
             // Pitching the circle with the map effectively scales it with the map
             // To counteract the effect for pitch-scale: viewport, we rescale the
             // whole circle based on the pitch scaling effect at its central point
             vec4 projected_center = projectTile(circle_center);
-            corner_position += extrude * (radius + stroke_width) * u_extrude_scale * (projected_center.w / u_camera_to_center_distance);
+            corner_position += extrude * u_extrude_scale * mercator_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
         }
 
         gl_Position = projectTileWithElevation(vec3(corner_position, ele));
