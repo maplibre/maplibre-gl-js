@@ -82,6 +82,9 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         let circleSortKey = null;
         let sortFeaturesByKey = false;
 
+        // If pitchwithmap = true && max radius (how to compute it?) is too big, tesselate the quads.
+        // Also tesselate if the bucket is for a heatmap.
+
         // Heatmap layers are handled in this bucket and have no evaluated properties, so we check our access
         if (styleLayer.type === 'circle') {
             circleSortKey = (styleLayer as CircleStyleLayer).layout.get('circle-sort-key');

@@ -1,8 +1,8 @@
 
-uniform mat4 u_matrix;
 uniform float u_extrude_scale;
 uniform float u_opacity;
 uniform float u_intensity;
+uniform highp float u_globe_extrude_scale;
 
 in vec2 a_pos;
 
@@ -48,7 +48,26 @@ void main(void) {
 
     // multiply a_pos by 0.5, since we had it * 2 in order to sneak
     // in extrusion data
-    vec4 pos = vec4(floor(a_pos * 0.5) + extrude, 0, 1);
+    vec2 circle_center = floor(a_pos * 0.5);
 
-    gl_Position = u_matrix * pos;
+#ifdef GLOBE
+    float angle = (unscaled_extrude.x > 0.0) ? u_globe_extrude_scale : -u_globe_extrude_scale;
+    angle *= S * radius;
+
+    vec3 center_vector = projectToSphere(circle_center);
+
+    // Default axis for vertical rotation
+    vec3 axis = vec3(-center_vector.z, 0.0, center_vector.x); // Equivalent to cross(center_vector, vec3(0.0, 1.0, 0.0))
+    if ((unscaled_extrude.x > 0.0) != (unscaled_extrude.y > 0.0)) {
+        // Move corner horizontally instead of vertically
+        axis = cross(center_vector, axis);
+    }
+    axis = normalize(axis);
+    
+    mat3 m = rotationMatrixFromAxisAngle(axis, angle);
+    vec3 corner_vector = m * center_vector;
+    gl_Position = interpolateProjection(circle_center, corner_vector);
+#else
+    gl_Position = projectTile(circle_center + extrude);
+#endif
 }

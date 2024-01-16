@@ -57,7 +57,7 @@ void main(void) {
         vec3 center_vector = projectToSphere(circle_center);
 
         // This var is only used when globe is enabled and defined.
-        float angle = (extrude.x > 0.0) ? u_globe_extrude_scale : -u_globe_extrude_scale; // TODO maybe wrong sign
+        float angle = (extrude.x > 0.0) ? u_globe_extrude_scale : -u_globe_extrude_scale;
 
         // Keep track of "2D" corner position to allow smooth interpolation between globe and mercator
         vec2 corner_position = circle_center;
