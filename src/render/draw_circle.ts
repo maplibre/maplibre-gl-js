@@ -16,6 +16,7 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
 import type {TerrainData} from '../render/terrain';
+import { ProjectionData } from './projection_manager';
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;
@@ -24,6 +25,7 @@ type TileRenderState = {
     indexBuffer: IndexBuffer;
     uniformValues: UniformValues<CircleUniformsType>;
     terrainData: TerrainData;
+    projectionData: ProjectionData;
 };
 
 type SegmentsTileRenderState = {
@@ -67,7 +69,13 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const uniformValues = circleUniformValues(painter, coord, tile, layer);
+        const uniformValues = circleUniformValues(painter, tile, layer);
+        const matrix = painter.translatePosMatrix(
+            coord.posMatrix,
+            tile,
+            layer.paint.get('circle-translate'),
+            layer.paint.get('circle-translate-anchor'));
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord, matrix);
 
         const state: TileRenderState = {
             programConfiguration,
@@ -75,7 +83,8 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
             layoutVertexBuffer,
             indexBuffer,
             uniformValues,
-            terrainData
+            terrainData,
+            projectionData
         };
 
         if (sortFeaturesByKey) {
@@ -102,11 +111,11 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
     }
 
     for (const segmentsState of segmentsRenderStates) {
-        const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues, terrainData} = segmentsState.state;
+        const {programConfiguration, program, layoutVertexBuffer, indexBuffer, uniformValues, terrainData, projectionData} = segmentsState.state;
         const segments = segmentsState.segments;
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-            uniformValues, terrainData, null, layer.id,
+            uniformValues, terrainData, projectionData, layer.id,
             layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

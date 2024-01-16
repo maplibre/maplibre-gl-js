@@ -14,7 +14,6 @@ export type CircleUniformsType = {
     'u_pitch_with_map': Uniform1i;
     'u_extrude_scale': Uniform2f;
     'u_device_pixel_ratio': Uniform1f;
-    'u_matrix': UniformMatrix4f;
 };
 
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({
@@ -23,12 +22,10 @@ const circleUniforms = (context: Context, locations: UniformLocations): CircleUn
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
     'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix)
 });
 
 const circleUniformValues = (
     painter: Painter,
-    coord: OverscaledTileID,
     tile: Tile,
     layer: CircleStyleLayer
 ): UniformValues<CircleUniformsType> => {
@@ -47,11 +44,6 @@ const circleUniformValues = (
     return {
         'u_camera_to_center_distance': transform.cameraToCenterDistance,
         'u_scale_with_map': +(layer.paint.get('circle-pitch-scale') === 'map'),
-        'u_matrix': painter.translatePosMatrix(
-            coord.posMatrix,
-            tile,
-            layer.paint.get('circle-translate'),
-            layer.paint.get('circle-translate-anchor')),
         'u_pitch_with_map': +(pitchWithMap),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_extrude_scale': extrudeScale

@@ -1,4 +1,3 @@
-uniform mat4 u_matrix;
 uniform bool u_scale_with_map;
 uniform bool u_pitch_with_map;
 uniform vec2 u_extrude_scale;
@@ -34,7 +33,7 @@ void main(void) {
     // in extrusion data
     vec2 circle_center = floor(a_pos * 0.5);
     float ele = get_elevation(circle_center);
-    v_visibility = calculate_visibility(u_matrix * vec4(circle_center, ele, 1.0));
+    v_visibility = calculate_visibility(projectTileWithElevation(vec3(circle_center, ele)));
 
     if (u_pitch_with_map) {
         vec2 corner_position = circle_center;
@@ -44,13 +43,13 @@ void main(void) {
             // Pitching the circle with the map effectively scales it with the map
             // To counteract the effect for pitch-scale: viewport, we rescale the
             // whole circle based on the pitch scaling effect at its central point
-            vec4 projected_center = u_matrix * vec4(circle_center, 0, 1);
+            vec4 projected_center = projectTile(circle_center);
             corner_position += extrude * (radius + stroke_width) * u_extrude_scale * (projected_center.w / u_camera_to_center_distance);
         }
 
-        gl_Position = u_matrix * vec4(corner_position, ele, 1);
+        gl_Position = projectTileWithElevation(vec3(corner_position, ele));
     } else {
-        gl_Position = u_matrix * vec4(circle_center, ele, 1);
+        gl_Position = projectTileWithElevation(vec3(circle_center, ele));
 
         if (u_scale_with_map) {
             gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale * u_camera_to_center_distance;
