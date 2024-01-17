@@ -73,53 +73,50 @@
       let layerControl;
 
       // Add the overlay as a control
-      map.on('load', () => {
-          (async () => {
+      map.on('load', async () => {
           // Fetch the data
-              const responseJSON = await fetch(parisSights).then((res) =>
-                  res.json()
-              );
+          const response = await fetch(parisSights);
+          const responseJSON = await response.json();
 
-              const layer = new deck.ScatterplotLayer({
-                  id: 'scatterplot-layer',
-                  data: responseJSON.results,
-                  pickable: true,
-                  opacity: 0.7,
-                  stroked: true,
-                  filled: true,
-                  radiusMinPixels: 14,
-                  radiusMaxPixels: 100,
-                  lineWidthMinPixels: 5,
-                  // Using appropriate fields for coordinates from the dataset
-                  getPosition: (d) => [d.geo_point_2d.lon, d.geo_point_2d.lat],
-                  getFillColor: (d) => {
-                      // Filtering by postal code
-                      if ('insee' in d && d.insee.startsWith('75')) {
-                          // Districts in Paris
-                          return colorPalette[parseInt(d.insee.substring(3))];
-                      } else {
-                          // Out of Paris
-                          return colorPalette[20];
-                      }
-                  },
-                  getLineColor: (d) => [14, 16, 255],
-                  onClick: (info) => {
-                      const {coordinate, object} = info;
-                      const description = `<p>${object.nom_carto || 'Unknown'}</p>`;
+          const layer = new deck.ScatterplotLayer({
+              id: 'scatterplot-layer',
+              data: responseJSON.results,
+              pickable: true,
+              opacity: 0.7,
+              stroked: true,
+              filled: true,
+              radiusMinPixels: 14,
+              radiusMaxPixels: 100,
+              lineWidthMinPixels: 5,
+              // Using appropriate fields for coordinates from the dataset
+              getPosition: (d) => [d.geo_point_2d.lon, d.geo_point_2d.lat],
+              getFillColor: (d) => {
+                  // Filtering by postal code
+                  if ('insee' in d && d.insee.startsWith('75')) {
+                      // Districts in Paris
+                      return colorPalette[parseInt(d.insee.substring(3))];
+                  } else {
+                      // Out of Paris
+                      return colorPalette[20];
+                  }
+              },
+              getLineColor: (d) => [14, 16, 255],
+              onClick: (info) => {
+                  const {coordinate, object} = info;
+                  const description = `<p>${object.nom_carto || 'Unknown'}</p>`;
 
-                      new maplibregl.Popup()
-                          .setLngLat(coordinate)
-                          .setHTML(description)
-                          .addTo(map);
-                  },
-              });
+                  new maplibregl.Popup()
+                      .setLngLat(coordinate)
+                      .setHTML(description)
+                      .addTo(map);
+              },
+          });
 
-              // Create the overlay
-              const overlay = new deck.MapboxOverlay({
-                  layers: [layer],
-              });
-              map.addControl(overlay);
-          })();
+          // Create the overlay
+          const overlay = new deck.MapboxOverlay({
+              layers: [layer],
+          });
+          map.addControl(overlay);
       });
     </script>
   </body>

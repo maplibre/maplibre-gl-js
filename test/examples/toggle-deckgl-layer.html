@@ -129,7 +129,7 @@
       };
 
       // Add the overlay as a control
-      const initializeOverlay = () => {
+      function initializeOverlay () {
           const layer = new deck.ScatterplotLayer({
               id: 'scatterplot-layer',
               data: sampleData.features,
@@ -167,7 +167,7 @@
           });
 
           map.addControl(overlay);
-      };
+      }
 
       map.on('load', () => {
           // Add the overlay
