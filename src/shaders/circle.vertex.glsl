@@ -45,11 +45,12 @@ void main(void) {
     #pragma mapbox: initialize lowp float stroke_opacity
 
     // unencode the extrusion vector that we snuck into the a_pos vector
-    vec2 extrude = vec2(mod(a_pos, 2.0) * 2.0 - 1.0);
+    vec2 pos_raw = a_pos + 32768.0;
+    vec2 extrude = vec2(mod(pos_raw, 8.0) / 7.0 * 2.0 - 1.0);
 
-    // multiply a_pos by 0.5, since we had it * 2 in order to sneak
+    // multiply a_pos by 0.125, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(a_pos * 0.5);
+    vec2 circle_center = floor(pos_raw * 0.125);
     float ele = get_elevation(circle_center);
     v_visibility = calculate_visibility(projectTileWithElevation(vec3(circle_center, ele)));
 
@@ -57,12 +58,12 @@ void main(void) {
         vec3 center_vector = projectToSphere(circle_center);
 
         // This var is only used when globe is enabled and defined.
-        float angle = (extrude.x > 0.0) ? u_globe_extrude_scale : -u_globe_extrude_scale;
+        float angle_scale = u_globe_extrude_scale;
 
         // Keep track of "2D" corner position to allow smooth interpolation between globe and mercator
         vec2 corner_position = circle_center;
         if (u_scale_with_map) {
-            angle *= (radius + stroke_width);
+            angle_scale *= (radius + stroke_width);
             corner_position += extrude * u_extrude_scale * (radius + stroke_width);
         } else {
             // Pitching the circle with the map effectively scales it with the map
@@ -70,21 +71,13 @@ void main(void) {
             // whole circle based on the pitch scaling effect at its central point
             vec4 projected_center = interpolateProjection(circle_center, center_vector);
             corner_position += extrude * u_extrude_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
-            angle *= (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
+            angle_scale *= (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
         }
 
 #ifdef GLOBE
-        // Default axis for vertical rotation
-        vec3 axis = vec3(-center_vector.z, 0.0, center_vector.x); // Equivalent to cross(center_vector, vec3(0.0, 1.0, 0.0))
-        if ((extrude.x > 0.0) != (extrude.y > 0.0)) {
-            // Move corner horizontally instead of vertically
-            axis = cross(center_vector, axis);
-        }
-        axis = normalize(axis);
-        
-        mat3 m = rotationMatrixFromAxisAngle(axis, angle);
-        vec3 corner_vector = m * center_vector;
-        gl_Position = interpolateProjection(circle_center, corner_vector);
+        vec2 angles = extrude * angle_scale;
+        vec3 corner_vector = globeRotateVector(center_vector, angles);
+        gl_Position = interpolateProjection(corner_position, corner_vector);
 #else
         gl_Position = projectTileWithElevation(vec3(corner_position, ele));
 #endif

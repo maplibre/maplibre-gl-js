@@ -173,6 +173,18 @@ uniform highp vec4 u_projection_clipping_plane;
 uniform highp float u_projection_globeness;
 uniform mat4 u_projection_fallback_matrix;
 
+vec3 globeRotateVector(vec3 vec, vec2 angles) {
+    vec3 axisRight = vec3(vec.z, 0.0, -vec.x); // Equivalent to cross(vec3(0.0, 1.0, 0.0), vec)
+    vec3 axisUp = cross(axisRight, vec);
+    axisRight = normalize(axisRight);
+    axisUp = normalize(axisUp);
+    vec2 t = tan(angles);
+    return normalize(vec + axisRight * t.x + axisUp * t.y);
+    // mat3 mX = rotationMatrixFromAxisAngle(axisUp, angles.x);
+    // mat3 mY = rotationMatrixFromAxisAngle(axisRight, angles.y);
+    // return mX * mY * vec;
+}
+
 float projectThickness(vec2 posInTile) {
     float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * posInTile.y;
     float spherical_y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos_y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
@@ -285,6 +297,11 @@ vec4 projectTileWithElevation(vec3 p) {
     return u_projection_matrix * vec4(p, 1.0);
 }
 
+vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
+    return projectTile(posInTile);
+}
+
+#define projectToSphere(p) (vec3(0.0, 1.0, 0.0))
 #define projectThickness(p) (1.0)
 #define getDebugColor(p) (vec4(1.0, 0.0, 1.0, 1.0))
 #endif

@@ -13,7 +13,7 @@ import type {Tile} from '../../source/tile';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {Painter} from '../painter';
 import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
-import { EXTENT } from '../../data/extent';
+import {EXTENT} from '../../data/extent';
 
 export type HeatmapUniformsType = {
     'u_extrude_scale': Uniform1f;
@@ -45,12 +45,12 @@ const heatmapTextureUniforms = (context: Context, locations: UniformLocations): 
 
 const heatmapUniformValues = (tile: Tile, zoom: number, intensity: number): UniformValues<HeatmapUniformsType> => {
     const pixelRatio = pixelsToTileUnits(tile, 1, zoom);
-    const globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI * Math.SQRT2;
+    const globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI;
     return {
         'u_extrude_scale': pixelsToTileUnits(tile, 1, zoom),
         'u_intensity': intensity,
         'u_globe_extrude_scale': globeExtrudeScale
-    }
+    };
 };
 
 const heatmapTextureUniformValues = (

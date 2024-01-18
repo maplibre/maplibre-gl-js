@@ -7,7 +7,7 @@ import type {OverscaledTileID} from '../../source/tile_id';
 import type {Tile} from '../../source/tile';
 import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
 import type {Painter} from '../painter';
-import { EXTENT } from '../../data/extent';
+import {EXTENT} from '../../data/extent';
 
 export type CircleUniformsType = {
     'u_camera_to_center_distance': Uniform1f;
@@ -41,11 +41,8 @@ const circleUniformValues = (
         pitchWithMap = true;
         extrudeScale = [pixelRatio, pixelRatio];
 
-        // Pixel scale at equator converted to radians (for globe circles), scaled by sqrt(2) because
-        // globe-aligned circle quad is rotated by 45 degrees, so that each corner offset is done on a single,
-        // easy to compute axis (rotating by axis angle is expensive, only do it once in the shader).
-        // the whole calculation: (one pixel in tile units) / (earth circumference in tile units) * (2PI radians) * sqrt(2)
-        globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI * Math.SQRT2;
+        // the whole calculation: (one pixel in tile units) / (earth circumference in tile units) * (2PI radians)
+        globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI;
     } else {
         pitchWithMap = false;
         extrudeScale = transform.pixelsToGLUnits;

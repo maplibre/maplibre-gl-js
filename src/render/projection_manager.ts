@@ -84,7 +84,7 @@ export class ProjectionManager {
 
     get isRenderingDirty(): boolean {
         const now = browser.now();
-        return (now - this._lastGlobeChangeTime) / 1000.0 < globeTransitionTimeSeconds + 0.2;
+        return (now - this._lastGlobeChangeTime) / 1000.0 < Math.max(globeTransitionTimeSeconds, zoomTransitionTimeSeconds) + 0.2;
     }
 
     constructor(map: Map) {

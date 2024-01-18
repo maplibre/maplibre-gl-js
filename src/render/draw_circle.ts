@@ -16,7 +16,7 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
 import type {TerrainData} from '../render/terrain';
-import { ProjectionData } from './projection_manager';
+import {ProjectionData} from './projection_manager';
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;
@@ -75,7 +75,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
             coord.posMatrix,
             tile,
             layer.paint.get('circle-translate'),
-            layer.paint.get('circle-translate-anchor'));
+            layer.paint.get('circle-translate-anchor')); // JP: TODO: implement this for globe
         const projectionData = projectionManager.getProjectionData(coord, matrix);
 
         const state: TileRenderState = {

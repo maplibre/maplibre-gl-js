@@ -24,7 +24,8 @@ void main(void) {
     #pragma mapbox: initialize mediump float radius
 
     // unencode the extrusion vector that we snuck into the a_pos vector
-    vec2 unscaled_extrude = vec2(mod(a_pos, 2.0) * 2.0 - 1.0);
+    vec2 pos_raw = a_pos + 32768.0;
+    vec2 unscaled_extrude = vec2(mod(pos_raw, 8.0) / 7.0 * 2.0 - 1.0);
 
     // This 'extrude' comes in ranging from [-1, -1], to [1, 1].  We'll use
     // it to produce the vertices of a square mesh framing the point feature
@@ -46,27 +47,15 @@ void main(void) {
     // mesh position
     vec2 extrude = v_extrude * radius * u_extrude_scale;
 
-    // multiply a_pos by 0.5, since we had it * 2 in order to sneak
+    // multiply a_pos by 0.125, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(a_pos * 0.5);
+    vec2 circle_center = floor(pos_raw * 0.125);
 
 #ifdef GLOBE
-    float angle = (unscaled_extrude.x > 0.0) ? u_globe_extrude_scale : -u_globe_extrude_scale;
-    angle *= S * radius;
-
+    vec2 angles = v_extrude * radius * u_globe_extrude_scale;
     vec3 center_vector = projectToSphere(circle_center);
-
-    // Default axis for vertical rotation
-    vec3 axis = vec3(-center_vector.z, 0.0, center_vector.x); // Equivalent to cross(center_vector, vec3(0.0, 1.0, 0.0))
-    if ((unscaled_extrude.x > 0.0) != (unscaled_extrude.y > 0.0)) {
-        // Move corner horizontally instead of vertically
-        axis = cross(center_vector, axis);
-    }
-    axis = normalize(axis);
-    
-    mat3 m = rotationMatrixFromAxisAngle(axis, angle);
-    vec3 corner_vector = m * center_vector;
-    gl_Position = interpolateProjection(circle_center, corner_vector);
+    vec3 corner_vector = globeRotateVector(center_vector, angles);
+    gl_Position = interpolateProjection(circle_center + extrude, corner_vector);
 #else
     gl_Position = projectTile(circle_center + extrude);
 #endif
