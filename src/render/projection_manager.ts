@@ -37,8 +37,17 @@ export type ProjectionData = {
     'u_projection_fallback_matrix': mat4;
 }
 
+function clamp(a: number, min: number, max: number): number {
+    return Math.min(Math.max(a, min), max);
+}
+
 function lerp(a: number, b: number, mix: number): number {
     return a * (1.0 - mix) + b * mix;
+}
+
+function smoothStep(edge0: number, edge1: number, x: number): number {
+    const t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    return t * t * (3.0 - 2.0 * t);
 }
 
 const globeTransitionTimeSeconds = 0.5;
@@ -82,6 +91,10 @@ export class ProjectionManager {
         return this._globeness > 0.0;
     }
 
+    get globeDrawWrappedtiles(): boolean {
+        return this._globeness < 1.0;
+    }
+
     get isRenderingDirty(): boolean {
         const now = browser.now();
         return (now - this._lastGlobeChangeTime) / 1000.0 < Math.max(globeTransitionTimeSeconds, zoomTransitionTimeSeconds) + 0.2;
@@ -112,6 +125,7 @@ export class ProjectionManager {
         const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / zoomTransitionTimeSeconds, 0.0), 1.0);
         const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
         this._globeness = Math.min(this._globeness, zoomGlobenessBound);
+        this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
 
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space

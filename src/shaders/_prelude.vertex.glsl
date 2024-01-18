@@ -188,7 +188,13 @@ vec3 globeRotateVector(vec3 vec, vec2 angles) {
 float projectThickness(vec2 posInTile) {
     float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * posInTile.y;
     float spherical_y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos_y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
-    return 1.0 / cos(spherical_y);
+    float thickness = 1.0 / cos(spherical_y);
+    
+    if (u_projection_globeness < 0.999) {
+        return mix(1.0, thickness, u_projection_globeness);
+    } else {
+        return thickness;
+    }
 }
 
 // JP: TODO: a function that returns tangent and cotangent vectors for the sphere when given mercator or inside-tile coordiantes
@@ -232,19 +238,28 @@ vec3 projectToSphere(vec2 posInTile) {
 
 vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
     vec4 pos = vec4(spherePos, 1.0);
-    vec4 result = u_projection_matrix * pos;
+    vec4 globePosition = u_projection_matrix * pos;
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
-    result.z = (1.0 - (dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * result.w;
+    globePosition.z = (1.0 - (dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * globePosition.w;
 
-    if (u_projection_globeness < 0.995) {
+    if (u_projection_globeness < 0.999) {
         vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, 0.0, 1.0);
+        // Only interpolate to globe's Z for the last 30% of the animation.
+        // (globe Z hides anything on the backfacing side of the planet)
+        const float z_globeness_threshold = 0.7;
+        vec4 result = globePosition;
+        result.z = mix(0.0, globePosition.z, clamp((u_projection_globeness - z_globeness_threshold) / (1.0 - z_globeness_threshold), 0.0, 1.0));
+        result.xyw = mix(flatPosition.xyw, globePosition.xyw, u_projection_globeness);
+        // Gradually hide poles during transition
         if ((posInTile.x < -32767.5 && posInTile.y < -32767.5) || (posInTile.x > 32766.5 && posInTile.y > 32766.5)) {
-            flatPosition.z = -10000000.0;
+            result = globePosition;
+            const float poles_hidden_anim_percentage = 0.02; // Only draw poles in the last 2% of the animation.
+            result.z = mix(globePosition.z, 100.0, pow(max((1.0 - u_projection_globeness) / poles_hidden_anim_percentage, 0.0), 8.0));
         }
-        result = mix(flatPosition, result, u_projection_globeness);
+        return result;
     }
 
-    return result;
+    return globePosition;
 }
 
 vec4 projectTile(vec2 posInTile) {

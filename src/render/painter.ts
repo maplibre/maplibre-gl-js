@@ -417,7 +417,7 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
-        const isGlobeActive = style.map.projectionManager.useGlobeRendering; // JP: TODO: this should be always false for large zooms!
+        const deduplicateWrapped = !style.map.projectionManager.globeDrawWrappedtiles;
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -425,9 +425,9 @@ export class Painter {
                 sourceCache.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates(false, isGlobeActive);
+            coordsAscending[id] = sourceCache.getVisibleCoordinates(false, deduplicateWrapped);
             coordsDescending[id] = coordsAscending[id].slice().reverse();
-            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true, isGlobeActive).reverse();
+            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true, deduplicateWrapped).reverse();
         }
 
         this.opaquePassCutoff = Infinity;
