@@ -46,6 +46,7 @@ function lerp(a: number, b: number, mix: number): number {
 }
 
 function smoothStep(edge0: number, edge1: number, x: number): number {
+    // Function definition from GLSL: https://registry.khronos.org/OpenGL-Refpages/gl4/html/smoothstep.xhtml
     const t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
     return t * t * (3.0 - 2.0 * t);
 }
