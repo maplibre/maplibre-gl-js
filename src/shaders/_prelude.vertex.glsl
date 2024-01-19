@@ -164,9 +164,10 @@ float get_elevation(vec2 pos) {
 
 uniform mat4 u_projection_matrix;
 
-#ifdef GLOBE
-
+// Make sure to define GLOBE_PI even if globe is disabled.
 #define GLOBE_PI 3.1415926535897932384626433832795
+
+#ifdef GLOBE
 
 uniform highp vec4 u_projection_tile_mercator_coords;
 uniform highp vec4 u_projection_clipping_plane;
