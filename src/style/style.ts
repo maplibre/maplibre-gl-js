@@ -5,6 +5,7 @@ import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
 import {GlyphManager} from '../render/glyph_manager';
 import {Light} from './light';
+import {Sky} from './sky';
 import {LineAtlas} from '../render/line_atlas';
 import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
@@ -47,7 +48,8 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
-    DiffOperations
+    DiffOperations,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -177,6 +179,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    sky: Sky;
 
     _frameRequest: AbortController;
     _loadStyleRequest: AbortController;
@@ -330,6 +333,8 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
+
+        if (this.stylesheet.sky) this.setSky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
@@ -513,6 +518,10 @@ export class Style extends Evented {
             return true;
         }
 
+        if (this.sky && this.sky.hasTransition()) {
+            return true;
+        }
+
         for (const id in this.sourceCaches) {
             if (this.sourceCaches[id].hasTransition()) {
                 return true;
@@ -571,6 +580,7 @@ export class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
+            if (this.sky) this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }
@@ -600,6 +610,7 @@ export class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
+        if (this.sky) this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -1451,6 +1462,28 @@ export class Style extends Evented {
 
         this.light.setLight(lightOptions, options);
         this.light.updateTransitions(parameters);
+    }
+
+    getSky() {
+        return this.sky && this.sky.getSky();
+    }
+
+    setSky(skyOptions?: SkySpecification) {
+        this._checkLoaded();
+
+        if (!skyOptions) {
+            this.sky = null;
+        } else {
+            if (this.sky) this.sky.setSky(skyOptions);
+            else this.sky = new Sky(this.map.painter.context, skyOptions);
+            this.sky.updateTransitions({
+                now: browser.now(),
+                transition: extend({
+                    duration: 300,
+                    delay: 0
+                }, this.stylesheet.transition)
+            });
+        }
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
