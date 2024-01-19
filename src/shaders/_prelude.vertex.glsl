@@ -185,11 +185,25 @@ vec3 globeRotateVector(vec3 vec, vec2 angles) {
     // return mX * mY * vec;
 }
 
-float projectThickness(vec2 posInTile) {
-    float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * posInTile.y;
+// Consider this private, do not use in other shaders directly!
+// Use `projectLineThickness` or `projectCircleRadius` instead.
+float circumferenceRatioAtTileY(float tileY) {
+    float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * tileY;
     float spherical_y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos_y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
-    float thickness = 1.0 / cos(spherical_y);
-    
+    return cos(spherical_y);
+}
+
+float projectLineThickness(float tileY) {
+    float thickness = 1.0 / circumferenceRatioAtTileY(tileY);    
+    if (u_projection_globeness < 0.999) {
+        return mix(1.0, thickness, u_projection_globeness);
+    } else {
+        return thickness;
+    }
+}
+
+float projectCircleRadius(float tileY) {
+    float thickness = 1.0 / circumferenceRatioAtTileY(tileY);    
     if (u_projection_globeness < 0.999) {
         return mix(1.0, thickness, u_projection_globeness);
     } else {
@@ -244,9 +258,9 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
 
     if (u_projection_globeness < 0.999) {
         vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, 0.0, 1.0);
-        // Only interpolate to globe's Z for the last 30% of the animation.
+        // Only interpolate to globe's Z for the last 50% of the animation.
         // (globe Z hides anything on the backfacing side of the planet)
-        const float z_globeness_threshold = 0.7;
+        const float z_globeness_threshold = 0.2;
         vec4 result = globePosition;
         result.z = mix(0.0, globePosition.z, clamp((u_projection_globeness - z_globeness_threshold) / (1.0 - z_globeness_threshold), 0.0, 1.0));
         result.xyw = mix(flatPosition.xyw, globePosition.xyw, u_projection_globeness);
@@ -296,6 +310,15 @@ vec4 projectTileWithElevation(vec3 posInTileWithElevation) {
 //     return result;
 // }
 #else
+
+float projectLineThickness(float tileY) {
+    return 1.0;
+}
+
+float projectCircleRadius(float tileY) {
+    return 1.0;
+}
+
 vec4 projectTile(vec2 p) {
     // Kill pole vertices and triangles by placing the pole vertex so far in Z that
     // the clipping hardware kills the entire triangle.
@@ -317,6 +340,6 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
 }
 
 #define projectToSphere(p) (vec3(0.0, 1.0, 0.0))
-#define projectThickness(p) (1.0)
 #define getDebugColor(p) (vec4(1.0, 0.0, 1.0, 1.0))
+
 #endif

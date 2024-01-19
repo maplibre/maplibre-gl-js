@@ -232,10 +232,9 @@ export class ProjectionManager {
         const globePixelScale = 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
         const flatPixelScale = 1.0;
         if (this.useGlobeRendering) {
-            return globePixelScale;
+            return lerp(flatPixelScale, globePixelScale, this._globeness);
         }
         return flatPixelScale;
-        //return lerp(flatPixelScale, globePixelScale, this._globeness);
     }
 
     private setGlobeProjection(data: ProjectionData): void {
