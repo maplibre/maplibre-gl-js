@@ -24,59 +24,60 @@ import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {PerformanceUtils} from './util/performance';
 import {AJAXError} from './util/ajax';
 import {GeoJSONSource} from './source/geojson_source';
-import {CanvasSource, CanvasSourceSpecification} from './source/canvas_source';
+import {CanvasSource} from './source/canvas_source';
 import {ImageSource} from './source/image_source';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source';
 import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
-import {addSourceType, type SourceClass} from './source/source';
+import {addSourceType} from './source/source';
 import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {getGlobalDispatcher} from './util/dispatcher';
-import {MapContextEvent, MapMouseEvent, MapTouchEvent, MapWheelEvent} from './ui/events';
-import {IControl} from './ui/control/control';
-import {ScrollZoomHandler} from './ui/handler/scroll_zoom';
-import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch';
-import {DragPanHandler} from './ui/handler/shim/drag_pan';
-import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
-import {BoxZoomHandler} from './ui/handler/box_zoom';
-import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
-import {CustomLayerInterface} from './style/style_layer/custom_style_layer';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
 
+function setRTLTextPlugin(pluginURL: string, lazy: boolean) { rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy) };
+function getRTLTextPluginStatus() { rtlMainThreadPluginFactory().getRTLTextPluginStatus() };
+function getVersion() { return version; }
+function getWorkerCount() { return WorkerPool.workerCount; };
+function setWorkerCount(count: number) { WorkerPool.workerCount = count; };
+function getMaxParallelImageRequests() {return config.MAX_PARALLEL_IMAGE_REQUESTS; }
+function setMaxParallelImageRequests(numRequests: number) { config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests; }
+function getWorkerUrl() { return config.WORKER_URL; }
+function setWorkerUrl(value: string) { config.WORKER_URL = value; }
+function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast('importScript', workerUrl);};
 /**
  * `maplibregl` is the global object that allows configurations that are not specific to a map instance
  *
  * @group Main
  */
-class MapLibreGL {
-    static Map = Map;
-    static NavigationControl = NavigationControl;
-    static GeolocateControl = GeolocateControl;
-    static AttributionControl = AttributionControl;
-    static LogoControl = LogoControl;
-    static ScaleControl = ScaleControl;
-    static FullscreenControl = FullscreenControl;
-    static TerrainControl = TerrainControl;
-    static Popup = Popup;
-    static Marker = Marker;
-    static Style = Style;
-    static LngLat = LngLat;
-    static LngLatBounds = LngLatBounds;
-    static Point = Point;
-    static MercatorCoordinate = MercatorCoordinate;
-    static Evented = Evented;
-    static AJAXError = AJAXError;
-    static config = config;
-    static CanvasSource = CanvasSource;
-    static GeoJSONSource = GeoJSONSource;
-    static ImageSource = ImageSource;
-    static RasterDEMTileSource = RasterDEMTileSource;
-    static RasterTileSource = RasterTileSource;
-    static VectorTileSource = VectorTileSource;
-    static VideoSource = VideoSource;
+export {
+    Map,
+    NavigationControl,
+    GeolocateControl,
+    AttributionControl,
+    LogoControl,
+    ScaleControl,
+    FullscreenControl,
+    TerrainControl,
+    Popup,
+    Marker,
+    Style,
+    LngLat,
+    LngLatBounds,
+    Point,
+    MercatorCoordinate,
+    Evented,
+    AJAXError,
+    config,
+    CanvasSource,
+    GeoJSONSource,
+    ImageSource,
+    RasterDEMTileSource,
+    RasterTileSource,
+    VectorTileSource,
+    VideoSource,
     /**
      * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).
      * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
@@ -90,7 +91,7 @@ class MapLibreGL {
      * ```
      * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
      */
-    static setRTLTextPlugin = (pluginURL: string, lazy: boolean) => rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy);
+    setRTLTextPlugin,
     /**
      * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
      * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
@@ -101,7 +102,7 @@ class MapLibreGL {
      * const pluginStatus = maplibregl.getRTLTextPluginStatus();
      * ```
      */
-    static getRTLTextPluginStatus = () => rtlMainThreadPluginFactory().getRTLTextPluginStatus();
+    getRTLTextPluginStatus,
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
@@ -124,7 +125,7 @@ class MapLibreGL {
      * maplibregl.prewarm()
      * ```
      */
-    static prewarm = prewarm;
+    prewarm,
     /**
      * Clears up resources that have previously been created by `maplibregl.prewarm()`.
      * Note that this is typically not necessary. You should only call this function
@@ -136,15 +137,12 @@ class MapLibreGL {
      * maplibregl.clearPrewarmedResources()
      * ```
      */
-    static clearPrewarmedResources = clearPrewarmedResources;
+    clearPrewarmedResources,
     /**
      * Returns the package version of the library
      * @returns Package version of the library
      */
-    static get version(): string {
-        return version;
-    }
-
+    getVersion,
     /**
      * Gets and sets the number of web workers instantiated on a page with GL JS maps.
      * By default, workerCount is 1 except for Safari browser where it is set to half the number of CPU cores (capped at 3).
@@ -156,13 +154,8 @@ class MapLibreGL {
      * maplibregl.workerCount = 2;
      * ```
      */
-    static get workerCount(): number {
-        return WorkerPool.workerCount;
-    }
-
-    static set workerCount(count: number) {
-        WorkerPool.workerCount = count;
-    }
+    getWorkerCount,
+    setWorkerCount,
     /**
      * Gets and sets the maximum number of images (raster tiles, sprites, icons) to load in parallel,
      * which affects performance in raster-heavy maps. 16 by default.
@@ -173,21 +166,10 @@ class MapLibreGL {
      * maplibregl.maxParallelImageRequests = 10;
      * ```
      */
-    static get maxParallelImageRequests(): number {
-        return config.MAX_PARALLEL_IMAGE_REQUESTS;
-    }
-
-    static set maxParallelImageRequests(numRequests: number) {
-        config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests;
-    }
-
-    static get workerUrl(): string {
-        return config.WORKER_URL;
-    }
-
-    static set workerUrl(value: string) {
-        config.WORKER_URL = value;
-    }
+    getMaxParallelImageRequests,
+    setMaxParallelImageRequests,
+    getWorkerUrl,
+    setWorkerUrl,
 
     /**
      * Adds a custom load resource function that will be called when using a URL that starts with a custom url schema.
@@ -216,7 +198,7 @@ class MapLibreGL {
      * });
      * ```
      */
-    static addProtocol = addProtocol;
+    addProtocol,
 
     /**
      * Removes a previously added protocol in the main thread.
@@ -227,7 +209,7 @@ class MapLibreGL {
      * maplibregl.removeProtocol('custom');
      * ```
      */
-    static removeProtocol = removeProtocol;
+    removeProtocol,
 
     /**
      * Adds a [custom source type](#Custom Sources), making it available for use with
@@ -236,7 +218,7 @@ class MapLibreGL {
      * @param sourceType - A {@link SourceClass} - which is a constructor for the `Source` interface.
      * @returns a promise that is resolved when the source type is ready or rejected with an error.
      */
-    static addSourceType = (name: string, sourceType: SourceClass) => addSourceType(name, sourceType);
+    addSourceType,
 
     /**
      * Allows loading javascript code in the worker thread.
@@ -269,52 +251,8 @@ class MapLibreGL {
      * maplibregl.importScriptInWorkers('add-protocol-worker.js');
      * ```
      */
-    static importScriptInWorkers = (workerUrl: string) => {
-        return getGlobalDispatcher().broadcast('importScript', workerUrl);
-    };
+    importScriptInWorkers
 }
 
 //This gets automatically stripped out in production builds.
-Debug.extend(MapLibreGL, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
-
-export {
-    type Map,
-    type NavigationControl,
-    type GeolocateControl,
-    type AttributionControl,
-    type LogoControl,
-    type ScaleControl,
-    type FullscreenControl,
-    type TerrainControl,
-    type Popup,
-    type Marker,
-    type Style,
-    type LngLat,
-    type LngLatBounds,
-    type Point,
-    type MercatorCoordinate,
-    type Evented,
-    type AJAXError,
-    type CanvasSource,
-    type GeoJSONSource,
-    type ImageSource,
-    type RasterDEMTileSource,
-    type RasterTileSource,
-    type VectorTileSource,
-    type VideoSource,
-    type MapMouseEvent,
-    type MapTouchEvent,
-    type MapWheelEvent,
-    type MapContextEvent,
-    type IControl,
-    type ScrollZoomHandler,
-    type TwoFingersTouchZoomRotateHandler,
-    type DragPanHandler,
-    type DoubleClickZoomHandler,
-    type BoxZoomHandler,
-    type DragRotateHandler,
-    type CustomLayerInterface,
-    type CanvasSourceSpecification
-};
-
-export default MapLibreGL;
+//Debug.extend(MapLibreGL, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
