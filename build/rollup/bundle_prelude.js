@@ -13,9 +13,10 @@ function define(_, chunk) {
 
         var sharedChunk = {};
         shared(sharedChunk);
-        maplibregl = chunk(sharedChunk);
+        maplibregl = chunk(sharedChunk, sharedChunk);
+        maplibregl = sharedChunk;
         if (typeof window !== 'undefined') {
-            maplibregl.workerUrl = window.URL.createObjectURL(new Blob([workerBundleString], { type: 'text/javascript' }));
+            sharedChunk.setWorkerUrl(window.URL.createObjectURL(new Blob([workerBundleString], { type: 'text/javascript' })));
         }
     }
 }
