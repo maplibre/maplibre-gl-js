@@ -38,8 +38,8 @@ const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
 
-function setRTLTextPlugin(pluginURL: string, lazy: boolean) { rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy); }
-function getRTLTextPluginStatus() { rtlMainThreadPluginFactory().getRTLTextPluginStatus(); }
+function setRTLTextPlugin(pluginURL: string, lazy: boolean) { return rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy); }
+function getRTLTextPluginStatus() { return rtlMainThreadPluginFactory().getRTLTextPluginStatus(); }
 function getVersion() { return version; }
 function getWorkerCount() { return WorkerPool.workerCount; }
 function setWorkerCount(count: number) { WorkerPool.workerCount = count; }
