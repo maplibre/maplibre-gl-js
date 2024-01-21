@@ -11,9 +11,10 @@ import puppeteer, {Page, Browser} from 'puppeteer';
 import v8toIstanbul from 'v8-to-istanbul';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import * as maplibreglModule from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let maplibregl: any;
+let maplibregl: typeof maplibreglModule;
 
 type TestData = {
     id: string;
