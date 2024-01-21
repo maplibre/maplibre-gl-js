@@ -1458,7 +1458,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Query the current elevation of location. It return null if terrain is not enabled. the elevation is in meters relative to mean sea-level
+     * Query the current elevation of location. Returns `null` if terrain is not enabled. Elevation is in meters relative to mean sea-level.
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
      * @returns elevation in meters
      */
