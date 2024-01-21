@@ -14,7 +14,7 @@ import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../di
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let maplibregl: any;
+let maplibregl: typeof maplibreglModule;
 
 type TestData = {
     id: string;
