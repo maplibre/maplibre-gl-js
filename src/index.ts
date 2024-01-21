@@ -182,7 +182,6 @@ export {
     VideoSource,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
-
     prewarm,
     clearPrewarmedResources,
     getVersion,
