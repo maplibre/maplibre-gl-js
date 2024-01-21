@@ -25,7 +25,7 @@ async function createImage(exampleName) {
     // Wait for map to load, then wait two more seconds for images, etc. to load.
     try {
         await page.waitForFunction('map.loaded()');
-            // Wait for 5 seconds on 3d model examples, since this takes longer to load.
+        // Wait for 5 seconds on 3d model examples, since this takes longer to load.
         const waitTime = exampleName.includes('3d-model') ? 5000 : 1500;
         console.log(`waiting for ${waitTime} ms`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -34,7 +34,7 @@ async function createImage(exampleName) {
         // In this case we take the screenshot immediately.
         console.log(`Timed out waiting for map load on ${exampleName}.`);
     }
-    
+
     await page
         .screenshot({
             path: `./docs/assets/examples/${exampleName}.png`,

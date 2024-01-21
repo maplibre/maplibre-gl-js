@@ -76,7 +76,8 @@ function getVersion() { return version; }
  * @returns Number of workers currently configured.
  * @example
  * ```ts
- * maplibregl.getWorkerCount()
+ * const workerCount = maplibregl.getWorkerCount()
+ * ```
  */
 function getWorkerCount() { return WorkerPool.workerCount; }
 /**
@@ -152,11 +153,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  * ```
  */
 function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast('importScript', workerUrl); }
-/**
- * `maplibregl` is the global object that allows configurations that are not specific to a map instance
- *
- * @group Main
- */
+
 export {
     Map,
     NavigationControl,
@@ -185,7 +182,7 @@ export {
     VideoSource,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
-    
+
     prewarm,
     clearPrewarmedResources,
     getVersion,
