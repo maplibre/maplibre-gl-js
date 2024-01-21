@@ -16,12 +16,13 @@ import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
 import {config} from './util/config';
-import {Debug} from './util/debug';
-import {isSafari} from './util/util';
+// HM TODO: bring this back?
+//import {Debug} from './util/debug';
+//import {isSafari} from './util/util';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
 import {WorkerPool} from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
-import {PerformanceUtils} from './util/performance';
+//import {PerformanceUtils} from './util/performance';
 import {AJAXError} from './util/ajax';
 import {GeoJSONSource} from './source/geojson_source';
 import {CanvasSource} from './source/canvas_source';
@@ -37,16 +38,16 @@ const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
 
-function setRTLTextPlugin(pluginURL: string, lazy: boolean) { rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy) };
-function getRTLTextPluginStatus() { rtlMainThreadPluginFactory().getRTLTextPluginStatus() };
+function setRTLTextPlugin(pluginURL: string, lazy: boolean) { rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy); }
+function getRTLTextPluginStatus() { rtlMainThreadPluginFactory().getRTLTextPluginStatus(); }
 function getVersion() { return version; }
-function getWorkerCount() { return WorkerPool.workerCount; };
-function setWorkerCount(count: number) { WorkerPool.workerCount = count; };
-function getMaxParallelImageRequests() {return config.MAX_PARALLEL_IMAGE_REQUESTS; }
+function getWorkerCount() { return WorkerPool.workerCount; }
+function setWorkerCount(count: number) { WorkerPool.workerCount = count; }
+function getMaxParallelImageRequests() { return config.MAX_PARALLEL_IMAGE_REQUESTS; }
 function setMaxParallelImageRequests(numRequests: number) { config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests; }
 function getWorkerUrl() { return config.WORKER_URL; }
 function setWorkerUrl(value: string) { config.WORKER_URL = value; }
-function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast('importScript', workerUrl);};
+function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast('importScript', workerUrl); }
 /**
  * `maplibregl` is the global object that allows configurations that are not specific to a map instance
  *
@@ -252,7 +253,7 @@ export {
      * ```
      */
     importScriptInWorkers
-}
+};
 
 //This gets automatically stripped out in production builds.
 //Debug.extend(MapLibreGL, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
