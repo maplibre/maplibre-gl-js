@@ -106,7 +106,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ${{ github.workspace }}/coverage/coverage-render.json
+          files: ${{ github.workspace }}/coverage/render/coverage-final.json
           verbose: true
       - name: Upload render test failure
         if: failure()
