@@ -23,6 +23,9 @@ const config: RollupOptions[] = [{
         sourcemap: 'inline',
         indent: false,
         chunkFileNames: 'shared.js',
+        amd: {
+            autoId: true,
+        },
         minifyInternalExports: production
     },
     onwarn: (message) => {
@@ -39,7 +42,7 @@ const config: RollupOptions[] = [{
     output: {
         name: 'maplibregl',
         file: outputFile,
-        format: 'umd',
+        format: 'iife',
         sourcemap: true,
         indent: false,
         intro: fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8'),
