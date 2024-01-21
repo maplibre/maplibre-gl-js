@@ -54,7 +54,8 @@ export class AttributionControl implements IControl {
         return 'bottom-right';
     }
 
-    /** {@inheritDoc IControl.onAdd} */
+    // HM TODO: this doesn't work as expected, I need to find a way to fix this.
+    /** {@inheritDoc} */
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options && this.options.compact;
@@ -76,7 +77,7 @@ export class AttributionControl implements IControl {
         return this._container;
     }
 
-    /** {@inheritDoc IControl.onRemove} */
+    /** {@inheritDoc} */
     onRemove() {
         DOM.remove(this._container);
 

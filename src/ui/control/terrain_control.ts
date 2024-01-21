@@ -27,7 +27,7 @@ export class TerrainControl implements IControl {
         this.options = options;
     }
 
-    /** {@inheritDoc IControl.onAdd} */
+    /** {@inheritDoc} */
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
@@ -41,7 +41,7 @@ export class TerrainControl implements IControl {
         return this._container;
     }
 
-    /** {@inheritDoc IControl.onRemove} */
+    /** {@inheritDoc} */
     onRemove() {
         DOM.remove(this._container);
         this._map.off('terrain', this._updateTerrainIcon);

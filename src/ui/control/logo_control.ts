@@ -38,7 +38,7 @@ export class LogoControl implements IControl {
         return 'bottom-left';
     }
 
-    /** {@inheritDoc IControl.onAdd} */
+    /** {@inheritDoc} */
     onAdd(map: Map) {
         this._map = map;
         this._compact = this.options && this.options.compact;
@@ -58,7 +58,7 @@ export class LogoControl implements IControl {
         return this._container;
     }
 
-    /** {@inheritDoc IControl.onRemove} */
+    /** {@inheritDoc} */
     onRemove() {
         DOM.remove(this._container);
         this._map.off('resize', this._updateCompact);

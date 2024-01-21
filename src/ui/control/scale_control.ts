@@ -63,7 +63,7 @@ export class ScaleControl implements IControl {
         updateScale(this._map, this._container, this.options);
     };
 
-    /** {@inheritDoc IControl.onAdd} */
+    /** {@inheritDoc} */
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-scale', map.getContainer());
@@ -74,7 +74,7 @@ export class ScaleControl implements IControl {
         return this._container;
     }
 
-    /** {@inheritDoc IControl.onRemove} */
+    /** {@inheritDoc} */
     onRemove() {
         DOM.remove(this._container);
         this._map.off('move', this._onMove);
