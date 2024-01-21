@@ -805,7 +805,7 @@ async function closePageAndFinish(page: Page, reportCoverage: boolean) {
     const coverageReport = new CoverageReport({
         name: 'MapLibre Coverage Report',
         outputDir: './coverage/render',
-        reports: [['json'], ['html']]
+        reports: [['v8'], ['codecov']]
     });
     coverageReport.cleanCache();
 
