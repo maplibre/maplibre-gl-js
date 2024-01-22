@@ -1,0 +1,115 @@
+{
+    "version": 8,
+    "sprite": "local://sprites/sprite",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "timeout": 60000,
+    "metadata": {
+        "test": {
+            "height": 512,
+            "width": 512,
+            "operations": [
+                [
+                    "wait"
+                ],
+                [
+                    "setTerrain"
+                ],
+                [
+                    "wait"
+                ],
+                [
+                    "setTerrain",
+                    {
+                        "source": "terrain",
+                        "exaggeration": 1
+                    }
+                ],
+                [
+                    "wait"
+                ]
+            ]
+        }
+    },
+    "center": [
+        35.38,
+        31.55
+    ],
+    "zoom": 16.25,
+    "pitch": 53,
+    "sources": {
+        "hillshadeSource": {
+            "type": "raster-dem",
+            "tiles": [
+                "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+            ],
+            "minzoom": 0,
+            "maxzoom": 12
+        },
+        "terrain": {
+            "type": "raster-dem",
+            "tiles": [
+                "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+            ],
+            "minzoom": 7,
+            "maxzoom": 12,
+            "tileSize": 256
+        },
+        "geometry": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {},
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                35.38,
+                                31.55
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "layers": [
+        {
+            "id": "hills",
+            "type": "hillshade",
+            "source": "hillshadeSource",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "hillshade-shadow-color": "#473B24",
+                "hillshade-illumination-anchor": "map",
+                "hillshade-illumination-direction": 150
+            }
+        },
+        {
+            "id": "geometry",
+            "type": "symbol",
+            "source": "geometry",
+            "layout": {
+                "icon-image": "rocket-12",
+                "text-field": "MapLibre",
+                "text-font": [
+                    "Open Sans Semibold",
+                    "Arial Unicode MS Bold"
+                ],
+                "text-allow-overlap": true,
+                "text-ignore-placement": true,
+                "text-offset": [
+                    0,
+                    1
+                ]
+            }
+        }
+    ],
+    "terrain": {
+        "source": "terrain",
+        "exaggeration": 1
+    }
+}

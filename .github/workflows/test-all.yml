@@ -98,11 +98,16 @@ jobs:
         if: runner.os == 'Linux'
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
-      - run: npm run build-prod
+      - run: npm run build-dist
       - run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/coverage/coverage-render.json
+          verbose: true
       - name: Upload render test failure
         if: failure()
         uses: actions/upload-artifact@v4

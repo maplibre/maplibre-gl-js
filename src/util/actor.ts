@@ -64,7 +64,6 @@ export class Actor implements IActor {
 
     /**
      * @param target - The target
-     * @param parent - The parent
      * @param mapId - A unique identifier for the Map instance using this Actor.
      */
     constructor(target: ActorTarget, mapId?: string | number) {

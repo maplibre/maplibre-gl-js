@@ -76,7 +76,7 @@ export type TerrainMesh = {
  */
 export class Terrain {
     /**
-     * The style this terrain crresponds to
+     * The style this terrain corresponds to
      */
     painter: Painter;
     /**

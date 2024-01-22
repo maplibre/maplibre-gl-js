@@ -20,7 +20,9 @@ jobs:
         run: npm ci
 
       - name: Build benchmarks
-        run: npm run build-benchmarks
+        run: |
+          npm run generate-typings
+          npm run build-benchmarks
 
       - name: Copy benchmarks_generated.js
         run: |

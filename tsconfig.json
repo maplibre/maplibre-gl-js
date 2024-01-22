@@ -38,7 +38,8 @@
   "include": [
     "rollup.config.*",
     "src/**/*",
-    "test/bench/**/*"
+    "test/bench/**/*",
+    "test/integration/**/*"
   ],
   "exclude": [
     "node_modules",
