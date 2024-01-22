@@ -52,7 +52,7 @@ For strict CSP environments without `worker-src blob: ; child-src blob:` enabled
 
 ```html
 <script>
-maplibregl.workerUrl = "${urls.js().replace('.js', '-csp-worker.js')}";
+maplibregl.setWorkerUrl("${urls.js().replace('.js', '-csp-worker.js')}");
 ...
 </script>
 ```
