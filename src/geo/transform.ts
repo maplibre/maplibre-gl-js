@@ -31,6 +31,7 @@ export class Transform {
     rotationMatrix: mat2;
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
+    cameraToSeaLevelDistance: number;
     mercatorMatrix: mat4;
     projMatrix: mat4;
     fogMatrix: mat4;
