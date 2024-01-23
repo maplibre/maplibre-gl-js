@@ -1,24 +1,23 @@
 let supportsGeolocation;
 
-export function checkGeolocationSupport(callback: (supported: boolean) => void, forceRecalculation = false): void {
+export async function checkGeolocationSupport(forceRecalculation = false): Promise<boolean> {
     if (supportsGeolocation !== undefined && !forceRecalculation) {
-        callback(supportsGeolocation);
-    } else if (window.navigator.permissions !== undefined) {
-        // navigator.permissions has incomplete browser support
-        // http://caniuse.com/#feat=permissions-api
-        // Test for the case where a browser disables Geolocation because of an
-        // insecure origin
-        window.navigator.permissions.query({name: 'geolocation'}).then((p) => {
-            supportsGeolocation = p.state !== 'denied';
-            callback(supportsGeolocation);
-        }).catch(() => {
-            // Fix for iOS16 which rejects query but still supports geolocation
-            supportsGeolocation = !!window.navigator.geolocation;
-            callback(supportsGeolocation);
-        });
-
-    } else {
-        supportsGeolocation = !!window.navigator.geolocation;
-        callback(supportsGeolocation);
+        return supportsGeolocation;
     }
+    if (window.navigator.permissions === undefined) {
+        supportsGeolocation = !!window.navigator.geolocation;
+        return supportsGeolocation;
+    }
+    // navigator.permissions has incomplete browser support
+    // http://caniuse.com/#feat=permissions-api
+    // Test for the case where a browser disables Geolocation because of an
+    // insecure origin
+    try {
+        const permissions = await window.navigator.permissions.query({name: 'geolocation'});
+        supportsGeolocation = permissions.state !== 'denied'; // eslint-disable-line require-atomic-updates
+    } catch {
+        // Fix for iOS16 which rejects query but still supports geolocation
+        supportsGeolocation = !!window.navigator.geolocation; // eslint-disable-line require-atomic-updates
+    }
+    return supportsGeolocation;
 }

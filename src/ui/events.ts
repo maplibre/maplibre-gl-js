@@ -7,7 +7,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
-import {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -438,7 +438,7 @@ export type MapStyleDataEvent = MapLibreEvent & {
  *
  * @group Event Related
  */
-export type MapSourceDataEvent = MapLibreEvent  & {
+export type MapSourceDataEvent = MapLibreEvent & {
     dataType: 'source';
     /**
      * True if the event has a `dataType` of `source` and the source has no outstanding network requests.
@@ -520,7 +520,7 @@ export class MapMouseEvent extends Event implements MapLibreEvent<MouseEvent> {
     _defaultPrevented: boolean;
 
     constructor(type: string, map: Map, originalEvent: MouseEvent, data: any = {}) {
-        const point = DOM.mousePos(map.getCanvasContainer(), originalEvent);
+        const point = DOM.mousePos(map.getCanvas(), originalEvent);
         const lngLat = map.unproject(point);
         super(type, extend({point, lngLat, originalEvent}, data));
         this._defaultPrevented = false;

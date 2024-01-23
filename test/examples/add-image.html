@@ -22,38 +22,33 @@
             'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
     });
 
-    map.on('load', () => {
-        map.loadImage(
-            'https://upload.wikimedia.org/wikipedia/commons/7/7c/201408_cat.png',
-            (error, image) => {
-                if (error) throw error;
-                map.addImage('cat', image);
-                map.addSource('point', {
-                    'type': 'geojson',
-                    'data': {
-                        'type': 'FeatureCollection',
-                        'features': [
-                            {
-                                'type': 'Feature',
-                                'geometry': {
-                                    'type': 'Point',
-                                    'coordinates': [0, 0]
-                                }
-                            }
-                        ]
+    map.on('load', async () => {
+        image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/7/7c/201408_cat.png');
+        map.addImage('cat', image.data);
+        map.addSource('point', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [0, 0]
+                        }
                     }
-                });
-                map.addLayer({
-                    'id': 'points',
-                    'type': 'symbol',
-                    'source': 'point',
-                    'layout': {
-                        'icon-image': 'cat',
-                        'icon-size': 0.25
-                    }
-                });
+                ]
             }
-        );
+        });
+        map.addLayer({
+            'id': 'points',
+            'type': 'symbol',
+            'source': 'point',
+            'layout': {
+                'icon-image': 'cat',
+                'icon-size': 0.25
+            }
+        });
     });
 </script>
 </body>

@@ -20,14 +20,12 @@ beforeEach(() => {
 });
 
 describe('LogoControl', () => {
-    test('does not appear by default', done => {
+    test('does not appear by default', async () => {
         const map = createMap(undefined, undefined);
-        map.on('load', () => {
-            expect(map.getContainer().querySelectorAll(
-                '.maplibregl-ctrl-logo'
-            )).toHaveLength(0);
-            done();
-        });
+        await map.once('load');
+        expect(map.getContainer().querySelectorAll(
+            '.maplibregl-ctrl-logo'
+        )).toHaveLength(0);
     });
 
     test('is not displayed when the maplibreLogo property is false', done => {

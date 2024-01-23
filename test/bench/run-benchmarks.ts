@@ -47,7 +47,7 @@ try {
     await webPage.setDefaultTimeout(0);
     await webPage.setViewport({width: 1280, height: 1024});
 
-    url.hash = 'NONE';
+    url.hash = 'NONE'; // this will simply load the page without running any benchmarks
     await webPage.goto(url.toString());
 
     // @ts-ignore
@@ -56,14 +56,15 @@ try {
     const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
     // @ts-ignore
     const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
+    const versionsDisplayName = await webPage.evaluate(() => (window as any).versionsDisplayName);
 
+    // The following will run all the tests if no arguments are passed, will run only the tests passed as arguments otherwise
     const toRun = argv._.length > 0 ? argv._ : allNames;
-    toRun.sort();
 
     const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
     const timeWidth = Math.max(...versions.map(v => v.length), 16);
 
-    console.log(''.padStart(nameWidth), ...versions.map(v =>  `${v.padStart(timeWidth)} `));
+    console.log(''.padStart(nameWidth), ...versions.map((v, i) =>  `${(versionsDisplayName[i]).padStart(timeWidth)} `));
 
     const merger = new PDFMerger();
     for (const name of toRun) {
@@ -115,9 +116,10 @@ try {
 
     await merger.save(`${dir}/all.pdf`);
 } catch (error) {
-    console.log(error);
     if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
         console.log('Could not connect to server. Please run \'npm run start-bench\'.');
+    } else {
+        console.log(error);
     }
 } finally {
     await browser.close();

@@ -246,6 +246,7 @@ export class Popup extends Evented {
             this._map.off('mousemove', this._onMouseMove);
             this._map.off('mouseup', this._onMouseUp);
             this._map.off('drag', this._onDrag);
+            this._map._canvasContainer.classList.remove('maplibregl-track-pointer');
             delete this._map;
         }
 
@@ -627,7 +628,7 @@ function normalizeOffset(offset?: Offset | null) {
 
     } else if (typeof offset === 'number') {
         // input specifies a radius from which to calculate offsets at all positions
-        const cornerOffset = Math.round(Math.sqrt(0.5 * Math.pow(offset, 2)));
+        const cornerOffset = Math.round(Math.abs(offset) / Math.SQRT2);
         return {
             'center': new Point(0, 0),
             'top': new Point(0, offset),

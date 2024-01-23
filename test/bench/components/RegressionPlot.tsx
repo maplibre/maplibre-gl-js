@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React from 'react';
 import {Axis} from './Axis';
 import {formatSample, Version, versionColor} from './util';
 
@@ -7,20 +7,9 @@ type RegressionPlotProps = {
     versions: Version[];
 }
 
-type RegressionPlotState = {
-    width: number;
-}
-
 export const RegressionPlot = (props: RegressionPlotProps) => {
-    const [state, setState] = useState<RegressionPlotState>({width: 100});
-    const svgElement = useRef(null);
-
-    useEffect(() => {
-        setState({width: svgElement.current.clientWidth});
-    }, [state]);
-
     const margin = {top: 10, right: 20, bottom: 30, left: 0};
-    const width = useMemo(() => { return state.width - margin.left - margin.right; }, [state]);
+    const width = 960 - margin.left - margin.right;
     const height = 200 - margin.top - margin.bottom;
     const versions = props.versions.filter(version => version.regression);
 
@@ -42,8 +31,7 @@ export const RegressionPlot = (props: RegressionPlotProps) => {
         <svg
             width="100%"
             height={height + margin.top + margin.bottom}
-            style={{overflow: 'visible'}}
-            ref={svgElement}>
+            style={{overflow: 'visible'}}>
             <g transform={`translate(${margin.left},${margin.top})`}>
                 <Axis orientation="bottom" scale={x} transform={`translate(0,${height})`}>
                     <text fill='#000' textAnchor="end" y={-6} x={width}>Iterations</text>

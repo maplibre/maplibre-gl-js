@@ -65,6 +65,7 @@
     "prefer-arrow-callback": "error",
     "prefer-const": ["error", {"destructuring": "all"}],
     "prefer-template": "error",
+    "prefer-spread": "off",
     // @typescript-eslint/quotes requires standard quotes rule to be turned off
     "quotes": "off",
     "@typescript-eslint/quotes": ["error", "single"],

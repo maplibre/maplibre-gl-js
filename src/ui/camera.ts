@@ -1,4 +1,4 @@
-import {extend, warnOnce, clamp, wrap, defaultEasing, pick} from '../util/util';
+import {extend, warnOnce, clamp, wrap, defaultEasing, pick, degreesToRadians} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
@@ -692,15 +692,30 @@ export abstract class Camera extends Evented {
         const tr = this.transform;
         const edgePadding = tr.padding;
 
-        // We want to calculate the upper right and lower left of the box defined by p0 and p1
-        // in a coordinate system rotate to match the destination bearing.
-        const p0world = tr.project(LngLat.convert(p0));
-        const p1world = tr.project(LngLat.convert(p1));
-        const p0rotated = p0world.rotate(-bearing * Math.PI / 180);
-        const p1rotated = p1world.rotate(-bearing * Math.PI / 180);
+        // Consider all corners of the rotated bounding box derived from the given points
+        // when find the camera position that fits the given points.
+        const bounds = new LngLatBounds(p0, p1);
+        const nwWorld = tr.project(bounds.getNorthWest());
+        const neWorld = tr.project(bounds.getNorthEast());
+        const seWorld = tr.project(bounds.getSouthEast());
+        const swWorld = tr.project(bounds.getSouthWest());
 
-        const upperRight = new Point(Math.max(p0rotated.x, p1rotated.x), Math.max(p0rotated.y, p1rotated.y));
-        const lowerLeft = new Point(Math.min(p0rotated.x, p1rotated.x), Math.min(p0rotated.y, p1rotated.y));
+        const bearingRadians = degreesToRadians(-bearing);
+
+        const nwRotatedWorld = nwWorld.rotate(bearingRadians);
+        const neRotatedWorld = neWorld.rotate(bearingRadians);
+        const seRotatedWorld = seWorld.rotate(bearingRadians);
+        const swRotatedWorld = swWorld.rotate(bearingRadians);
+
+        const upperRight = new Point(
+            Math.max(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
+            Math.max(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
+        );
+
+        const lowerLeft = new Point(
+            Math.min(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
+            Math.min(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
+        );
 
         // Calculate zoom: consider the original bbox and padding.
         const size = upperRight.sub(lowerLeft);
@@ -721,11 +736,14 @@ export abstract class Camera extends Evented {
         const paddingOffsetX = (options.padding.left - options.padding.right) / 2;
         const paddingOffsetY = (options.padding.top - options.padding.bottom) / 2;
         const paddingOffset = new Point(paddingOffsetX, paddingOffsetY);
-        const rotatedPaddingOffset = paddingOffset.rotate(bearing * Math.PI / 180);
+        const rotatedPaddingOffset = paddingOffset.rotate(degreesToRadians(bearing));
         const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
         const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
 
-        const center =  tr.unproject(p0world.add(p1world).div(2).sub(offsetAtFinalZoom));
+        const center = tr.unproject(
+            // either world diagonal can be used (NW-SE or NE-SW)
+            nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
+        );
 
         return {
             center,
@@ -742,7 +760,7 @@ export abstract class Camera extends Evented {
      *
      * @param bounds - Center these bounds in the viewport and use the highest
      * zoom level up to and including `Map#getMaxZoom()` that fits them in the viewport.
-     * @param options- Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
+     * @param options - Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
      * @returns `this`
      * @example
@@ -1067,7 +1085,7 @@ export abstract class Camera extends Evented {
     }
 
     _updateElevation(k: number) {
-        this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
+        this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         const elevation = this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
@@ -1427,7 +1445,9 @@ export abstract class Camera extends Evented {
     _renderFrameCallback = () => {
         const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
         this._onEaseFrame(this._easeOptions.easing(t));
-        if (t < 1) {
+
+        // if _stop is called during _onEaseFrame from _fireMoveEvents we should avoid a new _requestRenderFrame, checking it by ensuring _easeFrameId was not deleted
+        if (t < 1 && this._easeFrameId) {
             this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
         } else {
             this.stop();
@@ -1456,7 +1476,7 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Query the current elevation of location. It return null if terrain is not enabled. the elevation is in meters relative to mean sea-level
+     * Query the current elevation of location. Returns `null` if terrain is not enabled. Elevation is in meters relative to mean sea-level.
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
      * @returns elevation in meters
      */

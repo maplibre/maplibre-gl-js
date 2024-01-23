@@ -2,6 +2,13 @@ import {RGBAImage} from '../util/image';
 
 import type {Map} from '../ui/map';
 
+export type SpriteJSON = {[id: string]: StyleImageMetadata & {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+};}
+
 /**
  * The sprite data
  */

@@ -602,6 +602,22 @@ describe('popup', () => {
         expect(
             popup._container.classList.value
         ).not.toContain('maplibregl-popup-track-pointer');
+        expect(
+            map._canvasContainer.classList.value
+        ).not.toContain('maplibregl-track-pointer');
+    });
+
+    test('Pointer-tracked popup calling Popup#remove removes track-pointer class from map (#3434)', () => {
+        const map = createMap();
+        new Popup()
+            .setText('Test')
+            .trackPointer()
+            .addTo(map)
+            .remove();
+
+        expect(
+            map._canvasContainer.classList.value
+        ).not.toContain('maplibregl-track-pointer');
     });
 
     test('Positioned popup lacks pointer-tracking class', () => {

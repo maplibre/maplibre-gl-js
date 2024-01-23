@@ -18,21 +18,30 @@ import {Evented} from './util/evented';
 import {config} from './util/config';
 import {Debug} from './util/debug';
 import {isSafari} from './util/util';
-import {setRTLTextPlugin, getRTLTextPluginStatus} from './source/rtl_text_plugin';
+import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
 import {WorkerPool} from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
 import {PerformanceUtils} from './util/performance';
 import {AJAXError} from './util/ajax';
-import type {RequestParameters, ResponseCallback} from './util/ajax';
-import type {Cancelable} from './types/cancelable';
 import {GeoJSONSource} from './source/geojson_source';
-import {CanvasSource} from './source/canvas_source';
+import {CanvasSource, CanvasSourceSpecification} from './source/canvas_source';
 import {ImageSource} from './source/image_source';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source';
 import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
-
+import {addSourceType, type SourceClass} from './source/source';
+import {addProtocol, removeProtocol} from './source/protocol_crud';
+import {getGlobalDispatcher} from './util/dispatcher';
+import {MapContextEvent, MapMouseEvent, MapTouchEvent, MapWheelEvent} from './ui/events';
+import {IControl} from './ui/control/control';
+import {ScrollZoomHandler} from './ui/handler/scroll_zoom';
+import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch';
+import {DragPanHandler} from './ui/handler/shim/drag_pan';
+import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
+import {BoxZoomHandler} from './ui/handler/box_zoom';
+import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
+import {CustomLayerInterface} from './style/style_layer/custom_style_layer';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -73,7 +82,6 @@ class MapLibreGL {
      * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
      *
      * @param pluginURL - URL pointing to the Mapbox RTL text plugin source.
-     * @param callback - Called with an error argument if there is an error.
      * @param lazy - If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
      * rtl text will then be rendered only after the plugin finishes loading.
      * @example
@@ -82,7 +90,7 @@ class MapLibreGL {
      * ```
      * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
      */
-    static setRTLTextPlugin = setRTLTextPlugin;
+    static setRTLTextPlugin = (pluginURL: string, lazy: boolean) => rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy);
     /**
      * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
      * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
@@ -93,7 +101,7 @@ class MapLibreGL {
      * const pluginStatus = maplibregl.getRTLTextPluginStatus();
      * ```
      */
-    static getRTLTextPluginStatus = getRTLTextPluginStatus;
+    static getRTLTextPluginStatus = () => rtlMainThreadPluginFactory().getRTLTextPluginStatus();
     /**
      * Initializes resources like WebWorkers that can be shared across maps to lower load
      * times in some situations. `maplibregl.workerUrl` and `maplibregl.workerCount`, if being
@@ -182,45 +190,36 @@ class MapLibreGL {
     }
 
     /**
-     * Sets a custom load tile function that will be called when using a source that starts with a custom url schema.
+     * Adds a custom load resource function that will be called when using a URL that starts with a custom url schema.
+     * This will happen in the main thread, and workers might call it if they don't know how to handle the protocol.
      * The example below will be triggered for custom:// urls defined in the sources list in the style definitions.
-     * The function passed will receive the request parameters and should call the callback with the resulting request,
+     * The function passed will receive the request parameters and should return with the resulting resource,
      * for example a pbf vector tile, non-compressed, represented as ArrayBuffer.
      *
      * @param customProtocol - the protocol to hook, for example 'custom'
      * @param loadFn - the function to use when trying to fetch a tile specified by the customProtocol
      * @example
-     * This will fetch a file using the fetch API (this is obviously a non interesting example...)
      * ```ts
-     * maplibregl.addProtocol('custom', (params, callback) => {
-            fetch(`https://${params.url.split("://")[1]}`)
-                .then(t => {
-                    if (t.status == 200) {
-                        t.arrayBuffer().then(arr => {
-                            callback(null, arr, null, null);
-                        });
-                    } else {
-                        callback(new Error(`Tile fetch error: ${t.statusText}`));
-                    }
-                })
-                .catch(e => {
-                    callback(new Error(e));
-                });
-            return { cancel: () => { } };
-        });
+     * // This will fetch a file using the fetch API (this is obviously a non interesting example...)
+     * maplibregl.addProtocol('custom', async (params, abortController) => {
+     *      const t = await fetch(`https://${params.url.split("://")[1]}`);
+     *      if (t.status == 200) {
+     *          const buffer = await t.arrayBuffer();
+     *          return {data: buffer}
+     *      } else {
+     *          throw new Error(`Tile fetch error: ${t.statusText}`);
+     *      }
+     *  });
      * // the following is an example of a way to return an error when trying to load a tile
-     * maplibregl.addProtocol('custom2', (params, callback) => {
-     *      callback(new Error('someErrorMessage'));
-     *      return { cancel: () => { } };
+     * maplibregl.addProtocol('custom2', async (params, abortController) => {
+     *      throw new Error('someErrorMessage'));
      * });
      * ```
      */
-    static addProtocol(customProtocol: string, loadFn: (requestParameters: RequestParameters, callback: ResponseCallback<any>) => Cancelable) {
-        config.REGISTERED_PROTOCOLS[customProtocol] = loadFn;
-    }
+    static addProtocol = addProtocol;
 
     /**
-     * Removes a previously added protocol
+     * Removes a previously added protocol in the main thread.
      *
      * @param customProtocol - the custom protocol to remove registration for
      * @example
@@ -228,12 +227,94 @@ class MapLibreGL {
      * maplibregl.removeProtocol('custom');
      * ```
      */
-    static removeProtocol(customProtocol: string) {
-        delete config.REGISTERED_PROTOCOLS[customProtocol];
-    }
+    static removeProtocol = removeProtocol;
+
+    /**
+     * Adds a [custom source type](#Custom Sources), making it available for use with
+     * {@link Map#addSource}.
+     * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
+     * @param sourceType - A {@link SourceClass} - which is a constructor for the `Source` interface.
+     * @returns a promise that is resolved when the source type is ready or rejected with an error.
+     */
+    static addSourceType = (name: string, sourceType: SourceClass) => addSourceType(name, sourceType);
+
+    /**
+     * Allows loading javascript code in the worker thread.
+     * *Note* that since this is using some very internal classes and flows it is considered experimental and can break at any point.
+     *
+     * It can be useful for the following examples:
+     * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
+     * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which sould come with `addSourceType` usually.
+     * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
+     * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
+     * @returns
+     *
+     * @example
+     * ```ts
+     * // below is an example of sending a js file to the worker to load the method there
+     * // Note that you'll need to call the global function `addProtocol` in the worker to register the protocol there.
+     * // add-protocol-worker.js
+     * async function loadFn(params, abortController) {
+     *     const t = await fetch(`https://${params.url.split("://")[1]}`);
+     *     if (t.status == 200) {
+     *         const buffer = await t.arrayBuffer();
+     *         return {data: buffer}
+     *     } else {
+     *         throw new Error(`Tile fetch error: ${t.statusText}`);
+     *     }
+     * }
+     * self.addPRotocol('custom', loadFn);
+     *
+     * // main.js
+     * maplibregl.importScriptInWorkers('add-protocol-worker.js');
+     * ```
+     */
+    static importScriptInWorkers = (workerUrl: string) => {
+        return getGlobalDispatcher().broadcast('importScript', workerUrl);
+    };
 }
 
 //This gets automatically stripped out in production builds.
 Debug.extend(MapLibreGL, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
+
+export {
+    type Map,
+    type NavigationControl,
+    type GeolocateControl,
+    type AttributionControl,
+    type LogoControl,
+    type ScaleControl,
+    type FullscreenControl,
+    type TerrainControl,
+    type Popup,
+    type Marker,
+    type Style,
+    type LngLat,
+    type LngLatBounds,
+    type Point,
+    type MercatorCoordinate,
+    type Evented,
+    type AJAXError,
+    type CanvasSource,
+    type GeoJSONSource,
+    type ImageSource,
+    type RasterDEMTileSource,
+    type RasterTileSource,
+    type VectorTileSource,
+    type VideoSource,
+    type MapMouseEvent,
+    type MapTouchEvent,
+    type MapWheelEvent,
+    type MapContextEvent,
+    type IControl,
+    type ScrollZoomHandler,
+    type TwoFingersTouchZoomRotateHandler,
+    type DragPanHandler,
+    type DoubleClickZoomHandler,
+    type BoxZoomHandler,
+    type DragRotateHandler,
+    type CustomLayerInterface,
+    type CanvasSourceSpecification
+};
 
 export default MapLibreGL;

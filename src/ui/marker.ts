@@ -297,6 +297,8 @@ export class Marker extends Evented {
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
         map.on('moveend', this._update);
+        map.on('terrain', this._update);
+
         this.setDraggable(this._draggable);
         this._update();
 
@@ -419,7 +421,7 @@ export class Marker extends Evented {
             if (!('offset' in popup.options)) {
                 const markerHeight = 41 - (5.8 / 2);
                 const markerRadius = 13.5;
-                const linearOffset = Math.sqrt(Math.pow(markerRadius, 2) / 2);
+                const linearOffset = Math.abs(markerRadius) / Math.SQRT2;
                 popup.options.offset = this._defaultMarker ? {
                     'top': [0, 0],
                     'top-left': [0, 0],
@@ -504,8 +506,50 @@ export class Marker extends Evented {
         return this;
     }
 
-    _update = (e?: { type: 'move' | 'moveend' }) => {
+    _updateOpacity(force: boolean = false) {
+        const terrain = this._map.terrain;
+        if (!terrain) {
+            if (this._element.style.opacity === '0.2') { this._element.style.opacity = '1'; }
+            return;
+        }
+        if (force) {
+            this._opacityTimeout = null;
+        } else {
+            if (this._opacityTimeout) { return; }
+            this._opacityTimeout = setTimeout(() => {
+                this._opacityTimeout = null;
+            }, 100);
+        }
+
+        const map = this._map;
+
+        // Read depth framebuffer, getting position of terrain in line of sight to marker
+        const terrainDistance = map.terrain.depthAtPoint(this._pos);
+        // Transform marker position to clip space
+        const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
+        const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
+
+        const forgiveness = .006;
+        if (markerDistance - terrainDistance < forgiveness) {
+            this._element.style.opacity = '1';
+            return;
+        }
+        // If the base is obscured, use the offset to check if the marker's center is obscured.
+        const metersToCenter = -this._offset.y / map.transform._pixelPerMeter;
+        const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
+        const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
+        const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
+        // Display at full opacity if center is visible.
+        this._element.style.opacity = (markerDistanceCenter - terrainDistanceCenter > forgiveness) ? '0.2' : '1.0';
+    }
+
+    _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
         if (!this._map) return;
+
+        const isFullyLoaded = this._map.loaded() && !this._map.isMoving();
+        if (e?.type === 'terrain' || (e?.type === 'render' && !isFullyLoaded)) {
+            this._map.once('render', this._update);
+        }
 
         if (this._map.transform.renderWorldCopies) {
             this._lngLat = smartWrap(this._lngLat, this._pos, this._map.transform);
@@ -535,15 +579,7 @@ export class Marker extends Evented {
         }
 
         DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
-
-        // in case of 3D, ask the terrain coords-framebuffer for this pos and check if the marker is visible
-        // call this logic in setTimeout with a timeout of 100ms to save performance in map-movement
-        if (this._map.terrain && !this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
-            const lnglat = this._map.unproject(this._pos);
-            const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI / 180)) / Math.pow(2, this._map.transform.tileZoom + 8);
-            this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
-            this._opacityTimeout = null;
-        }, 100);
+        this._updateOpacity(e && e.type === 'moveend');
     };
 
     /**

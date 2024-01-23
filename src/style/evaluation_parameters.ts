@@ -1,6 +1,6 @@
 import {ZoomHistory} from './zoom_history';
 import {isStringInSupportedScript} from '../util/script_detection';
-import {plugin as rtlTextPlugin} from '../source/rtl_text_plugin';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
 
 import type {TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -39,7 +39,7 @@ export class EvaluationParameters {
     }
 
     isSupportedScript(str: string): boolean {
-        return isStringInSupportedScript(str, rtlTextPlugin.isLoaded());
+        return isStringInSupportedScript(str, rtlWorkerPlugin.getRTLTextPluginStatus() === 'loaded');
     }
 
     crossFadingFactor() {

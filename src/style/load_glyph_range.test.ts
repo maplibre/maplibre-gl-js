@@ -2,9 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import {RequestManager} from '../util/request_manager';
 import {loadGlyphRange} from './load_glyph_range';
-import {fakeXhr} from 'nise';
+import {fakeServer} from 'nise';
+import {bufferToArrayBuffer} from '../util/test/util';
 
-test('loadGlyphRange', done => {
+test('loadGlyphRange', async ()  => {
     global.fetch = null;
 
     const transform = jest.fn().mockImplementation((url) => {
@@ -13,31 +14,27 @@ test('loadGlyphRange', done => {
 
     const manager = new RequestManager(transform);
 
-    let request;
-    fakeXhr.useFakeXMLHttpRequest().onCreate = (req) => { request = req; };
+    const server = fakeServer.create();
+    server.respondWith(bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'))));
 
-    loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager, (err, result) => {
-        expect(err).toBeFalsy();
-        expect(transform).toHaveBeenCalledTimes(1);
-        expect(transform).toHaveBeenCalledWith('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs');
+    const promise = loadGlyphRange('Arial Unicode MS', 0, 'https://localhost/fonts/v1/{fontstack}/{range}.pbf', manager);
+    server.respond();
+    const result = await promise;
 
-        expect(Object.keys(result)).toHaveLength(223);
-        for (const key in result) {
-            const id = Number(key);
-            const glyph = result[id];
+    expect(transform).toHaveBeenCalledTimes(1);
+    expect(transform).toHaveBeenCalledWith('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf', 'Glyphs');
 
-            expect(glyph.id).toBe(Number(id));
-            expect(glyph.metrics).toBeTruthy();
-            expect(typeof glyph.metrics.width).toBe('number');
-            expect(typeof glyph.metrics.height).toBe('number');
-            expect(typeof glyph.metrics.top).toBe('number');
-            expect(typeof glyph.metrics.advance).toBe('number');
-        }
-        done();
-    });
+    expect(Object.keys(result)).toHaveLength(223);
+    for (const key in result) {
+        const id = Number(key);
+        const glyph = result[id];
 
-    expect(request.url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
-    request.setStatus(200);
-    request.response = fs.readFileSync(path.join(__dirname, '../../test/unit/assets/0-255.pbf'));
-    request.onload();
+        expect(glyph.id).toBe(Number(id));
+        expect(glyph.metrics).toBeTruthy();
+        expect(typeof glyph.metrics.width).toBe('number');
+        expect(typeof glyph.metrics.height).toBe('number');
+        expect(typeof glyph.metrics.top).toBe('number');
+        expect(typeof glyph.metrics.advance).toBe('number');
+    }
+    expect(server.requests[0].url).toBe('https://localhost/fonts/v1/Arial Unicode MS/0-255.pbf');
 });

@@ -2,11 +2,8 @@ import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' assert {type: 'json'};
-
-import {getJSON} from '../util/ajax';
+import {GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
-import type {GetImageCallback} from '../util/image_request';
-
 import {RequestManager, ResourceType} from '../util/request_manager';
 import {Style, StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -20,15 +17,19 @@ import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {AttributionControl} from './control/attribution_control';
 import {LogoControl} from './control/logo_control';
-
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
 import {MapEventType, MapLayerEventType, MapMouseEvent, MapSourceDataEvent, MapStyleDataEvent} from './events';
 import {TaskQueue} from '../util/task_queue';
+import {throttle} from '../util/throttle';
 import {webpSupported} from '../util/webp_supported';
 import {PerformanceMarkers, PerformanceUtils} from '../util/performance';
-import {Source, SourceClass} from '../source/source';
+import {Source} from '../source/source';
 import {StyleLayer} from '../style/style_layer';
+import {Terrain} from '../render/terrain';
+import {RenderToTexture} from '../render/render_to_texture';
+import {config} from '../util/config';
+import {defaultLocale} from './default_locale';
 
 import type {RequestTransformFunction} from '../util/request_manager';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -41,14 +42,12 @@ import type {ScrollZoomHandler} from './handler/scroll_zoom';
 import type {BoxZoomHandler} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
 import type {DragRotateHandler} from './handler/shim/drag_rotate';
-import {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
-
+import type {DragPanHandler, DragPanOptions} from './handler/shim/drag_pan';
+import type {CooperativeGesturesHandler, GestureOptions} from './handler/cooperative_gestures';
 import type {KeyboardHandler} from './handler/keyboard';
 import type {DoubleClickZoomHandler} from './handler/shim/dblclick_zoom';
 import type {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
-import {defaultLocale} from './default_locale';
 import type {TaskID} from '../util/task_queue';
-import type {Cancelable} from '../types/cancelable';
 import type {
     FilterSpecification,
     StyleSpecification,
@@ -57,13 +56,8 @@ import type {
     TerrainSpecification,
     SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
-
-import {Callback} from '../types/callback';
-import type {ControlPosition, IControl} from './control/control';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import {Terrain} from '../render/terrain';
-import {RenderToTexture} from '../render/render_to_texture';
-import {config} from '../util/config';
+import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 
 const version = packageJSON.version;
@@ -103,7 +97,7 @@ export type MapOptions = {
      */
     attributionControl?: boolean;
     /**
-     * Attribuition text to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
+     * Attribution text to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
      */
     customAttribution?: string | Array<string>;
     /**
@@ -328,23 +322,6 @@ export type MapOptions = {
     maxCanvasSize?: [number, number];
 };
 
-/**
- * An options object for the gesture settings
- * @example
- * ```ts
- * let options = {
- *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
- *   macHelpText: "Use ⌘ + scroll to zoom the map",
- *   mobileHelpText: "Use two fingers to move the map",
- * }
- * ```
- */
-export type GestureOptions = {
-    windowsHelpText?: string;
-    macHelpText?: string;
-    mobileHelpText?: string;
-};
-
 export type AddImageOptions = {
 
 }
@@ -388,7 +365,7 @@ const defaultOptions = {
     doubleClickZoom: true,
     touchZoomRotate: true,
     touchPitch: true,
-    cooperativeGestures: undefined,
+    cooperativeGestures: false,
 
     bearingSnap: 7,
     clickTolerance: 3,
@@ -456,9 +433,6 @@ export class Map extends Camera {
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
-    _cooperativeGestures: boolean | GestureOptions;
-    _cooperativeGesturesScreen: HTMLElement;
-    _metaKey: keyof MouseEvent;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
@@ -468,7 +442,7 @@ export class Map extends Camera {
     _canvas: HTMLCanvasElement;
     _maxTileCacheSize: number;
     _maxTileCacheZoomLevels: number;
-    _frame: Cancelable;
+    _frameRequest: AbortController;
     _styleDirty: boolean;
     _sourcesDirty: boolean;
     _placementDirty: boolean;
@@ -557,6 +531,12 @@ export class Map extends Camera {
      */
     touchPitch: TwoFingersTouchPitchHandler;
 
+    /**
+     * The map's {@link CooperativeGesturesHandler}, which allows the user to see cooperative gesture info when user tries to zoom in/out.
+     * Find more details and examples using `cooperativeGestures` in the {@link CooperativeGesturesHandler} section.
+     */
+    cooperativeGestures: CooperativeGesturesHandler;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -582,8 +562,6 @@ export class Map extends Camera {
         super(transform, {bearingSnap: options.bearingSnap});
 
         this._interactive = options.interactive;
-        this._cooperativeGestures = options.cooperativeGestures;
-        this._metaKey = navigator.platform.indexOf('Mac') === 0 ? 'metaKey' : 'ctrlKey';
         this._maxTileCacheSize = options.maxTileCacheSize;
         this._maxTileCacheZoomLevels = options.maxTileCacheZoomLevels;
         this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
@@ -639,24 +617,22 @@ export class Map extends Camera {
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
             let initialResizeEventCaptured = false;
+            const throttledResizeCallback = throttle((entries: ResizeObserverEntry[]) => {
+                if (this._trackResize && !this._removed) {
+                    this.resize(entries)._update();
+                }
+            }, 50);
             this._resizeObserver = new ResizeObserver((entries) => {
                 if (!initialResizeEventCaptured) {
                     initialResizeEventCaptured = true;
                     return;
                 }
-
-                if (this._trackResize) {
-                    this.resize(entries)._update();
-                }
+                throttledResizeCallback(entries);
             });
             this._resizeObserver.observe(this._container);
         }
 
         this.handlers = new HandlerManager(this, options as CompleteMapOptions);
-
-        if (this._cooperativeGestures) {
-            this._setupCooperativeGestures();
-        }
 
         const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
         this._hash = options.hash && (new Hash(hashName)).addTo(this);
@@ -1154,32 +1130,6 @@ export class Map extends Camera {
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
         this.transform.renderWorldCopies = renderWorldCopies;
         return this._update();
-    }
-
-    /**
-     * Gets the map's cooperativeGestures option
-     *
-     * @returns The gestureOptions
-     */
-    getCooperativeGestures(): boolean | GestureOptions {
-        return this._cooperativeGestures;
-    }
-
-    /**
-     * Sets or clears the map's cooperativeGestures option
-     *
-     * @param gestureOptions - If `true` or set to an options object, map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture.
-     * @returns `this`
-     */
-    setCooperativeGestures(gestureOptions?: GestureOptions | boolean | null): Map {
-        this._cooperativeGestures = gestureOptions;
-        if (this._cooperativeGestures) {
-            this._setupCooperativeGestures();
-        } else {
-            this._destroyCooperativeGestures();
-        }
-
-        return this;
     }
 
     /**
@@ -1826,11 +1776,11 @@ export class Map extends Camera {
         if (typeof style === 'string') {
             const url = style;
             const request = this._requestManager.transformRequest(url, ResourceType.Style);
-            getJSON(request, (error?: Error | null, json?: any | null) => {
+            getJSON<StyleSpecification>(request, new AbortController()).then((response) => {
+                this._updateDiff(response.data, options);
+            }).catch((error) => {
                 if (error) {
                     this.fire(new ErrorEvent(error));
-                } else if (json) {
-                    this._updateDiff(json, options);
                 }
             });
         } else if (typeof style === 'object') {
@@ -1961,7 +1911,7 @@ export class Map extends Camera {
      * map.setTerrain({ source: 'terrain' });
      * ```
      */
-    setTerrain(options: TerrainSpecification): this {
+    setTerrain(options: TerrainSpecification | null): this {
         this.style._checkLoaded();
 
         // clear event handlers
@@ -1973,12 +1923,14 @@ export class Map extends Camera {
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
-            this.transform._minEleveationForCurrentTile = 0;
+            this.transform.minElevationForCurrentTile = 0;
             this.transform.elevation = 0;
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            // Update terrain tiles when adding new terrain
+            if (this.terrain === null) sourceCache.reload();
             // Warn once if user is using the same source for hillshade and terrain
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
@@ -1988,14 +1940,14 @@ export class Map extends Camera {
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
-            this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+            this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
                     this.terrain.sourceCache.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
-                        this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+                        this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                         this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
@@ -2016,8 +1968,8 @@ export class Map extends Camera {
      * map.getTerrain(); // { source: 'terrain' };
      * ```
      */
-    getTerrain(): TerrainSpecification {
-        return this.terrain && this.terrain.options;
+    getTerrain(): TerrainSpecification | null {
+        return this.terrain?.options ?? null;
     }
 
     /**
@@ -2041,18 +1993,6 @@ export class Map extends Camera {
             }
         }
         return true;
-    }
-
-    /**
-     * Adds a [custom source type](#Custom Sources), making it available for use with
-     * {@link Map#addSource}.
-     * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
-     * @param SourceType - A {@link Source} constructor.
-     * @param callback - Called when the source type is ready or with an error argument if there is an error.
-     */
-    addSourceType(name: string, SourceType: SourceClass, callback: Callback<void>) {
-        this._lazyInitEmptyStyle();
-        return this.style.addSourceType(name, SourceType, callback);
     }
 
     /**
@@ -2303,21 +2243,19 @@ export class Map extends Camera {
      * domains must support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
      *
      * @param url - The URL of the image file. Image file must be in png, webp, or jpg format.
-     * @param callback - Expecting `callback(error, data)`. Called when the image has loaded or with an error argument if there is an error.
+     * @returns a promise that is resolved when the image is loaded
      *
      * @example
      * Load an image from an external URL.
      * ```ts
-     * map.loadImage('http://placekitten.com/50/50', function(error, image) {
-     *   if (error) throw error;
-     *   // Add the loaded image to the style's sprite with the ID 'kitten'.
-     *   map.addImage('kitten', image);
-     * });
+     * const response = await map.loadImage('http://placekitten.com/50/50');
+     * // Add the loaded image to the style's sprite with the ID 'kitten'.
+     * map.addImage('kitten', response.data);
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
      */
-    loadImage(url: string, callback: GetImageCallback) {
-        ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), callback);
+    loadImage(url: string): Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> {
+        return ImageRequest.getImage(this._requestManager.transformRequest(url, ResourceType.Image), new AbortController());
     }
 
     /**
@@ -2479,6 +2417,20 @@ export class Map extends Camera {
     }
 
     /**
+     * Return the ids of all layers currently in the style, including custom layers, in order.
+     *
+     * @returns ids of layers, in order
+     *
+     * @example
+     * ```ts
+     * const orderedLayerIds = map.getLayersOrder();
+     * ```
+     */
+    getLayersOrder(): string[] {
+        return this.style.getLayersOrder();
+    }
+
+    /**
      * Sets the zoom extent for the specified style layer. The zoom extent includes the
      * [minimum zoom level](https://maplibre.org/maplibre-style-spec/layers/#minzoom)
      * and [maximum zoom level](https://maplibre.org/maplibre-style-spec/layers/#maxzoom))
@@ -2560,6 +2512,7 @@ export class Map extends Camera {
      * @param name - The name of the paint property to set.
      * @param value - The value of the paint property to set.
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
+     * Pass `null` to unset the existing value.
      * @param options - Options object.
      * @returns `this`
      * @example
@@ -2962,39 +2915,6 @@ export class Map extends Camera {
         this._container.addEventListener('scroll', this._onMapScroll, false);
     }
 
-    _cooperativeGesturesOnWheel = (event: WheelEvent) => {
-        this._onCooperativeGesture(event, event[this._metaKey], 1);
-    };
-
-    _setupCooperativeGestures() {
-        const container = this._container;
-        this._cooperativeGesturesScreen = DOM.create('div', 'maplibregl-cooperative-gesture-screen', container);
-        let desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.windowsHelpText ? this._cooperativeGestures.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
-        if (navigator.platform.indexOf('Mac') === 0) {
-            desktopMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.macHelpText ? this._cooperativeGestures.macHelpText : 'Use ⌘ + scroll to zoom the map';
-        }
-        const mobileMessage = typeof this._cooperativeGestures !== 'boolean' && this._cooperativeGestures.mobileHelpText ? this._cooperativeGestures.mobileHelpText : 'Use two fingers to move the map';
-        this._cooperativeGesturesScreen.innerHTML = `
-            <div class="maplibregl-desktop-message">${desktopMessage}</div>
-            <div class="maplibregl-mobile-message">${mobileMessage}</div>
-        `;
-
-        // Remove cooperative gesture screen from the accessibility tree since screenreaders cannot interact with the map using gestures
-        this._cooperativeGesturesScreen.setAttribute('aria-hidden', 'true');
-
-        // Add event to canvas container since gesture container is pointer-events: none
-        this._canvasContainer.addEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-
-        // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
-        this._canvasContainer.classList.add('maplibregl-cooperative-gestures');
-    }
-
-    _destroyCooperativeGestures() {
-        DOM.remove(this._cooperativeGesturesScreen);
-        this._canvasContainer.removeEventListener('wheel', this._cooperativeGesturesOnWheel, false);
-        this._canvasContainer.classList.remove('maplibregl-cooperative-gestures');
-    }
-
     _resizeCanvas(width: number, height: number, pixelRatio: number) {
         // Request the required canvas size taking the pixelratio into account.
         this._canvas.width = Math.floor(pixelRatio * width);
@@ -3046,9 +2966,9 @@ export class Map extends Camera {
 
     _contextLost = (event: any) => {
         event.preventDefault();
-        if (this._frame) {
-            this._frame.cancel();
-            this._frame = null;
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
         }
         this.fire(new Event('webglcontextlost', {originalEvent: event}));
     };
@@ -3068,17 +2988,6 @@ export class Map extends Camera {
         this._container.scrollLeft = 0;
         return false;
     };
-
-    _onCooperativeGesture(event: any, metaPress, touches) {
-        if (!metaPress && touches < 2) {
-            // Alert user how to scroll/pan
-            this._cooperativeGesturesScreen.classList.add('maplibregl-show');
-            setTimeout(() => {
-                this._cooperativeGesturesScreen.classList.remove('maplibregl-show');
-            }, 100);
-        }
-        return false;
-    }
 
     /**
      * Returns a Boolean indicating whether the map is fully loaded.
@@ -3189,12 +3098,12 @@ export class Map extends Camera {
         // update terrain stuff
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
-            this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+            this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             if (!this._elevationFreeze) {
                 this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             }
         } else {
-            this.transform._minEleveationForCurrentTile = 0;
+            this.transform.minElevationForCurrentTile = 0;
             this.transform.elevation = 0;
         }
 
@@ -3261,9 +3170,9 @@ export class Map extends Camera {
     redraw(): this {
         if (this.style) {
             // cancel the scheduled update
-            if (this._frame) {
-                this._frame.cancel();
-                this._frame = null;
+            if (this._frameRequest) {
+                this._frameRequest.abort();
+                this._frameRequest = null;
             }
             this._render(0);
         }
@@ -3285,9 +3194,9 @@ export class Map extends Camera {
         for (const control of this._controls) control.onRemove(this);
         this._controls = [];
 
-        if (this._frame) {
-            this._frame.cancel();
-            this._frame = null;
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
         }
         this._renderTaskQueue.clear();
         this.painter.destroy();
@@ -3307,9 +3216,6 @@ export class Map extends Camera {
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
         DOM.remove(this._controlContainer);
-        if (this._cooperativeGestures) {
-            this._destroyCooperativeGestures();
-        }
         this._container.classList.remove('maplibregl-map');
 
         PerformanceUtils.clearMetrics();
@@ -3330,12 +3236,13 @@ export class Map extends Camera {
      * @see [Add an animated icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image-animated/)
      */
     triggerRepaint() {
-        if (this.style && !this._frame) {
-            this._frame = browser.frame((paintStartTimeStamp: number) => {
+        if (this.style && !this._frameRequest) {
+            this._frameRequest = new AbortController();
+            browser.frameAsync(this._frameRequest).then((paintStartTimeStamp: number) => {
                 PerformanceUtils.frame(paintStartTimeStamp);
-                this._frame = null;
+                this._frameRequest = null;
                 this._render(paintStartTimeStamp);
-            });
+            }).catch(() => {}); // ignore abort error
         }
     }
 

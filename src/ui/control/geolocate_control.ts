@@ -234,7 +234,7 @@ export class GeolocateControl extends Evented implements IControl {
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
-        checkGeolocationSupport(this._setupUI);
+        checkGeolocationSupport().then((supported) => this._setupUI(supported));
         return this._container;
     }
 
@@ -519,8 +519,7 @@ export class GeolocateControl extends Evented implements IControl {
             this._map.on('zoom', this._onZoom);
         }
 
-        this._geolocateButton.addEventListener('click',
-            this.trigger.bind(this));
+        this._geolocateButton.addEventListener('click', () => this.trigger());
 
         this._setup = true;
 

@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import puppeteer from 'puppeteer';
 import packageJson from '../package.json' assert { type: 'json' };
+import {sleep} from '../src/util/test/util';
 
 const exampleName = process.argv[2];
 const examplePath = path.resolve('test', 'examples');
@@ -28,10 +29,8 @@ async function createImage(exampleName) {
         .then(async () => {
             // Wait for 5 seconds on 3d model examples, since this takes longer to load.
             const waitTime = exampleName.includes('3d-model') ? 5000 : 1500;
-            await new Promise((resolve) => {
-                console.log(`waiting for ${waitTime} ms`);
-                setTimeout(resolve, waitTime);
-            });
+            console.log(`waiting for ${waitTime} ms`);
+            await sleep(waitTime);
         })
         // map.loaded() does not evaluate to true within 3 seconds, it's probably an animated example.
         // In this case we take the screenshot immediately.

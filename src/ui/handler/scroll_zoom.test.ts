@@ -295,4 +295,59 @@ describe('ScrollZoomHandler', () => {
 
         map.remove();
     });
+
+    test('Terrain 3D zoom is in the same direction when pointing above horizon or under horizon', () => {
+        // See also https://github.com/maplibre/maplibre-gl-js/issues/3398
+        const browserNow = jest.spyOn(browser, 'now');
+        let now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        let map = createMap();
+        map._renderTaskQueue.run();
+        map.terrain = {
+            pointCoordinate: () => null
+        } as any;
+        map.setZoom(5);
+        map.setMaxPitch(85);
+        map.setPitch(80);
+        map._renderTaskQueue.run();
+
+        // simulate a single 'wheel' event on top of screen
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: map.getCanvas().width / 2, clientY: 10});
+        map._renderTaskQueue.run();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
+        // On Top, use center point
+        expect(map.getCenter().lat).toBeCloseTo(0, 3);
+        expect(map.getCenter().lng).toBeCloseTo(0, 3);
+        expect(map.getZoom()).toBeCloseTo(5.02856, 3);
+
+        // do the same test on the bottom
+        map = createMap();
+        map._renderTaskQueue.run();
+        map.terrain = {
+            pointCoordinate: () => null
+        } as any;
+        map.setZoom(5);
+        map.setMaxPitch(85);
+        map.setPitch(80);
+        map._renderTaskQueue.run();
+
+        // simulate a single 'wheel' event on bottom of screen
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta, clientX: map.getCanvas().width / 2, clientY: map.getCanvas().height - 10});
+        map._renderTaskQueue.run();
+
+        now += 400;
+        browserNow.mockReturnValue(now);
+        map._renderTaskQueue.run();
+
+        expect(map.getCenter().lat).toBeCloseTo(-0.125643, 3);
+        expect(map.getCenter().lng).toBeCloseTo(0.0, 3);
+        expect(map.getZoom()).toBeCloseTo(5.02856, 3);
+
+        map.remove();
+    });
 });

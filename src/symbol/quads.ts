@@ -274,10 +274,12 @@ export function getGlyphQuads(
                 builtInOffset = [0, 0];
             }
 
+            const textureScale = positionedGlyph.metrics.isDoubleResolution ? 2 : 1;
+
             const x1 = (positionedGlyph.metrics.left - rectBuffer) * positionedGlyph.scale - halfAdvance + builtInOffset[0];
             const y1 = (-positionedGlyph.metrics.top - rectBuffer) * positionedGlyph.scale + builtInOffset[1];
-            const x2 = x1 + textureRect.w * positionedGlyph.scale / pixelRatio;
-            const y2 = y1 + textureRect.h * positionedGlyph.scale / pixelRatio;
+            const x2 = x1 + textureRect.w / textureScale * positionedGlyph.scale / pixelRatio;
+            const y2 = y1 + textureRect.h / textureScale * positionedGlyph.scale / pixelRatio;
 
             const tl = new Point(x1, y1);
             const tr = new Point(x2, y1);

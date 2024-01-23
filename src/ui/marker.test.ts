@@ -800,14 +800,73 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         map.terrain = {
-            getElevationForLngLatZoom: () => 0
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .9
         } as any as Terrain;
+        map.transform.lngLatToCameraDepth = () => .95;
 
         marker.setOffset([10, 10]);
 
         expect(setTimeout).toHaveBeenCalled();
         marker.remove();
         expect(clearTimeout).toHaveBeenCalled();
+
+        map.remove();
+    });
+
+    test('Marker after the terrain event must listen to the render event till is fully loaded', async () => {
+        const map = createMap();
+
+        new Marker()
+            .setLngLat([1, 1])
+            .addTo(map);
+
+        expect(map._oneTimeListeners.render).toBeUndefined();
+
+        map.fire('terrain');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+
+        map.fire('render');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+
+        map.fire('render');
+        expect(map._oneTimeListeners.render).toHaveLength(1);
+
+        // await idle to be fully loaded
+        await map.once('idle');
+        map.fire('render');
+        expect(map._oneTimeListeners.render).toHaveLength(0);
+        map.remove();
+    });
+
+    test('Marker changes opacity behind terrain and when terrain is removed', () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        expect(marker.getElement().style.opacity).toMatch('');
+
+        // Add terrain, not blocking marker
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .95 // Mocking distance to terrain
+        } as any as Terrain;
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('1');
+
+        // Terrain blocks marker
+        map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
+        map.fire('moveend');
+
+        expect(marker.getElement().style.opacity).toMatch('.2');
+
+        // Remove terrain
+        map.terrain = null;
+        map.fire('terrain');
+        expect(marker.getElement().style.opacity).toMatch('1');
 
         map.remove();
     });

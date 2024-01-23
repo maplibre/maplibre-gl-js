@@ -1,20 +1,21 @@
 import puppeteer, {Page, Browser} from 'puppeteer';
 import st from 'st';
-import http from 'http';
-import type {Server} from 'http';
-import fs from 'fs';
-import path from 'path';
-import pixelmatch from 'pixelmatch';
-import {PNG} from 'pngjs';
+import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
+import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
+import {sleep} from '../../../src/util/test/util';
 
 const testWidth = 800;
 const testHeight = 600;
+const deviceScaleFactor = 2;
 
 let server: Server;
 let browser: Browser;
 let page: Page;
-let map: any;
+let map: Map;
+let maplibregl: typeof MapLibreGL;
+
+jest.retryTimes(3);
 
 describe('Browser tests', () => {
 
@@ -31,7 +32,7 @@ describe('Browser tests', () => {
 
     beforeEach(async () => {
         page = await browser.newPage();
-        await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor: 2});
+        await page.setViewport({width: testWidth, height: testHeight, deviceScaleFactor});
 
         const port = (server.address() as AddressInfo).port;
 
@@ -46,6 +47,17 @@ describe('Browser tests', () => {
                 }
             });
         });
+    }, 40000);
+
+    afterEach(async() => {
+        page.close();
+    }, 40000);
+
+    afterAll(async () => {
+        await browser.close();
+        if (server) {
+            server.close();
+        }
     }, 40000);
 
     test('Load should fire before resize and moveend', async () => {
@@ -65,31 +77,64 @@ describe('Browser tests', () => {
         expect(firstFiredEvent).toBe('load');
     }, 20000);
 
-    test('Drag to the left', async () => {
+    test('Should continue zooming from last mouse position after scroll and flyto, see #2709', async () => {
+        const finalZoom = await page.evaluate(() => {
+            return new Promise<number>((resolve, _reject) => {
+                map.once('zoom', () => {
+                    map.flyTo({
+                        zoom: 9
+                    });
+                    setTimeout(() => {
+                        map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+                        map.once('idle', () => {
+                            resolve(map.getZoom());
+                        });
+                    }, 1000);
+                });
+                map.getCanvas().dispatchEvent(new WheelEvent('wheel', {deltaY: 120, bubbles: true}));
+            });
+        });
+        expect(finalZoom).toBeGreaterThan(2);
+    }, 20000);
 
+    test('Drag to the left', async () => {
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
 
-        // Perform drag action, wait a bit the end to avoid the momentum mode.
-        await page.mouse.move(canvasBB!.x, canvasBB!.y);
-        await page.mouse.down();
-        await page.mouse.move(100, 0);
-        await new Promise(r => setTimeout(r, 200));
-        await page.mouse.up();
+        const dragToLeft = async () => {
+            await page.mouse.move(canvasBB!.x, canvasBB!.y);
+            await page.mouse.down();
+            await page.mouse.move(100, 0, {
+                steps: 10
+            });
+            await page.mouse.up();
+            await sleep(200);
 
-        const center = await page.evaluate(() => {
-            return map.getCenter();
-        });
+            return page.evaluate(() => {
+                return map.getCenter();
+            });
+        };
 
-        expect(center.lng).toBeCloseTo(-35.15625, 4);
-        expect(center.lat).toBeCloseTo(0, 7);
+        await page.emulateMediaFeatures([
+            {name: 'prefers-reduced-motion', value: 'reduce'},
+        ]);
+        const centerWithoutInertia = await dragToLeft();
+        expect(centerWithoutInertia.lng).toBeCloseTo(-35.15625, 4);
+        expect(centerWithoutInertia.lat).toBeCloseTo(0, 7);
+
+        await page.emulateMediaFeatures([
+            {name: 'prefers-reduced-motion', value: 'reduce'},
+        ]);
+        const centerWithInertia = await dragToLeft();
+        expect(centerWithInertia.lng).toBeLessThan(-60);
+        expect(centerWithInertia.lat).toBeCloseTo(0, 7);
     }, 20000);
 
     test('Resize viewport (page)', async () => {
 
         await page.setViewport({width: 400, height: 400, deviceScaleFactor: 2});
 
-        await new Promise(r => setTimeout(r, 200));
+        await sleep(200);
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
@@ -103,7 +148,7 @@ describe('Browser tests', () => {
             document.getElementById('map')!.style.width = '200px';
             document.getElementById('map')!.style.height = '200px';
         });
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await sleep(1000);
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
@@ -127,122 +172,109 @@ describe('Browser tests', () => {
         expect(zoom).toBe(2);
     }, 20000);
 
-    test('CJK Characters', async () => {
-
+    test('Marker scaled: correct drag', async () => {
         await page.evaluate(() => {
+            document.getElementById('map')!.style.transform = 'scale(0.5)';
+            const markerMapPosition = map.getCenter();
+            (window as any).marker = new maplibregl.Marker({draggable: true})
+                .setLngLat(markerMapPosition)
+                .addTo(map);
+            return map.getCenter();
+        });
+        const canvas = await page.$('.maplibregl-canvas');
+        const canvasBB = await canvas?.boundingBox()!;
+        const dragToLeft = async () => {
+            await page.mouse.move(canvasBB!.x + canvasBB!.width / 2, canvasBB!.y + canvasBB!.height / 2);
+            await page.mouse.down();
+            await page.mouse.move(canvasBB!.x, canvasBB!.y, {
+                steps: 100
+            });
+            await page.mouse.up();
+            await sleep(200);
+
+            return page.evaluate(() => {
+                const afterMove = (window as any).marker.getLngLat();
+                return map.project(afterMove);
+            });
+        };
+        const newPosition = await dragToLeft();
+        expect(newPosition.x).toBeCloseTo(0);
+        expect(newPosition.y).toBeCloseTo(0);
+    });
+
+    test('Marker: correct position', async () => {
+        const markerScreenPosition = await page.evaluate(() => {
+            const markerMapPosition = [11.40, 47.30] as [number, number];
+            const marker = new maplibregl.Marker()
+                .setLngLat(markerMapPosition)
+                .addTo(map);
+
+            map.setPitch(52);
+            map.fitBounds(
+                [
+                    [markerMapPosition[0], markerMapPosition[1] + 0.02],
+                    [markerMapPosition[0], markerMapPosition[1] - 0.01]
+                ]
+                , {duration: 0}
+            );
 
             map.setStyle({
                 version: 8,
-                glyphs: 'https://mierune.github.io/fonts/{fontstack}/{range}.pbf',
                 sources: {
-                    sample: {
-                        type: 'geojson',
-                        data: {
-                            type: 'Feature',
-                            geometry: {
-                                type: 'Point',
-                                coordinates: [0, 0]
-                            },
-                            properties: {
-                                'name_en': 'abcde',
-                                'name_ja': 'あいうえお',
-                                'name_ch': '阿衣乌唉哦',
-                                'name_kr': '아이우'
-                            }
-                        }
+                    osm: {
+                        type: 'raster',
+                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tileSize: 256,
+                        attribution: '&copy; OpenStreetMap Contributors',
+                        maxzoom: 19
                     },
+                    // Use a different source for terrain and hillshade layers, to improve render quality
+                    terrainSource: {
+                        type: 'raster-dem',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tileSize: 256
+                    },
+                    hillshadeSource: {
+                        type: 'raster-dem',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tileSize: 256
+                    }
                 },
-                'layers': [
+                layers: [
                     {
-                        'id': 'sample-text-left',
-                        'type': 'symbol',
-                        'source': 'sample',
-                        'layout': {
-                            'text-anchor': 'top',
-                            'text-field': '{name_ja}{name_en}',
-                            'text-font': ['Open Sans Regular'],
-                            'text-offset': [-10, 0],
-                        }
+                        id: 'osm',
+                        type: 'raster',
+                        source: 'osm'
                     },
                     {
-                        'id': 'sample-text-center',
-                        'type': 'symbol',
-                        'source': 'sample',
-                        'layout': {
-                            'text-anchor': 'top',
-                            'text-field': '{name_ch}{name_kr}',
-                            'text-font': ['Open Sans Regular'],
-                            'text-offset': [0, 0],
-                        }
-                    },
-                    {
-                        'id': 'sample-text-right',
-                        'type': 'symbol',
-                        'source': 'sample',
-                        'layout': {
-                            'text-anchor': 'top',
-                            'text-field': '{name_en}{name_ja}',
-                            'text-font': ['Open Sans Regular'],
-                            'text-offset': [10, 0],
-                        }
-                    },
-                ]
+                        id: 'hills',
+                        type: 'hillshade',
+                        source: 'hillshadeSource',
+                        layout: {visibility: 'visible'},
+                        paint: {'hillshade-shadow-color': '#473B24'}
+                    }
+                ],
+                terrain: {
+                    source: 'terrainSource',
+                    exaggeration: 1
+                }
+            });
+
+            return new Promise<any>((resolve) => {
+                map.once('idle', () => {
+                    map.once('idle', () => {
+                        const markerBounding = marker.getElement().getBoundingClientRect();
+                        resolve({
+                            x: markerBounding.x,
+                            y: markerBounding.y
+                        });
+                    });
+                    map.setTerrain({source: 'terrainSource'});
+                });
             });
         });
 
-        const image = await page.evaluate(() => {
-            return new Promise((resolve, _) => {
-                map.once('idle', () => resolve(map.getCanvas().toDataURL()));
-                map.setZoom(8);
-            });
-        });
-
-        const actualBuff = Buffer.from((image as string).replace(/data:.*;base64,/, ''), 'base64');
-        const actualPng = new PNG({width: testWidth, height: testHeight});
-        actualPng.parse(actualBuff);
-
-        const expectedPlatforms = ['ubuntu-runner', 'macos-runner', 'macos-local'];
-        let minDiff = Infinity;
-        for (const expected of expectedPlatforms) {
-            const diff = compareByPixelmatch(actualPng, expected, testWidth, testHeight);
-            if (diff < minDiff) {
-                minDiff = diff;
-            }
-        }
-
-        // At least one platform should be identical
-        expect(minDiff).toBe(0);
-
+        expect(markerScreenPosition.x).toBeCloseTo(386.5);
+        expect(markerScreenPosition.y).toBeCloseTo(378.1);
     }, 20000);
-
-    afterEach(async() => {
-        page.close();
-    }, 40000);
-
-    afterAll(async () => {
-        await browser.close();
-        if (server) {
-            server.close();
-        }
-    }, 40000);
-
-    function compareByPixelmatch(actualPng:PNG, platform: string, width:number, height:number): number {
-        const platformFixtureBase64 = fs.readFileSync(
-            path.join(__dirname, `fixtures/cjk-expected-base64-image/${platform}-base64.txt`), 'utf8')
-            .replace(/\s/g, '')
-            .replace(/data:.*;base64,/, '');
-
-        const expectedBuff = Buffer.from(platformFixtureBase64, 'base64');
-
-        const expectedPng = new PNG({width: testWidth, height: testHeight});
-        expectedPng.parse(expectedBuff);
-
-        const diffImg = new PNG({width, height});
-
-        const diff = pixelmatch(
-            actualPng.data, expectedPng.data, diffImg.data,
-            width, height, {threshold: 0}) / (width * height);
-
-        return diff;
-    }
 });

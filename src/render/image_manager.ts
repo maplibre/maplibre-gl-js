@@ -11,38 +11,44 @@ import {warnOnce} from '../util/util';
 import type {StyleImage} from '../style/style_image';
 import type {Context} from '../gl/context';
 import type {PotpackBox} from 'potpack';
-import type {Callback} from '../types/callback';
+import type {GetImagesResponse} from '../util/actor_messages';
 
 type Pattern = {
     bin: PotpackBox;
     position: ImagePosition;
 };
 
-// When copied into the atlas texture, image data is padded by one pixel on each side. Icon
-// images are padded with fully transparent pixels, while pattern images are padded with a
-// copy of the image data wrapped from the opposite side. In both cases, this ensures the
-// correct behavior of GL_LINEAR texture sampling mode.
+/**
+ * When copied into the atlas texture, image data is padded by one pixel on each side. Icon
+ * images are padded with fully transparent pixels, while pattern images are padded with a
+ * copy of the image data wrapped from the opposite side. In both cases, this ensures the
+ * correct behavior of GL_LINEAR texture sampling mode.
+ */
 const padding = 1;
 
-/*
-    ImageManager does three things:
-
-        1. Tracks requests for icon images from tile workers and sends responses when the requests are fulfilled.
-        2. Builds a texture atlas for pattern images.
-        3. Rerenders renderable images once per frame
-
-    These are disparate responsibilities and should eventually be handled by different classes. When we implement
-    data-driven support for `*-pattern`, we'll likely use per-bucket pattern atlases, and that would be a good time
-    to refactor this.
+/**
+ * ImageManager does three things:
+ *
+ * 1. Tracks requests for icon images from tile workers and sends responses when the requests are fulfilled.
+ * 2. Builds a texture atlas for pattern images.
+ * 3. Rerenders renderable images once per frame
+ *
+ * These are disparate responsibilities and should eventually be handled by different classes. When we implement
+ * data-driven support for `*-pattern`, we'll likely use per-bucket pattern atlases, and that would be a good time
+ * to refactor this.
 */
 export class ImageManager extends Evented {
     images: {[_: string]: StyleImage};
     updatedImages: {[_: string]: boolean};
     callbackDispatchedThisFrame: {[_: string]: boolean};
     loaded: boolean;
+    /**
+     * This is used to track requests for images that are not yet available. When the image is loaded,
+     * the requestors will be notified.
+     */
     requestors: Array<{
         ids: Array<string>;
-        callback: Callback<{[_: string]: StyleImage}>;
+        promiseResolve: (value: GetImagesResponse) => void;
     }>;
 
     patterns: {[_: string]: Pattern};
@@ -75,8 +81,8 @@ export class ImageManager extends Evented {
         this.loaded = loaded;
 
         if (loaded) {
-            for (const {ids, callback} of this.requestors) {
-                this._notify(ids, callback);
+            for (const {ids, promiseResolve} of this.requestors) {
+                promiseResolve(this._getImagesForIds(ids));
             }
             this.requestors = [];
         }
@@ -176,28 +182,30 @@ export class ImageManager extends Evented {
         return Object.keys(this.images);
     }
 
-    getImages(ids: Array<string>, callback: Callback<{[_: string]: StyleImage}>) {
-        // If the sprite has been loaded, or if all the icon dependencies are already present
-        // (i.e. if they've been added via runtime styling), then notify the requestor immediately.
-        // Otherwise, delay notification until the sprite is loaded. At that point, if any of the
-        // dependencies are still unavailable, we'll just assume they are permanently missing.
-        let hasAllDependencies = true;
-        if (!this.isLoaded()) {
-            for (const id of ids) {
-                if (!this.images[id]) {
-                    hasAllDependencies = false;
+    getImages(ids: Array<string>): Promise<GetImagesResponse> {
+        return new Promise<GetImagesResponse>((resolve, _reject) => {
+            // If the sprite has been loaded, or if all the icon dependencies are already present
+            // (i.e. if they've been added via runtime styling), then notify the requestor immediately.
+            // Otherwise, delay notification until the sprite is loaded. At that point, if any of the
+            // dependencies are still unavailable, we'll just assume they are permanently missing.
+            let hasAllDependencies = true;
+            if (!this.isLoaded()) {
+                for (const id of ids) {
+                    if (!this.images[id]) {
+                        hasAllDependencies = false;
+                    }
                 }
             }
-        }
-        if (this.isLoaded() || hasAllDependencies) {
-            this._notify(ids, callback);
-        } else {
-            this.requestors.push({ids, callback});
-        }
+            if (this.isLoaded() || hasAllDependencies) {
+                resolve(this._getImagesForIds(ids));
+            } else {
+                this.requestors.push({ids, promiseResolve: resolve});
+            }
+        });
     }
 
-    _notify(ids: Array<string>, callback: Callback<{[_: string]: StyleImage}>) {
-        const response = {};
+    _getImagesForIds(ids: Array<string>): GetImagesResponse {
+        const response: GetImagesResponse = {};
 
         for (const id of ids) {
             let image = this.getImage(id);
@@ -224,8 +232,7 @@ export class ImageManager extends Evented {
                 warnOnce(`Image "${id}" could not be loaded. Please make sure you have added the image with map.addImage() or a "sprite" property in your style. You can provide missing images by listening for the "styleimagemissing" map event.`);
             }
         }
-
-        callback(null, response);
+        return response;
     }
 
     // Pattern stuff

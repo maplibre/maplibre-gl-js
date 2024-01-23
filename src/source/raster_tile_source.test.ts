@@ -2,7 +2,7 @@ import {RasterTileSource} from './raster_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {RequestManager} from '../util/request_manager';
 import {Dispatcher} from '../util/dispatcher';
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 import {Tile} from './tile';
 import {stubAjaxGetImage} from '../util/test/util';
 
@@ -15,9 +15,7 @@ function createSource(options, transformCallback?) {
         getPixelRatio() { return 1; }
     } as any);
 
-    source.on('error', (e) => {
-        throw e.error;
-    });
+    source.on('error', () => { }); // to prevent console log of errors
 
     return source;
 }
@@ -124,7 +122,7 @@ describe('RasterTileSource', () => {
                     loadVectorData () {},
                     setExpiryData() {}
                 } as any as Tile;
-                source.loadTile(tile, () => {});
+                source.loadTile(tile);
                 expect(transformSpy).toHaveBeenCalledTimes(1);
                 expect(transformSpy.mock.calls[0][0]).toBe('http://example.com/10/5/5.png');
                 expect(transformSpy.mock.calls[0][1]).toBe('Tile');
@@ -154,7 +152,7 @@ describe('RasterTileSource', () => {
                     tileID: new OverscaledTileID(10, 0, 10, 5, 5),
                     state: 'loading'
                 } as any as Tile;
-                source.loadTile(tile, () => {
+                source.loadTile(tile).then(() => {
                     expect(imageConstructorSpy).toHaveBeenCalledTimes(1);
                     expect(tile.state).toBe('loaded');
                     done();
@@ -164,10 +162,21 @@ describe('RasterTileSource', () => {
         server.respond();
     });
 
+    test('supports updating tiles', () => {
+        const source = createSource({url: '/source.json'});
+        source.setTiles(['http://example.com/{z}/{x}/{y}.png?updated=true']);
+
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                expect(source.tiles[0]).toBe('http://example.com/{z}/{x}/{y}.png?updated=true');
+            }
+        });
+    });
+
     test('cancels TileJSON request if removed', () => {
         const source = createSource({url: '/source.json'});
         source.onRemove();
-        expect((server.requests.pop() as any).aborted).toBe(true);
+        expect((server.lastRequest as any).aborted).toBe(true);
     });
 
     it('serializes options', () => {

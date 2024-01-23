@@ -1,4 +1,4 @@
-Copyright (c) 2020, MapLibre contributors
+Copyright (c) 2023, MapLibre contributors
 
 All rights reserved.
 

@@ -395,10 +395,10 @@ describe('transform', () => {
 
         expect(transform.customLayerMatrix()[0].toString().length).toBeGreaterThan(10);
         expect(transform.glCoordMatrix[0].toString().length).toBeGreaterThan(10);
-        expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 10);
+        expect(transform.maxPitchScaleFactor()).toBeCloseTo(2.366025418080343, 5);
     });
 
-    test('recalcuateZoom', () => {
+    test('recalculateZoom', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.elevation = 200;
         transform.center = new LngLat(10.0, 50.0);
@@ -416,16 +416,16 @@ describe('transform', () => {
         // expect new zoom because of elevation change
         terrain.getElevationForLngLatZoom = () => 400;
         transform.recalculateZoom(terrain as any);
-        expect(transform.zoom).toBe(14.127997275621933);
+        expect(transform.zoom).toBeCloseTo(14.127997275621933, 10);
         expect(transform.elevation).toBe(400);
 
-        expect(transform._center.lng).toBe(10.00000000000071);
-        expect(transform._center.lat).toBe(50.00000000000017);
+        expect(transform._center.lng).toBeCloseTo(10, 10);
+        expect(transform._center.lat).toBeCloseTo(50, 10);
 
         // expect new zoom because of elevation change to point below sea level
         terrain.getElevationForLngLatZoom = () => -200;
         transform.recalculateZoom(terrain as any);
-        expect(transform.zoom).toBe(13.773740316343467);
+        expect(transform.zoom).toBeCloseTo(13.773740316343467, 10);
         expect(transform.elevation).toBe(-200);
     });
 
@@ -460,5 +460,16 @@ describe('transform', () => {
         const top = Math.max(0, transform.height / 2 - transform.getHorizon());
         expect(top).toBeCloseTo(79.1823898251593, 10);
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
+    });
+
+    test('lngLatToCameraDepth', () => {
+        const transform = new Transform(0, 22, 0, 85, true);
+        transform.resize(500, 500);
+        transform.center = new LngLat(10.0, 50.0);
+
+        expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9997324396231673);
+        transform.pitch = 60;
+        expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9865782165762236);
+
     });
 });

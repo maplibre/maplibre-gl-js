@@ -13,22 +13,20 @@ import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
 
 import type {Bucket} from '../data/bucket';
-import type {Actor} from '../util/actor';
+import type {IActor} from '../util/actor';
 import type {StyleLayer} from '../style/style_layer';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import type {StyleImage} from '../style/style_image';
-import type {StyleGlyph} from '../style/style_glyph';
 import type {
     WorkerTileParameters,
-    WorkerTileCallback,
+    WorkerTileResult,
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import {Cancelable} from '../types/cancelable';
+import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages';
 
 export class WorkerTile {
     tileID: OverscaledTileID;
-    uid: string;
+    uid: string | number;
     zoom: number;
     pixelRatio: number;
     tileSize: number;
@@ -43,10 +41,9 @@ export class WorkerTile {
     data: VectorTile;
     collisionBoxArray: CollisionBoxArray;
 
-    abort: (() => void);
+    abort: AbortController;
     vectorTile: VectorTile;
-    inFlightDependencies: Cancelable[];
-    dependencySentinel: number;
+    inFlightDependencies: AbortController[];
 
     constructor(params: WorkerTileParameters) {
         this.tileID = new OverscaledTileID(params.tileID.overscaledZ, params.tileID.wrap, params.tileID.canonical.z, params.tileID.canonical.x, params.tileID.canonical.y);
@@ -61,10 +58,9 @@ export class WorkerTile {
         this.returnDependencies = !!params.returnDependencies;
         this.promoteId = params.promoteId;
         this.inFlightDependencies = [];
-        this.dependencySentinel = -1;
     }
 
-    parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: Actor, callback: WorkerTileCallback) {
+    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor): Promise<WorkerTileResult> {
         this.status = 'parsing';
         this.data = data;
 
@@ -132,114 +128,72 @@ export class WorkerTile {
             }
         }
 
-        let error: Error;
-        let glyphMap: {
-            [_: string]: {
-                [_: number]: StyleGlyph;
-            };
-        };
-        let iconMap: {[_: string]: StyleImage};
-        let patternMap: {[_: string]: StyleImage};
-
         const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
 
-        this.inFlightDependencies.forEach((request) => request?.cancel());
+        this.inFlightDependencies.forEach((request) => request?.abort());
         this.inFlightDependencies = [];
 
-        // cancelling seems to be not sufficient, we seems to still manage to get a callback hit, so use a sentinel to drop stale results
-        const dependencySentinel = ++this.dependencySentinel;
+        let getGlyphsPromise = Promise.resolve<GetGlyphsResponse>({});
         if (Object.keys(stacks).length) {
-            this.inFlightDependencies.push(actor.send('getGlyphs', {uid: this.uid, stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}, (err, result) => {
-                if (dependencySentinel !== this.dependencySentinel) {
-                    return;
-                }
-                if (!error) {
-                    error = err;
-                    glyphMap = result;
-                    maybePrepare.call(this);
-                }
-            }));
-        } else {
-            glyphMap = {};
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            getGlyphsPromise = actor.sendAsync({type: 'getGlyphs', data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController);
         }
 
         const icons = Object.keys(options.iconDependencies);
+        let getIconsPromise = Promise.resolve<GetImagesResponse>({});
         if (icons.length) {
-            this.inFlightDependencies.push(actor.send('getImages', {icons, source: this.source, tileID: this.tileID, type: 'icons'}, (err, result) => {
-                if (dependencySentinel !== this.dependencySentinel) {
-                    return;
-                }
-                if (!error) {
-                    error = err;
-                    iconMap = result;
-                    maybePrepare.call(this);
-                }
-            }));
-        } else {
-            iconMap = {};
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            getIconsPromise = actor.sendAsync({type: 'getImages', data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController);
         }
 
         const patterns = Object.keys(options.patternDependencies);
+        let getPatternsPromise = Promise.resolve<GetImagesResponse>({});
         if (patterns.length) {
-            this.inFlightDependencies.push(actor.send('getImages', {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}, (err, result) => {
-                if (dependencySentinel !== this.dependencySentinel) {
-                    return;
-                }
-                if (!error) {
-                    error = err;
-                    patternMap = result;
-                    maybePrepare.call(this);
-                }
-            }));
-        } else {
-            patternMap = {};
+            const abortController = new AbortController();
+            this.inFlightDependencies.push(abortController);
+            getPatternsPromise = actor.sendAsync({type: 'getImages', data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
         }
 
-        maybePrepare.call(this);
+        const [glyphMap, iconMap, patternMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
+        const glyphAtlas = new GlyphAtlas(glyphMap);
+        const imageAtlas = new ImageAtlas(iconMap, patternMap);
 
-        function maybePrepare() {
-            if (error) {
-                return callback(error);
-            } else if (glyphMap && iconMap && patternMap) {
-                const glyphAtlas = new GlyphAtlas(glyphMap);
-                const imageAtlas = new ImageAtlas(iconMap, patternMap);
-
-                for (const key in buckets) {
-                    const bucket = buckets[key];
-                    if (bucket instanceof SymbolBucket) {
-                        recalculateLayers(bucket.layers, this.zoom, availableImages);
-                        performSymbolLayout({
-                            bucket,
-                            glyphMap,
-                            glyphPositions: glyphAtlas.positions,
-                            imageMap: iconMap,
-                            imagePositions: imageAtlas.iconPositions,
-                            showCollisionBoxes: this.showCollisionBoxes,
-                            canonical: this.tileID.canonical
-                        });
-                    } else if (bucket.hasPattern &&
-                        (bucket instanceof LineBucket ||
-                         bucket instanceof FillBucket ||
-                         bucket instanceof FillExtrusionBucket)) {
-                        recalculateLayers(bucket.layers, this.zoom, availableImages);
-                        bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
-                    }
-                }
-
-                this.status = 'done';
-                callback(null, {
-                    buckets: Object.values(buckets).filter(b => !b.isEmpty()),
-                    featureIndex,
-                    collisionBoxArray: this.collisionBoxArray,
-                    glyphAtlasImage: glyphAtlas.image,
-                    imageAtlas,
-                    // Only used for benchmarking:
-                    glyphMap: this.returnDependencies ? glyphMap : null,
-                    iconMap: this.returnDependencies ? iconMap : null,
-                    glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
+        for (const key in buckets) {
+            const bucket = buckets[key];
+            if (bucket instanceof SymbolBucket) {
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
+                performSymbolLayout({
+                    bucket,
+                    glyphMap,
+                    glyphPositions: glyphAtlas.positions,
+                    imageMap: iconMap,
+                    imagePositions: imageAtlas.iconPositions,
+                    showCollisionBoxes: this.showCollisionBoxes,
+                    canonical: this.tileID.canonical
                 });
+            } else if (bucket.hasPattern &&
+                (bucket instanceof LineBucket ||
+                bucket instanceof FillBucket ||
+                bucket instanceof FillExtrusionBucket)) {
+                recalculateLayers(bucket.layers, this.zoom, availableImages);
+                bucket.addFeatures(options, this.tileID.canonical, imageAtlas.patternPositions);
             }
         }
+
+        this.status = 'done';
+        return {
+            buckets: Object.values(buckets).filter(b => !b.isEmpty()),
+            featureIndex,
+            collisionBoxArray: this.collisionBoxArray,
+            glyphAtlasImage: glyphAtlas.image,
+            imageAtlas,
+            // Only used for benchmarking:
+            glyphMap: this.returnDependencies ? glyphMap : null,
+            iconMap: this.returnDependencies ? iconMap : null,
+            glyphPositions: this.returnDependencies ? glyphAtlas.positions : null
+        };
     }
 }
 

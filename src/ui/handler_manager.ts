@@ -16,7 +16,9 @@ import {TapDragZoomHandler} from './handler/tap_drag_zoom';
 import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
+import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
 import {extend} from '../util/util';
+import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 
 export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
@@ -40,6 +42,11 @@ export interface Handler {
     enable(): void;
     disable(): void;
     isEnabled(): boolean;
+    /**
+     * This is used to indicate if the handler is currently active or not.
+     * In case a handler is active, it will block other handlers from gettting the relevant events.
+     * There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.
+     */
     isActive(): boolean;
     /**
      * `reset` can be called by the manager at any time and must reset everything to it's original state
@@ -222,6 +229,12 @@ export class HandlerManager {
             boxZoom.enable();
         }
 
+        const cooperativeGestures = map.cooperativeGestures = new CooperativeGesturesHandler(map, options.cooperativeGestures);
+        this._add('cooperativeGestures', cooperativeGestures);
+        if (options.cooperativeGestures) {
+            cooperativeGestures.enable();
+        }
+
         const tapZoom = new TapZoomHandler(map);
         const clickZoom = new ClickZoomHandler(map);
         map.doubleClickZoom = new DoubleClickZoomHandler(clickZoom, tapZoom);
@@ -364,7 +377,9 @@ export class HandlerManager {
         const eventTouches = (e as TouchEvent).touches;
 
         const mapTouches = eventTouches ? this._getMapTouches(eventTouches) : undefined;
-        const points = mapTouches ? DOM.touchPos(this._el, mapTouches) : DOM.mousePos(this._el, ((e as MouseEvent)));
+        const points = mapTouches ?
+            DOM.touchPos(this._map.getCanvas(), mapTouches) :
+            DOM.mousePos(this._map.getCanvas(), ((e as MouseEvent)));
 
         for (const {handlerName, handler, allowed} of this._handlers) {
             if (!handler.isEnabled()) continue;
@@ -583,7 +598,7 @@ export class HandlerManager {
 
             const shouldSnapToNorth = bearing => bearing !== 0 && -this._bearingSnap < bearing && bearing < this._bearingSnap;
 
-            if (inertialEase) {
+            if (inertialEase && (inertialEase.essential || !browser.prefersReducedMotion)) {
                 if (shouldSnapToNorth(inertialEase.bearing || this._map.getBearing())) {
                     inertialEase.bearing = 0;
                 }
