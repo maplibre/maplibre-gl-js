@@ -1,7 +1,5 @@
 // Note: all "sizes" are measured in bytes
 
-import type {Transferable} from '../types/transferable';
-
 /**
  * @internal
  * A view type size

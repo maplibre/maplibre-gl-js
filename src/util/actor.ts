@@ -2,7 +2,6 @@ import {Subscription, isWorker, subscribe} from './util';
 import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
-import type {Transferable} from '../types/transferable';
 import type {ActorMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
 
 /**
