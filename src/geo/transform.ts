@@ -710,7 +710,13 @@ export class Transform {
             return cache[posMatrixKey];
         }
 
-        const posMatrix = this.calculateTileMatrix(unwrappedTileID);
+        const canonical = unwrappedTileID.canonical;
+        const scale = this.worldSize / this.zoomScale(canonical.z);
+        const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
+
+        const posMatrix = mat4.identity(new Float64Array(16) as any);
+        mat4.translate(posMatrix, posMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
+        mat4.scale(posMatrix, posMatrix, [scale / EXTENT, scale / EXTENT, 1]);
         mat4.multiply(posMatrix, aligned ? this.alignedProjMatrix : this.projMatrix, posMatrix);
 
         cache[posMatrixKey] = new Float32Array(posMatrix);
