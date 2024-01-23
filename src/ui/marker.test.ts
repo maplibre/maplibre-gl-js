@@ -839,6 +839,34 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Sets default opacity if it\'s not provided as option', () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        expect(marker.getElement().style.opacity).toMatch('1');
+        map.remove();
+    });
+
+    test('Sets opacity according to options.opacity', () => {
+        const map = createMap();
+        const marker = new Marker({opacity: ['0.7', '']})
+            .setLngLat([0, 0])
+            .addTo(map);
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Changes opacity to a new value provided by setOpacity', () => {
+        const map = createMap();
+        const marker = new Marker({opacity: ['0.7', '']})
+            .setLngLat([0, 0])
+            .addTo(map);
+        marker.setOpacity(['0.6', '']);
+        expect(marker.getElement().style.opacity).toMatch('.6');
+        map.remove();
+    });
+
     test('Marker changes opacity behind terrain and when terrain is removed', () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
@@ -868,6 +896,40 @@ describe('marker', () => {
         map.fire('terrain');
         expect(marker.getElement().style.opacity).toMatch('1');
 
+        map.remove();
+    });
+
+    test('Applies options.opacity[0] when 3d terrain is enabled and marker is in clear view', () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: ['0.7', '0.3']})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .95
+        } as any as Terrain;
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Applies options.opacity[1] when marker is hidden by 3d terrain', () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: ['0.7', '0.3']})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('0.3');
         map.remove();
     });
 });
