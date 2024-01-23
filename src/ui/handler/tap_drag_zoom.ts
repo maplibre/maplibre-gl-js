@@ -3,7 +3,7 @@ import {TapRecognizer, MAX_TAP_INTERVAL, MAX_DIST} from './tap_recognizer';
 import type Point from '@mapbox/point-geometry';
 
 /**
- * A `TapDragZoomHandler` allows the user to zoom the map at a point by double tapping, it also allows the user pan the map by dragging.
+ * A `TapDragZoomHandler` allows the user to zoom the map at a point by double tapping. It also allows the user pan the map by dragging.
  */
 export class TapDragZoomHandler implements Handler {
 
