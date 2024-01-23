@@ -460,7 +460,7 @@ export class Transform {
 
     /**
      * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512)
-     * @param lngLat - the lngLat
+     * @param lnglat - the lngLat
      * @returns Point
      */
     project(lnglat: LngLat) {
