@@ -73,6 +73,11 @@ type MarkerOptions = {
      * @defaultValue 'auto'
      */
     pitchAlignment?: Alignment;
+    /**
+     * First string will be used as a Marker's opacity when it's in clear view. Second string - when a Marker is behind the terrain (with 3D terrain enabled).
+     * @defaultValue ['1', '0.2']
+     */
+    opacity?: [string, string];
 };
 
 /**
@@ -127,6 +132,7 @@ export class Marker extends Evented {
     _rotation: number;
     _pitchAlignment: Alignment;
     _rotationAlignment: Alignment;
+    _opacity: [string, string];
     _originalTabIndex: string; // original tabindex of _element
     _opacityTimeout: ReturnType<typeof setTimeout>;
 
@@ -146,6 +152,7 @@ export class Marker extends Evented {
         this._rotation = options && options.rotation || 0;
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
+        this._opacity = options && options.opacity ? options.opacity : ['1', '0.2'];
 
         if (!options || !options.element) {
             this._defaultMarker = true;
@@ -509,7 +516,7 @@ export class Marker extends Evented {
     _updateOpacity(force: boolean = false) {
         const terrain = this._map.terrain;
         if (!terrain) {
-            if (this._element.style.opacity === '0.2') { this._element.style.opacity = '1'; }
+            if (this._element.style.opacity !== this._opacity[0]) { this._element.style.opacity = this._opacity[0]; }
             return;
         }
         if (force) {
@@ -531,7 +538,7 @@ export class Marker extends Evented {
 
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
-            this._element.style.opacity = '1';
+            this._element.style.opacity = this._opacity[0];
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
@@ -540,7 +547,8 @@ export class Marker extends Evented {
         const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
         const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
         // Display at full opacity if center is visible.
-        this._element.style.opacity = (markerDistanceCenter - terrainDistanceCenter > forgiveness) ? '0.2' : '1.0';
+        const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
+        this._element.style.opacity = centerIsInvisible ? this._opacity[1] : this._opacity[0];
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
@@ -796,5 +804,24 @@ export class Marker extends Evented {
      */
     getPitchAlignment(): Alignment {
         return this._pitchAlignment;
+    }
+
+    /**
+     * Sets the `opacity` property of the marker.
+     * @param opacity - Sets the `opacity` property of the marker.
+     * @returns `this`
+     */
+    setOpacity(opacity?: [string, string]): this {
+        this._opacity = opacity || ['1', '0.2'];
+        this._updateOpacity();
+        return this;
+    }
+
+    /**
+     * Returns the current `opacity` property of the marker.
+     * @returns The current opacity of the marker.
+     */
+    getOpacity(): [string, string] {
+        return this._opacity;
     }
 }
