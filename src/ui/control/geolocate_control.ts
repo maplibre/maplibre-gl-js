@@ -230,7 +230,7 @@ export class GeolocateControl extends Evented implements IControl {
         this.options = extend({}, defaultOptions, options);
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
@@ -238,7 +238,7 @@ export class GeolocateControl extends Evented implements IControl {
         return this._container;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         // clear the geolocation watch if exists
         if (this._geolocationWatchID !== undefined) {

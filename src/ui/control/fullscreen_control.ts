@@ -69,7 +69,7 @@ export class FullscreenControl extends Evented implements IControl {
         }
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map): HTMLElement {
         this._map = map;
         if (!this._container) this._container = this._map.getContainer();
@@ -78,7 +78,7 @@ export class FullscreenControl extends Evented implements IControl {
         return this._controlContainer;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._controlContainer);
         this._map = null;
