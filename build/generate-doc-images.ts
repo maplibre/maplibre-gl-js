@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import puppeteer from 'puppeteer';
 import packageJson from '../package.json' assert { type: 'json' };
+import {sleep} from '../src/util/test/util';
 
 const exampleName = process.argv[2];
 const examplePath = path.resolve('test', 'examples');
@@ -23,17 +24,19 @@ async function createImage(exampleName) {
     await page.setContent(html.replaceAll('../../dist', `https://unpkg.com/maplibre-gl@${packageJson.version}/dist`));
 
     // Wait for map to load, then wait two more seconds for images, etc. to load.
-    try {
-        await page.waitForFunction('map.loaded()');
-        // Wait for 5 seconds on 3d model examples, since this takes longer to load.
-        const waitTime = exampleName.includes('3d-model') ? 5000 : 1500;
-        console.log(`waiting for ${waitTime} ms`);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-    } catch (err) {
+    await page
+        .waitForFunction('map.loaded()')
+        .then(async () => {
+            // Wait for 5 seconds on 3d model examples, since this takes longer to load.
+            const waitTime = exampleName.includes('3d-model') ? 5000 : 1500;
+            console.log(`waiting for ${waitTime} ms`);
+            await sleep(waitTime);
+        })
         // map.loaded() does not evaluate to true within 3 seconds, it's probably an animated example.
         // In this case we take the screenshot immediately.
-        console.log(`Timed out waiting for map load on ${exampleName}.`);
-    }
+        .catch(() => {
+            console.log(`Timed out waiting for map load on ${exampleName}.`);
+        });
 
     await page
         .screenshot({
