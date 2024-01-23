@@ -12,7 +12,7 @@ export type Unit = 'imperial' | 'metric' | 'nautical';
 /**
  * The {@link ScaleControl} options object
  */
-type ScaleOptions = {
+type ScaleControlOptions = {
     /**
      * The maximum length of the scale control in pixels.
      * @defaultValue 100
@@ -25,7 +25,7 @@ type ScaleOptions = {
     unit?: Unit;
 };
 
-const defaultOptions: ScaleOptions = {
+const defaultOptions: ScaleControlOptions = {
     maxWidth: 100,
     unit: 'metric'
 };
@@ -49,9 +49,9 @@ const defaultOptions: ScaleOptions = {
 export class ScaleControl implements IControl {
     _map: Map;
     _container: HTMLElement;
-    options: ScaleOptions;
+    options: ScaleControlOptions;
 
-    constructor(options: ScaleOptions) {
+    constructor(options: ScaleControlOptions) {
         this.options = extend({}, defaultOptions, options);
     }
 

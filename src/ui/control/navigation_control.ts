@@ -11,7 +11,7 @@ import type {IControl} from './control';
 /**
  * The {@link NavigationControl} options object
  */
-type NavigationOptions = {
+type NavigationControlOptions = {
     /**
      * If `true` the compass button is included.
      */
@@ -26,7 +26,7 @@ type NavigationOptions = {
     visualizePitch?: boolean;
 };
 
-const defaultOptions: NavigationOptions = {
+const defaultOptions: NavigationControlOptions = {
     showCompass: true,
     showZoom: true,
     visualizePitch: false
@@ -46,7 +46,7 @@ const defaultOptions: NavigationOptions = {
  */
 export class NavigationControl implements IControl {
     _map: Map;
-    options: NavigationOptions;
+    options: NavigationControlOptions;
     _container: HTMLElement;
     _zoomInButton: HTMLButtonElement;
     _zoomOutButton: HTMLButtonElement;
@@ -57,7 +57,7 @@ export class NavigationControl implements IControl {
     /**
      * @param options - the control's options
      */
-    constructor(options?: NavigationOptions) {
+    constructor(options?: NavigationControlOptions) {
         this.options = extend({}, defaultOptions, options);
 
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
