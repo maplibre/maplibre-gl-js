@@ -7,7 +7,7 @@
 ### 🐞 Bug fixes
 - Fix wheel zoom to be into the same direction above or under the horizon ([#3398](https://github.com/maplibre/maplibre-gl-js/issues/3398))
 - Fix _cameraForBoxAndBearing not fitting bounds properly when using asymettrical camera viewport and bearing.
-- _...Add new stuff here..._
+- Fix missing export `addProtocol` and `removeProtocol` in the `d.ts` file ([#3616](https://github.com/maplibre/maplibre-gl-js/pull/3616))
 
 ## 4.0.0-pre.4
 
