@@ -74,7 +74,7 @@ jobs:
       - run: npm run test-integration
         if: success() || failure()
 
-  render-tests-ubuntu:
+  render-tests:
     name: Render tests
     env:
       SPLIT_COUNT: 3
@@ -106,7 +106,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ${{ github.workspace }}/coverage/coverage-render.json
+          files: ${{ github.workspace }}/coverage/render/codecov.json
           verbose: true
       - name: Upload render test failure
         if: failure()

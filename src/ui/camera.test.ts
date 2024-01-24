@@ -8,6 +8,7 @@ import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
 import {Terrain} from '../render/terrain';
 import {LngLat, LngLatLike} from '../geo/lng_lat';
 import {Event} from '../util/evented';
+import {LngLatBounds} from '../geo/lng_lat_bounds';
 
 beforeEach(() => {
     setMatchMedia();
@@ -1930,7 +1931,7 @@ describe('#cameraForBounds', () => {
         const transform = camera.cameraForBounds(bb, {bearing: 175});
 
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
-        expect(fixedNum(transform.zoom, 3)).toBe(2.558);
+        expect(fixedNum(transform.zoom, 3)).toBe(2.396);
         expect(transform.bearing).toBe(175);
     });
 
@@ -1940,7 +1941,7 @@ describe('#cameraForBounds', () => {
         const transform = camera.cameraForBounds(bb, {bearing: -30});
 
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -100.5, lat: 34.7171});
-        expect(fixedNum(transform.zoom, 3)).toBe(2.392);
+        expect(fixedNum(transform.zoom, 3)).toBe(2.222);
         expect(transform.bearing).toBe(-30);
     });
 
@@ -1999,6 +2000,24 @@ describe('#cameraForBounds', () => {
         const transform = camera.cameraForBounds(bb, {bearing: 90, padding: {top: 10, right: 75, bottom: 50, left: 25}, offset: [0, 100], duration: 0});
 
         expect(fixedLngLat(transform.center, 4)).toEqual({lng: -103.3761, lat: 43.0929});
+    });
+
+    test('asymmetrical transform using LngLatBounds instance', () => {
+        const transform = new Transform(2, 10, 0, 60, false);
+        transform.resize(2048, 512);
+
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
+        camera._update = () => {};
+
+        const bb = new LngLatBounds();
+        bb.extend([-66.9326, 49.5904]);
+        bb.extend([-125.0011, 24.9493]);
+
+        const rotatedTransform = camera.cameraForBounds(bb, {bearing: 45});
+
+        expect(fixedLngLat(rotatedTransform.center, 4)).toEqual({lng: -95.9669, lat: 38.3048});
+        expect(fixedNum(rotatedTransform.zoom, 3)).toBe(2.507);
+        expect(rotatedTransform.bearing).toBe(45);
     });
 });
 

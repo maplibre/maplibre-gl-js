@@ -100,6 +100,7 @@ export class NavigationControl implements IControl {
         this._compassIcon.style.transform = rotate;
     };
 
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         if (this.options.showZoom) {
@@ -120,6 +121,7 @@ export class NavigationControl implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._container);
         if (this.options.showZoom) {

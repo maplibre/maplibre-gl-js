@@ -1,5 +1,8 @@
 import type {MousePitchHandler, MouseRotateHandler} from '../mouse';
 
+/**
+ * Options object for `DragRotateHandler`.
+ */
 export type DragRotateHandlerOptions = {
     /**
      * Control the map pitch in addition to the bearing
