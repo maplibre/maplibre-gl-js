@@ -29,7 +29,7 @@ export const plugins = (production: boolean): Plugin[] => [
     }),
     production && strip({
         sourceMap: true,
-        functions: ['PerformanceUtils.*', 'Debug.*']
+        functions: ['PerformanceUtils.*']
     }),
     production && terser({
         compress: {
@@ -46,7 +46,7 @@ export const plugins = (production: boolean): Plugin[] => [
         // https://github.com/mapbox/mapbox-gl-js/pull/6956
         ignoreGlobal: true
     })
-].filter(Boolean);
+].filter(Boolean) as Plugin[];
 
 export const watchStagingPlugin: Plugin = {
     name: 'watch-external',

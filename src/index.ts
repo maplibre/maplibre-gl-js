@@ -16,10 +16,6 @@ import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
 import {config} from './util/config';
-// HM TODO: bring this back?
-//import {Debug} from './util/debug';
-//import {isSafari} from './util/util';
-//import {PerformanceUtils} from './util/performance';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
 import {WorkerPool} from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
@@ -246,6 +242,3 @@ export {
     addSourceType,
     importScriptInWorkers
 };
-
-//This gets automatically stripped out in production builds.
-//Debug.extend(MapLibreGL, {isSafari, getPerformanceMetrics: PerformanceUtils.getPerformanceMetrics});
