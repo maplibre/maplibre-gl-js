@@ -16,6 +16,7 @@ const sharedConfig = {
 const config: Config = {
     coverageProvider: 'v8',
     reporters: [
+        'default',
         ['jest-monocart-coverage', {
             name: 'MapLibre Unit Coverage Report',
 
