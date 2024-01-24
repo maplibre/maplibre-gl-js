@@ -314,7 +314,9 @@ export {
     type BoxZoomHandler,
     type DragRotateHandler,
     type CustomLayerInterface,
-    type CanvasSourceSpecification
+    type CanvasSourceSpecification,
+    type addProtocol,
+    type removeProtocol
 };
 
 export default MapLibreGL;
