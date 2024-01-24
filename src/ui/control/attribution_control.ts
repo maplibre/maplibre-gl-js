@@ -7,7 +7,7 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * The {@link AttributionControl} options
  */
-type AttributionOptions = {
+type AttributionOptions = boolean | {
     /**
      * If `true`, the attribution control will always collapse when moving the map. If `false`,
      * force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.
@@ -18,6 +18,11 @@ type AttributionOptions = {
      * Attributions to show in addition to any other attributions.
      */
     customAttribution?: string | Array<string>;
+};
+
+const defaultAtributionControlOptions: AttributionOptions = {
+    compact: true,
+    customAttribution: '<a href="https://maplibre.org/" target="_blank">MapLibre</a>'
 };
 
 /**
@@ -47,7 +52,7 @@ export class AttributionControl implements IControl {
      * @param options - the attribution options
      */
     constructor(options: AttributionOptions = {}) {
-        this.options = options;
+        this.options = Object.assign({}, defaultAtributionControlOptions, options);
     }
 
     getDefaultPosition(): ControlPosition {
@@ -57,7 +62,7 @@ export class AttributionControl implements IControl {
     /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
-        this._compact = this.options && this.options.compact;
+        this._compact = this.options.compact;
         this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib');
         this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button', this._container);
         this._compactButton.addEventListener('click', this._toggleAttribution);

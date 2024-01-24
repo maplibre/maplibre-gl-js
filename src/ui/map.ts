@@ -658,7 +658,7 @@ export class Map extends Camera {
         if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
 
         if (options.attributionControl)
-            this.addControl(new AttributionControl({customAttribution: options.customAttribution}));
+            this.addControl(new AttributionControl(options.customAttribution ? {customAttribution: options.customAttribution} : undefined));
 
         if (options.maplibreLogo)
             this.addControl(new LogoControl(), options.logoPosition);
