@@ -45,7 +45,7 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm ci
-      - run: npm run jest-ci -- --coverage --coverageReporters json text html-spa --selectProjects unit
+      - run: npm run jest-ci
       - run: node ./build/merge-raw-coverage.js 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3

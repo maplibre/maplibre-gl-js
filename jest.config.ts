@@ -17,6 +17,7 @@ const config: Config = {
     coverageProvider: 'v8',
     reporters: [
         'default',
+        'github-actions',
         ['jest-monocart-coverage', {
             name: 'MapLibre Unit Coverage Report',
 
