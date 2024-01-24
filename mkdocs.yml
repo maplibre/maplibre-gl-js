@@ -36,6 +36,9 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.escapeall:
+      hardbreak: True
+      nbsp: True
 
 extra:
   social:

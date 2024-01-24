@@ -55,15 +55,15 @@ if (!fs.existsSync(typedocConfig.out)) {
 }
 
 fs.rmSync(path.join(typedocConfig.out, 'README.md'));
-fs.rmSync(path.join(typedocConfig.out, 'modules.md'));
 // Intro file for the API
-const modulesFolder = path.join(typedocConfig.out, 'modules');
-const content = fs.readFileSync(path.join(modulesFolder, `${typedocConfig.internalModule}.md`), 'utf-8');
+const modulesFile = path.join(typedocConfig.out, 'modules.md');
+const content = fs.readFileSync(modulesFile, 'utf-8');
 let lines = content.split('\n');
 const classesLineIndex = lines.indexOf(lines.find(l => l.endsWith('Classes')) as string);
 lines = lines.splice(2, classesLineIndex - 2);
 const contentString = generateAPIIntroMarkdown(lines);
 fs.writeFileSync(path.join(typedocConfig.out, 'README.md'), contentString);
+fs.rmSync(modulesFile);
 
 // Examples manupilation
 const examplesDocsFolder = path.join('docs', 'examples');
