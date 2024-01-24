@@ -13,7 +13,6 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
-import type {BoxZoomHandler} from './handler/box_zoom'; /* eslint-disable-line */ // this is used for the docs' import
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *

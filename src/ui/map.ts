@@ -58,8 +58,6 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import type {CanvasSourceSpecification} from '../source/canvas_source'; /* eslint-disable-line */ // this is used for the docs' import
-import type {CustomLayerInterface} from '../style/style_layer/custom_style_layer'; /* eslint-disable-line */ // this is used for the docs' import
 
 const version = packageJSON.version;
 

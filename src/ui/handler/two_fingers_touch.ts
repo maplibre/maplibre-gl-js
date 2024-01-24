@@ -16,7 +16,6 @@ export type AroundCenterOptions = {
 /**
  * The `TwoFingersTouchHandler`s allows the user to zoom, pitch and rotate the map using two fingers
  *
- * @group Handlers
  */
 abstract class TwoFingersTouchHandler implements Handler {
 

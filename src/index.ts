@@ -10,8 +10,8 @@ import {TerrainControl} from './ui/control/terrain_control';
 import {Popup} from './ui/popup';
 import {Marker} from './ui/marker';
 import {Style} from './style/style';
-import {LngLat} from './geo/lng_lat';
-import {LngLatBounds} from './geo/lng_lat_bounds';
+import {LngLat, LngLatLike} from './geo/lng_lat';
+import {LngLatBounds, LngLatBoundsLike} from './geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {MercatorCoordinate} from './geo/mercator_coordinate';
 import {Evented} from './util/evented';
@@ -19,21 +19,36 @@ import {config} from './util/config';
 // HM TODO: bring this back?
 //import {Debug} from './util/debug';
 //import {isSafari} from './util/util';
+//import {PerformanceUtils} from './util/performance';
 import {rtlMainThreadPluginFactory} from './source/rtl_text_plugin_main_thread';
 import {WorkerPool} from './util/worker_pool';
 import {prewarm, clearPrewarmedResources} from './util/global_worker_pool';
-//import {PerformanceUtils} from './util/performance';
 import {AJAXError} from './util/ajax';
 import {GeoJSONSource} from './source/geojson_source';
-import {CanvasSource} from './source/canvas_source';
+import {CanvasSource, CanvasSourceSpecification} from './source/canvas_source';
 import {ImageSource} from './source/image_source';
 import {RasterDEMTileSource} from './source/raster_dem_tile_source';
 import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
-import {addSourceType} from './source/source';
+import {Source, addSourceType} from './source/source';
 import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {getGlobalDispatcher} from './util/dispatcher';
+import {IControl} from './ui/control/control';
+import {EdgeInsets, PaddingOptions} from './geo/edge_insets';
+import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapSourceDataEvent, MapLibreZoomEvent, MapLibreEvent, MapLayerTouchEvent, MapLayerMouseEvent, MapLayerEventType, MapEventType, MapDataEvent, MapContextEvent, MapWheelEvent, MapTouchEvent} from './ui/events';
+import {BoxZoomHandler} from './ui/handler/box_zoom';
+import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
+import {DragPanHandler} from './ui/handler/shim/drag_pan';
+import {ScrollZoomHandler} from './ui/handler/scroll_zoom';
+import {TwoFingersTouchZoomRotateHandler} from './ui/handler/shim/two_fingers_touch';
+import {CustomLayerInterface} from './style/style_layer/custom_style_layer';
+import {PointLike} from './ui/camera';
+import {Hash} from './ui/hash';
+import {CooperativeGesturesHandler} from './ui/handler/cooperative_gestures';
+import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
+import {KeyboardHandler} from './ui/handler/keyboard';
+import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler} from './ui/handler/two_fingers_touch';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -163,6 +178,7 @@ export {
     ScaleControl,
     FullscreenControl,
     TerrainControl,
+    Hash,
     Popup,
     Marker,
     Style,
@@ -180,6 +196,40 @@ export {
     RasterTileSource,
     VectorTileSource,
     VideoSource,
+    EdgeInsets,
+    BoxZoomHandler,
+    DragRotateHandler,
+    DragPanHandler,
+    ScrollZoomHandler,
+    TwoFingersTouchZoomRotateHandler,
+    CooperativeGesturesHandler,
+    DoubleClickZoomHandler,
+    KeyboardHandler,
+    TwoFingersTouchZoomHandler,
+    TwoFingersTouchRotateHandler,
+    TwoFingersTouchPitchHandler,
+    type IControl,
+    type CustomLayerInterface,
+    type CanvasSourceSpecification,
+    type PaddingOptions,
+    type LngLatLike,
+    type PointLike,
+    type LngLatBoundsLike,
+    type Source,
+    type MapTerrainEvent,
+    type MapStyleImageMissingEvent,
+    type MapStyleDataEvent,
+    type MapSourceDataEvent,
+    type MapLibreZoomEvent,
+    type MapLibreEvent,
+    type MapLayerTouchEvent,
+    type MapLayerMouseEvent,
+    type MapLayerEventType,
+    type MapEventType,
+    type MapDataEvent,
+    type MapContextEvent,
+    type MapWheelEvent,
+    type MapTouchEvent,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
