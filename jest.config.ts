@@ -14,6 +14,23 @@ const sharedConfig = {
 } as Partial<Config>;
 
 const config: Config = {
+    coverageProvider: 'v8',
+    reporters: [
+        ['jest-monocart-coverage', {
+            name: 'MapLibre Unit Coverage Report',
+
+            reports: [
+                ['v8'],
+                ['raw'],
+            ],
+
+            sourceFilter: (sourcePath) => {
+                return !sourcePath.includes('node_modules/') && sourcePath.search(/src\//) !== -1;
+            },
+
+            outputDir: './coverage/unit'
+        }]
+    ],
     projects: [
         {
             displayName: 'unit',
