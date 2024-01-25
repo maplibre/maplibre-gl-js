@@ -396,8 +396,8 @@
 }
 
 a.maplibregl-ctrl-logo {
-    width: 88px;
-    height: 23px;
+    width: 112px;
+    height: 25px;
     margin: 0 0 -4px -4px;
     display: block;
     background-repeat: no-repeat;
@@ -407,7 +407,7 @@ a.maplibregl-ctrl-logo {
 }
 
 a.maplibregl-ctrl-logo.maplibregl-compact {
-    width: 14px;
+    width: 16px;
 }
 
 @media (-ms-high-contrast: active) {

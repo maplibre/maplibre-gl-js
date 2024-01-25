@@ -7,7 +7,7 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * The {@link AttributionControl} options
  */
-type AttributionOptions = boolean | {
+type AttributionOptions = {
     /**
      * If `true`, the attribution control will always collapse when moving the map. If `false`,
      * force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.
