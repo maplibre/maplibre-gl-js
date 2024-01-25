@@ -21,8 +21,7 @@ type AttributionOptions = {
     customAttribution?: string | Array<string>;
 };
 
-const defaultAtributionControlOptions: AttributionOptions = {
-    compact: true,
+export const defaultAtributionControlOptions: AttributionOptions = {
     customAttribution: '<a href="https://maplibre.org/" target="_blank">MapLibre</a>'
 };
 
