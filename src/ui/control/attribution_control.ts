@@ -1,5 +1,4 @@
 import {DOM} from '../../util/dom';
-import {extend} from '../../util/util';
 
 import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
@@ -40,7 +39,7 @@ export const defaultAtributionControlOptions: AttributionControlOptions = {
 export class AttributionControl implements IControl {
     options: AttributionControlOptions;
     _map: Map;
-    _compact: boolean;
+    _compact: boolean | undefined;
     _container: HTMLElement;
     _innerContainer: HTMLElement;
     _compactButton: HTMLElement;

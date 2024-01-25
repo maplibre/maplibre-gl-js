@@ -92,9 +92,10 @@ export type MapOptions = {
     bearingSnap?: number;
     /**
      * If set, an {@link AttributionControl} will be added to the map with the provided options.
-     * @defaultValue { compact: true, customAttribution: "MapLibre ..." }.
+     * To disable the attribution control, pass `false`.
+     * @defaultValue compact: true, customAttribution: "MapLibre ...".
      */
-    attributionControl?: AttributionControlOptions;
+    attributionControl?: boolean | AttributionControlOptions;
     /**
      * If `true`, the MapLibre logo will be shown.
      * @defaultValue false
@@ -654,7 +655,7 @@ export class Map extends Camera {
         if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
 
         if (options.attributionControl)
-            this.addControl(new AttributionControl(options.attributionControl));
+            this.addControl(new AttributionControl(typeof options.attributionControl === 'boolean' ? undefined : options.attributionControl));
 
         if (options.maplibreLogo)
             this.addControl(new LogoControl(), options.logoPosition);
