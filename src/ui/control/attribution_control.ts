@@ -5,9 +5,9 @@ import type {ControlPosition, IControl} from './control';
 import type {MapDataEvent} from '../events';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
- * The {@link AttributionControl} options
+ * The {@link AttributionControl} options object
  */
-type AttributionOptions = {
+type AttributionControlOptions = {
     /**
      * If `true`, the attribution control will always collapse when moving the map. If `false`,
      * force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.
@@ -32,7 +32,7 @@ type AttributionOptions = {
  * ```
  */
 export class AttributionControl implements IControl {
-    options: AttributionOptions;
+    options: AttributionControlOptions;
     _map: Map;
     _compact: boolean;
     _container: HTMLElement;
@@ -46,7 +46,7 @@ export class AttributionControl implements IControl {
     /**
      * @param options - the attribution options
      */
-    constructor(options: AttributionOptions = {}) {
+    constructor(options: AttributionControlOptions = {}) {
         this.options = options;
     }
 

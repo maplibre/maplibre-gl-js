@@ -10,10 +10,11 @@ import http from 'http';
 import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
-import type {default as MapLibreGL, Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import * as maplibreglModule from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let maplibregl: typeof MapLibreGL;
+let maplibregl: typeof maplibreglModule;
 
 type TestData = {
     id: string;

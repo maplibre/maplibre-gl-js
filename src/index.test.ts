@@ -1,5 +1,5 @@
 import {config} from './util/config';
-import maplibre from './index';
+import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index';
 import {getJSON, getArrayBuffer} from './util/ajax';
 import {ImageRequest} from './util/image_request';
 import {isAbortError} from './util/abort_error';
@@ -13,14 +13,14 @@ describe('maplibre', () => {
     });
 
     test('workerCount', () => {
-        expect(typeof maplibre.workerCount === 'number').toBeTruthy();
+        expect(typeof getWorkerCount() === 'number').toBeTruthy();
     });
 
     test('addProtocol', () => {
         const protocolName = 'custom';
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
 
-        maplibre.addProtocol(protocolName, async () => Promise.resolve({} as any));
+        addProtocol(protocolName, async () => Promise.resolve({} as any));
         expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
     });
 
@@ -28,16 +28,16 @@ describe('maplibre', () => {
         const protocolName = 'custom';
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
 
-        maplibre.addProtocol(protocolName, () => Promise.resolve({} as any));
+        addProtocol(protocolName, () => Promise.resolve({} as any));
         expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
 
-        maplibre.removeProtocol(protocolName);
+        removeProtocol(protocolName);
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
     });
 
     test('#addProtocol - getJSON', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', () => {
+        addProtocol('custom', () => {
             protocolCallbackCalled = true;
             return Promise.resolve({data: {'foo': 'bar'}});
         });
@@ -48,7 +48,7 @@ describe('maplibre', () => {
 
     test('#addProtocol - getArrayBuffer', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', () => {
+        addProtocol('custom', () => {
             protocolCallbackCalled = true;
             return Promise.resolve({data: new ArrayBuffer(1), cacheControl: 'cache-control', expires: 'expires'});
         });
@@ -61,7 +61,7 @@ describe('maplibre', () => {
 
     test('#addProtocol - returning ImageBitmap for getImage', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', () => {
+        addProtocol('custom', () => {
             protocolCallbackCalled = true;
             return Promise.resolve({data: new ImageBitmap()});
         });
@@ -73,7 +73,7 @@ describe('maplibre', () => {
 
     test('#addProtocol - returning HTMLImageElement for getImage', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', () => {
+        addProtocol('custom', () => {
             protocolCallbackCalled = true;
             return Promise.resolve({data: new Image()});
         });
@@ -83,7 +83,7 @@ describe('maplibre', () => {
     });
 
     test('#addProtocol - error', () => {
-        maplibre.addProtocol('custom', () => Promise.reject(new Error('test error')));
+        addProtocol('custom', () => Promise.reject(new Error('test error')));
 
         getJSON({url: 'custom://test/url/json'}, new AbortController()).catch((error) => {
             expect(error).toBeTruthy();
@@ -92,7 +92,7 @@ describe('maplibre', () => {
 
     test('#addProtocol - Cancel request', async () => {
         let cancelCalled = false;
-        maplibre.addProtocol('custom', (_req, abortController) => {
+        addProtocol('custom', (_req, abortController) => {
             abortController.signal.addEventListener('abort', () => {
                 cancelCalled = true;
             });
@@ -111,11 +111,11 @@ describe('maplibre', () => {
     });
 
     test('version', () => {
-        expect(typeof maplibre.version === 'string').toBeTruthy();
+        expect(typeof getVersion() === 'string').toBeTruthy();
 
         // Semver regex: https://gist.github.com/jhorsman/62eeea161a13b80e39f5249281e17c39
         // Backslashes are doubled to escape them
         const regexp = new RegExp('^([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+)?$');
-        expect(regexp.test(maplibre.version)).toBeTruthy();
+        expect(regexp.test(getVersion())).toBeTruthy();
     });
 });
