@@ -11,6 +11,7 @@ import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms} from '
 import {backgroundUniforms, backgroundPatternUniforms} from './background_program';
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms} from './terrain_program';
 import {globeUniforms} from './globe_program';
+import {errorMeasurementUniforms} from './projection_error_measurement_program';
 
 const emptyUniforms = (context: any, locations: any): any => {};
 
@@ -43,5 +44,6 @@ export const programUniforms = {
     backgroundPattern: backgroundPatternUniforms,
     terrain: terrainUniforms,
     terrainDepth: terrainDepthUniforms,
-    terrainCoords: terrainCoordsUniforms
+    terrainCoords: terrainCoordsUniforms,
+    projectionErrorMeasurement: errorMeasurementUniforms,
 };

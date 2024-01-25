@@ -59,6 +59,8 @@ import terrainDepthFrag from './terrain_depth.fragment.glsl.g';
 import terrainCoordsFrag from './terrain_coords.fragment.glsl.g';
 import terrainFrag from './terrain.fragment.glsl.g';
 import terrainVert from './terrain.vertex.glsl.g';
+import projectionErrorMeasurementVert from './projection_error_measurement.vertex.glsl.g';
+import projectionErrorMeasurementFrag from './projection_error_measurement.fragment.glsl.g';
 
 export const shaders = {
     prelude: compile(preludeFrag, preludeVert),
@@ -90,7 +92,8 @@ export const shaders = {
     symbolTextAndIcon: compile(symbolTextAndIconFrag, symbolTextAndIconVert),
     terrain: compile(terrainFrag, terrainVert),
     terrainDepth: compile(terrainDepthFrag, terrainVert),
-    terrainCoords: compile(terrainCoordsFrag, terrainVert)
+    terrainCoords: compile(terrainCoordsFrag, terrainVert),
+    projectionErrorMeasurement: compile(projectionErrorMeasurementFrag, projectionErrorMeasurementVert)
 };
 
 // Expand #pragmas to #ifdefs.

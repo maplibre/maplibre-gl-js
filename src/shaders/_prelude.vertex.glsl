@@ -195,7 +195,7 @@ float circumferenceRatioAtTileY(float tileY) {
 }
 
 float projectLineThickness(float tileY) {
-    float thickness = 1.0 / circumferenceRatioAtTileY(tileY);    
+    float thickness = 1.0 / circumferenceRatioAtTileY(tileY); 
     if (u_projection_globeness < 0.999) {
         return mix(1.0, thickness, u_projection_globeness);
     } else {

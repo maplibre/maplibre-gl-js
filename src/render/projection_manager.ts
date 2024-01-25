@@ -12,6 +12,16 @@ import {Transform} from '../geo/transform';
 import {Painter} from './painter';
 import {Tile} from '../source/tile';
 import {browser} from '../util/browser';
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {IndexBuffer} from '../gl/index_buffer';
+import {Framebuffer} from '../gl/framebuffer';
+import {StencilMode} from '../gl/stencil_mode';
+import {ColorMode} from '../gl/color_mode';
+import {Color} from '@maplibre/maplibre-gl-style-spec';
+import {DepthMode} from '../gl/depth_mode';
+import {CullFaceMode} from '../gl/cull_face_mode';
+import {projectionErrorMeasurementUniformValues} from './program/projection_error_measurement_program';
+import {warnOnce} from '../util/util';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
@@ -370,4 +380,188 @@ export class ProjectionManager {
 
         return mesh;
     }
+}
+
+class ProjectionErrorMeasurement {
+    private readonly _ringBufferSize = 2;
+    // we wait this many frames after measuring until we read back the value
+    private readonly _readbackWaitFrames = 4;
+    // we wait this many frames *reading back* a measurement until we trigger measure again
+    private readonly _measureWaitFrames = 4;
+    private readonly _texWidth = 1;
+    private readonly _texHeight = 1;
+    private _fullscreenTriangle: Mesh;
+    private _fbo: Framebuffer;
+    private _resultBuffer: Uint8Array;
+    private _pbos: Array<WebGLBuffer>;
+    private _nextPboIndex = 0;
+
+    private _measuredError: number = 0; // Result of last measurement
+    private _updateCount: number = 0;
+    private _lastReadbackFrame: number = -1000;
+
+    // There is never more than one readback waiting
+    private _readbackQueue: {
+        readbackIndex: number; // From what object index (in PBO ring buffer) to read data
+        frameNumberIssued: number; // Framenumber when the data was first computed
+        sync: WebGLSync;
+    } = null;
+
+    private _init(context: Context) {
+        const vertexArray = new PosArray();
+        vertexArray.emplaceBack(-1, -1);
+        vertexArray.emplaceBack(2, -1);
+        vertexArray.emplaceBack(-1, 2);
+        const indexArray = new TriangleIndexArray();
+        indexArray.emplaceBack(0, 1, 2);
+
+        this._fullscreenTriangle = new Mesh(
+            context.createVertexBuffer(vertexArray, posAttributes.members),
+            context.createIndexBuffer(indexArray),
+            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        );
+
+        this._resultBuffer = new Uint8Array(4);
+
+        const gl = context.gl;
+        context.activeTexture.set(gl.TEXTURE1);
+
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._texWidth, this._texHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
+        this._fbo.colorAttachment.set(texture);
+
+        if (gl instanceof WebGL2RenderingContext) {
+            this._pbos = [];
+
+            for (let i = 0; i < this._ringBufferSize; i++) {
+                const pbo = gl.createBuffer();
+                gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pbo);
+                gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
+            }
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, 0);
+        }
+    }
+
+    public updateErrorLoop(painter: Painter): number {
+        // JP: TODO: in the first N frames measure error across the whole mercator range
+        // If the error is small everywhere, disable measuring (for perf reasons)
+        // Or only do error measurement every N frames.
+
+        const currentFrame = this._updateCount;
+
+        if (this._readbackQueue) {
+            if (currentFrame >= this._readbackQueue.frameNumberIssued + this._readbackWaitFrames) {
+                // Try to read back - it is possible that this method does nothing, then
+                // the readback queue will not be cleared and we will retry next frame.
+                this._tryReadback(painter);
+            } else {
+                // Wait another frame
+            }
+        } else {
+            if (currentFrame >= this._lastReadbackFrame + this._measureWaitFrames) {
+                this._renderErrorTexture(painter);
+            }
+        }
+
+        this._updateCount++;
+        return this._measuredError;
+    }
+
+    private _bindFramebuffer(context: Context) {
+        const gl = context.gl;
+        context.activeTexture.set(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this._fbo.colorAttachment.get());
+        context.bindFramebuffer.set(this._fbo.framebuffer);
+    }
+
+    private _renderErrorTexture(painter: Painter): void {
+        const context = painter.context;
+        const gl = context.gl;
+
+        // Update framebuffer contents
+        this._bindFramebuffer(painter.context);
+        context.viewport.set([0, 0, this._texWidth, this._texHeight]);
+        context.clear({color: Color.transparent});
+
+        const program = painter.useProgram('projectionErrorMeasurement');
+
+        program.draw(context, gl.TRIANGLES,
+            DepthMode.disabled, StencilMode.disabled,
+            ColorMode.unblended, CullFaceMode.disabled,
+            projectionErrorMeasurementUniformValues(0.0, 0.0), null, null,
+            '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
+            this._fullscreenTriangle.segments);
+
+        context.viewport.set([0, 0, painter.width, painter.height]);
+
+        if (this._pbos && gl instanceof WebGL2RenderingContext) {
+            // Read back into PBO
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbos[this._nextPboIndex]);
+            gl.readBuffer(gl.COLOR_ATTACHMENT0);
+            gl.readPixels(0, 0, this._texWidth, this._texHeight, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, 0);
+            const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+            gl.flush();
+
+            this._readbackQueue = {
+                frameNumberIssued: this._updateCount,
+                readbackIndex: this._nextPboIndex,
+                sync,
+            };
+            this._nextPboIndex = (this._nextPboIndex + 1) % this._pbos.length;
+        } else {
+            // Read it back later.
+            this._readbackQueue = {
+                frameNumberIssued: this._updateCount,
+                readbackIndex: 0,
+                sync: null,
+            };
+        }
+    }
+
+    private _tryReadback(painter: Painter): void {
+        const context = painter.context;
+        const gl = context.gl;
+
+        if (this._pbos && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
+            // WebGL 2 path
+            const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
+
+            if (waitResult === gl.WAIT_FAILED) {
+                warnOnce('WebGL2 clientWaitSync failed.');
+                this._readbackQueue = null;
+                this._lastReadbackFrame = this._updateCount;
+                return;
+            }
+
+            if (waitResult === gl.TIMEOUT_EXPIRED) {
+                return; // Wait one more frame
+            }
+
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbos[this._readbackQueue.readbackIndex]);
+            gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this._resultBuffer, 0, 4);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, 0);
+        } else {
+            // WebGL1 compatible
+            this._bindFramebuffer(painter.context);
+            gl.readPixels(0, 0, this._texWidth, this._texHeight, gl.RGBA, gl.UNSIGNED_BYTE, this._resultBuffer);
+        }
+
+        // If we made it here, _resultBuffer contains the new measurement
+        this._readbackQueue = null;
+        this._measuredError = parseRGBA8float(this._resultBuffer);
+        this._lastReadbackFrame = this._updateCount;
+    }
+}
+
+function parseRGBA8float(buffer: Uint8Array): number {
+    // TODO
+    return 0;
 }

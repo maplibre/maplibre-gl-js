@@ -265,6 +265,7 @@ export class Painter {
 
         this._tileClippingMaskIDs = {};
 
+        // JP: TODO: fallback to normal flat clipping mask when globe is disabled
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
@@ -579,7 +580,6 @@ export class Painter {
      */
     translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean): mat4 {
         if (!translate[0] && !translate[1]) return matrix;
-
 
         const translation = this.translatePosition(tile, translate, translateAnchor, inViewportPixelUnitsUnits);
         const translatedMatrix = new Float32Array(16);
