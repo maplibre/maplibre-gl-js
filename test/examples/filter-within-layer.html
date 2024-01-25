@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>Filter within a Layer</title>
-    <meta property="og:description" content="Filter a layer based on user input using <code>setFilter()</code>." />
+    <meta property="og:description" content="Filter a layer based on user input using setFilter()." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -108,7 +108,7 @@
 </div>
 
 <script>
-    let data = {};
+    const data = {};
 
     const map = new maplibregl.Map({
         container: 'map',
@@ -136,8 +136,8 @@
     });
 
     document.getElementById('nav-filter').addEventListener('change', (e) => {
-        var filterOnValue = ["all"];
-        var operator = "==";
+        let filterOnValue = ['all'];
+        let operator = '==';
 
         switch (e.target.id) {
             /// example: `map.setFilter("earthquakes", ["any", [">", "felt", 16.0]])`
