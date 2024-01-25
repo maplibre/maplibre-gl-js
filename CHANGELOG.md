@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- ⚠️ Change attribution to be on by default ([#3618](https://github.com/maplibre/maplibre-gl-js/issues/3618))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
