@@ -21,8 +21,7 @@ const config: Config = {
             name: 'MapLibre Unit Coverage Report',
 
             reports: [
-                ['v8'],
-                ['raw'],
+                ['codecov']
             ],
 
             sourceFilter: (sourcePath) => {

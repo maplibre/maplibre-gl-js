@@ -46,7 +46,6 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm ci
       - run: npm run test-unit-ci
-      - run: node ./build/merge-raw-coverage.js 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         with:
