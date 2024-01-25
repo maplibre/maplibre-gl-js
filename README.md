@@ -1,4 +1,6 @@
-![MapLibre Logo](https://maplibre.org/img/maplibre-logo-big.svg)
+<p align="center">
+  <img src="./src/css/svg/maplibregl-ctrl-logo.svg" height="150" alt="MapLibre Logo">
+</p>
 
 # MapLibre GL JS
 
