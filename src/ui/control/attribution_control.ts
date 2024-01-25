@@ -1,4 +1,5 @@
 import {DOM} from '../../util/dom';
+import {extend} from '../../util/util';
 
 import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
@@ -52,7 +53,7 @@ export class AttributionControl implements IControl {
      * @param options - the attribution options
      */
     constructor(options: AttributionOptions = {}) {
-        this.options = Object.assign({}, defaultAtributionControlOptions, options);
+        this.options = extend({}, defaultAtributionControlOptions, options);
     }
 
     getDefaultPosition(): ControlPosition {
