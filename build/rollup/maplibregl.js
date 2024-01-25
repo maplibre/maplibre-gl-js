@@ -6,42 +6,17 @@
 // The three "chunks" imported here are produced by a first Rollup pass,
 // which outputs them as AMD modules.
 
-// Shared dependencies, i.e.:
-/*
-define(['exports'], function (exports) {
-    // Code for all common dependencies
-    // Each module's exports are attached attached to 'exports' (with
-    // names rewritten to avoid collisions, etc.)
-})
-*/
+// Shared dependencies
 import '../../staging/maplibregl/shared';
 
-// Worker and its unique dependencies, i.e.:
-/*
-define(['./shared.js'], function (__shared__js) {
-    //  Code for worker script and its unique dependencies.
-    //  Expects the output of 'shared' module to be passed in as an argument,
-    //  since all references to common deps look like, e.g.,
-    //  __shared__js.shapeText().
-});
-*/
-// When this wrapper function is passed to our custom define() above,
+// Worker and its unique dependencies
+// When this wrapper function is passed to our custom define() in build/rollup/bundle_prelude.js,
 // it gets stringified, together with the shared wrapper (using
 // Function.toString()), and the resulting string of code is made into a
 // Blob URL that gets used by the main module to create the web workers.
 import '../../staging/maplibregl/worker';
 
-// Main module and its unique dependencies
-/*
-define(['./shared.js'], function (__shared__js) {
-    //  Code for main GL JS module and its unique dependencies.
-    //  Expects the output of 'shared' module to be passed in as an argument,
-    //  since all references to common deps look like, e.g.,
-    //  __shared__js.shapeText().
-    //
-    //  Returns the actual maplibregl (i.e. src/index.js)
-});
-*/
+// Main module and its dependencies
 import '../../staging/maplibregl/index';
 
 export default maplibregl;

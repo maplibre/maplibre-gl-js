@@ -7,9 +7,9 @@ import type {Map} from '../map';
 import type {IControl} from './control';
 
 /**
- * The {@link FullscreenControl} options
+ * The {@link FullscreenControl} options object
  */
-type FullscreenOptions = {
+type FullscreenControlOptions = {
     /**
      * `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
      */
@@ -46,7 +46,7 @@ export class FullscreenControl extends Evented implements IControl {
     _container: HTMLElement;
     _prevCooperativeGesturesEnabled: boolean;
 
-    constructor(options: FullscreenOptions = {}) {
+    constructor(options: FullscreenControlOptions = {}) {
         super();
         this._fullscreen = false;
 
