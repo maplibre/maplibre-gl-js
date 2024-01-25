@@ -32,7 +32,7 @@ import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {getGlobalDispatcher} from './util/dispatcher';
 import {IControl} from './ui/control/control';
 import {EdgeInsets, PaddingOptions} from './geo/edge_insets';
-import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapSourceDataEvent, MapLibreZoomEvent, MapLibreEvent, MapLayerTouchEvent, MapLayerMouseEvent, MapLayerEventType, MapEventType, MapDataEvent, MapContextEvent, MapWheelEvent, MapTouchEvent} from './ui/events';
+import {MapTerrainEvent, MapStyleImageMissingEvent, MapStyleDataEvent, MapSourceDataEvent, MapLibreZoomEvent, MapLibreEvent, MapLayerTouchEvent, MapLayerMouseEvent, MapLayerEventType, MapEventType, MapDataEvent, MapContextEvent, MapWheelEvent, MapTouchEvent, MapMouseEvent} from './ui/events';
 import {BoxZoomHandler} from './ui/handler/box_zoom';
 import {DragRotateHandler} from './ui/handler/shim/drag_rotate';
 import {DragPanHandler} from './ui/handler/shim/drag_pan';
@@ -204,6 +204,9 @@ export {
     TwoFingersTouchZoomHandler,
     TwoFingersTouchRotateHandler,
     TwoFingersTouchPitchHandler,
+    MapWheelEvent,
+    MapTouchEvent,
+    MapMouseEvent,
     type IControl,
     type CustomLayerInterface,
     type CanvasSourceSpecification,
@@ -224,8 +227,6 @@ export {
     type MapEventType,
     type MapDataEvent,
     type MapContextEvent,
-    type MapWheelEvent,
-    type MapTouchEvent,
     setRTLTextPlugin,
     getRTLTextPluginStatus,
     prewarm,
