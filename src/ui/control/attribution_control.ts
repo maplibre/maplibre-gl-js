@@ -8,7 +8,7 @@ import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * The {@link AttributionControl} options object
  */
-type AttributionControlOptions = {
+export type AttributionControlOptions = {
     /**
      * If `true`, the attribution control will always collapse when moving the map. If `false`,
      * force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.
@@ -21,7 +21,8 @@ type AttributionControlOptions = {
     customAttribution?: string | Array<string>;
 };
 
-export const defaultAtributionControlOptions: AttributionOptions = {
+export const defaultAtributionControlOptions: AttributionControlOptions = {
+    compact: true,
     customAttribution: '<a href="https://maplibre.org/" target="_blank">MapLibre</a>'
 };
 
@@ -51,8 +52,8 @@ export class AttributionControl implements IControl {
     /**
      * @param options - the attribution options
      */
-    constructor(options: AttributionControlOptions = {}) {
-        this.options = extend({}, defaultAtributionControlOptions, options);
+    constructor(options: AttributionControlOptions = defaultAtributionControlOptions) {
+        this.options = options;
     }
 
     getDefaultPosition(): ControlPosition {

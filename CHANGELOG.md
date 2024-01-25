@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- ⚠️ Change attribution to be on by default ([#3618](https://github.com/maplibre/maplibre-gl-js/issues/3618))
+- ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/issues/3618))
 - ⚠️ Remove all global getters and setters from `maplibregl`, this means the the following methods have changed:
   `maplibregl.version` => `getVersion()`
   `maplibregl.workerCount` => `getWorkerCount()`, `setWorkerCount(...)`
