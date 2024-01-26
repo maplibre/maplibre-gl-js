@@ -22,6 +22,7 @@ import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {projectionErrorMeasurementUniformValues} from './program/projection_error_measurement_program';
 import {warnOnce} from '../util/util';
+import {mercatorYfromLat} from '../geo/mercator_coordinate';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
@@ -62,8 +63,9 @@ function smoothStep(edge0: number, edge1: number, x: number): number {
 }
 
 const globeTransitionTimeSeconds = 0.5;
-const zoomTransitionTimeSeconds = 0.2;
-const maxGlobeZoom = 11.0;
+const zoomTransitionTimeSeconds = 0.5;
+const maxGlobeZoom = 12.0;
+const errorTransitionTimeSeconds = 0.5;
 
 export class ProjectionManager {
     map: Map;
@@ -98,6 +100,21 @@ export class ProjectionManager {
     private _lastLargeZoomState: boolean = false;
     private _globeness: number;
 
+    // GPU atan() error correction
+    private _errorMeasurement: ProjectionErrorMeasurement;
+    private _errorQueryLatitudeDegrees: number;
+    private _errorCorrectionUsable: number = 0.0;
+    private _errorMeasurementLastValue: number = 0.0;
+    private _errorCorrectionPreviousValue: number = 0.0;
+    private _errorMeasurementLastChangeTime: number = -1000.0;
+
+    private _globeProjMatrix: mat4 = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ];
+
     get useGlobeRendering(): boolean {
         return this._globeness > 0.0;
     }
@@ -108,14 +125,46 @@ export class ProjectionManager {
 
     get isRenderingDirty(): boolean {
         const now = browser.now();
-        return (now - this._lastGlobeChangeTime) / 1000.0 < Math.max(globeTransitionTimeSeconds, zoomTransitionTimeSeconds) + 0.2;
+        let dirty = false;
+        // Globe transition
+        dirty = dirty || (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeTransitionTimeSeconds, zoomTransitionTimeSeconds) + 0.2);
+        // Error correction transition
+        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (errorTransitionTimeSeconds + 0.2);
+        // Error correction query in flight
+        dirty = dirty || this._errorMeasurement.awaitingQuery;
+        return dirty;
     }
 
     constructor(map: Map) {
         this.map = map;
     }
 
+    public updateGPUdependent(painter: Painter): void {
+        if (!this._errorMeasurement) {
+            this._errorMeasurement = new ProjectionErrorMeasurement();
+            this._errorMeasurement.init(painter);
+        }
+        const mercatorY = mercatorYfromLat(this._errorQueryLatitudeDegrees);
+        const expectedResult = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
+        const newValue = this._errorMeasurement.updateErrorLoop(painter, mercatorY, expectedResult);
+
+        const now = browser.now();
+
+        if (newValue !== this._errorMeasurementLastValue) {
+            this._errorCorrectionPreviousValue = this._errorCorrectionUsable; // store the interpolated value
+            this._errorMeasurementLastValue = newValue;
+            this._errorMeasurementLastChangeTime = now;
+        }
+
+        const sinceUpdateSeconds = (now - this._errorMeasurementLastChangeTime) / 1000.0;
+        const mix = Math.min(Math.max(sinceUpdateSeconds / errorTransitionTimeSeconds, 0.0), 1.0);
+        const newCorrection = -this._errorMeasurementLastValue; // Note the negation
+        this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, smoothStep(0.0, 1.0, mix));
+    }
+
     public updateProjection(transform: Transform): void {
+        this._errorQueryLatitudeDegrees = transform.center.lat;
+
         // Update globe transition animation
         const globeState = this.map._globeEnabled;
         const currentTime = browser.now();
@@ -137,6 +186,24 @@ export class ProjectionManager {
         const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
         this._globeness = Math.min(this._globeness, zoomGlobenessBound);
         this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
+
+        // We want zoom levels to be consistent between globe and flat views.
+        // This means that the pixel size of features at the map center point
+        // should be the same for both globe and flat view.
+        const globeRadiusPixels = transform.worldSize / (2.0 * Math.PI) / Math.cos(transform.center.lat * Math.PI / 180);
+
+        // Construct a completely separate matrix for globe view
+        const globeMatrix = new Float64Array(16) as any;
+        mat4.perspective(globeMatrix, transform._fov, transform.width / transform.height, 0.5, transform.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        mat4.translate(globeMatrix, globeMatrix, [0, 0, -transform.cameraToCenterDistance]);
+        mat4.rotateX(globeMatrix, globeMatrix, -transform._pitch);
+        mat4.rotateZ(globeMatrix, globeMatrix, -transform.angle);
+        mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
+        // Rotate the sphere to center it on viewed coordinates
+        mat4.rotateX(globeMatrix, globeMatrix, transform.center.lat * Math.PI / 180.0 - this._errorCorrectionUsable);
+        mat4.rotateY(globeMatrix, globeMatrix, -transform.center.lng * Math.PI / 180.0);
+        mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
+        this._globeProjMatrix = globeMatrix;
 
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
@@ -168,10 +235,9 @@ export class ProjectionManager {
         // - "T" is any point where a tangent line from "cam" touches the globe surface
         // - elevation is assumed to be zero - globe rendering must be separate from terrain rendering anyway
 
-        const globeRadiusInTransformUnits = transform.globeRadius;
         const pitch = transform.pitch * Math.PI / 180.0;
         // scale things so that the globe radius is 1
-        const distanceCameraToB = transform.cameraToCenterDistance / globeRadiusInTransformUnits;
+        const distanceCameraToB = transform.cameraToCenterDistance / globeRadiusPixels;
         const radius = 1;
 
         // Distance from camera to "A" - the point at the same elevation as camera, right above center point on globe
@@ -248,7 +314,7 @@ export class ProjectionManager {
     }
 
     private setGlobeProjection(data: ProjectionData): void {
-        data['u_projection_matrix'] = this.map.transform.globeProjMatrix;
+        data['u_projection_matrix'] = this._globeProjMatrix;
     }
 
     private getMeshKey(granuality: number, border: boolean, north: boolean, south: boolean): string {
@@ -400,6 +466,10 @@ class ProjectionErrorMeasurement {
     private _updateCount: number = 0;
     private _lastReadbackFrame: number = -1000;
 
+    get awaitingQuery(): boolean {
+        return !!this._readbackQueue;
+    }
+
     // There is never more than one readback waiting
     private _readbackQueue: {
         readbackIndex: number; // From what object index (in PBO ring buffer) to read data
@@ -407,7 +477,10 @@ class ProjectionErrorMeasurement {
         sync: WebGLSync;
     } = null;
 
-    private _init(context: Context) {
+    public init(painter: Painter) {
+        const context = painter.context;
+        const gl = context.gl;
+
         const vertexArray = new PosArray();
         vertexArray.emplaceBack(-1, -1);
         vertexArray.emplaceBack(2, -1);
@@ -423,7 +496,6 @@ class ProjectionErrorMeasurement {
 
         this._resultBuffer = new Uint8Array(4);
 
-        const gl = context.gl;
         context.activeTexture.set(gl.TEXTURE1);
 
         const texture = gl.createTexture();
@@ -444,12 +516,13 @@ class ProjectionErrorMeasurement {
                 const pbo = gl.createBuffer();
                 gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pbo);
                 gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
+                this._pbos.push(pbo);
             }
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, 0);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
         }
     }
 
-    public updateErrorLoop(painter: Painter): number {
+    public updateErrorLoop(painter: Painter, normalizedMercatorY: number, expectedAngleY: number): number {
         // JP: TODO: in the first N frames measure error across the whole mercator range
         // If the error is small everywhere, disable measuring (for perf reasons)
         // Or only do error measurement every N frames.
@@ -466,7 +539,7 @@ class ProjectionErrorMeasurement {
             }
         } else {
             if (currentFrame >= this._lastReadbackFrame + this._measureWaitFrames) {
-                this._renderErrorTexture(painter);
+                this._renderErrorTexture(painter, normalizedMercatorY, expectedAngleY);
             }
         }
 
@@ -481,7 +554,7 @@ class ProjectionErrorMeasurement {
         context.bindFramebuffer.set(this._fbo.framebuffer);
     }
 
-    private _renderErrorTexture(painter: Painter): void {
+    private _renderErrorTexture(painter: Painter, input: number, outputExpected: number): void {
         const context = painter.context;
         const gl = context.gl;
 
@@ -495,7 +568,7 @@ class ProjectionErrorMeasurement {
         program.draw(context, gl.TRIANGLES,
             DepthMode.disabled, StencilMode.disabled,
             ColorMode.unblended, CullFaceMode.disabled,
-            projectionErrorMeasurementUniformValues(0.0, 0.0), null, null,
+            projectionErrorMeasurementUniformValues(input, outputExpected), null, null,
             '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
             this._fullscreenTriangle.segments);
 
@@ -505,8 +578,8 @@ class ProjectionErrorMeasurement {
             // Read back into PBO
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbos[this._nextPboIndex]);
             gl.readBuffer(gl.COLOR_ATTACHMENT0);
-            gl.readPixels(0, 0, this._texWidth, this._texHeight, gl.RGBA, gl.UNSIGNED_BYTE, null);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, 0);
+            gl.readPixels(0, 0, this._texWidth, this._texHeight, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
             const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
             gl.flush();
 
@@ -547,7 +620,7 @@ class ProjectionErrorMeasurement {
 
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbos[this._readbackQueue.readbackIndex]);
             gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this._resultBuffer, 0, 4);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, 0);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
         } else {
             // WebGL1 compatible
             this._bindFramebuffer(painter.context);
@@ -557,11 +630,18 @@ class ProjectionErrorMeasurement {
         // If we made it here, _resultBuffer contains the new measurement
         this._readbackQueue = null;
         this._measuredError = parseRGBA8float(this._resultBuffer);
+        console.log(`Measured: ${this._measuredError}`);
         this._lastReadbackFrame = this._updateCount;
     }
 }
 
 function parseRGBA8float(buffer: Uint8Array): number {
-    // TODO
-    return 0;
+    let result = 0;
+    result += buffer[0] / 256.0;
+    result += buffer[1] / 65536.0;
+    result += buffer[2] / 16777216.0;
+    if (buffer[3] < 127.0) {
+        result = -result;
+    }
+    return result / 128.0;
 }
