@@ -456,6 +456,9 @@ class ProjectionErrorMeasurement {
     private readonly _measureWaitFrames = 4;
     private readonly _texWidth = 1;
     private readonly _texHeight = 1;
+
+    private readonly _allowWebGL2 = true;
+
     private _fullscreenTriangle: Mesh;
     private _fbo: Framebuffer;
     private _resultBuffer: Uint8Array;
@@ -509,7 +512,7 @@ class ProjectionErrorMeasurement {
         this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
         this._fbo.colorAttachment.set(texture);
 
-        if (gl instanceof WebGL2RenderingContext) {
+        if (this._allowWebGL2 && gl instanceof WebGL2RenderingContext) {
             this._pbos = [];
 
             for (let i = 0; i < this._ringBufferSize; i++) {
@@ -574,7 +577,7 @@ class ProjectionErrorMeasurement {
 
         context.viewport.set([0, 0, painter.width, painter.height]);
 
-        if (this._pbos && gl instanceof WebGL2RenderingContext) {
+        if (this._allowWebGL2 && this._pbos && gl instanceof WebGL2RenderingContext) {
             // Read back into PBO
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbos[this._nextPboIndex]);
             gl.readBuffer(gl.COLOR_ATTACHMENT0);
@@ -603,7 +606,7 @@ class ProjectionErrorMeasurement {
         const context = painter.context;
         const gl = context.gl;
 
-        if (this._pbos && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
+        if (this._allowWebGL2 && this._pbos && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
             // WebGL 2 path
             const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
 
