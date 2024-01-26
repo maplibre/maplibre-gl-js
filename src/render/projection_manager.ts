@@ -141,8 +141,7 @@ export class ProjectionManager {
 
     public updateGPUdependent(painter: Painter): void {
         if (!this._errorMeasurement) {
-            this._errorMeasurement = new ProjectionErrorMeasurement();
-            this._errorMeasurement.init(painter);
+            this._errorMeasurement = new ProjectionErrorMeasurement(painter);
         }
         const mercatorY = mercatorYfromLat(this._errorQueryLatitudeDegrees);
         const expectedResult = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
@@ -448,6 +447,21 @@ export class ProjectionManager {
     }
 }
 
+/**
+ * For vector globe the vertex shader projects mercator coordinates to angluar coordinates on a sphere.
+ * This projection requires some inverse trigonometry `atan(exp(...))` which is inaccurate on some GPUs (mainly on AMD and Nvidia).
+ * Since the inaccuracy is hardware-dependant and may change in the future, we need to measure the error at runtime.
+ *
+ * Our approach relies on several assumtions:
+ * - the error is only present in the "latitude" component (longitude doesn't need any inverse trigonometry)
+ * - the error is continuous and changes slowly with latitude
+ * - at zoom levels where the error is noticeable, the error is more-or-less the same across the entire visible map area (and thus can be described with a single number)
+ *
+ * Solution:
+ * Every few frames, launch a GPU shader that measures the error for the current map center latitude, and writes it to a 1x1 texture.
+ * Read back that texture, and offset the globe projection matrix according to the error (interpolating smoothly from old error to new error if needed).
+ * The texture readback is done using Pixel Pack Buffers (WebGL2) when possible, and has a few frames of latency, but that should not be a problem.
+ */
 class ProjectionErrorMeasurement {
     private readonly _ringBufferSize = 2;
     // we wait this many frames after measuring until we read back the value
@@ -456,6 +470,8 @@ class ProjectionErrorMeasurement {
     private readonly _measureWaitFrames = 4;
     private readonly _texWidth = 1;
     private readonly _texHeight = 1;
+    private readonly _texFormat: number;
+    private readonly _texType: number;
 
     private readonly _allowWebGL2 = true;
 
@@ -480,9 +496,12 @@ class ProjectionErrorMeasurement {
         sync: WebGLSync;
     } = null;
 
-    public init(painter: Painter) {
+    public constructor(painter: Painter) {
         const context = painter.context;
         const gl = context.gl;
+
+        this._texFormat = gl.RGBA;
+        this._texType = gl.UNSIGNED_BYTE;
 
         const vertexArray = new PosArray();
         vertexArray.emplaceBack(-1, -1);
@@ -507,7 +526,7 @@ class ProjectionErrorMeasurement {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._texWidth, this._texHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, this._texFormat, this._texWidth, this._texHeight, 0, this._texFormat, this._texType, null);
 
         this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
         this._fbo.colorAttachment.set(texture);
@@ -526,10 +545,6 @@ class ProjectionErrorMeasurement {
     }
 
     public updateErrorLoop(painter: Painter, normalizedMercatorY: number, expectedAngleY: number): number {
-        // JP: TODO: in the first N frames measure error across the whole mercator range
-        // If the error is small everywhere, disable measuring (for perf reasons)
-        // Or only do error measurement every N frames.
-
         const currentFrame = this._updateCount;
 
         if (this._readbackQueue) {
@@ -581,7 +596,7 @@ class ProjectionErrorMeasurement {
             // Read back into PBO
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbos[this._nextPboIndex]);
             gl.readBuffer(gl.COLOR_ATTACHMENT0);
-            gl.readPixels(0, 0, this._texWidth, this._texHeight, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+            gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, 0);
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
             const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
             gl.flush();
@@ -627,7 +642,7 @@ class ProjectionErrorMeasurement {
         } else {
             // WebGL1 compatible
             this._bindFramebuffer(painter.context);
-            gl.readPixels(0, 0, this._texWidth, this._texHeight, gl.RGBA, gl.UNSIGNED_BYTE, this._resultBuffer);
+            gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, this._resultBuffer);
         }
 
         // If we made it here, _resultBuffer contains the new measurement
