@@ -867,6 +867,16 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Resets opacity to default when setOpacity is called without arguments', () => {
+        const map = createMap();
+        const marker = new Marker({opacity: 0.7})
+            .setLngLat([0, 0])
+            .addTo(map);
+        marker.setOpacity();
+        expect(marker.getElement().style.opacity).toBe('1');
+        map.remove();
+    });
+
     test('Marker changes opacity behind terrain and when terrain is removed', () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker

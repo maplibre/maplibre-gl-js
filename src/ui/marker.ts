@@ -814,11 +814,16 @@ export class Marker extends Evented {
     }
 
     /**
-     * Sets the `opacity` property of the marker.
+     * Sets the `opacity` and `opacityWhenCovered` properties of the marker.
      * @param opacity - Sets the `opacity` property of the marker.
+     * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
      * @returns `this`
      */
     setOpacity(opacity?: number, opacityWhenCovered?: number): this {
+        if (opacity === undefined && opacityWhenCovered === undefined) {
+            this._opacity = 1;
+            this._opacityWhenCovered = 0.2;
+        }
         if (opacity !== undefined) {
             this._opacity = opacity;
         }
