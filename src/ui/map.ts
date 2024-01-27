@@ -468,7 +468,7 @@ export class Map extends Camera {
     _localIdeographFontFamily: string;
     _validateStyle: boolean;
     _requestManager: RequestManager;
-    _locale: typeof defaultLocale;
+    _locale: Partial<typeof defaultLocale>;
     _removed: boolean;
     _clickTolerance: number;
     _overridePixelRatio: number | null;
