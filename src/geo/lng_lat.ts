@@ -15,7 +15,7 @@ export const earthRadius = 6371008.8;
  *
  * @example
  * ```ts
- * let v1 = new maplibregl.LngLat(-122.420679, 37.772537);
+ * let v1 = new LngLat(-122.420679, 37.772537);
  * let v2 = [-122.420679, 37.772537];
  * let v3 = {lon: -122.420679, lat: 37.772537};
  * ```
@@ -43,7 +43,7 @@ export type LngLatLike = LngLat | {
  *
  * @example
  * ```ts
- * let ll = new maplibregl.LngLat(-123.9749, 40.7736);
+ * let ll = new LngLat(-123.9749, 40.7736);
  * ll.lng; // = -123.9749
  * ```
  * @see [Get coordinates of the mouse pointer](https://maplibre.org/maplibre-gl-js/docs/examples/mouse-position/)
@@ -75,7 +75,7 @@ export class LngLat {
      * @returns The wrapped `LngLat` object.
      * @example
      * ```ts
-     * let ll = new maplibregl.LngLat(286.0251, 40.7736);
+     * let ll = new LngLat(286.0251, 40.7736);
      * let wrapped = ll.wrap();
      * wrapped.lng; // = -73.9749
      * ```
@@ -90,7 +90,7 @@ export class LngLat {
      * @returns The coordinates represented as an array of longitude and latitude.
      * @example
      * ```ts
-     * let ll = new maplibregl.LngLat(-73.9749, 40.7736);
+     * let ll = new LngLat(-73.9749, 40.7736);
      * ll.toArray(); // = [-73.9749, 40.7736]
      * ```
      */
@@ -104,7 +104,7 @@ export class LngLat {
      * @returns The coordinates represented as a string of the format `'LngLat(lng, lat)'`.
      * @example
      * ```ts
-     * let ll = new maplibregl.LngLat(-73.9749, 40.7736);
+     * let ll = new LngLat(-73.9749, 40.7736);
      * ll.toString(); // = "LngLat(-73.9749, 40.7736)"
      * ```
      */
@@ -120,8 +120,8 @@ export class LngLat {
      * @returns Distance in meters between the two coordinates.
      * @example
      * ```ts
-     * let new_york = new maplibregl.LngLat(-74.0060, 40.7128);
-     * let los_angeles = new maplibregl.LngLat(-118.2437, 34.0522);
+     * let new_york = new LngLat(-74.0060, 40.7128);
+     * let los_angeles = new LngLat(-118.2437, 34.0522);
      * new_york.distanceTo(los_angeles); // = 3935751.690893987, "true distance" using a non-spherical approximation is ~3966km
      * ```
      */
@@ -146,7 +146,7 @@ export class LngLat {
      * @example
      * ```ts
      * let arr = [-73.9749, 40.7736];
-     * let ll = maplibregl.LngLat.convert(arr);
+     * let ll = LngLat.convert(arr);
      * ll;   // = LngLat {lng: -73.9749, lat: 40.7736}
      * ```
      */

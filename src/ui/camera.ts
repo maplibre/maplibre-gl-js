@@ -39,7 +39,7 @@ export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Pa
  * @example
  * Set the map's initial perspective with CameraOptions
  * ```ts
- * let map = new maplibregl.Map({
+ * let map = new Map({
  *   container: 'map',
  *   style: 'https://demotiles.maplibre.org/style.json',
  *   center: [-73.5804, 45.53483],

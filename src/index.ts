@@ -58,7 +58,7 @@ export type * from '@maplibre/maplibre-gl-style-spec';
  * rtl text will then be rendered only after the plugin finishes loading.
  * @example
  * ```ts
- * maplibregl.setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js', false);
+ * setRTLTextPlugin('https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js', false);
  * ```
  * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
  */
@@ -70,7 +70,7 @@ function setRTLTextPlugin(pluginURL: string, lazy: boolean) { return rtlMainThre
  *
  * @example
  * ```ts
- * const pluginStatus = maplibregl.getRTLTextPluginStatus();
+ * const pluginStatus = getRTLTextPluginStatus();
  * ```
  */
 function getRTLTextPluginStatus() { return rtlMainThreadPluginFactory().getRTLTextPluginStatus(); }
@@ -87,7 +87,7 @@ function getVersion() { return version; }
  * @returns Number of workers currently configured.
  * @example
  * ```ts
- * const workerCount = maplibregl.getWorkerCount()
+ * const workerCount = getWorkerCount()
  * ```
  */
 function getWorkerCount() { return WorkerPool.workerCount; }
@@ -98,7 +98,7 @@ function getWorkerCount() { return WorkerPool.workerCount; }
  *
  * @example
  * ```ts
- * maplibregl.setWorkerCount(2);
+ * setWorkerCount(2);
  * ```
  */
 function setWorkerCount(count: number) { WorkerPool.workerCount = count; }
@@ -109,7 +109,7 @@ function setWorkerCount(count: number) { WorkerPool.workerCount = count; }
  * @returns Number of parallel requests currently configured.
  * @example
  * ```ts
- * maplibregl.getMaxParallelImageRequests();
+ * getMaxParallelImageRequests();
  * ```
  */
 function getMaxParallelImageRequests() { return config.MAX_PARALLEL_IMAGE_REQUESTS; }
@@ -119,7 +119,7 @@ function getMaxParallelImageRequests() { return config.MAX_PARALLEL_IMAGE_REQUES
  *
  * @example
  * ```ts
- * maplibregl.setMaxParallelImageRequests(10);
+ * setMaxParallelImageRequests(10);
  * ```
  */
 function setMaxParallelImageRequests(numRequests: number) { config.MAX_PARALLEL_IMAGE_REQUESTS = numRequests; }
@@ -160,7 +160,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  * self.addPRotocol('custom', loadFn);
  *
  * // main.js
- * maplibregl.importScriptInWorkers('add-protocol-worker.js');
+ * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
 function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast('importScript', workerUrl); }
