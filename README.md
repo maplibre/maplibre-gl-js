@@ -86,11 +86,9 @@ We thank everyone who supported us financially in the past and special thanks to
 
 Read more about the MapLibre Sponsorship Program at [https://maplibre.org/sponsors/](https://maplibre.org/sponsors/).
 
-Platinum:
+Gold:
 
 <a href="https://aws.com"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
-
-Gold:
 
 <a href="https://meta.com"><img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="25%"/></a>
 
