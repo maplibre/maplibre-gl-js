@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Add "opacity" option and "setOpacity" method to Marker ([#3620](https://github.com/maplibre/maplibre-gl-js/pull/3620))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
