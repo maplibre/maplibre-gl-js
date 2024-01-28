@@ -21,7 +21,7 @@ type LogoControlOptions = {
  *
  * @example
  * ```ts
- * map.addControl(new maplibregl.LogoControl({compact: false}));
+ * map.addControl(new LogoControl({compact: false}));
  * ```
  **/
 export class LogoControl implements IControl {

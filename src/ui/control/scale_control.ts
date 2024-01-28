@@ -37,7 +37,7 @@ const defaultOptions: ScaleControlOptions = {
  *
  * @example
  * ```ts
- * let scale = new maplibregl.ScaleControl({
+ * let scale = new ScaleControl({
  *     maxWidth: 80,
  *     unit: 'imperial'
  * });

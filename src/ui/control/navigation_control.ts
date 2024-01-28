@@ -39,7 +39,7 @@ const defaultOptions: NavigationControlOptions = {
  *
  * @example
  * ```ts
- * let nav = new maplibregl.NavigationControl();
+ * let nav = new NavigationControl();
  * map.addControl(nav, 'top-left');
  * ```
  * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)

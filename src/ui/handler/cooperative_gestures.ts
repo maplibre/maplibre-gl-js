@@ -15,7 +15,7 @@ export type GestureOptions = boolean;
  *
  * @example
  * ```ts
- * const map = new maplibregl.Map({
+ * const map = new Map({
  *   cooperativeGestures: true
  * });
  * ```

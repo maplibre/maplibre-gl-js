@@ -25,8 +25,8 @@ type AttributionControlOptions = {
  * @group Markers and Controls
  * @example
  * ```ts
- * let map = new maplibregl.Map({attributionControl: false})
- *     .addControl(new maplibregl.AttributionControl({
+ * let map = new Map({attributionControl: false})
+ *     .addControl(new AttributionControl({
  *         compact: true
  *     }));
  * ```
