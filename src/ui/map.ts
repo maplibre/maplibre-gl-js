@@ -93,9 +93,10 @@ export type MapOptions = {
     /**
      * If set, an {@link AttributionControl} will be added to the map with the provided options.
      * To disable the attribution control, pass `false`.
+     * Note: showing the logo of MapLibre is not required for using MapLibre.
      * @defaultValue compact: true, customAttribution: "MapLibre ...".
      */
-    attributionControl?: boolean | AttributionControlOptions;
+    attributionControl?: false | AttributionControlOptions;
     /**
      * If `true`, the MapLibre logo will be shown.
      * @defaultValue false
