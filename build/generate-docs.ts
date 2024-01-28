@@ -24,7 +24,7 @@ import {Map} from 'maplibre-gl';
 const map = new Map(...)
 \`\`\`
 
-\`Import\` statements are omitted from the examples for brevity.
+Import declarations are omitted from the examples for brevity.
 
 `;
     intro += lines.map(l => l.replace('../', './')).join('\n');
