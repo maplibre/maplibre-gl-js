@@ -16,8 +16,6 @@ Note: showing the logo of MapLibre is not required for using MapLibre.
 - ⚠️ Changed the terrain enable disable locale key to match the other keys' styles, updated the typings to allow using locale with more ease ([#3621](https://github.com/maplibre/maplibre-gl-js/issues/3621))
 - Add "opacity" option and "setOpacity" method to Marker ([#3620](https://github.com/maplibre/maplibre-gl-js/pull/3620))
 
-### 🐞 Bug fixes
-
 ## 4.0.0-pre.5
 
 ### ✨ Features and improvements
