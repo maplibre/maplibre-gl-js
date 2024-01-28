@@ -92,7 +92,7 @@ type MarkerOptions = {
  *
  * @example
  * ```ts
- * let marker = new maplibregl.Marker()
+ * let marker = new Marker()
  *   .setLngLat([30.5, 50.5])
  *   .addTo(map);
  * ```
@@ -100,7 +100,7 @@ type MarkerOptions = {
  * @example
  * Set options
  * ```ts
- * let marker = new maplibregl.Marker({
+ * let marker = new Marker({
  *     color: "#FFFFFF",
  *     draggable: true
  *   }).setLngLat([30.5, 50.5])
@@ -300,7 +300,7 @@ export class Marker extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      *   .setLngLat([30.5, 50.5])
      *   .addTo(map); // add the marker to the map
      * ```
@@ -328,7 +328,7 @@ export class Marker extends Evented {
      * Removes the marker from a map
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker().addTo(map);
+     * let marker = new Marker().addTo(map);
      * marker.remove();
      * ```
      * @returns `this`
@@ -383,7 +383,7 @@ export class Marker extends Evented {
      * @example
      * Create a new marker, set the longitude and latitude, and add it to the map
      * ```ts
-     * new maplibregl.Marker()
+     * new Marker()
      *   .setLngLat([-65.017, -16.457])
      *   .addTo(map);
      * ```
@@ -413,9 +413,9 @@ export class Marker extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>")) // add popup
+     *  .setPopup(new Popup().setHTML("<h1>Hello World!</h1>")) // add popup
      *  .addTo(map);
      * ```
      * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
@@ -486,9 +486,9 @@ export class Marker extends Evented {
      * @returns popup
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>"))
+     *  .setPopup(new Popup().setHTML("<h1>Hello World!</h1>"))
      *  .addTo(map);
      *
      * console.log(marker.getPopup()); // return the popup instance
@@ -503,9 +503,9 @@ export class Marker extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>"))
+     *  .setPopup(new Popup().setHTML("<h1>Hello World!</h1>"))
      *  .addTo(map);
      *
      * marker.togglePopup(); // toggle popup open or closed
@@ -623,7 +623,7 @@ export class Marker extends Evented {
      *
      * @example
      * ```
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      * marker.addClassName('some-class')
      * ```
      */
@@ -638,7 +638,7 @@ export class Marker extends Evented {
      *
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      * marker.removeClassName('some-class')
      * ```
      */
@@ -655,7 +655,7 @@ export class Marker extends Evented {
      *
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      * marker.toggleClassName('toggleClass')
      * ```
      */

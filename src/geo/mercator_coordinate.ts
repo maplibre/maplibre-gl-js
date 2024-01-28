@@ -70,7 +70,7 @@ export function mercatorScale(lat: number) {
  *
  * @example
  * ```ts
- * let nullIsland = new maplibregl.MercatorCoordinate(0.5, 0.5, 0);
+ * let nullIsland = new MercatorCoordinate(0.5, 0.5, 0);
  * ```
  * @see [Add a custom style layer](https://maplibre.org/maplibre-gl-js/docs/examples/custom-style-layer/)
  */
@@ -98,7 +98,7 @@ export class MercatorCoordinate implements IMercatorCoordinate {
      * @returns The projected mercator coordinate.
      * @example
      * ```ts
-     * let coord = maplibregl.MercatorCoordinate.fromLngLat({ lng: 0, lat: 0}, 0);
+     * let coord = MercatorCoordinate.fromLngLat({ lng: 0, lat: 0}, 0);
      * coord; // MercatorCoordinate(0.5, 0.5, 0)
      * ```
      */
@@ -117,7 +117,7 @@ export class MercatorCoordinate implements IMercatorCoordinate {
      * @returns The `LngLat` object.
      * @example
      * ```ts
-     * let coord = new maplibregl.MercatorCoordinate(0.5, 0.5, 0);
+     * let coord = new MercatorCoordinate(0.5, 0.5, 0);
      * let lngLat = coord.toLngLat(); // LngLat(0, 0)
      * ```
      */
@@ -133,7 +133,7 @@ export class MercatorCoordinate implements IMercatorCoordinate {
      * @returns The altitude in meters.
      * @example
      * ```ts
-     * let coord = new maplibregl.MercatorCoordinate(0, 0, 0.02);
+     * let coord = new MercatorCoordinate(0, 0, 0.02);
      * coord.toAltitude(); // 6914.281956295339
      * ```
      */

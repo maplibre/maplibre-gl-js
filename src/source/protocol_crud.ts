@@ -15,7 +15,7 @@ export function getProtocol(url: string) {
  * @example
  * ```ts
  * // This will fetch a file using the fetch API (this is obviously a non interesting example...)
- * maplibregl.addProtocol('custom', async (params, abortController) => {
+ * addProtocol('custom', async (params, abortController) => {
  *      const t = await fetch(`https://${params.url.split("://")[1]}`);
  *      if (t.status == 200) {
  *          const buffer = await t.arrayBuffer();
@@ -25,7 +25,7 @@ export function getProtocol(url: string) {
  *      }
  *  });
  * // the following is an example of a way to return an error when trying to load a tile
- * maplibregl.addProtocol('custom2', async (params, abortController) => {
+ * addProtocol('custom2', async (params, abortController) => {
  *      throw new Error('someErrorMessage'));
  * });
  * ```
@@ -40,7 +40,7 @@ export function addProtocol(customProtocol: string, loadFn: AddProtocolAction) {
  * @param customProtocol - the custom protocol to remove registration for
  * @example
  * ```ts
- * maplibregl.removeProtocol('custom');
+ * removeProtocol('custom');
  * ```
  */
 export function removeProtocol(customProtocol: string) {

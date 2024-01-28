@@ -28,7 +28,7 @@ export type GestureOptions = {
  *
  * @example
  * ```ts
- * const map = new maplibregl.Map({
+ * const map = new Map({
  *   cooperativeGestures: {
  *      windowsHelpText: "Use Ctrl + scroll to zoom the map",
  *      macHelpText: "Use ⌘ + scroll to zoom the map",

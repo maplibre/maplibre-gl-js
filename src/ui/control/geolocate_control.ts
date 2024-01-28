@@ -79,7 +79,7 @@ let noTimeout = false;
  *
  * @example
  * ```ts
- * map.addControl(new maplibregl.GeolocateControl({
+ * map.addControl(new GeolocateControl({
  *     positionOptions: {
  *         enableHighAccuracy: true
  *     },
@@ -106,7 +106,7 @@ let noTimeout = false;
  * @example
  * ```ts
  * // Initialize the geolocate control.
- * let geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -124,7 +124,7 @@ let noTimeout = false;
  * @example
  * ```ts
  * // Initialize the geolocate control.
- * let geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -142,7 +142,7 @@ let noTimeout = false;
  * @example
  * ```ts
  * // Initialize the geolocate control.
- * let geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -160,7 +160,7 @@ let noTimeout = false;
  * @example
  * ```ts
  * // Initialize the geolocate control.
- * let geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -178,7 +178,7 @@ let noTimeout = false;
  * @example
  * ```ts
  * // Initialize the geolocate control.
- * let geolocate = new maplibregl.GeolocateControl({
+ * let geolocate = new GeolocateControl({
  *   positionOptions: {
  *       enableHighAccuracy: true
  *   },
@@ -546,7 +546,7 @@ export class GeolocateControl extends Evented implements IControl {
      * @example
      * ```ts
      * // Initialize the geolocate control.
-     * let geolocate = new maplibregl.GeolocateControl({
+     * let geolocate = new GeolocateControl({
      *  positionOptions: {
      *    enableHighAccuracy: true
      *  },

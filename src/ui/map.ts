@@ -403,7 +403,7 @@ const defaultOptions = {
  *
  * @example
  * ```ts
- * let map = new maplibregl.Map({
+ * let map = new Map({
  *   container: 'map',
  *   center: [-122.420679, 37.772537],
  *   zoom: 13,
@@ -702,7 +702,7 @@ export class Map extends Camera {
      * @example
      * Add zoom and rotation controls to the map.
      * ```ts
-     * map.addControl(new maplibregl.NavigationControl());
+     * map.addControl(new NavigationControl());
      * ```
      * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
      */
@@ -740,7 +740,7 @@ export class Map extends Camera {
      * @example
      * ```ts
      * // Define a new navigation control.
-     * let navigation = new maplibregl.NavigationControl();
+     * let navigation = new NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Remove zoom and rotation controls from the map.
@@ -766,7 +766,7 @@ export class Map extends Camera {
      * @example
      * ```ts
      * // Define a new navigation control.
-     * let navigation = new maplibregl.NavigationControl();
+     * let navigation = new NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Check that the navigation control exists on the map.
@@ -1348,7 +1348,7 @@ export class Map extends Camera {
      * // Set an event listener that will fire
      * // when a feature on the countries layer of the map is clicked
      * map.on('click', 'countries', (e) => {
-     *   new maplibregl.Popup()
+     *   new Popup()
      *     .setLngLat(e.lngLat)
      *     .setHTML(`Country name: ${e.features[0].properties.name}`)
      *     .addTo(map);

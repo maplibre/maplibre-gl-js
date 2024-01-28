@@ -17,6 +17,15 @@ We recommend looking at the [examples](../examples/index.md) as they will help y
 
 Most of the classes wirtten here have an "Options" object for initialization, it is recommended to check which options exist. 
 
+It is recommended to import what you need and the use it. Some examples for classes assume you did that.
+For example, import the \`Map\` class like this:
+\`\`\`ts
+import {Map} from 'maplibre-gl';
+const map = new Map(...)
+\`\`\`
+
+Import declarations are omitted from the examples for brevity.
+
 `;
     intro += lines.map(l => l.replace('../', './')).join('\n');
     return intro;

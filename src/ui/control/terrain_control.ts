@@ -11,8 +11,8 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
  *
  * @example
  * ```ts
- * let map = new maplibregl.Map({TerrainControl: false})
- *     .addControl(new maplibregl.TerrainControl({
+ * let map = new Map({TerrainControl: false})
+ *     .addControl(new TerrainControl({
  *         source: "terrain"
  *     }));
  * ```
