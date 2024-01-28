@@ -815,6 +815,7 @@ export class Marker extends Evented {
 
     /**
      * Sets the `opacity` and `opacityWhenCovered` properties of the marker.
+     * When called without arguments, resets opacity and opacityWhenCovered to defaults
      * @param opacity - Sets the `opacity` property of the marker.
      * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
      * @returns `this`
