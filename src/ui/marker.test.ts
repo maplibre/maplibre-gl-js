@@ -850,7 +850,7 @@ describe('marker', () => {
 
     test('Sets opacity according to options.opacity', () => {
         const map = createMap();
-        const marker = new Marker({opacity: 0.7})
+        const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -859,17 +859,17 @@ describe('marker', () => {
 
     test('Changes opacity to a new value provided by setOpacity', () => {
         const map = createMap();
-        const marker = new Marker({opacity: 0.7})
+        const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
-        marker.setOpacity(0.6);
+        marker.setOpacity('0.6');
         expect(marker.getElement().style.opacity).toMatch('.6');
         map.remove();
     });
 
     test('Resets opacity to default when setOpacity is called without arguments', () => {
         const map = createMap();
-        const marker = new Marker({opacity: 0.7})
+        const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
         marker.setOpacity();
@@ -912,7 +912,7 @@ describe('marker', () => {
     test('Applies options.opacity when 3d terrain is enabled and marker is in clear view', () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
-        const marker = new Marker({opacity: 0.7})
+        const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
 
@@ -929,7 +929,7 @@ describe('marker', () => {
     test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
-        const marker = new Marker({opacity: 0.7, opacityWhenCovered: 0.3})
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
             .setLngLat([0, 0])
             .addTo(map);
 
@@ -946,7 +946,7 @@ describe('marker', () => {
     test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', async () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
-        const marker = new Marker({opacityWhenCovered: 0.15})
+        const marker = new Marker({opacityWhenCovered: '0.15'})
             .setLngLat([0, 0])
             .addTo(map);
 
@@ -956,7 +956,7 @@ describe('marker', () => {
         } as any as Terrain;
         map.fire('terrain');
 
-        marker.setOpacity(undefined, 0.35);
+        marker.setOpacity(undefined, '0.35');
 
         expect(marker.getElement().style.opacity).toMatch('0.35');
         map.remove();
