@@ -15,7 +15,7 @@ import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} 
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {AttributionControl} from './control/attribution_control';
+import {AttributionControl, AttributionControlOptions, defaultAtributionControlOptions} from './control/attribution_control';
 import {LogoControl} from './control/logo_control';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
@@ -91,14 +91,12 @@ export type MapOptions = {
      */
     bearingSnap?: number;
     /**
-     * If `true`, an {@link AttributionControl} will be added to the map.
-     * @defaultValue true
+     * If set, an {@link AttributionControl} will be added to the map with the provided options.
+     * To disable the attribution control, pass `false`.
+     * Note: showing the logo of MapLibre is not required for using MapLibre.
+     * @defaultValue compact: true, customAttribution: "MapLibre ...".
      */
-    attributionControl?: boolean;
-    /**
-     * Attribution text to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
-     */
-    customAttribution?: string | Array<string>;
+    attributionControl?: false | AttributionControlOptions;
     /**
      * If `true`, the MapLibre logo will be shown.
      * @defaultValue false
@@ -371,7 +369,7 @@ const defaultOptions = {
     pitchWithRotate: true,
 
     hash: false,
-    attributionControl: true,
+    attributionControl: defaultAtributionControlOptions,
     maplibreLogo: false,
 
     failIfMajorPerformanceCaveat: false,
@@ -658,7 +656,7 @@ export class Map extends Camera {
         if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
 
         if (options.attributionControl)
-            this.addControl(new AttributionControl({customAttribution: options.customAttribution}));
+            this.addControl(new AttributionControl(typeof options.attributionControl === 'boolean' ? undefined : options.attributionControl));
 
         if (options.maplibreLogo)
             this.addControl(new LogoControl(), options.logoPosition);

@@ -2,6 +2,8 @@
 
 ### ✨ Features and improvements
 
+- ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/issues/3618))
+Note: showing the logo of MapLibre is not required for using MapLibre.
 - ⚠️ Changed cooperative gesture config and removed the strings from it in favor of the locale variable ([#3621](https://github.com/maplibre/maplibre-gl-js/issues/3621))
 - ⚠️ Changed the terrain enable disable locale key to match the other keys' styles, updated the typings to allow using locale with more ease ([#3621](https://github.com/maplibre/maplibre-gl-js/issues/3621))
 - Add "opacity" option and "setOpacity" method to Marker ([#3620](https://github.com/maplibre/maplibre-gl-js/pull/3620))
@@ -13,6 +15,7 @@
 ## 4.0.0-pre.5
 
 ### ✨ Features and improvements
+
 - ⚠️ Remove all global getters and setters from `maplibregl`, this means the the following methods have changed:
   `maplibregl.version` => `getVersion()`
   `maplibregl.workerCount` => `getWorkerCount()`, `setWorkerCount(...)`
@@ -21,6 +24,7 @@
   This is to avoid the need to use a global object and allow named exports/imports ([#3601](https://github.com/maplibre/maplibre-gl-js/issues/3601))
 
 ### 🐞 Bug fixes
+
 - Fix wheel zoom to be into the same direction above or under the horizon ([#3398](https://github.com/maplibre/maplibre-gl-js/issues/3398))
 - Fix _cameraForBoxAndBearing not fitting bounds properly when using asymettrical camera viewport and bearing.
 
