@@ -5,21 +5,8 @@ import type {Map} from '../map';
 
 /**
  * The {@link CooperativeGesturesHandler} options object for the gesture settings
- *
- * @example
- * ```ts
- * let options = {
- *   windowsHelpText: "Use Ctrl + scroll to zoom the map",
- *   macHelpText: "Use ⌘ + scroll to zoom the map",
- *   mobileHelpText: "Use two fingers to move the map",
- * }
- * ```
  */
-export type GestureOptions = {
-    windowsHelpText?: string;
-    macHelpText?: string;
-    mobileHelpText?: string;
-};
+export type GestureOptions = boolean;
 
 /**
  * A `CooperativeGestureHandler` is a control that adds cooperative gesture info when user tries to zoom in/out.
@@ -29,17 +16,13 @@ export type GestureOptions = {
  * @example
  * ```ts
  * const map = new Map({
- *   cooperativeGestures: {
- *      windowsHelpText: "Use Ctrl + scroll to zoom the map",
- *      macHelpText: "Use ⌘ + scroll to zoom the map",
- *      mobileHelpText: "Use two fingers to move the map",
- *   }
+ *   cooperativeGestures: true
  * });
  * ```
  * @see [Example: cooperative gestures](https://maplibre.org/maplibre-gl-js-docs/example/cooperative-gestures/)
  **/
 export class CooperativeGesturesHandler implements Handler {
-    _options: boolean | GestureOptions;
+    _options: GestureOptions;
     _map: Map;
     _container: HTMLElement;
     /**
@@ -48,7 +31,7 @@ export class CooperativeGesturesHandler implements Handler {
     _bypassKey: 'metaKey' | 'ctrlKey' = navigator.userAgent.indexOf('Mac') !== -1 ? 'metaKey' : 'ctrlKey';
     _enabled: boolean;
 
-    constructor(map: Map, options: boolean | GestureOptions = {}) {
+    constructor(map: Map, options: GestureOptions) {
         this._map = map;
         this._options = options;
         this._enabled = false;
@@ -64,11 +47,11 @@ export class CooperativeGesturesHandler implements Handler {
         // Add a cooperative gestures class (enable touch-action: pan-x pan-y;)
         mapCanvasContainer.classList.add('maplibregl-cooperative-gestures');
         this._container = DOM.create('div', 'maplibregl-cooperative-gesture-screen', mapCanvasContainer);
-        let desktopMessage = typeof this._options !== 'boolean' && this._options.windowsHelpText ? this._options.windowsHelpText : 'Use Ctrl + scroll to zoom the map';
+        let desktopMessage = this._map._getUIString('CooperativeGesturesHandler.WindowsHelpText');
         if (this._bypassKey === 'metaKey') {
-            desktopMessage = typeof this._options !== 'boolean' && this._options.macHelpText ? this._options.macHelpText : 'Use ⌘ + scroll to zoom the map';
+            desktopMessage = this._map._getUIString('CooperativeGesturesHandler.MacHelpText');
         }
-        const mobileMessage = typeof this._options !== 'boolean' && this._options.mobileHelpText ? this._options.mobileHelpText : 'Use two fingers to move the map, three to pitch';
+        const mobileMessage = this._map._getUIString('CooperativeGesturesHandler.MobileHelpText');
         // Create and append the desktop message div
         const desktopDiv = document.createElement('div');
         desktopDiv.className = 'maplibregl-desktop-message';

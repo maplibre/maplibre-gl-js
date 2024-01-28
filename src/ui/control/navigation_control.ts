@@ -146,7 +146,7 @@ export class NavigationControl implements IControl {
         return a;
     }
 
-    _setButtonTitle = (button: HTMLButtonElement, title: string) => {
+    _setButtonTitle = (button: HTMLButtonElement, title: 'ZoomIn' | 'ZoomOut' | 'ResetBearing') => {
         const str = this._map._getUIString(`NavigationControl.${title}`);
         button.title = str;
         button.setAttribute('aria-label', str);
