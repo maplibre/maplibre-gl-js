@@ -30,8 +30,8 @@ export const defaultAtributionControlOptions: AttributionControlOptions = {
  * @group Markers and Controls
  * @example
  * ```ts
- * let map = new maplibregl.Map({attributionControl: false})
- *     .addControl(new maplibregl.AttributionControl({
+ * let map = new Map({attributionControl: false})
+ *     .addControl(new AttributionControl({
  *         compact: true
  *     }));
  * ```
@@ -96,7 +96,7 @@ export class AttributionControl implements IControl {
         this._attribHTML = undefined;
     }
 
-    _setElementTitle(element: HTMLElement, title: string) {
+    _setElementTitle(element: HTMLElement, title: 'ToggleAttribution' | 'MapFeedback') {
         const str = this._map._getUIString(`AttributionControl.${title}`);
         element.title = str;
         element.setAttribute('aria-label', str);

@@ -97,7 +97,7 @@ const focusQuerySelector = [
  * @example
  * Create a popup
  * ```ts
- * let popup = new maplibregl.Popup();
+ * let popup = new Popup();
  * // Set an event listener that will fire
  * // any time the popup is opened
  * popup.on('open', function(){
@@ -108,7 +108,7 @@ const focusQuerySelector = [
  * @example
  * Create a popup
  * ```ts
- * let popup = new maplibregl.Popup();
+ * let popup = new Popup();
  * // Set an event listener that will fire
  * // any time the popup is closed
  * popup.on('close', function(){
@@ -129,7 +129,7 @@ const focusQuerySelector = [
  *  'left': [markerRadius, (markerHeight - markerRadius) * -1],
  *  'right': [-markerRadius, (markerHeight - markerRadius) * -1]
  *  };
- * let popup = new maplibregl.Popup({offset: popupOffsets, className: 'my-class'})
+ * let popup = new Popup({offset: popupOffsets, className: 'my-class'})
  *   .setLngLat(e.lngLat)
  *   .setHTML("<h1>Hello World!</h1>")
  *   .setMaxWidth("300px")
@@ -169,7 +169,7 @@ export class Popup extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * new maplibregl.Popup()
+     * new Popup()
      *   .setLngLat([0, 0])
      *   .setHTML("<h1>Null Island</h1>")
      *   .addTo(map);
@@ -223,7 +223,7 @@ export class Popup extends Evented {
      *
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup().addTo(map);
+     * let popup = new Popup().addTo(map);
      * popup.remove();
      * ```
      * @returns `this`
@@ -299,7 +299,7 @@ export class Popup extends Evented {
      * For most use cases, set `closeOnClick` and `closeButton` to `false`.
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup({ closeOnClick: false, closeButton: false })
+     * let popup = new Popup({ closeOnClick: false, closeButton: false })
      *   .setHTML("<h1>Hello World!</h1>")
      *   .trackPointer()
      *   .addTo(map);
@@ -329,7 +329,7 @@ export class Popup extends Evented {
      * @example
      * Change the `Popup` element's font size
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      *   .setLngLat([-96, 37.8])
      *   .setHTML("<p>Hello World!</p>")
      *   .addTo(map);
@@ -353,7 +353,7 @@ export class Popup extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      *   .setLngLat(e.lngLat)
      *   .setText('Hello, world!')
      *   .addTo(map);
@@ -374,7 +374,7 @@ export class Popup extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      *   .setLngLat(e.lngLat)
      *   .setHTML("<h1>Hello World!</h1>")
      *   .addTo(map);
@@ -430,7 +430,7 @@ export class Popup extends Evented {
      * ```ts
      * let div = document.createElement('div');
      * div.innerHTML = 'Hello, world!';
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      *   .setLngLat(e.lngLat)
      *   .setDOMContent(div)
      *   .addTo(map);
@@ -463,7 +463,7 @@ export class Popup extends Evented {
      *
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      * popup.addClassName('some-class')
      * ```
      */
@@ -480,7 +480,7 @@ export class Popup extends Evented {
      *
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      * popup.removeClassName('some-class')
      * ```
      */
@@ -511,7 +511,7 @@ export class Popup extends Evented {
      *
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      * popup.toggleClassName('toggleClass')
      * ```
      */

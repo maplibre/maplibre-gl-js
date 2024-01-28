@@ -39,7 +39,7 @@ const defaultOptions: NavigationControlOptions = {
  *
  * @example
  * ```ts
- * let nav = new maplibregl.NavigationControl();
+ * let nav = new NavigationControl();
  * map.addControl(nav, 'top-left');
  * ```
  * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
@@ -146,7 +146,7 @@ export class NavigationControl implements IControl {
         return a;
     }
 
-    _setButtonTitle = (button: HTMLButtonElement, title: string) => {
+    _setButtonTitle = (button: HTMLButtonElement, title: 'ZoomIn' | 'ZoomOut' | 'ResetBearing') => {
         const str = this._map._getUIString(`NavigationControl.${title}`);
         button.title = str;
         button.setAttribute('aria-label', str);

@@ -195,7 +195,7 @@ export type MapOptions = {
      * If `true` or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link FullscreenControl}.
      * @defaultValue undefined
      */
-    cooperativeGestures?: boolean | GestureOptions;
+    cooperativeGestures?: GestureOptions;
     /**
      * If `true`, the map will automatically resize when the browser window resizes.
      * @defaultValue true
@@ -401,7 +401,7 @@ const defaultOptions = {
  *
  * @example
  * ```ts
- * let map = new maplibregl.Map({
+ * let map = new Map({
  *   container: 'map',
  *   center: [-122.420679, 37.772537],
  *   zoom: 13,
@@ -466,7 +466,7 @@ export class Map extends Camera {
     _localIdeographFontFamily: string;
     _validateStyle: boolean;
     _requestManager: RequestManager;
-    _locale: any;
+    _locale: Partial<typeof defaultLocale>;
     _removed: boolean;
     _clickTolerance: number;
     _overridePixelRatio: number | null;
@@ -700,7 +700,7 @@ export class Map extends Camera {
      * @example
      * Add zoom and rotation controls to the map.
      * ```ts
-     * map.addControl(new maplibregl.NavigationControl());
+     * map.addControl(new NavigationControl());
      * ```
      * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
      */
@@ -738,7 +738,7 @@ export class Map extends Camera {
      * @example
      * ```ts
      * // Define a new navigation control.
-     * let navigation = new maplibregl.NavigationControl();
+     * let navigation = new NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Remove zoom and rotation controls from the map.
@@ -764,7 +764,7 @@ export class Map extends Camera {
      * @example
      * ```ts
      * // Define a new navigation control.
-     * let navigation = new maplibregl.NavigationControl();
+     * let navigation = new NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Check that the navigation control exists on the map.
@@ -1346,7 +1346,7 @@ export class Map extends Camera {
      * // Set an event listener that will fire
      * // when a feature on the countries layer of the map is clicked
      * map.on('click', 'countries', (e) => {
-     *   new maplibregl.Popup()
+     *   new Popup()
      *     .setLngLat(e.lngLat)
      *     .setHTML(`Country name: ${e.features[0].properties.name}`)
      *     .addTo(map);
@@ -1719,7 +1719,7 @@ export class Map extends Camera {
         return this;
     }
 
-    _getUIString(key: string) {
+    _getUIString(key: keyof typeof defaultLocale) {
         const str = this._locale[key];
         if (str == null) {
             throw new Error(`Missing UI string '${key}'`);

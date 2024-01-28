@@ -12,11 +12,11 @@
     "out": "./docs/API",
     "excludeExternals": true,
     "excludeInternal": true,
+    "placeInternalsInOwningModule": true,
     "excludeNotDocumented": true,
     "treatWarningsAsErrors": true,
     "entryPoints": ["./src/index.ts"],
     "intentionallyNotExported": ["CollisionBoxArray"],
-    "internalModule": "maplibregl",
     "navigation": {
         "includeCategories": false,
         "includeGroups": true
