@@ -2,7 +2,8 @@
 
 ### ✨ Features and improvements
 
-- ⚠️ Changed cooperative gesture config and removed the string for it in favor of the locale variable., Also changed the terrain enable disable locale key to match the other keys' styles ([#3621](https://github.com/maplibre/maplibre-gl-js/issues/3621))
+- ⚠️ Changed cooperative gesture config and removed the strings from it in favor of the locale variable ([#3621](https://github.com/maplibre/maplibre-gl-js/issues/3621))
+- ⚠️ Changed the terrain enable disable locale key to match the other keys' styles, updated the typings to allow using locale with more ease ([#3621](https://github.com/maplibre/maplibre-gl-js/issues/3621))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
