@@ -65,10 +65,6 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 Join the #maplibre slack channel at OSMUS: get an invite at https://slack.openstreetmap.us/
 Read the [CONTRIBUTING.md](CONTRIBUTING.md) guide in order to get familiar with how we do things around here.
 
-### Community Leadership
-
-You can find the official status of the backing community and steering committee in the [COMMUNITY.md](COMMUNITY.md) document.
-
 ### Avoid Fragmentation
 
 If you depend on a free software alternative to `mapbox-gl-js`, please consider joining our effort! Anyone with a stake in a healthy community-led fork is welcome to help us figure out our next steps. We welcome contributors and leaders! MapLibre GL JS already represents the combined efforts of a few early fork efforts, and we all benefit from "one project" rather than "our way". If you know of other forks, please reach out to them and direct them here.
@@ -92,11 +88,9 @@ We thank everyone who supported us financially in the past and special thanks to
 
 Read more about the MapLibre Sponsorship Program at [https://maplibre.org/sponsors/](https://maplibre.org/sponsors/).
 
-Platinum:
+Gold:
 
 <a href="https://aws.com"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
-
-Gold:
 
 <a href="https://meta.com"><img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="25%"/></a>
 
