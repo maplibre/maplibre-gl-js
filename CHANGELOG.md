@@ -2,7 +2,9 @@
 
 ### ✨ Features and improvements
 
-- ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/issues/3618)). Note: showing the logo of MapLibre is not required for using MapLibre.
+- ⚠️ Change attribution to be on by default, change `MapOptions.attributionControl` to be the type that the control handles, removed `MapOptions.customAttribution` ([#3618](https://github.com/maplibre/maplibre-gl-js/issues/3618))
+Note: showing the logo of MapLibre is not required for using MapLibre.
+- Add "opacity" option and "setOpacity" method to Marker ([#3620](https://github.com/maplibre/maplibre-gl-js/pull/3620))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes

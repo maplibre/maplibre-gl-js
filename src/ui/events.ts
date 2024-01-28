@@ -458,6 +458,9 @@ export type MapSourceDataEvent = MapLibreEvent & {
 }
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
+ *
+ * @group Event Related
+ *
  * @example
  * ```ts
  * // The `click` event is an example of a `MapMouseEvent`.
