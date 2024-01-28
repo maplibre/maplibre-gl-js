@@ -159,9 +159,7 @@ export class Marker extends Evented {
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
         this.setOpacity(); // set default opacity
-        if (options) {
-            this.setOpacity(options.opacity, options.opacityWhenCovered);
-        }
+        this.setOpacity(options?.opacity, options?.opacityWhenCovered);
 
         if (!options || !options.element) {
             this._defaultMarker = true;
