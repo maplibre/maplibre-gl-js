@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./src/css/svg/maplibregl-ctrl-logo.svg" height="150" alt="MapLibre Logo">
+  <img src="https://maplibre.org/img/maplibre-logo-big.svg" alt="MapLibre Logo">
 </p>
 
 # MapLibre GL JS
