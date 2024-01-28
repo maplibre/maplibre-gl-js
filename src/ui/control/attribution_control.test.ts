@@ -100,7 +100,7 @@ describe('AttributionControl', () => {
 
     test('does not appear in compact mode if container is less then 640 pixel wide and attributions are empty', () => {
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
-        map.addControl(new AttributionControl({customAttribution: undefined}));
+        map.addControl(new AttributionControl({}));
 
         const container = map.getContainer();
 
@@ -170,7 +170,7 @@ describe('AttributionControl', () => {
     });
 
     test('is hidden if empty', async () => {
-        const attribution = new AttributionControl({customAttribution: undefined});
+        const attribution = new AttributionControl({});
         map.addControl(attribution);
         await map.once('load');
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
@@ -186,7 +186,7 @@ describe('AttributionControl', () => {
     });
 
     test('is not hidden if adding a source with attributtion', async () => {
-        const attribution = new AttributionControl({customAttribution: undefined});
+        const attribution = new AttributionControl({});
         map.addControl(attribution);
         await map.once('load');
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
@@ -317,9 +317,7 @@ describe('AttributionControl', () => {
     });
 
     test('toggles attributions for sources whose visibility changes when zooming', async () => {
-        const attribution = new AttributionControl({
-            customAttribution: undefined
-        });
+        const attribution = new AttributionControl({});
         map.addControl(attribution);
 
         map.on('data', (e) => {
@@ -344,7 +342,6 @@ describe('AttributionControl test regarding the HTML elements details and summar
         test('It should NOT contain the attribute open="" on first load.', () => {
             const attributionControl = new AttributionControl({
                 compact: true,
-                customAttribution: undefined
             });
             map.addControl(attributionControl);
 
@@ -354,7 +351,6 @@ describe('AttributionControl test regarding the HTML elements details and summar
         test('It SHOULD contain the attribute open="" after click on summary.', () => {
             const attributionControl = new AttributionControl({
                 compact: true,
-                customAttribution: undefined
             });
             map.addControl(attributionControl);
             const container = map.getContainer();
@@ -368,7 +364,6 @@ describe('AttributionControl test regarding the HTML elements details and summar
         test('It should NOT contain the attribute open="" after two clicks on summary.', () => {
             const attributionControl = new AttributionControl({
                 compact: true,
-                customAttribution: undefined
             });
             map.addControl(attributionControl);
             const container = map.getContainer();
@@ -395,9 +390,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('It SHOULD contain the attribute open="" if offsetWidth > 640.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
-            const attributionControl = new AttributionControl({
-                customAttribution: undefined
-            });
+            const attributionControl = new AttributionControl({});
             map.addControl(attributionControl);
 
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
@@ -428,9 +421,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('The attribute open="" should NOT change on resize from > 640 to another > 640.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
-            const attributionControl = new AttributionControl({
-                customAttribution: undefined
-            });
+            const attributionControl = new AttributionControl({});
             map.addControl(attributionControl);
 
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
@@ -448,9 +439,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('The attribute open="" should NOT change on resize from <= 640 to another <= 640 if it is closed.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
-            const attributionControl = new AttributionControl({
-                customAttribution: undefined
-            });
+            const attributionControl = new AttributionControl({});
             map.addControl(attributionControl);
 
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBeNull();
@@ -468,9 +457,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('The attribute open="" should NOT change on resize from <= 640 to another <= 640 if it is open.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
-            const attributionControl = new AttributionControl({
-                customAttribution: undefined
-            });
+            const attributionControl = new AttributionControl({});
             map.addControl(attributionControl);
             const toggle = map.getContainer().querySelector('.maplibregl-ctrl-attrib-button');
             simulate.click(toggle);
