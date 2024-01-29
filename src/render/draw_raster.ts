@@ -42,7 +42,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     // However tiles borders will overlap, and a part of a tile often
     // gets hidden by its neighbour's border, which displays an ugly stretched texture.
     // To both hide the border stretch and avoid tiny gaps, tiles are first drawn without borders (with gaps),
-    // and then any missing pixels (gaps, not marker in stencil) get overdrawn with tile borders.
+    // and then any missing pixels (gaps, not marked in stencil) get overdrawn with tile borders.
     // This approach also avoids pixel shader overdraw, as any pixel is drawn at most once.
 
     // Stencil and two-pass is not used for ImageSource sources.

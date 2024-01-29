@@ -12,8 +12,6 @@ import {Transform} from '../geo/transform';
 import {Painter} from './painter';
 import {Tile} from '../source/tile';
 import {browser} from '../util/browser';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
 import {Framebuffer} from '../gl/framebuffer';
 import {StencilMode} from '../gl/stencil_mode';
 import {ColorMode} from '../gl/color_mode';
@@ -115,10 +113,18 @@ export class ProjectionManager {
         0, 0, 0, 1
     ];
 
+    /**
+     * This property is true when globe rendering and globe shader variants should be in use.
+     * This is false when globe is disabled, or when globe is enabled, but mercator rendering is used due to zoom level (and no transition is happening).
+     */
     get useGlobeRendering(): boolean {
         return this._globeness > 0.0;
     }
 
+    /**
+     * This property is true when wrapped tiles need to be rendered.
+     * This is false when globe rendering is used and no transition is happening.
+     */
     get globeDrawWrappedtiles(): boolean {
         return this._globeness < 1.0;
     }
@@ -320,10 +326,10 @@ export class ProjectionManager {
         return `${granuality.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
-    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, disablePoles?: boolean): Mesh {
+    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, usePoleVertices: boolean = true): Mesh {
         const granuality = ProjectionManager.getGranualityForZoomLevel(canonical.z, ProjectionManager.targetGranualityStencil, ProjectionManager.targetGranualityMinZoomStencil);
-        const north = !disablePoles && (canonical.y === 0);
-        const south = !disablePoles && (canonical.y === (1 << canonical.z) - 1);
+        const north = usePoleVertices && (canonical.y === 0);
+        const south = usePoleVertices && (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granuality, hasBorder, north, south);
     }
 
@@ -648,7 +654,6 @@ class ProjectionErrorMeasurement {
         // If we made it here, _resultBuffer contains the new measurement
         this._readbackQueue = null;
         this._measuredError = parseRGBA8float(this._resultBuffer);
-        console.log(`Measured: ${this._measuredError}`);
         this._lastReadbackFrame = this._updateCount;
     }
 }

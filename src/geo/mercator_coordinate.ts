@@ -1,4 +1,3 @@
-import {vec3} from 'gl-matrix';
 import {LngLat, earthRadius} from '../geo/lng_lat';
 import type {LngLatLike} from '../geo/lng_lat';
 import {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
