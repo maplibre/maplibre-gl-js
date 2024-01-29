@@ -929,7 +929,7 @@ describe('marker', () => {
     test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
-        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+        const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
 
