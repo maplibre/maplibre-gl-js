@@ -417,64 +417,6 @@ class Subdivider {
                     }
                 }
             }
-
-            // // Sanity check - no generated triangle should span multiple cells
-            // for (let i = initialFinalIndicesLength; i < finalIndices.length; i += 3) {
-            //     const indices = [finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]];
-            //     let minX = Infinity;
-            //     let minY = Infinity;
-            //     let maxX = -Infinity;
-            //     let maxY = -Infinity;
-
-            //     // Compute AABB
-            //     for (let i = 0; i < 3; i++) {
-            //         const vx = this._finalVertices[indices[i] * 2];
-            //         const vy = this._finalVertices[indices[i] * 2 + 1];
-            //         minX = Math.min(minX, vx);
-            //         maxX = Math.max(maxX, vx);
-            //         minY = Math.min(minY, vy);
-            //         maxY = Math.max(maxY, vy);
-            //     }
-
-            //     const cellXmin = Math.floor(minX / this._granualityCellSize);
-            //     const cellXmax = Math.ceil(maxX / this._granualityCellSize);
-            //     const cellYmin = Math.floor(minY / this._granualityCellSize);
-            //     const cellYmax = Math.ceil(maxY / this._granualityCellSize);
-
-            //     if (cellXmin + 1 < cellXmax || cellYmin + 1 < cellYmax) {
-            //         console.log(`Triangle cellspan: cellXmin ${cellXmin} cellXmax ${cellXmax}  cellYmin ${cellYmin}  cellYmax ${cellYmax} granuality ${this._granuality} cellsize: ${this._granualityCellSize}`);
-            //         console.log(`${this._finalVertices[triangleIndices[0] * 2]}, ${this._finalVertices[triangleIndices[0] * 2 + 1]}, ${this._finalVertices[triangleIndices[1] * 2]}, ${this._finalVertices[triangleIndices[1] * 2 + 1]}, ${this._finalVertices[triangleIndices[2] * 2]}, ${this._finalVertices[triangleIndices[2] * 2 + 1]}`);
-            //         break;
-            //     }
-            // }
-
-            // // Sanity check - the sum of areas of newly generated triangles should match the area of the original triangle.
-            // const getAreaDoubled = (i0, i1, i2) => {
-            //     const x0 = this._finalVertices[i0 * 2];
-            //     const y0 = this._finalVertices[i0 * 2 + 1];
-            //     const x1 = this._finalVertices[i1 * 2];
-            //     const y1 = this._finalVertices[i1 * 2 + 1];
-            //     const x2 = this._finalVertices[i2 * 2];
-            //     const y2 = this._finalVertices[i2 * 2 + 1];
-
-            //     return Math.abs(x0 * y1 + x1 * y2 + x2 * y0 - x0 * y2 - x1 * y0 - x2 * y1); // no division by 2 to make all math use integers
-            // };
-
-            // const originalArea = getAreaDoubled(triangleIndices[0], triangleIndices[1], triangleIndices[2]);
-
-            // let newAreaSum = 0;
-            // let actualNewIndices = [];
-
-            // for (let i = initialFinalIndicesLength; i < finalIndices.length; i += 3) {
-            //     actualNewIndices.push(finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]);
-            //     newAreaSum += getAreaDoubled(finalIndices[i], finalIndices[i + 1], finalIndices[i + 2]);
-            // }
-
-            // if (newAreaSum * 3 < originalArea && originalArea > 200) {
-            //     console.log(`Triangle area mismatch: ${originalArea} new: ${newAreaSum} granuality: ${this._granuality} cellsize: ${this._granualityCellSize}`);
-            //     console.log(`${this._finalVertices[triangleIndices[0] * 2]}, ${this._finalVertices[triangleIndices[0] * 2 + 1]}, ${this._finalVertices[triangleIndices[1] * 2]}, ${this._finalVertices[triangleIndices[1] * 2 + 1]}, ${this._finalVertices[triangleIndices[2] * 2]}, ${this._finalVertices[triangleIndices[2] * 2 + 1]}`);
-            //     console.log(this.getDebugSvg(actualNewIndices, [[triangleIndices[0], triangleIndices[1], triangleIndices[1], triangleIndices[2], triangleIndices[2], triangleIndices[0]]]));
-            // }
         }
 
         return finalIndices;
@@ -681,7 +623,6 @@ class Subdivider {
         let subdividedTriangles;
         try {
             const cut = this.convertIndices(vertices, earcut(vertices, holeIndices));
-            //subdividedTriangles = cut;
             subdividedTriangles = this.subdivideTrianglesScanline(cut);
         } catch (e) {
             console.error(e);

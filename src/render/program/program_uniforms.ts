@@ -10,7 +10,6 @@ import {rasterUniforms} from './raster_program';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms} from './symbol_program';
 import {backgroundUniforms, backgroundPatternUniforms} from './background_program';
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms} from './terrain_program';
-import {globeUniforms} from './globe_program';
 import {projectionErrorMeasurementUniforms} from './projection_error_measurement_program';
 
 const emptyUniforms = (context: any, locations: any): any => {};
@@ -27,7 +26,6 @@ export const programUniforms = {
     collisionCircle: collisionCircleUniforms,
     debug: debugUniforms,
     clippingMask: emptyUniforms,
-    globe: globeUniforms,
     heatmap: heatmapUniforms,
     heatmapTexture: heatmapTextureUniforms,
     hillshade: hillshadeUniforms,

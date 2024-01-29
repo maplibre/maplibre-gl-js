@@ -202,23 +202,10 @@ export class FillBucket implements Bucket {
                 lineList.push(lineIndices);
             }
 
-            // const subdivided = {
-            //     vertices: flattened,
-            //     indices,
-            // };
-            //const subdividedTris = subdivideTriangles(flattened, indices, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
-            //const subdividedLines = subdivideLines(subdividedTris.vertices, lineIndices, subdividedTris.vertexDictionary, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
-            //const subdivided = subdivideSimple(flattened, indices, ProjectionManager.getGranualityForZoomLevel(canonical.z), canonical);
-
             const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z));
             const finalVertices = subdivided.verticesFlattened;
             const finalIndicesTriangles = subdivided.indicesTriangles;
             const finalIndicesLineList = subdivided.indicesLineList;
-
-            // const finalVertices = flattened;
-            // const finalIndicesTriangles = indices;
-            // const finalIndicesLineList = lineList;
-
 
             fillArrays(
                 this.segments,

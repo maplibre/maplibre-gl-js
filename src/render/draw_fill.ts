@@ -71,10 +71,6 @@ function drawFillTiles(
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
-    // if (!isOutline) {
-    //     return;
-    // }
-
     if (!isOutline) {
         programName = image ? 'fillPattern' : 'fill';
         drawMode = gl.TRIANGLES;

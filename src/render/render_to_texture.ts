@@ -39,6 +39,7 @@ function fract(x: number): number {
 }
 
 function randomColor(x: number): vec4 {
+    // Shadertoy-style pseudorandom number generation from a seed "x".
     return [
         fract(Math.sin(x * 1234) * 5678) * 0.5 + 0.5,
         fract(Math.sin(x * 8522) * 4527) * 0.5 + 0.5,
@@ -142,8 +143,6 @@ export class RenderToTexture {
             this._coordsDescendingInv[id] = {};
             const tileIDs = style.sourceCaches[id].getVisibleCoordinates();
             for (const tileID of tileIDs) {
-
-
                 const keys = this.getTerrainCoords(tileID);
                 for (const key in keys) {
                     if (!this._coordsDescendingInv[id][key]) this._coordsDescendingInv[id][key] = [];

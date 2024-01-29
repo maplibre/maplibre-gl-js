@@ -33,8 +33,6 @@ import fillExtrusionFrag from './fill_extrusion.fragment.glsl.g';
 import fillExtrusionVert from './fill_extrusion.vertex.glsl.g';
 import fillExtrusionPatternFrag from './fill_extrusion_pattern.fragment.glsl.g';
 import fillExtrusionPatternVert from './fill_extrusion_pattern.vertex.glsl.g';
-import globeFrag from './globe.fragment.glsl.g';
-import globeVert from './globe.vertex.glsl.g';
 import hillshadePrepareFrag from './hillshade_prepare.fragment.glsl.g';
 import hillshadePrepareVert from './hillshade_prepare.vertex.glsl.g';
 import hillshadeFrag from './hillshade.fragment.glsl.g';
@@ -79,7 +77,6 @@ export const shaders = {
     fillPattern: compile(fillPatternFrag, fillPatternVert),
     fillExtrusion: compile(fillExtrusionFrag, fillExtrusionVert),
     fillExtrusionPattern: compile(fillExtrusionPatternFrag, fillExtrusionPatternVert),
-    globe: compile(globeFrag, globeVert),
     hillshadePrepare: compile(hillshadePrepareFrag, hillshadePrepareVert),
     hillshade: compile(hillshadeFrag, hillshadeVert),
     line: compile(lineFrag, lineVert),
