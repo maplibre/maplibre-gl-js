@@ -926,6 +926,23 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
+        } as any as Terrain;
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
     test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
