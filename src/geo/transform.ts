@@ -943,6 +943,7 @@ export class Transform {
 
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
+        this._fogMatrixCache = {};
     }
 
     maxPitchScaleFactor() {
