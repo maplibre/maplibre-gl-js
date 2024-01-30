@@ -2032,14 +2032,12 @@ export class Map extends Camera {
         return this.terrain?.options ?? null;
     }
 
-    setGlobe(enabled: boolean = true): void {
-        if (enabled && !this._globeEnabled) {
-            this._globeEnabled = true;
-            this._updateRenderToTexture();
-            this._update(true);
-        }
-        if (!enabled && this._globeEnabled) {
-            this._globeEnabled = false;
+    setGlobe(enabled: boolean = true, animate: boolean = true): void {
+        if (enabled !== this._globeEnabled) {
+            this._globeEnabled = enabled;
+            if (!animate) {
+                this.projectionManager.skipNextProjectionTransitionAnimation();
+            }
             this._updateRenderToTexture();
             this._update(true);
         }

@@ -97,6 +97,7 @@ export class ProjectionManager {
     private _lastLargeZoomStateChange: number = -1000.0;
     private _lastLargeZoomState: boolean = false;
     private _globeness: number;
+    private _skipNextAnimation: boolean = false;
 
     // GPU atan() error correction
     private _errorMeasurement: ProjectionErrorMeasurement;
@@ -145,6 +146,10 @@ export class ProjectionManager {
         this.map = map;
     }
 
+    public skipNextProjectionTransitionAnimation() {
+        this._skipNextAnimation = true;
+    }
+
     public updateGPUdependent(painter: Painter): void {
         if (!this._errorMeasurement) {
             this._errorMeasurement = new ProjectionErrorMeasurement(painter);
@@ -170,27 +175,7 @@ export class ProjectionManager {
     public updateProjection(transform: Transform): void {
         this._errorQueryLatitudeDegrees = transform.center.lat;
 
-        // Update globe transition animation
-        const globeState = this.map._globeEnabled;
-        const currentTime = browser.now();
-        if (globeState !== this._lastGlobeStateEnabled) {
-            this._lastGlobeChangeTime = currentTime;
-            this._lastGlobeStateEnabled = globeState;
-        }
-        // Transition parameter, where 0 is the start and 1 is end.
-        const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeTransitionTimeSeconds, 0.0), 1.0);
-        this._globeness = globeState ? globeTransition : (1.0 - globeTransition);
-
-        // Update globe zoom transition
-        const currentZoomState = transform.zoom >= maxGlobeZoom;
-        if (currentZoomState !== this._lastLargeZoomState) {
-            this._lastLargeZoomState = currentZoomState;
-            this._lastLargeZoomStateChange = currentTime;
-        }
-        const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / zoomTransitionTimeSeconds, 0.0), 1.0);
-        const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
-        this._globeness = Math.min(this._globeness, zoomGlobenessBound);
-        this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
+        this.updateAnimation(transform);
 
         // We want zoom levels to be consistent between globe and flat views.
         // This means that the pixel size of features at the map center point
@@ -316,6 +301,37 @@ export class ProjectionManager {
             return lerp(flatPixelScale, globePixelScale, this._globeness);
         }
         return flatPixelScale;
+    }
+
+    private updateAnimation(transform: Transform) {
+        // Update globe transition animation
+        const globeState = this.map._globeEnabled;
+        const currentTime = browser.now();
+        if (globeState !== this._lastGlobeStateEnabled) {
+            this._lastGlobeChangeTime = currentTime;
+            this._lastGlobeStateEnabled = globeState;
+        }
+        // Transition parameter, where 0 is the start and 1 is end.
+        const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeTransitionTimeSeconds, 0.0), 1.0);
+        this._globeness = globeState ? globeTransition : (1.0 - globeTransition);
+
+        if (this._skipNextAnimation) {
+            // Do not animate globe transition for the first 0.1 seconds of the existence of the map
+            this._globeness = globeState ? 1.0 : 0.0;
+            this._lastGlobeChangeTime = currentTime - globeTransitionTimeSeconds * 1000.0 * 2.0;
+            this._skipNextAnimation = false;
+        }
+
+        // Update globe zoom transition
+        const currentZoomState = transform.zoom >= maxGlobeZoom;
+        if (currentZoomState !== this._lastLargeZoomState) {
+            this._lastLargeZoomState = currentZoomState;
+            this._lastLargeZoomStateChange = currentTime;
+        }
+        const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / zoomTransitionTimeSeconds, 0.0), 1.0);
+        const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
+        this._globeness = Math.min(this._globeness, zoomGlobenessBound);
+        this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
     }
 
     private setGlobeProjection(data: ProjectionData): void {
@@ -466,7 +482,7 @@ export class ProjectionManager {
  * Solution:
  * Every few frames, launch a GPU shader that measures the error for the current map center latitude, and writes it to a 1x1 texture.
  * Read back that texture, and offset the globe projection matrix according to the error (interpolating smoothly from old error to new error if needed).
- * The texture readback is done using Pixel Pack Buffers (WebGL2) when possible, and has a few frames of latency, but that should not be a problem.
+ * The texture readback is done asynchronously using Pixel Pack Buffers (WebGL2) when possible, and has a few frames of latency, but that should not be a problem.
  */
 class ProjectionErrorMeasurement {
     private readonly _ringBufferSize = 2;
