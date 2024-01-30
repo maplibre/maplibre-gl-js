@@ -65,28 +65,45 @@ const zoomTransitionTimeSeconds = 0.5;
 const maxGlobeZoom = 12.0;
 const errorTransitionTimeSeconds = 0.5;
 
+class SubdivisionGranulitySettings {
+    /**
+     * A tile of zoom level 0 will be subdivided to granuality of 2 raised to this number.
+     * Each subsequent zoom level will have its granuality halved.
+     */
+    private readonly _baseZoomGranualityPower: number;
+
+    /**
+     * No tile will have granuality smaller than 2 raised to this number.
+     */
+    private readonly _minGranualityPower: number;
+
+    constructor(baseZoomGranualityPower: number, minGranualityPower: number) {
+        this._baseZoomGranualityPower = baseZoomGranualityPower;
+        this._minGranualityPower = minGranualityPower;
+    }
+
+    public getGranualityForZoomLevel(zoomLevel: number): number {
+        return 1 << Math.max(this._baseZoomGranualityPower - zoomLevel, this._minGranualityPower, 0);
+    }
+}
+
 export class ProjectionManager {
     map: Map;
 
     /**
-     * Mercator tiles will be subdivided to this degree of granuality in order to allow for a curved projection.
-     * Should be a power of 2.
+     * Granuality settings used for fill layer (both polygons and their anti-aliasing outlines).
      */
-    private static readonly targetGranuality = 1;
+    public static readonly GranualityFill = new SubdivisionGranulitySettings(7, 1);
 
     /**
-     * The granuality specified by `targetGranuality` will be used for zoom levels from this value onwards.
-     * Lower zoom levels will use a larger grantuality, doubled for each zoom level step from this value.
-     * This ensures that then looking at the entire earth, it will be subdivided enough give the illusion of an actual sphere
-     * (and not a poorly tesselated triangular mesh). This also ensures that higher zoom levels are not needlessly subdivided.
+     * Granuality used for stencil mask tiles.
      */
-    private static readonly targetGranualityMinZoom = 6;
+    public static readonly GranualityStencil = new SubdivisionGranulitySettings(7, 3);
 
-    // At targetGranuality=8 and minzoom=4 (base tile granuality of 128) the sphere appears almost perfectly smooth
-    // triangulation is invisible, apart from slight pixel shimmering at the equator
-
-    private static readonly targetGranualityStencil = 8;
-    private static readonly targetGranualityMinZoomStencil = 5;
+    /**
+     * Granuality used for the line layer.
+     */
+    public static readonly GranualityLine = new SubdivisionGranulitySettings(9, 1);
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
     private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
@@ -343,7 +360,7 @@ export class ProjectionManager {
     }
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, usePoleVertices: boolean = true): Mesh {
-        const granuality = ProjectionManager.getGranualityForZoomLevel(canonical.z, ProjectionManager.targetGranualityStencil, ProjectionManager.targetGranualityMinZoomStencil);
+        const granuality = ProjectionManager.GranualityStencil.getGranualityForZoomLevel(canonical.z);
         const north = usePoleVertices && (canonical.y === 0);
         const south = usePoleVertices && (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granuality, hasBorder, north, south);
@@ -365,14 +382,6 @@ export class ProjectionManager {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
         return painter.translatePosition(tile, translate, translateAnchor);
-    }
-
-    public static getGranualityForZoomLevelForTiles(zoomLevel: number): number {
-        return ProjectionManager.getGranualityForZoomLevel(zoomLevel, ProjectionManager.targetGranuality, ProjectionManager.targetGranualityMinZoom);
-    }
-
-    private static getGranualityForZoomLevel(zoomLevel: number, target: number, minZoom: number): number {
-        return Math.max(target << Math.max(minZoom - zoomLevel, 0), 1);
     }
 
     /**

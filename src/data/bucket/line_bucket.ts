@@ -265,7 +265,7 @@ export class LineBucket implements Bucket {
         this.scaledDistance = 0;
         this.totalDistance = 0;
 
-        const granuality = (canonical) ? ProjectionManager.getGranualityForZoomLevelForTiles(canonical.z) : 1;
+        const granuality = (canonical) ? ProjectionManager.GranualityLine.getGranualityForZoomLevel(canonical.z) : 1;
 
         // First, subdivide the line for globe rendering
         vertices = subdivideVertexLine(vertices, granuality);
