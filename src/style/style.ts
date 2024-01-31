@@ -1267,6 +1267,7 @@ export class Style extends Evented {
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
             light: myStyleSheet.light,
+            sky: myStyleSheet.sky,
             center: myStyleSheet.center,
             zoom: myStyleSheet.zoom,
             bearing: myStyleSheet.bearing,
