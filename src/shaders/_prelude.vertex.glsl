@@ -252,10 +252,9 @@ vec3 projectToSphere(vec2 posInTile) {
 }
 
 vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
-    vec4 pos = vec4(spherePos, 1.0);
-    vec4 globePosition = u_projection_matrix * pos;
+    vec4 globePosition = u_projection_matrix * vec4(spherePos, 1.0);
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
-    globePosition.z = (1.0 - (dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * globePosition.w;
+    globePosition.z = (1.0 - (dot(spherePos, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * globePosition.w;
 
     if (u_projection_globeness < 0.999) {
         vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, 0.0, 1.0);

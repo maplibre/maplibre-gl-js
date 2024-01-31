@@ -2,6 +2,7 @@ import {CollisionIndex} from './collision_index';
 import {mat4} from 'gl-matrix';
 
 import {Transform} from '../geo/transform';
+import {ProjectionManager} from '../render/projection_manager';
 
 describe('CollisionIndex', () => {
 
@@ -11,7 +12,7 @@ describe('CollisionIndex', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.resize(200, 200);
 
-        const ci = new CollisionIndex(transform);
+        const ci = new CollisionIndex(transform, new ProjectionManager(undefined));
         expect(ci.projectAndGetPerspectiveRatio(posMatrix, x, y).point.x).toBeCloseTo(10000212.3456, 10);
     });
 

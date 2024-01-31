@@ -1522,7 +1522,7 @@ export class Style extends Evented {
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
-            this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(transform, this.map.projectionManager, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 

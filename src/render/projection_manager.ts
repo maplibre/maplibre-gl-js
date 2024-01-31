@@ -2,7 +2,7 @@ import {mat4, vec3} from 'gl-matrix';
 import {Context} from '../gl/context';
 import {Map} from '../ui/map';
 import {Uniform1f, Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
-import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import {Mesh} from './mesh';
 import {EXTENT, EXTENT_STENCIL_BORDER} from '../data/extent';
@@ -88,7 +88,7 @@ class SubdivisionGranulitySettings {
 }
 
 export class ProjectionManager {
-    map: Map;
+    map: Map | undefined;
 
     /**
      * Granuality settings used for fill layer (both polygons and their anti-aliasing outlines).
@@ -192,7 +192,7 @@ export class ProjectionManager {
     public updateProjection(transform: Transform): void {
         this._errorQueryLatitudeDegrees = transform.center.lat;
 
-        this.updateAnimation(transform);
+        this._updateAnimation(transform);
 
         // We want zoom levels to be consistent between globe and flat views.
         // This means that the pixel size of features at the map center point
@@ -301,15 +301,39 @@ export class ProjectionManager {
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this.useGlobeRendering) {
-            this.setGlobeProjection(data);
+            this._setGlobeProjection(data);
         }
 
         return data;
     }
 
-    // public projectSymbolAnchor() {
-    //     // TODO
-    // }
+    private _projectToSphere(mercatorX: number, mercatorY: number): vec3 {
+        const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
+        const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
+
+        const len = Math.cos(sphericalY);
+        return [
+            Math.sin(sphericalX) * len,
+            Math.sin(sphericalY),
+            Math.cos(sphericalX) * len
+        ];
+    }
+
+    public isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
+        if (!this._isGlobeEnabled()) {
+            return false;
+        }
+
+        const scale = 1.0 / (1 << unwrappedTileID.canonical.z);
+        const spherePos = this._projectToSphere(
+            x / EXTENT * scale + unwrappedTileID.canonical.x * scale,
+            y / EXTENT * scale + unwrappedTileID.canonical.y * scale
+        );
+        const plane = this._cachedClippingPlane;
+        // dot(position on sphere, occlusion plane equation)
+        const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
+        return dotResult < 0.0;
+    }
 
     public getPixelScale(transform: Transform): number {
         const globePixelScale = 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
@@ -320,9 +344,13 @@ export class ProjectionManager {
         return flatPixelScale;
     }
 
-    private updateAnimation(transform: Transform) {
+    private _isGlobeEnabled() : boolean {
+        return this.map ? this.map._globeEnabled : false;
+    }
+
+    private _updateAnimation(transform: Transform) {
         // Update globe transition animation
-        const globeState = this.map._globeEnabled;
+        const globeState = this._isGlobeEnabled();
         const currentTime = browser.now();
         if (globeState !== this._lastGlobeStateEnabled) {
             this._lastGlobeChangeTime = currentTime;
@@ -351,11 +379,11 @@ export class ProjectionManager {
         this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
     }
 
-    private setGlobeProjection(data: ProjectionData): void {
+    private _setGlobeProjection(data: ProjectionData): void {
         data['u_projection_matrix'] = this._globeProjMatrix;
     }
 
-    private getMeshKey(granuality: number, border: boolean, north: boolean, south: boolean): string {
+    private _getMeshKey(granuality: number, border: boolean, north: boolean, south: boolean): string {
         return `${granuality.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
@@ -367,7 +395,7 @@ export class ProjectionManager {
     }
 
     public getMesh(context: Context, granuality: number, hasBorder: boolean, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
-        const key = this.getMeshKey(granuality, hasBorder, hasNorthEdge, hasSouthEdge);
+        const key = this._getMeshKey(granuality, hasBorder, hasNorthEdge, hasSouthEdge);
 
         if (key in this._tileMeshCache) {
             return this._tileMeshCache[key];
@@ -497,7 +525,7 @@ class ProjectionErrorMeasurement {
     private readonly _ringBufferSize = 2;
     // we wait this many frames after measuring until we read back the value
     private readonly _readbackWaitFrames = 4;
-    // we wait this many frames *reading back* a measurement until we trigger measure again
+    // we wait this many frames after *reading back* a measurement until we trigger measure again
     private readonly _measureWaitFrames = 4;
     private readonly _texWidth = 1;
     private readonly _texHeight = 1;
@@ -579,12 +607,11 @@ class ProjectionErrorMeasurement {
         const currentFrame = this._updateCount;
 
         if (this._readbackQueue) {
+            // Try to read back if enough frames elapsed. Otherwise do nothing, just wait another frame.
             if (currentFrame >= this._readbackQueue.frameNumberIssued + this._readbackWaitFrames) {
                 // Try to read back - it is possible that this method does nothing, then
                 // the readback queue will not be cleared and we will retry next frame.
                 this._tryReadback(painter);
-            } else {
-                // Wait another frame
             }
         } else {
             if (currentFrame >= this._lastReadbackFrame + this._measureWaitFrames) {

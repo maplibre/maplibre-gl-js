@@ -16,6 +16,8 @@ import type {
     SymbolLineVertexArray
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
+import {ProjectionManager} from '../render/projection_manager';
+import {UnwrappedTileID} from '../source/tile_id';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -52,6 +54,7 @@ export class CollisionIndex {
     screenBottomBoundary: number;
     gridRightBoundary: number;
     gridBottomBoundary: number;
+    projectionManager: ProjectionManager;
 
     // With perspectiveRatio the fontsize is calculated for tilted maps (near = bigger, far = smaller).
     // The cutoff defines a threshold to no longer render labels near the horizon.
@@ -59,10 +62,12 @@ export class CollisionIndex {
 
     constructor(
         transform: Transform,
+        projectionManager: ProjectionManager,
         grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
         ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
+        this.projectionManager = projectionManager;
 
         this.grid = grid;
         this.ignoredGrid = ignoredGrid;
@@ -82,6 +87,7 @@ export class CollisionIndex {
         overlapMode: OverlapMode,
         textPixelRatio: number,
         posMatrix: mat4,
+        unwrappedTileID: UnwrappedTileID,
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
         getElevation?: (x: number, y: number) => number
     ): {
@@ -97,7 +103,8 @@ export class CollisionIndex {
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate)) ||
-            projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff) {
+            projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff ||
+            this.projectionManager.isOccluded(collisionBox.anchorPointX, collisionBox.anchorPointY, unwrappedTileID)) {
             return {
                 box: [],
                 offscreen: false
@@ -118,6 +125,7 @@ export class CollisionIndex {
         glyphOffsetArray: GlyphOffsetArray,
         fontSize: number,
         posMatrix: mat4,
+        unwrappedTileID: UnwrappedTileID,
         labelPlaneMatrix: mat4,
         labelToScreenMatrix: mat4,
         showCollisionCircles: boolean,
