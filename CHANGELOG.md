@@ -6,6 +6,12 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 4.0.0
+
+### ✨ Features and improvements
+
+### 🐞 Bug fixes
+
 ## 4.0.0-pre.6
 
 ### ✨ Features and improvements
