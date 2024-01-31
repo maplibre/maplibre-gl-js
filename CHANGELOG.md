@@ -77,7 +77,7 @@ Note: showing the logo of MapLibre is not required for using MapLibre.
 ### 🐞 Bug fixes
 
 - Fix wheel zoom to be into the same direction above or under the horizon ([#3398](https://github.com/maplibre/maplibre-gl-js/issues/3398))
-- Fix _cameraForBoxAndBearing not fitting bounds properly when using asymettrical camera viewport and bearing.([#3591](https://github.com/maplibre/maplibre-gl-js/pull/3591))
+- Fix _cameraForBoxAndBearing not fitting bounds properly when using asymettrical camera viewport and bearing ([#3591](https://github.com/maplibre/maplibre-gl-js/pull/3591))
 
 ## 4.0.0-pre.4
 
