@@ -13,7 +13,7 @@ describe('CollisionIndex', () => {
         transform.resize(200, 200);
 
         const ci = new CollisionIndex(transform, new ProjectionManager(undefined));
-        expect(ci.projectAndGetPerspectiveRatio(posMatrix, x, y).point.x).toBeCloseTo(10000212.3456, 10);
+        expect(ci.projectAndGetPerspectiveRatio(posMatrix, x, y, null).point.x).toBeCloseTo(10000212.3456, 10);
     });
 
 });

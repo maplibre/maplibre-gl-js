@@ -3249,6 +3249,7 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
+        // This projection update should happen *before* placement update
         this.projectionManager.updateProjection(this.painter.transform);
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);

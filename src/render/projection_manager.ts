@@ -1,4 +1,4 @@
-import {mat4, vec3} from 'gl-matrix';
+import {mat4, vec3, vec4} from 'gl-matrix';
 import {Context} from '../gl/context';
 import {Map} from '../ui/map';
 import {Uniform1f, Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
@@ -21,6 +21,7 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {projectionErrorMeasurementUniformValues} from './program/projection_error_measurement_program';
 import {warnOnce} from '../util/util';
 import {mercatorYfromLat} from '../geo/mercator_coordinate';
+import Point from '@mapbox/point-geometry';
 
 export type ProjectionPreludeUniformsType = {
     'u_projection_matrix': UniformMatrix4f;
@@ -145,6 +146,10 @@ export class ProjectionManager {
      */
     get globeDrawWrappedtiles(): boolean {
         return this._globeness < 1.0;
+    }
+
+    get useSpecialProjectionForSymbols(): boolean {
+        return this.useGlobeRendering;
     }
 
     get isRenderingDirty(): boolean {
@@ -319,20 +324,31 @@ export class ProjectionManager {
         ];
     }
 
-    public isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
-        if (!this._isGlobeEnabled()) {
-            return false;
-        }
-
+    private _projectToSphereTile(inTileX: number, inTileY: number, unwrappedTileID: UnwrappedTileID): vec3 {
         const scale = 1.0 / (1 << unwrappedTileID.canonical.z);
-        const spherePos = this._projectToSphere(
-            x / EXTENT * scale + unwrappedTileID.canonical.x * scale,
-            y / EXTENT * scale + unwrappedTileID.canonical.y * scale
+        return this._projectToSphere(
+            inTileX / EXTENT * scale + unwrappedTileID.canonical.x * scale,
+            inTileY / EXTENT * scale + unwrappedTileID.canonical.y * scale
         );
+    }
+
+    public isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
+        const spherePos = this._projectToSphereTile(x, y, unwrappedTileID);
+
         const plane = this._cachedClippingPlane;
         // dot(position on sphere, occlusion plane equation)
         const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
         return dotResult < 0.0;
+    }
+
+    public project(x: number, y: number, unwrappedTileID: UnwrappedTileID) {
+        const sphere = this._projectToSphereTile(x, y, unwrappedTileID);
+        const pos: vec4 = [sphere[0], sphere[1], sphere[2], 1];
+        vec4.transformMat4(pos, pos, this._globeProjMatrix);
+        return {
+            point: new Point(pos[0] / pos[3], pos[1] / pos[3]),
+            signedDistanceFromCamera: pos[3]
+        };
     }
 
     public getPixelScale(transform: Transform): number {
@@ -344,13 +360,9 @@ export class ProjectionManager {
         return flatPixelScale;
     }
 
-    private _isGlobeEnabled() : boolean {
-        return this.map ? this.map._globeEnabled : false;
-    }
-
     private _updateAnimation(transform: Transform) {
         // Update globe transition animation
-        const globeState = this._isGlobeEnabled();
+        const globeState = this.map ? this.map._globeEnabled : false;
         const currentTime = browser.now();
         if (globeState !== this._lastGlobeStateEnabled) {
             this._lastGlobeChangeTime = currentTime;

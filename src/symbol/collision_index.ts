@@ -94,17 +94,18 @@ export class CollisionIndex {
             box: Array<number>;
             offscreen: boolean;
         } {
-        const projectedPoint = this.projectAndGetPerspectiveRatio(posMatrix, collisionBox.anchorPointX, collisionBox.anchorPointY, getElevation);
+        const projectedPoint = this.projectAndGetPerspectiveRatio(posMatrix, collisionBox.anchorPointX, collisionBox.anchorPointY, unwrappedTileID, getElevation);
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
         const tlX = collisionBox.x1 * tileToViewport + projectedPoint.point.x;
         const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
         const brX = collisionBox.x2 * tileToViewport + projectedPoint.point.x;
         const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
+        const projectionOccluded = this.projectionManager.useSpecialProjectionForSymbols ? this.projectionManager.isOccluded(collisionBox.anchorPointX, collisionBox.anchorPointY, unwrappedTileID) : false;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate)) ||
             projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff ||
-            this.projectionManager.isOccluded(collisionBox.anchorPointX, collisionBox.anchorPointY, unwrappedTileID)) {
+            projectionOccluded) {
             return {
                 box: [],
                 offscreen: false
@@ -368,8 +369,13 @@ export class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation?: (x: number, y: number) => number) {
-        const projected = projection.project(new Point(x, y), posMatrix, getElevation);
+    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
+        let projected;
+        if (this.projectionManager.useSpecialProjectionForSymbols) {
+            projected = this.projectionManager.project(x, y, unwrappedTileID);
+        } else {
+            projected = projection.project(new Point(x, y), posMatrix, getElevation);
+        }
         return {
             point: new Point(
                 (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
