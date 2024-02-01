@@ -131,6 +131,12 @@ export class ProjectionManager {
         0, 0, 1, 0,
         0, 0, 0, 1
     ];
+    private _globeProjMatrixNoCorrection: mat4 = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+    ];
 
     /**
      * This property is true when globe rendering and globe shader variants should be in use.
@@ -206,12 +212,20 @@ export class ProjectionManager {
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = new Float64Array(16) as any;
+        const globeMatrixUncorrected = new Float64Array(16) as any;
         mat4.perspective(globeMatrix, transform._fov, transform.width / transform.height, 0.5, transform.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -transform.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -transform._pitch);
         mat4.rotateZ(globeMatrix, globeMatrix, -transform.angle);
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
+
+        // Keep a atan-correction-free matrix for transformations done on the CPU with accurate math
+        mat4.rotateX(globeMatrixUncorrected, globeMatrix, transform.center.lat * Math.PI / 180.0);
+        mat4.rotateY(globeMatrixUncorrected, globeMatrixUncorrected, -transform.center.lng * Math.PI / 180.0);
+        mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
+        this._globeProjMatrixNoCorrection = globeMatrix;
+
         mat4.rotateX(globeMatrix, globeMatrix, transform.center.lat * Math.PI / 180.0 - this._errorCorrectionUsable);
         mat4.rotateY(globeMatrix, globeMatrix, -transform.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
@@ -344,7 +358,7 @@ export class ProjectionManager {
     public project(x: number, y: number, unwrappedTileID: UnwrappedTileID) {
         const sphere = this._projectToSphereTile(x, y, unwrappedTileID);
         const pos: vec4 = [sphere[0], sphere[1], sphere[2], 1];
-        vec4.transformMat4(pos, pos, this._globeProjMatrix);
+        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
         return {
             point: new Point(pos[0] / pos[3], pos[1] / pos[3]),
             signedDistanceFromCamera: pos[3]
