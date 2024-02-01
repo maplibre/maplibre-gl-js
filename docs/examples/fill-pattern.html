@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use fill-pattern to draw a polygon from a repeating image pattern." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -23,7 +23,7 @@
         zoom: 1
     });
 
-    map.on('load', () => {
+    map.on('load', async () => {
         // Add GeoJSON data
         map.addSource('source', {
             'type': 'geojson',
@@ -46,26 +46,19 @@
         });
 
         // Load an image to use as the pattern
-        map.loadImage(
-            'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/64px-Cat_silhouette.svg.png',
-            (err, image) => {
-                // Throw an error if something went wrong
-                if (err) throw err;
+        const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/64px-Cat_silhouette.svg.png');
+        // Declare the image
+        map.addImage('pattern', image.data);
 
-                // Declare the image
-                map.addImage('pattern', image);
-
-                // Use it
-                map.addLayer({
-                    'id': 'pattern-layer',
-                    'type': 'fill',
-                    'source': 'source',
-                    'paint': {
-                        'fill-pattern': 'pattern'
-                    }
-                });
+        // Use it
+        map.addLayer({
+            'id': 'pattern-layer',
+            'type': 'fill',
+            'source': 'source',
+            'paint': {
+                'fill-pattern': 'pattern'
             }
-        );
+        });
     });
 </script>
 </body>

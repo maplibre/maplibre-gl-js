@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use setLayoutProperty to switch languages dynamically." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -15,12 +15,14 @@
 <body>
 <style>
     #buttons {
+        display: flex;
+        justify-content: space-between;
+        position: absolute;
+        top: 20px;
         width: 90%;
-        margin: 0 auto;
     }
     .button {
         display: inline-block;
-        position: relative;
         cursor: pointer;
         width: 20%;
         padding: 8px;

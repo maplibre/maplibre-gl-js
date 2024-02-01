@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use MapLibre GL JS' built-in functions to visualize points as clusters." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -95,22 +95,16 @@
         });
 
         // inspect a cluster on click
-        map.on('click', 'clusters', (e) => {
+        map.on('click', 'clusters', async (e) => {
             const features = map.queryRenderedFeatures(e.point, {
                 layers: ['clusters']
             });
             const clusterId = features[0].properties.cluster_id;
-            map.getSource('earthquakes').getClusterExpansionZoom(
-                clusterId,
-                (err, zoom) => {
-                    if (err) return;
-
-                    map.easeTo({
-                        center: features[0].geometry.coordinates,
-                        zoom
-                    });
-                }
-            );
+            const zoom = await map.getSource('earthquakes').getClusterExpansionZoom(clusterId);
+            map.easeTo({
+                center: features[0].geometry.coordinates,
+                zoom
+            });
         });
 
         // When a click event occurs on a feature in
