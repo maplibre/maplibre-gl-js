@@ -14,8 +14,14 @@ function createMap(options = {}) {
     return globalCreateMap({container, ...options});
 }
 
+let spiedRAF;
 beforeEach(() => {
     beforeMapTest();
+    spiedRAF = jest.spyOn(window, 'requestAnimationFrame');
+    spiedRAF.mockImplementation((callback: FrameRequestCallback): number => { callback(0); return 0; });
+});
+afterEach(() => {
+    spiedRAF.mockRestore();
 });
 
 describe('marker', () => {
@@ -960,7 +966,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', async () => {
+    test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacityWhenCovered: '0.15'})
