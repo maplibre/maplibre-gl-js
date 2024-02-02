@@ -520,7 +520,7 @@ export class Marker extends Evented {
         return this;
     }
 
-    _updateOpacity(force: boolean = false) {
+    _updateOpacity = (force: boolean = false) => {
         const terrain = this._map.terrain;
         if (!terrain) {
             if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
@@ -556,7 +556,7 @@ export class Marker extends Evented {
         // Display at full opacity if center is visible.
         const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
         this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
-    }
+    };
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
         if (!this._map) return;
