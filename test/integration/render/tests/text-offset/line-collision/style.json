@@ -6,7 +6,7 @@
       "height": 256,
       "width": 1024,
       "collisionDebug": true,
-      "operations": [["idle"], ["wait", 100]]
+    "operations": [["idle"], ["wait", 500]]
     }
   },
   "center": [-73, 15],

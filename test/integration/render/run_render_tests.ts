@@ -8,12 +8,13 @@ import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
 import puppeteer, {Page, Browser} from 'puppeteer';
-import v8toIstanbul from 'v8-to-istanbul';
+import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
-import type {default as MapLibreGL, Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import * as maplibreglModule from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let maplibregl: typeof MapLibreGL;
+let maplibregl: typeof maplibreglModule;
 
 type TestData = {
     id: string;
@@ -776,7 +777,7 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
 
 async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
     const page = await browser.newPage();
-    page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+    await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
     applyDebugParameter(options, page);
     await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
     await runTests(page, testStyles, directory);
@@ -789,13 +790,29 @@ async function closePageAndFinish(page: Page, reportCoverage: boolean) {
     if (!reportCoverage) {
         return;
     }
-    const converter = v8toIstanbul('./dist/maplibre-gl-dev.js');
-    await converter.load();
-    converter.applyCoverage(coverage.map(c => c.rawScriptCoverage!.functions).flat());
-    const coverageReport = converter.toIstanbul();
-    const report = JSON.stringify(coverageReport);
-    fs.mkdirSync('./coverage', {recursive: true});
-    fs.writeFileSync('./coverage/coverage-render.json', report);
+
+    const rawV8CoverageData = coverage.map((it) => {
+        // Convert to raw v8 coverage format
+        const entry: any =  {
+            source: it.text,
+            ...it.rawScriptCoverage
+        };
+        if (entry.url.endsWith('maplibre-gl-dev.js')) {
+            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
+        }
+        return entry;
+    });
+
+    const coverageReport = new CoverageReport({
+        name: 'MapLibre Coverage Report',
+        outputDir: './coverage/render',
+        reports: [['v8'], ['codecov']]
+    });
+    coverageReport.cleanCache();
+
+    await coverageReport.add(rawV8CoverageData);
+
+    await coverageReport.generate();
 }
 
 /**

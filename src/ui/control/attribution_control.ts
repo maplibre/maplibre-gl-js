@@ -5,9 +5,9 @@ import type {ControlPosition, IControl} from './control';
 import type {MapDataEvent} from '../events';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
- * The {@link AttributionControl} options
+ * The {@link AttributionControl} options object
  */
-type AttributionOptions = {
+export type AttributionControlOptions = {
     /**
      * If `true`, the attribution control will always collapse when moving the map. If `false`,
      * force the expanded attribution control. The default is a responsive attribution that collapses when the user moves the map on maps less than 640 pixels wide.
@@ -20,21 +20,26 @@ type AttributionOptions = {
     customAttribution?: string | Array<string>;
 };
 
+export const defaultAtributionControlOptions: AttributionControlOptions = {
+    compact: true,
+    customAttribution: '<a href="https://maplibre.org/" target="_blank">MapLibre</a>'
+};
+
 /**
  * An `AttributionControl` control presents the map's attribution information. By default, the attribution control is expanded (regardless of map width).
  * @group Markers and Controls
  * @example
  * ```ts
- * let map = new maplibregl.Map({attributionControl: false})
- *     .addControl(new maplibregl.AttributionControl({
+ * let map = new Map({attributionControl: false})
+ *     .addControl(new AttributionControl({
  *         compact: true
  *     }));
  * ```
  */
 export class AttributionControl implements IControl {
-    options: AttributionOptions;
+    options: AttributionControlOptions;
     _map: Map;
-    _compact: boolean;
+    _compact: boolean | undefined;
     _container: HTMLElement;
     _innerContainer: HTMLElement;
     _compactButton: HTMLElement;
@@ -46,7 +51,7 @@ export class AttributionControl implements IControl {
     /**
      * @param options - the attribution options
      */
-    constructor(options: AttributionOptions = {}) {
+    constructor(options: AttributionControlOptions = defaultAtributionControlOptions) {
         this.options = options;
     }
 
@@ -57,7 +62,7 @@ export class AttributionControl implements IControl {
     /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
-        this._compact = this.options && this.options.compact;
+        this._compact = this.options.compact;
         this._container = DOM.create('details', 'maplibregl-ctrl maplibregl-ctrl-attrib');
         this._compactButton = DOM.create('summary', 'maplibregl-ctrl-attrib-button', this._container);
         this._compactButton.addEventListener('click', this._toggleAttribution);
@@ -91,7 +96,7 @@ export class AttributionControl implements IControl {
         this._attribHTML = undefined;
     }
 
-    _setElementTitle(element: HTMLElement, title: string) {
+    _setElementTitle(element: HTMLElement, title: 'ToggleAttribution' | 'MapFeedback') {
         const str = this._map._getUIString(`AttributionControl.${title}`);
         element.title = str;
         element.setAttribute('aria-label', str);

@@ -36,8 +36,6 @@ export type InertiaOptions = {
     maxSpeed: number;
 };
 
-export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
-
 export class HandlerInertia {
     _map: Map;
     _inertiaBuffer: Array<{

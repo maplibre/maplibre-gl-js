@@ -1,4 +1,4 @@
-import maplibregl from '../../../src';
+import * as maplibregl from '../../../src/';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '../data/style-benchmark-locations.json' assert {type: 'json'};
 import StyleLayerCreate from '../benchmarks/style_layer_create';

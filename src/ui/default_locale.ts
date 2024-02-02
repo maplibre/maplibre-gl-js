@@ -5,7 +5,7 @@ export const defaultLocale = {
     'FullscreenControl.Exit': 'Exit fullscreen',
     'GeolocateControl.FindMyLocation': 'Find my location',
     'GeolocateControl.LocationNotAvailable': 'Location not available',
-    'LogoControl.Title': 'Mapbox logo',
+    'LogoControl.Title': 'MapLibre logo',
     'NavigationControl.ResetBearing': 'Reset bearing to north',
     'NavigationControl.ZoomIn': 'Zoom in',
     'NavigationControl.ZoomOut': 'Zoom out',
@@ -14,6 +14,9 @@ export const defaultLocale = {
     'ScaleControl.Kilometers': 'km',
     'ScaleControl.Miles': 'mi',
     'ScaleControl.NauticalMiles': 'nm',
-    'TerrainControl.enableTerrain': 'Enable terrain',
-    'TerrainControl.disableTerrain': 'Disable terrain'
+    'TerrainControl.Enable': 'Enable terrain',
+    'TerrainControl.Disable': 'Disable terrain',
+    'CooperativeGesturesHandler.WindowsHelpText': 'Use Ctrl + scroll to zoom the map',
+    'CooperativeGesturesHandler.MacHelpText': 'Use ⌘ + scroll to zoom the map',
+    'CooperativeGesturesHandler.MobileHelpText': 'Use two fingers to move the map',
 };

@@ -4,6 +4,9 @@ import type {Map} from '../map';
 import {TransformProvider} from './transform-provider';
 import {Handler} from '../handler_manager';
 
+/**
+ * A `TapZoomHandler` allows the user to zoom the map at a point by double tapping
+ */
 export class TapZoomHandler implements Handler {
     _tr: TransformProvider;
     _enabled: boolean;

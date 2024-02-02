@@ -22,7 +22,7 @@ export class WorkerPool {
 
     acquire(mapId: number | string): Array<ActorTarget> {
         if (!this.workers) {
-            // Lazily look up the value of maplibregl.workerCount so that
+            // Lazily look up the value of getWorkerCount so that
             // client code has had a chance to set it.
             this.workers = [];
             while (this.workers.length < WorkerPool.workerCount) {

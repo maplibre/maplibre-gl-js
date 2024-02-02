@@ -172,6 +172,13 @@ const setSourceType = (name: string, type: SourceClass) => {
     registeredSources[name] = type;
 };
 
+/**
+ * Adds a [custom source type](#Custom Sources), making it available for use with
+ * {@link Map#addSource}.
+ * @param name - The name of the source type; source definition objects use this name in the `{type: ...}` field.
+ * @param sourceType - A {@link SourceClass} - which is a constructor for the `Source` interface.
+ * @returns a promise that is resolved when the source type is ready or rejected with an error.
+ */
 export const addSourceType = async (name: string, SourceType: SourceClass): Promise<void> => {
     if (getSourceType(name)) {
         throw new Error(`A source type called "${name}" already exists.`);

@@ -11,8 +11,8 @@ import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
  *
  * @example
  * ```ts
- * let map = new maplibregl.Map({TerrainControl: false})
- *     .addControl(new maplibregl.TerrainControl({
+ * let map = new Map({TerrainControl: false})
+ *     .addControl(new TerrainControl({
  *         source: "terrain"
  *     }));
  * ```
@@ -62,10 +62,10 @@ export class TerrainControl implements IControl {
         this._terrainButton.classList.remove('maplibregl-ctrl-terrain-enabled');
         if (this._map.terrain) {
             this._terrainButton.classList.add('maplibregl-ctrl-terrain-enabled');
-            this._terrainButton.title = this._map._getUIString('TerrainControl.disableTerrain');
+            this._terrainButton.title = this._map._getUIString('TerrainControl.Disable');
         } else {
             this._terrainButton.classList.add('maplibregl-ctrl-terrain');
-            this._terrainButton.title = this._map._getUIString('TerrainControl.enableTerrain');
+            this._terrainButton.title = this._map._getUIString('TerrainControl.Enable');
         }
     };
 }
