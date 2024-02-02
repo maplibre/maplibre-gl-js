@@ -594,7 +594,9 @@ export class Marker extends Evented {
         }
 
         DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
-        this._updateOpacity(e && e.type === 'moveend');
+
+        // Run it after painter.render and drawDepth
+        requestAnimationFrame((_) => this._updateOpacity(e && e.type === 'moveend'));
     };
 
     /**
