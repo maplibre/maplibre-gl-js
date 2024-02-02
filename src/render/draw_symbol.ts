@@ -277,6 +277,8 @@ function drawLayerSymbols(
     // Unpitched point labels need to have their rotation applied after projection
     const rotateInShader = rotateWithMap && !pitchWithMap && !alongLine;
 
+    const isViewportLine = !pitchWithMap && alongLine;
+
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
 
@@ -358,16 +360,16 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, painter, matrix,
+                    size, rotateInShader, pitchWithMap, isViewportLine, painter, matrix,
                     uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, painter, matrix,
+                    size, rotateInShader, pitchWithMap, isViewportLine, painter, matrix,
                     uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, painter, matrix,
+                size, rotateInShader, pitchWithMap, isViewportLine, painter, matrix,
                 uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize);
         }
 

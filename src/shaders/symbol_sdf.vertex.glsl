@@ -22,6 +22,7 @@ uniform mat4 u_label_plane_matrix;
 uniform mat4 u_coord_matrix;
 uniform bool u_is_text;
 uniform bool u_pitch_with_map;
+uniform bool u_is_viewport_line;
 uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
 uniform highp float u_aspect_ratio;
