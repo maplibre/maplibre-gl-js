@@ -521,7 +521,7 @@ export class Marker extends Evented {
     }
 
     _updateOpacity = (force: boolean = false) => {
-        const terrain = this._map.terrain;
+        const terrain = this._map?.terrain;
         if (!terrain) {
             if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
             return;
