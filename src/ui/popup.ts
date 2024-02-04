@@ -22,9 +22,11 @@ const defaultOptions = {
 
 /**
  * A pixel offset specified as:
+ *
  * - a single number specifying a distance from the location
  * - a {@link PointLike} specifying a constant offset
  * - an object of {@link Point}s specifying an offset for each anchor position
+ *
  * Negative offsets indicate left and up.
  */
 export type Offset = number | PointLike | {
