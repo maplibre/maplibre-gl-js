@@ -15,7 +15,7 @@ function generateAPIIntroMarkdown(lines: string[]): string {
 This file is intended as a reference for the important and public classes of this API.
 We recommend looking at the [examples](../examples/index.md) as they will help you the most to start with MapLibre.
 
-Most of the classes wirtten here have an "Options" object for initialization, it is recommended to check which options exist. 
+Most of the classes wirtten here have an "Options" object for initialization, it is recommended to check which options exist.
 
 It is recommended to import what you need and the use it. Some examples for classes assume you did that.
 For example, import the \`Map\` class like this:
