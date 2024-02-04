@@ -56,6 +56,7 @@ export function mercatorScale(lat: number) {
  * A `MercatorCoordinate` object represents a projected three dimensional position.
  *
  * `MercatorCoordinate` uses the web mercator projection ([EPSG:3857](https://epsg.io/3857)) with slightly different units:
+ *
  * - the size of 1 unit is the width of the projected world instead of the "mercator meter"
  * - the origin of the coordinate space is at the north-west corner instead of the middle
  *
