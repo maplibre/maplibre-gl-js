@@ -36,6 +36,7 @@ import {ExpiryData} from '../util/ajax';
 
 /**
  * The tile's state, can be:
+ *
  * - `loading` Tile data is in the process of loading.
  * - `loaded` Tile data has been loaded. Tile can be rendered.
  * - `reloading` Tile data has been loaded and is being updated. Tile can be rendered.
