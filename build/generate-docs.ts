@@ -117,4 +117,4 @@ if (!fs.existsSync(typedocConfig.out)) {
 fs.rmSync(path.join(typedocConfig.out, 'README.md'));
 generateReadme();
 generateExamplesFolder();
-console.log('Docs generation completed, to see it in action run\n docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material');
+console.log('Docs generation completed, to see it in action run\n npm run start-docs');
