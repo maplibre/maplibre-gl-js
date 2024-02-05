@@ -142,7 +142,6 @@ export class Marker extends Evented {
     _opacity: string;
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
-    _frameRequest: AbortController;
 
     /**
      * @param options - the options
@@ -597,9 +596,7 @@ export class Marker extends Evented {
 
         DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
 
-        this._frameRequest = new AbortController();
-        browser.frameAsync(this._frameRequest).then(() => { // Run _updateOpacity only after painter.render and drawDepth
-            this._frameRequest = null;
+        browser.frameAsync(new AbortController()).then(() => { // Run _updateOpacity only after painter.render and drawDepth
             this._updateOpacity(e && e.type === 'moveend');
         }).catch(() => {});
     };
