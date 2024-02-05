@@ -93,13 +93,13 @@ function generateExamplesFolder() {
         htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpgk);
         htmlContent = htmlContent.replace(/-dev.js/g, '.js');
         const htmlContentLines = htmlContent.split('\n');
-        const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
-        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
+        const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim()!;
+        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1')!;
         fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
         const mdFileName = file.replace('.html', '.md');
         indexArray.push({
-            title: title!,
-            description: description!,
+            title,
+            description,
             mdFileName
         });
         const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent);
