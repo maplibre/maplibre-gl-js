@@ -1,4 +1,5 @@
 import {DOM} from '../util/dom';
+import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap';
@@ -141,6 +142,7 @@ export class Marker extends Evented {
     _opacity: string;
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
+    _frameRequest: AbortController;
 
     /**
      * @param options - the options
@@ -520,7 +522,7 @@ export class Marker extends Evented {
         return this;
     }
 
-    _updateOpacity = (force: boolean = false) => {
+    _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
         if (!terrain) {
             if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
@@ -556,7 +558,7 @@ export class Marker extends Evented {
         // Display at full opacity if center is visible.
         const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
         this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
-    };
+    }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
         if (!this._map) return;
@@ -595,8 +597,11 @@ export class Marker extends Evented {
 
         DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
 
-        // Run it after painter.render and drawDepth
-        requestAnimationFrame((_) => this._updateOpacity(e && e.type === 'moveend'));
+        this._frameRequest = new AbortController();
+        browser.frameAsync(this._frameRequest).then(() => { // Run _updateOpacity only after painter.render and drawDepth
+            this._frameRequest = null;
+            this._updateOpacity(e && e.type === 'moveend');
+        }).catch(() => {});
     };
 
     /**
