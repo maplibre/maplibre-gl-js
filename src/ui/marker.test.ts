@@ -1,4 +1,4 @@
-import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest, sleep} from '../util/test/util';
 import {Marker} from './marker';
 import {Popup} from './popup';
 import {LngLat} from '../geo/lng_lat';
@@ -792,7 +792,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker removed after update when terrain is on should clear timeout', () => {
+    test('Marker removed after update when terrain is on should clear timeout', async () => {
         jest.spyOn(global, 'setTimeout');
         jest.spyOn(global, 'clearTimeout');
         const map = createMap();
@@ -806,6 +806,7 @@ describe('marker', () => {
         map.transform.lngLatToCameraDepth = () => .95;
 
         marker.setOffset([10, 10]);
+        await sleep(100);
 
         expect(setTimeout).toHaveBeenCalled();
         marker.remove();
@@ -839,20 +840,22 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Sets default opacity if it\'s not provided as option', () => {
+    test('Sets default opacity if it\'s not provided as option', async () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('1');
         map.remove();
     });
 
-    test('Sets opacity according to options.opacity', () => {
+    test('Sets opacity according to options.opacity', async () => {
         const map = createMap();
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('.7');
         map.remove();
     });
@@ -877,7 +880,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker changes opacity behind terrain and when terrain is removed', () => {
+    test('Marker changes opacity behind terrain and when terrain is removed', async () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker()
@@ -891,25 +894,28 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
+        await sleep(100);
         map.fire('moveend');
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
+        await sleep(100);
         map.fire('terrain');
         expect(marker.getElement().style.opacity).toMatch('1');
 
         map.remove();
     });
 
-    test('Applies options.opacity when 3d terrain is enabled and marker is in clear view', () => {
+    test('Applies options.opacity when 3d terrain is enabled and marker is in clear view', async () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacity: '0.7'})
@@ -920,13 +926,14 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95
         } as any as Terrain;
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
         map.remove();
     });
 
-    test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', () => {
+    test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', async () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacity: '0.7'})
@@ -937,13 +944,14 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
         } as any as Terrain;
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
         map.remove();
     });
 
-    test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', () => {
+    test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', async () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
@@ -954,13 +962,14 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .92
         } as any as Terrain;
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('0.3');
         map.remove();
     });
 
-    test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', async () => {
+    test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker({opacityWhenCovered: '0.15'})
