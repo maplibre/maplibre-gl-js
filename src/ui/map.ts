@@ -223,6 +223,7 @@ export type MapOptions = {
     pitch?: number;
     /**
      * If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+     *
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
      * container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
@@ -1094,6 +1095,7 @@ export class Map extends Camera {
 
     /**
      * Returns the state of `renderWorldCopies`. If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+     *
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
      * container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
@@ -1111,6 +1113,7 @@ export class Map extends Camera {
      * Sets the state of `renderWorldCopies`.
      *
      * @param renderWorldCopies - If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+     *
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
      * container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
@@ -2694,9 +2697,9 @@ export class Map extends Camera {
      *
      * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
      *
-     * * For vector or GeoJSON sources, including an `id` attribute in the original data file.
-     * * For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
-     * * For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
+     * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
+     * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
+     * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
      *
      * _Note: You can use the [`feature-state` expression](https://maplibre.org/maplibre-style-spec/expressions/#feature-state) to access the values in a feature's state object for the purposes of styling._
      *
@@ -3012,6 +3015,7 @@ export class Map extends Camera {
     /**
      * @internal
      * Call when a (re-)render of the map is required:
+     *
      * - The style has changed (`setPaintProperty()`, etc.)
      * - Source data has changed (e.g. tiles have finished loading)
      * - The map has is moving (or just finished moving)
