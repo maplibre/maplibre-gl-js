@@ -196,7 +196,7 @@ void main() {
 
     // JP: TODO: asi je dobrý první krok upravit shader?
     vec4 projected_pos;
-    if(u_pitch_with_map) {
+    if(u_pitch_with_map || u_is_viewport_line) {
         projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
     } else {
         projected_pos = u_label_plane_matrix * projectTileWithElevation(vec3(a_projected_pos.xy + u_translation, ele));

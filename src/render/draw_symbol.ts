@@ -332,12 +332,12 @@ function drawLayerSymbols(
         }
 
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const identity = mat4.create();
-        const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(identity, pitchWithMap, rotateWithMap, painter.transform, s);
-        const glCoordMatrix = symbolProjection.getGlCoordMatrix(identity, pitchWithMap, rotateWithMap, painter.transform, s);
+        const baseMatrix = isViewportLine ? coord.posMatrix : identityMat4;
+        const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+        const glCoordMatrix = symbolProjection.getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = painter.translatePosition(tile, translate, translateAnchor);
-        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord, baseMatrix);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
