@@ -337,7 +337,7 @@ function drawLayerSymbols(
         const glCoordMatrix = symbolProjection.getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = painter.translatePosition(tile, translate, translateAnchor);
-        const projectionData = painter.style.map.projectionManager.getProjectionData(coord, baseMatrix);
+        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
