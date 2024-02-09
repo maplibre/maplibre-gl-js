@@ -15,7 +15,24 @@ import type {
 import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
 
-export {updateLineLabels, hideGlyphs, getLabelPlaneMatrix, getGlCoordMatrix, project, getPerspectiveRatio, placeFirstAndLastGlyph, placeGlyphAlongLine, xyTransformMat4, projectVertexToViewport, findOffsetIntersectionPoint, transformToOffsetNormal};
+export {
+    updateLineLabels,
+    hideGlyphs,
+    getLabelPlaneMatrix,
+    getGlCoordMatrix,
+    project,
+    projectFromMapToLabelPlane,
+    projectFromLabelPlaneToScreen,
+    projectFromMapToScreen,
+    projectRaw,
+    getPerspectiveRatio,
+    placeFirstAndLastGlyph,
+    placeGlyphAlongLine,
+    xyTransformMat4,
+    projectVertexToViewport,
+    findOffsetIntersectionPoint,
+    transformToOffsetNormal
+};
 
 /*
  * # Overview of coordinate spaces
@@ -102,7 +119,23 @@ function getGlCoordMatrix(posMatrix: mat4,
     }
 }
 
-// JP: TODO: change this for globe?
+function projectFromMapToLabelPlane(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
+    return project(point, matrix, getElevation);
+}
+
+function projectFromLabelPlaneToScreen(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
+    return project(point, matrix, getElevation);
+}
+
+function projectFromMapToScreen(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
+    return project(point, matrix, getElevation);
+}
+
+function projectRaw(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
+    return project(point, matrix, getElevation);
+}
+
+// JP: TODO: change this for globe? YES change this! not so simple, need to get tile xy in here
 function project(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
     let pos;
     if (getElevation) { // slow because of handle z-index
@@ -202,7 +235,7 @@ function updateLineLabels(bucket: SymbolBucket,
         const pitchScaledFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
 
         const tileAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const anchorPoint = project(tileAnchorPoint, labelPlaneMatrix, getElevation).point; // JP: TODO: explore this for globe
+        const anchorPoint = projectFromMapToLabelPlane(tileAnchorPoint, labelPlaneMatrix, getElevation).point; // JP: TODO: explore this for globe
         const projectionCache = {projections: {}, offsets: {}};
 
         const placeUnflipped: any = placeGlyphsAlongLine(symbol, pitchScaledFontSize, false /*unflipped*/, keepUpright, posMatrix, labelPlaneMatrix, glCoordMatrix,
@@ -309,8 +342,8 @@ function placeGlyphsAlongLine(symbol, fontSize, flip, keepUpright, posMatrix, la
         if (!firstAndLastGlyph) {
             return {notEnoughRoom: true};
         }
-        const firstPoint = project(firstAndLastGlyph.first.point, glCoordMatrix, getElevation).point;
-        const lastPoint = project(firstAndLastGlyph.last.point, glCoordMatrix, getElevation).point;
+        const firstPoint = projectRaw(firstAndLastGlyph.first.point, glCoordMatrix, getElevation).point;
+        const lastPoint = projectRaw(firstAndLastGlyph.last.point, glCoordMatrix, getElevation).point;
 
         if (keepUpright && !flip) {
             const orientationChange = requiresOrientationChange(symbol.writingMode, firstPoint, lastPoint, aspectRatio);
@@ -330,10 +363,10 @@ function placeGlyphsAlongLine(symbol, fontSize, flip, keepUpright, posMatrix, la
         // Only a single glyph to place
         // So, determine whether to flip based on projected angle of the line segment it's on
         if (keepUpright && !flip) {
-            const a = project(tileAnchorPoint, posMatrix, getElevation).point;
+            const a = projectFromMapToScreen(tileAnchorPoint, posMatrix, getElevation).point;
             const tileVertexIndex = (symbol.lineStartIndex + symbol.segment + 1);
             const tileSegmentEnd = new Point(lineVertexArray.getx(tileVertexIndex), lineVertexArray.gety(tileVertexIndex));
-            const projectedVertex = project(tileSegmentEnd, posMatrix, getElevation);
+            const projectedVertex = projectFromMapToScreen(tileSegmentEnd, posMatrix, getElevation);
             // We know the anchor will be in the viewport, but the end of the line segment may be
             // behind the plane of the camera, in which case we can use a point at any arbitrary (closer)
             // point on the segment.
@@ -365,7 +398,7 @@ function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint:
     // If it did, that would mean our label extended all the way out from within the viewport to a (very distant)
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
     // plane of the camera.
-    const projectedUnitVertex = project(previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit()), projectionMatrix, getElevation).point;
+    const projectedUnitVertex = projectRaw(previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit()), projectionMatrix, getElevation).point;
     const projectedUnitSegment = previousProjectedPoint.sub(projectedUnitVertex);
 
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
@@ -447,7 +480,7 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs):
         return projectionCache.projections[index];
     }
     const currentVertex = new Point(lineVertexArray.getx(index), lineVertexArray.gety(index));
-    const projection = project(currentVertex, labelPlaneMatrix, getElevation);
+    const projection = projectFromMapToLabelPlane(currentVertex, labelPlaneMatrix, getElevation);
     if (projection.signedDistanceFromCamera > 0) {
         projectionCache.projections[index] = projection.point;
         return projection.point;

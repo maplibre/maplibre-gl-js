@@ -185,7 +185,9 @@ function updateVariableAnchorsForBucket(
             symbolProjection.hideGlyphs(symbol.numGlyphs, dynamicTextLayoutVertexArray);
         } else  {
             const tileAnchor = new Point(symbol.anchorX, symbol.anchorY);
-            const projectedAnchor = symbolProjection.project(tileAnchor, pitchWithMap ? posMatrix : labelPlaneMatrix, getElevation);
+            const projectedAnchor = pitchWithMap ?
+                symbolProjection.projectFromMapToScreen(tileAnchor, posMatrix, getElevation) :
+                symbolProjection.projectFromMapToLabelPlane(tileAnchor, labelPlaneMatrix, getElevation);
             const perspectiveRatio = symbolProjection.getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
             let renderTextSize = evaluateSizeForFeature(bucket.textSizeData, size, symbol) * perspectiveRatio / ONE_EM;
             if (pitchWithMap) {
@@ -202,7 +204,7 @@ function updateVariableAnchorsForBucket(
             // calculated above. In the (somewhat weird) case of pitch-aligned text, we add an equivalent
             // tile-unit based shift to the anchor before projecting to the label plane.
             const shiftedAnchor = pitchWithMap ?
-                symbolProjection.project(tileAnchor.add(shift), labelPlaneMatrix, getElevation).point :
+                symbolProjection.projectFromMapToLabelPlane(tileAnchor.add(shift), labelPlaneMatrix, getElevation).point :
                 projectedAnchor.point.add(rotateWithMap ?
                     shift.rotate(-transform.angle) :
                     shift);

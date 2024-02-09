@@ -143,12 +143,11 @@ export class CollisionIndex {
         const placedCollisionCircles = [];
 
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const screenAnchorPoint = projection.project(tileUnitAnchorPoint, posMatrix, getElevation);
-        const perspectiveRatio = projection.getPerspectiveRatio(this.transform.cameraToCenterDistance, screenAnchorPoint.signedDistanceFromCamera);
+        const perspectiveRatio = this.getPerspectiveRatio(posMatrix, tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation);
         const labelPlaneFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
 
-        const labelPlaneAnchorPoint = projection.project(tileUnitAnchorPoint, labelPlaneMatrix, getElevation).point;
+        const labelPlaneAnchorPoint = projection.projectFromMapToLabelPlane(tileUnitAnchorPoint, labelPlaneMatrix, getElevation).point;
 
         const projectionCache = {projections: {}, offsets: {}};
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
@@ -196,7 +195,7 @@ export class CollisionIndex {
 
             // The path might need to be converted into screen space if a pitched map is used as the label space
             if (labelToScreenMatrix) {
-                const screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix, getElevation));
+                const screenSpacePath = projectedPath.map(p => projection.projectFromLabelPlaneToScreen(p, labelToScreenMatrix, getElevation));
 
                 // Do not try to place collision circles if even of the points is behind the camera.
                 // This is a plausible scenario with big camera pitch angles
@@ -374,7 +373,7 @@ export class CollisionIndex {
         if (this.projectionManager.useSpecialProjectionForSymbols) {
             projected = this.projectionManager.project(x, y, unwrappedTileID);
         } else {
-            projected = projection.project(new Point(x, y), posMatrix, getElevation);
+            projected = projection.projectFromMapToScreen(new Point(x, y), posMatrix, getElevation);
         }
         return {
             point: new Point(
@@ -386,6 +385,16 @@ export class CollisionIndex {
             // to scale down boxes in the distance
             perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera)
         };
+    }
+
+    getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
+        let projected;
+        if (this.projectionManager.useSpecialProjectionForSymbols) {
+            projected = this.projectionManager.project(x, y, unwrappedTileID);
+        } else {
+            projected = projection.projectFromMapToScreen(new Point(x, y), posMatrix, getElevation);
+        }
+        return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
     isOffscreen(x1: number, y1: number, x2: number, y2: number) {
