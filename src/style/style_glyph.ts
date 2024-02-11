@@ -1,4 +1,4 @@
-import type {AlphaImage} from '../util/image';
+import type {RGBAImage, AlphaImage} from '../util/image';
 
 /**
  * Some metices related to a glyph
@@ -20,6 +20,6 @@ export type GlyphMetrics = {
  */
 export type StyleGlyph = {
     id: number;
-    bitmap: AlphaImage;
+    bitmap: RGBAImage;
     metrics: GlyphMetrics;
 };

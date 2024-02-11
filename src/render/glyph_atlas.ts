@@ -1,4 +1,4 @@
-import {AlphaImage} from '../util/image';
+import {RGBAImage, AlphaImage} from '../util/image';
 import {register} from '../util/web_worker_transfer';
 import potpack from 'potpack';
 
@@ -62,7 +62,7 @@ export class GlyphAtlas {
         }
 
         const {w, h} = potpack(bins);
-        const image = new AlphaImage({width: w || 1, height: h || 1});
+        const image = new RGBAImage({width: w || 1, height: h || 1});
 
         for (const stack in stacks) {
             const glyphs = stacks[stack];
@@ -71,7 +71,7 @@ export class GlyphAtlas {
                 const src = glyphs[+id];
                 if (!src || src.bitmap.width === 0 || src.bitmap.height === 0) continue;
                 const bin = positions[stack][id].rect;
-                AlphaImage.copy(src.bitmap, image, {x: 0, y: 0}, {x: bin.x + padding, y: bin.y + padding}, src.bitmap);
+                RGBAImage.copy(src.bitmap, image, {x: 0, y: 0}, {x: bin.x + padding, y: bin.y + padding}, src.bitmap);
             }
         }
 

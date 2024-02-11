@@ -2,7 +2,7 @@ import {loadGlyphRange} from '../style/load_glyph_range';
 
 import TinySDF from '@mapbox/tiny-sdf';
 import {unicodeBlockLookup} from '../util/is_char_in_unicode_block';
-import {AlphaImage} from '../util/image';
+import {RGBAImage, AlphaImage} from '../util/image';
 
 import type {StyleGlyph} from '../style/style_glyph';
 import type {RequestManager} from '../util/request_manager';
@@ -120,13 +120,14 @@ export class GlyphManager {
     }
 
     _doesCharSupportLocalGlyph(id: number): boolean {
-        /* eslint-disable new-cap */
-        return !!this.localIdeographFontFamily &&
-            (unicodeBlockLookup['CJK Unified Ideographs'](id) ||
-            unicodeBlockLookup['Hangul Syllables'](id) ||
-            unicodeBlockLookup['Hiragana'](id) ||
-            unicodeBlockLookup['Katakana'](id));
-        /* eslint-enable new-cap */
+        return true;
+        // /* eslint-disable new-cap */
+        // return !!this.localIdeographFontFamily &&
+        //     (unicodeBlockLookup['CJK Unified Ideographs'](id) ||
+        //     unicodeBlockLookup['Hangul Syllables'](id) ||
+        //     unicodeBlockLookup['Hiragana'](id) ||
+        //     unicodeBlockLookup['Katakana'](id));
+        // /* eslint-enable new-cap */
     }
 
     _tinySDF(entry: Entry, stack: string, id: number): StyleGlyph {
@@ -165,6 +166,21 @@ export class GlyphManager {
 
         const char = tinySDF.draw(String.fromCharCode(id));
 
+        console.log(id, char.data.slice());
+        const newData = new Uint8ClampedArray(4 * char.data.length);
+        for (let i = 0; i < char.data.length; ++i) {
+            newData[4 * i + 0] = char.data[i];
+            newData[4 * i + 1] = char.data[i];
+            newData[4 * i + 2] = char.data[i];
+            newData[4 * i + 3] = char.data[i];
+        }
+
+        //  0  1  2  3  4  5  6  7  8  9 10 11
+        // r0 g0 b0 a0 r1 g1 b1 a1 r2 g2 b2 a2
+        // r0 r1 r2 g0 g1 g2 b0 b1 b2 a0 a1 a2
+
+        char.data = newData.slice();
+
         /**
          * TinySDF's "top" is the distance from the alphabetic baseline to the top of the glyph.
          * Server-generated fonts specify "top" relative to an origin above the em box (the origin
@@ -184,7 +200,7 @@ export class GlyphManager {
 
         return {
             id,
-            bitmap: new AlphaImage({width: char.width || 30 * textureScale, height: char.height || 30 * textureScale}, char.data),
+            bitmap: new RGBAImage({width: char.width || 30 * textureScale, height: char.height || 30 * textureScale}, char.data),
             metrics: {
                 width: char.glyphWidth / textureScale || 24,
                 height: char.glyphHeight / textureScale || 24,
