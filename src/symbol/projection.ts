@@ -241,7 +241,6 @@ function updateLineLabels(bucket: SymbolBucket,
         const pitchScaledFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
 
         const tileAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const anchorPoint = projectFromMapToLabelPlane(tileAnchorPoint, labelPlaneMatrix, getElevation).point; // JP: TODO: explore this for globe
         const projectionCache = {projections: {}, offsets: {}};
 
         const projectionArgs: ProjectionArgs = {
@@ -256,6 +255,7 @@ function updateLineLabels(bucket: SymbolBucket,
             width: viewportWidth,
             height: viewportHeight
         };
+        const anchorPoint = projectTileCoordinatesToViewport(tileAnchorPoint.x, tileAnchorPoint.y, projectionArgs).point;
 
         const placeUnflipped: any = placeGlyphsAlongLine(projectionArgs, symbol, pitchScaledFontSize, false /*unflipped*/, keepUpright, posMatrix, glCoordMatrix,
             bucket.glyphOffsetArray, dynamicLayoutVertexArray, anchorPoint, aspectRatio, rotateToLine);
@@ -422,23 +422,13 @@ function placeGlyphsAlongLine(projectionArgs: ProjectionArgs, symbol, fontSize, 
 }
 
 // projectionProvider: either we want to project using a simple matrix (mat4), or do globe projection (ProjectionManager)
-function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionProvider: mat4 | ProjectionManager, getElevation: (x: number, y: number) => number, unwrappedTileID?: UnwrappedTileID, width?: number, height?: number) {
+function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4, getElevation: (x: number, y: number) => number) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
     // If it did, that would mean our label extended all the way out from within the viewport to a (very distant)
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
     // plane of the camera.
-
     const unitVertextoBeProjected = previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit());
-    let projectedUnitVertex: Point;
-
-    if (projectionProvider instanceof ProjectionManager) {
-        projectedUnitVertex = projectionProvider.project(unitVertextoBeProjected.x, unitVertextoBeProjected.y, unwrappedTileID).point;
-        projectedUnitVertex.x = (projectedUnitVertex.x * 0.5 + 0.5) * width;
-        projectedUnitVertex.y = (-projectedUnitVertex.y * 0.5 + 0.5) * height;
-    } else {
-        projectedUnitVertex = projectRaw(unitVertextoBeProjected, projectionProvider, getElevation).point;
-    }
-
+    const projectedUnitVertex = projectRaw(unitVertextoBeProjected, projectionMatrix, getElevation).point;
     const projectedUnitSegment = previousProjectedPoint.sub(projectedUnitVertex);
 
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
@@ -528,14 +518,7 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
     }
     const currentVertex = new Point(projectionArgs.lineVertexArray.getx(index), projectionArgs.lineVertexArray.gety(index));
 
-    let projection;
-    if (!projectionArgs.pitchWithMap && projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
-        projection = projectionArgs.projectionManager.project(currentVertex.x, currentVertex.y, projectionArgs.unwrappedTileID);
-        projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
-        projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
-    } else {
-        projection = projectFromMapToLabelPlane(currentVertex, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
-    }
+    const projection = projectTileCoordinatesToViewport(currentVertex.x, currentVertex.y, projectionArgs);
 
     if (projection.signedDistanceFromCamera > 0) {
         projectionArgs.projectionCache.projections[index] = projection.point;
@@ -548,17 +531,30 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
     const previousTilePoint = syntheticVertexArgs.distanceFromAnchor === 0 ?
         projectionArgs.tileAnchorPoint :
         new Point(projectionArgs.lineVertexArray.getx(previousLineVertexIndex), projectionArgs.lineVertexArray.gety(previousLineVertexIndex));
+
     // Don't cache because the new vertex might not be far enough out for future glyphs on the same segment
-    return projectTruncatedLineSegment(
-        previousTilePoint,
-        currentVertex,
-        syntheticVertexArgs.previousVertex,
-        syntheticVertexArgs.absOffsetX - syntheticVertexArgs.distanceFromAnchor + 1,
-        (!projectionArgs.pitchWithMap && projectionArgs.projectionManager.useSpecialProjectionForSymbols) ? projectionArgs.projectionManager : projectionArgs.labelPlaneMatrix,
-        projectionArgs.getElevation,
-        projectionArgs.unwrappedTileID,
-        projectionArgs.width,
-        projectionArgs.height);
+
+    // Now, do the equivalent of projectTruncatedLineSegment, but potentially using globe projection.
+    const minimumLength = syntheticVertexArgs.absOffsetX - syntheticVertexArgs.distanceFromAnchor + 1;
+    const unitVertextoBeProjected = previousTilePoint.add(previousTilePoint.sub(currentVertex)._unit());
+    const projectedUnitVertex = projectionArgs.projectionManager.project(unitVertextoBeProjected.x, unitVertextoBeProjected.y, projectionArgs.unwrappedTileID).point;
+    projectedUnitVertex.x = (projectedUnitVertex.x * 0.5 + 0.5) * projectionArgs.width;
+    projectedUnitVertex.y = (-projectedUnitVertex.y * 0.5 + 0.5) * projectionArgs.height;
+    const projectedUnitSegment = syntheticVertexArgs.previousVertex.sub(projectedUnitVertex);
+
+    return syntheticVertexArgs.previousVertex.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
+}
+
+function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: ProjectionArgs) {
+    let projection;
+    if (!projectionArgs.pitchWithMap && projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
+        projection = projectionArgs.projectionManager.project(x, y, projectionArgs.unwrappedTileID);
+        projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
+        projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
+    } else {
+        projection = projectFromMapToLabelPlane(new Point(x, y), projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
+    }
+    return projection;
 }
 
 /**
