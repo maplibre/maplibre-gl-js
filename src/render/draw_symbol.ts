@@ -350,7 +350,7 @@ function drawLayerSymbols(
         if (alongLine) {
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
-            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, projectionManager, coord.toUnwrapped(), getElevation);
+            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, projectionManager, coord.toUnwrapped(), tr.width, tr.height, getElevation);
         }
 
         const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor

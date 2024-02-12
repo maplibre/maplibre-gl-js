@@ -163,6 +163,8 @@ export class CollisionIndex {
             projectionManager: this.projectionManager,
             tileAnchorPoint: tileUnitAnchorPoint,
             unwrappedTileID,
+            width: this.transform.width,
+            height: this.transform.height
         };
 
         const firstAndLastGlyph = projection.placeFirstAndLastGlyph(
@@ -205,7 +207,7 @@ export class CollisionIndex {
             if (labelToScreenMatrix) {
                 const screenSpacePath = projectedPath.map(p => projection.projectFromLabelPlaneToScreen(p, labelToScreenMatrix, getElevation));
 
-                // Do not try to place collision circles if even of the points is behind the camera.
+                // Do not try to place collision circles if even one of the points is behind the camera.
                 // This is a plausible scenario with big camera pitch angles
                 if (screenSpacePath.some(point => point.signedDistanceFromCamera <= 0)) {
                     projectedPath = [];
@@ -396,6 +398,7 @@ export class CollisionIndex {
     }
 
     getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
+        // We don't care about the actual projected point, just its W component.
         let projected;
         if (this.projectionManager.useSpecialProjectionForSymbols) {
             projected = this.projectionManager.project(x, y, unwrappedTileID);

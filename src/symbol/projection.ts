@@ -185,6 +185,8 @@ function updateLineLabels(bucket: SymbolBucket,
     rotateToLine: boolean,
     projectionManager: ProjectionManager,
     unwrappedTileID: UnwrappedTileID,
+    viewportWidth: number,
+    viewportHeight: number,
     getElevation: (x: number, y: number) => number) {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
@@ -250,7 +252,9 @@ function updateLineLabels(bucket: SymbolBucket,
             projectionCache,
             projectionManager,
             tileAnchorPoint,
-            unwrappedTileID
+            unwrappedTileID,
+            width: viewportWidth,
+            height: viewportHeight
         };
 
         const placeUnflipped: any = placeGlyphsAlongLine(projectionArgs, symbol, pitchScaledFontSize, false /*unflipped*/, keepUpright, posMatrix, glCoordMatrix,
@@ -418,7 +422,7 @@ function placeGlyphsAlongLine(projectionArgs: ProjectionArgs, symbol, fontSize, 
 }
 
 // projectionProvider: either we want to project using a simple matrix (mat4), or do globe projection (ProjectionManager)
-function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionProvider: mat4 | ProjectionManager, getElevation: (x: number, y: number) => number, unwrappedTileID?: UnwrappedTileID) {
+function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionProvider: mat4 | ProjectionManager, getElevation: (x: number, y: number) => number, unwrappedTileID?: UnwrappedTileID, width?: number, height?: number) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
     // If it did, that would mean our label extended all the way out from within the viewport to a (very distant)
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
@@ -429,6 +433,8 @@ function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint:
 
     if (projectionProvider instanceof ProjectionManager) {
         projectedUnitVertex = projectionProvider.project(unitVertextoBeProjected.x, unitVertextoBeProjected.y, unwrappedTileID).point;
+        projectedUnitVertex.x = (projectedUnitVertex.x * 0.5 + 0.5) * width;
+        projectedUnitVertex.y = (-projectedUnitVertex.y * 0.5 + 0.5) * height;
     } else {
         projectedUnitVertex = projectRaw(unitVertextoBeProjected, projectionProvider, getElevation).point;
     }
@@ -490,6 +496,14 @@ export type ProjectionArgs = {
     pitchWithMap: boolean;
     projectionManager: ProjectionManager;
     unwrappedTileID: UnwrappedTileID;
+    /**
+     * Viewport width.
+     */
+    width: number;
+    /**
+     * Viewport height.
+     */
+    height: number;
 };
 
 /**
@@ -502,7 +516,6 @@ export type ProjectionSyntheticVertexArgs = {
     absOffsetX: number;
 };
 
-// JP: TODO: this is used by placeGlyphAlongLine, change this for globe
 /**
  * Transform a vertex from tile coordinates to label plane coordinates
  * @param index - index of vertex to project
@@ -516,11 +529,12 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
     const currentVertex = new Point(projectionArgs.lineVertexArray.getx(index), projectionArgs.lineVertexArray.gety(index));
 
     let projection;
-
-    if (projectionArgs.pitchWithMap) {
-        projection = projectFromMapToLabelPlane(currentVertex, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
-    } else {
+    if (!projectionArgs.pitchWithMap && projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
         projection = projectionArgs.projectionManager.project(currentVertex.x, currentVertex.y, projectionArgs.unwrappedTileID);
+        projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
+        projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
+    } else {
+        projection = projectFromMapToLabelPlane(currentVertex, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
     }
 
     if (projection.signedDistanceFromCamera > 0) {
@@ -540,8 +554,11 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
         currentVertex,
         syntheticVertexArgs.previousVertex,
         syntheticVertexArgs.absOffsetX - syntheticVertexArgs.distanceFromAnchor + 1,
-        projectionArgs.pitchWithMap ? projectionArgs.labelPlaneMatrix : projectionArgs.projectionManager,
-        projectionArgs.getElevation);
+        (!projectionArgs.pitchWithMap && projectionArgs.projectionManager.useSpecialProjectionForSymbols) ? projectionArgs.projectionManager : projectionArgs.labelPlaneMatrix,
+        projectionArgs.getElevation,
+        projectionArgs.unwrappedTileID,
+        projectionArgs.width,
+        projectionArgs.height);
 }
 
 /**
