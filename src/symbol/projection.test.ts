@@ -1,4 +1,4 @@
-import {findOffsetIntersectionPoint, project, projectVertexToViewport, transformToOffsetNormal} from './projection';
+import {ProjectionArgs, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, project, projectVertexToViewport, transformToOffsetNormal} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -20,22 +20,29 @@ describe('Vertex to viewport projection', () => {
     lineVertexArray.emplaceBack(10, 0, 10);
 
     test('projecting with null matrix', () => {
-        const projectionArgs = {
+        const projectionArgs: ProjectionArgs = {
             projectionCache: {projections: {}, offsets: {}},
             lineVertexArray,
             labelPlaneMatrix: mat4.create(),
             getElevation: (_x, _y) => 0,
             // Only relevant in "behind the camera" case, can't happen with null projection matrix
             tileAnchorPoint: new Point(0, 0),
+            // TODO: I guessed the values of the next three parameters. Verify correctness.
+            pitchWithMap: true,
+            projectionManager: null,
+            unwrappedTileID: null,
+        };
+
+        const syntheticVertexArgs: ProjectionSyntheticVertexArgs = {
             distanceFromAnchor: 0,
             previousVertex: new Point(0, 0),
             direction: 1,
             absOffsetX: 0
         };
 
-        const first = projectVertexToViewport(0, projectionArgs);
-        const second = projectVertexToViewport(1, projectionArgs);
-        const third = projectVertexToViewport(2, projectionArgs);
+        const first = projectVertexToViewport(0, projectionArgs, syntheticVertexArgs);
+        const second = projectVertexToViewport(1, projectionArgs, syntheticVertexArgs);
+        const third = projectVertexToViewport(2, projectionArgs, syntheticVertexArgs);
         expect(first.x).toBeCloseTo(-10);
         expect(second.x).toBeCloseTo(0);
         expect(third.x).toBeCloseTo(10);
@@ -54,14 +61,21 @@ describe('Find offset line intersections', () => {
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
 
-    const projectionArgs = {
+    const projectionArgs: ProjectionArgs = {
         projectionCache: {projections: {}, offsets: {}},
         lineVertexArray,
         labelPlaneMatrix: mat4.create(),
         getElevation: (_x, _y) => 0,
-        direction: 1,
-        // Only relevant in "behind the camera" case, can't happen with null projection matrix
         tileAnchorPoint: new Point(0, 0),
+        // TODO: I guessed the values of the next three parameters. Verify correctness.
+        pitchWithMap: true,
+        projectionManager: null,
+        unwrappedTileID: null,
+    };
+
+    // Only relevant in "behind the camera" case, can't happen with null projection matrix
+    const syntheticVertexArgs: ProjectionSyntheticVertexArgs = {
+        direction: 1,
         distanceFromAnchor: 0,
         previousVertex: new Point(0, 0),
         absOffsetX: 0
@@ -78,7 +92,7 @@ describe('Find offset line intersections', () => {
         const lineOffsetY = 1;
 
         const prevToCurrent = new Point(10, 0);
-        const normal = transformToOffsetNormal(prevToCurrent, lineOffsetY, projectionArgs.direction);
+        const normal = transformToOffsetNormal(prevToCurrent, lineOffsetY, syntheticVertexArgs.direction);
         expect(normal.y).toBeCloseTo(1);
         expect(normal.x).toBeCloseTo(0);
         const intersectionPoint = findOffsetIntersectionPoint(
@@ -89,7 +103,8 @@ describe('Find offset line intersections', () => {
             3,
             new Point(-10, 1),
             lineOffsetY,
-            projectionArgs
+            projectionArgs,
+            syntheticVertexArgs
         );
         expect(intersectionPoint.y).toBeCloseTo(1);
         expect(intersectionPoint.x).toBeCloseTo(-1);
@@ -107,7 +122,7 @@ describe('Find offset line intersections', () => {
         const lineOffsetY = -1;
 
         const prevToCurrent = new Point(10, 0);
-        const normal = transformToOffsetNormal(prevToCurrent, lineOffsetY, projectionArgs.direction);
+        const normal = transformToOffsetNormal(prevToCurrent, lineOffsetY, syntheticVertexArgs.direction);
         expect(normal.y).toBeCloseTo(-1);
         expect(normal.x).toBeCloseTo(0);
         const intersectionPoint = findOffsetIntersectionPoint(
@@ -118,7 +133,8 @@ describe('Find offset line intersections', () => {
             3,
             new Point(-10, -1),
             lineOffsetY,
-            projectionArgs
+            projectionArgs,
+            syntheticVertexArgs
         );
         expect(intersectionPoint.y).toBeCloseTo(-1);
         expect(intersectionPoint.x).toBeCloseTo(1);
@@ -135,13 +151,14 @@ describe('Find offset line intersections', () => {
         const prevToCurrent = new Point(10, 0);
         const intersectionPoint = findOffsetIntersectionPoint(
             1,
-            transformToOffsetNormal(prevToCurrent, lineOffsetY, projectionArgs.direction),
+            transformToOffsetNormal(prevToCurrent, lineOffsetY, syntheticVertexArgs.direction),
             new Point(0, 0),
             3,
             5,
             new Point(-10, 1),
             lineOffsetY,
-            projectionArgs
+            projectionArgs,
+            syntheticVertexArgs
         );
         expect(intersectionPoint.x).toBeCloseTo(0);
         expect(intersectionPoint.y).toBeCloseTo(1);

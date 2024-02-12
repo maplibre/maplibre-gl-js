@@ -4,7 +4,7 @@ import {PathInterpolator} from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
 import {GridIndex} from './grid_index';
-import {mat4, vec4} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
 import * as projection from '../symbol/projection';
@@ -18,6 +18,7 @@ import type {
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {ProjectionManager} from '../render/projection_manager';
 import {UnwrappedTileID} from '../source/tile_id';
+import {ProjectionArgs} from '../symbol/projection';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -153,6 +154,17 @@ export class CollisionIndex {
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
         const lineOffsetY = symbol.lineOffsetY * labelPlaneFontScale;
 
+        const projectionArgs: ProjectionArgs = {
+            getElevation,
+            labelPlaneMatrix,
+            lineVertexArray,
+            pitchWithMap,
+            projectionCache,
+            projectionManager: this.projectionManager,
+            tileAnchorPoint: tileUnitAnchorPoint,
+            unwrappedTileID,
+        };
+
         const firstAndLastGlyph = projection.placeFirstAndLastGlyph(
             labelPlaneFontScale,
             glyphOffsetArray,
@@ -160,13 +172,9 @@ export class CollisionIndex {
             lineOffsetY,
             /*flip*/ false,
             labelPlaneAnchorPoint,
-            tileUnitAnchorPoint,
             symbol,
-            lineVertexArray,
-            labelPlaneMatrix,
-            projectionCache,
             false,
-            getElevation);
+            projectionArgs);
 
         let collisionDetected = false;
         let inGrid = false;

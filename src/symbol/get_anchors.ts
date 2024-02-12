@@ -70,7 +70,6 @@ function getCenterAnchor(line: Array<Point>,
     }
 }
 
-// JP: TODO: change this for globe?
 function getAnchors(line: Array<Point>,
     spacing: number,
     maxAngle: number,
