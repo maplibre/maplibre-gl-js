@@ -270,6 +270,7 @@ function drawLayerSymbols(
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
+    const projectionManager = painter.style.map.projectionManager;
 
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
@@ -339,7 +340,7 @@ function drawLayerSymbols(
         const glCoordMatrix = symbolProjection.getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = painter.translatePosition(tile, translate, translateAnchor);
-        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+        const projectionData = projectionManager.getProjectionData(coord);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
@@ -349,7 +350,7 @@ function drawLayerSymbols(
         if (alongLine) {
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
-            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, getElevation);
+            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, projectionManager, coord.toUnwrapped(), getElevation);
         }
 
         const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
