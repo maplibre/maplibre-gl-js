@@ -148,9 +148,7 @@ export class CollisionIndex {
         const labelPlaneFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
 
-        const labelPlaneAnchorPoint = projection.projectFromMapToLabelPlane(tileUnitAnchorPoint, labelPlaneMatrix, getElevation).point;
-
-        const projectionCache = {projections: {}, offsets: {}};
+        const projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined};
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
         const lineOffsetY = symbol.lineOffsetY * labelPlaneFontScale;
 
@@ -173,7 +171,6 @@ export class CollisionIndex {
             lineOffsetX,
             lineOffsetY,
             /*flip*/ false,
-            labelPlaneAnchorPoint,
             symbol,
             false,
             projectionArgs);
