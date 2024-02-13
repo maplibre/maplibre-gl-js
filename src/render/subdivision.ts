@@ -761,6 +761,10 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
         return [];
     }
 
+    if (linePoints.length < 2) {
+        return [linePoints[0]];
+    }
+
     if (granuality < 2) {
         return linePoints;
     }
