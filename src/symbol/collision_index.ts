@@ -202,8 +202,13 @@ export class CollisionIndex {
 
             // The path might need to be converted into screen space if a pitched map is used as the label space
             if (labelToScreenMatrix) {
-                let screenSpacePath;
+                let screenSpacePath: Array<{
+                    point: Point;
+                    signedDistanceFromCamera: number;
+                    isOccluded?: boolean;
+                }>;
                 if (projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
+                    // Globe (or other special projection) is enabled in this branch.
                     const inverseLabelPlaneMatrix = mat4.create();
                     mat4.invert(inverseLabelPlaneMatrix, labelPlaneMatrix);
                     screenSpacePath = projectedPath.map(p => {
@@ -213,6 +218,26 @@ export class CollisionIndex {
                         projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionArgs.height;
                         return projected;
                     });
+                    // We don't want to generate screenspace collision circles for parts of the line that
+                    // are occluded by the planet itself. Find the longest segment of the path that is
+                    // not occluded, and remove everything else.
+                    let longestUnoccludedStart = 0;
+                    let longestUnoccludedLength = 0;
+                    let currentUnoccludedStart = 0;
+                    let currentUnoccludedLength = 0;
+                    for (let i = 0; i < screenSpacePath.length; i++) {
+                        if (screenSpacePath[i].isOccluded) {
+                            currentUnoccludedStart = i + 1;
+                            currentUnoccludedLength = 0;
+                        } else {
+                            currentUnoccludedLength++;
+                            if (currentUnoccludedLength > longestUnoccludedLength) {
+                                longestUnoccludedLength = currentUnoccludedLength;
+                                longestUnoccludedStart = currentUnoccludedStart;
+                            }
+                        }
+                    }
+                    screenSpacePath = screenSpacePath.slice(longestUnoccludedStart, longestUnoccludedStart + longestUnoccludedLength);
                 } else {
                     screenSpacePath = projectedPath.map(p => projection.projectFromLabelPlaneToScreen(p, labelToScreenMatrix, getElevation));
                 }

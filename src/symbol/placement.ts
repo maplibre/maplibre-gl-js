@@ -714,7 +714,7 @@ export class Placement {
                             iconBox, shift.x, shift.y,
                             rotateWithMap, pitchWithMap, this.transform.angle) :
                         iconBox;
-                    return this.collisionIndex.placeCollisionBox(shiftedIconBox, // TODO tohle je zajímavé
+                    return this.collisionIndex.placeCollisionBox(shiftedIconBox,
                         iconOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, collisionGroup.predicate, getElevation);
                 };
 
