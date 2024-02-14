@@ -17,7 +17,8 @@ const defaultOptions = {
     closeOnClick: true,
     focusAfterOpen: true,
     className: '',
-    maxWidth: '240px'
+    maxWidth: '240px',
+    subpixelPositioning: false
 };
 
 /**
@@ -78,6 +79,12 @@ export type PopupOptions = {
      * @defaultValue '240px'
      */
     maxWidth?: string;
+    /**
+     * If `true`, rounding is disabled for placement of the popup, allowing for
+     * sub-pixel positioning and smoother movement when the popup is translated.
+     * @defaultValue false
+     */
+    subpixelPositioning?: boolean;
 };
 
 const focusQuerySelector = [
@@ -523,6 +530,14 @@ export class Popup extends Evented {
         }
     }
 
+    enableSubpixelPositioning() {
+        this.options.subpixelPositioning = true;
+    }
+
+    disableSubpixelPositioning() {
+        this.options.subpixelPositioning = false;
+    }
+
     _createCloseButton() {
         if (this.options.closeButton) {
             this._closeButton = DOM.create('button', 'maplibregl-popup-close-button', this._content);
@@ -606,7 +621,12 @@ export class Popup extends Evented {
             }
         }
 
-        const offsetedPos = pos.add(offset[anchor]).round();
+        let offsetedPos = pos.add(offset[anchor]);
+
+        if (!this.options.subpixelPositioning) {
+            offsetedPos = offsetedPos.round();
+        }
+
         DOM.setTransform(this._container, `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`);
         applyAnchorClass(this._container, anchor, 'popup');
     };
