@@ -1,4 +1,5 @@
 import {DOM} from '../util/dom';
+import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap';
@@ -521,7 +522,7 @@ export class Marker extends Evented {
     }
 
     _updateOpacity(force: boolean = false) {
-        const terrain = this._map.terrain;
+        const terrain = this._map?.terrain;
         if (!terrain) {
             if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
             return;
@@ -594,7 +595,10 @@ export class Marker extends Evented {
         }
 
         DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
-        this._updateOpacity(e && e.type === 'moveend');
+
+        browser.frameAsync(new AbortController()).then(() => { // Run _updateOpacity only after painter.render and drawDepth
+            this._updateOpacity(e && e.type === 'moveend');
+        }).catch(() => {});
     };
 
     /**

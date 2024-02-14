@@ -15,7 +15,7 @@ function generateAPIIntroMarkdown(lines: string[]): string {
 This file is intended as a reference for the important and public classes of this API.
 We recommend looking at the [examples](../examples/index.md) as they will help you the most to start with MapLibre.
 
-Most of the classes wirtten here have an "Options" object for initialization, it is recommended to check which options exist. 
+Most of the classes wirtten here have an "Options" object for initialization, it is recommended to check which options exist.
 
 It is recommended to import what you need and the use it. Some examples for classes assume you did that.
 For example, import the \`Map\` class like this:
@@ -93,13 +93,13 @@ function generateExamplesFolder() {
         htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpgk);
         htmlContent = htmlContent.replace(/-dev.js/g, '.js');
         const htmlContentLines = htmlContent.split('\n');
-        const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim();
-        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1');
+        const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim()!;
+        const description = htmlContentLines.find(l => l.includes('og:description'))?.replace(/.*content=\"(.*)\".*/, '$1')!;
         fs.writeFileSync(path.join(examplesDocsFolder, file), htmlContent);
         const mdFileName = file.replace('.html', '.md');
         indexArray.push({
-            title: title!,
-            description: description!,
+            title,
+            description,
             mdFileName
         });
         const exampleMarkdown = generateMarkdownForExample(title, description, file, htmlContent);
@@ -117,4 +117,4 @@ if (!fs.existsSync(typedocConfig.out)) {
 fs.rmSync(path.join(typedocConfig.out, 'README.md'));
 generateReadme();
 generateExamplesFolder();
-console.log('Docs generation completed, to see it in action run\n docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material');
+console.log('Docs generation completed, to see it in action run\n npm run start-docs');

@@ -277,4 +277,53 @@ describe('Browser tests', () => {
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
         expect(markerScreenPosition.y).toBeCloseTo(378.1);
     }, 20000);
+
+    test('Marker: correct opacity after resize with 3d terrain', async () => {
+        const markerOpacity = await page.evaluate(() => {
+            const marker = new maplibregl.Marker()
+                .setLngLat(map.getCenter())
+                .addTo(map);
+
+            map.setStyle({
+                version: 8,
+                sources: {
+                    osm: {
+                        type: 'raster',
+                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tileSize: 256,
+                        attribution: '&copy; OpenStreetMap Contributors',
+                        maxzoom: 19
+                    },
+                    terrainSource: {
+                        type: 'raster-dem',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tileSize: 256
+                    }
+                },
+                layers: [{
+                    id: 'osm',
+                    type: 'raster',
+                    source: 'osm'
+                }],
+                terrain: {
+                    source: 'terrainSource',
+                    exaggeration: 1
+                }
+            });
+
+            return new Promise<any>((resolve) => {
+                map.once('idle', () => {
+                    map.once('idle', () => {
+                        document.getElementById('map')!.style.width = '250px';
+                        setTimeout(() => {
+                            resolve(marker.getElement().style.opacity);
+                        }, 100);
+                    });
+                    map.setTerrain({source: 'terrainSource'});
+                });
+            });
+        });
+
+        expect(markerOpacity).toBe('1');
+    }, 20000);
 });
