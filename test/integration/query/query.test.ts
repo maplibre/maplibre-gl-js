@@ -135,7 +135,7 @@ describe('query tests', () => {
                 cors: true,
             })
         );
-        browser = await puppeteer.launch({headless: 'new'});
+        browser = await puppeteer.launch({headless: true});
         await new Promise<void>((resolve) => server.listen(resolve));
     }, 60000);
 
