@@ -843,7 +843,7 @@ async function executeRenderTests() {
         options.openBrowser = checkParameter(options, '--open-browser');
     }
 
-    const browser = await puppeteer.launch({headless: options.openBrowser ? false : 'new', args: ['--enable-webgl', '--no-sandbox',
+    const browser = await puppeteer.launch({headless: options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
         '--disable-web-security']});
 
     const server = http.createServer(
