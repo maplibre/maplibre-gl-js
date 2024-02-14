@@ -232,7 +232,7 @@ function updateLineLabels(bucket: SymbolBucket,
         const pitchScaledFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
 
         const tileAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const projectionCache: ProjectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined};
+        const projectionCache: ProjectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
 
         const projectionArgs: ProjectionArgs = {
             getElevation,
@@ -309,6 +309,10 @@ function placeFirstAndLastGlyph(
         lineStartIndex, lineEndIndex, projectionArgs, rotateToLine);
     if (!lastPlacedGlyph)
         return null;
+
+    if (projectionArgs.projectionCache.anyProjectionOccluded) {
+        return null;
+    }
 
     return {first: firstPlacedGlyph, last: lastPlacedGlyph};
 }
@@ -398,7 +402,7 @@ function placeGlyphsAlongLine(projectionArgs: ProjectionArgs, symbol, fontSize, 
         }
         const singleGlyph = placeGlyphAlongLine(fontScale * glyphOffsetArray.getoffsetX(symbol.glyphStartIndex), lineOffsetX, lineOffsetY, flip, symbol.segment,
             symbol.lineStartIndex, symbol.lineStartIndex + symbol.lineLength, projectionArgs, rotateToLine);
-        if (!singleGlyph)
+        if (!singleGlyph || projectionArgs.projectionCache.anyProjectionOccluded)
             return {notEnoughRoom: true};
 
         placedGlyphs = [singleGlyph];
@@ -444,6 +448,16 @@ type ProjectionCache = {
      * Cached projected anchor point.
      */
     cachedAnchorPoint: Point | undefined;
+    /**
+     * Was any projected point occluded by the map itself (eg. occluded by the planet when using globe projection).
+     *
+     * TODO: This is a pretty hacky way to hide viewport-pitched line-following texts
+     * that are at least partially hidden behind the curve of the planet.
+     * Come up with something better in the future?
+     * But this works, and viewport-pitched line texts seem to be an seldom-used edge case anyway,
+     * and planetary-scale texts where this matters are even less likely.
+     */
+    anyProjectionOccluded: boolean;
 };
 
 /**
@@ -506,15 +520,18 @@ export type ProjectionSyntheticVertexArgs = {
  * @returns the vertex projected to the label plane
  */
 function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
-    if (projectionArgs.projectionCache.projections[index]) {
-        return projectionArgs.projectionCache.projections[index];
+    const cache = projectionArgs.projectionCache;
+
+    if (cache.projections[index]) {
+        return cache.projections[index];
     }
     const currentVertex = new Point(projectionArgs.lineVertexArray.getx(index), projectionArgs.lineVertexArray.gety(index));
 
     const projection = projectTileCoordinatesToViewport(currentVertex.x, currentVertex.y, projectionArgs);
 
     if (projection.signedDistanceFromCamera > 0) {
-        projectionArgs.projectionCache.projections[index] = projection.point;
+        cache.projections[index] = projection.point;
+        cache.anyProjectionOccluded = cache.anyProjectionOccluded || projection.isOccluded;
         return projection.point;
     }
 
@@ -541,6 +558,7 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
 function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: ProjectionArgs): {
     point: Point;
     signedDistanceFromCamera: number;
+    isOccluded: boolean;
 } {
     let projection;
     if (!projectionArgs.pitchWithMap && projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
@@ -548,7 +566,8 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: 
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
     } else {
-        projection = projectFromMapToLabelPlane(new Point(x, y), projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
+        projection = project(new Point(x, y), projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
+        projection.isOccluded = false;
     }
     return projection;
 }

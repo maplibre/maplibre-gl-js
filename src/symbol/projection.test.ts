@@ -21,7 +21,7 @@ describe('Vertex to viewport projection', () => {
 
     test('projecting with null matrix', () => {
         const projectionArgs: ProjectionArgs = {
-            projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined},
+            projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
             lineVertexArray,
             labelPlaneMatrix: mat4.create(),
             getElevation: (_x, _y) => 0,
@@ -64,7 +64,7 @@ describe('Find offset line intersections', () => {
     lineVertexArray.emplaceBack(10, 0, 10);
 
     const projectionArgs: ProjectionArgs = {
-        projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined},
+        projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
         lineVertexArray,
         labelPlaneMatrix: mat4.create(),
         getElevation: (_x, _y) => 0,
@@ -92,7 +92,7 @@ describe('Find offset line intersections', () => {
           ________| |
           __________|  <- origin
         */
-        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined};
+        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
         const lineOffsetY = 1;
 
         const prevToCurrent = new Point(10, 0);
@@ -122,7 +122,7 @@ describe('Find offset line intersections', () => {
           __________| |
           ____________|
         */
-        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined};
+        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
         const lineOffsetY = -1;
 
         const prevToCurrent = new Point(10, 0);
@@ -149,7 +149,7 @@ describe('Find offset line intersections', () => {
           ______._____
           ______|_____
         */
-        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined};
+        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
         const lineOffsetY = 1;
 
         const prevToCurrent = new Point(10, 0);
