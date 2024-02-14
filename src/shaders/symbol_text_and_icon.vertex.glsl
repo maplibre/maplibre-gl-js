@@ -90,9 +90,7 @@ void main() {
 
     highp float symbol_rotation = 0.0;
     if (u_rotate_symbol) {
-        // Point labels with 'rotation-alignment: map' are horizontal with respect to tile units
-        // To figure out that angle in projected space, we draw a short horizontal line in tile
-        // space, project it, and measure its angle in projected space.
+        // See comments in symbol_sdf.vertex
         vec4 offsetProjectedPoint = projectTileWithElevation(vec3(a_pos + u_translation + vec2(1, 0), ele));
 
         vec2 a = projectedPoint.xy / projectedPoint.w;
@@ -113,7 +111,7 @@ void main() {
     }
 
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
-    
+
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale), z, 1.0);
     if(u_pitch_with_map) {
         finalPos = projectTileWithElevation(finalPos.xyz);

@@ -40,95 +40,6 @@ out vec3 v_data1;
 #pragma mapbox: define lowp float halo_width
 #pragma mapbox: define lowp float halo_blur
 
-// Summary of all transformations that happen here:
-// There are three matrices here:
-// - u_matrix:
-//     - tile.coord.posMatrix, translated by "translate" property
-//         - anchor translation rotated by -angle if translateAnchor == viewport
-// - u_label_plane_matrix:
-//     - identity if symbols along line
-//     - if pitchWithMap
-//         - scales from tile units to pixels
-//         - if not rotateWithMap, rotated by angle
-//     - else
-//         - tile.coord.posMatrix and scaling from -1..1 to pixels
-// - u_coord_matrix:
-//     - if pitchWithMap
-//         - tile.coord.posMatrix scaled from pixels to tile units
-//         - if not rotateWithMap, rotated by -angle
-//     - else
-//         - matrix from pixels to -1..1
-//     - all that with translateanchor applied
-//         - anchor translation rotated by angle if translateAnchor==map
-// Matrices are used in the following way:
-// projectedPoint = u_matrix * a_pos   <------ only used for helper calculations (rotation angle, distance from camera)
-// gl_Position = u_coord_matrix * (u_label_plane_matrix * a_projected_pos);
-//
-// Note that when symbols follow a line, u_label_plane_matrix is identity and a_projected_pos is pre-transformed
-// Note that tile.coord.posMatrix contains the main projection matrix
-//
-// This gives us two main "transform" paths:
-//
-// pitchWithMap == true:
-// - u_label_plane_matrix:
-//     - scales from tile units to pixels
-//     - if not rotateWithMap, rotated by angle
-// - u_coord_matrix:
-//     - tile.coord.posMatrix scaled from pixels to tile units
-//     - if not rotateWithMap, rotated by -angle
-//     - all that with translateanchor applied
-//         - anchor translation rotated by angle if translateAnchor==map
-//
-// pitchWithMap == false:
-// - u_label_plane_matrix:
-//     - tile.coord.posMatrix and scaling from -1..1 to pixels
-// - u_coord_matrix:
-//     - matrix from pixels to -1..1
-//     - all that with translateanchor applied
-//         - anchor translation rotated by angle if translateAnchor==map
-
-// Transforms for different symbol coordinate spaces:
-// Note: symbol-translate and symbol-translate-anchor omitted, as it will happen separately
-//
-//     - map pixel space           pitch-alignment=map         rotation-alignment=map
-//         - u_label_plane_matrix:
-//             - scales from tile units to pixels
-//         - u_coord_matrix:
-//             - tile.coord.posMatrix scaled from pixels to tile units
-//
-//     - rotated map pixel space   pitch-alignment=map         rotation-alignment=viewport
-//         - u_label_plane_matrix:
-//             - scales from tile units to pixels
-//             - rotated by angle
-//         - u_coord_matrix:
-//             - tile.coord.posMatrix scaled from pixels to tile units
-//             - rotated by -angle
-//
-//     - viewport pixel space      pitch-alignment=viewport    rotation-alignment=*
-//         - u_label_plane_matrix:
-//             - tile.coord.posMatrix and scaling from -1..1 to pixels
-//         - u_coord_matrix:
-//             - matrix from pixels to -1..1
-
-// Plan of action to convert symbols for globe:
-//
-// - unify all coordinate spaces that vertices may be in after u_label_plane_matrix / before u_coord_matrix into a single coordinate space
-//     - unified coordinate space = "real 3D space"
-//     - when globe is enabled, the map is a unit sphere in this space
-//     - when flat rendering is used, the map is the XY plane
-//     - TODO: what about scale? flat map must work well with all zooms, without loss of precision
-// - calculate proper tangent and bitangent vectors according to desired glyph placement:
-//     - map pixel space           pitch-alignment=map         rotation-alignment=map
-//         - planet north + east, scaling TODO
-//     - rotated map pixel space   pitch-alignment=map         rotation-alignment=viewport
-//         - planet north + east, rotated with transform.angle, scaling TODO
-//     - viewport pixel space      pitch-alignment=viewport    rotation-alignment=*
-//         - camera plane-aligned up and right vectors, scaling to screenspace pixels
-// - then project the resulting vertices using the main transform/projection matrix
-
-// Note: I probably want to keep the semantics of "u_coord_matrix" the same - whatever those are (translate by pixels, correct rotation, projection)
-
-
 void main() {
     #pragma mapbox: initialize highp vec4 fill_color
     #pragma mapbox: initialize highp vec4 halo_color
@@ -194,7 +105,6 @@ void main() {
     highp float angle_cos = cos(segment_angle + symbol_rotation);
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
-    // JP: TODO: asi je dobrý první krok upravit shader?
     vec4 projected_pos;
     if(u_pitch_with_map || u_is_viewport_line) {
         projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
@@ -203,6 +113,7 @@ void main() {
     }
 
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
+
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale + a_pxoffset), z, 1.0);
     if(u_pitch_with_map) {
         finalPos = projectTileWithElevation(finalPos.xyz);
