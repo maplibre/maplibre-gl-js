@@ -158,15 +158,13 @@ function getPerspectiveRatio(cameraToCenterDistance: number, signedDistanceFromC
     return 0.5 + 0.5 * (cameraToCenterDistance / signedDistanceFromCamera);
 }
 
-function isVisible(anchorPos: vec4,
+function isVisible(p: Point,
     clippingBuffer: [number, number]) {
-    const x = anchorPos[0] / anchorPos[3];
-    const y = anchorPos[1] / anchorPos[3];
     const inPaddedViewport = (
-        x >= -clippingBuffer[0] &&
-        x <= clippingBuffer[0] &&
-        y >= -clippingBuffer[1] &&
-        y <= clippingBuffer[1]);
+        p.x >= -clippingBuffer[0] &&
+        p.x <= clippingBuffer[0] &&
+        p.y >= -clippingBuffer[1] &&
+        p.y <= clippingBuffer[1]);
     return inPaddedViewport;
 }
 
@@ -219,22 +217,15 @@ function updateLineLabels(bucket: SymbolBucket,
         // Awkward... but we're counting on the paired "vertical" symbol coming immediately after its horizontal counterpart
         useVertical = false;
 
-        let anchorPos;
-        if (getElevation) {  // slow because of handle z-index
-            anchorPos = [symbol.anchorX, symbol.anchorY, getElevation(symbol.anchorX, symbol.anchorY), 1] as vec4;
-            vec4.transformMat4(anchorPos, anchorPos, posMatrix);
-        } else {  // fast because of ignore z-index
-            anchorPos = [symbol.anchorX, symbol.anchorY, 0, 1] as vec4;
-            xyTransformMat4(anchorPos, anchorPos, posMatrix);
-        }
+        const anchorPos = projectFromMapToScreen(new Point(symbol.anchorX, symbol.anchorY), posMatrix, getElevation);
 
         // Don't bother calculating the correct point for invisible labels.
-        if (!isVisible(anchorPos, clippingBuffer)) {
+        if (!isVisible(anchorPos.point, clippingBuffer)) {
             hideGlyphs(symbol.numGlyphs, dynamicLayoutVertexArray);
             continue;
         }
 
-        const cameraToAnchorDistance = anchorPos[3];
+        const cameraToAnchorDistance = anchorPos.signedDistanceFromCamera;
         const perspectiveRatio = getPerspectiveRatio(painter.transform.cameraToCenterDistance, cameraToAnchorDistance);
 
         const fontSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
