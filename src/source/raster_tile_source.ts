@@ -156,14 +156,14 @@ export class RasterTileSource extends Evented implements Source {
      * @param url - A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
      * @returns `this`
      */
-        setUrl(url: string): this {
-            this.setSourceProperty(() => {
-                this.url = url;
-                this._options.url = url;
-            });
+    setUrl(url: string): this {
+        this.setSourceProperty(() => {
+            this.url = url;
+            this._options.url = url;
+        });
 
-            return this;
-        }
+        return this;
+    }
 
     serialize() {
         return extend({}, this._options);
