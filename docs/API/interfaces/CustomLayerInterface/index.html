@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.9">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.50c56a3b.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.f2e4d321.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -445,14 +445,15 @@
     
     
     
-    
-    
+      
+        
+        
       
       
+    
     
     <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
@@ -506,11 +507,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
@@ -1874,11 +1876,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
@@ -1940,11 +1943,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
@@ -2302,11 +2306,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" checked>
@@ -2732,11 +2737,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
@@ -5157,20 +5163,18 @@
     
     
     
-    
-    
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    
+    <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -7283,20 +7287,18 @@
     
     
     
-    
-    
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    
+    <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -7530,10 +7532,12 @@ These layers can be added between any regular layers using <a href="../../classe
 They must implement <code>render</code> and may implement <code>prerender</code>, <code>onAdd</code> and <code>onRemove</code>.
 They can trigger rendering using <a href="../../classes/Map/#triggerrepaint">Map#triggerRepaint</a>
 and they should appropriately handle <a href="../../types/MapContextEvent/">MapContextEvent</a> with <code>webglcontextlost</code> and <code>webglcontextrestored</code>.</p>
-<p>The <code>renderingMode</code> property controls whether the layer is treated as a <code>"2d"</code> or <code>"3d"</code> map layer. Use:
-- <code>"renderingMode": "3d"</code> to use the depth buffer and share it with other layers
-- <code>"renderingMode": "2d"</code> to add a layer with no depth. If you need to use the depth buffer for a <code>"2d"</code> layer you must use an offscreen
-  framebuffer and <a href="./#prerender">CustomLayerInterface#prerender</a></p>
+<p>The <code>renderingMode</code> property controls whether the layer is treated as a <code>"2d"</code> or <code>"3d"</code> map layer. Use:</p>
+<ul>
+<li><code>"renderingMode": "3d"</code> to use the depth buffer and share it with other layers</li>
+<li><code>"renderingMode": "2d"</code> to add a layer with no depth. If you need to use the depth buffer for a <code>"2d"</code> layer you must use an offscreen
+  framebuffer and <a href="./#prerender">CustomLayerInterface#prerender</a></li>
+</ul>
 <p><strong><code>Example</code></strong></p>
 <p>Custom layer implemented as ES6 class
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">class</span><span class="w"> </span><span class="nx">NullIslandLayer</span><span class="w"> </span><span class="p">{</span>
@@ -7610,7 +7614,7 @@ gives the layer a chance to initialize gl resources and register event listeners
 <h4 id="returns">Returns</h4>
 <p><code>void</code></p>
 <h4 id="defined-in">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/style/style_layer/custom_style_layer.ts#L125">src/style/style_layer/custom_style_layer.ts:125</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/style/style_layer/custom_style_layer.ts#L126">src/style/style_layer/custom_style_layer.ts:126</a></p>
 <hr />
 <h3 id="onremove">onRemove</h3>
 <p>▸ <strong>onRemove</strong>(<code>map</code>, <code>gl</code>): <code>void</code></p>
@@ -7641,20 +7645,20 @@ gives the layer a chance to clean up gl resources and event listeners.</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
 <h4 id="defined-in_1">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/style/style_layer/custom_style_layer.ts#L133">src/style/style_layer/custom_style_layer.ts:133</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/style/style_layer/custom_style_layer.ts#L134">src/style/style_layer/custom_style_layer.ts:134</a></p>
 <h2 id="properties">Properties</h2>
 <h3 id="id">id</h3>
 <p>• <strong>id</strong>: <code>string</code></p>
 <p>A unique layer id.</p>
 <h4 id="defined-in_2">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/style/style_layer/custom_style_layer.ts#L86">src/style/style_layer/custom_style_layer.ts:86</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/style/style_layer/custom_style_layer.ts#L87">src/style/style_layer/custom_style_layer.ts:87</a></p>
 <hr />
 <h3 id="prerender">prerender</h3>
 <p>• <code>Optional</code> <strong>prerender</strong>: <a href="../../types/CustomRenderMethod/"><code>CustomRenderMethod</code></a></p>
 <p>Optional method called during a render frame to allow a layer to prepare resources or render into a texture.</p>
 <p>The layer cannot make any assumptions about the current GL state and must bind a framebuffer before rendering.</p>
 <h4 id="defined-in_3">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/style/style_layer/custom_style_layer.ts#L117">src/style/style_layer/custom_style_layer.ts:117</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/style/style_layer/custom_style_layer.ts#L118">src/style/style_layer/custom_style_layer.ts:118</a></p>
 <hr />
 <h3 id="render">render</h3>
 <p>• <strong>render</strong>: <a href="../../types/CustomRenderMethod/"><code>CustomRenderMethod</code></a></p>
@@ -7670,19 +7674,19 @@ multiplied by the <code>a</code> value. If you are unable to provide colors in p
 may want to change the blend function to
 <code>gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA)</code>.</p>
 <h4 id="defined-in_4">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/style/style_layer/custom_style_layer.ts#L111">src/style/style_layer/custom_style_layer.ts:111</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/style/style_layer/custom_style_layer.ts#L112">src/style/style_layer/custom_style_layer.ts:112</a></p>
 <hr />
 <h3 id="renderingmode">renderingMode</h3>
 <p>• <code>Optional</code> <strong>renderingMode</strong>: <code>"2d"</code> | <code>"3d"</code></p>
 <p>Either <code>"2d"</code> or <code>"3d"</code>. Defaults to <code>"2d"</code>.</p>
 <h4 id="defined-in_5">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/style/style_layer/custom_style_layer.ts#L94">src/style/style_layer/custom_style_layer.ts:94</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/style/style_layer/custom_style_layer.ts#L95">src/style/style_layer/custom_style_layer.ts:95</a></p>
 <hr />
 <h3 id="type">type</h3>
 <p>• <strong>type</strong>: <code>"custom"</code></p>
 <p>The layer's type. Must be <code>"custom"</code>.</p>
 <h4 id="defined-in_6">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/style/style_layer/custom_style_layer.ts#L90">src/style/style_layer/custom_style_layer.ts:90</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/style/style_layer/custom_style_layer.ts#L91">src/style/style_layer/custom_style_layer.ts:91</a></p>
 
 
 
@@ -7773,7 +7777,7 @@ may want to change the blend function to
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.e1c3ead8.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8fd75fb4.min.js"></script>
       
     
   </body>

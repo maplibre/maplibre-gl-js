@@ -1,14 +1,12 @@
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <title>Toggle deck.gl layer</title>
-    <meta
-      property="og:description"
-      content="Toggle deck.gl layer using maplibre."
-    />
+    <meta property="og:description" content="Toggle deck.gl layer using maplibre." />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.css" />
-    <script src="https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.0.1/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@4.0.1/dist/maplibre-gl.js"></script>
     <script src="https://unpkg.com/deck.gl@8.9.33/dist.min.js"></script>
     <style>
       body {
@@ -167,7 +165,7 @@
 
           map.addControl(overlay);
       }
-      
+
       let show = true; // Display the layer by default
 
       map.on('load', () => {

@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.6">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.9">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.50c56a3b.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.f2e4d321.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -445,14 +445,15 @@
     
     
     
-    
-    
+      
+        
+        
       
       
+    
     
     <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
@@ -508,11 +509,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
@@ -2066,11 +2068,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
@@ -2132,11 +2135,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
@@ -2492,11 +2496,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
@@ -2789,11 +2794,12 @@
     
     
     
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_6" >
@@ -5214,20 +5220,18 @@
     
     
     
-    
-    
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    
+    <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -7340,20 +7344,18 @@
     
     
     
-    
-    
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    
+    <li class="md-nav__item md-nav__item--nested">
       
-        
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -7641,10 +7643,10 @@ API to locate the user on the map.</p>
 <p>Not all browsers support geolocation,
 and some users may disable the feature. Geolocation support for modern
 browsers including Chrome requires sites to be served over HTTPS. If
-geolocation support is not available, the GeolocateControl will show
+geolocation support is not available, the <code>GeolocateControl</code> will show
 as disabled.</p>
 <p>The zoom level applied will depend on the accuracy of the geolocation provided by the device.</p>
-<p>The GeolocateControl has two modes. If <code>trackUserLocation</code> is <code>false</code> (default) the control acts as a button, which when pressed will set the map's camera to target the user location. If the user moves, the map won't update. This is most suited for the desktop. If <code>trackUserLocation</code> is <code>true</code> the control acts as a toggle button that when active the user's location is actively monitored for changes. In this mode the GeolocateControl has three interaction states:
+<p>The <code>GeolocateControl</code> has two modes. If <code>trackUserLocation</code> is <code>false</code> (default) the control acts as a button, which when pressed will set the map's camera to target the user location. If the user moves, the map won't update. This is most suited for the desktop. If <code>trackUserLocation</code> is <code>true</code> the control acts as a toggle button that when active the user's location is actively monitored for changes. In this mode the <code>GeolocateControl</code> has three interaction states:
 * active - the map's camera automatically updates as the user's location changes, keeping the location dot in the center. Initial state and upon clicking the <code>GeolocateControl</code> button.
 * passive - the user's location dot automatically updates, but the map's camera does not. Occurs upon the user initiating a map movement.
 * disabled - occurs if Geolocation is not available, disabled or denied.</p>
@@ -7660,13 +7662,13 @@ as disabled.</p>
 <p><strong><code>See</code></strong></p>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/locate-user/">Locate the user</a></p>
 <h3 id="events">Events</h3>
-<p><code>trackuserlocationend</code> - Fired when the Geolocate Control changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when trackUserLocation is true. In the background state, the dot on the map will update with location updates but the camera will not.</p>
-<p><code>trackuserlocationstart</code> - Fired when the Geolocate Control changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a geolocate event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no geolocate event will follow unless the users's location changes).</p>
+<p><code>trackuserlocationend</code> - Fired when the <code>GeolocateControl</code> changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when <code>trackUserLocation</code> is <code>true</code>. In the background state, the dot on the map will update with location updates but the camera will not.</p>
+<p><code>trackuserlocationstart</code> - Fired when the <code>GeolocateControl</code> changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a <code>geolocate</code> event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no <code>geolocate</code> event will follow unless the users's location changes).</p>
 <p><code>geolocate</code> - Fired on each Geolocation API position update which returned as success.
 <code>data</code> - The returned <a href="https://developer.mozilla.org/en-US/docs/Web/API/Position">Position</a> object from the callback in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition">Geolocation.getCurrentPosition()</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition">Geolocation.watchPosition()</a>.</p>
 <p><code>error</code> - Fired on each Geolocation API position update which returned as an error.
 <code>data</code> - The returned <a href="https://developer.mozilla.org/en-US/docs/Web/API/PositionError">PositionError</a> object from the callback in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition">Geolocation.getCurrentPosition()</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition">Geolocation.watchPosition()</a>.</p>
-<p><code>outofmaxbounds</code> Fired on each Geolocation API position update which returned as success but user position is out of map maxBounds.
+<p><code>outofmaxbounds</code> Fired on each Geolocation API position update which returned as success but user position is out of map <code>maxBounds</code>.
 <code>data</code> - The returned <a href="https://developer.mozilla.org/en-US/docs/Web/API/Position">Position</a> object from the callback in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition">Geolocation.getCurrentPosition()</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition">Geolocation.watchPosition()</a>.</p>
 <p><strong><code>Example</code></strong></p>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Initialize the geolocate control.</span>
@@ -7760,7 +7762,7 @@ as disabled.</p>
 <h2 id="methods">Methods</h2>
 <h3 id="_isoutofmapmaxbounds">_isOutOfMapMaxBounds</h3>
 <p>▸ <strong>_isOutOfMapMaxBounds</strong>(<code>position</code>): <code>boolean</code></p>
-<p>Check if the Geolocation API Position is outside the map's maxbounds.</p>
+<p>Check if the Geolocation API Position is outside the map's <code>maxBounds</code>.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -7780,13 +7782,13 @@ as disabled.</p>
 </table>
 <h4 id="returns">Returns</h4>
 <p><code>boolean</code></p>
-<p><code>true</code> if position is outside the map's maxbounds, otherwise returns <code>false</code>.</p>
+<p><code>true</code> if position is outside the map's <code>maxBounds</code>, otherwise returns <code>false</code>.</p>
 <h4 id="defined-in">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/ui/control/geolocate_control.ts#L270">src/ui/control/geolocate_control.ts:270</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/ui/control/geolocate_control.ts#L270">src/ui/control/geolocate_control.ts:270</a></p>
 <hr />
 <h3 id="_onsuccess">_onSuccess</h3>
 <p>▸ <strong>_onSuccess</strong>(<code>position</code>): <code>void</code></p>
-<p>When the Geolocation API returns a new location, update the GeolocateControl.</p>
+<p>When the Geolocation API returns a new location, update the <code>GeolocateControl</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
 <thead>
@@ -7807,7 +7809,7 @@ as disabled.</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
 <h4 id="defined-in_1">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/ui/control/geolocate_control.ts#L315">src/ui/control/geolocate_control.ts:315</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/ui/control/geolocate_control.ts#L315">src/ui/control/geolocate_control.ts:315</a></p>
 <hr />
 <h3 id="_updatecamera">_updateCamera</h3>
 <p>▸ <strong>_updateCamera</strong>(<code>position</code>): <code>void</code></p>
@@ -7832,7 +7834,7 @@ as disabled.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>void</code></p>
 <h4 id="defined-in_2">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/ui/control/geolocate_control.ts#L382">src/ui/control/geolocate_control.ts:382</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/ui/control/geolocate_control.ts#L382">src/ui/control/geolocate_control.ts:382</a></p>
 <hr />
 <h3 id="_updatemarker">_updateMarker</h3>
 <p>▸ <strong>_updateMarker</strong>(<code>position?</code>): <code>void</code></p>
@@ -7857,7 +7859,7 @@ as disabled.</p>
 <h4 id="returns_3">Returns</h4>
 <p><code>void</code></p>
 <h4 id="defined-in_3">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/ui/control/geolocate_control.ts#L399">src/ui/control/geolocate_control.ts:399</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/ui/control/geolocate_control.ts#L399">src/ui/control/geolocate_control.ts:399</a></p>
 <hr />
 <h3 id="listens">listens</h3>
 <p>▸ <strong>listens</strong>(<code>type</code>): <code>boolean</code></p>
@@ -7885,7 +7887,7 @@ as disabled.</p>
 <h4 id="inherited-from">Inherited from</h4>
 <p><a href="../Evented/">Evented</a>.<a href="../Evented/#listens">listens</a></p>
 <h4 id="defined-in_4">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/util/evented.ts#L163">src/util/evented.ts:163</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/util/evented.ts#L163">src/util/evented.ts:163</a></p>
 <hr />
 <h3 id="off">off</h3>
 <p>▸ <strong>off</strong>(<code>type</code>, <code>listener</code>): <a href="./"><code>GeolocateControl</code></a></p>
@@ -7918,7 +7920,7 @@ as disabled.</p>
 <h4 id="inherited-from_1">Inherited from</h4>
 <p><a href="../Evented/">Evented</a>.<a href="../Evented/#off">off</a></p>
 <h4 id="defined-in_5">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/util/evented.ts#L88">src/util/evented.ts:88</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/util/evented.ts#L88">src/util/evented.ts:88</a></p>
 <hr />
 <h3 id="on">on</h3>
 <p>▸ <strong>on</strong>(<code>type</code>, <code>listener</code>): <code>this</code></p>
@@ -7951,7 +7953,7 @@ as disabled.</p>
 <h4 id="inherited-from_2">Inherited from</h4>
 <p><a href="../Evented/">Evented</a>.<a href="../Evented/#on">on</a></p>
 <h4 id="defined-in_6">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/util/evented.ts#L74">src/util/evented.ts:74</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/util/evented.ts#L74">src/util/evented.ts:74</a></p>
 <hr />
 <h3 id="onadd">onAdd</h3>
 <p>▸ <strong>onAdd</strong>(<code>map</code>): <code>HTMLElement</code></p>
@@ -7984,7 +7986,7 @@ as necessary.</p>
 <h4 id="implementation-of">Implementation of</h4>
 <p><a href="../../interfaces/IControl/">IControl</a>.<a href="../../interfaces/IControl/#onadd">onAdd</a></p>
 <h4 id="defined-in_7">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/ui/control/geolocate_control.ts#L234">src/ui/control/geolocate_control.ts:234</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/ui/control/geolocate_control.ts#L234">src/ui/control/geolocate_control.ts:234</a></p>
 <hr />
 <h3 id="onremove">onRemove</h3>
 <p>▸ <strong>onRemove</strong>(): <code>void</code></p>
@@ -7996,7 +7998,7 @@ internally.</p>
 <h4 id="implementation-of_1">Implementation of</h4>
 <p><a href="../../interfaces/IControl/">IControl</a>.<a href="../../interfaces/IControl/#onremove">onRemove</a></p>
 <h4 id="defined-in_8">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/ui/control/geolocate_control.ts#L242">src/ui/control/geolocate_control.ts:242</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/ui/control/geolocate_control.ts#L242">src/ui/control/geolocate_control.ts:242</a></p>
 <hr />
 <h3 id="once">once</h3>
 <p>▸ <strong>once</strong>(<code>type</code>, <code>listener?</code>): <code>Promise</code>&lt;<code>any</code>&gt; | <a href="./"><code>GeolocateControl</code></a></p>
@@ -8030,7 +8032,7 @@ internally.</p>
 <h4 id="inherited-from_3">Inherited from</h4>
 <p><a href="../Evented/">Evented</a>.<a href="../Evented/#once">once</a></p>
 <h4 id="defined-in_9">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/util/evented.ts#L104">src/util/evented.ts:104</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/util/evented.ts#L104">src/util/evented.ts:104</a></p>
 <hr />
 <h3 id="seteventedparent">setEventedParent</h3>
 <p>▸ <strong>setEventedParent</strong>(<code>parent?</code>, <code>data?</code>): <a href="./"><code>GeolocateControl</code></a></p>
@@ -8060,7 +8062,7 @@ internally.</p>
 <h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../Evented/">Evented</a>.<a href="../Evented/#seteventedparent">setEventedParent</a></p>
 <h4 id="defined-in_10">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/util/evented.ts#L175">src/util/evented.ts:175</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/util/evented.ts#L175">src/util/evented.ts:175</a></p>
 <hr />
 <h3 id="trigger">trigger</h3>
 <p>▸ <strong>trigger</strong>(): <code>boolean</code></p>
@@ -8083,7 +8085,7 @@ internally.</p>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="p">});</span>
 </span></code></pre></div>
 <h4 id="defined-in_11">Defined in</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/6eeb42865/src/ui/control/geolocate_control.ts#L562">src/ui/control/geolocate_control.ts:562</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/3bea9a10a/src/ui/control/geolocate_control.ts#L562">src/ui/control/geolocate_control.ts:562</a></p>
 
 
 
@@ -8174,7 +8176,7 @@ internally.</p>
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.e1c3ead8.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.8fd75fb4.min.js"></script>
       
     
   </body>
