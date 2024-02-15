@@ -166,7 +166,7 @@ uniform mat4 u_projection_matrix;
 
 // Make sure to define GLOBE_PI even if globe is disabled.
 #define GLOBE_PI 3.1415926535897932384626433832795
-#define GLOBE_RADIUS 6378000.0
+#define GLOBE_RADIUS 6371008.8
 
 #ifdef GLOBE
 
@@ -269,9 +269,7 @@ float globeComputeClippingZ(vec3 spherePos) {
 }
 
 vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
-    // Here we make use of the fact that spherePos is also the normal vector for this point
-    // on the planet's surface.
-    vec3 elevatedPos = spherePos * (1.0 + elevation * GLOBE_RADIUS);
+    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
     globePosition.z = globeComputeClippingZ(elevatedPos) * globePosition.w;
@@ -296,13 +294,31 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
     return globePosition;
 }
 
+// Computes screenspace projection
+// and replaces Z with a custom value that clips geometry
+// on the backfacing side of the planet.
 vec4 projectTile(vec2 posInTile) {
     return interpolateProjection(posInTile, projectToSphere(posInTile), 0.0);
 }
 
-vec4 projectTileWithElevation(vec3 posInTileWithElevation) {
-    vec3 spherePos = projectToSphere(posInTileWithElevation.xy);
-    return interpolateProjection(posInTileWithElevation.xy, spherePos, posInTileWithElevation.z);
+// Uses elevation to compute final screenspace projection
+// and replaces Z with a custom value that clips geometry
+// on the backfacing side of the planet.
+vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
+    return interpolateProjection(posInTile, projectToSphere(posInTile), elevation);
+}
+
+vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation) {
+    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
+    vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
+    vec4 fallbackPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
+    return mix(fallbackPosition, globePosition, u_projection_globeness);
+}
+
+// Projects the tile coordinates+elevation while preserving the Z value from the projection matrix.
+vec4 projectTileFor3D(vec2 posInTile, float elevation) {
+    vec3 spherePos = projectToSphere(posInTile);
+    return interpolateProjectionFor3D(posInTile, spherePos, elevation);
 }
 
 // vec4 getDebugColor(vec2 posInTile) {
@@ -350,14 +366,22 @@ vec4 projectTile(vec2 p) {
     return result;
 }
 
-vec4 projectTileWithElevation(vec3 p) {
+vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
     // This function is only used in symbol vertex shaders and symbols never use pole vertices,
     // so no need to detect them.
-    return u_projection_matrix * vec4(p, 1.0);
+    return u_projection_matrix * vec4(posInTile, elevation, 1.0);
+}
+
+vec4 projectTileFor3D(vec2 posInTile, float elevation) {
+    return projectTileWithElevation(posInTile, elevation);
 }
 
 vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
-    return projectTileWithElevation(vec3(posInTile, elevation));
+    return projectTileFor3D(posInTile, elevation);
+}
+
+vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation) {
+    return interpolateProjection(posInTile, spherePos, elevation);
 }
 
 #define projectToSphere(p) (vec3(0.0, 1.0, 0.0))

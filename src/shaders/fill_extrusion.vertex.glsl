@@ -56,9 +56,7 @@ void main() {
     vec3 spherePos = projectToSphere(posInTile);
     vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
     v_sphere_pos = elevatedPos;
-    vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
-    vec4 fallbackPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
-    gl_Position = mix(fallbackPosition, globePosition, u_projection_globeness);
+    gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
     #else
     gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
     #endif

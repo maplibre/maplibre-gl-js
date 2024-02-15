@@ -1,4 +1,3 @@
-uniform mat4 u_matrix;
 uniform vec2 u_pixel_coord_upper;
 uniform vec2 u_pixel_coord_lower;
 uniform float u_height_factor;
@@ -74,13 +73,21 @@ void main() {
     height = max(0.0, height) + height_terrain3d_offset;
 
     float t = mod(normal.x, 2.0);
-    float z = t > 0.0 ? height : base;
+    float elevation = t > 0.0 ? height : base;
+    vec2 posInTile = a_pos + u_fill_translate;
 
-    gl_Position = u_matrix * vec4(a_pos, z, 1);
+    #ifdef GLOBE
+    vec3 spherePos = projectToSphere(posInTile);
+    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
+    v_sphere_pos = elevatedPos;
+    gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
+    #else
+    gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
+    #endif
 
     vec2 pos = normal.x == 1.0 && normal.y == 0.0 && normal.z == 16384.0
         ? a_pos // extrusion top
-        : vec2(edgedistance, z * u_height_factor); // extrusion side
+        : vec2(edgedistance, elevation * u_height_factor); // extrusion side
 
     v_pos_a = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, fromScale * display_size_a, tileRatio, pos);
     v_pos_b = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, toScale * display_size_b, tileRatio, pos);

@@ -12,8 +12,7 @@ void main() {
     fragColor = vec4(1.0);
 #endif
 
-    // do not discard when overdraw inspection is on
-#if defined GLOBE && !defined OVERDRAW_INSPECTOR
+#ifdef GLOBE
     // Discard fragments that are occluded by the planet
     vec3 toPlanetCenter = -v_sphere_pos;
     vec3 toCameraNormalized = normalize(u_camera_pos_globe - v_sphere_pos);

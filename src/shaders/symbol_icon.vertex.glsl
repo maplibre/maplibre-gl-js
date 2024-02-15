@@ -54,7 +54,7 @@ void main() {
         size = u_size;
     }
 
-    vec4 projectedPoint = projectTileWithElevation(vec3(a_pos + u_translation, ele));
+    vec4 projectedPoint = projectTileWithElevation(a_pos + u_translation, ele);
     highp float camera_to_anchor_distance = projectedPoint.w;
     // See comments in symbol_sdf.vertex
     highp float distance_ratio = u_pitch_with_map ?
@@ -72,7 +72,7 @@ void main() {
     highp float symbol_rotation = 0.0;
     if (u_rotate_symbol) {
         // See comments in symbol_sdf.vertex
-        vec4 offsetProjectedPoint = projectTileWithElevation(vec3(a_pos + u_translation + vec2(1, 0), ele));
+        vec4 offsetProjectedPoint = projectTileWithElevation(a_pos + u_translation + vec2(1, 0), ele);
 
         vec2 a = projectedPoint.xy / projectedPoint.w;
         vec2 b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
@@ -88,14 +88,14 @@ void main() {
     if(u_pitch_with_map || u_is_viewport_line) {
         projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
     } else {
-        projected_pos = u_label_plane_matrix * projectTileWithElevation(vec3(a_projected_pos.xy + u_translation, ele));
+        projected_pos = u_label_plane_matrix * projectTileWithElevation(a_projected_pos.xy + u_translation, ele);
     }
 
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
 
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * max(a_minFontScale, fontScale) + a_pxoffset / 16.0), z, 1.0);
     if(u_pitch_with_map) {
-        finalPos = projectTileWithElevation(finalPos.xyz);
+        finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
     }
     gl_Position = finalPos;
 
