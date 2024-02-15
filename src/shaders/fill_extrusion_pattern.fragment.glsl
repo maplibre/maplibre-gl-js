@@ -1,6 +1,11 @@
 uniform vec2 u_texsize;
 uniform float u_fade;
 
+#ifdef GLOBE
+in vec3 v_sphere_pos;
+uniform vec3 u_camera_pos_globe;
+#endif
+
 uniform sampler2D u_image;
 
 in vec2 v_pos_a;

@@ -19,6 +19,10 @@ in vec4 a_normal_ed;
     in vec2 a_centroid;
 #endif
 
+#ifdef GLOBE
+out vec3 v_sphere_pos;
+#endif
+
 out vec2 v_pos_a;
 out vec2 v_pos_b;
 out vec4 v_lighting;

@@ -87,8 +87,8 @@ function drawExtrusionTiles(
 
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translateForUniforms, projectionManager, coord, crossfade, tile) :
-            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translateForUniforms, projectionManager);
+            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translateForUniforms, projectionManager, projectionManager.globeCameraPosition, coord, crossfade, tile) :
+            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translateForUniforms, projectionManager, projectionManager.globeCameraPosition);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,

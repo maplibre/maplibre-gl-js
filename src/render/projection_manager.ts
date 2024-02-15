@@ -137,6 +137,7 @@ export class ProjectionManager {
         0, 0, 1, 0,
         0, 0, 0, 1
     ];
+    private _globeCameraPosition: vec3 = [0, 0, 0];
 
     /**
      * This property is true when globe rendering and globe shader variants should be in use.
@@ -144,6 +145,10 @@ export class ProjectionManager {
      */
     get useGlobeRendering(): boolean {
         return this._globeness > 0.0;
+    }
+
+    get globeCameraPosition(): [number, number, number] {
+        return [this._globeCameraPosition[0], this._globeCameraPosition[1], this._globeCameraPosition[2]];
     }
 
     /**
@@ -230,6 +235,17 @@ export class ProjectionManager {
         mat4.rotateY(globeMatrix, globeMatrix, -transform.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrix = globeMatrix;
+
+        const invProj = mat4.create();
+        mat4.invert(invProj, globeMatrix);
+
+        const cameraPos: vec4 = [0, 0, -1, 1];
+        vec4.transformMat4(cameraPos, cameraPos, invProj);
+        this._globeCameraPosition = [
+            cameraPos[0] / cameraPos[3],
+            cameraPos[1] / cameraPos[3],
+            cameraPos[2] / cameraPos[3]
+        ];
 
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
