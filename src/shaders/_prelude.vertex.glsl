@@ -166,6 +166,7 @@ uniform mat4 u_projection_matrix;
 
 // Make sure to define GLOBE_PI even if globe is disabled.
 #define GLOBE_PI 3.1415926535897932384626433832795
+#define GLOBE_RADIUS 6378000.0
 
 #ifdef GLOBE
 
@@ -184,6 +185,18 @@ vec3 globeRotateVector(vec3 vec, vec2 angles) {
     // mat3 mX = rotationMatrixFromAxisAngle(axisUp, angles.x);
     // mat3 mY = rotationMatrixFromAxisAngle(axisRight, angles.y);
     // return mX * mY * vec;
+}
+
+mat3 globeGetRotationMatrix(vec3 spherePos) {
+    vec3 axisRight = vec3(spherePos.z, 0.0, -spherePos.x); // Equivalent to cross(vec3(0.0, 1.0, 0.0), vec)
+    vec3 axisDown = cross(axisRight, spherePos);
+    axisRight = normalize(axisRight);
+    axisDown = normalize(axisDown);
+    return mat3(
+        axisRight,
+        axisDown,
+        spherePos
+    );
 }
 
 // Consider this private, do not use in other shaders directly!
@@ -251,13 +264,20 @@ vec3 projectToSphere(vec2 posInTile) {
     return pos;
 }
 
-vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
-    vec4 globePosition = u_projection_matrix * vec4(spherePos, 1.0);
+float globeComputeClippingZ(vec3 spherePos) {
+    return (1.0 - (dot(spherePos, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w));
+}
+
+vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
+    // Here we make use of the fact that spherePos is also the normal vector for this point
+    // on the planet's surface.
+    vec3 elevatedPos = spherePos * (1.0 + elevation * GLOBE_RADIUS);
+    vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
-    globePosition.z = (1.0 - (dot(spherePos, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w)) * globePosition.w;
+    globePosition.z = globeComputeClippingZ(elevatedPos) * globePosition.w;
 
     if (u_projection_globeness < 0.999) {
-        vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, 0.0, 1.0);
+        vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
         // Only interpolate to globe's Z for the last 50% of the animation.
         // (globe Z hides anything on the backfacing side of the planet)
         const float z_globeness_threshold = 0.2;
@@ -277,11 +297,12 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
 }
 
 vec4 projectTile(vec2 posInTile) {
-    return interpolateProjection(posInTile, projectToSphere(posInTile));
+    return interpolateProjection(posInTile, projectToSphere(posInTile), 0.0);
 }
 
 vec4 projectTileWithElevation(vec3 posInTileWithElevation) {
-    return projectTile(posInTileWithElevation.xy);
+    vec3 spherePos = projectToSphere(posInTileWithElevation.xy);
+    return interpolateProjection(posInTileWithElevation.xy, spherePos, posInTileWithElevation.z);
 }
 
 // vec4 getDebugColor(vec2 posInTile) {
@@ -335,8 +356,8 @@ vec4 projectTileWithElevation(vec3 p) {
     return u_projection_matrix * vec4(p, 1.0);
 }
 
-vec4 interpolateProjection(vec2 posInTile, vec3 spherePos) {
-    return projectTile(posInTile);
+vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
+    return projectTileWithElevation(vec3(posInTile, elevation));
 }
 
 #define projectToSphere(p) (vec3(0.0, 1.0, 0.0))

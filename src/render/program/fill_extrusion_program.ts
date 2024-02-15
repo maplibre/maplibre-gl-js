@@ -16,19 +16,21 @@ import type {OverscaledTileID} from '../../source/tile_id';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {Tile} from '../../source/tile';
+import { ProjectionManager } from '../projection_manager';
 
 export type FillExtrusionUniformsType = {
-    'u_matrix': UniformMatrix4f;
     'u_lightpos': Uniform3f;
+    'u_lightpos_globe': Uniform3f;
     'u_lightintensity': Uniform1f;
     'u_lightcolor': Uniform3f;
     'u_vertical_gradient': Uniform1f;
     'u_opacity': Uniform1f;
+    'u_fill_translate': Uniform2f;
 };
 
 export type FillExtrusionPatternUniformsType = {
-    'u_matrix': UniformMatrix4f;
     'u_lightpos': Uniform3f;
+    'u_lightpos_globe': Uniform3f;
     'u_lightintensity': Uniform1f;
     'u_lightcolor': Uniform3f;
     'u_height_factor': Uniform1f;
@@ -41,20 +43,22 @@ export type FillExtrusionPatternUniformsType = {
     'u_scale': Uniform3f;
     'u_fade': Uniform1f;
     'u_opacity': Uniform1f;
+    'u_fill_translate': Uniform2f;
 };
 
 const fillExtrusionUniforms = (context: Context, locations: UniformLocations): FillExtrusionUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_lightpos': new Uniform3f(context, locations.u_lightpos),
+    'u_lightpos_globe': new Uniform3f(context, locations.u_lightpos_globe),
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
-    'u_opacity': new Uniform1f(context, locations.u_opacity)
+    'u_opacity': new Uniform1f(context, locations.u_opacity),
+    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
 });
 
 const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocations): FillExtrusionPatternUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_lightpos': new Uniform3f(context, locations.u_lightpos),
+    'u_lightpos_globe': new Uniform3f(context, locations.u_lightpos_globe),
     'u_lightintensity': new Uniform1f(context, locations.u_lightintensity),
     'u_lightcolor': new Uniform3f(context, locations.u_lightcolor),
     'u_vertical_gradient': new Uniform1f(context, locations.u_vertical_gradient),
@@ -66,14 +70,16 @@ const fillExtrusionPatternUniforms = (context: Context, locations: UniformLocati
     'u_pixel_coord_lower': new Uniform2f(context, locations.u_pixel_coord_lower),
     'u_scale': new Uniform3f(context, locations.u_scale),
     'u_fade': new Uniform1f(context, locations.u_fade),
-    'u_opacity': new Uniform1f(context, locations.u_opacity)
+    'u_opacity': new Uniform1f(context, locations.u_opacity),
+    'u_fill_translate': new Uniform2f(context, locations.u_fill_translate)
 });
 
 const fillExtrusionUniformValues = (
-    matrix: mat4,
     painter: Painter,
     shouldUseVerticalGradient: boolean,
-    opacity: number
+    opacity: number,
+    translate: [number, number],
+    projectionManager: ProjectionManager
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
     const _lp = light.properties.get('position');
@@ -83,29 +89,32 @@ const fillExtrusionUniformValues = (
         mat3.fromRotation(lightMat, -painter.transform.angle);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
+    const transformedLightPos = projectionManager.transformLightDirection(lightPos);
 
     const lightColor = light.properties.get('color');
 
     return {
-        'u_matrix': matrix,
         'u_lightpos': lightPos,
+        'u_lightpos_globe': transformedLightPos,
         'u_lightintensity': light.properties.get('intensity'),
         'u_lightcolor': [lightColor.r, lightColor.g, lightColor.b],
         'u_vertical_gradient': +shouldUseVerticalGradient,
-        'u_opacity': opacity
+        'u_opacity': opacity,
+        'u_fill_translate': translate
     };
 };
 
 const fillExtrusionPatternUniformValues = (
-    matrix: mat4,
     painter: Painter,
     shouldUseVerticalGradient: boolean,
     opacity: number,
+    translate: [number, number],
+    projectionManager: ProjectionManager,
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(matrix, painter, shouldUseVerticalGradient, opacity),
+    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, projectionManager),
         patternUniformValues(crossfade, painter, tile),
         {
             'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8

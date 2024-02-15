@@ -5,9 +5,11 @@ uniform float u_height_factor;
 uniform vec3 u_scale;
 uniform float u_vertical_gradient;
 uniform lowp float u_opacity;
+uniform vec2 u_fill_translate;
 
 uniform vec3 u_lightcolor;
 uniform lowp vec3 u_lightpos;
+uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
 
 in vec2 a_pos;

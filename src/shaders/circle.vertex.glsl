@@ -69,7 +69,7 @@ void main(void) {
             // Pitching the circle with the map effectively scales it with the map
             // To counteract the effect for pitch-scale: viewport, we rescale the
             // whole circle based on the pitch scaling effect at its central point
-            vec4 projected_center = interpolateProjection(circle_center, center_vector);
+            vec4 projected_center = interpolateProjection(circle_center, center_vector, 0.0);
             corner_position += extrude * u_extrude_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
             angle_scale *= (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
         }
@@ -77,7 +77,7 @@ void main(void) {
 #ifdef GLOBE
         vec2 angles = extrude * angle_scale / projectCircleRadius(circle_center.y);
         vec3 corner_vector = globeRotateVector(center_vector, angles);
-        gl_Position = interpolateProjection(corner_position, corner_vector);
+        gl_Position = interpolateProjection(corner_position, corner_vector, 0.0);
 #else
         gl_Position = projectTileWithElevation(vec3(corner_position, ele));
 #endif

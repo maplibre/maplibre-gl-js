@@ -61,6 +61,8 @@ function drawExtrusionTiles(
     const crossfade = layer.getCrossfadeParameters();
     const opacity = layer.paint.get('fill-extrusion-opacity');
     const constantPattern = patternProperty.constantOr(null);
+    const projectionManager = painter.style.map.projectionManager;
+
     for (const coord of coords) {
         const tile = source.getTile(coord);
         const bucket: FillExtrusionBucket = (tile.getBucket(layer) as any);
@@ -76,21 +78,20 @@ function drawExtrusionTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
+        const projectionData = projectionManager.getProjectionData(coord);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const matrix = painter.translatePosMatrix(
-            coord.posMatrix,
-            tile,
-            layer.paint.get('fill-extrusion-translate'),
-            layer.paint.get('fill-extrusion-translate-anchor'));
+        const translate = layer.paint.get('fill-extrusion-translate');
+        const translateAnchor = layer.paint.get('fill-extrusion-translate-anchor');
+        const translateForUniforms = projectionManager.translatePosition(painter, tile, translate, translateAnchor);
 
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(matrix, painter, shouldUseVerticalGradient, opacity, coord, crossfade, tile) :
-            fillExtrusionUniformValues(matrix, painter, shouldUseVerticalGradient, opacity);
+            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translateForUniforms, projectionManager, coord, crossfade, tile) :
+            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translateForUniforms, projectionManager);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, terrainData, null, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
+            uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
             programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);
     }

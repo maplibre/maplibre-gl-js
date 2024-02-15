@@ -373,6 +373,38 @@ export class ProjectionManager {
         };
     }
 
+    public transformLightDirection(dir: vec3): vec3 {
+        const sphereX = this.map.transform.center.lng * Math.PI / 180.0;
+        const sphereY = this.map.transform.center.lat * Math.PI / 180.0;
+
+        const len = Math.cos(sphereY);
+        const spherePos: vec3 = [
+            Math.sin(sphereX) * len,
+            Math.sin(sphereY),
+            Math.cos(sphereX) * len
+        ];
+
+        const axisRight: vec3 = [spherePos[2], 0.0, -spherePos[0]]; // Equivalent to cross(vec3(0.0, 1.0, 0.0), vec)
+        const axisDown: vec3 = [0, 0, 0];
+        vec3.cross(axisDown, axisRight, spherePos);
+        vec3.normalize(axisRight, axisRight);
+        vec3.normalize(axisDown, axisDown);
+
+        const transformed: vec3 = [
+            axisRight[0] * dir[0] + axisDown[0] * dir[1] + spherePos[0] * dir[2],
+            axisRight[1] * dir[0] + axisDown[1] * dir[1] + spherePos[1] * dir[2],
+            axisRight[2] * dir[0] + axisDown[2] * dir[1] + spherePos[2] * dir[2]
+        ];
+        // const mixed: vec3 = [
+        //     lerp(dir[0], transformed[0], this._globeness),
+        //     lerp(dir[1], transformed[1], this._globeness),
+        //     lerp(dir[2], transformed[2], this._globeness)
+        // ];
+        const normalized: vec3 = [0, 0, 0];
+        vec3.normalize(normalized, transformed);
+        return normalized;
+    }
+
     public getPixelScale(transform: Transform): number {
         const globePixelScale = 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
         const flatPixelScale = 1.0;
