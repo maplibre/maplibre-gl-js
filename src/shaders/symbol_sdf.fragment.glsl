@@ -15,6 +15,10 @@ in vec3 v_data1;
 #pragma mapbox: define lowp float halo_width
 #pragma mapbox: define lowp float halo_blur
 
+float median(float r, float g, float b) {
+    return max(min(r, g), min(max(r, g), b));
+}
+
 void main() {
     #pragma mapbox: initialize highp vec4 fill_color
     #pragma mapbox: initialize highp vec4 halo_color
@@ -40,15 +44,20 @@ void main() {
         inner_edge = inner_edge + gamma * gamma_scale;
     }
 
-    lowp float dist = texture(u_texture, tex).a;
-    highp float gamma_scaled = gamma * gamma_scale;
-    highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
-    if (u_is_halo) {
-        // When drawing halos, we want the inside of the halo to be transparent as well
-        // in case the text fill is transparent.
-        lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
-        alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
-    }
+    // lowp float dist = texture(u_texture, tex).a;
+    // highp float gamma_scaled = gamma * gamma_scale;
+    // highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
+    // if (u_is_halo) {
+    //     // When drawing halos, we want the inside of the halo to be transparent as well
+    //     // in case the text fill is transparent.
+    //     lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
+    //     alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
+    // }
+
+    
+    vec3 s = texture(u_texture, tex).rgb;
+    float sigDist = median(s.r, s.g, s.b) - 0.5;
+    float alpha = clamp(sigDist * 100.0, 0.0, 1.0);
 
     fragColor = color * (alpha * opacity * fade_opacity);
 
