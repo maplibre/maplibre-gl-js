@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
 - Add option to position popup at subpixel coordinates to allow for smooth animations ([#3710](https://github.com/maplibre/maplibre-gl-js/pull/3710))
 
 ### 🐞 Bug fixes
