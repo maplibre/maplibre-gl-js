@@ -751,4 +751,57 @@ describe('popup', () => {
 
         expect(window.document.activeElement).toBe(dummyFocusedEl);
     });
+
+    test('Popup is positioned on rounded whole-number pixel coordinates by default when offset is a decimal', () => {
+        const map = createMap();
+        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+
+        const popup = new Popup({offset: [-0.1, 0.9]})
+            .setLngLat([0, 0])
+            .setText('foobar')
+            .addTo(map);
+
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(0px,1px)');
+    });
+
+    test('Popup position is not rounded when subpixel positioning is enabled', () => {
+        const map = createMap();
+        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+
+        const popup = new Popup({offset: [-0.1, 0.9], subpixelPositioning: true})
+            .setLngLat([0, 0])
+            .setText('foobar')
+            .addTo(map);
+
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(-0.1px,0.9px)');
+    });
+
+    test('Popup subpixel positioning can be enabled with Popup#enableSubpixelPositioning', () => {
+        const map = createMap();
+        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+
+        const popup = new Popup({offset: [0, 0]})
+            .setLngLat([0, 0])
+            .setText('foobar')
+            .addTo(map);
+
+        popup.enableSubpixelPositioning();
+        popup.setOffset([-0.1, 0.9]);
+
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(-0.1px,0.9px)');
+    });
+    test('Popup subpixel positioning can be disabled with Popup#disableSubpixelPositioning', () => {
+        const map = createMap();
+        jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
+
+        const popup = new Popup({offset: [0, 0], subpixelPositioning: true})
+            .setLngLat([0, 0])
+            .setText('foobar')
+            .addTo(map);
+
+        popup.disableSubpixelPositioning();
+        popup.setOffset([-0.1, 0.9]);
+
+        expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(0px,1px)');
+    });
 });
