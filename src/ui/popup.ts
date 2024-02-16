@@ -81,7 +81,7 @@ export type PopupOptions = {
     maxWidth?: string;
     /**
      * If `true`, rounding is disabled for placement of the popup, allowing for
-     * sub-pixel positioning and smoother movement when the popup is translated.
+     * subpixel positioning and smoother movement when the popup is translated.
      * @defaultValue false
      */
     subpixelPositioning?: boolean;
