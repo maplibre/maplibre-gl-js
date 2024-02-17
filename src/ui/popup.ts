@@ -280,6 +280,7 @@ export class Popup extends Evented {
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
+        this._flatPos = null;
 
         this._trackPointer = false;
 
@@ -312,6 +313,7 @@ export class Popup extends Evented {
     trackPointer(): this {
         this._trackPointer = true;
         this._pos = null;
+        this._flatPos = null;
         this._update();
         if (this._map) {
             this._map.off('move', this._update);
