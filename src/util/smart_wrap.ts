@@ -17,7 +17,7 @@ import type {Transform} from '../geo/transform';
  * should wrap just enough to avoid doing so.
  */
 export function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform): LngLat {
-    const originalLngLat = lngLat;
+    const originalLngLat = new LngLat(lngLat.lng, lngLat.lat);
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
 
     // First, try shifting one world in either direction, and see if either is closer to the
