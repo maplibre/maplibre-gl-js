@@ -5,7 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Fix Style.setState ignoring validate flag.
 
 ## 4.0.1
 

@@ -895,7 +895,7 @@ describe('Style#setState', () => {
         const nextState = {...styleSpec};
         nextState.sources['def'] = {type: 'geojson'} as GeoJSONSourceSpecification;
 
-        const didChange = style.setState(nextState, {validate: validateState} as any); // `StyleSwapOptions` should be `StyleSwapOptions & StyleSetterOptions`
+        const didChange = style.setState(nextState, {validate: validateState});
 
         expect(didChange).toBeTruthy();
     });
