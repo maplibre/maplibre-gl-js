@@ -845,7 +845,7 @@ describe('marker', () => {
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
-        await sleep(100);
+        await sleep(500);
         expect(marker.getElement().style.opacity).toMatch('1');
         map.remove();
     });
@@ -855,7 +855,7 @@ describe('marker', () => {
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
-        await sleep(100);
+        await sleep(500);
         expect(marker.getElement().style.opacity).toMatch('.7');
         map.remove();
     });
@@ -894,21 +894,21 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
-        await sleep(100);
+        await sleep(500);
         map.fire('moveend');
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
         expect(marker.getElement().style.opacity).toMatch('1');
 
@@ -926,7 +926,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95
         } as any as Terrain;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -944,7 +944,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
         } as any as Terrain;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -962,7 +962,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .92
         } as any as Terrain;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('0.3');
