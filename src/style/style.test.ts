@@ -884,7 +884,7 @@ describe('Style#setState', () => {
         expect(style.stylesheet.layers).toHaveLength(1);
     });
 
-    test('Style#setState ignores validation style when validate false', async () => {
+    test('Style#setState skips validateStyle when validate false', async () => {
         const style = new Style(getStubMap());
         const styleSpec = createStyleJSON();
         style.loadJSON(styleSpec);

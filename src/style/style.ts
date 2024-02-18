@@ -664,8 +664,8 @@ export class Style extends Evented {
 
         const serializedStyle =  this.serialize();
         nextState = options.transformStyle ? options.transformStyle(serializedStyle, nextState) : nextState;
-        const validate = options.validate ?? true;
-        if (validate && emitValidationErrors(this, validateStyle(nextState))) return false;
+        //const validate = options.validate ?? true;
+        if (emitValidationErrors(this, validateStyle(nextState))) return false;
 
         nextState = clone(nextState);
         nextState.layers = deref(nextState.layers);
