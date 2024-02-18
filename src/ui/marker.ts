@@ -518,7 +518,8 @@ export class Marker extends Evented {
         if (!popup) return this;
         else if (popup.isOpen()) popup.remove();
         else {
-            popup.setLngLat(this._lngLat); popup.addTo(this._map);
+            popup.setLngLat(this._lngLat);
+            popup.addTo(this._map);
         }
         return this;
     }
