@@ -6,11 +6,15 @@ import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import type {Terrain} from '../render/terrain';
 
-function createMap(options = {} as any) {
+type MapOptions = {
+    width?: number;
+}
+
+function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
     Object.defineProperty(container, 'clientWidth', {value: options.width || 512});
-    Object.defineProperty(container, 'clientHeight', {value: options.height || 512});
+    Object.defineProperty(container, 'clientHeight', {value: 512});
     return globalCreateMap({container, ...options});
 }
 
