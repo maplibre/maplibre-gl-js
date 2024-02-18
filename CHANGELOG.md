@@ -7,7 +7,6 @@
 ### 🐞 Bug fixes
 
 - Fix Style.setState ignoring validate flag.
-
 - Fix marker flying off near horizon ([3704](https://github.com/maplibre/maplibre-gl-js/pull/3704))
 - _...Add new stuff here..._
 
