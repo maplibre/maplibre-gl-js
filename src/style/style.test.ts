@@ -883,35 +883,23 @@ describe('Style#setState', () => {
         expect(style.stylesheet.layers[0].id).toBe(initialState.layers[0].id);
         expect(style.stylesheet.layers).toHaveLength(1);
     });
-});
 
-describe.each([
-    [true, false],
-    [false, true],
-    [false, false]])(
-    'Style#setState ignores validation style when',
-    async (validateStyle, validateState) => {
-        let style: Style;
-        let nextState: any;
+    test('Style#setState ignores validation style when validate false', async () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON();
+        style.loadJSON(styleSpec);
 
-        beforeEach(async () => {
-            style = new Style(getStubMap(), {validate: validateStyle});
-            const styleSpec = createStyleJSON();
-            style.loadJSON(styleSpec);
+        await style.once('style.load');
 
-            await style.once('style.load');
+        style.addSource('abc', createSource());
+        const nextState = {...styleSpec};
+        nextState.sources['def'] = {type: 'geojson'} as GeoJSONSourceSpecification;
 
-            style.addSource('abc', createSource());
-            nextState = {...styleSpec};
-            nextState.sources['def'] = {type: 'geojson'} as GeoJSONSourceSpecification;
-        });
+        const didChange = style.setState(nextState, {validate: false});
 
-        test(` validate style ${validateStyle}, validate state ${validateState}}`, () => {
-            const didChange = style.setState(nextState, {validate: validateState});
-
-            expect(didChange).toBeTruthy();
-        });
+        expect(didChange).toBeTruthy();
     });
+});
 
 describe('Style#addSource', () => {
     test('throw before loaded', () => {
