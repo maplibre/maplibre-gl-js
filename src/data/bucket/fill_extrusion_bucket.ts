@@ -33,6 +33,9 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import { subdivideFill, subdivideVertexLine } from '../../render/subdivision';
+import { ProjectionManager } from '../../render/projection_manager';
+import { fillArrays } from './fill_bucket';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -166,12 +169,12 @@ export class FillExtrusionBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
+        // Compute polygon centroid to calculate elevation in GPU
         const centroid: CentroidAccumulator = {x: 0, y: 0, vertexCount: 0};
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             this.processPolygon(centroid, canonical, feature, polygon);
         }
 
-        // remember polygon centroid to calculate elevation in GPU
         for (let i = 0; i < centroid.vertexCount; i++) {
             this.centroidVertexArray.emplaceBack(
                 Math.floor(centroid.x / centroid.vertexCount),
@@ -187,11 +190,8 @@ export class FillExtrusionBucket implements Bucket {
         feature: BucketFeature,
         polygon: Array<Array<Point>>,
     ): void {
-        let numVertices = 0;
-        for (const ring of polygon) {
-            numVertices += ring.length;
-        }
         let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
+        const granuality = ProjectionManager.GranualityFill.getGranualityForZoomLevel(canonical.z);
 
         for (const ring of polygon) {
             if (ring.length === 0) {
@@ -202,13 +202,15 @@ export class FillExtrusionBucket implements Bucket {
                 continue;
             }
 
+            const subdivided = subdivideVertexLine(ring, granuality);
+
             let edgeDistance = 0;
 
-            for (let p = 0; p < ring.length; p++) {
-                const p1 = ring[p];
+            for (let p = 0; p < subdivided.length; p++) {
+                const p1 = subdivided[p];
 
                 if (p >= 1) {
-                    const p2 = ring[p - 1];
+                    const p2 = subdivided[p - 1];
 
                     if (!isBoundaryEdge(p1, p2)) {
                         if (segment.vertexLength + 4 > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
@@ -250,10 +252,6 @@ export class FillExtrusionBucket implements Bucket {
             }
         }
 
-        if (segment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
-            segment = this.segments.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray);
-        }
-
         //Only triangulate and draw the area of the feature if it is a polygon
         //Other feature types (e.g. LineString) do not have area, so triangulation is pointless / undefined
         if (vectorTileFeatureTypes[feature.type] !== 'Polygon')
@@ -261,7 +259,6 @@ export class FillExtrusionBucket implements Bucket {
 
         const flattened = [];
         const holeIndices = [];
-        const triangleIndex = segment.vertexLength;
 
         for (const ring of polygon) {
             if (ring.length === 0) {
@@ -273,31 +270,35 @@ export class FillExtrusionBucket implements Bucket {
             }
 
             for (let i = 0; i < ring.length; i++) {
-                const p = ring[i];
-
-                addVertex(this.layoutVertexArray, p.x, p.y, 0, 0, 1, 1, 0);
-                centroid.x += p.x;
-                centroid.y += p.y;
-                centroid.vertexCount += 1;
-
-                flattened.push(p.x);
-                flattened.push(p.y);
+                flattened.push(ring[i].x);
+                flattened.push(ring[i].y);
             }
-
         }
 
-        const indices = earcut(flattened, holeIndices);
+        // Pass empty array as lines, since lines already got subdivided separately earlier.
+        const subdivided = subdivideFill(flattened, holeIndices, [], canonical, granuality);
+        const finalVertices = subdivided.verticesFlattened;
+        const finalIndicesTriangles = subdivided.indicesTriangles;
 
-        for (let j = 0; j < indices.length; j += 3) {
-            // Counter-clockwise winding order.
-            this.indexArray.emplaceBack(
-                triangleIndex + indices[j],
-                triangleIndex + indices[j + 2],
-                triangleIndex + indices[j + 1]);
-        }
+        const that = this;
+        let numAdded = 0;
 
-        segment.primitiveLength += indices.length / 3;
-        segment.vertexLength += numVertices;
+        fillArrays(
+            this.segments,
+            null,
+            this.layoutVertexArray,
+            this.indexArray,
+            null,
+            finalVertices,
+            finalIndicesTriangles,
+            null,
+            (x, y) => {
+                addVertex(that.layoutVertexArray, x, y, 0, 0, 1, 1, 0);
+                numAdded++;
+            }
+        );
+
+        console.log(finalVertices.length / 2 + " -> " + numAdded);
     }
 }
 

@@ -392,7 +392,7 @@ class Subdivider {
                         const a = ring[lastEdgeA];
                         const b = ring[lastEdgeB];
                         if (c !== a && c !== b && a !== b) {
-                            finalIndices.push(a, b, c);
+                            finalIndices.push(b, a, c);
                         }
                         lastEdgeA--;
                         if (lastEdgeA < 0) {
@@ -756,6 +756,12 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
     return lineIndices;
 }
 
+/**
+ * Subdivides a line represented by an array of points.
+ * Assumes a line segment between each two consecutive points in the array.
+ * Does not assume a line segment from last point to first point.
+ * Eg. an array of 4 points describes exactly 3 line segments.
+ */
 export function subdivideVertexLine(linePoints: Array<Point>, granuality: number): Array<Point> {
     if (!linePoints) {
         return [];

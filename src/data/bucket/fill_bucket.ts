@@ -30,6 +30,7 @@ import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideFill} from '../../render/subdivision';
 import {ProjectionManager} from '../../render/projection_manager';
+import { StructArray } from '../../util/struct_array';
 
 export class FillBucket implements Bucket {
     index: number;
@@ -187,8 +188,9 @@ export class FillBucket implements Bucket {
                 const lineIndices = [];
                 const baseIndex = flattened.length / 2;
 
-                lineIndices.push(baseIndex + ring.length - 1);
-                lineIndices.push(baseIndex);
+                // The first/last vertex seems to always be duplicated?
+                //lineIndices.push(baseIndex + ring.length - 1);
+                //lineIndices.push(baseIndex);
                 flattened.push(ring[0].x);
                 flattened.push(ring[0].y);
 
@@ -215,7 +217,8 @@ export class FillBucket implements Bucket {
                 this.indexArray2,
                 finalVertices,
                 finalIndicesTriangles,
-                finalIndicesLineList
+                finalIndicesLineList,
+                (x, y) => this.layoutVertexArray.emplaceBack(x, y)
             );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
@@ -229,15 +232,16 @@ register('FillBucket', FillBucket, {omit: ['layers', 'patternFeatures']});
  * if too many vertices are used.
  * Sometimes subdivision might generate more vertices than what fits into 16 bit indices (MAX_VERTEX_ARRAY_LENGTH).
  */
-function fillArrays(
+export function fillArrays(
     segmentsTriangles: SegmentVector,
     segmentsLines: SegmentVector,
-    vertexArray: FillLayoutArray,
+    vertexArray: StructArray,
     triangleIndexArray: TriangleIndexArray,
     lineIndexArray: LineIndexArray,
     flattened: Array<number>,
     triangleIndices: Array<number>,
-    lineList: Array<Array<number>>) {
+    lineList: Array<Array<number>>,
+    addVertex: (x: number, y: number) => void) {
 
     const numVertices = flattened.length / 2;
 
@@ -256,24 +260,26 @@ function fillArrays(
         triangleSegment.vertexLength += numVertices;
         triangleSegment.primitiveLength += triangleIndices.length / 3;
 
-        const lineSegment = segmentsLines.prepareSegment(numVertices, vertexArray, lineIndexArray);
-        const lineIndicesStart = lineSegment.vertexLength;
-        lineSegment.vertexLength += numVertices;
-
         for (let i = 0; i < flattened.length; i += 2) {
-            vertexArray.emplaceBack(flattened[i], flattened[i + 1]);
+            addVertex(flattened[i], flattened[i + 1]);
         }
 
-        for (let listIndex = 0; listIndex < lineList.length; listIndex++) {
-            const lineIndices = lineList[listIndex];
+        if (segmentsLines && lineIndexArray) {
+            const lineSegment = segmentsLines.prepareSegment(numVertices, vertexArray, lineIndexArray);
+            const lineIndicesStart = lineSegment.vertexLength;
+            lineSegment.vertexLength += numVertices;
 
-            for (let i = 1; i < lineIndices.length; i += 2) {
-                lineIndexArray.emplaceBack(
-                    lineIndicesStart + lineIndices[i - 1],
-                    lineIndicesStart + lineIndices[i]);
+            for (let listIndex = 0; listIndex < lineList.length; listIndex++) {
+                const lineIndices = lineList[listIndex];
+
+                for (let i = 1; i < lineIndices.length; i += 2) {
+                    lineIndexArray.emplaceBack(
+                        lineIndicesStart + lineIndices[i - 1],
+                        lineIndicesStart + lineIndices[i]);
+                }
+
+                lineSegment.primitiveLength += lineIndices.length / 2;
             }
-
-            lineSegment.primitiveLength += lineIndices.length / 2;
         }
     } else {
         // Assumption: the incoming triangle indices use vertices in roughly linear order,
@@ -287,23 +293,25 @@ function fillArrays(
         // Normally, (out)lines share the same vertex buffer as triangles, but since we need to somehow split it into several drawcalls,
         // it is easier to just consider (out)lines separately and duplicate their vertices.
 
-        fillSegmentsTriangles(segmentsTriangles, vertexArray, triangleIndexArray, flattened, triangleIndices);
-        fillSegmentsLines(segmentsLines, vertexArray, lineIndexArray, flattened, lineList);
-
+        fillSegmentsTriangles(segmentsTriangles, vertexArray, triangleIndexArray, flattened, triangleIndices, addVertex);
+        if (segmentsLines && lineIndexArray) {
+            fillSegmentsLines(segmentsLines, vertexArray, lineIndexArray, flattened, lineList, addVertex);
+        }
         // Triangles and lines share vertex buffer, but we increment vertex counts of their segments by different amounts.
         // This can cause incorrect indices to be used if we reuse those segments, so we force the segment vector
         // to create new segments on the next `prepareSegment` call.
         segmentsTriangles.invalidateLast();
-        segmentsLines.invalidateLast();
+        segmentsLines?.invalidateLast();
     }
 }
 
 function fillSegmentsTriangles(
     segmentsTriangles: SegmentVector,
-    vertexArray: FillLayoutArray,
+    vertexArray: StructArray,
     triangleIndexArray: TriangleIndexArray,
     flattened: Array<number>,
-    triangleIndices: Array<number>
+    triangleIndices: Array<number>,
+    addVertex: (x: number, y: number) => void
 ) {
     // Array, or rather a map of [vertex index in the original data] -> index of the latest copy of this vertex in the final vertex buffer.
     const actualVertexIndices: Array<number> = [];
@@ -347,7 +355,7 @@ function fillSegmentsTriangles(
 
         if (i0needsVextexCopy) {
             actualIndex0 = totalVerticesCreated;
-            vertexArray.emplaceBack(flattened[i0 * 2], flattened[i0 * 2 + 1]);
+            addVertex(flattened[i0 * 2], flattened[i0 * 2 + 1]);
             actualVertexIndices[i0] = totalVerticesCreated;
             totalVerticesCreated++;
             segment.vertexLength++;
@@ -357,7 +365,7 @@ function fillSegmentsTriangles(
 
         if (i1needsVextexCopy) {
             actualIndex1 = totalVerticesCreated;
-            vertexArray.emplaceBack(flattened[i1 * 2], flattened[i1 * 2 + 1]);
+            addVertex(flattened[i1 * 2], flattened[i1 * 2 + 1]);
             actualVertexIndices[i1] = totalVerticesCreated;
             totalVerticesCreated++;
             segment.vertexLength++;
@@ -367,7 +375,7 @@ function fillSegmentsTriangles(
 
         if (i2needsVextexCopy) {
             actualIndex2 = totalVerticesCreated;
-            vertexArray.emplaceBack(flattened[i2 * 2], flattened[i2 * 2 + 1]);
+            addVertex(flattened[i2 * 2], flattened[i2 * 2 + 1]);
             actualVertexIndices[i2] = totalVerticesCreated;
             totalVerticesCreated++;
             segment.vertexLength++;
@@ -387,10 +395,11 @@ function fillSegmentsTriangles(
 
 function fillSegmentsLines(
     segmentsLines: SegmentVector,
-    vertexArray: FillLayoutArray,
+    vertexArray: StructArray,
     lineIndexArray: LineIndexArray,
     flattened: Array<number>,
-    lineList: Array<Array<number>>
+    lineList: Array<Array<number>>,
+    addVertex: (x: number, y: number) => void
 ) {
     // Array, or rather a map of [vertex index in the original data] -> index of the latest copy of this vertex in the final vertex buffer.
     const actualVertexIndices: Array<number> = [];
@@ -432,7 +441,7 @@ function fillSegmentsLines(
 
             if (i0needsVextexCopy) {
                 actualIndex0 = totalVerticesCreated;
-                vertexArray.emplaceBack(flattened[i0 * 2], flattened[i0 * 2 + 1]);
+                addVertex(flattened[i0 * 2], flattened[i0 * 2 + 1]);
                 actualVertexIndices[i0] = totalVerticesCreated;
                 totalVerticesCreated++;
                 segment.vertexLength++;
@@ -442,7 +451,7 @@ function fillSegmentsLines(
 
             if (i1needsVextexCopy) {
                 actualIndex1 = totalVerticesCreated;
-                vertexArray.emplaceBack(flattened[i1 * 2], flattened[i1 * 2 + 1]);
+                addVertex(flattened[i1 * 2], flattened[i1 * 2 + 1]);
                 actualVertexIndices[i1] = totalVerticesCreated;
                 totalVerticesCreated++;
                 segment.vertexLength++;
