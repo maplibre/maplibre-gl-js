@@ -55,17 +55,13 @@ Adds a control that shows a legend generated from the map style.
 Make multiple tile layers transparent.
 <br/><small>[View on GitHub](https://github.com/dayjournal/maplibre-gl-opacity)</small>
     
-#### mapbox-gl-style-switcher
-Adds a control to switch between styles.
-<br/><small>[View on GitHub](https://github.com/el/style-switcher)</small>
-    
 #### mapboxgl-minimap
 Adds a control to show a miniature overview of the current map.
 <br/><small>[View on GitHub](https://github.com/aesqe/mapboxgl-minimap)</small>
     
 #### maplibre-gl-temporal-control
-Temporal Controller plugin for MapLibre GL JS. [demo](https://kanahiro.github.io/maplibre-gl-temporal-control/raster.html).
-<br/><small>[View on GitHub](https://github.com/Kanahiro/maplibre-gl-temporal-control)</small>
+Temporal Controller plugin for MapLibre GL JS. [demo](https://mug-jp.github.io/maplibre-gl-temporal-control/raster.html).
+<br/><small>[View on GitHub](https://github.com/mug-jp/maplibre-gl-temporal-control)</small>
     
 #### mapbox-gl-valhalla
 Adds a control to provide isochrone features from valhalla server.
@@ -140,6 +136,10 @@ A library for retrieving features from FlatGeobuf file using a tiled approach. C
 #### mapbox-gl-arcgis-featureserver
 A library for retrieving features from an ArcGIS FeatureServer or MapServer. This library makes tiled requests rather than simply requesting every feature.
 <br/><small>[View on GitHub](https://github.com/rowanwins/mapbox-gl-arcgis-featureserver)</small>
+
+#### mapbox-gl-ogc-feature-collection
+A small package for requesting geojson from an OGC Feature API endpoint to serve tiles in MapBox/MapLibre.
+<br/><small>[View on GitHub](https://github.com/mkeller3/mapbox-gl-ogc-feature-collection)</small>
     
 #### mapbox-gl-esri-sources
 A library for making it easier to use Esri services in MapLibre GL JS. Supports Esri Map Services (dynamic & tiled), Esri Vector Tile Services & Esri Vector Basemap Styles.
@@ -170,7 +170,11 @@ Provides an [AngularJS](https://angularjs.org/) directive.
 #### ngx-maplibre-gl
 Provides an [Angular](https://angular.io/) integration.
 <br/><small>[View on GitHub](https://github.com/maplibre/ngx-maplibre-gl)</small>
-    
+
+#### vue-maplibre-gl
+Provide a [VueJS](https://vuejs.org/) integration.
+<br/><small>[View on GitHub](https://github.com/razorness/vue-maplibre-gl)</small>
+
 #### elm-mapbox
 Provides an [Elm](https://elm-lang.org) integration.
 <br/><small>[View on GitHub](https://package.elm-lang.org/packages/gampleman/elm-mapbox/latest/)</small>
@@ -178,6 +182,10 @@ Provides an [Elm](https://elm-lang.org) integration.
 #### ember-mapbox-gl
 Provides an [Ember](http://emberjs.com) integration.
 <br/><small>[View on GitHub](https://github.com/kturney/ember-mapbox-gl)</small>
+
+#### jekyll-maplibre
+Provides a [Jekyll](https://jekyllrb.com/) integration (plug-in).
+<br/><small>[View on GitHub](https://github.com/rriemann/jekyll-maplibre)</small>
 
 #### svelte-maplibre
 Provides a [Svelte](https://svelte.dev) integration.

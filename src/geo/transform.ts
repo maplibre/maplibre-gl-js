@@ -50,6 +50,7 @@ export class Transform {
     pixelMatrixInverse: mat4;
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
+    minElevationForCurrentTile: number;
 
     /**
      * Vertical field of view in radians.
@@ -71,7 +72,6 @@ export class Transform {
     _constraining: boolean;
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
-    _minEleveationForCurrentTile: number;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
@@ -98,7 +98,7 @@ export class Transform {
         this._edgeInsets = new EdgeInsets();
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
-        this._minEleveationForCurrentTile = 0;
+        this.minElevationForCurrentTile = 0;
     }
 
     clone(): Transform {
@@ -114,7 +114,7 @@ export class Transform {
         this.height = that.height;
         this._center = that._center;
         this._elevation = that._elevation;
-        this._minEleveationForCurrentTile = that._minEleveationForCurrentTile;
+        this.minElevationForCurrentTile = that.minElevationForCurrentTile;
         this.zoom = that.zoom;
         this.angle = that.angle;
         this._fov = that._fov;
@@ -473,6 +473,11 @@ export class Transform {
     zoomScale(zoom: number) { return Math.pow(2, zoom); }
     scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
+    /**
+     * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512)
+     * @param lnglat - the lngLat
+     * @returns Point
+     */
     project(lnglat: LngLat) {
         const lat = clamp(lnglat.lat, -this.maxValidLatitude, this.maxValidLatitude);
         return new Point(
@@ -480,6 +485,11 @@ export class Transform {
             mercatorYfromLat(lat) * this.worldSize);
     }
 
+    /**
+     * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90])
+     * @param point - world coordinate
+     * @returns LngLat
+     */
     unproject(point: Point): LngLat {
         return new MercatorCoordinate(point.x / this.worldSize, point.y / this.worldSize).toLngLat();
     }
@@ -542,7 +552,7 @@ export class Transform {
     }
 
     /**
-     * Given a location, return the screen point that corresponds to it
+     * Given a LngLat location, return the screen point that corresponds to it
      * @param lnglat - location
      * @param terrain - optional terrain
      * @returns screen point
@@ -565,7 +575,7 @@ export class Transform {
 
     /**
      * Given a geographical lnglat, return an unrounded
-     * coordinate that represents it at this transform's zoom level.
+     * coordinate that represents it at low zoom level.
      * @param lnglat - the location
      * @returns The mercator coordinate
      */
@@ -575,7 +585,7 @@ export class Transform {
 
     /**
      * Given a Coordinate, return its geographical position.
-     * @param coord - mercator coordivates
+     * @param coord - mercator coordinates
      * @returns lng and lat
      */
     coordinateLocation(coord: MercatorCoordinate): LngLat {
@@ -603,8 +613,8 @@ export class Transform {
         // unproject two points to get a line and then find the point on that
         // line with z=0
 
-        const coord0 = [p.x, p.y, 0, 1] as any;
-        const coord1 = [p.x, p.y, 1, 1] as any;
+        const coord0 = [p.x, p.y, 0, 1] as vec4;
+        const coord1 = [p.x, p.y, 1, 1] as vec4;
 
         vec4.transformMat4(coord0, coord0, this.pixelMatrixInverse);
         vec4.transformMat4(coord1, coord1, this.pixelMatrixInverse);
@@ -633,7 +643,7 @@ export class Transform {
      * @returns screen point
      */
     coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this.pixelMatrix): Point {
-        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as any;
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
@@ -821,7 +831,7 @@ export class Transform {
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
-        const minElevation = Math.min(this.elevation, this._minEleveationForCurrentTile);
+        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile);
         const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._pixelPerMeter / Math.cos(this._pitch);
         const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
 
@@ -848,12 +858,12 @@ export class Transform {
         // - the more depth precision is available for features (good)
         // - clipping starts appearing sooner when the camera is close to 3d features (bad)
         //
-        // Smaller values worked well for mapbox-gl-js but deckgl was encountering precision issues
-        // when rendering it's layers using custom layers. This value was experimentally chosen and
+        // Other values work for mapbox-gl-js but deckgl was encountering precision issues
+        // when rendering custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
         const nearZ = this.height / 50;
 
-        // matrix for conversion from location to GL coordinates (-1 .. 1)
+        // matrix for conversion from location to clip space(-1 .. 1)
         m = new Float64Array(16) as any;
         mat4.perspective(m, this._fov, this.width / this.height, nearZ, farZ);
 
@@ -868,21 +878,21 @@ export class Transform {
         mat4.translate(m, m, [-x, -y, 0]);
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
-        // ([0, 0] nw, [1, 1] se) to GL coordinates.
+        // ([0, 0] nw, [1, 1] se) to clip space.
         this.mercatorMatrix = mat4.scale([] as any, m, [this.worldSize, this.worldSize, this.worldSize]);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, [1, 1, this._pixelPerMeter]);
 
-        // matrix for conversion from location to screen coordinates in 2D
+        // matrix for conversion from world space to screen coordinates in 2D
         this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
-        // matrix for conversion from location to GL coordinates (-1 .. 1)
+        // matrix for conversion from world space to clip space (-1 .. 1)
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([] as any, m);
 
-        // matrix for conversion from location to screen coordinates in 2D
+        // matrix for conversion from world space to screen coordinates in 3D
         this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
@@ -899,7 +909,7 @@ export class Transform {
         mat4.translate(alignedM, alignedM, [dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0]);
         this.alignedProjMatrix = alignedM;
 
-        // inverse matrix for conversion from screen coordinaes to location
+        // inverse matrix for conversion from screen coordinates to location
         m = mat4.invert(new Float64Array(16) as any, this.pixelMatrix);
         if (!m) throw new Error('failed to invert matrix');
         this.pixelMatrixInverse = m;
@@ -969,5 +979,19 @@ export class Transform {
                 new Point(minX, minY)
             ];
         }
+    }
+    /**
+     * Return the distance to the camera in clip space from a LngLat.
+     * This can be compared to the value from the depth buffer (terrain.depthAtPoint)
+     * to determine whether a point is occluded.
+     * @param lngLat - the point
+     * @param elevation - the point's elevation
+     * @returns depth value in clip space (between 0 and 1)
+     */
+    lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
+        const coord = this.locationCoordinate(lngLat);
+        const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
+        vec4.transformMat4(p, p, this.projMatrix);
+        return (p[2] / p[3]);
     }
 }

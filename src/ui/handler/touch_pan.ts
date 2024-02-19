@@ -1,9 +1,11 @@
 import Point from '@mapbox/point-geometry';
 import {indexTouches} from './handler_util';
-import type {Map} from '../map';
-import {GestureOptions} from '../map';
 import {Handler} from '../handler_manager';
+import type {Map} from '../map';
 
+/**
+ * A `TouchPanHandler` allows the user to pan the map using touch gestures.
+ */
 export class TouchPanHandler implements Handler {
 
     _enabled: boolean;
@@ -11,17 +13,11 @@ export class TouchPanHandler implements Handler {
     _touches: {
         [k in string | number]: Point;
     };
-    _minTouches: number;
     _clickTolerance: number;
     _sum: Point;
     _map: Map;
-    _cancelCooperativeMessage: boolean;
 
-    constructor(options: {
-        clickTolerance: number;
-        cooperativeGestures: boolean | GestureOptions;
-    }, map: Map) {
-        this._minTouches = options.cooperativeGestures ? 2 : 1;
+    constructor(options: {clickTolerance: number}, map: Map) {
         this._clickTolerance = options.clickTolerance || 1;
         this._map = map;
         this.reset();
@@ -31,11 +27,10 @@ export class TouchPanHandler implements Handler {
         this._active = false;
         this._touches = {};
         this._sum = new Point(0, 0);
+    }
 
-        // Put a delay on the cooperative gesture message so it's less twitchy
-        setTimeout(() => {
-            this._cancelCooperativeMessage = false;
-        }, 200);
+    minTouchs() {
+        return this._map.cooperativeGestures.isEnabled() ? 2 : 1;
     }
 
     touchstart(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
@@ -43,16 +38,7 @@ export class TouchPanHandler implements Handler {
     }
 
     touchmove(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
-        if (this._map._cooperativeGestures) {
-            if (this._minTouches === 2 && mapTouches.length < 2 && !this._cancelCooperativeMessage) {
-                // If coop gesture enabled, show panning info to user
-                this._map._onCooperativeGesture(e, false, mapTouches.length);
-            } else if (!this._cancelCooperativeMessage) {
-                // If user is successfully navigating, we don't need this warning until the touch resets
-                this._cancelCooperativeMessage = true;
-            }
-        }
-        if (!this._active || mapTouches.length < this._minTouches) return;
+        if (!this._active || mapTouches.length < this.minTouchs()) return;
         e.preventDefault();
         return this._calculateTransform(e, points, mapTouches);
     }
@@ -60,7 +46,7 @@ export class TouchPanHandler implements Handler {
     touchend(e: TouchEvent, points: Array<Point>, mapTouches: Array<Touch>) {
         this._calculateTransform(e, points, mapTouches);
 
-        if (this._active && mapTouches.length < this._minTouches) {
+        if (this._active && mapTouches.length < this.minTouchs()) {
             this.reset();
         }
     }
@@ -91,7 +77,7 @@ export class TouchPanHandler implements Handler {
 
         this._touches = touches;
 
-        if (touchDeltaCount < this._minTouches || !touchDeltaSum.mag()) return;
+        if (touchDeltaCount < this.minTouchs() || !touchDeltaSum.mag()) return;
 
         const panDelta = touchDeltaSum.div(touchDeltaCount);
         this._sum._add(panDelta);

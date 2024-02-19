@@ -1,7 +1,7 @@
 import type {AlphaImage} from '../util/image';
 
 /**
- * The glyph's metrices
+ * Some metices related to a glyph
  */
 export type GlyphMetrics = {
     width: number;
@@ -9,10 +9,13 @@ export type GlyphMetrics = {
     left: number;
     top: number;
     advance: number;
+    /**
+     * isDoubleResolution = true for 48px textures
+     */
+    isDoubleResolution?: boolean;
 };
 
 /**
- * @internal
  * A style glyph type
  */
 export type StyleGlyph = {

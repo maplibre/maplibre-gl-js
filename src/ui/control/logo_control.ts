@@ -6,7 +6,7 @@ import type {ControlPosition, IControl} from './control';
 /**
  * The {@link LogoControl} options object
  */
-type LogoOptions = {
+type LogoControlOptions = {
     /**
      * If `true`, force a compact logo.
      * If `false`, force the full logo. The default is a responsive logo that collapses when the map is less than 640 pixels wide.
@@ -21,16 +21,16 @@ type LogoOptions = {
  *
  * @example
  * ```ts
- * map.addControl(new maplibregl.LogoControl({compact: false}));
+ * map.addControl(new LogoControl({compact: false}));
  * ```
  **/
 export class LogoControl implements IControl {
-    options: LogoOptions;
+    options: LogoControlOptions;
     _map: Map;
     _compact: boolean;
     _container: HTMLElement;
 
-    constructor(options: LogoOptions = {}) {
+    constructor(options: LogoControlOptions = {}) {
         this.options = options;
     }
 

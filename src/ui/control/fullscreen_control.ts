@@ -3,13 +3,13 @@ import {DOM} from '../../util/dom';
 import {warnOnce} from '../../util/util';
 
 import {Event, Evented} from '../../util/evented';
-import type {Map, GestureOptions} from '../map';
+import type {Map} from '../map';
 import type {IControl} from './control';
 
 /**
- * The {@link FullscreenControl} options
+ * The {@link FullscreenControl} options object
  */
-type FullscreenOptions = {
+type FullscreenControlOptions = {
     /**
      * `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
      */
@@ -27,7 +27,7 @@ type FullscreenOptions = {
  *
  * @example
  * ```ts
- * map.addControl(new maplibregl.FullscreenControl({container: document.querySelector('body')}));
+ * map.addControl(new FullscreenControl({container: document.querySelector('body')}));
  * ```
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/fullscreen/)
  *
@@ -44,9 +44,9 @@ export class FullscreenControl extends Evented implements IControl {
     _fullscreenchange: string;
     _fullscreenButton: HTMLButtonElement;
     _container: HTMLElement;
-    _prevCooperativeGestures: boolean | GestureOptions;
+    _prevCooperativeGesturesEnabled: boolean;
 
-    constructor(options: FullscreenOptions = {}) {
+    constructor(options: FullscreenControlOptions = {}) {
         super();
         this._fullscreen = false;
 
@@ -128,15 +128,12 @@ export class FullscreenControl extends Evented implements IControl {
 
         if (this._fullscreen) {
             this.fire(new Event('fullscreenstart'));
-            if (this._map._cooperativeGestures) {
-                this._prevCooperativeGestures = this._map._cooperativeGestures;
-                this._map.setCooperativeGestures();
-            }
+            this._prevCooperativeGesturesEnabled = this._map.cooperativeGestures.isEnabled();
+            this._map.cooperativeGestures.disable();
         } else {
             this.fire(new Event('fullscreenend'));
-            if (this._prevCooperativeGestures) {
-                this._map.setCooperativeGestures(this._prevCooperativeGestures);
-                delete this._prevCooperativeGestures;
+            if (this._prevCooperativeGesturesEnabled) {
+                this._map.cooperativeGestures.enable();
             }
         }
     }

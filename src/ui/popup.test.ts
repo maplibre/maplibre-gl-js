@@ -334,9 +334,11 @@ describe('popup', () => {
 
     test('Popup is repositioned at the specified LngLat', () => {
         const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
-
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0
+        } as any;
         const popup = new Popup()
-            .setLngLat([270, 0])
+            .setLngLat([70, 0])
             .setText('Test')
             .addTo(map)
             .setLngLat([0, 0]);
@@ -602,6 +604,22 @@ describe('popup', () => {
         expect(
             popup._container.classList.value
         ).not.toContain('maplibregl-popup-track-pointer');
+        expect(
+            map._canvasContainer.classList.value
+        ).not.toContain('maplibregl-track-pointer');
+    });
+
+    test('Pointer-tracked popup calling Popup#remove removes track-pointer class from map (#3434)', () => {
+        const map = createMap();
+        new Popup()
+            .setText('Test')
+            .trackPointer()
+            .addTo(map)
+            .remove();
+
+        expect(
+            map._canvasContainer.classList.value
+        ).not.toContain('maplibregl-track-pointer');
     });
 
     test('Positioned popup lacks pointer-tracking class', () => {

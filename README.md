@@ -1,4 +1,6 @@
-![MapLibre Logo](https://maplibre.org/img/maplibre-logo-big.svg)
+<p align="center">
+  <img src="https://maplibre.org/img/maplibre-logo-big.svg" alt="MapLibre Logo">
+</p>
 
 # MapLibre GL JS
 
@@ -49,46 +51,10 @@ Check out the features through [examples](https://maplibre.org/maplibre-gl-js/do
 
 <br />
 
-## Migrating from mapbox-gl to maplibre
-The libraries are very similar but diverge with newer features happening from v2 in both libraries where Mapbox turned proprietary.
-
-The overall migration happens by uninstalling `mapbox-gl` and installing `maplibre-gl` in your node packages (or see below for CDN links), and replacing `mapboxgl` with `maplibregl` throughout your TypeScript, JavaScript and HTML/CSS.
-
-```diff
--    var map = new mapboxgl.Map({
-+    var map = new maplibregl.Map({
-
--    <button class="mapboxgl-ctrl">
-+    <button class="maplibregl-ctrl">
-```
-
-#### Compatibility branch
-
-MapLibre GL JS v1 is completely backward compatible with Mapbox GL JS v1. This compatibility branch (named 1.x) is tagged v1 on npm, and its current version is 1.15.3. 
-
-#### CDN Links
-
-> MapLibre GL JS is distributed via [unpkg.com](https://unpkg.com). For more information, please see [MapLibre GL JS is on unpkg.com](./developer-guides/README-unpkg.md).
-
-```diff
--    <script src="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.js"></script>
--    <link
--      href="https://api.mapbox.com/mapbox-gl-js/v#.#.#/mapbox-gl.css"
--      rel="stylesheet"
--    />
-
-     
-+    <script src="https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.js"></script>
-+    <link
-+      href="https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.css"
-+      rel="stylesheet"
-+    />
-
-```
 
 Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
-Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started/get-started#using-with-a-mapbox-gl-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
+Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started#using-with-a-compatible-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
 
 <br />
 
@@ -98,10 +64,6 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 
 Join the #maplibre slack channel at OSMUS: get an invite at https://slack.openstreetmap.us/
 Read the [CONTRIBUTING.md](CONTRIBUTING.md) guide in order to get familiar with how we do things around here.
-
-### Community Leadership
-
-You can find the official status of the backing community and steering committee in the [COMMUNITY.md](COMMUNITY.md) document.
 
 ### Avoid Fragmentation
 
@@ -126,13 +88,13 @@ We thank everyone who supported us financially in the past and special thanks to
 
 Read more about the MapLibre Sponsorship Program at [https://maplibre.org/sponsors/](https://maplibre.org/sponsors/).
 
-Platinum:
+Gold:
 
 <a href="https://aws.com"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
 
-Silver:
-
 <a href="https://meta.com"><img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="25%"/></a>
+
+Silver:
 
 <a href="https://www.mierune.co.jp/?lang=en"><img src="https://maplibre.org/img/mierune-logo.svg" alt="Logo MIERUNE" width="25%"/></a>
 

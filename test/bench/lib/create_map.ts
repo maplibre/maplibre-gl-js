@@ -27,9 +27,9 @@ const createMap = (options: any): Promise<Map> => {
             .on(options.idle ? 'idle' : 'load', () => {
                 if (options.stubRender) {
                     // If there's a pending rerender, cancel it.
-                    if (map._frame) {
-                        map._frame.cancel();
-                        map._frame = null;
+                    if (map._frameRequest) {
+                        map._frameRequest.abort();
+                        map._frameRequest = null;
                     }
                 }
                 resolve(map);

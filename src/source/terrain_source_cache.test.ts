@@ -2,7 +2,7 @@ import {TerrainSourceCache} from './terrain_source_cache';
 import {Style} from '../style/style';
 import {RequestManager} from '../util/request_manager';
 import {Dispatcher} from '../util/dispatcher';
-import {fakeServer, FakeServer} from 'nise';
+import {fakeServer, type FakeServer} from 'nise';
 import {Transform} from '../geo/transform';
 import {Evented} from '../util/evented';
 import {Painter} from '../render/painter';

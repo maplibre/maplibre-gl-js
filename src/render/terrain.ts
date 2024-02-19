@@ -65,7 +65,7 @@ export type TerrainData = {
  */
 export class Terrain {
     /**
-     * The style this terrain crresponds to
+     * The style this terrain corresponds to
      */
     painter: Painter;
     /**
@@ -107,7 +107,7 @@ export class Terrain {
      */
     _coordsTexture: Texture;
     /**
-     * accuracy of the coords. 2 * tileSize should be enoughth.
+     * accuracy of the coords. 2 * tileSize should be enough.
      */
     _coordsTextureSize: number;
     /**
@@ -331,10 +331,27 @@ export class Terrain {
         const coordsSize = this._coordsTextureSize;
         const worldSize = (1 << tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(
-            (tileID.canonical.x * coordsSize + x) / worldSize,
+            (tile.tileID.canonical.x * coordsSize + x) / worldSize + tile.tileID.wrap,
             (tileID.canonical.y * coordsSize + y) / worldSize,
             this.getElevation(tileID, x, y, coordsSize)
         );
+    }
+
+    /**
+     * Reads the depth value from the depth-framebuffer at a given screen pixel
+     * @param p - Screen coordinate
+     * @returns depth value in clip space (between 0 and 1)
+     */
+
+    depthAtPoint(p: Point): number {
+        const rgba = new Uint8Array(4);
+        const context = this.painter.context, gl = context.gl;
+        context.bindFramebuffer.set(this.getFramebuffer('depth').framebuffer);
+        gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        context.bindFramebuffer.set(null);
+        // decode coordinates (encoding see terran_depth.fragment.glsl)
+        const depthValue = (rgba[0] / (256 * 256 * 256) + rgba[1] / (256 * 256) + rgba[2] / 256 + rgba[3]) / 256;
+        return depthValue;
     }
 
     /**

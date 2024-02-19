@@ -711,6 +711,7 @@ a.maplibregl-ctrl-logo.maplibregl-compact {
     top: 0;
     left: 0;
     will-change: transform;
+    transition: opacity 0.2s;
 }
 
 .maplibregl-user-location-dot {

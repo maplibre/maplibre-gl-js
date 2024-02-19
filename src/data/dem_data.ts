@@ -3,38 +3,80 @@ import {RGBAImage} from '../util/image';
 import {warnOnce} from '../util/util';
 import {register} from '../util/web_worker_transfer';
 
-// DEMData is a data structure for decoding, backfilling, and storing elevation data for processing in the hillshade shaders
-// data can be populated either from a pngraw image tile or from serliazed data sent back from a worker. When data is initially
-// loaded from a image tile, we decode the pixel values using the appropriate decoding formula, but we store the
-// elevation data as an Int32 value. we add 65536 (2^16) to eliminate negative values and enable the use of
-// integer overflow when creating the texture used in the hillshadePrepare step.
+/**
+ * The possible DEM encoding types
+ */
+export type DEMEncoding = 'mapbox' | 'terrarium' | 'custom'
 
-// DEMData also handles the backfilling of data from a tile's neighboring tiles. This is necessary because we use a pixel's 8
-// surrounding pixel values to compute the slope at that pixel, and we cannot accurately calculate the slope at pixels on a
-// tile's edge without backfilling from neighboring tiles.
-
+/**
+ * DEMData is a data structure for decoding, backfilling, and storing elevation data for processing in the hillshade shaders
+ * data can be populated either from a pngraw image tile or from serliazed data sent back from a worker. When data is initially
+ * loaded from a image tile, we decode the pixel values using the appropriate decoding formula, but we store the
+ * elevation data as an Int32 value. we add 65536 (2^16) to eliminate negative values and enable the use of
+ * integer overflow when creating the texture used in the hillshadePrepare step.
+ *
+ * DEMData also handles the backfilling of data from a tile's neighboring tiles. This is necessary because we use a pixel's 8
+ * surrounding pixel values to compute the slope at that pixel, and we cannot accurately calculate the slope at pixels on a
+ * tile's edge without backfilling from neighboring tiles.
+ */
 export class DEMData {
-    uid: string;
+    uid: string | number;
     data: Uint32Array;
     stride: number;
     dim: number;
     min: number;
     max: number;
-    encoding: 'mapbox' | 'terrarium';
+    redFactor: number;
+    greenFactor: number;
+    blueFactor: number;
+    baseShift: number;
 
-    // RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
+    /**
+     * Constructs a `DEMData` object
+     * @param uid - the tile's unique id
+     * @param data - RGBAImage data has uniform 1px padding on all sides: square tile edge size defines stride
     // and dim is calculated as stride - 2.
-    constructor(uid: string, data: RGBAImage, encoding: 'mapbox' | 'terrarium') {
+     * @param encoding - the encoding type of the data
+     * @param redFactor - the red channel factor used to unpack the data, used for `custom` encoding only
+     * @param greenFactor - the green channel factor used to unpack the data, used for `custom` encoding only
+     * @param blueFactor - the blue channel factor used to unpack the data, used for `custom` encoding only
+     * @param baseShift - the base shift used to unpack the data, used for `custom` encoding only
+     */
+    constructor(uid: string | number, data: RGBAImage | ImageData, encoding: DEMEncoding, redFactor = 1.0, greenFactor = 1.0, blueFactor = 1.0, baseShift = 0.0) {
         this.uid = uid;
         if (data.height !== data.width) throw new RangeError('DEM tiles must be square');
-        if (encoding && encoding !== 'mapbox' && encoding !== 'terrarium') {
-            warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox" and "terrarium".`);
+        if (encoding && !['mapbox', 'terrarium', 'custom'].includes(encoding)) {
+            warnOnce(`"${encoding}" is not a valid encoding type. Valid types include "mapbox", "terrarium" and "custom".`);
             return;
         }
         this.stride = data.height;
         const dim = this.dim = data.height - 2;
         this.data = new Uint32Array(data.data.buffer);
-        this.encoding = encoding || 'mapbox';
+        switch (encoding) {
+            case 'terrarium':
+                // unpacking formula for mapzen terrarium:
+                // https://aws.amazon.com/public-datasets/terrain/
+                this.redFactor = 256.0;
+                this.greenFactor = 1.0;
+                this.blueFactor = 1.0 / 256.0;
+                this.baseShift = 32768.0;
+                break;
+            case 'custom':
+                this.redFactor = redFactor;
+                this.greenFactor = greenFactor;
+                this.blueFactor = blueFactor;
+                this.baseShift = baseShift;
+                break;
+            case 'mapbox':
+            default:
+                // unpacking formula for mapbox.terrain-rgb:
+                // https://www.mapbox.com/help/access-elevation-data/#mapbox-terrain-rgb
+                this.redFactor = 6553.6;
+                this.greenFactor = 25.6;
+                this.blueFactor = 0.1;
+                this.baseShift = 10000.0;
+                break;
+        }
 
         // in order to avoid flashing seams between tiles, here we are initially populating a 1px border of pixels around the image
         // with the data of the nearest pixel from the image. this data is eventually replaced when the tile's neighboring
@@ -70,12 +112,11 @@ export class DEMData {
     get(x: number, y: number) {
         const pixels = new Uint8Array(this.data.buffer);
         const index = this._idx(x, y) * 4;
-        const unpack = this.encoding === 'terrarium' ? this._unpackTerrarium : this._unpackMapbox;
-        return unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
+        return this.unpack(pixels[index], pixels[index + 1], pixels[index + 2]);
     }
 
     getUnpackVector() {
-        return this.encoding === 'terrarium' ? [256.0, 1.0, 1.0 / 256.0, 32768.0] : [6553.6, 25.6, 0.1, 10000.0];
+        return [this.redFactor, this.greenFactor, this.blueFactor, this.baseShift];
     }
 
     _idx(x: number, y: number) {
@@ -83,16 +124,8 @@ export class DEMData {
         return (y + 1) * this.stride + (x + 1);
     }
 
-    _unpackMapbox(r: number, g: number, b: number) {
-        // unpacking formula for mapbox.terrain-rgb:
-        // https://www.mapbox.com/help/access-elevation-data/#mapbox-terrain-rgb
-        return ((r * 256 * 256 + g * 256.0 + b) / 10.0 - 10000.0);
-    }
-
-    _unpackTerrarium(r: number, g: number, b: number) {
-        // unpacking formula for mapzen terrarium:
-        // https://aws.amazon.com/public-datasets/terrain/
-        return ((r * 256 + g + b / 256) - 32768.0);
+    unpack(r: number, g: number, b: number) {
+        return (r * this.redFactor + g * this.greenFactor + b * this.blueFactor - this.baseShift);
     }
 
     getPixels() {

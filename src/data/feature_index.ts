@@ -40,7 +40,6 @@ type QueryParameters = {
 };
 
 /**
- * @internal
  * An in memory index class to allow fast interaction with features
  */
 export class FeatureIndex {

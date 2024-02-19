@@ -7,6 +7,7 @@ import type {StyleImage} from '../style/style_image';
 import type {ImageManager} from './image_manager';
 import type {Texture} from './texture';
 import type {Rect} from './glyph_atlas';
+import type {GetImagesResponse} from '../util/actor_messages';
 
 const IMAGE_PADDING: number = 1;
 export {IMAGE_PADDING};
@@ -61,7 +62,6 @@ export class ImagePosition {
 }
 
 /**
- * @internal
  * A class holding all the images
  */
 export class ImageAtlas {
@@ -71,7 +71,7 @@ export class ImageAtlas {
     haveRenderCallbacks: Array<string>;
     uploaded: boolean;
 
-    constructor(icons: {[_: string]: StyleImage}, patterns: {[_: string]: StyleImage}) {
+    constructor(icons: GetImagesResponse, patterns: GetImagesResponse) {
         const iconPositions = {}, patternPositions = {};
         this.haveRenderCallbacks = [];
 

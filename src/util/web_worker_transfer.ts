@@ -1,16 +1,19 @@
 import {TransferableGridIndex} from './transferable_grid_index';
 import {Color, CompoundExpression, expressions, ResolvedImage, StylePropertyFunction,
     StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
-
 import {AJAXError} from './ajax';
-
-import type {Transferable} from '../types/transferable';
 import {isImageBitmap} from './util';
 
+/**
+ * A class that is serizlized to and json, that can be constructed back to the original class in the worker or in the main thread
+ */
 type SerializedObject<S extends Serialized = any> = {
     [_: string]: S;
 };
 
+/**
+ * All the possible values that can be serialized and sent to and from the worker
+ */
 export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Array<Serialized> | SerializedObject;
 
 type Registry = {
@@ -111,7 +114,8 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         input instanceof String ||
         input instanceof Date ||
         input instanceof RegExp ||
-        input instanceof Blob) {
+        input instanceof Blob ||
+        input instanceof Error) {
         return input;
     }
 
@@ -156,7 +160,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         const klass = (input.constructor as any);
         const name = klass._classRegistryKey;
         if (!name) {
-            throw new Error('can\'t serialize object of unregistered class');
+            throw new Error(`can't serialize object of unregistered class ${klass.name}`);
         }
         if (!registry[name]) throw new Error(`${name} is not registered.`);
 
@@ -172,10 +176,9 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
 
         if (!klass.serialize) {
             for (const key in input) {
-                // any cast due to https://github.com/facebook/flow/issues/5393
-                if (!(input as any).hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
+                if (!input.hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
                 if (registry[name].omit.indexOf(key) >= 0) continue;
-                const property = (input as any)[key];
+                const property = input[key];
                 properties[key] = registry[name].shallow.indexOf(key) >= 0 ?
                     property :
                     serialize(property, transferables);
@@ -184,7 +187,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
                 properties.message = input.message;
             }
         } else {
-            if (transferables && properties as any === transferables[transferables.length - 1]) {
+            if (transferables && properties === transferables[transferables.length - 1]) {
                 throw new Error('statically serialized object won\'t survive transfer of $name property');
             }
         }
@@ -214,6 +217,7 @@ export function deserialize(input: Serialized): unknown {
         input instanceof Date ||
         input instanceof RegExp ||
         input instanceof Blob ||
+        input instanceof Error ||
         isArrayBuffer(input) ||
         isImageBitmap(input) ||
         ArrayBuffer.isView(input) ||
@@ -226,7 +230,7 @@ export function deserialize(input: Serialized): unknown {
     }
 
     if (typeof input === 'object') {
-        const name = (input as any).$name || 'Object';
+        const name = input.$name || 'Object';
         if (!registry[name]) {
             throw new Error(`can't deserialize unregistered class ${name}`);
         }

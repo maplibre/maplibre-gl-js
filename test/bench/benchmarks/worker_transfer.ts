@@ -63,6 +63,10 @@ export default class WorkerTransfer extends Benchmark {
             deserialize(obj);
         }
     }
+
+    teardown(): void | Promise<void> {
+        this.worker.terminate();
+    }
 }
 
 function barePayload(obj) {

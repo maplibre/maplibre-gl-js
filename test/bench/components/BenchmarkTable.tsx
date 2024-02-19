@@ -15,7 +15,8 @@ export const BenchmarksTable = (props: BenchmarksTableProps) => (
                 <span>Running</span>}</h1>
 
         {props.benchmarks.map((benchmark, i) => {
-            return <BenchmarkRow key={`${benchmark.name}-${i}`} {...benchmark}/>;
+            benchmark.finishedAll = props.finished;
+            return <BenchmarkRow key={`${benchmark.name}-${i}`} {...benchmark} />;
         })}
     </div>
 );

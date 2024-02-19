@@ -88,33 +88,11 @@ describe('FullscreenControl', () => {
 
         // Simulate a click to the fullscreen button
         fullscreen._fullscreenButton.dispatchEvent(click);
-        expect(map.getCooperativeGestures()).toBeFalsy();
+        expect(map.cooperativeGestures.isEnabled()).toBeFalsy();
 
         // Second simulated click would exit fullscreen mode
         fullscreen._fullscreenButton.dispatchEvent(click);
-        expect(map.getCooperativeGestures()).toBe(cooperativeGestures);
-    });
-
-    test('reenables cooperative gestures custom options when fullscreen exits', () => {
-        const cooperativeGestures = {
-            'windowsHelpText': 'Custom message',
-            'macHelpText': 'Custom message',
-            'mobileHelpText': 'Custom message',
-        };
-        const map = createMap({cooperativeGestures});
-        const fullscreen = new FullscreenControl({});
-
-        map.addControl(fullscreen);
-
-        const click = new window.Event('click');
-
-        // Simulate a click to the fullscreen button
-        fullscreen._fullscreenButton.dispatchEvent(click);
-        expect(map.getCooperativeGestures()).toBeFalsy();
-
-        // Second simulated click would exit fullscreen mode
-        fullscreen._fullscreenButton.dispatchEvent(click);
-        expect(map.getCooperativeGestures()).toEqual(cooperativeGestures);
+        expect(map.cooperativeGestures.isEnabled()).toBeTruthy();
     });
 
     test('if never set, cooperative gestures remain disabled when fullscreen exits', () => {
@@ -127,10 +105,10 @@ describe('FullscreenControl', () => {
 
         // Simulate a click to the fullscreen button
         fullscreen._fullscreenButton.dispatchEvent(click);
-        expect(map.getCooperativeGestures()).toBeFalsy();
+        expect(map.cooperativeGestures.isEnabled()).toBeFalsy();
 
         // Second simulated click would exit fullscreen mode
         fullscreen._fullscreenButton.dispatchEvent(click);
-        expect(map.getCooperativeGestures()).toBeFalsy();
+        expect(map.cooperativeGestures.isEnabled()).toBeFalsy();
     });
 });

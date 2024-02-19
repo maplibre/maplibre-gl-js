@@ -66,7 +66,7 @@ export class VideoSource extends ImageSource {
         this.options = options;
     }
 
-    load = () => {
+    async load() {
         this._loaded = false;
         const options = this.options;
 
@@ -74,29 +74,30 @@ export class VideoSource extends ImageSource {
         for (const url of options.urls) {
             this.urls.push(this.map._requestManager.transformRequest(url, ResourceType.Source).url);
         }
-
-        getVideo(this.urls, (err, video) => {
+        try {
+            const video = await getVideo(this.urls);
             this._loaded = true;
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (video) {
-                this.video = video;
-                this.video.loop = true;
-
-                // Start repainting when video starts playing. hasTransition() will then return
-                // true to trigger additional frames as long as the videos continues playing.
-                this.video.addEventListener('playing', () => {
-                    this.map.triggerRepaint();
-                });
-
-                if (this.map) {
-                    this.video.play();
-                }
-
-                this._finishLoading();
+            if (!video) {
+                return;
             }
-        });
-    };
+            this.video = video;
+            this.video.loop = true;
+
+            // Start repainting when video starts playing. hasTransition() will then return
+            // true to trigger additional frames as long as the videos continues playing.
+            this.video.addEventListener('playing', () => {
+                this.map.triggerRepaint();
+            });
+
+            if (this.map) {
+                this.video.play();
+            }
+
+            this._finishLoading();
+        } catch (err) {
+            this.fire(new ErrorEvent(err));
+        }
+    }
 
     /**
      * Pauses the video.
@@ -152,7 +153,7 @@ export class VideoSource extends ImageSource {
      *
      * @returns `this`
      */
-    prepare = (): this => {
+    prepare(): this {
         if (Object.keys(this.tiles).length === 0 || this.video.readyState < 2) {
             return; // not enough data for current position
         }
@@ -189,15 +190,15 @@ export class VideoSource extends ImageSource {
         if (newTilesLoaded) {
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
-    };
+    }
 
-    serialize = (): VideoSourceSpecification => {
+    serialize(): VideoSourceSpecification {
         return {
             type: 'video',
             urls: this.urls,
             coordinates: this.coordinates
         };
-    };
+    }
 
     hasTransition() {
         return this.video && !this.video.paused;

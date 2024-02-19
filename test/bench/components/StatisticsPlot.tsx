@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React from 'react';
 import {kde} from '../lib/statistics';
 import {Axis} from './Axis';
 import {formatSample, Version, versionColor} from './util';
@@ -8,21 +8,10 @@ type StatisticsPlotProps = {
     versions: Version[];
 }
 
-type StatisticsPlotState = {
-    width: number;
-}
-
 export const StatisticsPlot = (props:StatisticsPlotProps) => {
 
-    const [state, setState] = useState<StatisticsPlotState>({width: 100});
-    const svgElement = useRef(null);
-
-    useEffect(() => {
-        setState({width: svgElement.current.clientWidth});
-    }, [state]);
-
     const margin = {top: 0, right: 20, bottom: 20, left: 0};
-    const width = useMemo(() => { return state.width - margin.left - margin.right; }, [state]);
+    const width = 960 - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
     const kdeWidth = 100;
 
@@ -65,9 +54,7 @@ export const StatisticsPlot = (props:StatisticsPlotProps) => {
         <svg
             width="100%"
             height={height + margin.top + margin.bottom}
-            style={{overflow: 'visible'}}
-            ref={svgElement}
-        >
+            style={{overflow: 'visible'}}>
             <defs>
                 <g id="up-arrow">
                     <path transform="translate(-6, -2)" style={{stroke: 'inherit', fill: 'inherit'}}

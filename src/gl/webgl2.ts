@@ -5,7 +5,7 @@ export function isWebGL2(
     if (cache.has(gl)) {
         return cache.get(gl);
     } else {
-        const value = gl.getParameter(gl.VERSION).startsWith('WebGL 2.0');
+        const value = gl.getParameter(gl.VERSION)?.startsWith('WebGL 2.0');
         cache.set(gl, value);
         return value;
     }

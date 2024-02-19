@@ -5,6 +5,7 @@ const sharedConfig = {
         // use typescript to convert from esm to cjs
         '[.](m|c)?(ts|js)(x)?$': ['ts-jest', {
             'isolatedModules': true,
+            'tsconfig': 'tsconfig.jest.json'
         }],
     },
     // any tests that operate on dist files shouldn't compile them again.
@@ -13,12 +14,29 @@ const sharedConfig = {
 } as Partial<Config>;
 
 const config: Config = {
+    coverageProvider: 'v8',
+    reporters: [
+        'github-actions',
+        ['jest-monocart-coverage', {
+            name: 'MapLibre Unit Coverage Report',
+
+            reports: [
+                ['codecov']
+            ],
+
+            sourceFilter: (sourcePath) => {
+                return !sourcePath.includes('node_modules/') && sourcePath.search(/src\//) !== -1;
+            },
+
+            outputDir: './coverage/unit'
+        }]
+    ],
     projects: [
         {
             displayName: 'unit',
             testEnvironment: 'jsdom',
             setupFiles: [
-                'jest-canvas-mock',
+                'jest-webgl-canvas-mock',
                 './test/unit/lib/web_worker_mock.ts'
             ],
             testMatch: [
