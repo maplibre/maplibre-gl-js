@@ -33,9 +33,9 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import { subdivideFill, subdivideVertexLine } from '../../render/subdivision';
-import { ProjectionManager } from '../../render/projection_manager';
-import { fillArrays } from './fill_bucket';
+import {subdivideFill, subdivideVertexLine} from '../../render/subdivision';
+import {ProjectionManager} from '../../render/projection_manager';
+import {fillArrays} from './fill_bucket';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -280,8 +280,7 @@ export class FillExtrusionBucket implements Bucket {
         const finalVertices = subdivided.verticesFlattened;
         const finalIndicesTriangles = subdivided.indicesTriangles;
 
-        const that = this;
-        let numAdded = 0;
+        const vertexArray = this.layoutVertexArray;
 
         fillArrays(
             this.segments,
@@ -293,12 +292,9 @@ export class FillExtrusionBucket implements Bucket {
             finalIndicesTriangles,
             null,
             (x, y) => {
-                addVertex(that.layoutVertexArray, x, y, 0, 0, 1, 1, 0);
-                numAdded++;
+                addVertex(vertexArray, x, y, 0, 0, 1, 1, 0);
             }
         );
-
-        console.log(finalVertices.length / 2 + " -> " + numAdded);
     }
 }
 

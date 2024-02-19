@@ -30,7 +30,7 @@ import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideFill} from '../../render/subdivision';
 import {ProjectionManager} from '../../render/projection_manager';
-import { StructArray } from '../../util/struct_array';
+import {StructArray} from '../../util/struct_array';
 
 export class FillBucket implements Bucket {
     index: number;
@@ -209,6 +209,8 @@ export class FillBucket implements Bucket {
             const finalIndicesTriangles = subdivided.indicesTriangles;
             const finalIndicesLineList = subdivided.indicesLineList;
 
+            const vertexArray = this.layoutVertexArray;
+
             fillArrays(
                 this.segments,
                 this.segments2,
@@ -218,7 +220,7 @@ export class FillBucket implements Bucket {
                 finalVertices,
                 finalIndicesTriangles,
                 finalIndicesLineList,
-                (x, y) => this.layoutVertexArray.emplaceBack(x, y)
+                (x, y) => vertexArray.emplaceBack(x, y)
             );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
@@ -260,15 +262,22 @@ export function fillArrays(
         triangleSegment.vertexLength += numVertices;
         triangleSegment.primitiveLength += triangleIndices.length / 3;
 
+        let lineIndicesStart;
+        let lineSegment;
+
+        if (segmentsLines && lineIndexArray) {
+            // Note that segment creation must happen before we add vertices into the vertex buffer
+            lineSegment = segmentsLines.prepareSegment(numVertices, vertexArray, lineIndexArray);
+            lineIndicesStart = lineSegment.vertexLength;
+            lineSegment.vertexLength += numVertices;
+        }
+
+        // Add vertices into vertex buffer
         for (let i = 0; i < flattened.length; i += 2) {
             addVertex(flattened[i], flattened[i + 1]);
         }
 
         if (segmentsLines && lineIndexArray) {
-            const lineSegment = segmentsLines.prepareSegment(numVertices, vertexArray, lineIndexArray);
-            const lineIndicesStart = lineSegment.vertexLength;
-            lineSegment.vertexLength += numVertices;
-
             for (let listIndex = 0; listIndex < lineList.length; listIndex++) {
                 const lineIndices = lineList[listIndex];
 

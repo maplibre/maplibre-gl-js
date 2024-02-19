@@ -794,21 +794,18 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
         const minY = Math.min(lineVertex0y, lineVertex1y);
         const maxY = Math.max(lineVertex0y, lineVertex1y);
 
-        const clampedMinX = Math.max(minX, 0);
-        const clampedMaxX = Math.min(maxX, EXTENT);
-        const clampedMinY = Math.max(minY, 0);
-        const clampedMaxY = Math.min(maxY, EXTENT);
-
         const subdividedLinePoints = [];
 
         // The first vertex of this line segment was already added in previous iteration or at the start of this function.
         // Only add the second vertex of this segment.
         subdividedLinePoints.push(linePoints[pointIndex]);
 
-        for (let cellX = Math.max(Math.floor((minX + granualityStep) / granualityStep), 0); cellX <= Math.min(Math.floor((maxX - 1) / granualityStep), granuality); cellX += 1) {
+        const cellXstart = Math.floor((minX + granualityStep) / granualityStep);
+        const cellXend = Math.floor((maxX - 1) / granualityStep);
+        for (let cellX = cellXstart; cellX <= cellXend; cellX += 1) {
             const cellEdgeX = cellX * granualityStep;
             const y = checkEdgeDivide(lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX);
-            if (y !== undefined && y >= clampedMinY && y <= clampedMaxY) {
+            if (y !== undefined && y >= minY && y <= maxY) {
                 let add = true;
                 for (const p of subdividedLinePoints) {
                     if (p.x === cellEdgeX && p.y === y) {
@@ -822,10 +819,12 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
             }
         }
 
-        for (let cellY = Math.max(Math.floor((minY + granualityStep) / granualityStep), 0); cellY <= Math.min(Math.floor((maxY - 1) / granualityStep), granuality); cellY += 1) {
+        const cellYstart = Math.floor((minY + granualityStep) / granualityStep);
+        const cellYend = Math.floor((maxY - 1) / granualityStep);
+        for (let cellY = cellYstart; cellY <= cellYend; cellY += 1) {
             const cellEdgeY = cellY * granualityStep;
             const x = checkEdgeDivide(lineVertex0y, lineVertex0x, lineVertex1y, lineVertex1x, cellEdgeY);
-            if (x !== undefined && x >= clampedMinX && x <= clampedMaxX) {
+            if (x !== undefined && x >= minX && x <= maxX) {
                 let add = true;
                 for (const p of subdividedLinePoints) {
                     if (p.x === x && p.y === cellEdgeY) {
