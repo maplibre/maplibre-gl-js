@@ -8,9 +8,6 @@
 
 ## 4.0.2
 
-### ✨ Features and improvements
-
-
 ### 🐞 Bug fixes
 
 - Fix `Style.setState` ignoring validate flag ([#3709](https://github.com/maplibre/maplibre-gl-js/pull/3709))
