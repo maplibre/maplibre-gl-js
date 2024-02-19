@@ -38,20 +38,22 @@ describe('Terrain', () => {
             transform: {center: {lng: 0}}
         } as any as Painter;
         const sourceCache = {} as SourceCache;
-        const getTileByID = (tileID) : OverscaledTileID => {
+        const getTileByID = (tileID) : Tile => {
             if (tileID !== 'abcd') {
-                return null as any as OverscaledTileID;
+                return null as any as Tile;
             }
             return {
-                canonical: {
-                    x: 0,
-                    y: 0,
-                    z: 0
+                tileID: {
+                    canonical: {
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    }
                 }
-            } as any as OverscaledTileID;
+            } as any as Tile;
         };
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
-        terrain.sourceCache.getTileIDByKey = getTileByID;
+        terrain.sourceCache.getTileByID = getTileByID;
         terrain.coordsIndex.push('abcd');
 
         const coordinate = terrain.pointCoordinate(new Point(0, 0));
@@ -140,6 +142,7 @@ describe('Terrain', () => {
             {exaggeration: 2} as any as TerrainSpecification,
         );
 
+        terrain.sourceCache._tiles[tileID.key] = tile;
         const {minElevation, maxElevation} = terrain.getMinMaxElevation(tileID);
 
         expect(minElevation).toBe(0);

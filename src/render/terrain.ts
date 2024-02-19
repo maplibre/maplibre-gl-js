@@ -7,6 +7,8 @@ import {warnOnce} from '../util/util';
 import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
 import pos3dAttributes from '../data/pos3d_attributes';
 import {SegmentVector} from '../data/segment';
+import {VertexBuffer} from '../gl/vertex_buffer';
+import {IndexBuffer} from '../gl/index_buffer';
 import {Painter} from './painter';
 import {Texture} from '../render/texture';
 import type {Framebuffer} from '../gl/framebuffer';
@@ -17,7 +19,6 @@ import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {LngLat, earthRadius} from '../geo/lng_lat';
-import {Mesh} from './mesh';
 
 /**
  * @internal
@@ -33,6 +34,16 @@ export type TerrainData = {
     texture: WebGLTexture;
     depthTexture: WebGLTexture;
     tile: Tile;
+}
+
+/**
+ * @internal
+ * A terrain mesh object
+ */
+export type TerrainMesh = {
+    indexBuffer: IndexBuffer;
+    vertexBuffer: VertexBuffer;
+    segments: SegmentVector;
 }
 
 /**
@@ -56,7 +67,7 @@ export type TerrainData = {
  *       - one texture for the coords-framebuffer with the size of the map-div.
  *       - one texture for the depth-framebuffer with the size of the map-div.
  *       - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
- *       - finally for each render-to-texture tile a set of textures
+ *       - finally for each render-to-texture tile (= this._tiles) a set of textures
  *         for each render stack (The stack-concept is documented in painter.ts).
  *         Normally there exists 1-3 Textures per tile, depending on the stylesheet.
  *         Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a
@@ -85,6 +96,12 @@ export class Terrain {
      */
     exaggeration: number;
     /**
+     * to not see pixels in the render-to-texture tiles it is good to render them bigger
+     * this number is the multiplicator (must be a power of 2) for the current tileSize.
+     * So to get good results with not too much memory footprint a value of 2 should be fine.
+     */
+    qualityFactor: number;
+    /**
      * holds the framebuffer object in size of the screen to render the coords & depth into a texture.
      */
     _fbo: Framebuffer;
@@ -95,7 +112,7 @@ export class Terrain {
      * GL Objects for the terrain-mesh
      * The mesh is a regular mesh, which has the advantage that it can be reused for all tiles.
      */
-    _mesh: Mesh;
+    _mesh: TerrainMesh;
     /**
      * coords index contains a list of tileID.keys. This index is used to identify
      * the tile via the alpha-cannel in the coords-texture.
@@ -127,17 +144,11 @@ export class Terrain {
         this.sourceCache = new TerrainSourceCache(sourceCache);
         this.options = options;
         this.exaggeration = typeof options.exaggeration === 'number' ? options.exaggeration : 1.0;
+        this.qualityFactor = 2;
         this.meshSize = 128;
         this._demMatrixCache = {};
         this.coordsIndex = [];
         this._coordsTextureSize = 1024;
-    }
-
-    destroy() {
-        if (this._mesh) {
-            this._mesh.destroy();
-            this._mesh = null;
-        }
     }
 
     /**
@@ -325,15 +336,15 @@ export class Terrain {
         // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
         const y = rgba[1] + ((rgba[2] & 15) << 8);
-        const tileIDkey = this.coordsIndex[255 - rgba[3]];
-        const tileID = tileIDkey && this.sourceCache.getTileIDByKey(tileIDkey);
-        if (!tileID) return null;
+        const tileID = this.coordsIndex[255 - rgba[3]];
+        const tile = tileID && this.sourceCache.getTileByID(tileID);
+        if (!tile) return null;
         const coordsSize = this._coordsTextureSize;
-        const worldSize = (1 << tileID.canonical.z) * coordsSize;
+        const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(
             (tile.tileID.canonical.x * coordsSize + x) / worldSize + tile.tileID.wrap,
-            (tileID.canonical.y * coordsSize + y) / worldSize,
-            this.getElevation(tileID, x, y, coordsSize)
+            (tile.tileID.canonical.y * coordsSize + y) / worldSize,
+            this.getElevation(tile.tileID, x, y, coordsSize)
         );
     }
 
@@ -358,7 +369,7 @@ export class Terrain {
      * create a regular mesh which will be used by all terrain-tiles
      * @returns the created regular mesh
      */
-    getTerrainMesh(): Mesh {
+    getTerrainMesh(): TerrainMesh {
         if (this._mesh) return this._mesh;
         const context = this.painter.context;
         const vertexArray = new Pos3dArray();
@@ -392,11 +403,11 @@ export class Terrain {
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 3, offsetRight + y + 1);
             indexArray.emplaceBack(offsetRight + y, offsetRight + y + 2, offsetRight + y + 3);
         }
-        this._mesh = new Mesh(
-            context.createVertexBuffer(vertexArray, pos3dAttributes.members),
-            context.createIndexBuffer(indexArray),
-            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        );
+        this._mesh = {
+            indexBuffer: context.createIndexBuffer(indexArray),
+            vertexBuffer: context.createVertexBuffer(vertexArray, pos3dAttributes.members),
+            segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        };
         return this._mesh;
     }
 

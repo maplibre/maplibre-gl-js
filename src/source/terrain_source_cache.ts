@@ -6,6 +6,7 @@ import {Evented} from '../util/evented';
 import type {Transform} from '../geo/transform';
 import type {SourceCache} from '../source/source_cache';
 import {Terrain} from '../render/terrain';
+import {browser} from '../util/browser';
 
 /**
  * @internal
@@ -22,13 +23,25 @@ export class TerrainSourceCache extends Evented {
      */
     sourceCache: SourceCache;
     /**
-     * contains a map of tileID-key to tileID for the current scene. (only for performance)
+     * stores all render-to-texture tiles.
      */
-    _renderableTiles: {[_: string]: OverscaledTileID};
+    _tiles: {[_: string]: Tile};
+    /**
+     * contains a list of tileID-keys for the current scene. (only for performance)
+     */
+    _renderableTilesKeys: Array<string>;
     /**
      * raster-dem-tile for a TileID cache.
      */
     _sourceTileCache: {[_: string]: string};
+    /**
+     * minimum zoomlevel to render the terrain.
+     */
+    minzoom: number;
+    /**
+     * maximum zoomlevel to render the terrain.
+     */
+    maxzoom: number;
     /**
      * render-to-texture tileSize in scene.
      */
@@ -40,13 +53,16 @@ export class TerrainSourceCache extends Evented {
     /**
      * used to determine whether depth & coord framebuffers need updating
      */
-    _lastTilesetChange: number = Date.now();
+    _lastTilesetChange: number = browser.now();
 
     constructor(sourceCache: SourceCache) {
         super();
         this.sourceCache = sourceCache;
-        this._renderableTiles = {};
+        this._tiles = {};
+        this._renderableTilesKeys = [];
         this._sourceTileCache = {};
+        this.minzoom = 0;
+        this.maxzoom = 22;
         this.tileSize = 512;
         this.deltaZoom = 1;
         sourceCache.usedForTerrain = true;
@@ -62,19 +78,53 @@ export class TerrainSourceCache extends Evented {
      * Load Terrain Tiles, create internal render-to-texture tiles, free GPU memory.
      * @param transform - the operation to do
      * @param terrain - the terrain
-     * @param coveringTiles - visible tiles, obtained from `transform.coveringTiles()`
      */
-    update(transform: Transform, terrain: Terrain, coveringTiles: Array<OverscaledTileID>): void {
+    update(transform: Transform, terrain: Terrain): void {
         // load raster-dem tiles for the current scene.
         this.sourceCache.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.
-        this._renderableTiles = {};
-        for (const tileID of coveringTiles) {
-            this._renderableTiles[tileID.key] = tileID;
-            tileID.posMatrix = new Float64Array(16) as any;
-            mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-            this._lastTilesetChange = Date.now();
+        this._renderableTilesKeys = [];
+        const keys = {};
+        for (const tileID of transform.coveringTiles({
+            tileSize: this.tileSize,
+            minzoom: this.minzoom,
+            maxzoom: this.maxzoom,
+            reparseOverscaled: false,
+            terrain
+        })) {
+            keys[tileID.key] = true;
+            this._renderableTilesKeys.push(tileID.key);
+            if (!this._tiles[tileID.key]) {
+                tileID.posMatrix = new Float64Array(16) as any;
+                mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
+                this._lastTilesetChange = browser.now();
+            }
         }
+        // free unused tiles
+        for (const key in this._tiles) {
+            if (!keys[key]) delete this._tiles[key];
+        }
+    }
+
+    /**
+     * Free render to texture cache
+     * @param tileID - optional, free only corresponding to tileID.
+     */
+    freeRtt(tileID?: OverscaledTileID) {
+        for (const key in this._tiles) {
+            const tile = this._tiles[key];
+            if (!tileID || tile.tileID.equals(tileID) || tile.tileID.isChildOf(tileID) || tileID.isChildOf(tile.tileID))
+                tile.rtt = [];
+        }
+    }
+
+    /**
+     * get a list of tiles, which are loaded and should be rendered in the current scene
+     * @returns the renderable tiles
+     */
+    getRenderableTiles(): Array<Tile> {
+        return this._renderableTilesKeys.map(key => this.getTileByID(key));
     }
 
     /**
@@ -82,8 +132,48 @@ export class TerrainSourceCache extends Evented {
      * @param id - the tile id
      * @returns the tile
      */
-    getTileIDByKey(id: string): OverscaledTileID {
-        return this._renderableTiles[id];
+    getTileByID(id: string): Tile {
+        return this._tiles[id];
+    }
+
+    /**
+     * Searches for the corresponding current renderable terrain-tiles
+     * @param tileID - the tile to look for
+     * @returns the tiles that were found
+     */
+    getTerrainCoords(tileID: OverscaledTileID): Record<string, OverscaledTileID> {
+        const coords = {};
+        for (const key of this._renderableTilesKeys) {
+            const _tileID = this._tiles[key].tileID;
+            if (_tileID.canonical.equals(tileID.canonical)) {
+                const coord = tileID.clone();
+                coord.posMatrix = new Float64Array(16) as any;
+                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                coords[key] = coord;
+            } else if (_tileID.canonical.isChildOf(tileID.canonical)) {
+                const coord = tileID.clone();
+                coord.posMatrix = new Float64Array(16) as any;
+                const dz = _tileID.canonical.z - tileID.canonical.z;
+                const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
+                const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(coord.posMatrix, 0, size, 0, size, 0, 1);
+                mat4.translate(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
+                coords[key] = coord;
+            } else if (tileID.canonical.isChildOf(_tileID.canonical)) {
+                const coord = tileID.clone();
+                coord.posMatrix = new Float64Array(16) as any;
+                const dz = tileID.canonical.z - _tileID.canonical.z;
+                const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
+                const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
+                const size = EXTENT >> dz;
+                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                mat4.translate(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
+                mat4.scale(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
+                coords[key] = coord;
+            }
+        }
+        return coords;
     }
 
     /**

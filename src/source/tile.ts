@@ -93,6 +93,8 @@ export class Tile {
     hasSymbolBuckets: boolean;
     hasRTLText: boolean;
     dependencies: any;
+    rtt: Array<{id: number; stamp: number}>;
+    rttCoords: {[_:string]: string};
 
     /**
      * @param tileID - the tile ID
@@ -109,6 +111,8 @@ export class Tile {
         this.hasSymbolBuckets = false;
         this.hasRTLText = false;
         this.dependencies = {};
+        this.rtt = [];
+        this.rttCoords = {};
 
         // Counts the number of times a response was already expired when
         // received. We're using this to add a delay when making a new request

@@ -1932,7 +1932,6 @@ export class Map extends Camera {
             // remove terrain
             if (this.terrain) {
                 this.terrain.sourceCache.destruct();
-                this.terrain.destroy();
             }
             this.terrain = null;
             this.transform.minElevationForCurrentTile = 0;
@@ -3147,7 +3146,7 @@ export class Map extends Camera {
 
         // update terrain stuff
         if (this.terrain) {
-            this.terrain.sourceCache.update(this.transform, this.terrain, rttCoveringTiles);
+            this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             if (!this._elevationFreeze) {
                 this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
