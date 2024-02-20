@@ -3,6 +3,7 @@ in vec4 v_color;
 #ifdef GLOBE
 in vec3 v_sphere_pos;
 uniform vec3 u_camera_pos_globe;
+uniform highp float u_projection_globeness;
 #endif
 
 void main() {
@@ -33,9 +34,14 @@ void main() {
     // Remember that planet center is at 0,0,0.
     // Also clamp t to not consider intersections that happened behind the ray origin.
     vec3 nearest = v_sphere_pos + toCameraNormalized * max(t, 0.0);
-    bool intersected = dot(nearest, nearest) < 1.0;
-    if (intersected) {
-        discard;
+    // We want to remove planet occlusion during the animated transition out of globe view.
+    // Thus we animate the "radius" of the planet sphere used in ray-sphere collision.
+    // Radius of 1.0 is equal to full size planet (since we raycast agains a unit sphere).
+    // Note that unsquared globeness is intentionally compared to squared distance from planet center,
+    // effectively using sqrt(globeness) as the planet radius. This is done to make the animation look better.
+    float distance_to_planet_center_squared = dot(nearest, nearest);
+    if (distance_to_planet_center_squared < u_projection_globeness) {
+        discard; // Ray intersected the planet.
     }
 #endif
 }
