@@ -10,9 +10,23 @@ class RTLMainThreadPlugin extends Evented {
     dispatcher: Dispatcher = getGlobalDispatcher();
     queue: PluginState[] = [];
 
-    async _sendPluginStateToWorker() {
+    private async _sendPluginStateToWorker() {
         await this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL});
-        this.fire(new Event('pluginStateChange', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL}));
+        this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL}).then(
+            (broadCastResults: boolean[]) => {
+                // should fire pluginStateChange event only if at least one of the receiver actually changed plugin status
+                if (broadCastResults) {
+                    for (const result of broadCastResults) {
+                        if (result) {
+                            this.fire(new Event('pluginStateChange',
+                                {
+                                    pluginStatus: this.pluginStatus,
+                                    pluginURL: this.pluginURL
+                                }));
+                        }
+                    }
+                }
+            });
     }
 
     getRTLTextPluginStatus() {

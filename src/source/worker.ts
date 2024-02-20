@@ -177,7 +177,12 @@ export default class Worker {
     private async _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
         rtlWorkerPlugin.setState(state);
         const pluginURL = rtlWorkerPlugin.getPluginURL();
-        if (state.pluginStatus === 'loaded' && !rtlWorkerPlugin.isParsed() && pluginURL != null) {
+
+        const isLoaded =
+            state.pluginStatus === 'loaded' || // Main Thread: loaded if the completion callback returned successfully
+            rtlWorkerPlugin.applyArabicShaping != null; // Web-worker: loaded if the plugin functions have been compiled
+
+        if (isLoaded && !rtlWorkerPlugin.isParsed() && pluginURL != null) {
             this.self.importScripts(pluginURL);
             const complete = rtlWorkerPlugin.isParsed();
             if (complete) {
