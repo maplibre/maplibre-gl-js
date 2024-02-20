@@ -47,7 +47,7 @@ jobs:
       - run: npm ci
       - run: npm run test-unit-ci
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ${{ github.workspace }}/coverage/unit/codecov.json
           verbose: true
@@ -71,7 +71,7 @@ jobs:
         with:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
-      - run: npm run test-integration
+      - run: npm run test-integration-ci
         if: success() || failure()
 
   render-tests:
@@ -104,7 +104,7 @@ jobs:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
         if: success() || failure()
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ${{ github.workspace }}/coverage/render/codecov.json
           verbose: true
@@ -128,5 +128,5 @@ jobs:
           node-version-file: '.nvmrc'
       - run: npm ci
       - run: npm run build-dist
-      - run: npm run test-build
+      - run: npm run test-build-ci
         if: success() || failure()

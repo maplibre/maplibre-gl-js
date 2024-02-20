@@ -165,6 +165,7 @@ export class Popup extends Evented {
     _lngLat: LngLat;
     _trackPointer: boolean;
     _pos: Point;
+    _flatPos: Point;
 
     constructor(options?: PopupOptions) {
         super();
@@ -286,6 +287,7 @@ export class Popup extends Evented {
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
+        this._flatPos = null;
 
         this._trackPointer = false;
 
@@ -318,6 +320,7 @@ export class Popup extends Evented {
     trackPointer(): this {
         this._trackPointer = true;
         this._pos = null;
+        this._flatPos = null;
         this._update();
         if (this._map) {
             this._map.off('move', this._update);
@@ -592,12 +595,16 @@ export class Popup extends Evented {
         }
 
         if (this._map.transform.renderWorldCopies && !this._trackPointer) {
-            this._lngLat = smartWrap(this._lngLat, this._pos, this._map.transform);
+            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
         }
 
         if (this._trackPointer && !cursor) return;
 
-        const pos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
+        const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
+        if (this._map.terrain) {
+            // flat position is saved because smartWrap needs non-elevated points
+            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationPoint(this._lngLat);
+        }
 
         let anchor = this.options.anchor;
         const offset = normalizeOffset(this.options.offset);

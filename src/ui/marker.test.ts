@@ -6,10 +6,14 @@ import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import type {Terrain} from '../render/terrain';
 
-function createMap(options = {}) {
+type MapOptions = {
+    width?: number;
+}
+
+function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
-    Object.defineProperty(container, 'clientWidth', {value: 512});
+    Object.defineProperty(container, 'clientWidth', {value: options.width || 512});
     Object.defineProperty(container, 'clientHeight', {value: 512});
     return globalCreateMap({container, ...options});
 }
@@ -284,6 +288,7 @@ describe('marker', () => {
         expect(marker.getPopup().options.offset['top-left']).toEqual([0, 0]);
         expect(marker.getPopup().options.offset['top-right']).toEqual([0, 0]);
 
+        map.remove();
     });
 
     test('Popup anchors around default Marker', () => {
@@ -352,6 +357,41 @@ describe('marker', () => {
             marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
         ).toBeTruthy();
 
+        map.remove();
+    });
+
+    test('Popup is opened at its marker position after marker is moved to another globe', () => {
+        const map = createMap({width: 3000});
+
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map);
+
+        marker._pos = new Point(2999, 242);
+        marker._lngLat = map.unproject(marker._pos);
+        marker.togglePopup();
+
+        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
+    });
+
+    test('Popup is re-opened at its marker position after marker is moved to another globe', () => {
+        const map = createMap({width: 3000});
+
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map)
+            .togglePopup()
+            .togglePopup();
+
+        marker._pos = new Point(2999, 242);
+        marker._lngLat = map.unproject(marker._pos);
+        marker.togglePopup();
+
+        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
     });
 
     test('Marker drag functionality can be added with drag option', () => {
@@ -845,7 +885,7 @@ describe('marker', () => {
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
-        await sleep(100);
+        await sleep(500);
         expect(marker.getElement().style.opacity).toMatch('1');
         map.remove();
     });
@@ -855,7 +895,7 @@ describe('marker', () => {
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
-        await sleep(100);
+        await sleep(500);
         expect(marker.getElement().style.opacity).toMatch('.7');
         map.remove();
     });
@@ -894,21 +934,21 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
-        await sleep(100);
+        await sleep(500);
         map.fire('moveend');
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
         expect(marker.getElement().style.opacity).toMatch('1');
 
@@ -926,7 +966,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95
         } as any as Terrain;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -944,7 +984,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
         } as any as Terrain;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -962,7 +1002,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .92
         } as any as Terrain;
-        await sleep(100);
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('0.3');

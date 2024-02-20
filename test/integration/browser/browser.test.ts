@@ -26,7 +26,7 @@ describe('Browser tests', () => {
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
-        browser = await puppeteer.launch({headless: 'new'});
+        browser = await puppeteer.launch({headless: true});
 
     }, 40000);
 

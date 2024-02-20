@@ -126,6 +126,7 @@ export class Marker extends Evented {
     _popup: Popup;
     _lngLat: LngLat;
     _pos: Point;
+    _flatPos: Point;
     _color: string;
     _scale: number;
     _defaultMarker: boolean;
@@ -449,7 +450,6 @@ export class Marker extends Evented {
                 } as Offset : this._offset;
             }
             this._popup = popup;
-            if (this._lngLat) this._popup.setLngLat(this._lngLat);
 
             this._originalTabIndex = this._element.getAttribute('tabindex');
             if (!this._originalTabIndex) {
@@ -517,7 +517,10 @@ export class Marker extends Evented {
 
         if (!popup) return this;
         else if (popup.isOpen()) popup.remove();
-        else popup.addTo(this._map);
+        else {
+            popup.setLngLat(this._lngLat);
+            popup.addTo(this._map);
+        }
         return this;
     }
 
@@ -568,10 +571,14 @@ export class Marker extends Evented {
         }
 
         if (this._map.transform.renderWorldCopies) {
-            this._lngLat = smartWrap(this._lngLat, this._pos, this._map.transform);
+            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
         }
 
-        this._pos = this._map.project(this._lngLat)._add(this._offset);
+        this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
+        if (this._map.terrain) {
+            // flat position is saved because smartWrap needs non-elevated points
+            this._flatPos = this._map.transform.locationPoint(this._lngLat)._add(this._offset);
+        }
 
         let rotation = '';
         if (this._rotationAlignment === 'viewport' || this._rotationAlignment === 'auto') {

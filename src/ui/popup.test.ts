@@ -334,9 +334,11 @@ describe('popup', () => {
 
     test('Popup is repositioned at the specified LngLat', () => {
         const map = createMap({width: 1024}); // longitude bounds: [-360, 360]
-
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0
+        } as any;
         const popup = new Popup()
-            .setLngLat([270, 0])
+            .setLngLat([70, 0])
             .setText('Test')
             .addTo(map)
             .setLngLat([0, 0]);
