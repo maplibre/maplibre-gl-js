@@ -776,7 +776,7 @@ describe('popup', () => {
         expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(-0.1px,0.9px)');
     });
 
-    test('Popup subpixel positioning can be enabled with Popup#enableSubpixelPositioning', () => {
+    test('Popup subpixel positioning can be enabled with Popup#setSubpixelPositioning', () => {
         const map = createMap();
         jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
@@ -785,12 +785,12 @@ describe('popup', () => {
             .setText('foobar')
             .addTo(map);
 
-        popup.enableSubpixelPositioning();
+        popup.setSubpixelPositioning(true);
         popup.setOffset([-0.1, 0.9]);
 
         expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(-0.1px,0.9px)');
     });
-    test('Popup subpixel positioning can be disabled with Popup#disableSubpixelPositioning', () => {
+    test('Popup subpixel positioning can be disabled with Popup#setSubpixelPositioning', () => {
         const map = createMap();
         jest.spyOn(map, 'project').mockReturnValue(new Point(0, 0));
 
@@ -799,7 +799,7 @@ describe('popup', () => {
             .setText('foobar')
             .addTo(map);
 
-        popup.disableSubpixelPositioning();
+        popup.setSubpixelPositioning(false);
         popup.setOffset([-0.1, 0.9]);
 
         expect(popup.getElement().style.transform).toBe('translate(-50%,-100%) translate(0px,1px)');

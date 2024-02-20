@@ -530,12 +530,19 @@ export class Popup extends Evented {
         }
     }
 
-    enableSubpixelPositioning() {
-        this.options.subpixelPositioning = true;
-    }
-
-    disableSubpixelPositioning() {
-        this.options.subpixelPositioning = false;
+    /**
+     * Set the option to allow subpixel positioning of the popup by passing a boolean
+     *
+     * @param value - When boolean is true, subpixel positioning is enabled for the popup.
+     *
+     * @example
+     * ```ts
+     * let popup = new Popup()
+     * popup.setSubpixelPositioning(true);
+     * ```
+     */
+    setSubpixelPositioning(value: boolean) {
+        this.options.subpixelPositioning = value;
     }
 
     _createCloseButton() {
