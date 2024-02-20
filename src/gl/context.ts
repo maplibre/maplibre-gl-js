@@ -119,16 +119,19 @@ export class Context {
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
 
         if (isWebGL2(gl)) {
+            console.log('is webgl 2');
             this.HALF_FLOAT = gl.HALF_FLOAT;
             const extColorBufferHalfFloat = gl.getExtension('EXT_color_buffer_half_float');
             this.RGBA16F = gl.RGBA16F ?? extColorBufferHalfFloat?.RGBA16F_EXT;
             this.RGB16F = gl.RGB16F ?? extColorBufferHalfFloat?.RGB16F_EXT;
             gl.getExtension('EXT_color_buffer_float');
         } else {
+            console.log('is not webgl 2');
             gl.getExtension('EXT_color_buffer_half_float');
             gl.getExtension('OES_texture_half_float_linear');
             const extTextureHalfFloat = gl.getExtension('OES_texture_half_float');
             this.HALF_FLOAT = extTextureHalfFloat?.HALF_FLOAT_OES;
+            gl.getExtension('OES_standard_derivatives');
         }
     }
 

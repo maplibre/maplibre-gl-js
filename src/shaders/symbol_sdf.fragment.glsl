@@ -1,3 +1,5 @@
+#extension GL_OES_standard_derivatives : enable
+
 #define SDF_PX 8.0
 
 uniform bool u_is_halo;
@@ -56,8 +58,16 @@ void main() {
 
     
     vec3 s = texture(u_texture, tex).rgb;
-    float sigDist = median(s.r, s.g, s.b) - 0.5;
-    float alpha = clamp(sigDist * 100.0, 0.0, 1.0);
+    float sd = median(s.r, s.g, s.b);
+    vec4 sdfParams = vec4(1024.0, 1024.0, 32.0, 8.0);
+    vec2 dxdy = fwidth(tex) * sdfParams.xy;
+    float dist = sd + min(0.001, 0.5 - 1.0 / sdfParams.w) - 0.5;
+    float opacity_openglobus = clamp(dist * sdfParams.w / length(dxdy) + 0.5, 0.0, 1.0);
+    if(opacity_openglobus <= 0.1){
+        discard;
+    }
+
+    float alpha = opacity_openglobus; //clamp(sigDist * 100.0, 0.0, 1.0);
 
     fragColor = color * (alpha * opacity * fade_opacity);
 
