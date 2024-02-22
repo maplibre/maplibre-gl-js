@@ -238,7 +238,7 @@ export class Painter {
         projectionData['u_projection_matrix'] = matrix;
 
         // Note: we use a shader with projection code disabled since we want to draw a fullscreen quad
-        this.useProgram('clippingMask', null, false).draw(context, gl.TRIANGLES,
+        this.useProgram('clippingMask', null, [], false).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,
@@ -649,15 +649,16 @@ export class Painter {
      * @param allowProjection Use shader variant with complex projection vertex shader. True by default.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, allowProjection?: boolean): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines: Array<string> = [], allowProjection: boolean = true): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
-        const useGlobe = this.style.map.projectionManager.useGlobeRendering && ((typeof allowProjection !== 'undefined') ? allowProjection : true);
+        const useGlobe = this.style.map.projectionManager.useGlobeRendering && allowProjection;
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             (this._showOverdrawInspector ? '/overdraw' : '') +
             (useTerrain ? '/terrain' : '') +
-            (useGlobe ? '/globe' : ''); // JP: TODO: globe and terrain should never be active at the same time
+            (useGlobe ? '/globe' : '') +
+            (defines ? ('/defines:' + defines.join('//')) : '');
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,

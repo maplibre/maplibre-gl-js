@@ -95,7 +95,7 @@ export const shaders = {
 
 // Expand #pragmas to #ifdefs.
 
-function compile(fragmentSource, vertexSource) {
+function compile(fragmentSource: string, vertexSource: string) {
     const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
     const staticAttributes = vertexSource.match(/attribute ([\w]+) ([\w]+)/g);
