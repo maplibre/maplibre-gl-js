@@ -54,7 +54,8 @@ export class Program<Us extends UniformBindings> {
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
         hasTerrain: boolean,
-        hasGlobe: boolean) {
+        hasGlobe: boolean,
+        programDefines: Array<string> = []) {
 
         const gl = context.gl;
         this.program = gl.createProgram();
@@ -82,6 +83,9 @@ export class Program<Us extends UniformBindings> {
         }
         if (hasGlobe) {
             defines.push('#define GLOBE;');
+        }
+        if (programDefines) {
+            defines.push(...programDefines);
         }
 
         const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');

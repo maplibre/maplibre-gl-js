@@ -313,7 +313,7 @@ export class ProjectionManager {
         this._cachedClippingPlane = [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    public getProjectionData(tileID: OverscaledTileID, fallBackMatrix?: mat4): ProjectionData {
+    public getProjectionData(tileID: OverscaledTileID, fallBackMatrix: mat4 = null, useAtanCorrection: boolean = true): ProjectionData {
         const identity = mat4.create();
         const data: ProjectionData = {
             'u_projection_matrix': identity,
@@ -336,7 +336,7 @@ export class ProjectionManager {
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this.useGlobeRendering) {
-            this._setGlobeProjection(data);
+            data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
         }
 
         return data;
@@ -396,8 +396,8 @@ export class ProjectionManager {
         const offsetX = canonical.x * scale;
         const offsetY = canonical.y * scale;
 
-        const mercatorX = vertexX * scale + offsetX;
-        const mercatorY = vertexY * scale + offsetY;
+        const mercatorX = vertexX / EXTENT * scale + offsetX;
+        const mercatorY = vertexY / EXTENT * scale + offsetY;
         const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
         const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
 
@@ -526,10 +526,6 @@ export class ProjectionManager {
         const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
         this._globeness = Math.min(this._globeness, zoomGlobenessBound);
         this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
-    }
-
-    private _setGlobeProjection(data: ProjectionData): void {
-        data['u_projection_matrix'] = this._globeProjMatrix;
     }
 
     private _getMeshKey(granuality: number, border: boolean, north: boolean, south: boolean): string {

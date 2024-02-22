@@ -7,4 +7,4 @@ export const layout = createLayout([
 export const layoutPreprojected = createLayout([
     {name: 'a_pos_preprojected', components: 3, type: 'Float32'},
     {name: 'a_pos', components: 2, type: 'Int16'}
-], 16);
+], 4);

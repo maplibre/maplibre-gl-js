@@ -667,7 +667,8 @@ export class Painter {
                 programUniforms[name],
                 this._showOverdrawInspector,
                 useTerrain,
-                useGlobe
+                useGlobe,
+                defines
             );
         }
         return this.cache[key];

@@ -78,7 +78,8 @@ function drawFillTiles(
 
     let allowPreprojectedGeometry = projectionManager.useGlobeRendering;
 
-    if (propertyFillTranslate[0] !== 0 || propertyFillTranslate[1] !== 0) {
+    const epsilon = 1e-6;
+    if (Math.abs(propertyFillTranslate[0]) > epsilon || Math.abs(propertyFillTranslate[1]) > epsilon) {
         allowPreprojectedGeometry = false;
     }
 
@@ -113,7 +114,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = projectionManager.getProjectionData(coord);
+        const projectionData = projectionManager.getProjectionData(coord, null, !allowPreprojectedGeometry);
 
         const translateForUniforms = projectionManager.translatePosition(painter, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
