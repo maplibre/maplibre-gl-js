@@ -588,14 +588,14 @@ export class ProjectionManager {
                 if (x === -1) {
                     vx = -EXTENT_STENCIL_BORDER;
                 }
-                if (x === granuality) {
+                if (x === granuality + 1) {
                     vx = EXTENT + EXTENT_STENCIL_BORDER;
                 }
                 let vy = y / granuality * EXTENT;
                 if (y === -1) {
                     vy = north ? northY : (-EXTENT_STENCIL_BORDER);
                 }
-                if (y === granuality) {
+                if (y === granuality + 1) {
                     vy = south ? southY : EXTENT + EXTENT_STENCIL_BORDER;
                 }
                 vertexArray.emplaceBack(vx, vy);
