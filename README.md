@@ -104,7 +104,7 @@ Silver:
 
 <a href="https://www.radar.com/"><img src="https://maplibre.org/img/radar-logo.svg" alt="Logo Radar" width="25%"/></a>
 
-<a href="https://www.microsoft.com/"><img src="https://maplibre.org/img/msdf-logo.svg" alt="Logo MSFT" width="25%"/></a>
+<a href="https://www.microsoft.com/"><img src="https://maplibre.org/img/msft-logo.svg" alt="Logo MSFT" width="25%"/></a>
 
 Backers and Supporters:
 
