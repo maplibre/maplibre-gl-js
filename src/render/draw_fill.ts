@@ -71,6 +71,19 @@ function drawFillTiles(
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
+    const projectionManager = painter.style.map.projectionManager;
+
+    const propertyFillTranslate = layer.paint.get('fill-translate');
+    const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
+
+    let allowPreprojectedGeometry = projectionManager.useGlobeRendering;
+
+    if (propertyFillTranslate[0] !== 0 || propertyFillTranslate[1] !== 0) {
+        allowPreprojectedGeometry = false;
+    }
+
+    const programDefines = allowPreprojectedGeometry ? ["#define PREPROJECTED"] : [];
+
     if (!isOutline) {
         programName = image ? 'fillPattern' : 'fill';
         drawMode = gl.TRIANGLES;
@@ -89,7 +102,7 @@ function drawFillTiles(
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram(programName, programConfiguration);
+        const program = painter.useProgram(programName, programConfiguration, programDefines);
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
         if (image) {
@@ -100,11 +113,9 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = painter.style.map.projectionManager.getProjectionData(coord);
+        const projectionData = projectionManager.getProjectionData(coord);
 
-        const propertyFillTranslate = layer.paint.get('fill-translate');
-        const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
-        const translateForUniforms = painter.style.map.projectionManager.translatePosition(painter, tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        const translateForUniforms = projectionManager.translatePosition(painter, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
@@ -119,9 +130,11 @@ function drawFillTiles(
                 fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
 
+        const vbo = allowPreprojectedGeometry ? bucket.layoutPreprojectedVertexBuffer : bucket.layoutVertexBuffer;
+
         program.draw(painter.context, drawMode, depthMode,
             painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
-            layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
+            layer.id, vbo, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }
 }

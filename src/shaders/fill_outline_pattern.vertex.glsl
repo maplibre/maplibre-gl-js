@@ -4,6 +4,9 @@ uniform vec2 u_pixel_coord_lower;
 uniform vec3 u_scale;
 uniform vec2 u_fill_translate;
 
+#ifdef PREPROJECTED
+in vec3 a_pos_preprojected;
+#endif
 in vec2 a_pos;
 
 out vec2 v_pos_a;
@@ -32,7 +35,11 @@ void main() {
     float fromScale = u_scale.y;
     float toScale = u_scale.z;
 
+    #ifdef PREPROJECTED
+    gl_Position = interpolateProjection(a_pos, a_pos_preprojected, 0.0);
+    #else
     gl_Position = projectTile(a_pos + u_fill_translate);
+    #endif
 
     vec2 display_size_a = (pattern_br_a - pattern_tl_a) / pixel_ratio_from;
     vec2 display_size_b = (pattern_br_b - pattern_tl_b) / pixel_ratio_to;
