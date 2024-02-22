@@ -46,8 +46,8 @@ function checkEdgeDivide(e0x: number, e0y: number, e1x: number, e1y: number, div
 
 // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
 // First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
-const NORTH_POLE_XY = -32768;
-const SOUTH_POLE_XY = 32767;
+const NORTH_POLE_Y = -32768;
+const SOUTH_POLE_Y = 32767;
 
 class Subdivider {
     /**
@@ -507,21 +507,20 @@ class Subdivider {
     private ensureNoPoleVertices() {
         const flattened = this._finalVertices;
 
-        // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
+        // Special pole vertices have Y coordinate -32768 for the north pole and 32767 for the south pole.
         // First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
-        const northXY = -32768;
-        const southXY = 32767;
+        const northY = -32768;
+        const southY = 32767;
 
         for (let i = 0; i < flattened.length; i += 2) {
-            const vx = flattened[i];
             const vy = flattened[i + 1];
-            if (vx === northXY && vy === northXY) {
+            if (vy === northY) {
                 // Move slightly down
-                flattened[i + 1] = northXY + 1;
+                flattened[i + 1] = northY + 1;
             }
-            if (vx === southXY && vy === southXY) {
+            if (vy === southY) {
                 // Move slightly down
-                flattened[i + 1] = southXY - 1;
+                flattened[i + 1] = southY - 1;
             }
         }
     }
@@ -547,42 +546,69 @@ class Subdivider {
             const i0 = indices[primitiveIndex - 2];
             const i1 = indices[primitiveIndex - 1];
             const i2 = indices[primitiveIndex];
+            const v0x = flattened[i0 * 2];
             const v0y = flattened[i0 * 2 + 1];
+            const v1x = flattened[i1 * 2];
             const v1y = flattened[i1 * 2 + 1];
+            const v2x = flattened[i2 * 2];
             const v2y = flattened[i2 * 2 + 1];
 
             if (north) {
                 if (v0y === northEdge && v1y === northEdge) {
                     indices.push(i0);
                     indices.push(i1);
-                    indices.push(this.getVertexIndex(NORTH_POLE_XY, NORTH_POLE_XY));
+                    indices.push(this.getVertexIndex(v0x, NORTH_POLE_Y));
+
+                    indices.push(i1);
+                    indices.push(this.getVertexIndex(v1x, NORTH_POLE_Y));
+                    indices.push(this.getVertexIndex(v0x, NORTH_POLE_Y));
                 }
                 if (v1y === northEdge && v2y === northEdge) {
                     indices.push(i1);
                     indices.push(i2);
-                    indices.push(this.getVertexIndex(NORTH_POLE_XY, NORTH_POLE_XY));
+                    indices.push(this.getVertexIndex(v1x, NORTH_POLE_Y));
+
+                    indices.push(i2);
+                    indices.push(this.getVertexIndex(v2x, NORTH_POLE_Y));
+                    indices.push(this.getVertexIndex(v1x, NORTH_POLE_Y));
                 }
                 if (v2y === northEdge && v0y === northEdge) {
                     indices.push(i2);
                     indices.push(i0);
-                    indices.push(this.getVertexIndex(NORTH_POLE_XY, NORTH_POLE_XY));
+                    indices.push(this.getVertexIndex(v2x, NORTH_POLE_Y));
+
+                    indices.push(i0);
+                    indices.push(this.getVertexIndex(v0x, NORTH_POLE_Y));
+                    indices.push(this.getVertexIndex(v2x, NORTH_POLE_Y));
                 }
             }
             if (south) {
                 if (v0y === southEdge && v1y === southEdge) {
                     indices.push(i0);
                     indices.push(i1);
-                    indices.push(this.getVertexIndex(SOUTH_POLE_XY, SOUTH_POLE_XY));
+                    indices.push(this.getVertexIndex(v0x, SOUTH_POLE_Y));
+
+                    indices.push(i1);
+                    indices.push(this.getVertexIndex(v1x, SOUTH_POLE_Y));
+                    indices.push(this.getVertexIndex(v0x, SOUTH_POLE_Y));
                 }
                 if (v1y === southEdge && v2y === southEdge) {
                     indices.push(i1);
                     indices.push(i2);
-                    indices.push(this.getVertexIndex(SOUTH_POLE_XY, SOUTH_POLE_XY));
+                    indices.push(this.getVertexIndex(v1x, SOUTH_POLE_Y));
+
+                    indices.push(i2);
+                    indices.push(this.getVertexIndex(v2x, SOUTH_POLE_Y));
+                    indices.push(this.getVertexIndex(v1x, SOUTH_POLE_Y));
                 }
                 if (v2y === southEdge && v0y === southEdge) {
                     indices.push(i2);
                     indices.push(i0);
-                    indices.push(this.getVertexIndex(SOUTH_POLE_XY, SOUTH_POLE_XY));
+                    indices.push(this.getVertexIndex(v2x, SOUTH_POLE_Y));
+
+                    indices.push(i0);
+                    indices.push(this.getVertexIndex(v0x, SOUTH_POLE_Y));
+                    indices.push(this.getVertexIndex(v2x, SOUTH_POLE_Y));
                 }
             }
         }

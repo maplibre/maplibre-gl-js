@@ -253,11 +253,11 @@ vec3 projectToSphere(vec2 posInTile) {
     );
 
     // North pole
-    if (posInTile.x < -32767.5 && posInTile.y < -32767.5) {
+    if (posInTile.y < -32767.5) {
         pos = vec3(0.0, 1.0, 0.0);
     }
     // South pole
-    if (posInTile.x > 32766.5 && posInTile.y > 32766.5) {
+    if (posInTile.y > 32766.5) {
         pos = vec3(0.0, -1.0, 0.0);
     }
 
@@ -283,7 +283,7 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
         result.z = mix(0.0, globePosition.z, clamp((u_projection_globeness - z_globeness_threshold) / (1.0 - z_globeness_threshold), 0.0, 1.0));
         result.xyw = mix(flatPosition.xyw, globePosition.xyw, u_projection_globeness);
         // Gradually hide poles during transition
-        if ((posInTile.x < -32767.5 && posInTile.y < -32767.5) || (posInTile.x > 32766.5 && posInTile.y > 32766.5)) {
+        if ((posInTile.y < -32767.5) || (posInTile.y > 32766.5)) {
             result = globePosition;
             const float poles_hidden_anim_percentage = 0.02; // Only draw poles in the last 2% of the animation.
             result.z = mix(globePosition.z, 100.0, pow(max((1.0 - u_projection_globeness) / poles_hidden_anim_percentage, 0.0), 8.0));
@@ -360,7 +360,7 @@ vec4 projectTile(vec2 p) {
     // Kill pole vertices and triangles by placing the pole vertex so far in Z that
     // the clipping hardware kills the entire triangle.
     vec4 result = u_projection_matrix * vec4(p, 0.0, 1.0);
-    if ((p.x < -32767.5 && p.y < -32767.5) || (p.x > 32766.5 && p.y > 32766.5)) {
+    if (p.y < -32767.5 || p.y > 32766.5) {
         result.z = -10000000.0;
     }
     return result;

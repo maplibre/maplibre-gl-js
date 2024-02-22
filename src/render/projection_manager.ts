@@ -567,77 +567,53 @@ export class ProjectionManager {
         const vertexArray = new PosArray();
         const indexArray = new TriangleIndexArray();
 
-        const quadsPerAxis = border ? granuality + 2 : granuality; // two extra quads for border
-        const verticesPerAxis = quadsPerAxis + 1; // one more vertex than quads
+        // We only want to generate the north/south border if the tile
+        // does NOT border the north/south edge of the mercator range.
 
-        if (border) {
-            for (let y = 0; y < verticesPerAxis; y++) {
-                for (let x = 0; x < verticesPerAxis; x++) {
-                    let vx = (x - 1) / granuality * EXTENT;
-                    if (x === 0) {
-                        vx = -EXTENT_STENCIL_BORDER;
-                    }
-                    if (x === verticesPerAxis - 1) {
-                        vx = EXTENT + EXTENT_STENCIL_BORDER;
-                    }
-                    let vy = (y - 1) / granuality * EXTENT;
-                    if (y === 0) {
-                        vy = -EXTENT_STENCIL_BORDER;
-                    }
-                    if (y === verticesPerAxis - 1) {
-                        vy = EXTENT + EXTENT_STENCIL_BORDER;
-                    }
-                    vertexArray.emplaceBack(vx, vy);
+        const quadsPerAxisX = granuality + (border ? 2 : 0); // two extra quads for border
+        const quadsPerAxisY = granuality + ((north || border) ? 1 : 0) + (south || border ? 1 : 0);
+        const verticesPerAxisX = quadsPerAxisX + 1; // one more vertex than quads
+        //const verticesPerAxisY = quadsPerAxisY + 1; // one more vertex than quads
+        const offsetX = border ? -1 : 0;
+        const offsetY = (border || north) ? -1 : 0;
+        const endX = granuality + (border ? 1 : 0);
+        const endY = granuality + ((border || south) ? 1 : 0);
+
+        const northY = -32768;
+        const southY = 32767;
+
+        for (let y = offsetY; y <= endY; y++) {
+            for (let x = offsetX; x <= endX; x++) {
+                let vx = x / granuality * EXTENT;
+                if (x === -1) {
+                    vx = -EXTENT_STENCIL_BORDER;
                 }
-            }
-        } else {
-            for (let y = 0; y < verticesPerAxis; y++) {
-                for (let x = 0; x < verticesPerAxis; x++) {
-                    const vx = x / granuality * EXTENT;
-                    const vy = y / granuality * EXTENT;
-                    vertexArray.emplaceBack(vx, vy);
+                if (x === granuality) {
+                    vx = EXTENT + EXTENT_STENCIL_BORDER;
                 }
+                let vy = y / granuality * EXTENT;
+                if (y === -1) {
+                    vy = north ? northY : (-EXTENT_STENCIL_BORDER);
+                }
+                if (y === granuality) {
+                    vy = south ? southY : EXTENT + EXTENT_STENCIL_BORDER;
+                }
+                vertexArray.emplaceBack(vx, vy);
             }
         }
 
-        for (let y = 0; y < quadsPerAxis; y++) {
-            for (let x = 0; x < quadsPerAxis; x++) {
-                const v0 = x + y * verticesPerAxis;
-                const v1 = (x + 1) + y * verticesPerAxis;
-                const v2 = x + (y + 1) * verticesPerAxis;
-                const v3 = (x + 1) + (y + 1) * verticesPerAxis;
+        for (let y = 0; y < quadsPerAxisY; y++) {
+            for (let x = 0; x < quadsPerAxisX; x++) {
+                const v0 = x + y * verticesPerAxisX;
+                const v1 = (x + 1) + y * verticesPerAxisX;
+                const v2 = x + (y + 1) * verticesPerAxisX;
+                const v3 = (x + 1) + (y + 1) * verticesPerAxisX;
                 // v0----v1
                 //  |  / |
                 //  | /  |
                 // v2----v3
                 indexArray.emplaceBack(v0, v2, v1);
                 indexArray.emplaceBack(v1, v2, v3);
-            }
-        }
-
-        // Generate poles
-        const northXY = -32768;
-        const southXY = 32767;
-
-        if (north) {
-            const vNorthPole = vertexArray.length;
-            vertexArray.emplaceBack(northXY, northXY);
-
-            for (let x = 0; x < quadsPerAxis; x++) {
-                const v0u = x;
-                const v1u = x + 1;
-                indexArray.emplaceBack(v0u, v1u, vNorthPole);
-            }
-        }
-
-        if (south) {
-            const vSouthPole = vertexArray.length;
-            vertexArray.emplaceBack(southXY, southXY);
-
-            for (let x = 0; x < quadsPerAxis; x++) {
-                const v0u = quadsPerAxis * verticesPerAxis + x;
-                const v1u = quadsPerAxis * verticesPerAxis + x + 1;
-                indexArray.emplaceBack(v1u, v0u, vSouthPole);
             }
         }
 

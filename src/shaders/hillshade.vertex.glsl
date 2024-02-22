@@ -8,11 +8,11 @@ void main() {
     gl_Position = projectTile(a_pos);
     v_pos = a_pos / 8192.0;
     // North pole
-    if (a_pos.x < -32767.5 && a_pos.y < -32767.5) {
-        v_pos = vec2(0.5, 0.0);
+    if (a_pos.y < -32767.5) {
+        v_pos.y = 0.0;
     }
     // South pole
-    if (a_pos.x > 32766.5 && a_pos.y > 32766.5) {
-        v_pos = vec2(0.5, 1.0);
+    if (a_pos.y > 32766.5) {
+        v_pos.y = 1.0;
     }
 }

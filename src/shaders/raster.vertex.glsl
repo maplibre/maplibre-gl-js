@@ -26,12 +26,12 @@ void main() {
      // When globe rendering is enabled, pole vertices need special handling to get nice texture coordinates.
     #ifdef GLOBE
     // North pole
-    if (a_pos.x < -32767.5 && a_pos.y < -32767.5) {
-        v_pos0 = vec2(0.5, 0.0);
+    if (a_pos.y < -32767.5) {
+        v_pos0.y = 0.0;
     }
     // South pole
-    if (a_pos.x > 32766.5 && a_pos.y > 32766.5) {
-        v_pos0 = vec2(0.5, 1.0);
+    if (a_pos.y > 32766.5) {
+        v_pos0.y = 1.0;
     }
     #endif
 
