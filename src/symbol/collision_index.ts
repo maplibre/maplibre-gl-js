@@ -237,7 +237,7 @@ export class CollisionIndex {
                     }
                     screenSpacePath = screenSpacePath.slice(longestUnoccludedStart, longestUnoccludedStart + longestUnoccludedLength);
                 } else {
-                    screenSpacePath = projectedPath.map(p => projection.projectFromLabelPlaneToScreen(p, labelToScreenMatrix, getElevation));
+                    screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix, getElevation));
                 }
 
                 // Do not try to place collision circles if even one of the points is behind the camera.
@@ -416,7 +416,7 @@ export class CollisionIndex {
         if (this.projectionManager.useSpecialProjectionForSymbols) {
             projected = this.projectionManager.project(x, y, unwrappedTileID);
         } else {
-            projected = projection.projectFromMapToScreen(new Point(x, y), posMatrix, getElevation);
+            projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }
         return {
             point: new Point(
@@ -436,7 +436,7 @@ export class CollisionIndex {
         if (this.projectionManager.useSpecialProjectionForSymbols) {
             projected = this.projectionManager.project(x, y, unwrappedTileID);
         } else {
-            projected = projection.projectFromMapToScreen(new Point(x, y), posMatrix, getElevation);
+            projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }

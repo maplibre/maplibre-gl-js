@@ -23,10 +23,6 @@ export {
     getLabelPlaneMatrix,
     getGlCoordMatrix,
     project,
-    projectFromMapToLabelPlane,
-    projectFromLabelPlaneToScreen,
-    projectFromMapToScreen,
-    projectRaw,
     getPerspectiveRatio,
     placeFirstAndLastGlyph,
     placeGlyphAlongLine,
@@ -122,22 +118,6 @@ function getGlCoordMatrix(posMatrix: mat4,
     }
 }
 
-function projectFromMapToLabelPlane(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
-    return project(point, matrix, getElevation);
-}
-
-function projectFromLabelPlaneToScreen(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
-    return project(point, matrix, getElevation);
-}
-
-function projectFromMapToScreen(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
-    return project(point, matrix, getElevation);
-}
-
-function projectRaw(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
-    return project(point, matrix, getElevation);
-}
-
 function project(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
     let pos;
     if (getElevation) { // slow because of handle z-index
@@ -217,7 +197,7 @@ function updateLineLabels(bucket: SymbolBucket,
         // Awkward... but we're counting on the paired "vertical" symbol coming immediately after its horizontal counterpart
         useVertical = false;
 
-        const anchorPos = projectFromMapToScreen(new Point(symbol.anchorX, symbol.anchorY), posMatrix, getElevation);
+        const anchorPos = project(new Point(symbol.anchorX, symbol.anchorY), posMatrix, getElevation);
 
         // Don't bother calculating the correct point for invisible labels.
         if (!isVisible(anchorPos.point, clippingBuffer)) {
@@ -363,8 +343,8 @@ function placeGlyphsAlongLine(projectionArgs: ProjectionArgs, symbol, fontSize, 
         if (!firstAndLastGlyph) {
             return {notEnoughRoom: true};
         }
-        const firstPoint = projectRaw(firstAndLastGlyph.first.point, glCoordMatrix, projectionArgs.getElevation).point;
-        const lastPoint = projectRaw(firstAndLastGlyph.last.point, glCoordMatrix, projectionArgs.getElevation).point;
+        const firstPoint = project(firstAndLastGlyph.first.point, glCoordMatrix, projectionArgs.getElevation).point;
+        const lastPoint = project(firstAndLastGlyph.last.point, glCoordMatrix, projectionArgs.getElevation).point;
 
         if (keepUpright && !flip) {
             const orientationChange = requiresOrientationChange(symbol.writingMode, firstPoint, lastPoint, aspectRatio);
@@ -384,10 +364,10 @@ function placeGlyphsAlongLine(projectionArgs: ProjectionArgs, symbol, fontSize, 
         // Only a single glyph to place
         // So, determine whether to flip based on projected angle of the line segment it's on
         if (keepUpright && !flip) {
-            const a = projectFromMapToScreen(projectionArgs.tileAnchorPoint, posMatrix, projectionArgs.getElevation).point;
+            const a = project(projectionArgs.tileAnchorPoint, posMatrix, projectionArgs.getElevation).point;
             const tileVertexIndex = (symbol.lineStartIndex + symbol.segment + 1);
             const tileSegmentEnd = new Point(projectionArgs.lineVertexArray.getx(tileVertexIndex), projectionArgs.lineVertexArray.gety(tileVertexIndex));
-            const projectedVertex = projectFromMapToScreen(tileSegmentEnd, posMatrix, projectionArgs.getElevation);
+            const projectedVertex = project(tileSegmentEnd, posMatrix, projectionArgs.getElevation);
             // We know the anchor will be in the viewport, but the end of the line segment may be
             // behind the plane of the camera, in which case we can use a point at any arbitrary (closer)
             // point on the segment.
@@ -421,7 +401,7 @@ function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint:
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
     // plane of the camera.
     const unitVertextoBeProjected = previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit());
-    const projectedUnitVertex = projectRaw(unitVertextoBeProjected, projectionMatrix, getElevation).point;
+    const projectedUnitVertex = project(unitVertextoBeProjected, projectionMatrix, getElevation).point;
     const projectedUnitSegment = previousProjectedPoint.sub(projectedUnitVertex);
 
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
