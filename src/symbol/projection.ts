@@ -138,7 +138,6 @@ function projectRaw(point: Point, matrix: mat4, getElevation?: (x: number, y: nu
     return project(point, matrix, getElevation);
 }
 
-// JP: TODO: change this for globe? YES change this! not so simple, need to get tile xy in here
 function project(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
     let pos;
     if (getElevation) { // slow because of handle z-index
@@ -650,7 +649,6 @@ type PlacedGlyph = {
     path: Array<Point>;
 };
 
-// JP: TODO: change this to make it work with globe and other projections
 /*
  * Place a single glyph along its line, projected into the label plane, by iterating outward
  * from the anchor point until the distance traversed in the label plane equals the glyph's

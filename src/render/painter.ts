@@ -264,8 +264,6 @@ export class Painter {
 
         this._tileClippingMaskIDs = {};
 
-        // JP: TODO: fallback to normal flat clipping mask when globe is disabled
-
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;

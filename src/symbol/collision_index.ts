@@ -82,7 +82,6 @@ export class CollisionIndex {
         this.perspectiveRatioCutoff = 0.6;
     }
 
-    // JP: TODO: change this for globe?
     placeCollisionBox(
         collisionBox: SingleCollisionBox,
         overlapMode: OverlapMode,
@@ -119,7 +118,6 @@ export class CollisionIndex {
         };
     }
 
-    // JP: TODO: change this for globe?
     placeCollisionCircles(
         overlapMode: OverlapMode,
         symbol: any,
