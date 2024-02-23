@@ -1,5 +1,5 @@
 import {browser} from '../util/browser';
-import {mat4, vec3} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
@@ -46,7 +46,6 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
-import {Mesh} from './mesh';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -643,10 +642,11 @@ export class Painter {
     }
 
     /**
-     * TODO
-     * @param name
-     * @param programConfiguration
-     * @param allowProjection Use shader variant with complex projection vertex shader. True by default.
+     * Finds the required shader and its variant (base/terrain/globe, etc.) and binds it, compiling a new shader if required.
+     * @param name - Name of the desired shader.
+     * @param programConfiguration - Configuration of shader's inputs.
+     * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
+     * @param allowProjection - Whether to use a shader variant with complex projection vertex shader. True by default. Use false when drawing eg. a fullscreen quad.
      * @returns
      */
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines: Array<string> = [], allowProjection: boolean = true): Program<any> {
@@ -658,7 +658,7 @@ export class Painter {
             (this._showOverdrawInspector ? '/overdraw' : '') +
             (useTerrain ? '/terrain' : '') +
             (useGlobe ? '/globe' : '') +
-            (defines ? ('/defines:' + defines.join('//')) : '');
+            (defines ? (`/defines:${defines.join('//')}`) : '');
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,

@@ -12,7 +12,7 @@ import {backgroundUniforms, backgroundPatternUniforms} from './background_progra
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms} from './terrain_program';
 import {projectionErrorMeasurementUniforms} from './projection_error_measurement_program';
 
-const emptyUniforms = (context: any, locations: any): any => {};
+const emptyUniforms = (_: any, __: any): any => {};
 
 export const programUniforms = {
     fillExtrusion: fillExtrusionUniforms,

@@ -1,9 +1,7 @@
-import Layout from './layout';
 import {subdivideFill} from '../../../src/render/subdivision';
 import {CanonicalTileID} from '../../../src/source/tile_id';
 import Benchmark from '../lib/benchmark';
 import {EXTENT} from '../../../src/data/extent';
-import earcut from 'earcut';
 
 export default class Subdivide extends Benchmark {
     flattened: Array<number>;

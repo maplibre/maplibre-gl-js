@@ -1,4 +1,4 @@
-import {FillLayoutArray, FillPreprojectedLayoutArray, StructArrayLayout3f12} from '../array_types.g';
+import {FillLayoutArray, FillPreprojectedLayoutArray} from '../array_types.g';
 
 import {layout, layoutPreprojected} from './fill_attributes';
 import {SegmentVector} from '../segment';

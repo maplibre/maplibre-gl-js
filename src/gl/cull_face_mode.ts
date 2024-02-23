@@ -1,7 +1,6 @@
 import type {CullFaceModeType, FrontFaceType} from './types';
 
 const BACK = 0x0405;
-const CW = 0x0900;
 const CCW = 0x0901;
 
 export class CullFaceMode {

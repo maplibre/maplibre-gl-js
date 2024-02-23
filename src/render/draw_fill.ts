@@ -83,7 +83,7 @@ function drawFillTiles(
         allowPreprojectedGeometry = false;
     }
 
-    const programDefines = allowPreprojectedGeometry ? ["#define PREPROJECTED"] : [];
+    const programDefines = allowPreprojectedGeometry ? ['#define PREPROJECTED'] : [];
 
     if (!isOutline) {
         programName = image ? 'fillPattern' : 'fill';

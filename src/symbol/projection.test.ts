@@ -27,7 +27,6 @@ describe('Vertex to viewport projection', () => {
             getElevation: (_x, _y) => 0,
             // Only relevant in "behind the camera" case, can't happen with null projection matrix
             tileAnchorPoint: new Point(0, 0),
-            // TODO: I guessed the values of the next three parameters. Verify correctness.
             pitchWithMap: true,
             projectionManager: null,
             unwrappedTileID: null,
@@ -69,7 +68,6 @@ describe('Find offset line intersections', () => {
         labelPlaneMatrix: mat4.create(),
         getElevation: (_x, _y) => 0,
         tileAnchorPoint: new Point(0, 0),
-        // TODO: I guessed the values of the next three parameters. Verify correctness.
         pitchWithMap: true,
         projectionManager: null,
         unwrappedTileID: null,

@@ -3,11 +3,10 @@ import {
     Uniform1i,
     Uniform1f,
     Uniform2f,
-    Uniform3f,
-    UniformMatrix4f
+    Uniform3f
 } from '../uniform_binding';
 
-import {mat3, mat4, vec3} from 'gl-matrix';
+import {mat3, vec3} from 'gl-matrix';
 import {extend} from '../../util/util';
 
 import type {Context} from '../../gl/context';
@@ -16,7 +15,7 @@ import type {OverscaledTileID} from '../../source/tile_id';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {Tile} from '../../source/tile';
-import { ProjectionManager } from '../projection_manager';
+import {ProjectionManager} from '../projection_manager';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;
