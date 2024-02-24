@@ -6,6 +6,7 @@
 
 ### 🐞 Bug fixes
 - Fix popup appearing far from marker that was moved to a side globe ([3712](https://github.com/maplibre/maplibre-gl-js/pull/3712))
+- Set text color in the attribution pill ([3737](https://github.com/maplibre/maplibre-gl-js/pull/3737))
 - _...Add new stuff here..._
 
 ## 4.0.2
