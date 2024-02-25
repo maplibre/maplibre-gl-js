@@ -1079,6 +1079,20 @@ describe('Map', () => {
 
     });
 
+    describe('renderWorldCopies', () => {
+        test('does not constrain horizontal panning when renderWorldCopies is set to true', () => {
+            const map = createMap({renderWorldCopies: true});
+            map.setCenter({lng: 180, lat: 0});
+            expect(map.getCenter().lng).toBe(180);
+        });
+
+        test('constrains horizontal panning when renderWorldCopies is set to false', () => {
+            const map = createMap({renderWorldCopies: false});
+            map.setCenter({lng: 180, lat: 0});
+            expect(map.getCenter().lng).toBeLessThan(110);
+        });
+    });
+
     test('#setMinZoom', () => {
         const map = createMap({zoom: 5});
         map.setMinZoom(3.5);
