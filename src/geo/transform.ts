@@ -780,7 +780,10 @@ export class Transform {
 
         if (lngRange) {
             const centerX = (minX + maxX) / 2;
-            const x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+            let x = point.x;
+            if (this._renderWorldCopies) {
+                x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+            }
             const w2 = size.x / 2;
 
             if (x - w2 < minX) x2 = minX + w2;

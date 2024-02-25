@@ -1090,6 +1090,14 @@ describe('Map', () => {
             const map = createMap({renderWorldCopies: false});
             map.setCenter({lng: 180, lat: 0});
             expect(map.getCenter().lng).toBeLessThan(110);
+            expect(map.getCenter().lng).toBeGreaterThan(109);
+        });
+
+        test('does not wrap the map when renderWorldCopies is set to false', () => {
+            const map = createMap({renderWorldCopies: false});
+            map.setCenter({lng: 200, lat: 0});
+            expect(map.getCenter().lng).toBeLessThan(110);
+            expect(map.getCenter().lng).toBeGreaterThan(109);
         });
     });
 
