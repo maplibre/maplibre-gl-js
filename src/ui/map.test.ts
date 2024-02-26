@@ -1311,6 +1311,19 @@ describe('Map', () => {
         canvas.dispatchEvent(new window.Event('webglcontextlost'));
     });
 
+    test('#remove broadcasts removeMap to worker', () => {
+        const map = createMap();
+        let dispatchType;
+        const _broadcastSpyOn = jest.spyOn(map.style.dispatcher, 'broadcast')
+            .mockImplementation((type, _data) => {
+                dispatchType = type;
+                return Promise.resolve({} as any);
+            });
+        map.remove();
+        expect(_broadcastSpyOn).toHaveBeenCalled();
+        expect(dispatchType).toBe('removeMap');
+    });
+
     test('#redraw', async () => {
         const map = createMap();
 
