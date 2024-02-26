@@ -3,7 +3,7 @@ import {Context} from '../gl/context';
 import {Map} from '../ui/map';
 import {Uniform1f, Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
 import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
-import {FillPreprojectedLayoutArray, PosArray, StructArrayLayout3f12, TriangleIndexArray} from '../data/array_types.g';
+import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import {Mesh} from './mesh';
 import {EXTENT, EXTENT_STENCIL_BORDER} from '../data/extent';
 import {SegmentVector} from '../data/segment';
@@ -352,73 +352,6 @@ export class ProjectionManager {
             Math.sin(sphericalY),
             Math.cos(sphericalX) * len
         ];
-    }
-
-    /**
-     * Projects a flattened array of mercator in-tile coordinates (0..EXTENT) to points on a sphere.
-     * Stores the results in the provided vertex buffer.
-     */
-    public projectVertexBuffer(flattened: Array<number>, canonical: CanonicalTileID, buffer: StructArrayLayout3f12): void {
-        const scale = 1.0 / (1 << canonical.z);
-        const offsetX = canonical.x * scale;
-        const offsetY = canonical.y * scale;
-        for (let i = 0; i < flattened.length; i += 2) {
-            const vertexX = flattened[i * 2];
-            const vertexY = flattened[i * 2 + 1];
-            const mercatorX = vertexX * scale + offsetX;
-            const mercatorY = vertexY * scale + offsetY;
-            const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
-            const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
-
-            const len = Math.cos(sphericalY);
-
-            let resultX = Math.sin(sphericalX) * len;
-            let resultY = Math.sin(sphericalY);
-            let resultZ = Math.cos(sphericalX) * len;
-
-            if (vertexY < -32767.5) {
-                resultX = 0.0;
-                resultY = 1.0;
-                resultZ = 0.0;
-            }
-            if (vertexY > 32766.5) {
-                resultX = 0.0;
-                resultY = -1.0;
-                resultZ = 0.0;
-            }
-
-            buffer.emplaceBack(resultX, resultY, resultZ);
-        }
-    }
-
-    public static projectVertex(vertexX: number, vertexY: number, canonical: CanonicalTileID, buffer: FillPreprojectedLayoutArray): void {
-        const scale = 1.0 / (1 << canonical.z);
-        const offsetX = canonical.x * scale;
-        const offsetY = canonical.y * scale;
-
-        const mercatorX = vertexX / EXTENT * scale + offsetX;
-        const mercatorY = vertexY / EXTENT * scale + offsetY;
-        const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
-        const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
-
-        const len = Math.cos(sphericalY);
-
-        let resultX = Math.sin(sphericalX) * len;
-        let resultY = Math.sin(sphericalY);
-        let resultZ = Math.cos(sphericalX) * len;
-
-        if (vertexY < -32767.5) {
-            resultX = 0.0;
-            resultY = 1.0;
-            resultZ = 0.0;
-        }
-        if (vertexY > 32766.5) {
-            resultX = 0.0;
-            resultY = -1.0;
-            resultZ = 0.0;
-        }
-
-        buffer.emplaceBack(resultX, resultY, resultZ, vertexX, vertexY);
     }
 
     private _projectToSphereTile(inTileX: number, inTileY: number, unwrappedTileID: UnwrappedTileID): vec3 {

@@ -76,15 +76,6 @@ function drawFillTiles(
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
 
-    let allowPreprojectedGeometry = projectionManager.useGlobeRendering;
-
-    const epsilon = 1e-6;
-    if (Math.abs(propertyFillTranslate[0]) > epsilon || Math.abs(propertyFillTranslate[1]) > epsilon) {
-        allowPreprojectedGeometry = false;
-    }
-
-    const programDefines = allowPreprojectedGeometry ? ['#define PREPROJECTED'] : [];
-
     if (!isOutline) {
         programName = image ? 'fillPattern' : 'fill';
         drawMode = gl.TRIANGLES;
@@ -103,7 +94,7 @@ function drawFillTiles(
         if (!bucket) continue;
 
         const programConfiguration = bucket.programConfigurations.get(layer.id);
-        const program = painter.useProgram(programName, programConfiguration, programDefines);
+        const program = painter.useProgram(programName, programConfiguration);
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
         if (image) {
@@ -114,7 +105,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = projectionManager.getProjectionData(coord, null, !allowPreprojectedGeometry);
+        const projectionData = projectionManager.getProjectionData(coord);
 
         const translateForUniforms = projectionManager.translatePosition(painter, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
@@ -131,11 +122,9 @@ function drawFillTiles(
                 fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
 
-        const vbo = allowPreprojectedGeometry ? bucket.layoutPreprojectedVertexBuffer : bucket.layoutVertexBuffer;
-
         program.draw(painter.context, drawMode, depthMode,
             painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
-            layer.id, vbo, indexBuffer, segments,
+            layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }
 }

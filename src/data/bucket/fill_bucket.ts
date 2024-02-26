@@ -1,6 +1,6 @@
-import {FillLayoutArray, FillPreprojectedLayoutArray} from '../array_types.g';
+import {FillLayoutArray} from '../array_types.g';
 
-import {layout, layoutPreprojected} from './fill_attributes';
+import {layout} from './fill_attributes';
 import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type';
@@ -43,9 +43,7 @@ export class FillBucket implements Bucket {
     patternFeatures: Array<BucketFeature>;
 
     layoutVertexArray: FillLayoutArray;
-    layoutPreprojectecVertixArray: FillPreprojectedLayoutArray;
     layoutVertexBuffer: VertexBuffer;
-    layoutPreprojectedVertexBuffer: VertexBuffer;
 
     indexArray: TriangleIndexArray;
     indexBuffer: IndexBuffer;
@@ -69,7 +67,6 @@ export class FillBucket implements Bucket {
         this.patternFeatures = [];
 
         this.layoutVertexArray = new FillLayoutArray();
-        this.layoutPreprojectecVertixArray = new FillPreprojectedLayoutArray();
         this.indexArray = new TriangleIndexArray();
         this.indexArray2 = new LineIndexArray();
         this.programConfigurations = new ProgramConfigurationSet(options.layers, options.zoom);
@@ -154,7 +151,6 @@ export class FillBucket implements Bucket {
     upload(context: Context) {
         if (!this.uploaded) {
             this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layout.members);
-            this.layoutPreprojectedVertexBuffer = context.createVertexBuffer(this.layoutPreprojectecVertixArray, layoutPreprojected.members);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
             this.indexBuffer2 = context.createIndexBuffer(this.indexArray2);
         }
@@ -165,9 +161,6 @@ export class FillBucket implements Bucket {
     destroy() {
         if (!this.layoutVertexBuffer) return;
         this.layoutVertexBuffer.destroy();
-        if (this.layoutPreprojectedVertexBuffer) {
-            this.layoutPreprojectedVertexBuffer.destroy();
-        }
         this.indexBuffer.destroy();
         this.indexBuffer2.destroy();
         this.programConfigurations.destroy();
@@ -217,7 +210,6 @@ export class FillBucket implements Bucket {
             const finalIndicesLineList = subdivided.indicesLineList;
 
             const vertexArray = this.layoutVertexArray;
-            const vertexArrayPreprojected = this.layoutPreprojectecVertixArray;
 
             fillArrays(
                 this.segments,
@@ -230,7 +222,6 @@ export class FillBucket implements Bucket {
                 finalIndicesLineList,
                 (x, y) => {
                     vertexArray.emplaceBack(x, y);
-                    ProjectionManager.projectVertex(x, y, canonical, vertexArrayPreprojected);
                 }
             );
         }
