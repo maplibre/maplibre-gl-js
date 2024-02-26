@@ -20,7 +20,7 @@ function waitForConsole(page: Page): Promise<string> {
     });
 }
 
-const browser = await puppeteer.launch({ headless: true});
+const browser = await puppeteer.launch({headless: true});
 try {
 
     const page = await browser.newPage();
