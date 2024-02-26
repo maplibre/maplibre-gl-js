@@ -15,7 +15,7 @@ import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {Source} from '../source/source';
 import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
-import {SourceCache} from '../source/source_cache';
+import {SourceCache, SourceCacheSource} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
@@ -870,7 +870,7 @@ export class Style extends Evented {
      * @param id - ID of the desired source
      * @returns source
      */
-    getSource(id: string): Source | undefined {
+    getSource(id: string): SourceCacheSource | undefined {
         return this.sourceCaches[id] && this.sourceCaches[id].getSource();
     }
 

@@ -12,7 +12,6 @@ import {browser} from '../util/browser';
 import {OverscaledTileID} from './tile_id';
 import {SourceFeatureState} from './source_state';
 
-import type {Source} from './source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
@@ -22,6 +21,15 @@ import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import {Terrain} from '../render/terrain';
 import {config} from '../util/config';
+import {GeoJSONSource} from './geojson_source';
+import {ImageSource} from './image_source';
+import {VideoSource} from './video_source';
+import {RasterDEMTileSource} from './raster_dem_tile_source';
+import {VectorTileSource} from './vector_tile_source';
+import {RasterTileSource} from './raster_tile_source';
+import {CanvasSource} from './canvas_source';
+
+export type SourceCacheSource = GeoJSONSource | ImageSource | RasterTileSource | RasterDEMTileSource | VectorTileSource | VideoSource | CanvasSource;
 
 /**
  * @internal
@@ -39,7 +47,7 @@ export class SourceCache extends Evented {
     map: Map;
     style: Style;
 
-    _source: Source;
+    _source: SourceCacheSource;
     _sourceLoaded: boolean;
     _sourceErrored: boolean;
     _tiles: {[_: string]: Tile};
@@ -126,10 +134,10 @@ export class SourceCache extends Evented {
         }
     }
 
-    onRemove(map: Map) {
+    onRemove() {
         this.clearTiles();
-        if (this._source && this._source.onRemove) {
-            this._source.onRemove(map);
+        if (this._source && 'onRemove' in this._source) {
+            this._source.onRemove();
         }
     }
 
@@ -153,7 +161,7 @@ export class SourceCache extends Evented {
         return true;
     }
 
-    getSource(): Source {
+    getSource() {
         return this._source;
     }
 
@@ -186,12 +194,12 @@ export class SourceCache extends Evented {
     }
 
     _unloadTile(tile: Tile) {
-        if (this._source.unloadTile)
+        if ('unloadTile' in this._source)
             this._source.unloadTile(tile);
     }
 
     _abortTile(tile: Tile) {
-        if (this._source.abortTile)
+        if ('abortTile' in this._source)
             this._source.abortTile(tile);
 
         this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
@@ -202,7 +210,7 @@ export class SourceCache extends Evented {
     }
 
     prepare(context: Context) {
-        if  (this._source.prepare) {
+        if  ('prepare' in this._source) {
             this._source.prepare();
         }
 
@@ -509,10 +517,10 @@ export class SourceCache extends Evented {
         // better, retained tiles. They are not drawn separately.
         this._coveredTiles = {};
 
-        let idealTileIDs;
+        let idealTileIDs: Array<any>;
         if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
-        } else if (this._source.tileID) {
+        } else if ('tileID' in this._source) {
             idealTileIDs = transform.getVisibleUnwrappedCoordinates(this._source.tileID)
                 .map((unwrapped) => new OverscaledTileID(unwrapped.canonical.z, unwrapped.wrap, unwrapped.canonical.z, unwrapped.canonical.x, unwrapped.canonical.y));
         } else {
@@ -520,14 +528,18 @@ export class SourceCache extends Evented {
                 tileSize: this.usedForTerrain ? this.tileSize : this._source.tileSize,
                 minzoom: this._source.minzoom,
                 maxzoom: this._source.maxzoom,
-                roundZoom: this.usedForTerrain ? false : this._source.roundZoom,
-                reparseOverscaled: this._source.reparseOverscaled,
+                roundZoom: 'roundZoom' in this._source && !this.usedForTerrain ? this._source.roundZoom : false,
+                reparseOverscaled: 'reparseOverscaled' in this._source ? this._source.reparseOverscaled : false,
                 terrain
             });
 
-            if (this._source.hasTile) {
-                idealTileIDs = idealTileIDs.filter((coord) => (this._source.hasTile as any)(coord));
-            }
+            idealTileIDs = idealTileIDs.filter((coord) => {
+                if ('hasTile' in this._source) {
+                    return this._source.hasTile(coord);
+                }
+
+                return true;
+            });
         }
 
         // Determine the overzooming/underzooming amounts.

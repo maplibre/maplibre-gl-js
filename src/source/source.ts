@@ -13,6 +13,7 @@ import type {Map} from '../ui/map';
 import type {Tile} from './tile';
 import type {OverscaledTileID, CanonicalTileID} from './tile_id';
 import type {CanvasSourceSpecification} from '../source/canvas_source';
+import {SourceCacheSource} from './source_cache';
 
 const registeredSources = {} as {[key:string]: SourceClass};
 
@@ -122,7 +123,7 @@ export interface Source {
  * A general definition of a {@link Source} class for factory usage
  */
 export type SourceClass = {
-    new (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source;
+    new (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): SourceCacheSource;
 }
 
 /**
@@ -136,7 +137,7 @@ export type SourceClass = {
  * @param dispatcher - A {@link Dispatcher} instance, which can be used to send messages to the workers.
  * @returns a newly created source
  */
-export const create = (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): Source => {
+export const create = (id: string, specification: SourceSpecification | CanvasSourceSpecification, dispatcher: Dispatcher, eventedParent: Evented): SourceCacheSource => {
 
     const Class = getSourceType(specification.type);
     const source = new Class(id, specification, dispatcher, eventedParent);

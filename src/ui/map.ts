@@ -2032,7 +2032,7 @@ export class Map extends Camera {
      * @see [Animate a point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-point-along-line/)
      * @see [Add live realtime data](https://maplibre.org/maplibre-gl-js/docs/examples/live-geojson/)
      */
-    getSource(id: string): Source | undefined {
+    getSource(id: string) {
         return this.style.getSource(id);
     }
 
