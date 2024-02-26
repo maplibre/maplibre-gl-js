@@ -279,7 +279,11 @@ describe('SourceCache#removeTile', () => {
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loaded';
         };
-        sourceCache._source.unloadTile = jest.fn();
+
+        const unloadTileMock = jest.fn();
+        if ('unloadTile' in sourceCache._source) {
+            sourceCache._source.unloadTile = unloadTileMock;
+        }
 
         const tr = new Transform();
         tr.width = 512;
@@ -289,7 +293,7 @@ describe('SourceCache#removeTile', () => {
         sourceCache._addTile(tileID);
         sourceCache._removeTile(tileID.key);
 
-        expect(sourceCache._source.unloadTile).not.toHaveBeenCalled();
+        expect(unloadTileMock).not.toHaveBeenCalled();
     });
 
     test('aborts and unloads unfinished tile', () => {
@@ -298,14 +302,19 @@ describe('SourceCache#removeTile', () => {
             unload = 0;
 
         const sourceCache = createSourceCache();
-        sourceCache._source.abortTile = async (tile) => {
-            expect(tile.tileID).toEqual(tileID);
-            abort++;
-        };
-        sourceCache._source.unloadTile = async (tile) => {
-            expect(tile.tileID).toEqual(tileID);
-            unload++;
-        };
+        if ('abortTile' in sourceCache._source) {
+            sourceCache._source.abortTile = async (tile) => {
+                expect(tile.tileID).toEqual(tileID);
+                abort++;
+            };
+        }
+
+        if ('unloadTile' in sourceCache._source) {
+            sourceCache._source.unloadTile = async (tile) => {
+                expect(tile.tileID).toEqual(tileID);
+                unload++;
+            };
+        }
 
         sourceCache._addTile(tileID);
         sourceCache._removeTile(tileID.key);
@@ -1290,14 +1299,19 @@ describe('SourceCache#clearTiles', () => {
             unload = 0;
 
         const sourceCache = createSourceCache();
-        sourceCache._source.abortTile = async (tile) => {
-            expect(tile.tileID).toEqual(coord);
-            abort++;
-        };
-        sourceCache._source.unloadTile = async (tile) => {
-            expect(tile.tileID).toEqual(coord);
-            unload++;
-        };
+        if ('abortTile' in sourceCache._source) {
+            sourceCache._source.abortTile = async (tile) => {
+                expect(tile.tileID).toEqual(coord);
+                abort++;
+            };
+        }
+
+        if ('unloadTile' in sourceCache._source) {
+            sourceCache._source.unloadTile = async (tile) => {
+                expect(tile.tileID).toEqual(coord);
+                unload++;
+            };
+        }
         sourceCache.onAdd(undefined);
 
         sourceCache._addTile(coord);
@@ -1558,9 +1572,12 @@ describe('source cache loaded', () => {
                 });
             });
         };
-        sourceCache._source.hasTile = function (tileID: OverscaledTileID) {
-            return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
-        };
+
+        if ('hasTile' in sourceCache._source) {
+            sourceCache._source.hasTile = function (tileID: OverscaledTileID) {
+                return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
+            };
+        }
 
         const tr = new Transform();
         tr.zoom = 10;
@@ -1605,9 +1622,13 @@ describe('source cache loaded', () => {
                 this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
             }
         };
-        sourceCache._source.hasTile = (tileID: OverscaledTileID) => {
-            return japan.contains(tileID.canonical);
-        };
+
+        if ('hasTile' in sourceCache._source) {
+
+            sourceCache._source.hasTile = (tileID: OverscaledTileID) => {
+                return japan.contains(tileID.canonical);
+            };
+        }
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType !== 'idle') {
@@ -1821,7 +1842,7 @@ describe('SourceCache#onRemove', () => {
         const sourceCache = createSourceCache();
         jest.spyOn(sourceCache, 'clearTiles');
 
-        sourceCache.onRemove(undefined);
+        sourceCache.onRemove();
 
         expect(sourceCache.clearTiles).toHaveBeenCalled();
     });
@@ -1832,7 +1853,7 @@ describe('SourceCache#onRemove', () => {
             onRemove: sourceOnRemove
         });
 
-        sourceCache.onRemove(undefined);
+        sourceCache.onRemove();
 
         expect(sourceOnRemove).toHaveBeenCalled();
     });

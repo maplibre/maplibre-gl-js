@@ -15,7 +15,7 @@ import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
 import {Source} from '../source/source';
 import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
-import {SourceCache} from '../source/source_cache';
+import {SourceCache, SourceCacheSource} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
@@ -247,7 +247,7 @@ export class Style extends Evented {
             }
 
             const source = sourceCache.getSource();
-            if (!source || !source.vectorLayerIds) {
+            if (!source || !('vectorLayerIds' in source)) {
                 return;
             }
 
@@ -437,7 +437,7 @@ export class Style extends Evented {
         }
 
         const source = sourceCache.getSource();
-        if (source.type === 'geojson' || (source.vectorLayerIds && source.vectorLayerIds.indexOf(sourceLayer) === -1)) {
+        if (source.type === 'geojson' || ('vectorLayerIds' in source && (source.vectorLayerIds as Array<string>).indexOf(sourceLayer) === -1)) {
             this.fire(new ErrorEvent(new Error(
                 `Source layer "${sourceLayer}" ` +
                 `does not exist on source "${source.id}" ` +
@@ -845,7 +845,7 @@ export class Style extends Evented {
         delete this._updatedSources[id];
         sourceCache.fire(new Event('data', {sourceDataType: 'metadata', dataType: 'source', sourceId: id}));
         sourceCache.setEventedParent(null);
-        sourceCache.onRemove(this.map);
+        sourceCache.onRemove();
         this._changed = true;
     }
 
@@ -870,7 +870,7 @@ export class Style extends Evented {
      * @param id - ID of the desired source
      * @returns source
      */
-    getSource(id: string): Source | undefined {
+    getSource(id: string): SourceCacheSource | undefined {
         return this.sourceCaches[id] && this.sourceCaches[id].getSource();
     }
 
@@ -1489,7 +1489,7 @@ export class Style extends Evented {
         for (const id in this.sourceCaches) {
             const sourceCache = this.sourceCaches[id];
             sourceCache.setEventedParent(null);
-            sourceCache.onRemove(this.map);
+            sourceCache.onRemove();
         }
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);

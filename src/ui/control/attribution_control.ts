@@ -147,7 +147,7 @@ export class AttributionControl implements IControl {
             const sourceCache = sourceCaches[id];
             if (sourceCache.used || sourceCache.usedForTerrain) {
                 const source = sourceCache.getSource();
-                if (source.attribution && attributions.indexOf(source.attribution) < 0) {
+                if ('attribution' in source && attributions.indexOf(source.attribution) < 0) {
                     attributions.push(source.attribution);
                 }
             }
