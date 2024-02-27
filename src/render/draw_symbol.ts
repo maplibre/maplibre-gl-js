@@ -25,7 +25,7 @@ import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
-import type {Texture} from '../render/texture';
+import type {Texture, TextureFilter} from '../render/texture';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {UniformValues} from './uniform_binding';
 import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
@@ -48,8 +48,8 @@ type SymbolTileRenderState = {
         uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>;
         atlasTexture: Texture;
         atlasTextureIcon: Texture | null;
-        atlasInterpolation: GLenum;
-        atlasInterpolationIcon: GLenum;
+        atlasInterpolation: TextureFilter;
+        atlasInterpolationIcon: TextureFilter;
         isSDF: boolean;
         hasHalo: boolean;
     };
@@ -305,9 +305,9 @@ function drawLayerSymbols(
         let texSize: [number, number];
         let texSizeIcon: [number, number] = [0, 0];
         let atlasTexture: Texture;
-        let atlasInterpolation: GLenum;
+        let atlasInterpolation: TextureFilter;
         let atlasTextureIcon = null;
-        let atlasInterpolationIcon: GLenum;
+        let atlasInterpolationIcon: TextureFilter;
         if (isText) {
             atlasTexture = tile.glyphAtlasTexture;
             atlasInterpolation = gl.LINEAR;
@@ -406,12 +406,10 @@ function drawLayerSymbols(
         const state = segmentState.state;
 
         context.activeTexture.set(gl.TEXTURE0);
-        // @ts-ignore
         state.atlasTexture.bind(state.atlasInterpolation, gl.CLAMP_TO_EDGE);
         if (state.atlasTextureIcon) {
             context.activeTexture.set(gl.TEXTURE1);
             if (state.atlasTextureIcon) {
-                // @ts-ignore
                 state.atlasTextureIcon.bind(state.atlasInterpolationIcon, gl.CLAMP_TO_EDGE);
             }
         }
