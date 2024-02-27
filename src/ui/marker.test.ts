@@ -8,6 +8,7 @@ import type {Terrain} from '../render/terrain';
 
 type MapOptions = {
     width?: number;
+    renderWorldCopies?: boolean;
 }
 
 function createMap(options: MapOptions = {}) {
@@ -1026,5 +1027,16 @@ describe('marker', () => {
 
         expect(marker.getElement().style.opacity).toMatch('0.35');
         map.remove();
+    });
+
+    test('Marker\'s lng is wrapped when slightly crossing 180 with {renderWorldCopies: false}', () => {
+        const map = createMap({width: 1024, renderWorldCopies: false});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .addTo(map);
+
+        marker.setLngLat([181, 0]);
+
+        expect(marker._lngLat.lng).toBe(-179);
     });
 });
