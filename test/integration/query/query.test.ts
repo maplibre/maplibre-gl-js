@@ -16,7 +16,6 @@ import {globSync} from 'glob';
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 let maplibregl: typeof maplibreglModule;
 
-
 jest.retryTimes(3);
 
 function performQueryOnFixture(fixture)  {
