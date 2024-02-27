@@ -266,6 +266,9 @@ export class GlobeProjection extends ProjectionBase {
             data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
         }
 
+        data['u_projection_clipping_plane'] = [...this._cachedClippingPlane];
+        data['u_projection_globeness'] = this._globeness;
+
         return data;
     }
 
