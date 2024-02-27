@@ -6,7 +6,7 @@ import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
-
+import {RTLPluginStatus, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
 import type {
     WorkerSource,
     WorkerSourceConstructor,
@@ -143,7 +143,7 @@ export default class Worker {
             this.referrer = params;
         });
 
-        this.actor.registerMessageHandler('syncRTLPluginState', (mapId: string, params: PluginState) => {
+        this.actor.registerMessageHandler(SyncRTLPluginStateMessageName, (mapId: string, params: PluginState) => {
             return this._syncRTLPluginState(mapId, params);
         });
 
@@ -174,23 +174,22 @@ export default class Worker {
         }
     }
 
-    private async _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
-        rtlWorkerPlugin.setState(state);
-        const pluginURL = rtlWorkerPlugin.getPluginURL();
+    private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
+        const resultState: PluginState = {
+            pluginStatus: rtlWorkerPlugin.pluginStatus,
+            pluginURL: rtlWorkerPlugin.pluginURL
+        };
 
-        const isLoaded =
-            state.pluginStatus === 'loaded' || // Main Thread: loaded if the completion callback returned successfully
-            rtlWorkerPlugin.applyArabicShaping != null; // Web-worker: loaded if the plugin functions have been compiled
-
-        if (isLoaded && !rtlWorkerPlugin.isParsed() && pluginURL != null) {
-            this.self.importScripts(pluginURL);
-            const complete = rtlWorkerPlugin.isParsed();
-            if (complete) {
-                return complete;
+        if (incomingState.pluginStatus === 'loading' && !rtlWorkerPlugin.isParsed() && incomingState.pluginURL != null) {
+            this.self.importScripts(incomingState.pluginURL);
+            if (rtlWorkerPlugin.isParsed()) {
+                resultState.pluginStatus = 'loaded';
+                resultState.pluginURL = incomingState.pluginURL;
+                rtlWorkerPlugin.setState(resultState);
             }
-            throw new Error(`RTL Text Plugin failed to import scripts from ${pluginURL}`);
         }
-        return false;
+
+        return resultState;
     }
 
     private _getAvailableImages(mapId: string) {

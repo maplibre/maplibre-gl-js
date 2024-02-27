@@ -5,13 +5,21 @@
  *
  * `deferred`: The plugin URL has been specified, but loading has been deferred.
  *
- * `loading`: request in-flight.
+ * `requested`: at least one tile needs RTL to render, but the plugin has not been set
+ *
+ * `loading`: RTL is in the process of being loaded by worker.
  *
  * `loaded`: The plugin is now loaded
  *
  *  `error`: The plugin failed to load
  */
-export type RTLPluginStatus = 'unavailable' | 'deferred' | 'loading' | 'loaded' | 'error';
+export type RTLPluginStatus =
+                'unavailable' |
+                'deferred' |
+                'requested' |
+                'loading' |
+                'loaded' |
+                'error';
 
 /**
  * The RTL plugin state
@@ -19,4 +27,10 @@ export type RTLPluginStatus = 'unavailable' | 'deferred' | 'loading' | 'loaded' 
 export type PluginState = {
     pluginStatus: RTLPluginStatus;
     pluginURL: string;
+
+    /** Optional error object that carries error from worker to main thread */
+    error?: Error;
 };
+
+export const RTLPluginLoadedEventName = 'RTLPluginLoaded';
+export const SyncRTLPluginStateMessageName = 'syncRTLPluginState';

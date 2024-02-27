@@ -35,14 +35,14 @@ describe('RTLMainThreadPlugin', () => {
         await sleep(0);
         server.respond();
         await promise;
-        expect(rtlMainThreadPlugin.pluginURL).toEqual(url);
+        expect(rtlMainThreadPlugin.url).toEqual(url);
     });
 
     it('should set the RTL text plugin but deffer downloading', async () => {
         const url = 'http://example.com/plugin';
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         expect(server.requests).toHaveLength(0);
-        expect(rtlMainThreadPlugin.pluginStatus).toBe('deferred');
+        expect(rtlMainThreadPlugin.status).toBe('deferred');
     });
 
     it('should throw if the plugin is already set', async () => {
@@ -64,20 +64,20 @@ describe('RTLMainThreadPlugin', () => {
         await sleep(0);
         server.respond();
         await promise;
-        expect(rtlMainThreadPlugin.pluginURL).toEqual(url);
-        expect(rtlMainThreadPlugin.pluginStatus).toBe('error');
+        expect(rtlMainThreadPlugin.url).toEqual(url);
+        expect(rtlMainThreadPlugin.status).toBe('error');
     });
 
-    it('should lazy load the plugin if deffered', async () => {
+    it('should lazy load the plugin if deferred', async () => {
         const url = 'http://example.com/plugin';
         server.respondWith(new ArrayBuffer(0));
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
         expect(server.requests).toHaveLength(0);
-        expect(rtlMainThreadPlugin.pluginStatus).toBe('deferred');
-        const promise = rtlMainThreadPlugin.lazyLoadRTLTextPlugin();
+        expect(rtlMainThreadPlugin.status).toBe('deferred');
+        const promise = rtlMainThreadPlugin.lazyLoad();
         await sleep(0);
         server.respond();
         await promise;
-        expect(rtlMainThreadPlugin.pluginStatus).toBe('loaded');
+        expect(rtlMainThreadPlugin.status).toBe('loaded');
     });
 });
