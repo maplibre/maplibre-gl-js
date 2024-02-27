@@ -10,6 +10,7 @@ import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
 import {OverscaledTileID} from '../source/tile_id';
+import {GlobeProjection} from '../geo/projection/globe';
 
 export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords?: Array<OverscaledTileID>) {
     const color = layer.paint.get('background-color');
@@ -50,7 +51,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
             backgroundUniformValues(opacity, color);
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(tileID);
 
-        if (projectionManager.useGlobeRendering) {
+        if (projectionManager instanceof GlobeProjection && projectionManager.useGlobeRendering) {
             // For globe rendering, background uses tile meshes *without* borders and no stencil clipping.
             // This works assuming the tileIDs list contains only tiles of the same zoom level.
             // This seems to always be the case for background layers, but I'm leaving this comment

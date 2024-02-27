@@ -107,7 +107,7 @@ function drawFillTiles(
 
         const projectionData = projectionManager.getProjectionData(coord);
 
-        const translateForUniforms = projectionManager.translatePosition(painter, tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        const translateForUniforms = projectionManager.translatePosition(painter.transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;

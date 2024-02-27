@@ -62,7 +62,9 @@ import {drawTerrain} from '../render/draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 import {mat4} from 'gl-matrix';
 import {EXTENT} from '../data/extent';
-import {ProjectionManager} from '../render/projection_manager';
+import {ProjectionBase} from '../geo/projection/projection_base';
+import {MercatorProjection} from '../geo/projection/mercator';
+import {GlobeProjection} from '../geo/projection/globe';
 
 const version = packageJSON.version;
 
@@ -430,7 +432,7 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
-    projectionManager: ProjectionManager;
+    projectionManager: ProjectionBase;
 
     _globeEnabled: boolean = false;
     _container: HTMLElement;
@@ -609,7 +611,7 @@ export class Map extends Camera {
             this.setMaxBounds(options.maxBounds);
         }
 
-        this.projectionManager = new ProjectionManager(this);
+        this.projectionManager = new GlobeProjection(this);
 
         this._setupContainer();
         this._setupPainter();
@@ -1985,7 +1987,9 @@ export class Map extends Camera {
         if (enabled !== this._globeEnabled) {
             this._globeEnabled = enabled;
             if (!animate) {
-                this.projectionManager.skipNextProjectionTransitionAnimation();
+                if (this.projectionManager instanceof GlobeProjection) {
+                    this.projectionManager.skipNextProjectionTransitionAnimation();
+                }
             }
             this._updateRenderToTexture();
             this._update(true);

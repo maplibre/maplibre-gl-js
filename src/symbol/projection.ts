@@ -14,8 +14,8 @@ import type {
 } from '../data/array_types.g';
 import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
-import {ProjectionManager} from '../render/projection_manager';
 import {UnwrappedTileID} from '../source/tile_id';
+import {ProjectionBase} from '../geo/projection/projection_base';
 
 export {
     updateLineLabels,
@@ -161,7 +161,7 @@ function updateLineLabels(bucket: SymbolBucket,
     pitchWithMap: boolean,
     keepUpright: boolean,
     rotateToLine: boolean,
-    projectionManager: ProjectionManager,
+    projectionManager: ProjectionBase,
     unwrappedTileID: UnwrappedTileID,
     viewportWidth: number,
     viewportHeight: number,
@@ -471,7 +471,7 @@ export type ProjectionArgs = {
      * True when line glyphs are projected onto the map, instead of onto the viewport.
      */
     pitchWithMap: boolean;
-    projectionManager: ProjectionManager;
+    projectionManager: ProjectionBase;
     unwrappedTileID: UnwrappedTileID;
     /**
      * Viewport width.
@@ -527,9 +527,14 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
     // Now, do the equivalent of projectTruncatedLineSegment, but potentially using globe projection.
     const minimumLength = syntheticVertexArgs.absOffsetX - syntheticVertexArgs.distanceFromAnchor + 1;
     const unitVertextoBeProjected = previousTilePoint.add(previousTilePoint.sub(currentVertex)._unit());
-    const projectedUnitVertex = projectionArgs.projectionManager.project(unitVertextoBeProjected.x, unitVertextoBeProjected.y, projectionArgs.unwrappedTileID).point;
-    projectedUnitVertex.x = (projectedUnitVertex.x * 0.5 + 0.5) * projectionArgs.width;
-    projectedUnitVertex.y = (-projectedUnitVertex.y * 0.5 + 0.5) * projectionArgs.height;
+    let projectedUnitVertex;
+    if (projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
+        projectedUnitVertex = projectionArgs.projectionManager.project(unitVertextoBeProjected.x, unitVertextoBeProjected.y, projectionArgs.unwrappedTileID).point;
+        projectedUnitVertex.x = (projectedUnitVertex.x * 0.5 + 0.5) * projectionArgs.width;
+        projectedUnitVertex.y = (-projectedUnitVertex.y * 0.5 + 0.5) * projectionArgs.height;
+    } else {
+        projectedUnitVertex = project(unitVertextoBeProjected, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation).point;
+    }
     const projectedUnitSegment = syntheticVertexArgs.previousVertex.sub(projectedUnitVertex);
 
     return syntheticVertexArgs.previousVertex.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));

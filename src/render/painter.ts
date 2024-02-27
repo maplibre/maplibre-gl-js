@@ -2,7 +2,6 @@ import {browser} from '../util/browser';
 import {mat4} from 'gl-matrix';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
-import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
@@ -34,7 +33,6 @@ import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 
 import type {Transform} from '../geo/transform';
-import type {Tile} from '../source/tile';
 import type {Style} from '../style/style';
 import type {StyleLayer} from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
@@ -46,6 +44,8 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
+import {Mesh} from './mesh';
+import {GlobeProjection} from '../geo/projection/globe';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -85,6 +85,8 @@ export class Painter {
     pixelRatio: number;
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
+    tileExtentMesh: Mesh;
+
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
     rasterBoundsBuffer: VertexBuffer;
@@ -211,6 +213,8 @@ export class Painter {
 
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
+
+        this.tileExtentMesh = new Mesh(this.tileExtentBuffer, this.quadTriangleIndexBuffer, this.tileExtentSegments);
     }
 
     /*
@@ -264,13 +268,20 @@ export class Painter {
 
         this._tileClippingMaskIDs = {};
 
+        const projectionManager = this.style.map.projectionManager;
+
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
-            const projectionData = this.style.map.projectionManager.getProjectionData(tileID);
-            const mesh = this.style.map.projectionManager.getMeshFromTileID(this.context, tileID.canonical, true);
+            let mesh = this.tileExtentMesh;
+
+            if (projectionManager instanceof GlobeProjection) {
+                mesh = projectionManager.getMeshFromTileID(this.context, tileID.canonical, true);
+            }
+
+            const projectionData = projectionManager.getProjectionData(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -415,7 +426,7 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
-        const deduplicateWrapped = !style.map.projectionManager.globeDrawWrappedtiles;
+        const deduplicateWrapped = !style.map.projectionManager.drawWrappedtiles;
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -573,45 +584,6 @@ export class Painter {
         }
     }
 
-    /**
-     * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
-     * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
-     * @returns matrix
-     */
-    translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean): mat4 {
-        if (!translate[0] && !translate[1]) return matrix;
-
-        const translation = this.translatePosition(tile, translate, translateAnchor, inViewportPixelUnitsUnits);
-        const translatedMatrix = new Float32Array(16);
-        mat4.translate(translatedMatrix, matrix, [translation[0], translation[1], 0]);
-        return translatedMatrix;
-    }
-
-    /**
-     * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
-     * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
-     */
-    translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean): [number, number] {
-        if (!translate[0] && !translate[1]) return [0, 0];
-
-        const angle = inViewportPixelUnitsUnits ?
-            (translateAnchor === 'map' ? this.transform.angle : 0) :
-            (translateAnchor === 'viewport' ? -this.transform.angle : 0);
-
-        if (angle) {
-            const sinA = Math.sin(angle);
-            const cosA = Math.cos(angle);
-            translate = [
-                translate[0] * cosA - translate[1] * sinA,
-                translate[0] * sinA + translate[1] * cosA
-            ];
-        }
-
-        return [
-            inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], this.transform.zoom),
-            inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], this.transform.zoom)];
-    }
-
     saveTileTexture(texture: Texture) {
         const textures = this._tileTextures[texture.size[0]];
         if (!textures) {
@@ -650,7 +622,10 @@ export class Painter {
     useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines: Array<string> = [], allowProjection: boolean = true): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
-        const useGlobe = this.style.map.projectionManager.useGlobeRendering && allowProjection;
+
+        // TODO: better system for injecting projection code into shaders
+        const useGlobe = (this.style.map.projectionManager instanceof GlobeProjection && this.style.map.projectionManager.useGlobeRendering && allowProjection);
+
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             (this._showOverdrawInspector ? '/overdraw' : '') +

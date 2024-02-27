@@ -28,8 +28,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideFill} from '../../render/subdivision';
-import {ProjectionManager} from '../../render/projection_manager';
+import {subdivideFill, granualitySettings} from '../../render/subdivision';
 import {StructArray} from '../../util/struct_array';
 
 export class FillBucket implements Bucket {
@@ -204,7 +203,7 @@ export class FillBucket implements Bucket {
                 lineList.push(lineIndices);
             }
 
-            const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, ProjectionManager.GranualityFill.getGranualityForZoomLevel(canonical.z));
+            const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, granualitySettings.GranualityFill.getGranualityForZoomLevel(canonical.z));
             const finalVertices = subdivided.verticesFlattened;
             const finalIndicesTriangles = subdivided.indicesTriangles;
             const finalIndicesLineList = subdivided.indicesLineList;

@@ -1,51 +1,30 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {Context} from '../gl/context';
-import {Map} from '../ui/map';
-import {Uniform1f, Uniform4f, UniformLocations, UniformMatrix4f} from './uniform_binding';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
-import {PosArray, TriangleIndexArray} from '../data/array_types.g';
-import {Mesh} from './mesh';
-import {EXTENT, EXTENT_STENCIL_BORDER} from '../data/extent';
-import {SegmentVector} from '../data/segment';
-import posAttributes from '../data/pos_attributes';
-import {Transform} from '../geo/transform';
-import {Painter} from './painter';
-import {Tile} from '../source/tile';
-import {browser} from '../util/browser';
-import {Framebuffer} from '../gl/framebuffer';
-import {StencilMode} from '../gl/stencil_mode';
-import {ColorMode} from '../gl/color_mode';
+import {Context} from '../../gl/context';
+import {Map} from '../../ui/map';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
+import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
+import {Mesh} from '../../render/mesh';
+import {EXTENT, EXTENT_STENCIL_BORDER} from '../../data/extent';
+import {SegmentVector} from '../../data/segment';
+import posAttributes from '../../data/pos_attributes';
+import {Transform} from '../transform';
+import {Painter} from '../../render/painter';
+import {Tile} from '../../source/tile';
+import {browser} from '../../util/browser';
+import {Framebuffer} from '../../gl/framebuffer';
+import {StencilMode} from '../../gl/stencil_mode';
+import {ColorMode} from '../../gl/color_mode';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {projectionErrorMeasurementUniformValues} from './program/projection_error_measurement_program';
-import {warnOnce} from '../util/util';
-import {mercatorYfromLat} from '../geo/mercator_coordinate';
+import {DepthMode} from '../../gl/depth_mode';
+import {CullFaceMode} from '../../gl/cull_face_mode';
+import {projectionErrorMeasurementUniformValues} from '../../render/program/projection_error_measurement_program';
+import {warnOnce} from '../../util/util';
+import {mercatorYfromLat} from '../mercator_coordinate';
+import {granualitySettings} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
-
-export type ProjectionPreludeUniformsType = {
-    'u_projection_matrix': UniformMatrix4f;
-    'u_projection_tile_mercator_coords': Uniform4f;
-    'u_projection_clipping_plane': Uniform4f;
-    'u_projection_globeness': Uniform1f;
-    'u_projection_fallback_matrix': UniformMatrix4f;
-};
-
-export const projectionUniforms = (context: Context, locations: UniformLocations): ProjectionPreludeUniformsType => ({
-    'u_projection_matrix': new UniformMatrix4f(context, locations.u_projection_matrix),
-    'u_projection_tile_mercator_coords': new Uniform4f(context, locations.u_projection_tile_mercator_coords),
-    'u_projection_clipping_plane': new Uniform4f(context, locations.u_projection_clipping_plane),
-    'u_projection_globeness': new Uniform1f(context, locations.u_projection_globeness),
-    'u_projection_fallback_matrix': new UniformMatrix4f(context, locations.u_projection_fallback_matrix)
-});
-
-export type ProjectionData = {
-    'u_projection_matrix': mat4;
-    'u_projection_tile_mercator_coords': [number, number, number, number];
-    'u_projection_clipping_plane': [number, number, number, number];
-    'u_projection_globeness': number;
-    'u_projection_fallback_matrix': mat4;
-}
+import {ProjectionData} from './projection_uniforms';
+import * as Mercator from './mercator';
+import {ProjectionBase} from './projection_base';
 
 function clamp(a: number, min: number, max: number): number {
     return Math.min(Math.max(a, min), max);
@@ -66,45 +45,9 @@ const zoomTransitionTimeSeconds = 0.5;
 const maxGlobeZoom = 12.0;
 const errorTransitionTimeSeconds = 0.5;
 
-class SubdivisionGranulitySettings {
-    /**
-     * A tile of zoom level 0 will be subdivided to granuality of 2 raised to this number.
-     * Each subsequent zoom level will have its granuality halved.
-     */
-    private readonly _baseZoomGranualityPower: number;
-
-    /**
-     * No tile will have granuality smaller than 2 raised to this number.
-     */
-    private readonly _minGranualityPower: number;
-
-    constructor(baseZoomGranualityPower: number, minGranualityPower: number) {
-        this._baseZoomGranualityPower = baseZoomGranualityPower;
-        this._minGranualityPower = minGranualityPower;
-    }
-
-    public getGranualityForZoomLevel(zoomLevel: number): number {
-        return 1 << Math.max(this._baseZoomGranualityPower - zoomLevel, this._minGranualityPower, 0);
-    }
-}
-
-export class ProjectionManager {
-    map: Map | undefined;
-
-    /**
-     * Granuality settings used for fill layer (both polygons and their anti-aliasing outlines).
-     */
-    public static readonly GranualityFill = new SubdivisionGranulitySettings(7, 1);
-
-    /**
-     * Granuality used for stencil mask tiles.
-     */
-    public static readonly GranualityStencil = new SubdivisionGranulitySettings(7, 3);
-
-    /**
-     * Granuality used for the line layer.
-     */
-    public static readonly GranualityLine = new SubdivisionGranulitySettings(9, 1);
+export class GlobeProjection extends ProjectionBase {
+    private _map: Map | undefined;
+    private _mercator: Mercator.MercatorProjection;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
     private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
@@ -155,7 +98,7 @@ export class ProjectionManager {
      * This property is true when wrapped tiles need to be rendered.
      * This is false when globe rendering is used and no transition is happening.
      */
-    get globeDrawWrappedtiles(): boolean {
+    get drawWrappedtiles(): boolean {
         return this._globeness < 1.0;
     }
 
@@ -176,7 +119,9 @@ export class ProjectionManager {
     }
 
     constructor(map: Map) {
-        this.map = map;
+        super();
+        this._map = map;
+        this._mercator = new Mercator.MercatorProjection();
     }
 
     public skipNextProjectionTransitionAnimation() {
@@ -314,25 +259,7 @@ export class ProjectionManager {
     }
 
     public getProjectionData(tileID: OverscaledTileID, fallBackMatrix: mat4 = null, useAtanCorrection: boolean = true): ProjectionData {
-        const identity = mat4.create();
-        const data: ProjectionData = {
-            'u_projection_matrix': identity,
-            'u_projection_tile_mercator_coords': [0, 0, 1, 1],
-            'u_projection_clipping_plane': [...this._cachedClippingPlane],
-            'u_projection_globeness': this._globeness,
-            'u_projection_fallback_matrix': identity,
-        };
-
-        if (tileID) {
-            data['u_projection_matrix'] = fallBackMatrix ? fallBackMatrix : tileID.posMatrix;
-            data['u_projection_tile_mercator_coords'] = [
-                tileID.canonical.x / (1 << tileID.canonical.z),
-                tileID.canonical.y / (1 << tileID.canonical.z),
-                1.0 / (1 << tileID.canonical.z) / EXTENT,
-                1.0 / (1 << tileID.canonical.z) / EXTENT
-            ];
-        }
-        data['u_projection_fallback_matrix'] = data['u_projection_matrix'];
+        const data = this._mercator.getProjectionData(tileID, fallBackMatrix);
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this.useGlobeRendering) {
@@ -390,8 +317,8 @@ export class ProjectionManager {
     }
 
     public transformLightDirection(dir: vec3): vec3 {
-        const sphereX = this.map.transform.center.lng * Math.PI / 180.0;
-        const sphereY = this.map.transform.center.lat * Math.PI / 180.0;
+        const sphereX = this._map.transform.center.lng * Math.PI / 180.0;
+        const sphereY = this._map.transform.center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
         const spherePos: vec3 = [
@@ -432,7 +359,7 @@ export class ProjectionManager {
 
     private _updateAnimation(transform: Transform) {
         // Update globe transition animation
-        const globeState = this.map ? this.map._globeEnabled : false;
+        const globeState = this._map ? this._map._globeEnabled : false;
         const currentTime = browser.now();
         if (globeState !== this._lastGlobeStateEnabled) {
             this._lastGlobeChangeTime = currentTime;
@@ -466,7 +393,7 @@ export class ProjectionManager {
     }
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, usePoleVertices: boolean = true): Mesh {
-        const granuality = ProjectionManager.GranualityStencil.getGranualityForZoomLevel(canonical.z);
+        const granuality = granualitySettings.GranualityStencil.getGranualityForZoomLevel(canonical.z);
         const north = usePoleVertices && (canonical.y === 0);
         const south = usePoleVertices && (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granuality, hasBorder, north, south);
@@ -484,10 +411,10 @@ export class ProjectionManager {
         return mesh;
     }
 
-    public translatePosition(painter: Painter, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
-        return painter.translatePosition(tile, translate, translateAnchor);
+        return Mercator.translatePosition(transform, tile, translate, translateAnchor);
     }
 
     /**

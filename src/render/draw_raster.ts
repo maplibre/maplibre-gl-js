@@ -13,6 +13,7 @@ import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
+import {GlobeProjection} from '../geo/projection/globe';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -31,7 +32,8 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     const source = sourceCache.getSource();
     const program = painter.useProgram('raster');
 
-    const globe = painter.style.map.projectionManager.useGlobeRendering;
+    const projection = painter.style.map.projectionManager;
+    const globe = (projection instanceof GlobeProjection && projection.useGlobeRendering);
 
     const colorMode = painter.colorModeForRenderPass();
     const align = !painter.options.moving;
@@ -96,7 +98,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
             const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
             const rttCoord = isRenderingToTexture ? coord : null;
             const posMatrix = rttCoord ? rttCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
-            const projectionData = painter.style.map.projectionManager.getProjectionData(coord, posMatrix);
+            const projectionData = projection.getProjectionData(coord, posMatrix);
             const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer,
                 (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
 
@@ -105,7 +107,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
             let segments = painter.rasterBoundsSegmentsPosOnly;
 
             if (globe) {
-                const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical, useBorder);
+                const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder);
                 vertexBuffer = mesh.vertexBuffer;
                 indexBuffer = mesh.indexBuffer;
                 segments = mesh.segments;

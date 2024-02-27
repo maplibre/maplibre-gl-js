@@ -16,6 +16,7 @@ import type {OverscaledTileID} from '../source/tile_id';
 import {VertexBuffer} from '../gl/vertex_buffer';
 import {IndexBuffer} from '../gl/index_buffer';
 import {SegmentVector} from '../data/segment';
+import {GlobeProjection} from '../geo/projection/globe';
 
 const MAX_PRERENDERS_PER_FRAME = 1;
 
@@ -25,6 +26,8 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
     const context = painter.context;
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
+    const projection = painter.style.map.projectionManager;
+    const globe = (projection instanceof GlobeProjection && projection.useGlobeRendering);
 
     if (painter.renderPass === 'offscreen') {
         // Prepare tiles
@@ -42,8 +45,6 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
         context.viewport.set([0, 0, painter.width, painter.height]);
     } else if (painter.renderPass === 'translucent') {
         // Render tiles
-        const globe = painter.style.map.projectionManager.useGlobeRendering;
-
         if (globe) {
             // Globe needs two-pass rendering to avoid artifacts when rendering texture tiles.
             // See comments in draw_raster.ts for more details.
@@ -52,7 +53,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
             // Draw borderless tile meshes
             for (const coord of coords) {
                 const tile = sourceCache.getTile(coord);
-                const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical, false);
+                const mesh = projection.getMeshFromTileID(context, coord.canonical, false);
                 renderHillshade(painter, coord, tile, layer, depthMode, stencilModesHigh[coord.overscaledZ], colorMode, isRenderingToTexture,
                     mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
             }
@@ -60,7 +61,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
             // Fill gaps with meshes with borders
             for (const coord of coords) {
                 const tile = sourceCache.getTile(coord);
-                const mesh = painter.style.map.projectionManager.getMeshFromTileID(context, coord.canonical, true);
+                const mesh = projection.getMeshFromTileID(context, coord.canonical, true);
                 renderHillshade(painter, coord, tile, layer, depthMode, stencilModesLow[coord.overscaledZ], colorMode, isRenderingToTexture,
                     mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
             }

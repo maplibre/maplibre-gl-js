@@ -14,7 +14,7 @@ import type {UniformBindings, UniformValues, UniformLocations} from './uniform_b
 import type {BinderUniform} from '../data/program_configuration';
 import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
 import type {TerrainData} from '../render/terrain';
-import {ProjectionPreludeUniformsType, ProjectionData, projectionUniforms} from './projection_manager';
+import {ProjectionData, ProjectionPreludeUniformsType, projectionUniforms} from '../geo/projection/projection_uniforms';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 

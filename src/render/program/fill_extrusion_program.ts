@@ -15,7 +15,7 @@ import type {OverscaledTileID} from '../../source/tile_id';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {Tile} from '../../source/tile';
-import {ProjectionManager} from '../projection_manager';
+import {ProjectionBase} from '../../geo/projection/projection_base';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;
@@ -82,7 +82,7 @@ const fillExtrusionUniformValues = (
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
-    projectionManager: ProjectionManager,
+    projectionManager: ProjectionBase,
     cameraPosGlobe: [number, number, number]
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
@@ -114,7 +114,7 @@ const fillExtrusionPatternUniformValues = (
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
-    projectionManager: ProjectionManager,
+    projectionManager: ProjectionBase,
     cameraPosGlobe: [number, number, number],
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,

@@ -37,7 +37,7 @@ import type {Transform} from '../geo/transform';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
-import {ProjectionData} from './projection_manager';
+import {ProjectionData} from '../geo/projection/projection_uniforms';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -339,7 +339,7 @@ function drawLayerSymbols(
         const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
         const glCoordMatrix = symbolProjection.getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
-        const translation = painter.translatePosition(tile, translate, translateAnchor);
+        const translation = projectionManager.translatePosition(painter.transform, tile, translate, translateAnchor);
         const projectionData = projectionManager.getProjectionData(coord);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();

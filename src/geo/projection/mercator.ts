@@ -1,0 +1,139 @@
+import {mat4, vec3} from 'gl-matrix';
+import {Painter} from '../../render/painter';
+import {Transform} from '../transform';
+import {ProjectionBase} from './projection_base';
+import {OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
+import Point from '@mapbox/point-geometry';
+import {Tile} from '../../source/tile';
+import {ProjectionData} from './projection_uniforms';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
+import {EXTENT} from '../../data/extent';
+
+export class MercatorProjection extends ProjectionBase {
+    get useSpecialProjectionForSymbols(): boolean {
+        return false;
+    }
+
+    get isRenderingDirty(): boolean {
+        // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
+        return false;
+    }
+
+    get drawWrappedtiles(): boolean {
+        // Mecator always needs to draw wrapped/duplicated tiles.
+        return true;
+    }
+
+    updateGPUdependent(_: Painter): void {
+        // Do nothing.
+    }
+
+    updateProjection(_: Transform): void {
+        // Do nothing.
+    }
+
+    getProjectionData(tileID: OverscaledTileID, fallBackMatrix?: mat4): ProjectionData {
+        let mainMatrix: mat4;
+        if (fallBackMatrix) {
+            mainMatrix = fallBackMatrix;
+        } else {
+            if (tileID) {
+                mainMatrix = tileID.posMatrix;
+            } else {
+                mainMatrix = mat4.create(); // identity
+            }
+        }
+
+        const data: ProjectionData = {
+            'u_projection_matrix': mainMatrix,
+            'u_projection_tile_mercator_coords': tileID ? [
+                tileID.canonical.x / (1 << tileID.canonical.z),
+                tileID.canonical.y / (1 << tileID.canonical.z),
+                1.0 / (1 << tileID.canonical.z) / EXTENT,
+                1.0 / (1 << tileID.canonical.z) / EXTENT
+            ] : [0.0, 0.0, 1.0, 1.0],
+            'u_projection_clipping_plane': [0, 0, 0, 0],
+            'u_projection_globeness': 0.0,
+            'u_projection_fallback_matrix': mainMatrix,
+        };
+
+        return data;
+    }
+
+    isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
+        return false;
+    }
+
+    project(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID): {
+        point: Point;
+        signedDistanceFromCamera: number;
+        isOccluded: boolean;
+    } {
+        // This function should only be used when useSpecialProjectionForSymbols is set to true.
+        throw new Error('Not implemented.');
+    }
+
+    transformLightDirection(dir: vec3): vec3 {
+        return dir;
+    }
+
+    getPixelScale(_: Transform): number {
+        return 1.0;
+    }
+
+    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+        return translatePosition(transform, tile, translate, translateAnchor);
+    }
+}
+
+/**
+ * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
+ * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+ * @returns matrix
+ */
+export function translatePosMatrix(
+    transform: Transform,
+    tile: Tile,
+    matrix: mat4,
+    translate: [number, number],
+    translateAnchor: 'map' | 'viewport',
+    inViewportPixelUnitsUnits: boolean = false
+): mat4 {
+    if (!translate[0] && !translate[1]) return matrix;
+
+    const translation = translatePosition(transform, tile, translate, translateAnchor, inViewportPixelUnitsUnits);
+    const translatedMatrix = new Float32Array(16);
+    mat4.translate(translatedMatrix, matrix, [translation[0], translation[1], 0]);
+    return translatedMatrix;
+}
+
+/**
+ * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
+ * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+ */
+export function translatePosition(
+    transform: Transform,
+    tile: Tile,
+    translate: [number, number],
+    translateAnchor: 'map' | 'viewport',
+    inViewportPixelUnitsUnits: boolean = false
+): [number, number] {
+    if (!translate[0] && !translate[1]) return [0, 0];
+
+    const angle = inViewportPixelUnitsUnits ?
+        (translateAnchor === 'map' ? transform.angle : 0) :
+        (translateAnchor === 'viewport' ? -transform.angle : 0);
+
+    if (angle) {
+        const sinA = Math.sin(angle);
+        const cosA = Math.cos(angle);
+        translate = [
+            translate[0] * cosA - translate[1] * sinA,
+            translate[0] * sinA + translate[1] * cosA
+        ];
+    }
+
+    return [
+        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], transform.zoom),
+        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
+}
