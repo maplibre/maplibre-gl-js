@@ -32,7 +32,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     const source = sourceCache.getSource();
     const program = painter.useProgram('raster');
 
-    const projection = painter.style.map.projectionManager;
+    const projection = painter.style.map.projection;
     const globe = (projection instanceof GlobeProjection && projection.useGlobeRendering);
 
     const colorMode = painter.colorModeForRenderPass();

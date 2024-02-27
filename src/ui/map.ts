@@ -432,7 +432,7 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
-    projectionManager: ProjectionBase;
+    projection: ProjectionBase;
 
     _globeEnabled: boolean = false;
     _container: HTMLElement;
@@ -611,7 +611,7 @@ export class Map extends Camera {
             this.setMaxBounds(options.maxBounds);
         }
 
-        this.projectionManager = new GlobeProjection(this);
+        this.projection = new GlobeProjection(this);
 
         this._setupContainer();
         this._setupPainter();
@@ -1987,8 +1987,8 @@ export class Map extends Camera {
         if (enabled !== this._globeEnabled) {
             this._globeEnabled = enabled;
             if (!animate) {
-                if (this.projectionManager instanceof GlobeProjection) {
-                    this.projectionManager.skipNextProjectionTransitionAnimation();
+                if (this.projection instanceof GlobeProjection) {
+                    this.projection.skipNextProjectionTransitionAnimation();
                 }
             }
             this._updateRenderToTexture();
@@ -3161,7 +3161,7 @@ export class Map extends Camera {
         }
 
         // This projection update should happen *before* placement update
-        this.projectionManager.updateProjection(this.painter.transform);
+        this.projection.updateProjection(this.painter.transform);
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
@@ -3215,7 +3215,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projectionManager.isRenderingDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projection.isRenderingDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

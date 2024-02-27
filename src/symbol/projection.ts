@@ -161,7 +161,7 @@ function updateLineLabels(bucket: SymbolBucket,
     pitchWithMap: boolean,
     keepUpright: boolean,
     rotateToLine: boolean,
-    projectionManager: ProjectionBase,
+    projection: ProjectionBase,
     unwrappedTileID: UnwrappedTileID,
     viewportWidth: number,
     viewportHeight: number,
@@ -220,7 +220,7 @@ function updateLineLabels(bucket: SymbolBucket,
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            projectionManager,
+            projection,
             tileAnchorPoint,
             unwrappedTileID,
             width: viewportWidth,
@@ -394,7 +394,6 @@ function placeGlyphsAlongLine(projectionArgs: ProjectionArgs, symbol, fontSize, 
     return {};
 }
 
-// projectionProvider: either we want to project using a simple matrix (mat4), or do globe projection (ProjectionManager)
 function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4, getElevation: (x: number, y: number) => number) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
     // If it did, that would mean our label extended all the way out from within the viewport to a (very distant)
@@ -471,7 +470,7 @@ export type ProjectionArgs = {
      * True when line glyphs are projected onto the map, instead of onto the viewport.
      */
     pitchWithMap: boolean;
-    projectionManager: ProjectionBase;
+    projection: ProjectionBase;
     unwrappedTileID: UnwrappedTileID;
     /**
      * Viewport width.
@@ -528,8 +527,8 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
     const minimumLength = syntheticVertexArgs.absOffsetX - syntheticVertexArgs.distanceFromAnchor + 1;
     const unitVertextoBeProjected = previousTilePoint.add(previousTilePoint.sub(currentVertex)._unit());
     let projectedUnitVertex;
-    if (projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
-        projectedUnitVertex = projectionArgs.projectionManager.project(unitVertextoBeProjected.x, unitVertextoBeProjected.y, projectionArgs.unwrappedTileID).point;
+    if (projectionArgs.projection.useSpecialProjectionForSymbols) {
+        projectedUnitVertex = projectionArgs.projection.project(unitVertextoBeProjected.x, unitVertextoBeProjected.y, projectionArgs.unwrappedTileID).point;
         projectedUnitVertex.x = (projectedUnitVertex.x * 0.5 + 0.5) * projectionArgs.width;
         projectedUnitVertex.y = (-projectedUnitVertex.y * 0.5 + 0.5) * projectionArgs.height;
     } else {
@@ -546,8 +545,8 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: 
     isOccluded: boolean;
 } {
     let projection;
-    if (!projectionArgs.pitchWithMap && projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
-        projection = projectionArgs.projectionManager.project(x, y, projectionArgs.unwrappedTileID);
+    if (!projectionArgs.pitchWithMap && projectionArgs.projection.useSpecialProjectionForSymbols) {
+        projection = projectionArgs.projection.project(x, y, projectionArgs.unwrappedTileID);
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
     } else {

@@ -82,7 +82,7 @@ const fillExtrusionUniformValues = (
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
-    projectionManager: ProjectionBase,
+    projection: ProjectionBase,
     cameraPosGlobe: [number, number, number]
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
@@ -93,7 +93,7 @@ const fillExtrusionUniformValues = (
         mat3.fromRotation(lightMat, -painter.transform.angle);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
-    const transformedLightPos = projectionManager.transformLightDirection(lightPos);
+    const transformedLightPos = projection.transformLightDirection(lightPos);
 
     const lightColor = light.properties.get('color');
 
@@ -114,13 +114,13 @@ const fillExtrusionPatternUniformValues = (
     shouldUseVerticalGradient: boolean,
     opacity: number,
     translate: [number, number],
-    projectionManager: ProjectionBase,
+    projection: ProjectionBase,
     cameraPosGlobe: [number, number, number],
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,
     tile: Tile
 ): UniformValues<FillExtrusionPatternUniformsType> => {
-    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, projectionManager, cameraPosGlobe),
+    return extend(fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, projection, cameraPosGlobe),
         patternUniformValues(crossfade, painter, tile),
         {
             'u_height_factor': -Math.pow(2, coord.overscaledZ) / tile.tileSize / 8

@@ -48,7 +48,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
 
     const context = painter.context;
     const gl = context.gl;
-    const projectionManager = painter.style.map.projectionManager;
+    const projection = painter.style.map.projection;
 
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
     // Turn off stencil testing to allow circles to be drawn across boundaries,
@@ -80,7 +80,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
         //     styleTranslate,
         //     styleTranslateAnchor); // JP: TODO: implement this for globe
         const matrix = coord.posMatrix;
-        const projectionData = projectionManager.getProjectionData(coord, matrix);
+        const projectionData = projection.getProjectionData(coord, matrix);
 
         const state: TileRenderState = {
             programConfiguration,

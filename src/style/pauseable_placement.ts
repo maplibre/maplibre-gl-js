@@ -71,7 +71,7 @@ export class PauseablePlacement {
 
     constructor(
         transform: Transform,
-        projectionManager: ProjectionBase,
+        projection: ProjectionBase,
         terrain: Terrain,
         order: Array<string>,
         forceFullPlacement: boolean,
@@ -80,7 +80,7 @@ export class PauseablePlacement {
         crossSourceCollisions: boolean,
         prevPlacement?: Placement
     ) {
-        this.placement = new Placement(transform, projectionManager, terrain, fadeDuration, crossSourceCollisions, prevPlacement);
+        this.placement = new Placement(transform, projection, terrain, fadeDuration, crossSourceCollisions, prevPlacement);
         this._currentPlacementIndex = order.length - 1;
         this._forceFullPlacement = forceFullPlacement;
         this._showCollisionBoxes = showCollisionBoxes;

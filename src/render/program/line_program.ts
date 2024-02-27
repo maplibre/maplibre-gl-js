@@ -187,7 +187,7 @@ function calculateTileRatio(tile: Tile, transform: Transform) {
 
 function calculateTranslation(painter: Painter, tile: Tile, layer: LineStyleLayer): [number, number] {
     // Translate line points prior to any transformation
-    return painter.style.map.projectionManager.translatePosition(
+    return painter.style.map.projection.translatePosition(
         painter.transform,
         tile,
         layer.paint.get('line-translate'),

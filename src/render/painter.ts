@@ -237,7 +237,7 @@ export class Painter {
         mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
-        const projectionData = this.style.map.projectionManager.getProjectionData(null);
+        const projectionData = this.style.map.projection.getProjectionData(null);
         projectionData['u_projection_matrix'] = matrix;
 
         // Note: we use a shader with projection code disabled since we want to draw a fullscreen quad
@@ -268,7 +268,7 @@ export class Painter {
 
         this._tileClippingMaskIDs = {};
 
-        const projectionManager = this.style.map.projectionManager;
+        const projection = this.style.map.projection;
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
@@ -277,11 +277,11 @@ export class Painter {
 
             let mesh = this.tileExtentMesh;
 
-            if (projectionManager instanceof GlobeProjection) {
-                mesh = projectionManager.getMeshFromTileID(this.context, tileID.canonical, true);
+            if (projection instanceof GlobeProjection) {
+                mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true);
             }
 
-            const projectionData = projectionManager.getProjectionData(tileID);
+            const projectionData = projection.getProjectionData(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
@@ -426,7 +426,7 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
-        const deduplicateWrapped = !style.map.projectionManager.drawWrappedtiles;
+        const deduplicateWrapped = !style.map.projection.drawWrappedtiles;
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -483,7 +483,7 @@ export class Painter {
         }
 
         // Execute offscreen GPU tasks of the projection manager
-        this.style.map.projectionManager.updateGPUdependent(this);
+        this.style.map.projection.updateGPUdependent(this);
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.bindFramebuffer.set(null);
@@ -624,7 +624,7 @@ export class Painter {
         const useTerrain = !!this.style.map.terrain;
 
         // TODO: better system for injecting projection code into shaders
-        const useGlobe = (this.style.map.projectionManager instanceof GlobeProjection && this.style.map.projectionManager.useGlobeRendering && allowProjection);
+        const useGlobe = (this.style.map.projection instanceof GlobeProjection && this.style.map.projection.useGlobeRendering && allowProjection);
 
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +

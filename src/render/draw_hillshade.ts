@@ -26,7 +26,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
     const context = painter.context;
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    const projection = painter.style.map.projectionManager;
+    const projection = painter.style.map.projection;
     const globe = (projection instanceof GlobeProjection && projection.useGlobeRendering);
 
     if (painter.renderPass === 'offscreen') {
@@ -101,7 +101,7 @@ function renderHillshade(
 
     const align = !painter.options.moving;
     const matrix = isRenderingToTexture ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align);
-    const projectionData = painter.style.map.projectionManager.getProjectionData(coord, matrix);
+    const projectionData = painter.style.map.projection.getProjectionData(coord, matrix);
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
         hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, vertexBuffer, indexBuffer, segments);

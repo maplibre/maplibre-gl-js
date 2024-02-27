@@ -55,7 +55,7 @@ export class CollisionIndex {
     screenBottomBoundary: number;
     gridRightBoundary: number;
     gridBottomBoundary: number;
-    projectionManager: ProjectionBase;
+    projection: ProjectionBase;
 
     // With perspectiveRatio the fontsize is calculated for tilted maps (near = bigger, far = smaller).
     // The cutoff defines a threshold to no longer render labels near the horizon.
@@ -63,12 +63,12 @@ export class CollisionIndex {
 
     constructor(
         transform: Transform,
-        projectionManager: ProjectionBase,
+        projection: ProjectionBase,
         grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
         ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
-        this.projectionManager = projectionManager;
+        this.projection = projection;
 
         this.grid = grid;
         this.ignoredGrid = ignoredGrid;
@@ -100,7 +100,7 @@ export class CollisionIndex {
         const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
         const brX = collisionBox.x2 * tileToViewport + projectedPoint.point.x;
         const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
-        const projectionOccluded = this.projectionManager.useSpecialProjectionForSymbols ? this.projectionManager.isOccluded(collisionBox.anchorPointX, collisionBox.anchorPointY, unwrappedTileID) : false;
+        const projectionOccluded = this.projection.useSpecialProjectionForSymbols ? this.projection.isOccluded(collisionBox.anchorPointX, collisionBox.anchorPointY, unwrappedTileID) : false;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate)) ||
@@ -156,7 +156,7 @@ export class CollisionIndex {
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            projectionManager: this.projectionManager,
+            projection: this.projection,
             tileAnchorPoint: tileUnitAnchorPoint,
             unwrappedTileID,
             width: this.transform.width,
@@ -205,13 +205,13 @@ export class CollisionIndex {
                     signedDistanceFromCamera: number;
                     isOccluded?: boolean;
                 }>;
-                if (projectionArgs.projectionManager.useSpecialProjectionForSymbols) {
+                if (projectionArgs.projection.useSpecialProjectionForSymbols) {
                     // Globe (or other special projection) is enabled in this branch.
                     const inverseLabelPlaneMatrix = mat4.create();
                     mat4.invert(inverseLabelPlaneMatrix, labelPlaneMatrix);
                     screenSpacePath = projectedPath.map(p => {
                         const backProjected = projection.project(p, inverseLabelPlaneMatrix, projectionArgs.getElevation);
-                        const projected = this.projectionManager.project(backProjected.point.x, backProjected.point.y, unwrappedTileID);
+                        const projected = this.projection.project(backProjected.point.x, backProjected.point.y, unwrappedTileID);
                         projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionArgs.width;
                         projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionArgs.height;
                         return projected;
@@ -413,8 +413,8 @@ export class CollisionIndex {
 
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
         let projected;
-        if (this.projectionManager.useSpecialProjectionForSymbols) {
-            projected = this.projectionManager.project(x, y, unwrappedTileID);
+        if (this.projection.useSpecialProjectionForSymbols) {
+            projected = this.projection.project(x, y, unwrappedTileID);
         } else {
             projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }
@@ -433,8 +433,8 @@ export class CollisionIndex {
     getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
         // We don't care about the actual projected point, just its W component.
         let projected;
-        if (this.projectionManager.useSpecialProjectionForSymbols) {
-            projected = this.projectionManager.project(x, y, unwrappedTileID);
+        if (this.projection.useSpecialProjectionForSymbols) {
+            projected = this.projection.project(x, y, unwrappedTileID);
         } else {
             projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }

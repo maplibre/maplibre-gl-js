@@ -20,7 +20,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
 
     const context = painter.context;
     const gl = context.gl;
-    const projectionManager = painter.style.map.projectionManager;
+    const projection = painter.style.map.projection;
     const transform = painter.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');
@@ -44,14 +44,14 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
 
     for (const tileID of tileIDs) {
         const matrix = coords ? tileID.posMatrix : painter.transform.calculatePosMatrix(tileID.toUnwrapped());
-        const projectionData = projectionManager.getProjectionData(tileID, matrix);
+        const projectionData = projection.getProjectionData(tileID, matrix);
 
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :
             backgroundUniformValues(opacity, color);
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(tileID);
 
-        if (projectionManager instanceof GlobeProjection && projectionManager.useGlobeRendering) {
+        if (projection instanceof GlobeProjection && projection.useGlobeRendering) {
             // For globe rendering, background uses tile meshes *without* borders and no stencil clipping.
             // This works assuming the tileIDs list contains only tiles of the same zoom level.
             // This seems to always be the case for background layers, but I'm leaving this comment
@@ -62,7 +62,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
             // first though, as that doesn't seem to happen for background layers as of writing this.
 
             const useMeshWithBorders = false;
-            const mesh = projectionManager.getMeshFromTileID(context, tileID.canonical, useMeshWithBorders);
+            const mesh = projection.getMeshFromTileID(context, tileID.canonical, useMeshWithBorders);
             program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
                 uniformValues, terrainData, projectionData, layer.id,
                 mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);

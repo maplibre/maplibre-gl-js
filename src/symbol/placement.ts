@@ -241,10 +241,10 @@ export class Placement {
         [k in any]: CollisionCircleArray;
     };
 
-    constructor(transform: Transform, projectionManager: ProjectionBase, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+    constructor(transform: Transform, projection: ProjectionBase, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
         this.terrain = terrain;
-        this.collisionIndex = new CollisionIndex(this.transform, projectionManager);
+        this.collisionIndex = new CollisionIndex(this.transform, projection);
         this.placements = {};
         this.opacities = {};
         this.variableOffsets = {};
