@@ -17,14 +17,17 @@ const defaultOptions = {
     closeOnClick: true,
     focusAfterOpen: true,
     className: '',
-    maxWidth: '240px'
+    maxWidth: '240px',
+    subpixelPositioning: false
 };
 
 /**
  * A pixel offset specified as:
+ *
  * - a single number specifying a distance from the location
  * - a {@link PointLike} specifying a constant offset
  * - an object of {@link Point}s specifying an offset for each anchor position
+ *
  * Negative offsets indicate left and up.
  */
 export type Offset = number | PointLike | {
@@ -76,6 +79,12 @@ export type PopupOptions = {
      * @defaultValue '240px'
      */
     maxWidth?: string;
+    /**
+     * If `true`, rounding is disabled for placement of the popup, allowing for
+     * subpixel positioning and smoother movement when the popup is translated.
+     * @defaultValue false
+     */
+    subpixelPositioning?: boolean;
 };
 
 const focusQuerySelector = [
@@ -97,7 +106,7 @@ const focusQuerySelector = [
  * @example
  * Create a popup
  * ```ts
- * let popup = new maplibregl.Popup();
+ * let popup = new Popup();
  * // Set an event listener that will fire
  * // any time the popup is opened
  * popup.on('open', function(){
@@ -108,7 +117,7 @@ const focusQuerySelector = [
  * @example
  * Create a popup
  * ```ts
- * let popup = new maplibregl.Popup();
+ * let popup = new Popup();
  * // Set an event listener that will fire
  * // any time the popup is closed
  * popup.on('close', function(){
@@ -129,7 +138,7 @@ const focusQuerySelector = [
  *  'left': [markerRadius, (markerHeight - markerRadius) * -1],
  *  'right': [-markerRadius, (markerHeight - markerRadius) * -1]
  *  };
- * let popup = new maplibregl.Popup({offset: popupOffsets, className: 'my-class'})
+ * let popup = new Popup({offset: popupOffsets, className: 'my-class'})
  *   .setLngLat(e.lngLat)
  *   .setHTML("<h1>Hello World!</h1>")
  *   .setMaxWidth("300px")
@@ -156,6 +165,7 @@ export class Popup extends Evented {
     _lngLat: LngLat;
     _trackPointer: boolean;
     _pos: Point;
+    _flatPos: Point;
 
     constructor(options?: PopupOptions) {
         super();
@@ -169,7 +179,7 @@ export class Popup extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * new maplibregl.Popup()
+     * new Popup()
      *   .setLngLat([0, 0])
      *   .setHTML("<h1>Null Island</h1>")
      *   .addTo(map);
@@ -223,7 +233,7 @@ export class Popup extends Evented {
      *
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup().addTo(map);
+     * let popup = new Popup().addTo(map);
      * popup.remove();
      * ```
      * @returns `this`
@@ -277,6 +287,7 @@ export class Popup extends Evented {
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
         this._pos = null;
+        this._flatPos = null;
 
         this._trackPointer = false;
 
@@ -299,7 +310,7 @@ export class Popup extends Evented {
      * For most use cases, set `closeOnClick` and `closeButton` to `false`.
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup({ closeOnClick: false, closeButton: false })
+     * let popup = new Popup({ closeOnClick: false, closeButton: false })
      *   .setHTML("<h1>Hello World!</h1>")
      *   .trackPointer()
      *   .addTo(map);
@@ -309,6 +320,7 @@ export class Popup extends Evented {
     trackPointer(): this {
         this._trackPointer = true;
         this._pos = null;
+        this._flatPos = null;
         this._update();
         if (this._map) {
             this._map.off('move', this._update);
@@ -329,7 +341,7 @@ export class Popup extends Evented {
      * @example
      * Change the `Popup` element's font size
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      *   .setLngLat([-96, 37.8])
      *   .setHTML("<p>Hello World!</p>")
      *   .addTo(map);
@@ -353,7 +365,7 @@ export class Popup extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      *   .setLngLat(e.lngLat)
      *   .setText('Hello, world!')
      *   .addTo(map);
@@ -374,7 +386,7 @@ export class Popup extends Evented {
      * @returns `this`
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      *   .setLngLat(e.lngLat)
      *   .setHTML("<h1>Hello World!</h1>")
      *   .addTo(map);
@@ -430,7 +442,7 @@ export class Popup extends Evented {
      * ```ts
      * let div = document.createElement('div');
      * div.innerHTML = 'Hello, world!';
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      *   .setLngLat(e.lngLat)
      *   .setDOMContent(div)
      *   .addTo(map);
@@ -463,7 +475,7 @@ export class Popup extends Evented {
      *
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      * popup.addClassName('some-class')
      * ```
      */
@@ -480,7 +492,7 @@ export class Popup extends Evented {
      *
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      * popup.removeClassName('some-class')
      * ```
      */
@@ -511,7 +523,7 @@ export class Popup extends Evented {
      *
      * @example
      * ```ts
-     * let popup = new maplibregl.Popup()
+     * let popup = new Popup()
      * popup.toggleClassName('toggleClass')
      * ```
      */
@@ -519,6 +531,21 @@ export class Popup extends Evented {
         if (this._container) {
             return this._container.classList.toggle(className);
         }
+    }
+
+    /**
+     * Set the option to allow subpixel positioning of the popup by passing a boolean
+     *
+     * @param value - When boolean is true, subpixel positioning is enabled for the popup.
+     *
+     * @example
+     * ```ts
+     * let popup = new Popup()
+     * popup.setSubpixelPositioning(true);
+     * ```
+     */
+    setSubpixelPositioning(value: boolean) {
+        this.options.subpixelPositioning = value;
     }
 
     _createCloseButton() {
@@ -568,12 +595,16 @@ export class Popup extends Evented {
         }
 
         if (this._map.transform.renderWorldCopies && !this._trackPointer) {
-            this._lngLat = smartWrap(this._lngLat, this._pos, this._map.transform);
+            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
         }
 
         if (this._trackPointer && !cursor) return;
 
-        const pos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
+        const pos = this._flatPos = this._pos = this._trackPointer && cursor ? cursor : this._map.project(this._lngLat);
+        if (this._map.terrain) {
+            // flat position is saved because smartWrap needs non-elevated points
+            this._flatPos = this._trackPointer && cursor ? cursor : this._map.transform.locationPoint(this._lngLat);
+        }
 
         let anchor = this.options.anchor;
         const offset = normalizeOffset(this.options.offset);
@@ -604,7 +635,12 @@ export class Popup extends Evented {
             }
         }
 
-        const offsetedPos = pos.add(offset[anchor]).round();
+        let offsetedPos = pos.add(offset[anchor]);
+
+        if (!this.options.subpixelPositioning) {
+            offsetedPos = offsetedPos.round();
+        }
+
         DOM.setTransform(this._container, `${anchorTranslate[anchor]} translate(${offsetedPos.x}px,${offsetedPos.y}px)`);
         applyAnchorClass(this._container, anchor, 'popup');
     };

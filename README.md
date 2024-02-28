@@ -1,4 +1,6 @@
-![MapLibre Logo](https://maplibre.org/img/maplibre-logo-big.svg)
+<p align="center">
+  <img src="https://maplibre.org/img/maplibre-logo-big.svg" alt="MapLibre Logo">
+</p>
 
 # MapLibre GL JS
 
@@ -52,7 +54,7 @@ Check out the features through [examples](https://maplibre.org/maplibre-gl-js/do
 
 Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
-Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started/get-started#using-with-a-mapbox-gl-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
+Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started#using-with-a-compatible-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
 
 <br />
 
@@ -62,10 +64,6 @@ Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs
 
 Join the #maplibre slack channel at OSMUS: get an invite at https://slack.openstreetmap.us/
 Read the [CONTRIBUTING.md](CONTRIBUTING.md) guide in order to get familiar with how we do things around here.
-
-### Community Leadership
-
-You can find the official status of the backing community and steering committee in the [COMMUNITY.md](COMMUNITY.md) document.
 
 ### Avoid Fragmentation
 
@@ -90,11 +88,9 @@ We thank everyone who supported us financially in the past and special thanks to
 
 Read more about the MapLibre Sponsorship Program at [https://maplibre.org/sponsors/](https://maplibre.org/sponsors/).
 
-Platinum:
+Gold:
 
 <a href="https://aws.com"><img src="https://maplibre.org/img/aws-logo.svg" alt="Logo AWS" width="25%"/></a>
-
-Gold:
 
 <a href="https://meta.com"><img src="https://maplibre.org/img/meta-logo.svg" alt="Logo Meta" width="25%"/></a>
 
@@ -107,6 +103,8 @@ Silver:
 <a href="https://www.jawg.io/"><img src="https://maplibre.org/img/jawgmaps-logo.svg" alt="Logo JawgMaps" width="25%"/></a>
 
 <a href="https://www.radar.com/"><img src="https://maplibre.org/img/radar-logo.svg" alt="Logo Radar" width="25%"/></a>
+
+<a href="https://www.microsoft.com/"><img src="https://maplibre.org/img/msft-logo.svg" alt="Logo MSFT" width="25%"/></a>
 
 Backers and Supporters:
 

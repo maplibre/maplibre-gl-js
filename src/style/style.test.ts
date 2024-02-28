@@ -883,6 +883,22 @@ describe('Style#setState', () => {
         expect(style.stylesheet.layers[0].id).toBe(initialState.layers[0].id);
         expect(style.stylesheet.layers).toHaveLength(1);
     });
+
+    test('Style#setState skips validateStyle when validate false', async () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON();
+        style.loadJSON(styleSpec);
+
+        await style.once('style.load');
+
+        style.addSource('abc', createSource());
+        const nextState = {...styleSpec};
+        nextState.sources['def'] = {type: 'geojson'} as GeoJSONSourceSpecification;
+
+        const didChange = style.setState(nextState, {validate: false});
+
+        expect(didChange).toBeTruthy();
+    });
 });
 
 describe('Style#addSource', () => {

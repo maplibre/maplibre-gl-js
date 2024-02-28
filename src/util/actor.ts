@@ -2,7 +2,6 @@ import {Subscription, isWorker, subscribe} from './util';
 import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
-import type {Transferable} from '../types/transferable';
 import type {ActorMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
 
 /**
@@ -130,7 +129,7 @@ export class Actor implements IActor {
     receive(message: {data: MessageData}) {
         const data = message.data;
         const id = data.id;
-        if (data.origin !== location.origin) {
+        if (data.origin !== 'file://' && location.origin !== 'file://' && data.origin !== location.origin) {
             return;
         }
         if (data.targetMapId && this.mapId !== data.targetMapId) {

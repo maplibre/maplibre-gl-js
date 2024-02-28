@@ -21,8 +21,6 @@ import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 
-export type InputEvent = MouseEvent | TouchEvent | KeyboardEvent | WheelEvent;
-
 const isMoving = p => p.zoom || p.drag || p.pitch || p.rotate;
 
 class RenderFrameEvent extends Event {
@@ -364,7 +362,7 @@ export class HandlerManager {
 
         this._updatingCamera = true;
 
-        const inputEvent = e.type === 'renderFrame' ? undefined : e as InputEvent;
+        const inputEvent = e.type === 'renderFrame' ? undefined : e as UIEvent;
 
         /*
          * We don't call e.preventDefault() for any events by default.
@@ -435,7 +433,7 @@ export class HandlerManager {
         eventsInProgress: EventsInProgress,
         handlerResult: HandlerResult,
         name: string,
-        e?: InputEvent) {
+        e?: UIEvent) {
         if (!handlerResult) return;
 
         extend(mergedHandlerResult, handlerResult);

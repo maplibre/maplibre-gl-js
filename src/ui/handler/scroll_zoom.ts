@@ -233,7 +233,14 @@ export class ScrollZoomHandler implements Handler {
         const pos = DOM.mousePos(this._map.getCanvas(), e);
         const tr = this._tr;
 
-        this._around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
+        if (pos.y > tr.transform.height / 2 - tr.transform.getHorizon()) {
+            this._around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
+        } else {
+            // Do not use current cursor position if above the horizon to avoid 'unproject' this point
+            // as it is not mapped into 'coords' framebuffer or inversible with 'pixelMatrixInverse'.
+            this._around = LngLat.convert(tr.center);
+        }
+
         this._aroundPoint = tr.transform.locationPoint(this._around);
         if (!this._frameId) {
             this._frameId = true;
