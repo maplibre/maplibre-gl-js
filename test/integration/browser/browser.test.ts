@@ -327,7 +327,7 @@ describe('Browser tests', () => {
             await sleepInBrowser(100);
 
             await map.once('idle');
-            const fullscreenButton = document.getElementsByTagName("map-libre")[0].shadowRoot.querySelector(".maplibregl-ctrl-fullscreen") as HTMLButtonElement;
+            const fullscreenButton = document.getElementsByTagName('map-libre')[0].shadowRoot.querySelector('.maplibregl-ctrl-fullscreen') as HTMLButtonElement;
             fullscreenButton.click();
             await sleepInBrowser(1000);
 
