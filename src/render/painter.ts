@@ -630,13 +630,14 @@ export class Painter {
         const projectionPrelude = forceSimpleProjection ? shaders.projectionMercator : projection.shaderPreludeCode;
         const projectionDefine = forceSimpleProjection ? MercatorShaderDefine : projection.shaderDefine;
         const projectionKey = `/${forceSimpleProjection ? MercatorShaderVariantKey : projection.shaderVariantName}`;
+        const concatenatedDefines = defines ? [projectionDefine].concat(defines) : [projectionDefine];
 
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             projectionKey +
             (this._showOverdrawInspector ? '/overdraw' : '') +
             (useTerrain ? '/terrain' : '') +
-            (defines ? (`/defines:${defines.join('//')}`) : '');
+            (concatenatedDefines ? (`/defines:${concatenatedDefines.join('//')}`) : '');
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
@@ -646,7 +647,7 @@ export class Painter {
                 this._showOverdrawInspector,
                 useTerrain,
                 projectionPrelude,
-                [projectionDefine].concat(defines)
+                concatenatedDefines
             );
         }
         return this.cache[key];
