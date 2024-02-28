@@ -277,4 +277,64 @@ describe('Browser tests', () => {
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
         expect(markerScreenPosition.y).toBeCloseTo(378.1);
     }, 20000);
+
+    test('Fullscreen control should work in shadowdom as well', async () => {
+        const fullscreenButtonTitle = await page.evaluate(async () => {
+            function sleepInBrowser(milliseconds: number) {
+                return new Promise(resolve => setTimeout(resolve, milliseconds));
+            };
+
+            let map: Map;
+            class MapLibre extends HTMLElement {
+                async connectedCallback() {
+                    const maplibreCSS = await (await fetch('/../../../../dist/maplibre-gl.css')).text();
+                    const styleSheet = new CSSStyleSheet();
+                    await styleSheet.replace(`${maplibreCSS}
+                      :host, .maplibregl-map {
+                      height: 100%;
+                      width: 100%;
+                    }`);
+                    const shadow = this.attachShadow({
+                        mode: 'open'
+                    });
+                    shadow.adoptedStyleSheets.push(styleSheet);
+                    const container = document.createElement('div');
+                    shadow.appendChild(container);
+                    map = new maplibregl.Map({
+                        container,
+                        style: {
+                            version: 8,
+                            sources: {
+                                osm: {
+                                    attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
+                                    type: 'raster',
+                                    tileSize: 256,
+                                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png']
+                                }
+                            },
+                            layers: [{
+                                type: 'raster',
+                                id: 'OpenStreetMap',
+                                source: 'osm'
+                            }]
+                        }
+                    });
+                    map.addControl(new maplibregl.FullscreenControl());
+                }
+            }
+            customElements.define('map-libre', MapLibre);
+            document.body.innerHTML = '<map-libre></map-libre>';
+            
+            await sleepInBrowser(100);
+
+            await map.once('idle');
+            let fullscreenButton = document.getElementsByTagName("map-libre")[0].shadowRoot.querySelector(".maplibregl-ctrl-fullscreen") as HTMLButtonElement;
+            fullscreenButton.click();
+            await sleepInBrowser(1000);
+
+            return fullscreenButton.title;
+        });
+
+        expect(fullscreenButtonTitle).toBe('Exit fullscreen');
+    }, 20000);
 });
