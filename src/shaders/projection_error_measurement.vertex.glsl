@@ -6,7 +6,7 @@ uniform highp float u_output_expected;
 out vec4 v_output_error_encoded;
 
 void main() {
-    float real_output = 2.0 * atan(exp(GLOBE_PI - (u_input * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
+    float real_output = 2.0 * atan(exp(PI - (u_input * PI * 2.0))) - PI * 0.5;
     // If we assume that the error visible on the map is never more than 1 km,
     // then the angular error is always smaller than 1/6378 * 2PI = ~0.00098513
     float error = real_output - u_output_expected;

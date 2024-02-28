@@ -164,11 +164,11 @@ float get_elevation(vec2 pos) {
 
 uniform mat4 u_projection_matrix;
 
-// Make sure to define GLOBE_PI even if globe is disabled.
-#define GLOBE_PI 3.1415926535897932384626433832795
-#define GLOBE_RADIUS 6371008.8
+const float PI = 3.1415926535897932384626433832795;
 
 #ifdef GLOBE
+
+#define GLOBE_RADIUS 6371008.8
 
 uniform highp vec4 u_projection_tile_mercator_coords;
 uniform highp vec4 u_projection_clipping_plane;
@@ -203,7 +203,7 @@ mat3 globeGetRotationMatrix(vec3 spherePos) {
 // Use `projectLineThickness` or `projectCircleRadius` instead.
 float circumferenceRatioAtTileY(float tileY) {
     float mercator_pos_y = u_projection_tile_mercator_coords.y + u_projection_tile_mercator_coords.w * tileY;
-    float spherical_y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos_y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
+    float spherical_y = 2.0 * atan(exp(PI - (mercator_pos_y * PI * 2.0))) - PI * 0.5;
     return cos(spherical_y);
 }
 
@@ -242,8 +242,8 @@ vec3 projectToSphere(vec2 posInTile) {
     // However, for now we will treat them as coordinates on a perfect sphere. TODO.
 
     vec2 spherical;
-    spherical.x = mercator_pos.x * GLOBE_PI * 2.0 + GLOBE_PI;
-    spherical.y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos.y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
+    spherical.x = mercator_pos.x * PI * 2.0 + PI;
+    spherical.y = 2.0 * atan(exp(PI - (mercator_pos.y * PI * 2.0))) - PI * 0.5;
 
     float len = cos(spherical.y);
     vec3 pos = vec3(
@@ -321,31 +321,6 @@ vec4 projectTileFor3D(vec2 posInTile, float elevation) {
     return interpolateProjectionFor3D(posInTile, spherePos, elevation);
 }
 
-// vec4 getDebugColor(vec2 posInTile) {
-//     vec2 mercator_pos = mix(u_projection_tile_mercator_coords.xy, u_projection_tile_mercator_coords.zw, posInTile / 8192.0);
-//     vec2 spherical;
-//     spherical.x = mercator_pos.x * GLOBE_PI * 2.0 + GLOBE_PI;
-//     spherical.y = 2.0 * atan(exp(GLOBE_PI - (mercator_pos.y * GLOBE_PI * 2.0))) - GLOBE_PI * 0.5;
-//     float scale = 0.5;
-//     float len = cos(spherical.y);
-//     vec4 pos = vec4(
-//         sin(spherical.x) * len,
-//         sin(spherical.y),
-//         cos(spherical.x) * len,
-//         1.0
-//     );
-//     float dist = dot(pos.xyz, u_projection_clipping_plane.xyz) + u_projection_clipping_plane.w;
-
-//     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);
-//     float epsilon = 0.02;
-
-//     if(dist > epsilon)
-//         result = vec4(0.0, 1.0, 0.0, 1.0);
-//     if(dist < -epsilon)
-//         result = vec4(1.0, 0.0, 0.0, 1.0);
-
-//     return result;
-// }
 #else
 
 float projectLineThickness(float tileY) {
