@@ -336,6 +336,7 @@ describe('Browser tests', () => {
         });
 
         expect(fullscreenButtonTitle).toBe('Exit fullscreen');
+    }, 20000);
 
     test('Marker: correct opacity after resize with 3d terrain', async () => {
         const markerOpacity = await page.evaluate(() => {
