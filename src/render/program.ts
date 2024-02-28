@@ -1,4 +1,4 @@
-import {shaders} from '../shaders/shaders';
+import {PreparedShader, shaders} from '../shaders/shaders';
 import {ProgramConfiguration} from '../data/program_configuration';
 import {VertexArrayObject} from './vertex_array_object';
 import {Context} from '../gl/context';
@@ -44,17 +44,12 @@ export class Program<Us extends UniformBindings> {
     failedToCreate: boolean;
 
     constructor(context: Context,
-        source: {
-            fragmentSource: string;
-            vertexSource: string;
-            staticAttributes: Array<string>;
-            staticUniforms: Array<string>;
-        },
+        source: PreparedShader,
         configuration: ProgramConfiguration,
         fixedUniforms: (b: Context, a: UniformLocations) => Us,
         showOverdrawInspector: boolean,
         hasTerrain: boolean,
-        hasGlobe: boolean,
+        projectionPrelude: PreparedShader,
         programDefines: Array<string> = []) {
 
         const gl = context.gl;
@@ -81,15 +76,12 @@ export class Program<Us extends UniformBindings> {
         if (hasTerrain) {
             defines.push('#define TERRAIN3D;');
         }
-        if (hasGlobe) {
-            defines.push('#define GLOBE;');
-        }
         if (programDefines) {
             defines.push(...programDefines);
         }
 
-        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, source.fragmentSource).join('\n');
-        const vertexSource = defines.concat(shaders.prelude.vertexSource, source.vertexSource).join('\n');
+        const fragmentSource = defines.concat(shaders.prelude.fragmentSource, projectionPrelude.fragmentSource, source.fragmentSource).join('\n');
+        const vertexSource = defines.concat(shaders.prelude.vertexSource, projectionPrelude.vertexSource, source.vertexSource).join('\n');
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         if (gl.isContextLost()) {

@@ -46,6 +46,7 @@ import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
 import {Mesh} from './mesh';
 import {GlobeProjection} from '../geo/projection/globe';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -241,7 +242,7 @@ export class Painter {
         projectionData['u_projection_matrix'] = matrix;
 
         // Note: we use a shader with projection code disabled since we want to draw a fullscreen quad
-        this.useProgram('clippingMask', null, [], false).draw(context, gl.TRIANGLES,
+        this.useProgram('clippingMask', null, [], true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,
@@ -616,21 +617,25 @@ export class Painter {
      * @param name - Name of the desired shader.
      * @param programConfiguration - Configuration of shader's inputs.
      * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
-     * @param allowProjection - Whether to use a shader variant with complex projection vertex shader. True by default. Use false when drawing eg. a fullscreen quad.
+     * @param forceSimpleProjection - Whether to force the use of a shader variant with simple mercator projection vertex shader.
+     * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines: Array<string> = [], allowProjection: boolean = true): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines: Array<string> = [], forceSimpleProjection: boolean = false): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 
-        // TODO: better system for injecting projection code into shaders
-        const useGlobe = (this.style.map.projection instanceof GlobeProjection && this.style.map.projection.useGlobeRendering && allowProjection);
+        const projection = this.style.map.projection;
+
+        const projectionPrelude = forceSimpleProjection ? shaders.projectionMercator : projection.shaderPreludeCode;
+        const projectionDefine = forceSimpleProjection ? MercatorShaderDefine : projection.shaderDefine;
+        const projectionKey = `/${forceSimpleProjection ? MercatorShaderVariantKey : projection.shaderVariantName}`;
 
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
+            projectionKey +
             (this._showOverdrawInspector ? '/overdraw' : '') +
             (useTerrain ? '/terrain' : '') +
-            (useGlobe ? '/globe' : '') +
             (defines ? (`/defines:${defines.join('//')}`) : '');
         if (!this.cache[key]) {
             this.cache[key] = new Program(
@@ -640,8 +645,8 @@ export class Painter {
                 programUniforms[name],
                 this._showOverdrawInspector,
                 useTerrain,
-                useGlobe,
-                defines
+                projectionPrelude,
+                [projectionDefine].concat(defines)
             );
         }
         return this.cache[key];

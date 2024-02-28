@@ -25,6 +25,7 @@ import Point from '@mapbox/point-geometry';
 import {ProjectionData} from './projection_uniforms';
 import * as Mercator from './mercator';
 import {ProjectionBase} from './projection_base';
+import {PreparedShader, shaders} from '../../shaders/shaders';
 
 function clamp(a: number, min: number, max: number): number {
     return Math.min(Math.max(a, min), max);
@@ -116,6 +117,16 @@ export class GlobeProjection extends ProjectionBase {
         // Error correction query in flight
         dirty = dirty || this._errorMeasurement.awaitingQuery;
         return dirty;
+    }
+
+    get shaderVariantName(): string {
+        return this.useGlobeRendering ? 'globe' : this._mercator.shaderVariantName;
+    }
+    get shaderDefine(): string {
+        return this.useGlobeRendering ? '#define GLOBE' : this._mercator.shaderDefine;
+    }
+    get shaderPreludeCode(): PreparedShader {
+        return this.useGlobeRendering ? shaders.projectionGlobe : this._mercator.shaderPreludeCode;
     }
 
     constructor(map: Map) {

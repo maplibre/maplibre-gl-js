@@ -1,4 +1,4 @@
-import {mat4, vec3} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {Painter} from '../../render/painter';
 import {Transform} from '../transform';
 import {ProjectionBase} from './projection_base';
@@ -8,6 +8,10 @@ import {Tile} from '../../source/tile';
 import {ProjectionData} from './projection_uniforms';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {EXTENT} from '../../data/extent';
+import {PreparedShader, shaders} from '../../shaders/shaders';
+
+export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
+export const MercatorShaderVariantKey = 'mercator';
 
 export class MercatorProjection extends ProjectionBase {
     get useSpecialProjectionForSymbols(): boolean {
@@ -22,6 +26,16 @@ export class MercatorProjection extends ProjectionBase {
     get drawWrappedtiles(): boolean {
         // Mecator always needs to draw wrapped/duplicated tiles.
         return true;
+    }
+
+    get shaderVariantName(): string {
+        return MercatorShaderVariantKey;
+    }
+    get shaderDefine(): string {
+        return MercatorShaderDefine;
+    }
+    get shaderPreludeCode(): PreparedShader {
+        return shaders.projectionMercator;
     }
 
     updateGPUdependent(_: Painter): void {
@@ -43,15 +57,22 @@ export class MercatorProjection extends ProjectionBase {
                 mainMatrix = mat4.create(); // identity
             }
         }
+        let tileOffsetSize: [number, number, number, number];
 
-        const data: ProjectionData = {
-            'u_projection_matrix': mainMatrix,
-            'u_projection_tile_mercator_coords': tileID ? [
+        if (tileID) {
+            tileOffsetSize = [
                 tileID.canonical.x / (1 << tileID.canonical.z),
                 tileID.canonical.y / (1 << tileID.canonical.z),
                 1.0 / (1 << tileID.canonical.z) / EXTENT,
                 1.0 / (1 << tileID.canonical.z) / EXTENT
-            ] : [0.0, 0.0, 1.0, 1.0],
+            ];
+        } else {
+            tileOffsetSize = [0, 0, 1, 1];
+        }
+
+        const data: ProjectionData = {
+            'u_projection_matrix': mainMatrix,
+            'u_projection_tile_mercator_coords': tileOffsetSize,
             'u_projection_clipping_plane': [0, 0, 0, 0],
             'u_projection_globeness': 0.0,
             'u_projection_fallback_matrix': mainMatrix,
@@ -71,10 +92,6 @@ export class MercatorProjection extends ProjectionBase {
     } {
         // This function should only be used when useSpecialProjectionForSymbols is set to true.
         throw new Error('Not implemented.');
-    }
-
-    transformLightDirection(dir: vec3): vec3 {
-        return dir;
     }
 
     getPixelScale(_: Transform): number {

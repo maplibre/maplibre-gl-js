@@ -59,9 +59,20 @@ import terrainFrag from './terrain.fragment.glsl.g';
 import terrainVert from './terrain.vertex.glsl.g';
 import projectionErrorMeasurementVert from './projection_error_measurement.vertex.glsl.g';
 import projectionErrorMeasurementFrag from './projection_error_measurement.fragment.glsl.g';
+import projectionMercatorVert from './_projection_mercator.vertex.glsl.g';
+import projectionGlobeVert from './_projection_globe.vertex.glsl.g';
+
+export type PreparedShader = {
+    fragmentSource: string;
+    vertexSource: string;
+    staticAttributes: Array<string>;
+    staticUniforms: Array<string>;
+};
 
 export const shaders = {
     prelude: compile(preludeFrag, preludeVert),
+    projectionMercator: compile('', projectionMercatorVert),
+    projectionGlobe: compile('', projectionGlobeVert),
     background: compile(backgroundFrag, backgroundVert),
     backgroundPattern: compile(backgroundPatternFrag, backgroundPatternVert),
     circle: compile(circleFrag, circleVert),
@@ -95,7 +106,7 @@ export const shaders = {
 
 // Expand #pragmas to #ifdefs.
 
-function compile(fragmentSource: string, vertexSource: string) {
+function compile(fragmentSource: string, vertexSource: string): PreparedShader {
     const re = /#pragma mapbox: ([\w]+) ([\w]+) ([\w]+) ([\w]+)/g;
 
     const staticAttributes = vertexSource.match(/attribute ([\w]+) ([\w]+)/g);

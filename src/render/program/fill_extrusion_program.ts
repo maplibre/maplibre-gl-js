@@ -16,6 +16,7 @@ import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {Tile} from '../../source/tile';
 import {ProjectionBase} from '../../geo/projection/projection_base';
+import {GlobeProjection} from '../../geo/projection/globe';
 
 export type FillExtrusionUniformsType = {
     'u_lightpos': Uniform3f;
@@ -93,7 +94,7 @@ const fillExtrusionUniformValues = (
         mat3.fromRotation(lightMat, -painter.transform.angle);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
-    const transformedLightPos = projection.transformLightDirection(lightPos);
+    const transformedLightPos = projection instanceof GlobeProjection ? projection.transformLightDirection(lightPos) : lightPos;
 
     const lightColor = light.properties.get('color');
 

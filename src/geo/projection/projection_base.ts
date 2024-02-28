@@ -1,10 +1,11 @@
-import {mat4, vec3} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {Painter} from '../../render/painter';
 import {Tile} from '../../source/tile';
 import {OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
 import {Transform} from '../transform';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from './projection_uniforms';
+import {PreparedShader} from '../../shaders/shaders';
 
 export abstract class ProjectionBase {
     abstract get useSpecialProjectionForSymbols(): boolean;
@@ -12,6 +13,15 @@ export abstract class ProjectionBase {
     abstract get isRenderingDirty(): boolean;
 
     abstract get drawWrappedtiles(): boolean;
+
+    /**
+     * Name of the shader projection variant that should be used for this projection.
+     * Note that this value may change dynamically, eg. when globe projection transitions to mercator.
+     * Then globe projection might start reporting the mercator shader variant name to make MapLibre use faster mercator shaders.
+     */
+    abstract get shaderVariantName(): string;
+    abstract get shaderDefine(): string;
+    abstract get shaderPreludeCode(): PreparedShader;
 
     abstract updateGPUdependent(painter: Painter): void;
 
@@ -26,8 +36,6 @@ export abstract class ProjectionBase {
         signedDistanceFromCamera: number;
         isOccluded: boolean;
     };
-
-    abstract transformLightDirection(dir: vec3): vec3;
 
     abstract getPixelScale(transform: Transform): number;
 
