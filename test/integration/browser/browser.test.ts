@@ -282,7 +282,7 @@ describe('Browser tests', () => {
         const fullscreenButtonTitle = await page.evaluate(async () => {
             function sleepInBrowser(milliseconds: number) {
                 return new Promise(resolve => setTimeout(resolve, milliseconds));
-            };
+            }
 
             let map: Map;
             class MapLibre extends HTMLElement {
