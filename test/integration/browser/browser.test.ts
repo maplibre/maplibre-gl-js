@@ -337,7 +337,7 @@ describe('Browser tests', () => {
 
         expect(fullscreenButtonTitle).toBe('Exit fullscreen');
 
-      test('Marker: correct opacity after resize with 3d terrain', async () => {
+    test('Marker: correct opacity after resize with 3d terrain', async () => {
         const markerOpacity = await page.evaluate(() => {
             const marker = new maplibregl.Marker()
                 .setLngLat(map.getCenter())
