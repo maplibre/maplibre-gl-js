@@ -2,7 +2,7 @@ import {mat4} from 'gl-matrix';
 import {Painter} from '../../render/painter';
 import {Transform} from '../transform';
 import {ProjectionBase} from './projection_base';
-import {OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
+import {UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {Tile} from '../../source/tile';
 import {ProjectionData} from './projection_uniforms';
@@ -14,6 +14,10 @@ export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
 export class MercatorProjection extends ProjectionBase {
+    constructor() {
+        super('mercator');
+    }
+
     get useSpecialProjectionForSymbols(): boolean {
         return false;
     }

@@ -68,6 +68,19 @@ import {GlobeProjection} from '../geo/projection/globe';
 
 const version = packageJSON.version;
 
+type ProjectionName = 'mercator' | 'globe';
+
+function getProjectionFromName(name: ProjectionName, map: Map): ProjectionBase {
+    switch (name) {
+        case 'mercator':
+            return new MercatorProjection();
+        case 'globe':
+            return new GlobeProjection(map);
+        default:
+            return new MercatorProjection();
+    }
+}
+
 /**
  * The {@link Map} options object.
  */
@@ -325,6 +338,12 @@ export type MapOptions = {
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
      */
     maxCanvasSize?: [number, number];
+    /**
+     * Map projection to use. Options are:
+     * - 'mercator' - default, classical flat Web Mercator map.
+     * - 'globe' - a 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zooms.
+     */
+    projection?: ProjectionName;
 };
 
 export type AddImageOptions = {
@@ -394,7 +413,8 @@ const defaultOptions = {
     crossSourceCollisions: true,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
-    maxCanvasSize: [4096, 4096]
+    maxCanvasSize: [4096, 4096],
+    projection: 'mercator'
 } as CompleteMapOptions;
 
 /**
@@ -434,14 +454,12 @@ export class Map extends Camera {
     handlers: HandlerManager;
     projection: ProjectionBase;
 
-    _globeEnabled: boolean = false;
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
     _controlPositions: {[_: string]: HTMLElement};
     _interactive: boolean;
     _showTileBoundaries: boolean;
-    _showTextureTiles: boolean;
     _showCollisionBoxes: boolean;
     _showPadding: boolean;
     _showOverdrawInspector: boolean;
@@ -611,7 +629,7 @@ export class Map extends Camera {
             this.setMaxBounds(options.maxBounds);
         }
 
-        this.projection = new GlobeProjection(this);
+        this.projection = getProjectionFromName(options.projection, this);
 
         this._setupContainer();
         this._setupPainter();
@@ -1983,24 +2001,11 @@ export class Map extends Camera {
         return this.terrain?.options ?? null;
     }
 
-    setGlobe(enabled: boolean = true, animate: boolean = true): void {
-        if (enabled !== this._globeEnabled) {
-            this._globeEnabled = enabled;
-            if (!animate) {
-                if (this.projection instanceof GlobeProjection) {
-                    this.projection.skipNextProjectionTransitionAnimation();
-                }
-            }
-            this._updateRenderToTexture();
-            this._update(true);
-        }
-    }
-
     /**
-     * Enables or disables render-to-texture, depending on whether globe and/or terrain is enabled.
+     * Enables or disables render-to-texture, depending on whether terrain is enabled.
      */
     private _updateRenderToTexture(): void {
-        if (!this.terrain && !this._globeEnabled) {
+        if (!this.terrain) {
             // Disable rtt
             if (this._renderToTextureCallback) {
                 this.style.off('data', this._renderToTextureCallback);
@@ -3176,10 +3181,6 @@ export class Map extends Camera {
             };
         }
 
-        if (this.painter.renderToTexture) {
-            this.painter.renderToTexture.debugTileColor = this._showTextureTiles;
-        }
-
         // Actually draw
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
@@ -3343,24 +3344,6 @@ export class Map extends Camera {
 
     /**
      * Gets and sets a Boolean indicating whether the map will visualize
-     * different render-to-texture tiles by rendering them in different color tones.
-     *
-     * Only takes effect when terrain or globe rendering is enabled.
-     *
-     * @example
-     * ```ts
-     * map.showTextureTiles = true;
-     * ```
-     */
-    get showTextureTiles(): boolean { return !!this._showTextureTiles; }
-    set showTextureTiles(value: boolean) {
-        if (this._showTextureTiles === value) return;
-        this._showTextureTiles = value;
-        this._update();
-    }
-
-    /**
-     * Gets and sets a Boolean indicating whether the map will visualize
      * the padding offsets.
      */
     get showPadding(): boolean { return !!this._showPadding; }
@@ -3436,4 +3419,24 @@ export class Map extends Camera {
     getCameraTargetElevation(): number {
         return this.transform.elevation;
     }
+
+    /**
+     * Returns the active `ProjectionBase` object.
+     * @returns The projection object.
+     * @example
+     * ```ts
+     * let projection = map.getProjection();
+     * ```
+     */
+    getProjection(): ProjectionBase { return this.projection; }
+
+    /**
+     * Returns the active projection name.
+     * @returns The projection name
+     * @example
+     * ```ts
+     * let projectionName = map.getProjectionName();
+     * ```
+     */
+    getProjectionName(): string { return this.projection.name; }
 }

@@ -1,7 +1,7 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {Context} from '../../gl/context';
 import {Map} from '../../ui/map';
-import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
+import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {Mesh} from '../../render/mesh';
 import {EXTENT, EXTENT_STENCIL_BORDER} from '../../data/extent';
@@ -69,6 +69,8 @@ export class GlobeProjection extends ProjectionBase {
     private _errorCorrectionPreviousValue: number = 0.0;
     private _errorMeasurementLastChangeTime: number = -1000.0;
 
+    private _globeProjectionOverride = true;
+
     private _globeProjMatrix: mat4 = [
         1, 0, 0, 0,
         0, 1, 0, 0,
@@ -129,8 +131,21 @@ export class GlobeProjection extends ProjectionBase {
         return this.useGlobeRendering ? shaders.projectionGlobe : this._mercator.shaderPreludeCode;
     }
 
+    /**
+     * When true, globe view fill function as normal. When false, mercator will be used at all zoom levels instead.
+     * Transitioning between states will be animated.
+     * True by default.
+     */
+    get globeView(): boolean { return this._globeProjectionOverride; }
+    set globeView(value: boolean) {
+        if (value !== this._globeProjectionOverride) {
+            this._globeProjectionOverride = value;
+            this._map._update(true); // Otherwise the transition animation might not happen until the map is interacted with by the user.
+        }
+    }
+
     constructor(map: Map) {
-        super();
+        super('globe');
         this._map = map;
         this._mercator = new Mercator.MercatorProjection();
     }
@@ -373,7 +388,7 @@ export class GlobeProjection extends ProjectionBase {
 
     private _updateAnimation(transform: Transform) {
         // Update globe transition animation
-        const globeState = this._map ? this._map._globeEnabled : false;
+        const globeState = this._globeProjectionOverride;
         const currentTime = browser.now();
         if (globeState !== this._lastGlobeStateEnabled) {
             this._lastGlobeChangeTime = currentTime;

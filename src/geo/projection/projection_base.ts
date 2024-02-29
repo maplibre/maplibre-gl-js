@@ -1,13 +1,19 @@
 import {mat4} from 'gl-matrix';
 import {Painter} from '../../render/painter';
 import {Tile} from '../../source/tile';
-import {OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
+import {UnwrappedTileID} from '../../source/tile_id';
 import {Transform} from '../transform';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from './projection_uniforms';
 import {PreparedShader} from '../../shaders/shaders';
 
 export abstract class ProjectionBase {
+    readonly name: string;
+
+    constructor(name: string) {
+        this.name = name;
+    }
+
     abstract get useSpecialProjectionForSymbols(): boolean;
 
     abstract get isRenderingDirty(): boolean;
