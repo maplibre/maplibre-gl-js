@@ -139,6 +139,13 @@ export default class Worker {
             }
         });
 
+        this.actor.registerMessageHandler('removeMap', async (mapId: string) => {
+            delete this.layerIndexes[mapId];
+            delete this.availableImages[mapId];
+            delete this.workerSources[mapId];
+            delete this.demWorkerSources[mapId];
+        });
+
         this.actor.registerMessageHandler('setReferrer', async (_mapId: string, params: string) => {
             this.referrer = params;
         });

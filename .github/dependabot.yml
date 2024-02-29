@@ -8,10 +8,13 @@ updates:
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
-      interval: "weekly"
+      interval: "daily"
     open-pull-requests-limit: 20
     versioning-strategy: increase
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+    ignore:
+      - dependency-name: "codecov/codecov-action"
+        versions: ["4"]
