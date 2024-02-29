@@ -2656,6 +2656,46 @@ describe('Map', () => {
         });
     });
 
+    describe('#setSky', () => {
+        test('calls style setSky when set', () => {
+            const map = createMap();
+            const spy = jest.fn();
+            map.style.setSky = spy;
+            map.setSky({'fog-blend': 0.5});
+
+            expect(spy).toHaveBeenCalled();
+        });
+    });
+
+    describe('#getSky', () => {
+        test('returns undefined when not set', () => {
+            const map = createMap();
+            expect(map.getSky()).toBeUndefined();
+        });
+    });
+
+    describe('#setLight', () => {
+        test('calls style setLight when set', () => {
+            const map = createMap();
+            const spy = jest.fn();
+            map.style.setLight = spy;
+            map.setLight({anchor: 'viewport'});
+
+            expect(spy).toHaveBeenCalled();
+        });
+    });
+
+    describe('#getLight', () => {
+        test('calls style getLight when invoked', () => {
+            const map = createMap();
+            const spy = jest.fn();
+            map.style.getLight = spy;
+            map.getLight();
+
+            expect(spy).toHaveBeenCalled();
+        });
+    });
+
     describe('cooperativeGestures option', () => {
         test('cooperativeGesture container element is hidden from a11y tree', () => {
             const map = createMap({cooperativeGestures: true});
