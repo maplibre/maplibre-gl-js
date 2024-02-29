@@ -269,8 +269,8 @@ export class GlobeProjection extends ProjectionBase {
         this._cachedClippingPlane = [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    public getProjectionData(tileID: OverscaledTileID, fallBackMatrix: mat4 = null, useAtanCorrection: boolean = true): ProjectionData {
-        const data = this._mercator.getProjectionData(tileID, fallBackMatrix);
+    public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4, useAtanCorrection: boolean = true): ProjectionData {
+        const data = this._mercator.getProjectionData(canonicalTileCoords, tilePosMatrix);
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this.useGlobeRendering) {

@@ -50,7 +50,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     // Stencil and two-pass is not used for ImageSource sources.
     const passCount = (globe && !(source instanceof ImageSource)) ? 2 : 1;
 
-    let stencilModesLow, stencilModesHigh, coords;
+    let stencilModesLow, stencilModesHigh, coords: Array<OverscaledTileID>;
 
     if (passCount > 1) {
         [stencilModesHigh, stencilModesLow, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
@@ -98,7 +98,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
             const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
             const rttCoord = isRenderingToTexture ? coord : null;
             const posMatrix = rttCoord ? rttCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
-            const projectionData = projection.getProjectionData(coord, posMatrix);
+            const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
             const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer,
                 (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
 

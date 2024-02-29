@@ -46,32 +46,23 @@ export class MercatorProjection extends ProjectionBase {
         // Do nothing.
     }
 
-    getProjectionData(tileID: OverscaledTileID, fallBackMatrix?: mat4): ProjectionData {
-        let mainMatrix: mat4;
-        if (fallBackMatrix) {
-            mainMatrix = fallBackMatrix;
-        } else {
-            if (tileID) {
-                mainMatrix = tileID.posMatrix;
-            } else {
-                mainMatrix = mat4.create(); // identity
-            }
-        }
+    getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
         let tileOffsetSize: [number, number, number, number];
 
-        if (tileID) {
+        if (canonicalTileCoords) {
             tileOffsetSize = [
-                tileID.canonical.x / (1 << tileID.canonical.z),
-                tileID.canonical.y / (1 << tileID.canonical.z),
-                1.0 / (1 << tileID.canonical.z) / EXTENT,
-                1.0 / (1 << tileID.canonical.z) / EXTENT
+                canonicalTileCoords.x / (1 << canonicalTileCoords.z),
+                canonicalTileCoords.y / (1 << canonicalTileCoords.z),
+                1.0 / (1 << canonicalTileCoords.z) / EXTENT,
+                1.0 / (1 << canonicalTileCoords.z) / EXTENT
             ];
         } else {
             tileOffsetSize = [0, 0, 1, 1];
         }
+        const mainMatrix = tilePosMatrix ? tilePosMatrix : mat4.create();
 
         const data: ProjectionData = {
-            'u_projection_matrix': mainMatrix,
+            'u_projection_matrix': mainMatrix, // Might be set to a custom matrix by different projections
             'u_projection_tile_mercator_coords': tileOffsetSize,
             'u_projection_clipping_plane': [0, 0, 0, 0],
             'u_projection_globeness': 0.0,

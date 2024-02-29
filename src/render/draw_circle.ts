@@ -80,7 +80,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
         //     styleTranslate,
         //     styleTranslateAnchor); // JP: TODO: implement this for globe
         const matrix = coord.posMatrix;
-        const projectionData = projection.getProjectionData(coord, matrix);
+        const projectionData = projection.getProjectionData(coord.canonical, matrix);
 
         const state: TileRenderState = {
             programConfiguration,

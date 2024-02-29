@@ -238,7 +238,7 @@ export class Painter {
         mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
-        const projectionData = this.style.map.projection.getProjectionData(null);
+        const projectionData = this.style.map.projection.getProjectionData(null, null);
         projectionData['u_projection_matrix'] = matrix;
 
         // Note: we use a shader with projection code disabled since we want to draw a fullscreen quad
@@ -282,7 +282,7 @@ export class Painter {
                 mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true);
             }
 
-            const projectionData = projection.getProjectionData(tileID);
+            const projectionData = projection.getProjectionData(tileID.canonical, tileID.posMatrix);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.

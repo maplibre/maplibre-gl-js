@@ -27,7 +27,7 @@ export abstract class ProjectionBase {
 
     abstract updateProjection(transform: Transform): void;
 
-    abstract getProjectionData(tileID: OverscaledTileID, fallBackMatrix?: mat4): ProjectionData;
+    abstract getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData;
 
     abstract isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
 

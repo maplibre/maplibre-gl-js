@@ -80,7 +80,7 @@ function drawExtrusionTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const projectionData = projection.getProjectionData(coord);
+        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
         const translate = layer.paint.get('fill-extrusion-translate');

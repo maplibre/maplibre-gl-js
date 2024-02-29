@@ -105,7 +105,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = projection.getProjectionData(coord);
+        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
 
         const translateForUniforms = projection.translatePosition(painter.transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 

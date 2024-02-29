@@ -101,7 +101,7 @@ function renderHillshade(
 
     const align = !painter.options.moving;
     const matrix = isRenderingToTexture ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align);
-    const projectionData = painter.style.map.projection.getProjectionData(coord, matrix);
+    const projectionData = painter.style.map.projection.getProjectionData(coord.canonical, matrix);
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
         hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, vertexBuffer, indexBuffer, segments);

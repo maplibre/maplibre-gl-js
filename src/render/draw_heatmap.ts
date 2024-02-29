@@ -53,7 +53,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
             const program = painter.useProgram('heatmap', programConfiguration);
             const {zoom} = painter.transform;
 
-            const projectionData = projection.getProjectionData(coord, coord.posMatrix);
+            const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
                 heatmapUniformValues(tile, zoom, layer.paint.get('heatmap-intensity')),
