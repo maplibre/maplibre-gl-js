@@ -1,27 +1,93 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='./dist/maplibre-gl.css' />
     <script src='./dist/maplibre-gl-dev.js'></script>
     <style>
-        body { margin: 0; padding: 0; }
-        html, body, #map { height: 100%; }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #slidecontainer {
+            position: absolute;
+            background: #fff;
+            top: 0;
+            left: 0;
+            padding: 10px;
+        }
     </style>
 </head>
-<body>
-<div id="map"></div>
 
-<script>
-    const map = new maplibregl.Map({
-        container: 'map',
-        style: 'style.json',
-        center: [8, 47],
-        zoom: 3,
-        hash: 'map'
-    });
-</script>
+<body>
+    <div id="map"></div>
+    <div id="slidecontainer">
+        <input type="range" min="1" max="30" value="15" class="slider" id="size">
+        <p id="sizeOut">icon-size: 15</p>
+
+    </div>
+    <script>
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'style.json',
+            center: [8, 47],
+            zoom: 3,
+            hash: 'map'
+        });
+
+
+        map.on('load', () => {
+            map.addSource('switzerland', {
+                'type': 'geojson',
+                'data': {
+                    "type": "Feature",
+                    "properties": {},
+                    "geometry": {
+                        "coordinates": [
+                            8.202136837110828,
+                            46.941621680048314
+                        ],
+                        "type": "Point"
+                    }
+                }
+            });
+            map.addLayer({
+                'id': 'switzerland',
+                'type': 'symbol',
+                'source': 'switzerland',
+                'layout': {
+                    "icon-image": "drawing",
+                    "icon-size": 15
+                }
+            });
+
+
+            function updateMap() {
+                var size = Number(document.getElementById("size").value);
+                map.setLayoutProperty('switzerland', 'icon-size', size);
+            }
+
+            updateMap();
+
+            var sizeSlider = document.getElementById("size");
+
+            sizeSlider.oninput = function () {
+                updateMap();
+                document.getElementById("sizeOut").innerHTML = `icon-size: ${document.getElementById("size").value}`;
+            }
+        });
+
+    </script>
 </body>
+
 </html>

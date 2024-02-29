@@ -7,6 +7,7 @@
         17.65431710431244,
         32.954120326746775
     ],
+    "sprite": "http://localhost:3000/sprite/Roboto-Regular.ttf",
     "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
     "layers": [
         {
@@ -420,7 +421,7 @@
                 ],
                 "text-size": 150,
                 "text-field": ".",
-                "visibility": "visible",
+                "visibility": "none",
                 "symbol-placement": "line"
             },
             "source": "maplibre",
@@ -467,8 +468,10 @@
                     "Open Sans Semibold"
                 ],
                 "text-size": 150,
-                "text-field": ".",
-                "visibility": "visible",
+                "icon-image":"drawing",
+                "icon-size": 4,
+                "text-field": "",
+                "visibility": "none",
                 "text-max-width": 10,
                 "text-transform": {
                     "stops": [
