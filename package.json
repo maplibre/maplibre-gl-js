@@ -74,7 +74,7 @@
     "@types/window-or-global": "^1.0.6",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
-    "address": "^2.0.1",
+    "address": "^2.0.2",
     "benchmark": "^2.1.4",
     "canvas": "^2.11.2",
     "cssnano": "^6.0.5",
