@@ -4,7 +4,7 @@ import {Tile} from '../../source/tile';
 import {UnwrappedTileID} from '../../source/tile_id';
 import {Transform} from '../transform';
 import Point from '@mapbox/point-geometry';
-import {ProjectionData} from './projection_uniforms';
+import {ProjectionData} from '../../render/program/projection_program';
 import {PreparedShader} from '../../shaders/shaders';
 
 export abstract class ProjectionBase {

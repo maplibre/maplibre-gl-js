@@ -37,7 +37,7 @@ import type {Transform} from '../geo/transform';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
-import {ProjectionData} from '../geo/projection/projection_uniforms';
+import {ProjectionData} from './program/projection_program';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;

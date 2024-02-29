@@ -16,7 +16,7 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {UniformValues} from './uniform_binding';
 import type {CircleUniformsType} from './program/circle_program';
 import type {TerrainData} from '../render/terrain';
-import {ProjectionData} from '../geo/projection/projection_uniforms';
+import {ProjectionData} from './program/projection_program';
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;

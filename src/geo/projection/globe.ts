@@ -22,7 +22,7 @@ import {warnOnce} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {granualitySettings} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
-import {ProjectionData} from './projection_uniforms';
+import {ProjectionData} from '../../render/program/projection_program';
 import * as Mercator from './mercator';
 import {ProjectionBase} from './projection_base';
 import {PreparedShader, shaders} from '../../shaders/shaders';
