@@ -109,11 +109,15 @@ export class FullscreenControl extends Evented implements IControl {
     }
 
     _onFullscreenChange = () => {
-        const fullscreenElement =
+        let fullscreenElement =
             window.document.fullscreenElement ||
             (window.document as any).mozFullScreenElement ||
             (window.document as any).webkitFullscreenElement ||
             (window.document as any).msFullscreenElement;
+
+        while (fullscreenElement?.shadowRoot?.fullscreenElement) {
+            fullscreenElement = fullscreenElement.shadowRoot.fullscreenElement;
+        }
 
         if ((fullscreenElement === this._container) !== this._fullscreen) {
             this._handleFullscreenChange();

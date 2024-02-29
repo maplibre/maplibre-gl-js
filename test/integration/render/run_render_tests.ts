@@ -35,8 +35,6 @@ type TestData = {
         id: string;
         image: string;
     };
-    axonometric: boolean;
-    skew: [number, number];
     fadeDuration: number;
     debug: boolean;
     showOverdrawInspector: boolean;
@@ -123,13 +121,8 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
  * @returns nothing as it updates the testData object
  */
 function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
-    let stats;
     const dir = path.join(directory, testData.id);
-    try {
-        // @ts-ignore
-        stats = fs.statSync(dir, fs.R_OK | fs.W_OK);
-        if (!stats.isDirectory()) throw new Error();
-    } catch (e) {
+    if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
 
@@ -594,16 +587,11 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             const map = new maplibregl.Map({
                 container: 'map',
                 style,
-
-                // @ts-ignore
-                classes: options.classes,
                 interactive: false,
                 attributionControl: false,
                 maxPitch: options.maxPitch,
                 pixelRatio: options.pixelRatio,
                 preserveDrawingBuffer: true,
-                axonometric: options.axonometric || false,
-                skew: options.skew || [0, 0],
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
                 crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
@@ -765,7 +753,6 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     for (const style of testStyles) {
         try {
             style.metadata.test.error = undefined;
-            //@ts-ignore
             const data = await getImageFromStyle(style, page);
             compareRenderResults(directory, style.metadata.test, data);
         } catch (ex) {
@@ -843,7 +830,7 @@ async function executeRenderTests() {
         options.openBrowser = checkParameter(options, '--open-browser');
     }
 
-    const browser = await puppeteer.launch({headless: options.openBrowser ? false : 'new', args: ['--enable-webgl', '--no-sandbox',
+    const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
         '--disable-web-security']});
 
     const server = http.createServer(

@@ -138,4 +138,11 @@ describe('Worker register RTLTextPlugin', () => {
         worker.actor.messageHandlers['setImages']('0', ['availableImages']);
         expect(worker.availableImages['0']).toEqual(['availableImages']);
     });
+
+    test('clears resources when map is removed', () => {
+        worker.actor.messageHandlers['setLayers']('0', []);
+        expect(worker.layerIndexes['0']).toBeDefined();
+        worker.actor.messageHandlers['removeMap']('0', undefined);
+        expect(worker.layerIndexes['0']).toBeUndefined();
+    });
 });
