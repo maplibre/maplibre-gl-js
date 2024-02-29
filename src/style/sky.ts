@@ -12,21 +12,21 @@ import {extend} from '../util/util';
 import {Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 
-type Props = {
+type SkyProps = {
     'sky-color': DataConstantProperty<Color>;
     'fog-color': DataConstantProperty<Color>;
     'fog-blend': DataConstantProperty<number>;
     'horizon-blend': DataConstantProperty<number>;
 };
 
-type PropsPossiblyEvaluated = {
+type SkyPropsPossiblyEvaluated = {
     'sky-color': Color;
     'fog-color': Color;
     'fog-blend': number;
     'horizon-blend': number;
 };
 
-const properties: Properties<Props> = new Properties({
+const properties: Properties<SkyProps> = new Properties({
     'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification),
     'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification),
     'fog-blend': new DataConstantProperty(styleSpec.sky['fog-blend'] as StylePropertySpecification),
@@ -36,10 +36,10 @@ const properties: Properties<Props> = new Properties({
 const TRANSITION_SUFFIX = '-transition';
 
 export class Sky extends Evented {
-    properties: PossiblyEvaluated<Props, PropsPossiblyEvaluated>;
+    properties: PossiblyEvaluated<SkyProps, SkyPropsPossiblyEvaluated>;
 
-    _transitionable: Transitionable<Props>;
-    _transitioning: Transitioning<Props>;
+    _transitionable: Transitionable<SkyProps>;
+    _transitioning: Transitioning<SkyProps>;
 
     vertexBuffer: VertexBuffer;
     indexBuffer: IndexBuffer;
@@ -72,9 +72,9 @@ export class Sky extends Evented {
         for (const name in sky) {
             const value = sky[name];
             if (name.endsWith(TRANSITION_SUFFIX)) {
-                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof Props, value);
+                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof SkyProps, value);
             } else {
-                this._transitionable.setValue(name as keyof Props, value);
+                this._transitionable.setValue(name as keyof SkyProps, value);
             }
         }
     }

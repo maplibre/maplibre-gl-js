@@ -750,6 +750,9 @@ export class Style extends Evented {
                 case 'setSprite':
                     operations.push(() => this.setSprite.apply(this, op.args));
                     break;
+                case 'setSky':
+                    operations.push(() => this.setSky.apply(this, op.args));
+                    break;
                 case 'setTerrain':
                     operations.push(() => this.map.setTerrain.apply(this, op.args));
                     break;
@@ -1475,17 +1478,20 @@ export class Style extends Evented {
 
         if (!skyOptions) {
             this.sky = null;
-        } else {
-            if (this.sky) this.sky.setSky(skyOptions);
-            else this.sky = new Sky(this.map.painter.context, skyOptions);
-            this.sky.updateTransitions({
-                now: browser.now(),
-                transition: extend({
-                    duration: 300,
-                    delay: 0
-                }, this.stylesheet.transition)
-            });
+            return;
         }
+        if (this.sky) {
+            this.sky.setSky(skyOptions);
+            return;
+        }
+        this.sky = new Sky(this.map.painter.context, skyOptions);
+        this.sky.updateTransitions({
+            now: browser.now(),
+            transition: extend({
+                duration: 300,
+                delay: 0
+            }, this.stylesheet.transition)
+        });
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {

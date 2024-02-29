@@ -693,6 +693,7 @@ describe('Style#setState', () => {
         spys.push(jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
+        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
 
         const newStyle = JSON.parse(JSON.stringify(styleJson)) as StyleSpecification;
@@ -721,6 +722,11 @@ describe('Style#setState', () => {
             exaggeration: 0.5
         };
         newStyle.zoom = 2;
+        newStyle.sky = {
+            "fog-color": "#000001",
+            "sky-color": "#000002",
+            "horizon-blend": 0.5,
+        };
         const didChange = style.setState(newStyle);
         expect(didChange).toBeTruthy();
         for (const spy of spys) {
