@@ -90,7 +90,7 @@ function drawExtrusionTiles(
             fillExtrusionUniformValues(matrix, painter, shouldUseVerticalGradient, opacity);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
-            uniformValues, terrainData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
+            uniformValues, terrainData, null, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
             bucket.segments, layer.paint, painter.transform.zoom,
             programConfiguration, painter.style.map.terrain && bucket.centroidVertexBuffer);
     }

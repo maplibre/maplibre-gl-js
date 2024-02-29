@@ -1,8 +1,7 @@
 import {browser} from '../util/browser';
-import {mat4, vec3} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
-import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import {SegmentVector} from '../data/segment';
 import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
@@ -18,7 +17,6 @@ import {StencilMode} from '../gl/stencil_mode';
 import {ColorMode} from '../gl/color_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {Texture} from './texture';
-import {clippingMaskUniformValues} from './program/clipping_mask_program';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {drawSymbols} from './draw_symbol';
 import {drawCircles} from './draw_circle';
@@ -35,7 +33,6 @@ import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 
 import type {Transform} from '../geo/transform';
-import type {Tile} from '../source/tile';
 import type {Style} from '../style/style';
 import type {StyleLayer} from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
@@ -47,6 +44,10 @@ import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
+import {Mesh} from './mesh';
+import {GlobeProjection} from '../geo/projection/globe';
+import {translatePosMatrix as mercatorTranslatePosMatrix, MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {Tile} from '../source/tile';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -79,10 +80,14 @@ export class Painter {
     pixelRatio: number;
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
+    tileExtentMesh: Mesh;
+
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
     rasterBoundsBuffer: VertexBuffer;
     rasterBoundsSegments: SegmentVector;
+    rasterBoundsBufferPosOnly: VertexBuffer;
+    rasterBoundsSegmentsPosOnly: SegmentVector;
     viewportBuffer: VertexBuffer;
     viewportSegments: SegmentVector;
     quadTriangleIndexBuffer: IndexBuffer;
@@ -172,6 +177,14 @@ export class Painter {
         this.rasterBoundsBuffer = context.createVertexBuffer(rasterBoundsArray, rasterBoundsAttributes.members);
         this.rasterBoundsSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
 
+        const rasterBoundsArrayPosOnly = new PosArray();
+        rasterBoundsArrayPosOnly.emplaceBack(0, 0);
+        rasterBoundsArrayPosOnly.emplaceBack(EXTENT, 0);
+        rasterBoundsArrayPosOnly.emplaceBack(0, EXTENT);
+        rasterBoundsArrayPosOnly.emplaceBack(EXTENT, EXTENT);
+        this.rasterBoundsBufferPosOnly = context.createVertexBuffer(rasterBoundsArrayPosOnly, posAttributes.members);
+        this.rasterBoundsSegmentsPosOnly = SegmentVector.simpleSegment(0, 0, 4, 5);
+
         const viewportArray = new PosArray();
         viewportArray.emplaceBack(0, 0);
         viewportArray.emplaceBack(1, 0);
@@ -195,6 +208,8 @@ export class Painter {
 
         const gl = this.context.gl;
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
+
+        this.tileExtentMesh = new Mesh(this.tileExtentBuffer, this.quadTriangleIndexBuffer, this.tileExtentSegments);
     }
 
     /*
@@ -217,9 +232,13 @@ export class Painter {
         mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
-        this.useProgram('clippingMask').draw(context, gl.TRIANGLES,
+        const projectionData = this.style.map.projection.getProjectionData(null, null);
+        projectionData['u_projection_matrix'] = matrix;
+
+        // Note: we use a shader with projection code disabled since we want to draw a fullscreen quad
+        this.useProgram('clippingMask', null, [], true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
-            clippingMaskUniformValues(matrix), null,
+            null, null, projectionData,
             '$clipping', this.viewportBuffer,
             this.quadTriangleIndexBuffer, this.viewportSegments);
     }
@@ -244,16 +263,27 @@ export class Painter {
 
         this._tileClippingMaskIDs = {};
 
+        const projection = this.style.map.projection;
+
+        // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
+            let mesh = this.tileExtentMesh;
+
+            if (projection instanceof GlobeProjection) {
+                mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true);
+            }
+
+            const projectionData = projection.getProjectionData(tileID.canonical, tileID.posMatrix);
+
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
                 new StencilMode({func: gl.ALWAYS, mask: 0}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
-                ColorMode.disabled, CullFaceMode.disabled, clippingMaskUniformValues(tileID.posMatrix),
-                terrainData, '$clipping', this.tileExtentBuffer,
-                this.quadTriangleIndexBuffer, this.tileExtentSegments);
+                ColorMode.disabled, CullFaceMode.backCCW, null,
+                terrainData, projectionData, '$clipping', mesh.vertexBuffer,
+                mesh.indexBuffer, mesh.segments);
         }
     }
 
@@ -306,6 +336,41 @@ export class Painter {
         return [{[minTileZ]: StencilMode.disabled}, coords];
     }
 
+    stencilConfigForOverlapTwoPass(tileIDs: Array<OverscaledTileID>): [
+        { [_: number]: Readonly<StencilMode> }, // borderless tiles - high priority & high stencil values
+        { [_: number]: Readonly<StencilMode> }, // tiles with border - low priority
+        Array<OverscaledTileID>
+    ] {
+        const gl = this.context.gl;
+        const coords = tileIDs.sort((a, b) => b.overscaledZ - a.overscaledZ);
+        const minTileZ = coords[coords.length - 1].overscaledZ;
+        const stencilValues = coords[0].overscaledZ - minTileZ + 1;
+
+        this.clearStencil();
+
+        if (stencilValues > 1) {
+            const zToStencilModeHigh = {};
+            const zToStencilModeLow = {};
+            for (let i = 0; i < stencilValues; i++) {
+                zToStencilModeHigh[i + minTileZ] = new StencilMode({func: gl.GREATER, mask: 0xFF}, stencilValues + 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+                zToStencilModeLow[i + minTileZ] = new StencilMode({func: gl.GREATER, mask: 0xFF}, 1 + i, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE);
+            }
+            this.nextStencilID = stencilValues * 2 + 1;
+            return [
+                zToStencilModeHigh,
+                zToStencilModeLow,
+                coords
+            ];
+        } else {
+            this.nextStencilID = 3;
+            return [
+                {[minTileZ]: new StencilMode({func: gl.GREATER, mask: 0xFF}, 2, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                {[minTileZ]: new StencilMode({func: gl.GREATER, mask: 0xFF}, 1, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE)},
+                coords
+            ];
+        }
+    }
+
     colorModeForRenderPass(): Readonly<ColorMode> {
         const gl = this.context.gl;
         if (this._showOverdrawInspector) {
@@ -356,15 +421,17 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
+        const deduplicateWrapped = !style.map.projection.drawWrappedtiles;
+
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
             if (sourceCache.used) {
                 sourceCache.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates();
+            coordsAscending[id] = sourceCache.getVisibleCoordinates(false, deduplicateWrapped);
             coordsDescending[id] = coordsAscending[id].slice().reverse();
-            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
+            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true, deduplicateWrapped).reverse();
         }
 
         this.opaquePassCutoff = Infinity;
@@ -382,8 +449,8 @@ export class Painter {
             this.opaquePassCutoff = 0;
 
             // update coords/depth-framebuffer on camera movement, or tile reloading
-            const newTiles = this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
-            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
+            const hasNewTiles = this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || hasNewTiles) {
                 mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
                 this.terrainFacilitator.renderTime = Date.now();
                 this.terrainFacilitator.dirty = false;
@@ -407,6 +474,9 @@ export class Painter {
 
             this.renderLayer(this, sourceCaches[layer.source], layer, coords);
         }
+
+        // Execute offscreen GPU tasks of the projection manager
+        this.style.map.projection.updateGPUdependent(this);
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.bindFramebuffer.set(null);
@@ -507,36 +577,17 @@ export class Painter {
         }
     }
 
-    /**
-     * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
-     * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
-     * @returns matrix
-     */
-    translatePosMatrix(matrix: mat4, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport', inViewportPixelUnitsUnits?: boolean): mat4 {
-        if (!translate[0] && !translate[1]) return matrix;
-
-        const angle = inViewportPixelUnitsUnits ?
-            (translateAnchor === 'map' ? this.transform.angle : 0) :
-            (translateAnchor === 'viewport' ? -this.transform.angle : 0);
-
-        if (angle) {
-            const sinA = Math.sin(angle);
-            const cosA = Math.cos(angle);
-            translate = [
-                translate[0] * cosA - translate[1] * sinA,
-                translate[0] * sinA + translate[1] * cosA
-            ];
-        }
-
-        const translation = [
-            inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], this.transform.zoom),
-            inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], this.transform.zoom),
-            0
-        ] as vec3;
-
-        const translatedMatrix = new Float32Array(16);
-        mat4.translate(translatedMatrix, matrix, translation);
-        return translatedMatrix;
+    // Temporary function - translate & translate-anchor handling will be moved to projection classes,
+    // since it is inherently projection dependent. Most translations will not be handled by the
+    // projection matrix (like the one this function produces), but by specialized code in the vertex shader.
+    translatePosMatrix(
+        matrix: mat4,
+        tile: Tile,
+        translate: [number, number],
+        translateAnchor: 'map' | 'viewport',
+        inViewportPixelUnitsUnits: boolean = false
+    ): mat4 {
+        return mercatorTranslatePosMatrix(this.transform, tile, matrix, translate, translateAnchor, inViewportPixelUnitsUnits);
     }
 
     saveTileTexture(texture: Texture) {
@@ -566,12 +617,32 @@ export class Painter {
         return !imagePosA || !imagePosB;
     }
 
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null): Program<any> {
+    /**
+     * Finds the required shader and its variant (base/terrain/globe, etc.) and binds it, compiling a new shader if required.
+     * @param name - Name of the desired shader.
+     * @param programConfiguration - Configuration of shader's inputs.
+     * @param defines - Additional macros to be injected at the beginning of the shader. Expected format is `['#define XYZ']`, etc.
+     * @param forceSimpleProjection - Whether to force the use of a shader variant with simple mercator projection vertex shader.
+     * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
+     * @returns
+     */
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines: Array<string> = [], forceSimpleProjection: boolean = false): Program<any> {
         this.cache = this.cache || {};
+        const useTerrain = !!this.style.map.terrain;
+
+        const projection = this.style.map.projection;
+
+        const projectionPrelude = forceSimpleProjection ? shaders.projectionMercator : projection.shaderPreludeCode;
+        const projectionDefine = forceSimpleProjection ? MercatorShaderDefine : projection.shaderDefine;
+        const projectionKey = `/${forceSimpleProjection ? MercatorShaderVariantKey : projection.shaderVariantName}`;
+        const concatenatedDefines = defines ? [projectionDefine].concat(defines) : [projectionDefine];
+
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
+            projectionKey +
             (this._showOverdrawInspector ? '/overdraw' : '') +
-            (this.style.map.terrain ? '/terrain' : '');
+            (useTerrain ? '/terrain' : '') +
+            (concatenatedDefines ? (`/defines:${concatenatedDefines.join('//')}`) : '');
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
@@ -579,7 +650,9 @@ export class Painter {
                 programConfiguration,
                 programUniforms[name],
                 this._showOverdrawInspector,
-                this.style.map.terrain
+                useTerrain,
+                projectionPrelude,
+                concatenatedDefines
             );
         }
         return this.cache[key];

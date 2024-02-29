@@ -58,8 +58,28 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
+import {drawTerrain} from '../render/draw_terrain';
+import {OverscaledTileID} from '../source/tile_id';
+import {mat4} from 'gl-matrix';
+import {EXTENT} from '../data/extent';
+import {ProjectionBase} from '../geo/projection/projection_base';
+import {MercatorProjection} from '../geo/projection/mercator';
+import {GlobeProjection} from '../geo/projection/globe';
 
 const version = packageJSON.version;
+
+type ProjectionName = 'mercator' | 'globe';
+
+function getProjectionFromName(name: ProjectionName, map: Map): ProjectionBase {
+    switch (name) {
+        case 'mercator':
+            return new MercatorProjection();
+        case 'globe':
+            return new GlobeProjection(map);
+        default:
+            return new MercatorProjection();
+    }
+}
 
 /**
  * The {@link Map} options object.
@@ -318,6 +338,12 @@ export type MapOptions = {
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
      */
     maxCanvasSize?: [number, number];
+    /**
+     * Map projection to use. Options are:
+     * - 'mercator' - default, classical flat Web Mercator map.
+     * - 'globe' - a 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zooms.
+     */
+    projection?: ProjectionName;
 };
 
 export type AddImageOptions = {
@@ -387,7 +413,8 @@ const defaultOptions = {
     crossSourceCollisions: true,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
-    maxCanvasSize: [4096, 4096]
+    maxCanvasSize: [4096, 4096],
+    projection: 'mercator'
 } as CompleteMapOptions;
 
 /**
@@ -425,6 +452,7 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
+    projection: ProjectionBase;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -599,6 +627,8 @@ export class Map extends Camera {
         if (options.maxBounds) {
             this.setMaxBounds(options.maxBounds);
         }
+
+        this.projection = getProjectionFromName(options.projection, this);
 
         this._setupContainer();
         this._setupPainter();
@@ -3084,6 +3114,9 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
+        // This projection update should happen *before* placement update
+        this.projection.updateProjection(this.painter.transform);
+
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
         // Actually draw
@@ -3121,7 +3154,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projection.isRenderingDirty;
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -3324,4 +3357,24 @@ export class Map extends Camera {
     getCameraTargetElevation(): number {
         return this.transform.elevation;
     }
+
+    /**
+     * Returns the active `ProjectionBase` object.
+     * @returns The projection object.
+     * @example
+     * ```ts
+     * let projection = map.getProjection();
+     * ```
+     */
+    getProjection(): ProjectionBase { return this.projection; }
+
+    /**
+     * Returns the active projection name.
+     * @returns The projection name
+     * @example
+     * ```ts
+     * let projectionName = map.getProjectionName();
+     * ```
+     */
+    getProjectionName(): string { return this.projection.name; }
 }

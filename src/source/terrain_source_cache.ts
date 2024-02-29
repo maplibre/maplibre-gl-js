@@ -6,6 +6,7 @@ import {Evented} from '../util/evented';
 import type {Transform} from '../geo/transform';
 import type {SourceCache} from '../source/source_cache';
 import {Terrain} from '../render/terrain';
+import {browser} from '../util/browser';
 
 /**
  * @internal
@@ -49,6 +50,10 @@ export class TerrainSourceCache extends Evented {
      * raster-dem tiles will load for performance the actualZoom - deltaZoom zoom-level.
      */
     deltaZoom: number;
+    /**
+     * used to determine whether depth & coord framebuffers need updating
+     */
+    _lastTilesetChange: number = browser.now();
 
     constructor(sourceCache: SourceCache) {
         super();
@@ -93,6 +98,7 @@ export class TerrainSourceCache extends Evented {
                 tileID.posMatrix = new Float64Array(16) as any;
                 mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
+                this._lastTilesetChange = browser.now();
             }
         }
         // free unused tiles
@@ -193,11 +199,11 @@ export class TerrainSourceCache extends Evented {
     }
 
     /**
-     * get a list of tiles, loaded after a specific time. This is used to update depth & coords framebuffers.
+     * gets whether any tiles were loaded after a specific time. This is used to update depth & coords framebuffers.
      * @param time - the time
-     * @returns the relevant tiles
+     * @returns true if any tiles came into view at or after the specified time
      */
-    tilesAfterTime(time = Date.now()): Array<Tile> {
-        return Object.values(this._tiles).filter(t => t.timeAdded >= time);
+    anyTilesAfterTime(time = Date.now()): boolean {
+        return this._lastTilesetChange >= time;
     }
 }
