@@ -987,8 +987,9 @@ export abstract class Camera extends Evented {
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        const center = LngLat.convert(options.center || locationAtOffset);
+        let center = LngLat.convert(options.center || locationAtOffset);
         this._normalizeCenter(center);
+        center = tr.getConstrained(center, zoom).center;
 
         const from = tr.project(locationAtOffset);
         const delta = tr.project(center).sub(from);
@@ -1260,8 +1261,10 @@ export abstract class Camera extends Evented {
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        const center = LngLat.convert(options.center || locationAtOffset);
+        let center = LngLat.convert(options.center || locationAtOffset);
         this._normalizeCenter(center);
+
+        center = tr.getConstrained(center, zoom).center;
 
         const from = tr.project(locationAtOffset);
         const delta = tr.project(center).sub(from);
