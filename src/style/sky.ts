@@ -1,9 +1,3 @@
-import {PosArray, TriangleIndexArray} from '../data/array_types.g';
-import posAttributes from '../data/pos_attributes';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
-import {SegmentVector} from '../data/segment';
-import {Context} from '../gl/context';
 import {DataConstantProperty, PossiblyEvaluated, Properties, Transitionable, Transitioning, TransitionParameters} from './properties';
 import {Evented} from '../util/evented';
 import {EvaluationParameters} from './evaluation_parameters';
@@ -41,29 +35,11 @@ export class Sky extends Evented {
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
 
-    vertexBuffer: VertexBuffer;
-    indexBuffer: IndexBuffer;
-    segments: SegmentVector;
-
-    constructor(context :Context, sky?: SkySpecification) {
+    constructor(sky?: SkySpecification) {
         super();
         this._transitionable = new Transitionable(properties);
         this.setSky(sky);
         this._transitioning = this._transitionable.untransitioned();
-
-        const vertexArray = new PosArray();
-        vertexArray.emplaceBack(-1, -1);
-        vertexArray.emplaceBack(1, -1);
-        vertexArray.emplaceBack(1, 1);
-        vertexArray.emplaceBack(-1, 1);
-
-        const indexArray = new TriangleIndexArray();
-        indexArray.emplaceBack(0, 1, 2);
-        indexArray.emplaceBack(0, 2, 3);
-
-        this.vertexBuffer = context.createVertexBuffer(vertexArray, posAttributes.members);
-        this.indexBuffer = context.createIndexBuffer(indexArray);
-        this.segments = SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length);
     }
 
     setSky(sky?: SkySpecification) {

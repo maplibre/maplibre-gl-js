@@ -12,7 +12,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {fakeServer, type FakeServer} from 'nise';
 
 import {EvaluationParameters} from './evaluation_parameters';
-import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, TerrainSpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {GeoJSONSource} from '../source/geojson_source';
 import {sleep} from '../util/test/util';
 
@@ -723,9 +723,9 @@ describe('Style#setState', () => {
         };
         newStyle.zoom = 2;
         newStyle.sky = {
-            "fog-color": "#000001",
-            "sky-color": "#000002",
-            "horizon-blend": 0.5,
+            'fog-color': '#000001',
+            'sky-color': '#000002',
+            'horizon-blend': 0.5,
         };
         const didChange = style.setState(newStyle);
         expect(didChange).toBeTruthy();
@@ -2533,5 +2533,52 @@ describe('Style#serialize', () => {
 
         await style.once('style.load');
         expect(style.serialize().terrain).toBeUndefined();
+    });
+
+    test('include sky property when map has sky', async () => {
+        const sky: SkySpecification = {
+            'fog-blend': 0.5,
+            'fog-color': '#fff'
+        };
+        const styleJson = createStyleJSON({sky});
+        const style = new Style(getStubMap());
+        style.loadJSON(styleJson);
+
+        await style.once('style.load');
+        expect(style.serialize().sky).toStrictEqual(sky);
+    });
+
+    test('do not include sky property when map does not have sky', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.serialize().sky).toBeUndefined();
+    });
+
+    test('do not include sky property after removing sky from the map', async () => {
+        const sky: SkySpecification = {
+            'fog-blend': 0.5,
+            'fog-color': '#fff'
+        };
+        const styleJson = createStyleJSON({sky});
+        const style = new Style(getStubMap());
+        style.loadJSON(styleJson);
+
+        await style.once('style.load');
+        style.setSky(undefined);
+        expect(style.serialize().sky).toBeUndefined();
+    });
+
+    test('include sky property when setting it after map loads', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setSky({
+            'fog-blend': 0.5,
+            'fog-color': '#fff'
+        });
+        expect(style.serialize().sky).toBeDefined();
     });
 });

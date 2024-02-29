@@ -1254,7 +1254,7 @@ export class Style extends Evented {
         return extend({duration: 300, delay: 0}, this.stylesheet && this.stylesheet.transition);
     }
 
-    serialize(): StyleSpecification {
+    serialize(): StyleSpecification | undefined {
         // We return undefined before we're loaded, following the pattern of Map.getStyle() before
         // the Style object is initialized.
         // Internally, Style._validate() calls Style.serialize() but callers are responsible for
@@ -1265,13 +1265,13 @@ export class Style extends Evented {
         const layers = this._serializeByIds(this._order);
         const terrain = this.map.getTerrain() || undefined;
         const myStyleSheet = this.stylesheet;
+        const sky = this.getSky();
 
         return filterObject({
             version: myStyleSheet.version,
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
             light: myStyleSheet.light,
-            sky: myStyleSheet.sky,
             center: myStyleSheet.center,
             zoom: myStyleSheet.zoom,
             bearing: myStyleSheet.bearing,
@@ -1281,7 +1281,8 @@ export class Style extends Evented {
             transition: myStyleSheet.transition,
             sources,
             layers,
-            terrain
+            terrain,
+            sky
         },
         (value) => { return value !== undefined; });
     }
@@ -1470,7 +1471,7 @@ export class Style extends Evented {
     }
 
     getSky() {
-        return this.sky && this.sky.getSky();
+        return this.sky?.getSky();
     }
 
     setSky(skyOptions?: SkySpecification) {
@@ -1484,7 +1485,7 @@ export class Style extends Evented {
             this.sky.setSky(skyOptions);
             return;
         }
-        this.sky = new Sky(this.map.painter.context, skyOptions);
+        this.sky = new Sky(skyOptions);
         this.sky.updateTransitions({
             now: browser.now(),
             transition: extend({

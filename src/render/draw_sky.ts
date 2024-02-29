@@ -1,9 +1,12 @@
 import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
+import {PosArray, TriangleIndexArray} from '../data/array_types.g';
+import posAttributes from '../data/pos_attributes';
+import {SegmentVector} from '../data/segment';
 import {skyUniformValues} from './program/sky_program';
-import type {Painter} from './painter';
 import {Sky} from '../style/sky';
+import type {Painter} from './painter';
 
 export function drawSky(painter: Painter, sky: Sky) {
     const context = painter.context;
@@ -16,7 +19,21 @@ export function drawSky(painter: Painter, sky: Sky) {
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram('sky');
 
+    const vertexArray = new PosArray();
+    vertexArray.emplaceBack(-1, -1);
+    vertexArray.emplaceBack(1, -1);
+    vertexArray.emplaceBack(1, 1);
+    vertexArray.emplaceBack(-1, 1);
+
+    const indexArray = new TriangleIndexArray();
+    indexArray.emplaceBack(0, 1, 2);
+    indexArray.emplaceBack(0, 2, 3);
+
+    const vertexBuffer = context.createVertexBuffer(vertexArray, posAttributes.members);
+    const indexBuffer = context.createIndexBuffer(indexArray);
+    const segments = SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length);
+
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
-        CullFaceMode.disabled, skyUniforms, undefined, 'sky', sky.vertexBuffer,
-        sky.indexBuffer, sky.segments);
+        CullFaceMode.disabled, skyUniforms, undefined, 'sky', vertexBuffer,
+        indexBuffer, segments);
 }
