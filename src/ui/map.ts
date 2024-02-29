@@ -2691,7 +2691,8 @@ export class Map extends Camera {
     }
 
     /**
-     * Loads a Sky onto the map.
+     * Loads sky and fog defined by {@link SkySpecification} onto the map.
+     * Note: The fog only shows when using the terrain 3D feature.
      * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sky).
      * @returns `this`
      * @example
