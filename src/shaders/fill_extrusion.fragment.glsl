@@ -3,7 +3,7 @@ in vec4 v_color;
 #ifdef GLOBE
 in vec3 v_sphere_pos;
 uniform vec3 u_camera_pos_globe;
-uniform highp float u_projection_globeness;
+uniform highp float u_projection_transition;
 #endif
 
 void main() {
@@ -40,7 +40,7 @@ void main() {
     // Note that unsquared globeness is intentionally compared to squared distance from planet center,
     // effectively using sqrt(globeness) as the planet radius. This is done to make the animation look better.
     float distance_to_planet_center_squared = dot(nearest, nearest);
-    if (distance_to_planet_center_squared < u_projection_globeness) {
+    if (distance_to_planet_center_squared < u_projection_transition) {
         discard; // Ray intersected the planet.
     }
 #endif

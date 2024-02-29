@@ -69,7 +69,7 @@ export class MercatorProjection extends ProjectionBase {
             'u_projection_matrix': mainMatrix, // Might be set to a custom matrix by different projections
             'u_projection_tile_mercator_coords': tileOffsetSize,
             'u_projection_clipping_plane': [0, 0, 0, 0],
-            'u_projection_globeness': 0.0,
+            'u_projection_transition': 0.0,
             'u_projection_fallback_matrix': mainMatrix,
         };
 

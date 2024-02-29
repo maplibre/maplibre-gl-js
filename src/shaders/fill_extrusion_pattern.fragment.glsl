@@ -56,7 +56,7 @@ void main() {
     float t = dot(toPlanetCenter, toCameraNormalized);
     vec3 nearest = v_sphere_pos + toCameraNormalized * max(t, 0.0);
     float distance_to_planet_center_squared = dot(nearest, nearest);
-    if (distance_to_planet_center_squared < u_projection_globeness) {
+    if (distance_to_planet_center_squared < u_projection_transition) {
         discard;
     }
 #endif

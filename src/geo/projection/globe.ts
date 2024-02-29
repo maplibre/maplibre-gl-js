@@ -293,7 +293,7 @@ export class GlobeProjection extends ProjectionBase {
         }
 
         data['u_projection_clipping_plane'] = [...this._cachedClippingPlane];
-        data['u_projection_globeness'] = this._globeness;
+        data['u_projection_transition'] = this._globeness;
 
         return data;
     }

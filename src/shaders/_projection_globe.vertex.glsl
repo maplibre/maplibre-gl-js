@@ -2,7 +2,7 @@
 
 uniform highp vec4 u_projection_tile_mercator_coords;
 uniform highp vec4 u_projection_clipping_plane;
-uniform highp float u_projection_globeness;
+uniform highp float u_projection_transition;
 uniform mat4 u_projection_fallback_matrix;
 
 vec3 globeRotateVector(vec3 vec, vec2 angles) {
@@ -36,8 +36,8 @@ float circumferenceRatioAtTileY(float tileY) {
 
 float projectLineThickness(float tileY) {
     float thickness = 1.0 / circumferenceRatioAtTileY(tileY); 
-    if (u_projection_globeness < 0.999) {
-        return mix(1.0, thickness, u_projection_globeness);
+    if (u_projection_transition < 0.999) {
+        return mix(1.0, thickness, u_projection_transition);
     } else {
         return thickness;
     }
@@ -45,8 +45,8 @@ float projectLineThickness(float tileY) {
 
 float projectCircleRadius(float tileY) {
     float thickness = 1.0 / circumferenceRatioAtTileY(tileY);    
-    if (u_projection_globeness < 0.999) {
-        return mix(1.0, thickness, u_projection_globeness);
+    if (u_projection_transition < 0.999) {
+        return mix(1.0, thickness, u_projection_transition);
     } else {
         return thickness;
     }
@@ -91,19 +91,19 @@ vec4 interpolateProjection(vec2 posInTile, vec3 spherePos, float elevation) {
     // Z is overwritten by glDepthRange anyway - use a custom z value to clip geometry on the invisible side of the sphere.
     globePosition.z = globeComputeClippingZ(elevatedPos) * globePosition.w;
 
-    if (u_projection_globeness < 0.999) {
+    if (u_projection_transition < 0.999) {
         vec4 flatPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
         // Only interpolate to globe's Z for the last 50% of the animation.
         // (globe Z hides anything on the backfacing side of the planet)
         const float z_globeness_threshold = 0.2;
         vec4 result = globePosition;
-        result.z = mix(0.0, globePosition.z, clamp((u_projection_globeness - z_globeness_threshold) / (1.0 - z_globeness_threshold), 0.0, 1.0));
-        result.xyw = mix(flatPosition.xyw, globePosition.xyw, u_projection_globeness);
+        result.z = mix(0.0, globePosition.z, clamp((u_projection_transition - z_globeness_threshold) / (1.0 - z_globeness_threshold), 0.0, 1.0));
+        result.xyw = mix(flatPosition.xyw, globePosition.xyw, u_projection_transition);
         // Gradually hide poles during transition
         if ((posInTile.y < -32767.5) || (posInTile.y > 32766.5)) {
             result = globePosition;
             const float poles_hidden_anim_percentage = 0.02; // Only draw poles in the last 2% of the animation.
-            result.z = mix(globePosition.z, 100.0, pow(max((1.0 - u_projection_globeness) / poles_hidden_anim_percentage, 0.0), 8.0));
+            result.z = mix(globePosition.z, 100.0, pow(max((1.0 - u_projection_transition) / poles_hidden_anim_percentage, 0.0), 8.0));
         }
         return result;
     }
@@ -129,7 +129,7 @@ vec4 interpolateProjectionFor3D(vec2 posInTile, vec3 spherePos, float elevation)
     vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
     vec4 globePosition = u_projection_matrix * vec4(elevatedPos, 1.0);
     vec4 fallbackPosition = u_projection_fallback_matrix * vec4(posInTile, elevation, 1.0);
-    return mix(fallbackPosition, globePosition, u_projection_globeness);
+    return mix(fallbackPosition, globePosition, u_projection_transition);
 }
 
 // Projects the tile coordinates+elevation while preserving the Z value from the projection matrix.

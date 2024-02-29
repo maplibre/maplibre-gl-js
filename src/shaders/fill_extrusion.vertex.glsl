@@ -78,7 +78,7 @@ void main() {
     mat3 rotMatrix = globeGetRotationMatrix(spherePos);
     normalForLighting = rotMatrix * normalForLighting;
     // Interpolate dot product result instead of normals and light direction
-    directional = mix(directional, clamp(dot(normalForLighting, u_lightpos_globe), 0.0, 1.0), u_projection_globeness);
+    directional = mix(directional, clamp(dot(normalForLighting, u_lightpos_globe), 0.0, 1.0), u_projection_transition);
     #endif
 
     // Adjust directional so that
