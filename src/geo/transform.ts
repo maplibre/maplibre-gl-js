@@ -711,8 +711,11 @@ export class Transform {
         return this.mercatorMatrix.slice() as any;
     }
 
-    _constrain() {
-        if (!this.center || !this.width || !this.height || this._constraining) return;
+    getConstrained(center: LngLat, zoom: number): {center: LngLat; zoom: number} {
+        const result = {
+            center: new LngLat(center.lng, center.lat),
+            zoom
+        };
 
         let lngRange = this.lngRange;
 
@@ -721,15 +724,12 @@ export class Transform {
             lngRange = [-almost180, almost180];
         }
 
-        this._constraining = true;
-
         let minY = -90;
         let maxY = 90;
         let minX = -180;
         let maxX = 180;
         let sy, sx, x2, y2;
-        const size = this.size,
-            unmodified = this._unmodified;
+        const size = this.size;
 
         if (this.latRange) {
             const latRange = this.latRange;
@@ -755,19 +755,17 @@ export class Transform {
             sx = maxX - minX < size.x ? size.x / (maxX - minX) : 0;
         }
 
-        const point = this.point;
+        const point = this.project(center);
 
         // how much the map should scale to fit the screen into given latitude/longitude ranges
         const s = Math.max(sx || 0, sy || 0);
 
         if (s) {
-            this.center = this.unproject(new Point(
+            result.center = this.unproject(new Point(
                 sx ? (maxX + minX) / 2 : point.x,
                 sy ? (maxY + minY) / 2 : point.y));
-            this.zoom += this.scaleZoom(s);
-            this._unmodified = unmodified;
-            this._constraining = false;
-            return;
+            result.zoom += this.scaleZoom(s);
+            return result;
         }
 
         if (this.latRange) {
@@ -792,11 +790,21 @@ export class Transform {
 
         // pan the map if the screen goes off the range
         if (x2 !== undefined || y2 !== undefined) {
-            this.center = this.unproject(new Point(
+            result.center = this.unproject(new Point(
                 x2 !== undefined ? x2 : point.x,
                 y2 !== undefined ? y2 : point.y)).wrap();
         }
 
+        return result;
+    }
+
+    _constrain() {
+        if (!this.center || !this.width || !this.height || this._constraining) return;
+        this._constraining = true;
+        const unmodified = this._unmodified;
+        const {center, zoom} = this.getConstrained(this.center, this.zoom);
+        this.center = center;
+        this.zoom = zoom;
         this._unmodified = unmodified;
         this._constraining = false;
     }
