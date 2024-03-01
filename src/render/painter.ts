@@ -235,7 +235,7 @@ export class Painter {
         const projectionData = this.style.map.projection.getProjectionData(null, null);
         projectionData['u_projection_matrix'] = matrix;
 
-        // Note: we use a shader with projection code disabled since we want to draw a fullscreen quad
+        // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
         this.useProgram('clippingMask', null, [], true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
