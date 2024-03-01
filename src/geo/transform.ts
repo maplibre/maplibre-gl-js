@@ -734,13 +734,13 @@ export class Transform {
         let minX = -180;
         let maxX = 180;
         let sy, sx, x2, y2;
-        const size = this.size;
+        const {x: screenWidth, y: screenHeight} = this.size;
 
         if (this.latRange) {
             const latRange = this.latRange;
             minY = mercatorYfromLat(latRange[1]) * this.worldSize;
             maxY = mercatorYfromLat(latRange[0]) * this.worldSize;
-            sy = maxY - minY < size.y ? size.y / (maxY - minY) : 0;
+            sy = maxY - minY < screenHeight ? screenHeight / (maxY - minY) : 0;
         }
 
         if (lngRange) {
@@ -757,7 +757,7 @@ export class Transform {
 
             if (maxX < minX) maxX += this.worldSize;
 
-            sx = maxX - minX < size.x ? size.x / (maxX - minX) : 0;
+            sx = maxX - minX < screenWidth ? screenWidth / (maxX - minX) : 0;
         }
 
         const point = this.project(lngLat);
@@ -775,7 +775,7 @@ export class Transform {
 
         if (this.latRange) {
             const y = point.y,
-                h2 = size.y / 2;
+                h2 = screenHeight / 2;
 
             if (y - h2 < minY) y2 = minY + h2;
             if (y + h2 > maxY) y2 = maxY - h2;
@@ -787,7 +787,7 @@ export class Transform {
             if (this._renderWorldCopies) {
                 x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
             }
-            const w2 = size.x / 2;
+            const w2 = screenWidth / 2;
 
             if (x - w2 < minX) x2 = minX + w2;
             if (x + w2 > maxX) x2 = maxX - w2;
