@@ -32,6 +32,9 @@ class RTLMainThreadPlugin extends Evented {
         }
 
         this.url = browser.resolveURL(url);
+        if (!this.url) {
+            throw new Error(`requested url ${url} is invalid`);
+        }
         if (this.status === 'unavailable') {
 
             // from initial state:
@@ -58,7 +61,7 @@ class RTLMainThreadPlugin extends Evented {
     async _download() : Promise<void> {
         const workerResults = await this._syncState('loading');
         if (workerResults.length > 0) {
-            const workerResult = workerResults[0];
+            const workerResult: PluginState = workerResults[0];
             this.status = workerResult.pluginStatus;
 
             // expect worker to return 'loaded'
@@ -69,7 +72,7 @@ class RTLMainThreadPlugin extends Evented {
                 if (workerResult.error) {
                     throw workerResult.error;
                 } else {
-                    throw new Error(`worker failed '${SyncRTLPluginStateMessageName}' for unknown reason`);
+                    throw new Error(`worker failed to load ${this.url}`);
                 }
             }
         } else {
