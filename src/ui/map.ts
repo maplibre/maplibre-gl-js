@@ -58,10 +58,6 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {drawTerrain} from '../render/draw_terrain';
-import {OverscaledTileID} from '../source/tile_id';
-import {mat4} from 'gl-matrix';
-import {EXTENT} from '../data/extent';
 import {ProjectionBase} from '../geo/projection/projection_base';
 import {MercatorProjection} from '../geo/projection/mercator';
 import {GlobeProjection} from '../geo/projection/globe';
@@ -77,6 +73,7 @@ function getProjectionFromName(name: ProjectionName, map: Map): ProjectionBase {
         case 'globe':
             return new GlobeProjection(map);
         default:
+            warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
             return new MercatorProjection();
     }
 }
@@ -340,8 +337,9 @@ export type MapOptions = {
     maxCanvasSize?: [number, number];
     /**
      * Map projection to use. Options are:
-     * - 'mercator' - default, classical flat Web Mercator map.
-     * - 'globe' - a 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zooms.
+     * - 'mercator' - The default, a classical flat Web Mercator map.
+     * - 'globe' - A 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zoom levels.
+     * @defaultValue 'mercator'
      */
     projection?: ProjectionName;
 };
