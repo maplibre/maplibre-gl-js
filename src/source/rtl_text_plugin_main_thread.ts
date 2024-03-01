@@ -1,7 +1,7 @@
 
 import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
-import {RTLPluginStatus, RTLPluginLoadedEventName, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
+import {RTLPluginStatus, RTLPluginLoadedEventName, SyncRTLPluginStateMessageName, PluginState} from './rtl_text_plugin_status';
 import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
 
 class RTLMainThreadPlugin extends Evented {
@@ -9,38 +9,13 @@ class RTLMainThreadPlugin extends Evented {
     url: string = null;
     dispatcher: Dispatcher = getGlobalDispatcher();
 
-    /** Download RTL plugin by sending a message to worker and process its response */
-    async _download() : Promise<void> {
-        this.status = 'loading';
-        const workerResults = await this.dispatcher.broadcast(
-            SyncRTLPluginStateMessageName,
-            {
-                pluginStatus: 'loading',
-                pluginURL: this.url
-            }
-        );
-
-        if (workerResults.length > 0) {
-            const workerResult = workerResults[0];
-            this.status = workerResult.pluginStatus;
-            if (workerResult.pluginStatus === 'loaded') {
-                // success scenario
-                this.fire(new Event(RTLPluginLoadedEventName));
-            } else {
-                // failed scenario: returned, but status is not loaded.
-                if (workerResult.error) {
-                    throw workerResult.error;
-                } else {
-                    throw new Error(`worker failed '${SyncRTLPluginStateMessageName}' for unknown reason`);
-                }
-            }
-        } else {
-            // failed scenario(edge case): worker did not respond
-            this.status = 'error';
-            throw new Error(`worker did not respond to message: ${SyncRTLPluginStateMessageName}`);
-        }
+    /** Sync RTL plugin state by broadcasting a message to the worker */
+    _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
+        this.status = statusToSend;
+        return this.dispatcher.broadcast(SyncRTLPluginStateMessageName, {pluginStatus: statusToSend, pluginURL: this.url});
     }
 
+    /** This one is exposed to outside */
     getRTLTextPluginStatus(): RTLPluginStatus {
         return this.status;
     }
@@ -61,8 +36,13 @@ class RTLMainThreadPlugin extends Evented {
 
             // from initial state:
             if (deferred) {
-                // nothing else to do, just wait
+
                 this.status = 'deferred';
+                // fire and forget: in this case it does not need wait for the broadcasting result
+                // it is important to sync the deferred status once because
+                // symbol_bucket will be checking it in worker
+                this._syncState(this.status);
+
             } else {
                 // immediate download
                 return this._download();
@@ -71,6 +51,31 @@ class RTLMainThreadPlugin extends Evented {
         } else if (this.status === 'requested') {
             // already requested, start downloading
             return this._download();
+        }
+    }
+
+    /** Download RTL plugin by sending a message to worker and process its response */
+    async _download() : Promise<void> {
+        const workerResults = await this._syncState('loading');
+        if (workerResults.length > 0) {
+            const workerResult = workerResults[0];
+            this.status = workerResult.pluginStatus;
+
+            // expect worker to return 'loaded'
+            if (workerResult.pluginStatus === 'loaded') {
+                this.fire(new Event(RTLPluginLoadedEventName));
+            } else {
+                // failed scenario: returned, but bad status
+                if (workerResult.error) {
+                    throw workerResult.error;
+                } else {
+                    throw new Error(`worker failed '${SyncRTLPluginStateMessageName}' for unknown reason`);
+                }
+            }
+        } else {
+            // failed scenario(edge case): worker did not respond
+            this.status = 'error';
+            throw new Error(`worker did not respond to message: ${SyncRTLPluginStateMessageName}`);
         }
     }
 
