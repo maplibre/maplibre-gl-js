@@ -58,11 +58,11 @@ describe('RTLMainThreadPlugin', () => {
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url);
         expect(rtlMainThreadPlugin.url).toEqual(url);
+        expect(rtlMainThreadPlugin.status).toBe('loaded');
     });
 
     it('should set the RTL text plugin but deffer downloading', async () => {
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
-        expect(server.requests).toHaveLength(0);
         expect(rtlMainThreadPlugin.status).toBe('deferred');
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
     });
@@ -94,9 +94,25 @@ describe('RTLMainThreadPlugin', () => {
 
         // this is really a fire and forget
         rtlMainThreadPlugin.lazyLoad();
-        window.setTimeout(() => {
-            expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
-            expect(rtlMainThreadPlugin.status).toBe('loaded');
-        }, 10);
+        await sleep(1);
+        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
+        expect(rtlMainThreadPlugin.status).toBe('loaded');
+    });
+
+    it('should set status to requested if RTL plugin was not set', async () => {
+        rtlMainThreadPlugin.lazyLoad();
+        expect(rtlMainThreadPlugin.status).toBe('requested');
+    });
+
+    it('should immediately download if RTL plugin was already requested, ignoring deferred:true', async () => {
+        broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
+        rtlMainThreadPlugin.lazyLoad();
+        expect(rtlMainThreadPlugin.status).toBe('requested');
+        await sleep(1);
+
+        // notice even when deferred is true, it should download because already requested
+        await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
+        expect(rtlMainThreadPlugin.status).toBe('loaded');
+        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
     });
 });
