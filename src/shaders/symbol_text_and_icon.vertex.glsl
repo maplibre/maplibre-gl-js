@@ -1,5 +1,3 @@
-const float PI = 3.141592653589793;
-
 in vec4 a_pos_offset;
 in vec4 a_data;
 in vec3 a_projected_pos;
