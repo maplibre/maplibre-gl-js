@@ -40,34 +40,23 @@ void main() {
     lowp vec4 color = fill_color;
     highp float gamma = EDGE_GAMMA / (fontScale * u_gamma_scale);
     lowp float inner_edge = (256.0 - 64.0) / 256.0;
-    if (u_is_halo) {
-        color = halo_color;
-        gamma = (halo_blur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * u_gamma_scale);
-        inner_edge = inner_edge + gamma * gamma_scale;
-    }
 
-    // lowp float dist = texture(u_texture, tex).a;
-    // highp float gamma_scaled = gamma * gamma_scale;
-    // highp float alpha = smoothstep(inner_edge - gamma_scaled, inner_edge + gamma_scaled, dist);
-    // if (u_is_halo) {
-    //     // When drawing halos, we want the inside of the halo to be transparent as well
-    //     // in case the text fill is transparent.
-    //     lowp float halo_edge = (6.0 - halo_width / fontScale) / SDF_PX;
-    //     alpha = min(smoothstep(halo_edge - gamma_scaled, halo_edge + gamma_scaled, dist), 1.0 - alpha);
-    // }
-
-    
+    float opacity_openglobus = 0.0;
     vec3 s = texture(u_texture, tex).rgb;
     float sd = median(s.r, s.g, s.b);
-    // vec4 sdfParams = vec4(1024.0, 1024.0, 32.0, 8.0);
-    // vec2 dxdy = fwidth(tex) * sdfParams.xy;
-    float dist = (sd - 0.5) * 6.0 * size;
-    float opacity_openglobus = clamp(dist + 0.5, 0.0, 1.0);
-    // if(opacity_openglobus <= 0.1){
-    //     discard;
-    // }
+    float dist = 0.0;
+    
+    if (u_is_halo) {
+        color = halo_color;
+        // use halo_blur as to make inner bigger
+        dist = (sd - 0.5 + halo_blur + halo_width) * 6.0 * size;
+    }
+    else {
+        dist = (sd - 0.5 + halo_blur) * 6.0 * size;
+    }
+    opacity_openglobus = clamp(dist + 0.5, 0.0, 1.0);
 
-    float alpha = opacity_openglobus; //clamp(sigDist * 100.0, 0.0, 1.0);
+    float alpha = opacity_openglobus;
 
     fragColor = color * (alpha * opacity * fade_opacity);
 
