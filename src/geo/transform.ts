@@ -733,7 +733,7 @@ export class Transform {
         let maxY = 90;
         let minX = -180;
         let maxX = 180;
-        let sy, sx, x2, y2;
+        let sy, sx;
         const {x: screenWidth, y: screenHeight} = this.size;
 
         if (this.latRange) {
@@ -761,6 +761,7 @@ export class Transform {
         }
 
         const {x: originalX, y: originalY} = this.project(lngLat);
+        let modifiedX, modifiedY;
 
         // how much the map should scale to fit the screen into given latitude/longitude ranges
         const s = Math.max(sx || 0, sy || 0);
@@ -777,8 +778,8 @@ export class Transform {
             const y = originalY,
                 h2 = screenHeight / 2;
 
-            if (y - h2 < minY) y2 = minY + h2;
-            if (y + h2 > maxY) y2 = maxY - h2;
+            if (y - h2 < minY) modifiedY = minY + h2;
+            if (y + h2 > maxY) modifiedY = maxY - h2;
         }
 
         if (lngRange) {
@@ -789,15 +790,15 @@ export class Transform {
             }
             const w2 = screenWidth / 2;
 
-            if (x - w2 < minX) x2 = minX + w2;
-            if (x + w2 > maxX) x2 = maxX - w2;
+            if (x - w2 < minX) modifiedX = minX + w2;
+            if (x + w2 > maxX) modifiedX = maxX - w2;
         }
 
         // pan the map if the screen goes off the range
-        if (x2 !== undefined || y2 !== undefined) {
+        if (modifiedX !== undefined || modifiedY !== undefined) {
             result.center = this.unproject(new Point(
-                x2 !== undefined ? x2 : originalX,
-                y2 !== undefined ? y2 : originalY)).wrap();
+                modifiedX !== undefined ? modifiedX : originalX,
+                modifiedY !== undefined ? modifiedY : originalY)).wrap();
         }
 
         return result;
