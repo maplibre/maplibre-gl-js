@@ -11,9 +11,3 @@
  * * This leaves us with 2^13 = 8192
  */
 export const EXTENT = 8192;
-
-/**
- * The size of border region for stencil masks, in internal tile coordinates.
- * Used for globe rendering.
- */
-export const EXTENT_STENCIL_BORDER = EXTENT / 128;

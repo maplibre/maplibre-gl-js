@@ -4,7 +4,7 @@ import {Map} from '../../ui/map';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {Mesh} from '../../render/mesh';
-import {EXTENT, EXTENT_STENCIL_BORDER} from '../../data/extent';
+import {EXTENT} from '../../data/extent';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {Transform} from '../transform';
@@ -26,6 +26,12 @@ import {ProjectionData} from '../../render/program/projection_program';
 import * as Mercator from './mercator';
 import {ProjectionBase} from './projection_base';
 import {PreparedShader, shaders} from '../../shaders/shaders';
+
+/**
+ * The size of border region for stencil masks, in internal tile coordinates.
+ * Used for globe rendering.
+ */
+const EXTENT_STENCIL_BORDER = EXTENT / 128;
 
 function clamp(a: number, min: number, max: number): number {
     return Math.min(Math.max(a, min), max);
