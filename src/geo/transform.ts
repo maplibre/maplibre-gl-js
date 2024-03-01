@@ -733,14 +733,16 @@ export class Transform {
         let maxY = 90;
         let minX = -180;
         let maxX = 180;
-        let scaleY, scaleX;
+        let scaleY = 0;
+        let scaleX = 0;
         const {x: screenWidth, y: screenHeight} = this.size;
 
         if (this.latRange) {
             const latRange = this.latRange;
             minY = mercatorYfromLat(latRange[1]) * this.worldSize;
             maxY = mercatorYfromLat(latRange[0]) * this.worldSize;
-            scaleY = maxY - minY < screenHeight ? screenHeight / (maxY - minY) : 0;
+            const shouldZoomIn = maxY - minY < screenHeight;
+            if (shouldZoomIn) scaleY = screenHeight / (maxY - minY);
         }
 
         if (lngRange) {
@@ -757,16 +759,17 @@ export class Transform {
 
             if (maxX < minX) maxX += this.worldSize;
 
-            scaleX = maxX - minX < screenWidth ? screenWidth / (maxX - minX) : 0;
+            const shouldZoomIn = maxX - minX < screenWidth;
+            if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
         const {x: originalX, y: originalY} = this.project(lngLat);
         let modifiedX, modifiedY;
 
-        // how much the map should scale to fit the screen into given latitude/longitude ranges
         const scale = Math.max(scaleX || 0, scaleY || 0);
 
         if (scale) {
+            // zoom in to exclude all beyond the given lng/lat ranges
             result.center = this.unproject(new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY));
