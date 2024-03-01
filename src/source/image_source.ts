@@ -19,6 +19,7 @@ import type {
     ImageSourceSpecification,
     VideoSourceSpecification
 } from '@maplibre/maplibre-gl-style-spec';
+import Point from '@mapbox/point-geometry';
 
 /**
  * Four geographical coordinates,
@@ -104,6 +105,7 @@ export class ImageSource extends Evented implements Source {
     _boundsArray: RasterBoundsArray;
     boundsBuffer: VertexBuffer;
     boundsSegments: SegmentVector;
+    tileCoords: Array<Point>;
     _loaded: boolean;
     _request: AbortController;
 
@@ -226,13 +228,13 @@ export class ImageSource extends Evented implements Source {
 
         // Transform the corner coordinates into the coordinate space of our
         // tile.
-        const tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
+        this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
 
         this._boundsArray = new RasterBoundsArray();
-        this._boundsArray.emplaceBack(tileCoords[0].x, tileCoords[0].y, 0, 0);
-        this._boundsArray.emplaceBack(tileCoords[1].x, tileCoords[1].y, EXTENT, 0);
-        this._boundsArray.emplaceBack(tileCoords[3].x, tileCoords[3].y, 0, EXTENT);
-        this._boundsArray.emplaceBack(tileCoords[2].x, tileCoords[2].y, EXTENT, EXTENT);
+        this._boundsArray.emplaceBack(this.tileCoords[0].x, this.tileCoords[0].y, 0, 0);
+        this._boundsArray.emplaceBack(this.tileCoords[1].x, this.tileCoords[1].y, EXTENT, 0);
+        this._boundsArray.emplaceBack(this.tileCoords[3].x, this.tileCoords[3].y, 0, EXTENT);
+        this._boundsArray.emplaceBack(this.tileCoords[2].x, this.tileCoords[2].y, EXTENT, EXTENT);
 
         if (this.boundsBuffer) {
             this.boundsBuffer.destroy();
