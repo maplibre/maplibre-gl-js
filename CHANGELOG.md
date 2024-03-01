@@ -1,8 +1,9 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
 - Add option to position popup at subpixel coordinates to allow for smooth animations ([#3710](https://github.com/maplibre/maplibre-gl-js/pull/3710))
+- Constrain horizontal panning when renderWorldCopies is set to false ([3738](https://github.com/maplibre/maplibre-gl-js/pull/3738))
+- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - Fix popup appearing far from marker that was moved to a side globe ([3712](https://github.com/maplibre/maplibre-gl-js/pull/3712))

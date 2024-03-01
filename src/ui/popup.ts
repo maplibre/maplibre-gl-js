@@ -596,6 +596,8 @@ export class Popup extends Evented {
 
         if (this._map.transform.renderWorldCopies && !this._trackPointer) {
             this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
+        } else {
+            this._lngLat = this._lngLat?.wrap();
         }
 
         if (this._trackPointer && !cursor) return;
