@@ -797,9 +797,8 @@ export class Transform {
 
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
-            result.center = this.unproject(new Point(
-                modifiedX !== undefined ? modifiedX : originalX,
-                modifiedY !== undefined ? modifiedY : originalY)).wrap();
+            const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
+            result.center = this.unproject(newPoint).wrap();
         }
 
         return result;
