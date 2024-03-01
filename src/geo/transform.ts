@@ -711,9 +711,14 @@ export class Transform {
         return this.mercatorMatrix.slice() as any;
     }
 
-    getConstrained(center: LngLat, zoom: number): {center: LngLat; zoom: number} {
+    // Get center lngLat and zoom to ensure that
+    // 1) everything beyond the bounds is excluded
+    // 2) a given lngLat is as near the center as possible
+    // Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+    // MinZoom and maxZoom don't affect the result here
+    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
         const result = {
-            center: new LngLat(center.lng, center.lat),
+            center: new LngLat(lngLat.lng, lngLat.lat),
             zoom
         };
 
@@ -755,7 +760,7 @@ export class Transform {
             sx = maxX - minX < size.x ? size.x / (maxX - minX) : 0;
         }
 
-        const point = this.project(center);
+        const point = this.project(lngLat);
 
         // how much the map should scale to fit the screen into given latitude/longitude ranges
         const s = Math.max(sx || 0, sy || 0);
