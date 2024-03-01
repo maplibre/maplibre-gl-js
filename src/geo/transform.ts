@@ -729,35 +729,36 @@ export class Transform {
             lngRange = [-almost180, almost180];
         }
 
+        const worldSize = this.tileSize * this.zoomScale(zoom); // A world size for the requested zoom level, not the current world size
         let minY = 0;
-        let maxY = this.worldSize;
+        let maxY = worldSize;
         let minX = 0;
-        let maxX = this.worldSize;
+        let maxX = worldSize;
         let scaleY = 0;
         let scaleX = 0;
         const {x: screenWidth, y: screenHeight} = this.size;
 
         if (this.latRange) {
             const latRange = this.latRange;
-            minY = mercatorYfromLat(latRange[1]) * this.worldSize;
-            maxY = mercatorYfromLat(latRange[0]) * this.worldSize;
+            minY = mercatorYfromLat(latRange[1]) * worldSize;
+            maxY = mercatorYfromLat(latRange[0]) * worldSize;
             const shouldZoomIn = maxY - minY < screenHeight;
             if (shouldZoomIn) scaleY = screenHeight / (maxY - minY);
         }
 
         if (lngRange) {
             minX = wrap(
-                mercatorXfromLng(lngRange[0]) * this.worldSize,
+                mercatorXfromLng(lngRange[0]) * worldSize,
                 0,
-                this.worldSize
+                worldSize
             );
             maxX = wrap(
-                mercatorXfromLng(lngRange[1]) * this.worldSize,
+                mercatorXfromLng(lngRange[1]) * worldSize,
                 0,
-                this.worldSize
+                worldSize
             );
 
-            if (maxX < minX) maxX += this.worldSize;
+            if (maxX < minX) maxX += worldSize;
 
             const shouldZoomIn = maxX - minX < screenWidth;
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
@@ -787,7 +788,7 @@ export class Transform {
             const centerX = (minX + maxX) / 2;
             let wrappedX = originalX;
             if (this._renderWorldCopies) {
-                wrappedX = wrap(originalX, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+                wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
             }
             const w2 = screenWidth / 2;
 
