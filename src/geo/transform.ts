@@ -729,10 +729,10 @@ export class Transform {
             lngRange = [-almost180, almost180];
         }
 
-        let minY = -90;
-        let maxY = 90;
-        let minX = -180;
-        let maxX = 180;
+        let minY = 0;
+        let maxY = this.worldSize;
+        let minX = 0;
+        let maxX = this.worldSize;
         let scaleY = 0;
         let scaleX = 0;
         const {x: screenWidth, y: screenHeight} = this.size;
