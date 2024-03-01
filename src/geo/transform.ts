@@ -760,21 +760,21 @@ export class Transform {
             sx = maxX - minX < screenWidth ? screenWidth / (maxX - minX) : 0;
         }
 
-        const point = this.project(lngLat);
+        const {x: originalX, y: originalY} = this.project(lngLat);
 
         // how much the map should scale to fit the screen into given latitude/longitude ranges
         const s = Math.max(sx || 0, sy || 0);
 
         if (s) {
             result.center = this.unproject(new Point(
-                sx ? (maxX + minX) / 2 : point.x,
-                sy ? (maxY + minY) / 2 : point.y));
+                sx ? (maxX + minX) / 2 : originalX,
+                sy ? (maxY + minY) / 2 : originalY));
             result.zoom += this.scaleZoom(s);
             return result;
         }
 
         if (this.latRange) {
-            const y = point.y,
+            const y = originalY,
                 h2 = screenHeight / 2;
 
             if (y - h2 < minY) y2 = minY + h2;
@@ -783,9 +783,9 @@ export class Transform {
 
         if (lngRange) {
             const centerX = (minX + maxX) / 2;
-            let x = point.x;
+            let x = originalX;
             if (this._renderWorldCopies) {
-                x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+                x = wrap(originalX, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
             }
             const w2 = screenWidth / 2;
 
@@ -796,8 +796,8 @@ export class Transform {
         // pan the map if the screen goes off the range
         if (x2 !== undefined || y2 !== undefined) {
             result.center = this.unproject(new Point(
-                x2 !== undefined ? x2 : point.x,
-                y2 !== undefined ? y2 : point.y)).wrap();
+                x2 !== undefined ? x2 : originalX,
+                y2 !== undefined ? y2 : originalY)).wrap();
         }
 
         return result;
