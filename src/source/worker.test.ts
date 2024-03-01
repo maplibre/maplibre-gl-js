@@ -6,6 +6,7 @@ import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 import {ActorTarget, IActor} from '../util/actor';
+import {PluginState, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];
@@ -25,6 +26,101 @@ class WorkerSourceMock implements WorkerSource {
 }
 
 describe('Worker register RTLTextPlugin', () => {
+    let worker: Worker;
+    let _self: WorkerGlobalScopeInterface & ActorTarget;
+
+    beforeEach(() => {
+        _self = {
+            addEventListener() {},
+            importScripts() {}
+        } as any;
+        worker = new Worker(_self);
+        global.fetch = null;
+    });
+
+    test('should not throw and set values in plugin', () => {
+        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
+            return false;
+        });
+
+        const rtlTextPlugin = {
+            applyArabicShaping: 'test',
+            processBidirectionalText: 'test',
+            processStyledBidirectionalText: 'test',
+        };
+
+        _self.registerRTLTextPlugin(rtlTextPlugin);
+        expect(rtlWorkerPlugin.applyArabicShaping).toBe('test');
+        expect(rtlWorkerPlugin.processBidirectionalText).toBe('test');
+        expect(rtlWorkerPlugin.processStyledBidirectionalText).toBe('test');
+    });
+
+    test('should throw if already parsed', () => {
+        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
+            return true;
+        });
+
+        const rtlTextPlugin = {
+            applyArabicShaping: jest.fn(),
+            processBidirectionalText: jest.fn(),
+            processStyledBidirectionalText: jest.fn(),
+        };
+
+        expect(() => {
+            _self.registerRTLTextPlugin(rtlTextPlugin);
+        }).toThrow('RTL text plugin already registered.');
+    });
+
+    test('should move RTL plugin from unavailable to deferred', () => {
+        rtlWorkerPlugin.setState({
+            pluginURL: '',
+            pluginStatus: 'unavailable'
+        }
+        );
+        const mockMessage: PluginState = {
+            pluginURL: '',
+            pluginStatus: 'deferred'
+        };
+        // force calling to private method
+        (worker as any)['_syncRTLPluginState']('', mockMessage);
+        expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('deferred');
+    });
+
+    test('should download RTL plugin when "loading" message is received', async () => {
+        rtlWorkerPlugin.setState({
+            pluginURL: '',
+            pluginStatus: 'deferred'
+        });
+
+        const mockURL = 'https://somehost/somescript';
+        const mockMessage: PluginState = {
+            pluginURL: mockURL,
+            pluginStatus: 'loading'
+        };
+
+        // isParse() to return false at first
+        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
+            return false;
+        });
+
+        const importSpy = jest.spyOn(worker.self, 'importScripts').mockImplementation(() => {
+            // after importing isParse() to return true
+            jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
+                return true;
+            });
+        });
+
+        // force calling to private method
+        const syncResult: PluginState = await (worker as any)['_syncRTLPluginState']('', mockMessage);
+        expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
+        expect(importSpy).toHaveBeenCalledWith(mockURL);
+        expect(syncResult.error).toBeUndefined();
+        expect(syncResult.pluginURL).toBe(mockURL);
+        expect(syncResult.pluginStatus).toBe('loaded');
+    });
+});
+
+describe('Worker generic testing', () => {
     let worker: Worker;
     let _self: WorkerGlobalScopeInterface & ActorTarget;
 
@@ -83,39 +179,6 @@ describe('Worker register RTLTextPlugin', () => {
         }).toThrow(`Worker source with name "${extenalSourceName}" already registered.`);
 
         worker.actor.messageHandlers['loadTile']('999', {type: extenalSourceName} as WorkerTileParameters);
-    });
-
-    test('should not throw and set values in plugin', () => {
-        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
-            return false;
-        });
-
-        const rtlTextPlugin = {
-            applyArabicShaping: 'test',
-            processBidirectionalText: 'test',
-            processStyledBidirectionalText: 'test',
-        };
-
-        _self.registerRTLTextPlugin(rtlTextPlugin);
-        expect(rtlWorkerPlugin.applyArabicShaping).toBe('test');
-        expect(rtlWorkerPlugin.processBidirectionalText).toBe('test');
-        expect(rtlWorkerPlugin.processStyledBidirectionalText).toBe('test');
-    });
-
-    test('should throw if already parsed', () => {
-        jest.spyOn(rtlWorkerPlugin, 'isParsed').mockImplementation(() => {
-            return true;
-        });
-
-        const rtlTextPlugin = {
-            applyArabicShaping: jest.fn(),
-            processBidirectionalText: jest.fn(),
-            processStyledBidirectionalText: jest.fn(),
-        };
-
-        expect(() => {
-            _self.registerRTLTextPlugin(rtlTextPlugin);
-        }).toThrow('RTL text plugin already registered.');
     });
 
     test('Referrer is set', () => {

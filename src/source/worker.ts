@@ -6,7 +6,7 @@ import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
-import {RTLPluginStatus, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
+import {PluginState, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
 import type {
     WorkerSource,
     WorkerSourceConstructor,
@@ -17,7 +17,6 @@ import type {
 
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {PluginState} from './rtl_text_plugin_status';
 import type {ClusterIDAndSource, GetClusterLeavesParams, RemoveSourceParams, UpdateLayersParamaeters} from '../util/actor_messages';
 
 /**
@@ -182,18 +181,19 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        const resultState: PluginState = {
-            pluginStatus: rtlWorkerPlugin.pluginStatus,
-            pluginURL: rtlWorkerPlugin.pluginURL
-        };
+        const resultState = incomingState;
 
         if (incomingState.pluginStatus === 'loading' && !rtlWorkerPlugin.isParsed() && incomingState.pluginURL != null) {
             this.self.importScripts(incomingState.pluginURL);
-            if (rtlWorkerPlugin.isParsed()) {
+            const complete = rtlWorkerPlugin.isParsed();
+            if (complete) {
                 resultState.pluginStatus = 'loaded';
                 resultState.pluginURL = incomingState.pluginURL;
                 rtlWorkerPlugin.setState(resultState);
             }
+        } else {
+            // simply sync and done
+            rtlWorkerPlugin.setState(resultState);
         }
 
         return resultState;
