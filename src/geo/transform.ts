@@ -775,23 +775,21 @@ export class Transform {
         }
 
         if (this.latRange) {
-            const y = originalY,
-                h2 = screenHeight / 2;
-
-            if (y - h2 < minY) modifiedY = minY + h2;
-            if (y + h2 > maxY) modifiedY = maxY - h2;
+            const h2 = screenHeight / 2;
+            if (originalY - h2 < minY) modifiedY = minY + h2;
+            if (originalY + h2 > maxY) modifiedY = maxY - h2;
         }
 
         if (lngRange) {
             const centerX = (minX + maxX) / 2;
-            let x = originalX;
+            let wrappedX = originalX;
             if (this._renderWorldCopies) {
-                x = wrap(originalX, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+                wrappedX = wrap(originalX, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
             }
             const w2 = screenWidth / 2;
 
-            if (x - w2 < minX) modifiedX = minX + w2;
-            if (x + w2 > maxX) modifiedX = maxX - w2;
+            if (wrappedX - w2 < minX) modifiedX = minX + w2;
+            if (wrappedX + w2 > maxX) modifiedX = maxX - w2;
         }
 
         // pan the map if the screen goes off the range
