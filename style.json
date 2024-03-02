@@ -7,7 +7,7 @@
         17.65431710431244,
         32.954120326746775
     ],
-    "sprite": "http://localhost:3000/sprite/Roboto-Regular.ttf",
+    "sprite": "https://wipfli.github.io/maplibre-msdf-demo/sprite/Roboto-Regular.ttf",
     "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
     "layers": [
         {
