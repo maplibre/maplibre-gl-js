@@ -81,8 +81,8 @@ describe('Worker register RTLTextPlugin', () => {
             pluginURL: '',
             pluginStatus: 'deferred'
         };
-        // force calling to private method
-        (worker as any)['_syncRTLPluginState']('', mockMessage);
+
+        worker.actor.messageHandlers[SyncRTLPluginStateMessageName]('', mockMessage);
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('deferred');
     });
 
@@ -110,8 +110,7 @@ describe('Worker register RTLTextPlugin', () => {
             });
         });
 
-        // force calling to private method
-        const syncResult: PluginState = await (worker as any)['_syncRTLPluginState']('', mockMessage);
+        const syncResult: PluginState = await worker.actor.messageHandlers[SyncRTLPluginStateMessageName]('', mockMessage) as any;
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
         expect(importSpy).toHaveBeenCalledWith(mockURL);
         expect(syncResult.error).toBeUndefined();
