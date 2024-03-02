@@ -403,9 +403,9 @@
             "type": "symbol",
             "paint": {
                 "text-color": "#1077B0",
-                "text-halo-blur": 1,
-                "text-halo-color": "rgba(255, 255, 255, 1)",
-                "text-halo-width": 1
+                "text-halo-blur": 0.05,
+                "text-halo-color": "rgba(255, 255, 255, 0.7)",
+                "text-halo-width": 0.2
             },
             "filter": [
                 "all",
@@ -419,9 +419,9 @@
                 "text-font": [
                     "Open Sans Semibold"
                 ],
-                "text-size": 150,
-                "text-field": ".",
-                "visibility": "none",
+                "text-size": 50,
+                "text-field": "{name}",
+                "visibility": "visible",
                 "symbol-placement": "line"
             },
             "source": "maplibre",
@@ -434,31 +434,9 @@
             "type": "symbol",
             "paint": {
                 "text-color": "rgba(8, 37, 77, 1)",
-                "text-halo-blur": {
-                    "stops": [
-                        [
-                            2,
-                            0.2
-                        ],
-                        [
-                            6,
-                            0
-                        ]
-                    ]
-                },
-                "text-halo-color": "rgba(255, 255, 255, 1)",
-                "text-halo-width": {
-                    "stops": [
-                        [
-                            2,
-                            1
-                        ],
-                        [
-                            6,
-                            1.6
-                        ]
-                    ]
-                }
+                "text-halo-blur": 0.08,
+                "text-halo-color": "rgba(255, 255, 255, 0.7)",
+                "text-halo-width": 0.2
             },
             "filter": [
                 "all"
@@ -467,24 +445,20 @@
                 "text-font": [
                     "Open Sans Semibold"
                 ],
-                "text-size": 150,
-                "icon-image":"drawing",
-                "icon-size": 4,
-                "text-field": "",
-                "visibility": "none",
-                "text-max-width": 10,
-                "text-transform": {
+                "text-size": 50,
+                "text-field": {
                     "stops": [
                         [
-                            0,
-                            "uppercase"
+                            2,
+                            "{ABBREV}"
                         ],
                         [
-                            2,
-                            "none"
+                            4,
+                            "{NAME}"
                         ]
                     ]
-                }
+                },
+                "visibility": "visible"
             },
             "source": "maplibre",
             "maxzoom": 24,

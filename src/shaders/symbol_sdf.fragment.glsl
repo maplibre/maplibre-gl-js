@@ -49,12 +49,12 @@ void main() {
     if (u_is_halo) {
         color = halo_color;
         // use halo_blur as to make inner bigger
-        dist = (sd - 0.5 + halo_blur + halo_width) * 6.0 * size;
+        dist = (sd - 0.5 + halo_blur + halo_width); // * 6.0 * fontScale;
     }
     else {
-        dist = (sd - 0.5 + halo_blur) * 6.0 * size;
+        dist = (sd - 0.5 + halo_blur); // * 6.0 * fontScale;
     }
-    opacity_openglobus = clamp(dist + 0.5, 0.0, 1.0);
+    opacity_openglobus = clamp(dist / fwidth(dist) + 0.5, 0.0, 1.0);
 
     float alpha = opacity_openglobus;
 

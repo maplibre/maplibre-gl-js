@@ -1,10 +1,10 @@
 {
   "drawing": {
-    "height": 30,
+    "height": 60,
     "pixelRatio": 1,
     "sdf": true,
-    "width": 30,
-    "x": 205,
-    "y": 305
+    "width": 60,
+    "x": 0,
+    "y": 0
   }
 }

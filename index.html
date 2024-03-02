@@ -32,14 +32,14 @@
 <body>
     <div id="map"></div>
     <div id="slidecontainer">
-        <input type="range" min="1" max="30" value="15" step="0.1" class="slider" id="size">
-        <p id="sizeOut">size: 15</p>
+        <input type="range" min="15" max="100" value="50" step="1" class="slider" id="size">
+        <p id="sizeOut">size: 50</p>
 
-        <input type="range" min="0.0" max="0.3" value="0.1" step="0.01" class="slider" id="haloWidth">
-        <p id="haloWidthOut">halo: 0.1</p>
+        <input type="range" min="0.0" max="0.3" value="0.2" step="0.01" class="slider" id="haloWidth">
+        <p id="haloWidthOut">halo: 0.2</p>
 
-        <input type="range" min="0.0" max="0.3" value="0.0" step="0.01" class="slider" id="weight">
-        <p id="weightOut">weight: 0.0</p>
+        <input type="range" min="0.0" max="0.1" value="0.08" step="0.01" class="slider" id="weight">
+        <p id="weightOut">weight: 0.08</p>
 
     </div>
     <script>
@@ -53,47 +53,20 @@
 
 
         map.on('load', () => {
-            map.addSource('switzerland', {
-                'type': 'geojson',
-                'data': {
-                    "type": "Feature",
-                    "properties": {},
-                    "geometry": {
-                        "coordinates": [
-                            8.202136837110828,
-                            46.941621680048314
-                        ],
-                        "type": "Point"
-                    }
-                }
-            });
-            map.addLayer({
-                'id': 'switzerland',
-                'type': 'symbol',
-                'source': 'switzerland',
-                'layout': {
-                    "icon-image": "drawing",
-                    "icon-size": 15
-                },
-                "paint": {
-                    "icon-halo-color": "rgba(255, 255, 255, 0.7)",
-                    "icon-halo-width": 0.1,
-                    // repurpose icon-halo-blur for inner size
-                    "icon-halo-blur": 0.0
-                }
-            });
-
 
             function updateMap() {
                 var size = Number(document.getElementById("size").value);
-                map.setLayoutProperty('switzerland', 'icon-size', size);
+                map.setLayoutProperty('geolines-label', 'text-size', size);
+                map.setLayoutProperty('countries-label', 'text-size', size);
 
                 var haloWidth = Number(document.getElementById("haloWidth").value);
-                map.setPaintProperty('switzerland', 'icon-halo-width', haloWidth);
+                map.setPaintProperty('geolines-label', 'text-halo-width', haloWidth);
+                map.setPaintProperty('countries-label', 'text-halo-width', haloWidth);
 
                 var weight = Number(document.getElementById("weight").value);
                 // repurpose icon-halo-blur for inner size
-                map.setPaintProperty('switzerland', 'icon-halo-blur', weight); 
+                map.setPaintProperty('geolines-label', 'text-halo-blur', weight); 
+                map.setPaintProperty('countries-label', 'text-halo-blur', weight);
             }
 
             updateMap();
