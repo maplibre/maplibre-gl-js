@@ -64,6 +64,12 @@ import {GlobeProjection} from '../geo/projection/globe';
 
 const version = packageJSON.version;
 
+/**
+ * Name of MapLibre's map projection. Can be:
+ *
+ * - `mercator` - A classic Web Mercator 2D map
+ * - 'globe' - A 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zoom levels.
+ */
 type ProjectionName = 'mercator' | 'globe';
 
 function getProjectionFromName(name: ProjectionName, map: Map): ProjectionBase {
