@@ -361,7 +361,7 @@ export class Tile {
             this.expirationTime = new Date(data.expires).getTime();
         }
 
-        if (this.expirationTime) {
+        if (this.expirationTime !== null) {
             const now = Date.now();
             let isExpired = false;
 
