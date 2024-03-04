@@ -48,17 +48,17 @@ class RTLMainThreadPlugin extends Evented {
 
             } else {
                 // immediate download
-                return this._download();
+                return this._requestImport();
             }
 
         } else if (this.status === 'requested') {
             // already requested, start downloading
-            return this._download();
+            return this._requestImport();
         }
     }
 
-    /** Download RTL plugin by sending a message to worker and process its response */
-    async _download() : Promise<void> {
+    /** Send a message to worker which will import the RTL plugin script */
+    async _requestImport() : Promise<void> {
         const workerResults = await this._syncState('loading');
         if (workerResults.length > 0) {
             const workerResult: PluginState = workerResults[0];
@@ -68,17 +68,8 @@ class RTLMainThreadPlugin extends Evented {
             if (workerResult.pluginStatus === 'loaded') {
                 this.fire(new Event(RTLPluginLoadedEventName));
             } else {
-                // failed scenario: returned, but bad status
-                if (workerResult.error) {
-                    throw workerResult.error;
-                } else {
-                    throw new Error(`worker failed to load ${this.url}`);
-                }
+                throw new Error(`worker failed to load ${this.url}, worker status=${workerResult.pluginStatus}`);
             }
-        } else {
-            // failed scenario(edge case): worker did not respond
-            this.status = 'error';
-            throw new Error(`worker did not respond to message: ${SyncRTLPluginStateMessageName}`);
         }
     }
 
@@ -87,7 +78,7 @@ class RTLMainThreadPlugin extends Evented {
         if (this.status === 'unavailable') {
             this.status = 'requested';
         } else if (this.status === 'deferred') {
-            this._download();
+            this._requestImport();
         }
     }
 }

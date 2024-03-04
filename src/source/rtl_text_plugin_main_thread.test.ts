@@ -18,7 +18,7 @@ describe('RTLMainThreadPlugin', () => {
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(() => { return Promise.resolve({} as any); });
     });
 
-    function broadcastMockSuccess(message: string, payload: PluginState): Promise<PluginState[]> {
+    function broadcastMockSuccess(message: typeof SyncRTLPluginStateMessageName, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
 
             if (payload.pluginStatus === 'loading') {
@@ -31,7 +31,7 @@ describe('RTLMainThreadPlugin', () => {
         }
     }
 
-    function broadcastMockFailure(message: string, payload: PluginState): Promise<PluginState[]> {
+    function broadcastMockFailure(message: typeof SyncRTLPluginStateMessageName, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
 
             if (payload.pluginStatus === 'loading') {

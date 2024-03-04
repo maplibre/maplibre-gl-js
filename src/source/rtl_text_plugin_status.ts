@@ -27,9 +27,6 @@ export type RTLPluginStatus =
 export type PluginState = {
     pluginStatus: RTLPluginStatus;
     pluginURL: string;
-
-    /** Optional error object that carries error from worker to main thread */
-    error?: Error;
 };
 
 export const RTLPluginLoadedEventName = 'RTLPluginLoaded';

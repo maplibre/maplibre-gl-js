@@ -183,16 +183,26 @@ export default class Worker {
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
         const resultState = incomingState;
 
-        if (incomingState.pluginStatus === 'loading' && !rtlWorkerPlugin.isParsed() && incomingState.pluginURL != null) {
-            this.self.importScripts(incomingState.pluginURL);
-            const complete = rtlWorkerPlugin.isParsed();
-            if (complete) {
-                resultState.pluginStatus = 'loaded';
-                resultState.pluginURL = incomingState.pluginURL;
-                rtlWorkerPlugin.setState(resultState);
-            }
-        } else {
+        // Parsed plugin cannot be changed;
+        // and cannot do anything if url is blank so both cases just return its current state.
+        if (rtlWorkerPlugin.isParsed() || !incomingState.pluginURL) {
+            return {
+                pluginURL: rtlWorkerPlugin.getPluginURL(),
+                pluginStatus: rtlWorkerPlugin.getRTLTextPluginStatus()
+            };
+        }
+
+        if (incomingState.pluginStatus !== 'loading') {
             // simply sync and done
+            rtlWorkerPlugin.setState(resultState);
+            return resultState;
+        }
+
+        this.self.importScripts(incomingState.pluginURL);
+        const complete = rtlWorkerPlugin.isParsed();
+        if (complete) {
+            resultState.pluginStatus = 'loaded';
+            resultState.pluginURL = incomingState.pluginURL;
             rtlWorkerPlugin.setState(resultState);
         }
 
