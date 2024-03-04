@@ -54,11 +54,12 @@ export class MercatorProjection extends ProjectionBase {
         let tileOffsetSize: [number, number, number, number];
 
         if (canonicalTileCoords) {
+            const scale = (canonicalTileCoords.z >= 0) ? (1 << canonicalTileCoords.z) : Math.pow(2.0, canonicalTileCoords.z);
             tileOffsetSize = [
-                canonicalTileCoords.x / (1 << canonicalTileCoords.z),
-                canonicalTileCoords.y / (1 << canonicalTileCoords.z),
-                1.0 / (1 << canonicalTileCoords.z) / EXTENT,
-                1.0 / (1 << canonicalTileCoords.z) / EXTENT
+                canonicalTileCoords.x / scale,
+                canonicalTileCoords.y / scale,
+                1.0 / scale / EXTENT,
+                1.0 / scale / EXTENT
             ];
         } else {
             tileOffsetSize = [0, 0, 1, 1];
