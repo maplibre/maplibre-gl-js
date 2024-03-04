@@ -3,7 +3,7 @@ import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 import {sleep} from '../util/test/util';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
-import {RTLPluginStatus, PluginState, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
+import {PluginState, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
 describe('RTLMainThreadPlugin', () => {
