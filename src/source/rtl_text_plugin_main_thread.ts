@@ -71,17 +71,27 @@ class RTLMainThreadPlugin extends Evented {
             await getArrayBuffer({url: this.url}, new AbortController());
         }
 
-        const workerResults = await this._syncState('loading');
-        if (workerResults.length > 0) {
-            const workerResult: PluginState = workerResults[0];
-            this.status = workerResult.pluginStatus;
+        try {
+            const workerResults = await this._syncState('loading');
+            if (workerResults.length > 0) {
 
-            // expect worker to return 'loaded'
-            if (workerResult.pluginStatus === 'loaded') {
-                this.fire(new Event(RTLPluginLoadedEventName));
-            } else {
-                throw new Error(`worker failed to load ${this.url}, worker status=${workerResult.pluginStatus}`);
+                // expect all of them to be 'loaded'
+                const expectedStatus = 'loaded';
+                const failedToLoadWorkers = workerResults.filter((workerResult) => {
+                    return workerResult.pluginStatus !== expectedStatus;
+                });
+
+                if (failedToLoadWorkers.length > 0) {
+                    throw new Error(failedToLoadWorkers[1].pluginStatus);
+                } else {
+                    // all success
+                    this.status = expectedStatus;
+                    this.fire(new Event(RTLPluginLoadedEventName));
+                }
             }
+        } catch (e) {
+            this.status = 'error';
+            throw new Error(`worker failed to load ${this.url}, ${e.toString()}`);
         }
     }
 
@@ -90,6 +100,7 @@ class RTLMainThreadPlugin extends Evented {
         if (this.status === 'unavailable') {
             this.status = 'requested';
         } else if (this.status === 'deferred') {
+            console.log(`lazy load, status = ${this.status}, calling _requestImport`);
             this._requestImport();
         }
     }
