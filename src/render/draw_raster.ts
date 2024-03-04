@@ -39,7 +39,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     const align = !painter.options.moving;
 
     // When rendering globe, two passes are needed.
-    // Subdivided tiles with different granualities might have tiny gaps between them.
+    // Subdivided tiles with different granularities might have tiny gaps between them.
     // To combat this, tile meshes for globe have a slight border region.
     // However tiles borders will overlap, and a part of a tile often
     // gets hidden by its neighbour's border, which displays an ugly stretched texture.

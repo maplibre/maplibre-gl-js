@@ -20,7 +20,7 @@ import {CullFaceMode} from '../../gl/cull_face_mode';
 import {projectionErrorMeasurementUniformValues} from '../../render/program/projection_error_measurement_program';
 import {warnOnce} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
-import {granualitySettings} from '../../render/subdivision';
+import {granularitySettings} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import * as Mercator from './mercator';
@@ -423,25 +423,25 @@ export class GlobeProjection extends ProjectionBase {
         this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
     }
 
-    private _getMeshKey(granuality: number, border: boolean, north: boolean, south: boolean): string {
-        return `${granuality.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
+    private _getMeshKey(granularity: number, border: boolean, north: boolean, south: boolean): string {
+        return `${granularity.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, usePoleVertices: boolean = true): Mesh {
-        const granuality = granualitySettings.GranualityStencil.getGranualityForZoomLevel(canonical.z);
+        const granularity = granularitySettings.granularityStencil.getgranularityForZoomLevel(canonical.z);
         const north = usePoleVertices && (canonical.y === 0);
         const south = usePoleVertices && (canonical.y === (1 << canonical.z) - 1);
-        return this.getMesh(context, granuality, hasBorder, north, south);
+        return this.getMesh(context, granularity, hasBorder, north, south);
     }
 
-    public getMesh(context: Context, granuality: number, hasBorder: boolean, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
-        const key = this._getMeshKey(granuality, hasBorder, hasNorthEdge, hasSouthEdge);
+    public getMesh(context: Context, granularity: number, hasBorder: boolean, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
+        const key = this._getMeshKey(granularity, hasBorder, hasNorthEdge, hasSouthEdge);
 
         if (key in this._tileMeshCache) {
             return this._tileMeshCache[key];
         }
 
-        const mesh = this._createQuadMesh(context, granuality, hasBorder, hasNorthEdge, hasSouthEdge);
+        const mesh = this._createQuadMesh(context, granularity, hasBorder, hasNorthEdge, hasSouthEdge);
         this._tileMeshCache[key] = mesh;
         return mesh;
     }
@@ -455,42 +455,42 @@ export class GlobeProjection extends ProjectionBase {
     /**
      * Creates a quad mesh covering positions in range 0..EXTENT, for tile clipping.
      * @param context - MapLibre's rendering context object.
-     * @param granuality - Mesh triangulation granuality: 1 for just a single quad, 3 for 3x3 quads.
+     * @param granularity - Mesh triangulation granularity: 1 for just a single quad, 3 for 3x3 quads.
      * @returns
      */
-    private _createQuadMesh(context: Context, granuality: number, border: boolean, north: boolean, south: boolean): Mesh {
+    private _createQuadMesh(context: Context, granularity: number, border: boolean, north: boolean, south: boolean): Mesh {
         const vertexArray = new PosArray();
         const indexArray = new TriangleIndexArray();
 
         // We only want to generate the north/south border if the tile
         // does NOT border the north/south edge of the mercator range.
 
-        const quadsPerAxisX = granuality + (border ? 2 : 0); // two extra quads for border
-        const quadsPerAxisY = granuality + ((north || border) ? 1 : 0) + (south || border ? 1 : 0);
+        const quadsPerAxisX = granularity + (border ? 2 : 0); // two extra quads for border
+        const quadsPerAxisY = granularity + ((north || border) ? 1 : 0) + (south || border ? 1 : 0);
         const verticesPerAxisX = quadsPerAxisX + 1; // one more vertex than quads
         //const verticesPerAxisY = quadsPerAxisY + 1; // one more vertex than quads
         const offsetX = border ? -1 : 0;
         const offsetY = (border || north) ? -1 : 0;
-        const endX = granuality + (border ? 1 : 0);
-        const endY = granuality + ((border || south) ? 1 : 0);
+        const endX = granularity + (border ? 1 : 0);
+        const endY = granularity + ((border || south) ? 1 : 0);
 
         const northY = -32768;
         const southY = 32767;
 
         for (let y = offsetY; y <= endY; y++) {
             for (let x = offsetX; x <= endX; x++) {
-                let vx = x / granuality * EXTENT;
+                let vx = x / granularity * EXTENT;
                 if (x === -1) {
                     vx = -EXTENT_STENCIL_BORDER;
                 }
-                if (x === granuality + 1) {
+                if (x === granularity + 1) {
                     vx = EXTENT + EXTENT_STENCIL_BORDER;
                 }
-                let vy = y / granuality * EXTENT;
+                let vy = y / granularity * EXTENT;
                 if (y === -1) {
                     vy = north ? northY : (-EXTENT_STENCIL_BORDER);
                 }
-                if (y === granuality + 1) {
+                if (y === granularity + 1) {
                     vy = south ? southY : EXTENT + EXTENT_STENCIL_BORDER;
                 }
                 vertexArray.emplaceBack(vx, vy);

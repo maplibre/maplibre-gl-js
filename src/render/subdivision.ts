@@ -1,49 +1,49 @@
 export class SubdivisionGranulityExpression {
     /**
-     * A tile of zoom level 0 will be subdivided to granuality of 2 raised to this number.
-     * Each subsequent zoom level will have its granuality halved.
+     * A tile of zoom level 0 will be subdivided to granularity of 2 raised to this number.
+     * Each subsequent zoom level will have its granularity halved.
      */
-    private readonly _baseZoomGranualityPower: number;
+    private readonly _baseZoomgranularityPower: number;
 
     /**
-     * No tile will have granuality smaller than 2 raised to this number.
+     * No tile will have granularity smaller than 2 raised to this number.
      */
-    private readonly _minGranualityPower: number;
+    private readonly _mingranularityPower: number;
 
-    constructor(baseZoomGranualityPower: number, minGranualityPower: number) {
-        this._baseZoomGranualityPower = baseZoomGranualityPower;
-        this._minGranualityPower = minGranualityPower;
+    constructor(baseZoomgranularityPower: number, mingranularityPower: number) {
+        this._baseZoomgranularityPower = baseZoomgranularityPower;
+        this._mingranularityPower = mingranularityPower;
     }
 
-    public getGranualityForZoomLevel(zoomLevel: number): number {
-        return 1 << Math.max(this._baseZoomGranualityPower - zoomLevel, this._minGranualityPower, 0);
+    public getgranularityForZoomLevel(zoomLevel: number): number {
+        return 1 << Math.max(this._baseZoomgranularityPower - zoomLevel, this._mingranularityPower, 0);
     }
 }
 
-export class SubdivisionGranualitySetting {
+export class SubdivisiongranularitySetting {
     /**
-     * Granuality settings used for fill layer (both polygons and their anti-aliasing outlines).
+     * granularity settings used for fill layer (both polygons and their anti-aliasing outlines).
      */
-    public readonly GranualityFill;
+    public readonly granularityFill;
 
     /**
-     * Granuality used for stencil mask tiles.
+     * granularity used for stencil mask tiles.
      */
-    public readonly GranualityStencil;
+    public readonly granularityStencil;
 
     /**
-     * Granuality used for the line layer.
+     * granularity used for the line layer.
      */
-    public readonly GranualityLine;
+    public readonly granularityLine;
 
     constructor(fill: SubdivisionGranulityExpression, line: SubdivisionGranulityExpression, stencil: SubdivisionGranulityExpression) {
-        this.GranualityFill = fill;
-        this.GranualityLine = line;
-        this.GranualityStencil = stencil;
+        this.granularityFill = fill;
+        this.granularityLine = line;
+        this.granularityStencil = stencil;
     }
 }
 
-export const granualitySettings: SubdivisionGranualitySetting = new SubdivisionGranualitySetting(
+export const granularitySettings: SubdivisiongranularitySetting = new SubdivisiongranularitySetting(
     new SubdivisionGranulityExpression(7, 1), // Fill
     new SubdivisionGranulityExpression(9, 1), // Line
     new SubdivisionGranulityExpression(7, 3) // Stencil
