@@ -3,7 +3,8 @@ import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
 import {sleep} from '../util/test/util';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
-import {PluginState, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
+import {PluginState} from './rtl_text_plugin_status';
+import {MessageType, SyncRTLPluginStateMessageName} from '../util/actor_messages';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
 describe('RTLMainThreadPlugin', () => {
@@ -18,7 +19,7 @@ describe('RTLMainThreadPlugin', () => {
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(() => { return Promise.resolve({} as any); });
     });
 
-    function broadcastMockSuccess(message: typeof SyncRTLPluginStateMessageName, payload: PluginState): Promise<PluginState[]> {
+    function broadcastMockSuccess(message: MessageType, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
 
             if (payload.pluginStatus === 'loading') {
@@ -31,7 +32,7 @@ describe('RTLMainThreadPlugin', () => {
         }
     }
 
-    function broadcastMockFailure(message: typeof SyncRTLPluginStateMessageName, payload: PluginState): Promise<PluginState[]> {
+    function broadcastMockFailure(message: MessageType, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
 
             if (payload.pluginStatus === 'loading') {

@@ -30,4 +30,4 @@ export type PluginState = {
 };
 
 export const RTLPluginLoadedEventName = 'RTLPluginLoaded';
-export const SyncRTLPluginStateMessageName = 'syncRTLPluginState';
+

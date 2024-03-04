@@ -6,7 +6,8 @@ import {CanonicalTileID, OverscaledTileID} from './tile_id';
 import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 import {ActorTarget, IActor} from '../util/actor';
-import {PluginState, SyncRTLPluginStateMessageName} from './rtl_text_plugin_status';
+import {PluginState} from './rtl_text_plugin_status';
+import {SyncRTLPluginStateMessageName} from '../util/actor_messages';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];

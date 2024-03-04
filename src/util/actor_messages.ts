@@ -3,7 +3,7 @@ import type {TileParameters, WorkerDEMTileParameters, WorkerTileParameters, Work
 import type {DEMData} from '../data/dem_data';
 import type {StyleImage} from '../style/style_image';
 import type {StyleGlyph} from '../style/style_glyph';
-import type {PluginState, SyncRTLPluginStateMessageName} from '../source/rtl_text_plugin_status';
+import type {PluginState} from '../source/rtl_text_plugin_status';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';
@@ -79,6 +79,9 @@ export type GetGlyphsResponse = {
  * A response object returned when requesting images
  */
 export type GetImagesResponse = {[_: string]: StyleImage}
+
+/** the message name to sync RTL Plugin state. Shared by main thread and worker */
+export const SyncRTLPluginStateMessageName = 'syncRTLPluginState';
 
 /**
  * This is basically a mapping between all the calls that are made to and from the workers.

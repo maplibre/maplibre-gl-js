@@ -1,8 +1,12 @@
 
 import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
-import {RTLPluginStatus, RTLPluginLoadedEventName, SyncRTLPluginStateMessageName, PluginState} from './rtl_text_plugin_status';
+import {RTLPluginStatus, RTLPluginLoadedEventName, PluginState} from './rtl_text_plugin_status';
 import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
+
+import {getArrayBuffer} from '../util/ajax';
+import {SyncRTLPluginStateMessageName} from '../util/actor_messages';
+import {WorkerPool} from '../util/worker_pool';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
@@ -52,13 +56,21 @@ class RTLMainThreadPlugin extends Evented {
             }
 
         } else if (this.status === 'requested') {
-            // already requested, start downloading
             return this._requestImport();
         }
     }
 
     /** Send a message to worker which will import the RTL plugin script */
     async _requestImport() : Promise<void> {
+
+        // Reference PR: https://github.com/mapbox/mapbox-gl-js/pull/9122
+        // if have more than 1 workers, it is better to load once in main thread to warm up browser cache
+        // so all workers can use it --- even though the result of getArrayBuffer is not being used here.
+        // Otherwise, just let worker importScript once.
+        if (WorkerPool.workerCount > 1) {
+            await getArrayBuffer({url: this.url}, new AbortController());
+        }
+
         const workerResults = await this._syncState('loading');
         if (workerResults.length > 0) {
             const workerResult: PluginState = workerResults[0];
