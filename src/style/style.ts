@@ -1493,6 +1493,9 @@ export class Style extends Evented {
         }
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
+        if (mapRemoved) {
+            this.dispatcher.broadcast('removeMap', undefined);
+        }
         this.dispatcher.remove(mapRemoved);
     }
 

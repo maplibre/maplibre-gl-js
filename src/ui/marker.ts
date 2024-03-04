@@ -450,7 +450,6 @@ export class Marker extends Evented {
                 } as Offset : this._offset;
             }
             this._popup = popup;
-            if (this._lngLat) this._popup.setLngLat(this._lngLat);
 
             this._originalTabIndex = this._element.getAttribute('tabindex');
             if (!this._originalTabIndex) {
@@ -518,7 +517,10 @@ export class Marker extends Evented {
 
         if (!popup) return this;
         else if (popup.isOpen()) popup.remove();
-        else popup.addTo(this._map);
+        else {
+            popup.setLngLat(this._lngLat);
+            popup.addTo(this._map);
+        }
         return this;
     }
 
@@ -570,6 +572,8 @@ export class Marker extends Evented {
 
         if (this._map.transform.renderWorldCopies) {
             this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
+        } else {
+            this._lngLat = this._lngLat?.wrap();
         }
 
         this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);

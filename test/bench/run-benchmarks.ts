@@ -50,12 +50,9 @@ try {
     url.hash = 'NONE'; // this will simply load the page without running any benchmarks
     await webPage.goto(url.toString());
 
-    // @ts-ignore
-    await webPage.waitForFunction(() => window.maplibreglBenchmarkFinished);
-    // @ts-ignore
-    const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
-    // @ts-ignore
-    const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
+    await webPage.waitForFunction(() => (window as any).maplibreglBenchmarkFinished);
+    const allNames = await webPage.evaluate(() => Object.keys((window as any).maplibreglBenchmarks));
+    const versions = await webPage.evaluate((name) => Object.keys((window as any).maplibreglBenchmarks[name]), allNames[0]);
     const versionsDisplayName = await webPage.evaluate(() => (window as any).versionsDisplayName);
 
     // The following will run all the tests if no arguments are passed, will run only the tests passed as arguments otherwise
@@ -75,15 +72,13 @@ try {
         await webPage.reload();
 
         await webPage.waitForFunction(
-            // @ts-ignore
-            () => window.maplibreglBenchmarkFinished,
+            () => (window as any).maplibreglBenchmarkFinished,
             {
                 polling: 200,
                 timeout: 0
             }
         );
-        // @ts-ignore
-        const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
+        const results = await webPage.evaluate((name) => (window as any).maplibreglBenchmarkResults[name], name);
         const output = versions.map((v) => {
             if (v && results[v]) {
                 const trimmedMean = results[v].summary?.trimmedMean;

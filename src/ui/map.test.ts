@@ -1079,6 +1079,63 @@ describe('Map', () => {
 
     });
 
+    describe('renderWorldCopies', () => {
+        test('does not constrain horizontal panning when renderWorldCopies is set to true', () => {
+            const map = createMap({renderWorldCopies: true});
+            map.setCenter({lng: 180, lat: 0});
+            expect(map.getCenter().lng).toBe(180);
+        });
+
+        test('constrains horizontal panning when renderWorldCopies is set to false', () => {
+            const map = createMap({renderWorldCopies: false});
+            map.setCenter({lng: 180, lat: 0});
+            expect(map.getCenter().lng).toBeCloseTo(110, 0);
+        });
+
+        test('does not wrap the map when renderWorldCopies is set to false', () => {
+            const map = createMap({renderWorldCopies: false});
+            map.setCenter({lng: 200, lat: 0});
+            expect(map.getCenter().lng).toBeCloseTo(110, 0);
+        });
+
+        test('panTo is constrained to single globe when renderWorldCopies is set to false', () => {
+            const map = createMap({renderWorldCopies: false});
+            map.panTo({lng: 180, lat: 0}, {duration: 0});
+            expect(map.getCenter().lng).toBeCloseTo(110, 0);
+            map.panTo({lng: -3000, lat: 0}, {duration: 0});
+            expect(map.getCenter().lng).toBeCloseTo(-110, 0);
+        });
+
+        test('flyTo is constrained to single globe when renderWorldCopies is set to false', () => {
+            const map = createMap({renderWorldCopies: false});
+            map.flyTo({center: [1000, 0], zoom: 3, animate: false});
+            expect(map.getCenter().lng).toBeCloseTo(171, 0);
+            map.flyTo({center: [-1000, 0], zoom: 5, animate: false});
+            expect(map.getCenter().lng).toBeCloseTo(-178, 0);
+        });
+
+        test('lng is constrained to a single globe when zooming with {renderWorldCopies: false}', () => {
+            const map = createMap({renderWorldCopies: false, center: [180, 0], zoom: 2});
+            expect(map.getCenter().lng).toBeCloseTo(162, 0);
+            map.zoomTo(1, {animate: false});
+            expect(map.getCenter().lng).toBeCloseTo(145, 0);
+        });
+
+        test('lng is constrained by maxBounds when {renderWorldCopies: false}', () => {
+            const map = createMap({
+                renderWorldCopies: false,
+                maxBounds: [
+                    [70, 30],
+                    [80, 40]
+                ],
+                zoom: 8,
+                center: [75, 35]
+            });
+            map.setCenter({lng: 180, lat: 0});
+            expect(map.getCenter().lng).toBeCloseTo(80, 0);
+        });
+    });
+
     test('#setMinZoom', () => {
         const map = createMap({zoom: 5});
         map.setMinZoom(3.5);
@@ -1309,6 +1366,13 @@ describe('Map', () => {
         // Dispatch the event manually because at the time of this writing, gl does not support
         // the WEBGL_lose_context extension.
         canvas.dispatchEvent(new window.Event('webglcontextlost'));
+    });
+
+    test('#remove broadcasts removeMap to worker', () => {
+        const map = createMap();
+        const _broadcastSpyOn = jest.spyOn(map.style.dispatcher, 'broadcast');
+        map.remove();
+        expect(_broadcastSpyOn).toHaveBeenCalledWith('removeMap', undefined);
     });
 
     test('#redraw', async () => {

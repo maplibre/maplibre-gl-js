@@ -52,6 +52,7 @@
     function switchRenderOption(option) {
         const status = option.target.id;
         map.setRenderWorldCopies(status === 'true');
+        map.panTo(map.getCenter());
     }
 
     for (let i = 0; i < inputs.length; i++) {
