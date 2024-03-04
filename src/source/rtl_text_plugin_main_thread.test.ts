@@ -43,6 +43,23 @@ describe('RTLMainThreadPlugin', () => {
         }
     }
 
+    /** return two results, one success one failure */
+    function broadcastMockMix(message: MessageType, payload: PluginState): Promise<PluginState[]> {
+        if (message === SyncRTLPluginStateMessageName) {
+            if (payload.pluginStatus === 'loading') {
+                const resultState0: PluginState = {
+                    pluginStatus: 'loaded',
+                    pluginURL: payload.pluginURL
+                };
+                const resultState1: PluginState = {
+                    pluginStatus: 'error',
+                    pluginURL: payload.pluginURL
+                };
+                return Promise.resolve([resultState0, resultState1]);
+            }
+        }
+    }
+
     afterEach(() => {
         server.restore();
         broadcastSpy.mockRestore();
@@ -135,5 +152,11 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('requested');
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');
+    });
+
+    it('should throw error for mixed success and failure', async () => {
+        broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockMix as any);
+        const promise = rtlMainThreadPlugin.setRTLTextPlugin(url);
+        await expect(promise).rejects.toThrow(`worker failed to load ${url}, worker status is error`);
     });
 });

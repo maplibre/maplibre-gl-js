@@ -51,7 +51,6 @@ class RTLMainThreadPlugin extends Evented {
                 this._syncState(this.status);
 
             } else {
-                // immediate download
                 return this._requestImport();
             }
 
@@ -82,7 +81,7 @@ class RTLMainThreadPlugin extends Evented {
                 });
 
                 if (failedToLoadWorkers.length > 0) {
-                    throw new Error(failedToLoadWorkers[1].pluginStatus);
+                    throw failedToLoadWorkers[0].pluginStatus;
                 } else {
                     // all success
                     this.status = expectedStatus;
@@ -91,7 +90,7 @@ class RTLMainThreadPlugin extends Evented {
             }
         } catch (e) {
             this.status = 'error';
-            throw new Error(`worker failed to load ${this.url}, ${e.toString()}`);
+            throw new Error(`worker failed to load ${this.url}, worker status is ${e.toString()}`);
         }
     }
 
@@ -100,7 +99,6 @@ class RTLMainThreadPlugin extends Evented {
         if (this.status === 'unavailable') {
             this.status = 'requested';
         } else if (this.status === 'deferred') {
-            console.log(`lazy load, status = ${this.status}, calling _requestImport`);
             this._requestImport();
         }
     }
