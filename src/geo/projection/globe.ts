@@ -524,15 +524,18 @@ export class GlobeProjection extends ProjectionBase {
 
 /**
  * For vector globe the vertex shader projects mercator coordinates to angluar coordinates on a sphere.
- * This projection requires some inverse trigonometry `atan(exp(...))` which is inaccurate on some GPUs (mainly on AMD and Nvidia).
+ * This projection requires some inverse trigonometry `atan(exp(...))`, which is inaccurate on some GPUs (mainly on AMD and Nvidia).
+ * The inaccuracy is severe enough to require a workaround. The uncorrected map is shifted north-south by up to several hundred meters in some latitudes.
  * Since the inaccuracy is hardware-dependant and may change in the future, we need to measure the error at runtime.
  *
  * Our approach relies on several assumtions:
+ *
  * - the error is only present in the "latitude" component (longitude doesn't need any inverse trigonometry)
  * - the error is continuous and changes slowly with latitude
  * - at zoom levels where the error is noticeable, the error is more-or-less the same across the entire visible map area (and thus can be described with a single number)
  *
  * Solution:
+ *
  * Every few frames, launch a GPU shader that measures the error for the current map center latitude, and writes it to a 1x1 texture.
  * Read back that texture, and offset the globe projection matrix according to the error (interpolating smoothly from old error to new error if needed).
  * The texture readback is done asynchronously using Pixel Pack Buffers (WebGL2) when possible, and has a few frames of latency, but that should not be a problem.
