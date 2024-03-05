@@ -441,7 +441,7 @@ export class GlobeProjection implements ProjectionBase {
     }
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, usePoleVertices: boolean = true): Mesh {
-        const granularity = granularitySettings.granularityStencil.getgranularityForZoomLevel(canonical.z);
+        const granularity = granularitySettings.granularityStencil.getGranularityForZoomLevel(canonical.z);
         const north = usePoleVertices && (canonical.y === 0);
         const south = usePoleVertices && (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granularity, hasBorder, north, south);
