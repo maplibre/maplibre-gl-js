@@ -13,9 +13,9 @@ import {PreparedShader, shaders} from '../../shaders/shaders';
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
-export class MercatorProjection extends ProjectionBase {
-    constructor() {
-        super('mercator');
+export class MercatorProjection implements ProjectionBase {
+    get name(): string {
+        return 'mercator';
     }
 
     get useSpecialProjectionForSymbols(): boolean {
@@ -35,11 +35,17 @@ export class MercatorProjection extends ProjectionBase {
     get shaderVariantName(): string {
         return MercatorShaderVariantKey;
     }
+
     get shaderDefine(): string {
         return MercatorShaderDefine;
     }
+
     get shaderPreludeCode(): PreparedShader {
         return shaders.projectionMercator;
+    }
+
+    get vertexShaderPreludeCode(): string {
+        return shaders.projectionMercator.vertexSource;
     }
 
     updateGPUdependent(_: Painter): void {

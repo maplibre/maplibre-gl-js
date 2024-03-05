@@ -52,7 +52,7 @@ const zoomTransitionTimeSeconds = 0.5;
 const maxGlobeZoom = 12.0;
 const errorTransitionTimeSeconds = 0.5;
 
-export class GlobeProjection extends ProjectionBase {
+export class GlobeProjection implements ProjectionBase {
     private _map: Map | undefined;
     private _mercator: Mercator.MercatorProjection;
 
@@ -90,6 +90,10 @@ export class GlobeProjection extends ProjectionBase {
         0, 0, 0, 1
     ];
     private _globeCameraPosition: vec3 = [0, 0, 0];
+
+    get name(): string {
+        return 'globe';
+    }
 
     /**
      * This property is true when globe rendering and globe shader variants should be in use.
@@ -130,11 +134,17 @@ export class GlobeProjection extends ProjectionBase {
     get shaderVariantName(): string {
         return this.useGlobeRendering ? 'globe' : this._mercator.shaderVariantName;
     }
+
     get shaderDefine(): string {
         return this.useGlobeRendering ? '#define GLOBE' : this._mercator.shaderDefine;
     }
+
     get shaderPreludeCode(): PreparedShader {
         return this.useGlobeRendering ? shaders.projectionGlobe : this._mercator.shaderPreludeCode;
+    }
+
+    get vertexShaderPreludeCode(): string {
+        return shaders.projectionMercator.vertexSource;
     }
 
     /**
@@ -151,7 +161,6 @@ export class GlobeProjection extends ProjectionBase {
     }
 
     constructor(map: Map) {
-        super('globe');
         this._map = map;
         this._mercator = new Mercator.MercatorProjection();
     }
