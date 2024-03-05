@@ -22,7 +22,7 @@ const cornerCoords = [
     new Point(0, EXTENT),
 ];
 
-export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
+export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'translucent') return;
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
@@ -39,7 +39,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     const align = !painter.options.moving;
 
     // When rendering globe, two passes are needed.
-    // Subdivided tiles with different granualities might have tiny gaps between them.
+    // Subdivided tiles with different granularities might have tiny gaps between them.
     // To combat this, tile meshes for globe have a slight border region.
     // However tiles borders will overlap, and a part of a tile often
     // gets hidden by its neighbour's border, which displays an ugly stretched texture.
@@ -76,7 +76,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
             tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
             const parentTile = sourceCache.findLoadedParent(coord, 0),
-                fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, isRenderingToTexture);
+                fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, painter.style.map.terrain);
 
             let parentScaleBy, parentTL;
 
@@ -96,8 +96,9 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
             }
 
             const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-            const rttCoord = isRenderingToTexture ? coord : null;
-            const posMatrix = rttCoord ? rttCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
+
+            const terrainCoord = terrainData ? coord : null;
+            const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
             const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
             const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer,
                 (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
@@ -126,10 +127,10 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     }
 }
 
-function getFadeValues(tile, parentTile, sourceCache, layer, transform, isRenderingToTexture) {
+function getFadeValues(tile, parentTile, sourceCache, layer, transform, terrain) {
     const fadeDuration = layer.paint.get('raster-fade-duration');
 
-    if (!isRenderingToTexture && fadeDuration > 0) {
+    if (!terrain && fadeDuration > 0) {
         const now = browser.now();
         const sinceTile = (now - tile.timeAdded) / fadeDuration;
         const sinceParent = parentTile ? (now - parentTile.timeAdded) / fadeDuration : -1;

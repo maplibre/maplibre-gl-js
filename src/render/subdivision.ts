@@ -3,55 +3,55 @@ import {EXTENT} from '../data/extent';
 import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
 
-export class SubdivisionGranulityExpression {
+export class SubdivisionGranularityExpression {
     /**
-     * A tile of zoom level 0 will be subdivided to granuality of 2 raised to this number.
-     * Each subsequent zoom level will have its granuality halved.
+     * A tile of zoom level 0 will be subdivided to granularity of 2 raised to this number.
+     * Each subsequent zoom level will have its granularity halved.
      */
-    private readonly _baseZoomGranualityPower: number;
+    private readonly _baseZoomGranularityPower: number;
 
     /**
-     * No tile will have granuality smaller than 2 raised to this number.
+     * No tile will have granularity smaller than 2 raised to this number.
      */
-    private readonly _minGranualityPower: number;
+    private readonly _minGranularityPower: number;
 
-    constructor(baseZoomGranualityPower: number, minGranualityPower: number) {
-        this._baseZoomGranualityPower = baseZoomGranualityPower;
-        this._minGranualityPower = minGranualityPower;
+    constructor(baseZoomGranularityPower: number, minGranularityPower: number) {
+        this._baseZoomGranularityPower = baseZoomGranularityPower;
+        this._minGranularityPower = minGranularityPower;
     }
 
-    public getGranualityForZoomLevel(zoomLevel: number): number {
-        return 1 << Math.max(this._baseZoomGranualityPower - zoomLevel, this._minGranualityPower, 0);
-    }
-}
-
-export class SubdivisionGranualitySetting {
-    /**
-     * Granuality settings used for fill layer (both polygons and their anti-aliasing outlines).
-     */
-    public readonly GranualityFill;
-
-    /**
-     * Granuality used for stencil mask tiles.
-     */
-    public readonly GranualityStencil;
-
-    /**
-     * Granuality used for the line layer.
-     */
-    public readonly GranualityLine;
-
-    constructor(fill: SubdivisionGranulityExpression, line: SubdivisionGranulityExpression, stencil: SubdivisionGranulityExpression) {
-        this.GranualityFill = fill;
-        this.GranualityLine = line;
-        this.GranualityStencil = stencil;
+    public getGranularityForZoomLevel(zoomLevel: number): number {
+        return 1 << Math.max(this._baseZoomGranularityPower - zoomLevel, this._minGranularityPower, 0);
     }
 }
 
-export const granualitySettings: SubdivisionGranualitySetting = new SubdivisionGranualitySetting(
-    new SubdivisionGranulityExpression(7, 1), // Fill
-    new SubdivisionGranulityExpression(9, 1), // Line
-    new SubdivisionGranulityExpression(7, 3) // Stencil
+export class SubdivisionGranularitySetting {
+    /**
+     * granularity settings used for fill layer (both polygons and their anti-aliasing outlines).
+     */
+    public readonly granularityFill;
+
+    /**
+     * granularity used for stencil mask tiles.
+     */
+    public readonly granularityStencil;
+
+    /**
+     * granularity used for the line layer.
+     */
+    public readonly granularityLine;
+
+    constructor(fill: SubdivisionGranularityExpression, line: SubdivisionGranularityExpression, stencil: SubdivisionGranularityExpression) {
+        this.granularityFill = fill;
+        this.granularityLine = line;
+        this.granularityStencil = stencil;
+    }
+}
+
+export const granularitySettings: SubdivisionGranularitySetting = new SubdivisionGranularitySetting(
+    new SubdivisionGranularityExpression(7, 1), // Fill
+    new SubdivisionGranularityExpression(9, 1), // Line
+    new SubdivisionGranularityExpression(7, 3) // Stencil
 );
 
 type SubdivisionResult = {

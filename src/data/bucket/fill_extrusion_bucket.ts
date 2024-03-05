@@ -32,7 +32,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideFill, subdivideVertexLine, granualitySettings} from '../../render/subdivision';
+import {subdivideFill, subdivideVertexLine, granularitySettings} from '../../render/subdivision';
 import {fillArrays} from './fill_bucket';
 
 const FACTOR = Math.pow(2, 13);
@@ -189,7 +189,7 @@ export class FillExtrusionBucket implements Bucket {
         polygon: Array<Array<Point>>,
     ): void {
         let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-        const granuality = granualitySettings.GranualityFill.getGranualityForZoomLevel(canonical.z);
+        const granuality = granularitySettings.granularityFill.getGranularityForZoomLevel(canonical.z);
 
         for (const ring of polygon) {
             if (ring.length === 0) {

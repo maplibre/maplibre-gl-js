@@ -20,7 +20,7 @@ import {GlobeProjection} from '../geo/projection/globe';
 
 const MAX_PRERENDERS_PER_FRAME = 1;
 
-export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
+export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     const context = painter.context;
@@ -54,7 +54,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
             for (const coord of coords) {
                 const tile = sourceCache.getTile(coord);
                 const mesh = projection.getMeshFromTileID(context, coord.canonical, false);
-                renderHillshade(painter, coord, tile, layer, depthMode, stencilModesHigh[coord.overscaledZ], colorMode, isRenderingToTexture,
+                renderHillshade(painter, coord, tile, layer, depthMode, stencilModesHigh[coord.overscaledZ], colorMode,
                     mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
             }
 
@@ -62,14 +62,14 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
             for (const coord of coords) {
                 const tile = sourceCache.getTile(coord);
                 const mesh = projection.getMeshFromTileID(context, coord.canonical, true);
-                renderHillshade(painter, coord, tile, layer, depthMode, stencilModesLow[coord.overscaledZ], colorMode, isRenderingToTexture,
+                renderHillshade(painter, coord, tile, layer, depthMode, stencilModesLow[coord.overscaledZ], colorMode,
                     mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
             }
         } else {
             const [stencilModes, coords] = painter.stencilConfigForOverlap(tileIDs);
             for (const coord of coords) {
                 const tile = sourceCache.getTile(coord);
-                renderHillshade(painter, coord, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode, isRenderingToTexture,
+                renderHillshade(painter, coord, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode,
                     painter.rasterBoundsBufferPosOnly, painter.quadTriangleIndexBuffer, painter.rasterBoundsSegmentsPosOnly);
             }
         }
@@ -84,7 +84,6 @@ function renderHillshade(
     depthMode: Readonly<DepthMode>,
     stencilMode: Readonly<StencilMode>,
     colorMode: Readonly<ColorMode>,
-    isRenderingToTexture: boolean,
     vertexBuffer: VertexBuffer,
     indexBuffer: IndexBuffer,
     segments: SegmentVector) {
@@ -100,7 +99,7 @@ function renderHillshade(
     gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
     const align = !painter.options.moving;
-    const matrix = isRenderingToTexture ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align);
+    const matrix = terrainData ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align);
     const projectionData = painter.style.map.projection.getProjectionData(coord.canonical, matrix);
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,

@@ -33,7 +33,7 @@ import type {VertexBuffer} from '../../gl/vertex_buffer';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideVertexLine, granualitySettings} from '../../render/subdivision';
+import {subdivideVertexLine, granularitySettings} from '../../render/subdivision';
 
 // NOTE ON EXTRUDE SCALE:
 // scale the extrusion vector so that the normal length is this value.
@@ -264,7 +264,7 @@ export class LineBucket implements Bucket {
         this.scaledDistance = 0;
         this.totalDistance = 0;
 
-        const granuality = (canonical) ? granualitySettings.GranualityLine.getGranualityForZoomLevel(canonical.z) : 1;
+        const granuality = (canonical) ? granularitySettings.granularityLine.getGranularityForZoomLevel(canonical.z) : 1;
 
         // First, subdivide the line for globe rendering
         vertices = subdivideVertexLine(vertices, granuality);

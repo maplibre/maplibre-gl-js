@@ -17,7 +17,7 @@ import {clamp, nextPowerOfTwo} from '../util/util';
 import {renderColorRamp} from '../util/color_ramp';
 import {EXTENT} from '../data/extent';
 
-export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
+export function drawLine(painter: Painter, sourceCache: SourceCache, layer: LineStyleLayer, coords: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'translucent') return;
 
     const opacity = layer.paint.get('line-opacity');
@@ -66,7 +66,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const rttCoord = isRenderingToTexture ? coord : null;
+        const rttCoord = terrainData ? coord : null;
         const projectionData = painter.style.map.projection.getProjectionData(coord.canonical, rttCoord ? rttCoord.posMatrix : tile.tileID.posMatrix);
         const pixelRatio = painter.style.map.projection.getPixelScale(painter.style.map.transform);
 

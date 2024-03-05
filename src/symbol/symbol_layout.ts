@@ -33,7 +33,7 @@ import murmur3 from 'murmurhash-js';
 import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
 import {VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
 import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
-import {subdivideVertexLine, granualitySettings} from '../render/subdivision';
+import {subdivideVertexLine, granularitySettings} from '../render/subdivision';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:
@@ -334,7 +334,7 @@ function addFeature(bucket: SymbolBucket,
 
     const subdivideLine = (line) => {
         // Subdivide lines for symbols as well, in order to allow line-following-text to be curved under non-mercator projections.
-        const granuality = (canonical) ? granualitySettings.GranualityLine.getGranualityForZoomLevel(canonical.z) : 1;
+        const granuality = (canonical) ? granularitySettings.granularityLine.getGranularityForZoomLevel(canonical.z) : 1;
         return subdivideVertexLine(line, granuality);
     };
 
