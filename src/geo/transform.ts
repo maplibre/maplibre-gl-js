@@ -32,6 +32,9 @@ export class Transform {
     pixelsToGLUnits: [number, number];
     cameraToCenterDistance: number;
     mercatorMatrix: mat4;
+
+    mercatorMatrix3D: mat4;
+
     projMatrix: mat4;
     invProjMatrix: mat4;
     alignedProjMatrix: mat4;
@@ -873,6 +876,9 @@ export class Transform {
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to clip space.
         this.mercatorMatrix = mat4.scale([] as any, m, [this.worldSize, this.worldSize, this.worldSize]);
+
+        this.mercatorMatrix3D = mat4.translate([] as any, m, [0, 0, -this.elevation * this._pixelPerMeter]);
+        mat4.scale(this.mercatorMatrix3D, this.mercatorMatrix3D, [this.worldSize, this.worldSize, this.worldSize]);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, [1, 1, this._pixelPerMeter]);

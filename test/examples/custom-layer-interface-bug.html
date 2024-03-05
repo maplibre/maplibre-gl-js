@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Custom layer interface bug - missing mercatorMatrix3D</title>
+  <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+  <script src='../../dist/maplibre-gl-dev.js'></script>
+  <style>
+      body { margin: 0; padding: 0; }
+      html, body, #map { height: 100%; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  // Kemacher is a peak just North of Innsbruck, Austria.
+  const KEMACHER_LOCATIION = "47°18′46″N 11°21′59″E 2480m";
+  const KEMACHER_LNG_LAT = [11.36638889, 47.31277778, 2480];
+
+  const KEMACHER_MC = maplibregl.MercatorCoordinate.fromLngLat(
+            {
+              lng: KEMACHER_LNG_LAT[0],
+              lat: KEMACHER_LNG_LAT[1],
+            },
+            KEMACHER_LNG_LAT[2],
+          );
+  const KEMACHER_POINT_4F = [KEMACHER_MC.x, KEMACHER_MC.y, KEMACHER_MC.z, 1.0];
+
+  const map = new maplibregl.Map({
+    style: {
+            version: 8,
+            sources: {
+                osm: {
+                    type: 'raster',
+                    tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '&copy; OpenStreetMap Contributors',
+                    maxzoom: 19
+                },
+                // Use a different source for terrain and hillshade layers, to improve render quality
+                terrainSource: {
+                    type: 'raster-dem',
+                    url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                    tileSize: 256
+                },
+                hillshadeSource: {
+                    type: 'raster-dem',
+                    url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                    tileSize: 256
+                }
+            },
+            layers: [
+                {
+                    id: 'osm',
+                    type: 'raster',
+                    source: 'osm'
+                },
+                {
+                    id: 'hills',
+                    type: 'hillshade',
+                    source: 'hillshadeSource',
+                    layout: {visibility: 'visible'},
+                    paint: {'hillshade-shadow-color': '#473B24'}
+                }
+            ],
+            terrain: {
+                source: 'terrainSource',
+                exaggeration: 1
+            }
+        },
+      center: [11.35, 47.3],
+      zoom: 12.0,
+      pitch: 45,
+      bearing: 0,
+      container: 'map',
+      antialias: true
+  });
+
+    class KemacherTestLayer {
+        constructor() {
+            this.id = 'kemacher';
+            this.type = 'custom';
+            this.renderingMode = '3d';
+        }
+
+        onAdd(map, gl) {
+            this.map = map;
+
+            const vertexSource = `#version 300 es
+
+            uniform vec4 u_point;
+            uniform mat4 u_matrix;
+
+            void main() {
+                gl_Position = u_matrix * u_point;
+                gl_PointSize = 20.0;
+            }`;
+
+            const fragmentSource = `#version 300 es
+            precision highp float;
+
+            uniform float u_colour;
+
+            out vec4 out_colour;
+
+            void main() {
+                out_colour = vec4(1.0 - u_colour, 0.0 + u_colour, 0.0, 1.0);
+            }`;
+
+            const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertexShader, vertexSource);
+            gl.compileShader(vertexShader);
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+              console.error(vertexShader, " : ", gl.getShaderInfoLog(vertexShader));
+            }
+
+            const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fragmentShader, fragmentSource);
+            gl.compileShader(fragmentShader);
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+              console.error(fragmentShader, " : ", gl.getShaderInfoLog(fragmentShader));
+            }
+
+            this.program = gl.createProgram();
+            gl.attachShader(this.program, vertexShader);
+            gl.attachShader(this.program, fragmentShader);
+            gl.linkProgram(this.program);
+
+            if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+                console.error("shader program : ", gl.getProgramInfoLog(program));
+            }
+        }
+
+        render(gl, matrix) {
+            // Note that mercatorMatrix is always passed to a CustomLayerInterface - even if renderingMode == "3d"
+            console.assert(JSON.stringify(matrix) === JSON.stringify(this.map.transform.mercatorMatrix));
+
+            // Draw point in red using mercatorMatrix
+            gl.useProgram(this.program);
+            gl.uniform4fv(gl.getUniformLocation(this.program, "u_point"), KEMACHER_POINT_4F);
+            gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "u_matrix"), false, this.map.transform.mercatorMatrix);
+            gl.uniform1f(gl.getUniformLocation(this.program, "u_colour"), 0.0);
+            gl.drawArrays(gl.POINTS, 0, 1);
+
+            // Draw point in green using mercatorMatrix3D
+            gl.uniform4fv(gl.getUniformLocation(this.program, "u_point"), KEMACHER_POINT_4F);
+            gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "u_matrix"), false, this.map.transform.mercatorMatrix3D);
+            gl.uniform1f(gl.getUniformLocation(this.program, "u_colour"), 1.0);
+            gl.drawArrays(gl.POINTS, 0, 1);
+        }
+    }
+
+    map.on('load', function() {
+        map.addLayer(new KemacherTestLayer());
+    });
+</script>
+</body>
+</html>
+
+
