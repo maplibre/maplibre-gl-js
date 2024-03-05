@@ -715,8 +715,8 @@ export class Transform {
     // 1) everything beyond the bounds is excluded
     // 2) a given lngLat is as near the center as possible
     // Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
-    // MinZoom and maxZoom don't affect the result here
     getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+        zoom = clamp(+zoom, this.minZoom, this.maxZoom);
         const result = {
             center: new LngLat(lngLat.lng, lngLat.lat),
             zoom
@@ -729,7 +729,7 @@ export class Transform {
             lngRange = [-almost180, almost180];
         }
 
-        const worldSize = this.tileSize * this.zoomScale(zoom); // A world size for the requested zoom level, not the current world size
+        const worldSize = this.tileSize * this.zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
         let minY = 0;
         let maxY = worldSize;
         let minX = 0;

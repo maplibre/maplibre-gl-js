@@ -986,12 +986,12 @@ export abstract class Camera extends Evented {
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        let center = LngLat.convert(options.center || locationAtOffset);
-        let zoom = 'zoom' in options ? +options.zoom : startZoom;
+
+        const {center, zoom} = tr.getConstrained(
+            LngLat.convert(options.center || locationAtOffset),
+            options.zoom ?? startZoom
+        );
         this._normalizeCenter(center);
-        const constrained = tr.getConstrained(center, zoom);
-        center = constrained.center;
-        zoom = constrained.zoom;
 
         const from = tr.project(locationAtOffset);
         const delta = tr.project(center).sub(from);
@@ -1261,12 +1261,12 @@ export abstract class Camera extends Evented {
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        let center = LngLat.convert(options.center || locationAtOffset);
-        let zoom = 'zoom' in options ? clamp(+options.zoom, tr.minZoom, tr.maxZoom) : startZoom;
+
+        const {center, zoom} = tr.getConstrained(
+            LngLat.convert(options.center || locationAtOffset),
+            options.zoom ?? startZoom
+        );
         this._normalizeCenter(center);
-        const constrained = tr.getConstrained(center, zoom);
-        center = constrained.center;
-        zoom = constrained.zoom;
         const scale = tr.zoomScale(zoom - startZoom);
 
         const from = tr.project(locationAtOffset);
