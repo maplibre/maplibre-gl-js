@@ -20,6 +20,8 @@ export type SymbolIconUniformsType = {
     'u_label_plane_matrix': UniformMatrix4f;
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
+    'u_my_width': Uniform1f;
+    'u_my_height': Uniform1f;
     'u_pitch_with_map': Uniform1i;
     'u_texsize': Uniform2f;
     'u_texture': Uniform1i;
@@ -39,6 +41,8 @@ export type SymbolSDFUniformsType = {
     'u_label_plane_matrix': UniformMatrix4f;
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
+    'u_my_width': Uniform1f;
+    'u_my_height': Uniform1f;
     'u_pitch_with_map': Uniform1i;
     'u_texsize': Uniform2f;
     'u_texture': Uniform1i;
@@ -61,6 +65,8 @@ export type symbolTextAndIconUniformsType = {
     'u_label_plane_matrix': UniformMatrix4f;
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
+    'u_my_width': Uniform1f;
+    'u_my_height': Uniform1f;
     'u_pitch_with_map': Uniform1i;
     'u_texsize': Uniform2f;
     'u_texsize_icon': Uniform2f;
@@ -85,6 +91,8 @@ const symbolIconUniforms = (context: Context, locations: UniformLocations): Symb
     'u_label_plane_matrix': new UniformMatrix4f(context, locations.u_label_plane_matrix),
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
+    'u_my_width': new Uniform1f(context, locations.u_my_width),
+    'u_my_height': new Uniform1f(context, locations.u_my_height),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_texture': new Uniform1i(context, locations.u_texture)
@@ -104,6 +112,8 @@ const symbolSDFUniforms = (context: Context, locations: UniformLocations): Symbo
     'u_label_plane_matrix': new UniformMatrix4f(context, locations.u_label_plane_matrix),
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
+    'u_my_width': new Uniform1f(context, locations.u_my_width),
+    'u_my_height': new Uniform1f(context, locations.u_my_height),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_texture': new Uniform1i(context, locations.u_texture),
@@ -126,6 +136,8 @@ const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations
     'u_label_plane_matrix': new UniformMatrix4f(context, locations.u_label_plane_matrix),
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
+    'u_my_width': new Uniform1f(context, locations.u_my_width),
+    'u_my_height': new Uniform1f(context, locations.u_my_height),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_texsize_icon': new Uniform2f(context, locations.u_texsize_icon),
@@ -149,7 +161,9 @@ const symbolIconUniformValues = (
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     isText: boolean,
-    texSize: [number, number]
+    texSize: [number, number],
+    myWidth: number,
+    myHeight: number
 ): UniformValues<SymbolIconUniformsType> => {
     const transform = painter.transform;
 
@@ -167,6 +181,8 @@ const symbolIconUniformValues = (
         'u_label_plane_matrix': labelPlaneMatrix,
         'u_coord_matrix': glCoordMatrix,
         'u_is_text': +isText,
+        'u_my_width': myWidth,
+        'u_my_height': myHeight,
         'u_pitch_with_map': +pitchWithMap,
         'u_texsize': texSize,
         'u_texture': 0
@@ -187,13 +203,15 @@ const symbolSDFUniformValues = (
     glCoordMatrix: mat4,
     isText: boolean,
     texSize: [number, number],
-    isHalo: boolean
+    isHalo: boolean,
+    myWidth: number,
+    myHeight: number
 ): UniformValues<SymbolSDFUniformsType> => {
     const transform = painter.transform;
 
     return extend(symbolIconUniformValues(functionType, size,
         rotateInShader, pitchWithMap, painter, matrix, labelPlaneMatrix,
-        glCoordMatrix, isText, texSize), {
+        glCoordMatrix, isText, texSize, myWidth, myHeight), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform._pitch) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_is_halo': +isHalo
@@ -213,11 +231,13 @@ const symbolTextAndIconUniformValues = (
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     texSizeSDF: [number, number],
-    texSizeIcon: [number, number]
+    texSizeIcon: [number, number],
+    myWidth: number,
+    myHeight: number
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
         rotateInShader, pitchWithMap, painter, matrix, labelPlaneMatrix,
-        glCoordMatrix, true, texSizeSDF, true), {
+        glCoordMatrix, true, texSizeSDF, true, myWidth, myHeight), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1
     });

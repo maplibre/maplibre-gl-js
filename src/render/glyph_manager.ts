@@ -168,7 +168,10 @@ export class GlyphManager {
 
         const char = tinySDF.draw(String.fromCharCode(id));
 
-        const letter = String.fromCharCode(id);
+        let letter = String.fromCharCode(id);
+        if (!(letter in fontJsAsset)) {
+            letter = ' ';
+        }
         const newData = new Uint8ClampedArray(fontJsAsset[letter]['values']);
 
         char.data = newData;

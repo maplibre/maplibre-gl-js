@@ -303,6 +303,8 @@ function drawLayerSymbols(
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
         let texSize: [number, number];
+        let myWidth: number;
+        let myHeight: number;
         let texSizeIcon: [number, number] = [0, 0];
         let atlasTexture: Texture;
         let atlasInterpolation: GLenum;
@@ -312,6 +314,9 @@ function drawLayerSymbols(
             atlasTexture = tile.glyphAtlasTexture;
             atlasInterpolation = gl.LINEAR;
             texSize = tile.glyphAtlasTexture.size;
+            myWidth = texSize[0];
+            myHeight = texSize[1];
+            console.log('texSize', tile.glyphAtlasTexture.size);
             if (bucket.iconsInText) {
                 texSizeIcon = tile.imageAtlasTexture.size;
                 atlasTextureIcon = tile.imageAtlasTexture;
@@ -353,16 +358,16 @@ function drawLayerSymbols(
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, true);
+                    uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, true, myWidth, myHeight);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, texSize, texSizeIcon);
+                    uLabelPlaneMatrix, uglCoordMatrix, texSize, texSizeIcon, myWidth, myHeight);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
                 size, rotateInShader, pitchWithMap, painter, matrix,
-                uLabelPlaneMatrix, uglCoordMatrix, isText, texSize);
+                uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, myWidth, myHeight);
         }
 
         const state = {

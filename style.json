@@ -404,7 +404,7 @@
             "paint": {
                 "text-color": "#1077B0",
                 "text-halo-blur": 0.05,
-                "text-halo-color": "rgba(255, 255, 255, 0.7)",
+                "text-halo-color": "rgba(255, 255, 255, 1.0)",
                 "text-halo-width": 0.2
             },
             "filter": [
@@ -435,7 +435,7 @@
             "paint": {
                 "text-color": "rgba(8, 37, 77, 1)",
                 "text-halo-blur": 0.08,
-                "text-halo-color": "rgba(255, 255, 255, 0.7)",
+                "text-halo-color": "rgba(255, 255, 255, 1.0)",
                 "text-halo-width": 0.2
             },
             "filter": [

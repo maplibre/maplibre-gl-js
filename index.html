@@ -31,7 +31,7 @@
 
 <body>
     <div id="map"></div>
-    <div id="slidecontainer">
+    <!--div id="slidecontainer">
         <input type="range" min="15" max="100" value="50" step="1" class="slider" id="size">
         <p id="sizeOut">size: 50</p>
 
@@ -41,11 +41,11 @@
         <input type="range" min="0.0" max="0.1" value="0.08" step="0.01" class="slider" id="weight">
         <p id="weightOut">weight: 0.08</p>
 
-    </div>
+    </div-->
     <script>
         const map = new maplibregl.Map({
             container: 'map',
-            style: 'style.json',
+            style: 'style-swissmap.json',
             center: [8, 47],
             zoom: 3,
             hash: 'map'
@@ -55,18 +55,18 @@
         map.on('load', () => {
 
             function updateMap() {
-                var size = Number(document.getElementById("size").value);
-                map.setLayoutProperty('geolines-label', 'text-size', size);
-                map.setLayoutProperty('countries-label', 'text-size', size);
+                // var size = Number(document.getElementById("size").value);
+                // map.setLayoutProperty('geolines-label', 'text-size', size);
+                // map.setLayoutProperty('countries-label', 'text-size', size);
 
-                var haloWidth = Number(document.getElementById("haloWidth").value);
-                map.setPaintProperty('geolines-label', 'text-halo-width', haloWidth);
-                map.setPaintProperty('countries-label', 'text-halo-width', haloWidth);
+                // var haloWidth = Number(document.getElementById("haloWidth").value);
+                // map.setPaintProperty('geolines-label', 'text-halo-width', haloWidth);
+                // map.setPaintProperty('countries-label', 'text-halo-width', haloWidth);
 
-                var weight = Number(document.getElementById("weight").value);
-                // repurpose icon-halo-blur for inner size
-                map.setPaintProperty('geolines-label', 'text-halo-blur', weight); 
-                map.setPaintProperty('countries-label', 'text-halo-blur', weight);
+                // var weight = Number(document.getElementById("weight").value);
+                // // repurpose icon-halo-blur for inner size
+                // map.setPaintProperty('geolines-label', 'text-halo-blur', weight); 
+                // map.setPaintProperty('countries-label', 'text-halo-blur', weight);
             }
 
             updateMap();
