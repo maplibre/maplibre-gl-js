@@ -202,8 +202,8 @@ export class Painter {
         this.tileBorderIndexBuffer = context.createIndexBuffer(tileLineStripIndices);
 
         const quadTriangleIndices = new TriangleIndexArray();
-        quadTriangleIndices.emplaceBack(0, 1, 2);
-        quadTriangleIndices.emplaceBack(2, 1, 3);
+        quadTriangleIndices.emplaceBack(1, 0, 2);
+        quadTriangleIndices.emplaceBack(1, 2, 3);
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
 
         const gl = this.context.gl;
