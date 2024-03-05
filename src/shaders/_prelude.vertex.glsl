@@ -161,6 +161,6 @@ float get_elevation(vec2 pos) {
 }
 
 
-const float PI = 3.1415926535897932384626433832795;
+const float PI = 3.141592653589793;
 
 uniform mat4 u_projection_matrix;

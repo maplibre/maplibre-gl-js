@@ -15,7 +15,6 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import {drawTerrain} from './draw_terrain';
 
 describe('render to texture', () => {
     const gl = document.createElement('canvas').getContext('webgl');
@@ -97,60 +96,56 @@ describe('render to texture', () => {
     style.map = map;
 
     const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
-    const renderableTiles = [tile.tileID];
-    painter.renderToTexture.getTerrainCoords = () => { return {[tile.tileID.key]: tile.tileID}; };
+    terrain.sourceCache.getRenderableTiles = () => [tile];
+    terrain.sourceCache.getTerrainCoords = () => { return {[tile.tileID.key]: tile.tileID}; };
     map.terrain = terrain;
 
-    const rtt = new RenderToTexture(painter);
-    rtt.prepareForRender(style, 0, renderableTiles);
+    const rtt = new RenderToTexture(painter, terrain);
+    rtt.prepareForRender(style, 0);
     painter.renderToTexture = rtt;
 
-    const drawTerrainFunc = (painter: Painter, tiles: OverscaledTileID[]) => {
-        drawTerrain(painter, terrain, tiles);
-    };
-
     test('check state', () => {
-        expect(rtt._renderableTiles.map(t => t.key)).toStrictEqual(['923']);
+        expect(rtt._renderableTiles.map(t => t.tileID.key)).toStrictEqual(['923']);
         expect(rtt._coordsDescendingInv).toEqual({'maine': {'923': [{'canonical': {'key': '922', 'x': 1, 'y': 2, 'z': 2}, 'key': '923', 'overscaledZ': 3, 'wrap': 0}]}});
         expect(rtt._coordsDescendingInvStr).toStrictEqual({maine: {'923': '923'}});
     });
 
     test('should render text after a line by not adding the text to the stack', () => {
         style._order = ['maine-fill', 'maine-symbol'];
-        rtt.prepareForRender(style, 0, renderableTiles);
+        rtt.prepareForRender(style, 0);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-fill', 'maine-symbol']);
-        expect(rtt.renderLayer(fillLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, drawTerrainFunc)).toBeFalsy();
+        expect(rtt.renderLayer(fillLayer)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
         expect(layersDrawn).toBe(1);
     });
 
     test('render symbol inbetween of rtt layers', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
-        rtt.prepareForRender(style, 0, renderableTiles);
+        rtt.prepareForRender(style, 0);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
-        expect(rtt.renderLayer(backgroundLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(fillLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(rasterLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(hillshadeLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, drawTerrainFunc)).toBeFalsy();
-        expect(rtt.renderLayer(lineLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, drawTerrainFunc)).toBeFalsy();
+        expect(rtt.renderLayer(backgroundLayer)).toBeTruthy();
+        expect(rtt.renderLayer(fillLayer)).toBeTruthy();
+        expect(rtt.renderLayer(rasterLayer)).toBeTruthy();
+        expect(rtt.renderLayer(hillshadeLayer)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(lineLayer)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
         expect(layersDrawn).toBe(2);
     });
 
     test('render more symbols inbetween of rtt layers', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
-        rtt.prepareForRender(style, 0, renderableTiles);
+        rtt.prepareForRender(style, 0);
         layersDrawn = 0;
         expect(rtt._renderableLayerIds).toStrictEqual(['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol']);
-        expect(rtt.renderLayer(backgroundLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, drawTerrainFunc)).toBeFalsy();
-        expect(rtt.renderLayer(hillshadeLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, drawTerrainFunc)).toBeFalsy();
-        expect(rtt.renderLayer(lineLayer, drawTerrainFunc)).toBeTruthy();
-        expect(rtt.renderLayer(symbolLayer, drawTerrainFunc)).toBeFalsy();
+        expect(rtt.renderLayer(backgroundLayer)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(hillshadeLayer)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
+        expect(rtt.renderLayer(lineLayer)).toBeTruthy();
+        expect(rtt.renderLayer(symbolLayer)).toBeFalsy();
         expect(layersDrawn).toBe(3);
     });
 });

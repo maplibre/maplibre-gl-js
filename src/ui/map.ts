@@ -58,16 +58,18 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {drawTerrain} from '../render/draw_terrain';
-import {OverscaledTileID} from '../source/tile_id';
-import {mat4} from 'gl-matrix';
-import {EXTENT} from '../data/extent';
 import {ProjectionBase} from '../geo/projection/projection_base';
 import {MercatorProjection} from '../geo/projection/mercator';
 import {GlobeProjection} from '../geo/projection/globe';
 
 const version = packageJSON.version;
 
+/**
+ * Name of MapLibre's map projection. Can be:
+ *
+ * - `mercator` - A classic Web Mercator 2D map
+ * - 'globe' - A 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zoom levels.
+ */
 type ProjectionName = 'mercator' | 'globe';
 
 function getProjectionFromName(name: ProjectionName, map: Map): ProjectionBase {
@@ -77,6 +79,7 @@ function getProjectionFromName(name: ProjectionName, map: Map): ProjectionBase {
         case 'globe':
             return new GlobeProjection(map);
         default:
+            warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
             return new MercatorProjection();
     }
 }
@@ -340,8 +343,9 @@ export type MapOptions = {
     maxCanvasSize?: [number, number];
     /**
      * Map projection to use. Options are:
-     * - 'mercator' - default, classical flat Web Mercator map.
-     * - 'globe' - a 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zooms.
+     * - 'mercator' - The default, a classical flat Web Mercator map.
+     * - 'globe' - A 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zoom levels.
+     * @defaultValue 'mercator'
      */
     projection?: ProjectionName;
 };
@@ -501,7 +505,6 @@ export class Map extends Camera {
     _overridePixelRatio: number | null;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-    _renderToTextureCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
     /**
      * @internal
@@ -723,7 +726,7 @@ export class Map extends Camera {
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
@@ -763,7 +766,7 @@ export class Map extends Camera {
     /**
      * Removes the control from the map.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param control - The {@link IControl} to remove.
      * @returns `this`
@@ -1950,13 +1953,12 @@ export class Map extends Camera {
 
         if (!options) {
             // remove terrain
-            if (this.terrain) {
-                this.terrain.sourceCache.destruct();
-            }
+            if (this.terrain) this.terrain.sourceCache.destruct();
             this.terrain = null;
+            if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
+            this.painter.renderToTexture = null;
             this.transform.minElevationForCurrentTile = 0;
             this.transform.elevation = 0;
-            this._updateRenderToTexture();
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -1971,18 +1973,21 @@ export class Map extends Camera {
                 }
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);
+            this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this._terrainDataCallback = e => {
-                if (e.dataType === 'source' && e.tile) {
+                if (e.dataType === 'style') {
+                    this.terrain.sourceCache.freeRtt();
+                } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                         this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                     }
+                    this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
             };
             this.style.on('data', this._terrainDataCallback);
-            this._updateRenderToTexture();
         }
 
         this.fire(new Event('terrain', {terrain: options}));
@@ -1999,35 +2004,6 @@ export class Map extends Camera {
      */
     getTerrain(): TerrainSpecification | null {
         return this.terrain?.options ?? null;
-    }
-
-    /**
-     * Enables or disables render-to-texture, depending on whether terrain is enabled.
-     */
-    private _updateRenderToTexture(): void {
-        if (!this.terrain) {
-            // Disable rtt
-            if (this._renderToTextureCallback) {
-                this.style.off('data', this._renderToTextureCallback);
-            }
-            if (this.painter.renderToTexture) {
-                this.painter.renderToTexture.destruct();
-            }
-            this.painter.renderToTexture = null;
-        } else {
-            // Enable rtt
-            this.painter.renderToTexture = new RenderToTexture(this.painter);
-            this._renderToTextureCallback = e => {
-                if (this.painter.renderToTexture) {
-                    if (e.dataType === 'style') {
-                        this.painter.renderToTexture.freeRtt();
-                    } else if (e.dataType === 'source' && e.tile) {
-                        this.painter.renderToTexture.freeRtt(e.tile.tileID);
-                    }
-                }
-            };
-            this.style.on('data', this._renderToTextureCallback);
-        }
     }
 
     /**
@@ -2188,7 +2164,7 @@ export class Map extends Camera {
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern).
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -2258,7 +2234,7 @@ export class Map extends Camera {
      * in the style's original sprite and any images
      * that have been added at runtime using {@link Map#addImage}.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the image.
      *
@@ -2440,7 +2416,7 @@ export class Map extends Camera {
     /**
      * Removes the layer with the given ID from the map's style.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the layer to remove
      * @returns `this`
@@ -3130,29 +3106,6 @@ export class Map extends Camera {
             this.style._updateSources(this.transform);
         }
 
-        const useRtt = !!this.terrain;
-
-        let rttCoveringTiles;
-
-        if (useRtt) {
-            const rttTileSize = 512;
-            const rttMinZoom = 0;
-            const rttMaxZoom = 22;
-
-            rttCoveringTiles = this.transform.coveringTiles({
-                tileSize: rttTileSize,
-                minzoom: rttMinZoom,
-                maxzoom: rttMaxZoom,
-                reparseOverscaled: false,
-                terrain: this.terrain,
-            });
-
-            for (const tileID of rttCoveringTiles) {
-                tileID.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
-            }
-        }
-
         // update terrain stuff
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
@@ -3170,17 +3123,6 @@ export class Map extends Camera {
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
-        let rttOptions;
-
-        if (useRtt) {
-            rttOptions = {
-                rttTiles: rttCoveringTiles,
-                drawFunc: (painter: Painter, rttTiles: OverscaledTileID[]) => {
-                    drawTerrain(painter, this.terrain, rttTiles);
-                },
-            };
-        }
-
         // Actually draw
         this.painter.render(this.style, {
             showTileBoundaries: this.showTileBoundaries,
@@ -3190,7 +3132,7 @@ export class Map extends Camera {
             moving: this.isMoving(),
             fadeDuration,
             showPadding: this.showPadding,
-        }, rttOptions);
+        });
 
         this.fire(new Event('render'));
 
@@ -3270,6 +3212,7 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.projection.destroy();
         this._renderTaskQueue.clear();
         this.painter.destroy();
         this.handlers.destroy();

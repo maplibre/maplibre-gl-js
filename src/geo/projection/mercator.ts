@@ -13,9 +13,9 @@ import {PreparedShader, shaders} from '../../shaders/shaders';
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
-export class MercatorProjection extends ProjectionBase {
-    constructor() {
-        super('mercator');
+export class MercatorProjection implements ProjectionBase {
+    get name(): string {
+        return 'mercator';
     }
 
     get useSpecialProjectionForSymbols(): boolean {
@@ -27,19 +27,29 @@ export class MercatorProjection extends ProjectionBase {
         return false;
     }
 
-    get drawWrappedtiles(): boolean {
-        // Mecator always needs to draw wrapped/duplicated tiles.
+    get drawWrappedTiles(): boolean {
+        // Mercator always needs to draw wrapped/duplicated tiles.
         return true;
     }
 
     get shaderVariantName(): string {
         return MercatorShaderVariantKey;
     }
+
     get shaderDefine(): string {
         return MercatorShaderDefine;
     }
+
     get shaderPreludeCode(): PreparedShader {
         return shaders.projectionMercator;
+    }
+
+    get vertexShaderPreludeCode(): string {
+        return shaders.projectionMercator.vertexSource;
+    }
+
+    destroy(): void {
+        // Do nothing.
     }
 
     updateGPUdependent(_: Painter): void {
@@ -54,11 +64,12 @@ export class MercatorProjection extends ProjectionBase {
         let tileOffsetSize: [number, number, number, number];
 
         if (canonicalTileCoords) {
+            const scale = (canonicalTileCoords.z >= 0) ? (1 << canonicalTileCoords.z) : Math.pow(2.0, canonicalTileCoords.z);
             tileOffsetSize = [
-                canonicalTileCoords.x / (1 << canonicalTileCoords.z),
-                canonicalTileCoords.y / (1 << canonicalTileCoords.z),
-                1.0 / (1 << canonicalTileCoords.z) / EXTENT,
-                1.0 / (1 << canonicalTileCoords.z) / EXTENT
+                canonicalTileCoords.x / scale,
+                canonicalTileCoords.y / scale,
+                1.0 / scale / EXTENT,
+                1.0 / scale / EXTENT
             ];
         } else {
             tileOffsetSize = [0, 0, 1, 1];

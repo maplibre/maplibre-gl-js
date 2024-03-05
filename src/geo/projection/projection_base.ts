@@ -7,43 +7,114 @@ import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PreparedShader} from '../../shaders/shaders';
 
-export abstract class ProjectionBase {
-    readonly name: string;
+/**
+ * An abstract class the specializations of which are used internally by MapLibre to handle different projections.
+ */
+export interface ProjectionBase {
+    /**
+     * @internal
+     * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
+     */
+    get name(): string;
 
-    constructor(name: string) {
-        this.name = name;
-    }
+    /**
+     * @internal
+     * True if symbols should use the `project` method of the current ProjectionBase class
+     * instead of the default (and fast) mercator projection path.
+     */
+    get useSpecialProjectionForSymbols(): boolean;
 
-    abstract get useSpecialProjectionForSymbols(): boolean;
+    /**
+     * @internal
+     * True when an animation handled by the projection is in progress,
+     * requiring MapLibre to keep rendering new frames.
+     */
+    get isRenderingDirty(): boolean;
 
-    abstract get isRenderingDirty(): boolean;
-
-    abstract get drawWrappedtiles(): boolean;
+    /**
+     * @internal
+     * True if this projection required wrapped copies of the world to be drawn.
+     */
+    get drawWrappedTiles(): boolean;
 
     /**
      * Name of the shader projection variant that should be used for this projection.
-     * Note that this value may change dynamically, eg. when globe projection transitions to mercator.
+     * Note that this value may change dynamically, for example when globe projection internally transitions to mercator.
      * Then globe projection might start reporting the mercator shader variant name to make MapLibre use faster mercator shaders.
      */
-    abstract get shaderVariantName(): string;
-    abstract get shaderDefine(): string;
-    abstract get shaderPreludeCode(): PreparedShader;
+    get shaderVariantName(): string;
 
-    abstract updateGPUdependent(painter: Painter): void;
+    /**
+     * A `#define` macro that is injected into every MapLibre shader that uses this projection.
+     * @example
+     * `const define = projection.shaderDefine; // '#define GLOBE'`
+     */
+    get shaderDefine(): string;
 
-    abstract updateProjection(transform: Transform): void;
+    /**
+     * @internal
+     * A preprocessed prelude code for both vertex and fragment shaders.
+     */
+    get shaderPreludeCode(): PreparedShader;
 
-    abstract getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData;
+    /**
+     * Vertex shader code that is injected into every MapLibre vertex shader that uses this projection.
+     */
+    get vertexShaderPreludeCode(): string;
 
-    abstract isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
+    /**
+     * @internal
+     * Cleans up any resources the projection created, especially GPU buffers.
+     */
+    destroy(): void;
 
-    abstract project(x: number, y: number, unwrappedTileID: UnwrappedTileID): {
+    /**
+     * @internal
+     * Runs any GPU-side tasks this projection required. Called at the beginning of every frame.
+     */
+    updateGPUdependent(painter: Painter): void;
+
+    /**
+     * @internal
+     * Updates the projection for current transform, such as recomputing internal matrices.
+     * May change the value of `isRenderingDirty`.
+     */
+    updateProjection(transform: Transform): void;
+
+    /**
+     * @internal
+     * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
+     */
+    getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData;
+
+    /**
+     * @internal
+     * Returns whether the supplied location is occluded in this projection.
+     * For example during globe rendering a location on the backfacing side of the globe is occluded.
+     * @param x - Tile space coordinate in range 0..EXTENT.
+     * @param y - Tile space coordinate in range 0..EXTENT.
+     * @param unwrappedTileID - TileID of the tile the supplied coordinates belong to.
+     */
+    isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
+
+    /**
+     * @internal
+     * Projects a point in tile coordinates. Used in symbol rendering.
+     */
+    project(x: number, y: number, unwrappedTileID: UnwrappedTileID): {
         point: Point;
         signedDistanceFromCamera: number;
         isOccluded: boolean;
     };
 
-    abstract getPixelScale(transform: Transform): number;
+    /**
+     * @internal
+     */
+    getPixelScale(transform: Transform): number;
 
-    abstract translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+    /**
+     * @internal
+     * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
+     */
+    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
 }

@@ -46,7 +46,8 @@ import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
 import {Mesh} from './mesh';
 import {GlobeProjection} from '../geo/projection/globe';
-import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {translatePosMatrix as mercatorTranslatePosMatrix, MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {Tile} from '../source/tile';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -58,13 +59,6 @@ type PainterOptions = {
     zooming: boolean;
     moving: boolean;
     fadeDuration: number;
-};
-
-export type FuncDrawBufferedRttTiles = (painter: Painter, rttTiles: OverscaledTileID[]) => void;
-
-type RenderToTextureOptions = {
-    rttTiles: OverscaledTileID[];
-    drawFunc: FuncDrawBufferedRttTiles;
 };
 
 /**
@@ -208,8 +202,8 @@ export class Painter {
         this.tileBorderIndexBuffer = context.createIndexBuffer(tileLineStripIndices);
 
         const quadTriangleIndices = new TriangleIndexArray();
-        quadTriangleIndices.emplaceBack(0, 1, 2);
-        quadTriangleIndices.emplaceBack(2, 1, 3);
+        quadTriangleIndices.emplaceBack(1, 0, 2);
+        quadTriangleIndices.emplaceBack(1, 2, 3);
         this.quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
 
         const gl = this.context.gl;
@@ -241,7 +235,7 @@ export class Painter {
         const projectionData = this.style.map.projection.getProjectionData(null, null);
         projectionData['u_projection_matrix'] = matrix;
 
-        // Note: we use a shader with projection code disabled since we want to draw a fullscreen quad
+        // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
         this.useProgram('clippingMask', null, [], true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
@@ -408,7 +402,7 @@ export class Painter {
         return this.currentLayer < this.opaquePassCutoff;
     }
 
-    render(style: Style, options: PainterOptions, rttOptions?: RenderToTextureOptions) {
+    render(style: Style, options: PainterOptions) {
         this.style = style;
         this.options = options;
 
@@ -427,7 +421,7 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
-        const deduplicateWrapped = !style.map.projection.drawWrappedtiles;
+        const deduplicateWrapped = !style.map.projection.drawWrappedTiles;
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
@@ -449,21 +443,19 @@ export class Painter {
             }
         }
 
-        if (this.renderToTexture && rttOptions) {
-            this.renderToTexture.prepareForRender(this.style, this.transform.zoom, rttOptions.rttTiles);
+        if (this.renderToTexture) {
+            this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             this.opaquePassCutoff = 0;
 
-            if (this.style.map.terrain) {
-                // update coords/depth-framebuffer on camera movement, or tile reloading
-                const hasNewTiles = this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
-                if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || hasNewTiles) {
-                    mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
-                    this.terrainFacilitator.renderTime = Date.now();
-                    this.terrainFacilitator.dirty = false;
-                    drawDepth(this, this.style.map.terrain, rttOptions.rttTiles);
-                    drawCoords(this, this.style.map.terrain, rttOptions.rttTiles);
-                }
+            // update coords/depth-framebuffer on camera movement, or tile reloading
+            const hasNewTiles = this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
+            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || hasNewTiles) {
+                mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
+                this.terrainFacilitator.renderTime = Date.now();
+                this.terrainFacilitator.dirty = false;
+                drawDepth(this, this.style.map.terrain);
+                drawCoords(this, this.style.map.terrain);
             }
         }
 
@@ -480,7 +472,7 @@ export class Painter {
             const coords = coordsDescending[layer.source];
             if (layer.type !== 'custom' && !coords.length) continue;
 
-            this.renderLayer(this, sourceCaches[layer.source], layer, coords, false);
+            this.renderLayer(this, sourceCaches[layer.source], layer, coords);
         }
 
         // Execute offscreen GPU tasks of the projection manager
@@ -498,7 +490,7 @@ export class Painter {
 
         // Opaque pass ===============================================
         // Draw opaque layers top-to-bottom first.
-        if (!this.renderToTexture || !rttOptions) {
+        if (!this.renderToTexture) {
             this.renderPass = 'opaque';
 
             for (this.currentLayer = layerIds.length - 1; this.currentLayer >= 0; this.currentLayer--) {
@@ -507,7 +499,7 @@ export class Painter {
                 const coords = coordsAscending[layer.source];
 
                 this._renderTileClippingMasks(layer, coords);
-                this.renderLayer(this, sourceCache, layer, coords, false);
+                this.renderLayer(this, sourceCache, layer, coords);
             }
         }
 
@@ -519,7 +511,7 @@ export class Painter {
             const layer = this.style._layers[layerIds[this.currentLayer]];
             const sourceCache = sourceCaches[layer.source];
 
-            if (this.renderToTexture && rttOptions && this.renderToTexture.renderLayer(layer, rttOptions.drawFunc)) continue;
+            if (this.renderToTexture && this.renderToTexture.renderLayer(layer)) continue;
 
             // For symbol layers in the translucent pass, we add extra tiles to the renderable set
             // for cross-tile symbol fading. Symbol layers don't use tile clipping, so no need to render
@@ -527,7 +519,7 @@ export class Painter {
             const coords = (layer.type === 'symbol' ? coordsDescendingSymbol : coordsDescending)[layer.source];
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
-            this.renderLayer(this, sourceCache, layer, coords, false);
+            this.renderLayer(this, sourceCache, layer, coords);
         }
 
         if (this.options.showTileBoundaries) {
@@ -546,7 +538,7 @@ export class Painter {
         this.context.setDefault();
     }
 
-    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isRenderingToTexture: boolean) {
+    renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
         if (layer.isHidden(this.transform.zoom)) return;
         if (layer.type !== 'background' && layer.type !== 'custom' && !(coords || []).length) return;
         this.id = layer.id;
@@ -562,7 +554,7 @@ export class Painter {
                 drawHeatmap(painter, sourceCache, layer as any, coords);
                 break;
             case 'line':
-                drawLine(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+                drawLine(painter, sourceCache, layer as any, coords);
                 break;
             case 'fill':
                 drawFill(painter, sourceCache, layer as any, coords);
@@ -571,10 +563,10 @@ export class Painter {
                 drawFillExtrusion(painter, sourceCache, layer as any, coords);
                 break;
             case 'hillshade':
-                drawHillshade(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+                drawHillshade(painter, sourceCache, layer as any, coords);
                 break;
             case 'raster':
-                drawRaster(painter, sourceCache, layer as any, coords, isRenderingToTexture);
+                drawRaster(painter, sourceCache, layer as any, coords);
                 break;
             case 'background':
                 drawBackground(painter, sourceCache, layer as any, coords);
@@ -583,6 +575,19 @@ export class Painter {
                 drawCustom(painter, sourceCache, layer as any);
                 break;
         }
+    }
+
+    // Temporary function - translate & translate-anchor handling will be moved to projection classes,
+    // since it is inherently projection dependent. Most translations will not be handled by the
+    // projection matrix (like the one this function produces), but by specialized code in the vertex shader.
+    translatePosMatrix(
+        matrix: mat4,
+        tile: Tile,
+        translate: [number, number],
+        translateAnchor: 'map' | 'viewport',
+        inViewportPixelUnitsUnits: boolean = false
+    ): mat4 {
+        return mercatorTranslatePosMatrix(this.transform, tile, matrix, translate, translateAnchor, inViewportPixelUnitsUnits);
     }
 
     saveTileTexture(texture: Texture) {
