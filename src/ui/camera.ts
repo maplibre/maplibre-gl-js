@@ -1254,19 +1254,20 @@ export abstract class Camera extends Evented {
             startPitch = this.getPitch(),
             startPadding = this.getPadding();
 
-        const zoom = 'zoom' in options ? clamp(+options.zoom, tr.minZoom, tr.maxZoom) : startZoom;
         const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
         const pitch = 'pitch' in options ? +options.pitch : startPitch;
         const padding = 'padding' in options ? options.padding : tr.padding;
 
-        const scale = tr.zoomScale(zoom - startZoom);
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
         let center = LngLat.convert(options.center || locationAtOffset);
+        let zoom = 'zoom' in options ? clamp(+options.zoom, tr.minZoom, tr.maxZoom) : startZoom;
         this._normalizeCenter(center);
-
-        center = tr.getConstrained(center, zoom).center;
+        const constrained = tr.getConstrained(center, zoom);
+        center = constrained.center;
+        zoom = constrained.zoom;
+        const scale = tr.zoomScale(zoom - startZoom);
 
         const from = tr.project(locationAtOffset);
         const delta = tr.project(center).sub(from);
