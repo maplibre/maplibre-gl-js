@@ -342,20 +342,20 @@ function fillSegmentsTriangles(
         const i1 = triangleIndices[primitiveEndIndex - 1];
         const i2 = triangleIndices[primitiveEndIndex];
 
-        let i0needsVextexCopy = actualVertexIndices[i0] < currentSegmentCutoff;
-        let i1needsVextexCopy = actualVertexIndices[i1] < currentSegmentCutoff;
-        let i2needsVextexCopy = actualVertexIndices[i2] < currentSegmentCutoff;
+        let i0needsVertexCopy = actualVertexIndices[i0] < currentSegmentCutoff;
+        let i1needsVertexCopy = actualVertexIndices[i1] < currentSegmentCutoff;
+        let i2needsVertexCopy = actualVertexIndices[i2] < currentSegmentCutoff;
 
-        const vertexCopyCount = (i0needsVextexCopy ? 1 : 0) + (i1needsVextexCopy ? 1 : 0) + (i2needsVextexCopy ? 1 : 0);
+        const vertexCopyCount = (i0needsVertexCopy ? 1 : 0) + (i1needsVertexCopy ? 1 : 0) + (i2needsVertexCopy ? 1 : 0);
 
         // Will needed vertex copies fit into this segment?
         if (segment.vertexLength + vertexCopyCount > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
             // Break up into a new segment if not.
             segment = segmentsTriangles.createNewSegment(vertexArray, triangleIndexArray);
             currentSegmentCutoff = totalVerticesCreated;
-            i0needsVextexCopy = true;
-            i1needsVextexCopy = true;
-            i2needsVextexCopy = true;
+            i0needsVertexCopy = true;
+            i1needsVertexCopy = true;
+            i2needsVertexCopy = true;
             baseVertex = 0;
         }
 
@@ -363,7 +363,7 @@ function fillSegmentsTriangles(
         let actualIndex1 = -1;
         let actualIndex2 = -1;
 
-        if (i0needsVextexCopy) {
+        if (i0needsVertexCopy) {
             actualIndex0 = totalVerticesCreated;
             addVertex(flattened[i0 * 2], flattened[i0 * 2 + 1]);
             actualVertexIndices[i0] = totalVerticesCreated;
@@ -373,7 +373,7 @@ function fillSegmentsTriangles(
             actualIndex0 = actualVertexIndices[i0];
         }
 
-        if (i1needsVextexCopy) {
+        if (i1needsVertexCopy) {
             actualIndex1 = totalVerticesCreated;
             addVertex(flattened[i1 * 2], flattened[i1 * 2 + 1]);
             actualVertexIndices[i1] = totalVerticesCreated;
@@ -383,7 +383,7 @@ function fillSegmentsTriangles(
             actualIndex1 = actualVertexIndices[i1];
         }
 
-        if (i2needsVextexCopy) {
+        if (i2needsVertexCopy) {
             actualIndex2 = totalVerticesCreated;
             addVertex(flattened[i2 * 2], flattened[i2 * 2 + 1]);
             actualVertexIndices[i2] = totalVerticesCreated;
@@ -431,25 +431,25 @@ function fillSegmentsLines(
             const i0 = currentLine[lineVertex - 1];
             const i1 = currentLine[lineVertex];
 
-            let i0needsVextexCopy = actualVertexIndices[i0] < currentSegmentCutoff;
-            let i1needsVextexCopy = actualVertexIndices[i1] < currentSegmentCutoff;
+            let i0needsVertexCopy = actualVertexIndices[i0] < currentSegmentCutoff;
+            let i1needsVertexCopy = actualVertexIndices[i1] < currentSegmentCutoff;
 
-            const vertexCopyCount = (i0needsVextexCopy ? 1 : 0) + (i1needsVextexCopy ? 1 : 0);
+            const vertexCopyCount = (i0needsVertexCopy ? 1 : 0) + (i1needsVertexCopy ? 1 : 0);
 
             // Will needed vertex copies fit into this segment?
             if (segment.vertexLength + vertexCopyCount > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
                 // Break up into a new segment if not.
                 segment = segmentsLines.createNewSegment(vertexArray, lineIndexArray);
                 currentSegmentCutoff = totalVerticesCreated;
-                i0needsVextexCopy = true;
-                i1needsVextexCopy = true;
+                i0needsVertexCopy = true;
+                i1needsVertexCopy = true;
                 baseVertex = 0;
             }
 
             let actualIndex0 = -1;
             let actualIndex1 = -1;
 
-            if (i0needsVextexCopy) {
+            if (i0needsVertexCopy) {
                 actualIndex0 = totalVerticesCreated;
                 addVertex(flattened[i0 * 2], flattened[i0 * 2 + 1]);
                 actualVertexIndices[i0] = totalVerticesCreated;
@@ -459,7 +459,7 @@ function fillSegmentsLines(
                 actualIndex0 = actualVertexIndices[i0];
             }
 
-            if (i1needsVextexCopy) {
+            if (i1needsVertexCopy) {
                 actualIndex1 = totalVerticesCreated;
                 addVertex(flattened[i1 * 2], flattened[i1 * 2 + 1]);
                 actualVertexIndices[i1] = totalVerticesCreated;
