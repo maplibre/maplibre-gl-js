@@ -13,6 +13,8 @@ import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
 
+export const MAX_VALID_LATITUDE = 85.051129;
+
 /**
  * @internal
  * A single transform, generally used for a single tile to be
@@ -23,7 +25,6 @@ export class Transform {
     tileZoom: number;
     lngRange: [number, number];
     latRange: [number, number];
-    maxValidLatitude: number;
     scale: number;
     width: number;
     height: number;
@@ -60,7 +61,6 @@ export class Transform {
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
-        this.maxValidLatitude = 85.051129; // constant
 
         this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
         this._minZoom = minZoom || 0;
@@ -464,7 +464,7 @@ export class Transform {
      * @returns Point
      */
     project(lnglat: LngLat) {
-        const lat = clamp(lnglat.lat, -this.maxValidLatitude, this.maxValidLatitude);
+        const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
         return new Point(
             mercatorXfromLng(lnglat.lng) * this.worldSize,
             mercatorYfromLat(lat) * this.worldSize);
@@ -679,7 +679,7 @@ export class Transform {
             this._constrain();
         } else {
             this.lngRange = null;
-            this.latRange = [-this.maxValidLatitude, this.maxValidLatitude];
+            this.latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
         }
     }
 
@@ -764,16 +764,17 @@ export class Transform {
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
-        const {x: originalX, y: originalY} = this.project(lngLat);
+        const {x: originalX, y: originalY} = this.project.call({worldSize}, lngLat);
         let modifiedX, modifiedY;
 
         const scale = Math.max(scaleX || 0, scaleY || 0);
 
         if (scale) {
             // zoom in to exclude all beyond the given lng/lat ranges
-            result.center = this.unproject(new Point(
+            const newPoint = new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
-                scaleY ? (maxY + minY) / 2 : originalY));
+                scaleY ? (maxY + minY) / 2 : originalY);
+            result.center = this.unproject.call({worldSize}, newPoint).wrap();
             result.zoom += this.scaleZoom(scale);
             return result;
         }
@@ -799,7 +800,7 @@ export class Transform {
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
-            result.center = this.unproject(newPoint).wrap();
+            result.center = this.unproject.call({worldSize}, newPoint).wrap();
         }
 
         return result;

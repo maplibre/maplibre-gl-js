@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {Transform} from './transform';
+import {MAX_VALID_LATITUDE, Transform} from './transform';
 import {LngLat} from './lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
@@ -10,7 +10,6 @@ describe('transform', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.resize(500, 500);
         expect(transform.unmodified).toBe(true);
-        expect(transform.maxValidLatitude).toBe(85.051129);
         expect(transform.tileSize).toBe(512);
         expect(transform.worldSize).toBe(512);
         expect(transform.width).toBe(500);
@@ -353,8 +352,8 @@ describe('transform', () => {
     test('clamps latitude', () => {
         const transform = new Transform(0, 22, 0, 60, true);
 
-        expect(transform.project(new LngLat(0, -90))).toEqual(transform.project(new LngLat(0, -transform.maxValidLatitude)));
-        expect(transform.project(new LngLat(0, 90))).toEqual(transform.project(new LngLat(0, transform.maxValidLatitude)));
+        expect(transform.project(new LngLat(0, -90))).toEqual(transform.project(new LngLat(0, -MAX_VALID_LATITUDE)));
+        expect(transform.project(new LngLat(0, 90))).toEqual(transform.project(new LngLat(0, MAX_VALID_LATITUDE)));
     });
 
     test('clamps pitch', () => {
