@@ -726,7 +726,7 @@ export class Map extends Camera {
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
@@ -766,7 +766,7 @@ export class Map extends Camera {
     /**
      * Removes the control from the map.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param control - The {@link IControl} to remove.
      * @returns `this`
@@ -2164,7 +2164,7 @@ export class Map extends Camera {
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern).
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -2234,7 +2234,7 @@ export class Map extends Camera {
      * in the style's original sprite and any images
      * that have been added at runtime using {@link Map#addImage}.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the image.
      *
@@ -2416,7 +2416,7 @@ export class Map extends Camera {
     /**
      * Removes the layer with the given ID from the map's style.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the layer to remove
      * @returns `this`
