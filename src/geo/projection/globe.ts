@@ -165,6 +165,10 @@ export class GlobeProjection implements ProjectionBase {
         this._mercator = new Mercator.MercatorProjection();
     }
 
+    public destroy() {
+        this._errorMeasurement.destroy(this._map.painter);
+    }
+
     public skipNextProjectionTransitionAnimation() {
         this._skipNextAnimation = true;
     }
@@ -532,12 +536,12 @@ export class GlobeProjection implements ProjectionBase {
 }
 
 /**
- * For vector globe the vertex shader projects mercator coordinates to angluar coordinates on a sphere.
+ * For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.
  * This projection requires some inverse trigonometry `atan(exp(...))`, which is inaccurate on some GPUs (mainly on AMD and Nvidia).
  * The inaccuracy is severe enough to require a workaround. The uncorrected map is shifted north-south by up to several hundred meters in some latitudes.
  * Since the inaccuracy is hardware-dependant and may change in the future, we need to measure the error at runtime.
  *
- * Our approach relies on several assumtions:
+ * Our approach relies on several assumptions:
  *
  * - the error is only present in the "latitude" component (longitude doesn't need any inverse trigonometry)
  * - the error is continuous and changes slowly with latitude
@@ -548,13 +552,24 @@ export class GlobeProjection implements ProjectionBase {
  * Every few frames, launch a GPU shader that measures the error for the current map center latitude, and writes it to a 1x1 texture.
  * Read back that texture, and offset the globe projection matrix according to the error (interpolating smoothly from old error to new error if needed).
  * The texture readback is done asynchronously using Pixel Pack Buffers (WebGL2) when possible, and has a few frames of latency, but that should not be a problem.
+ *
+ * General operation of this class each frame is:
+ *
+ * - render the error shader into a fbo, read that pixel into a PBO, place a fence
+ * - wait a few frames to allow the GPU (and driver) to actually execute the shader
+ * - wait for the fence to be signalled (guaranteeing the shader to actually be executed)
+ * - read back the PBO's contents
+ * - wait a few more frames
+ * - repeat
  */
 class ProjectionErrorMeasurement {
-    private readonly _ringBufferSize = 2;
-    // we wait this many frames after measuring until we read back the value
+    // We wait at least this many frames after measuring until we read back the value.
+    // After this period, we might wait more frames until a fence is signalled to make sure the rendering is completed.
     private readonly _readbackWaitFrames = 4;
-    // we wait this many frames after *reading back* a measurement until we trigger measure again
-    private readonly _measureWaitFrames = 4;
+    // We wait this many frames after *reading back* a measurement until we trigger measure again.
+    // We could in theory render the measurement pixel immediately, but we wait to make sure
+    // no pipeline stall happens.
+    private readonly _measureWaitFrames = 6;
     private readonly _texWidth = 1;
     private readonly _texHeight = 1;
     private readonly _texFormat: number;
@@ -565,8 +580,7 @@ class ProjectionErrorMeasurement {
     private _fullscreenTriangle: Mesh;
     private _fbo: Framebuffer;
     private _resultBuffer: Uint8Array;
-    private _pbos: Array<WebGLBuffer>;
-    private _nextPboIndex = 0;
+    private _pbo: WebGLBuffer;
 
     private _measuredError: number = 0; // Result of last measurement
     private _updateCount: number = 0;
@@ -578,8 +592,7 @@ class ProjectionErrorMeasurement {
 
     // There is never more than one readback waiting
     private _readbackQueue: {
-        readbackIndex: number; // From what object index (in PBO ring buffer) to read data
-        frameNumberIssued: number; // Framenumber when the data was first computed
+        frameNumberIssued: number; // Frame number when the data was first computed
         sync: WebGLSync;
     } = null;
 
@@ -619,14 +632,9 @@ class ProjectionErrorMeasurement {
         this._fbo.colorAttachment.set(texture);
 
         if (this._allowWebGL2 && gl instanceof WebGL2RenderingContext) {
-            this._pbos = [];
-
-            for (let i = 0; i < this._ringBufferSize; i++) {
-                const pbo = gl.createBuffer();
-                gl.bindBuffer(gl.PIXEL_PACK_BUFFER, pbo);
-                gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
-                this._pbos.push(pbo);
-            }
+            this._pbo = gl.createBuffer();
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
+            gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
         }
     }
@@ -635,12 +643,10 @@ class ProjectionErrorMeasurement {
         const gl = painter.context.gl;
         this._fullscreenTriangle.destroy();
         this._fbo.destroy();
-        for (const pbo of this._pbos) {
-            gl.deleteBuffer(pbo);
-        }
+        gl.deleteBuffer(this._pbo);
         this._fullscreenTriangle = null;
         this._fbo = null;
-        this._pbos = null;
+        this._pbo = null;
         this._resultBuffer = null;
     }
 
@@ -691,9 +697,9 @@ class ProjectionErrorMeasurement {
 
         context.viewport.set([0, 0, painter.width, painter.height]);
 
-        if (this._allowWebGL2 && this._pbos && gl instanceof WebGL2RenderingContext) {
+        if (this._allowWebGL2 && this._pbo && gl instanceof WebGL2RenderingContext) {
             // Read back into PBO
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbos[this._nextPboIndex]);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
             gl.readBuffer(gl.COLOR_ATTACHMENT0);
             gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, 0);
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
@@ -702,15 +708,12 @@ class ProjectionErrorMeasurement {
 
             this._readbackQueue = {
                 frameNumberIssued: this._updateCount,
-                readbackIndex: this._nextPboIndex,
                 sync,
             };
-            this._nextPboIndex = (this._nextPboIndex + 1) % this._pbos.length;
         } else {
             // Read it back later.
             this._readbackQueue = {
                 frameNumberIssued: this._updateCount,
-                readbackIndex: 0,
                 sync: null,
             };
         }
@@ -720,7 +723,7 @@ class ProjectionErrorMeasurement {
         const context = painter.context;
         const gl = context.gl;
 
-        if (this._allowWebGL2 && this._pbos && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
+        if (this._allowWebGL2 && this._pbo && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
             // WebGL 2 path
             const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
 
@@ -735,7 +738,7 @@ class ProjectionErrorMeasurement {
                 return; // Wait one more frame
             }
 
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbos[this._readbackQueue.readbackIndex]);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
             gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this._resultBuffer, 0, 4);
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
         } else {
