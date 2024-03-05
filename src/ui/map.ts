@@ -3212,6 +3212,7 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.projection.destroy();
         this._renderTaskQueue.clear();
         this.painter.destroy();
         this.handlers.destroy();

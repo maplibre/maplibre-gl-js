@@ -48,6 +48,10 @@ export class MercatorProjection implements ProjectionBase {
         return shaders.projectionMercator.vertexSource;
     }
 
+    destroy(): void {
+        // Do nothing.
+    }
+
     updateGPUdependent(_: Painter): void {
         // Do nothing.
     }

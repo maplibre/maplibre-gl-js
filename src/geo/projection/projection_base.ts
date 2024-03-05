@@ -64,6 +64,12 @@ export interface ProjectionBase {
 
     /**
      * @internal
+     * Cleans up any resources the projection created, especially GPU buffers.
+     */
+    destroy(): void;
+
+    /**
+     * @internal
      * Runs any GPU-side tasks this projection required. Called at the beginning of every frame.
      */
     updateGPUdependent(painter: Painter): void;

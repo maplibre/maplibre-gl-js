@@ -631,6 +631,19 @@ class ProjectionErrorMeasurement {
         }
     }
 
+    public destroy(painter: Painter) {
+        const gl = painter.context.gl;
+        this._fullscreenTriangle.destroy();
+        this._fbo.destroy();
+        for (const pbo of this._pbos) {
+            gl.deleteBuffer(pbo);
+        }
+        this._fullscreenTriangle = null;
+        this._fbo = null;
+        this._pbos = null;
+        this._resultBuffer = null;
+    }
+
     public updateErrorLoop(painter: Painter, normalizedMercatorY: number, expectedAngleY: number): number {
         const currentFrame = this._updateCount;
 
