@@ -6,6 +6,20 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 4.1.0
+
+### ✨ Features and improvements
+
+- Add option to position popup at subpixel coordinates to allow for smooth animations ([#3710](https://github.com/maplibre/maplibre-gl-js/pull/3710))
+- Constrain horizontal panning when renderWorldCopies is set to false ([3738](https://github.com/maplibre/maplibre-gl-js/pull/3738))
+
+### 🐞 Bug fixes
+
+- Fix popup appearing far from marker that was moved to a side globe ([3712](https://github.com/maplibre/maplibre-gl-js/pull/3712))
+- Set text color to ensure contrast in the attribution pill ([3737](https://github.com/maplibre/maplibre-gl-js/pull/3737))
+- Fix memory leak in Worker when map is removed ([3734](https://github.com/maplibre/maplibre-gl-js/pull/3734))
+- Fix issue with `FullscreenControl` when MapLibre is within a [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) ([#3573](https://github.com/maplibre/maplibre-gl-js/pull/3573))
+
 ## 4.0.2
 
 ### 🐞 Bug fixes

@@ -729,6 +729,13 @@ export class Transform {
     _constrain() {
         if (!this.center || !this.width || !this.height || this._constraining) return;
 
+        let lngRange = this.lngRange;
+
+        if (!this._renderWorldCopies && lngRange === null) {
+            const almost180 = 180 - 1e-10;
+            lngRange = [-almost180, almost180];
+        }
+
         this._constraining = true;
 
         let minY = -90;
@@ -746,9 +753,7 @@ export class Transform {
             sy = maxY - minY < size.y ? size.y / (maxY - minY) : 0;
         }
 
-        if (this.lngRange) {
-            const lngRange = this.lngRange;
-
+        if (lngRange) {
             minX = wrap(
                 mercatorXfromLng(lngRange[0]) * this.worldSize,
                 0,
@@ -788,9 +793,12 @@ export class Transform {
             if (y + h2 > maxY) y2 = maxY - h2;
         }
 
-        if (this.lngRange) {
+        if (lngRange) {
             const centerX = (minX + maxX) / 2;
-            const x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+            let x = point.x;
+            if (this._renderWorldCopies) {
+                x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+            }
             const w2 = size.x / 2;
 
             if (x - w2 < minX) x2 = minX + w2;

@@ -6,10 +6,15 @@ import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import type {Terrain} from '../render/terrain';
 
-function createMap(options = {}) {
+type MapOptions = {
+    width?: number;
+    renderWorldCopies?: boolean;
+}
+
+function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
-    Object.defineProperty(container, 'clientWidth', {value: 512});
+    Object.defineProperty(container, 'clientWidth', {value: options.width || 512});
     Object.defineProperty(container, 'clientHeight', {value: 512});
     return globalCreateMap({container, ...options});
 }
@@ -284,6 +289,7 @@ describe('marker', () => {
         expect(marker.getPopup().options.offset['top-left']).toEqual([0, 0]);
         expect(marker.getPopup().options.offset['top-right']).toEqual([0, 0]);
 
+        map.remove();
     });
 
     test('Popup anchors around default Marker', () => {
@@ -352,6 +358,41 @@ describe('marker', () => {
             marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
         ).toBeTruthy();
 
+        map.remove();
+    });
+
+    test('Popup is opened at its marker position after marker is moved to another globe', () => {
+        const map = createMap({width: 3000});
+
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map);
+
+        marker._pos = new Point(2999, 242);
+        marker._lngLat = map.unproject(marker._pos);
+        marker.togglePopup();
+
+        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
+    });
+
+    test('Popup is re-opened at its marker position after marker is moved to another globe', () => {
+        const map = createMap({width: 3000});
+
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map)
+            .togglePopup()
+            .togglePopup();
+
+        marker._pos = new Point(2999, 242);
+        marker._lngLat = map.unproject(marker._pos);
+        marker.togglePopup();
+
+        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
     });
 
     test('Marker drag functionality can be added with drag option', () => {
@@ -986,5 +1027,16 @@ describe('marker', () => {
 
         expect(marker.getElement().style.opacity).toMatch('0.35');
         map.remove();
+    });
+
+    test('Marker\'s lng is wrapped when slightly crossing 180 with {renderWorldCopies: false}', () => {
+        const map = createMap({width: 1024, renderWorldCopies: false});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .addTo(map);
+
+        marker.setLngLat([181, 0]);
+
+        expect(marker._lngLat.lng).toBe(-179);
     });
 });
