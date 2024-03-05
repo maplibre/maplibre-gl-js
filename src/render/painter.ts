@@ -421,7 +421,7 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
-        const deduplicateWrapped = !style.map.projection.drawWrappedtiles;
+        const deduplicateWrapped = !style.map.projection.drawWrappedTiles;
 
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];

@@ -111,7 +111,7 @@ export class GlobeProjection implements ProjectionBase {
      * This property is true when wrapped tiles need to be rendered.
      * This is false when globe rendering is used and no transition is happening.
      */
-    get drawWrappedtiles(): boolean {
+    get drawWrappedTiles(): boolean {
         return this._globeness < 1.0;
     }
 

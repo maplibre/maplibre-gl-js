@@ -35,7 +35,7 @@ export interface ProjectionBase {
      * @internal
      * True if this projection required wrapped copies of the world to be drawn.
      */
-    get drawWrappedtiles(): boolean;
+    get drawWrappedTiles(): boolean;
 
     /**
      * Name of the shader projection variant that should be used for this projection.

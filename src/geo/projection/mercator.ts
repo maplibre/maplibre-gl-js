@@ -27,8 +27,8 @@ export class MercatorProjection implements ProjectionBase {
         return false;
     }
 
-    get drawWrappedtiles(): boolean {
-        // Mecator always needs to draw wrapped/duplicated tiles.
+    get drawWrappedTiles(): boolean {
+        // Mercator always needs to draw wrapped/duplicated tiles.
         return true;
     }
 
