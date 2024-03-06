@@ -80,9 +80,6 @@ export type GetGlyphsResponse = {
  */
 export type GetImagesResponse = {[_: string]: StyleImage}
 
-/** the message name to sync RTL Plugin state. Shared by main thread and worker */
-export const SyncRTLPluginStateMessageName = 'syncRTLPluginState';
-
 /**
  * This is basically a mapping between all the calls that are made to and from the workers.
  * The key is the event name, the first parameter is the event input type, and the last parameter is the output type.
@@ -100,7 +97,7 @@ export type RequestResponseMessageMap = {
     'setImages': [string[], void];
     'setLayers': [Array<LayerSpecification>, void];
     'updateLayers': [UpdateLayersParamaeters, void];
-    [SyncRTLPluginStateMessageName]: [PluginState, PluginState];
+    'syncRTLPluginState': [PluginState, PluginState];
     'setReferrer': [string, void];
     'removeSource': [RemoveSourceParams, void];
     'removeMap': [undefined, void];

@@ -4,13 +4,14 @@ import {sleep} from '../util/test/util';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {PluginState} from './rtl_text_plugin_status';
-import {MessageType, SyncRTLPluginStateMessageName} from '../util/actor_messages';
+import {MessageType} from '../util/actor_messages';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
 describe('RTLMainThreadPlugin', () => {
     let server: FakeServer;
     let broadcastSpy: jest.SpyInstance;
     const url = 'http://example.com/plugin';
+    const SyncRTLPluginStateMessageName = 'syncRTLPluginState';
     beforeEach(() => {
         server = fakeServer.create();
         global.fetch = null;

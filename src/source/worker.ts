@@ -18,7 +18,6 @@ import type {
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {
-    SyncRTLPluginStateMessageName,
     type ClusterIDAndSource,
     type GetClusterLeavesParams,
     type RemoveSourceParams,
@@ -155,7 +154,7 @@ export default class Worker {
             this.referrer = params;
         });
 
-        this.actor.registerMessageHandler(SyncRTLPluginStateMessageName, (mapId: string, params: PluginState) => {
+        this.actor.registerMessageHandler('syncRTLPluginState', (mapId: string, params: PluginState) => {
             return this._syncRTLPluginState(mapId, params);
         });
 
@@ -187,29 +186,27 @@ export default class Worker {
     }
 
     private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
-        const resultState = incomingState;
 
         // Parsed plugin cannot be changed, so just return its current state.
         if (rtlWorkerPlugin.isParsed()) {
-            return {
-                pluginURL: rtlWorkerPlugin.getPluginURL(),
-                pluginStatus: rtlWorkerPlugin.getRTLTextPluginStatus()
-            };
+            return rtlWorkerPlugin.getState();
         }
 
         if (incomingState.pluginStatus !== 'loading') {
             // simply sync and done
-            rtlWorkerPlugin.setState(resultState);
-            return resultState;
+            rtlWorkerPlugin.setState(incomingState);
+            return incomingState;
         }
         const urlToLoad = incomingState.pluginURL;
         this.self.importScripts(urlToLoad);
         const complete = rtlWorkerPlugin.isParsed();
         if (complete) {
-            resultState.pluginStatus = 'loaded';
-            resultState.pluginURL = urlToLoad;
-            rtlWorkerPlugin.setState(resultState);
-            return resultState;
+            const loadedState: PluginState = {
+                pluginStatus: 'loaded',
+                pluginURL: urlToLoad
+            };
+            rtlWorkerPlugin.setState(loadedState);
+            return loadedState;
         }
 
         // error case

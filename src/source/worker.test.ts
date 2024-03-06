@@ -7,7 +7,6 @@ import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_sou
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 import {ActorTarget, IActor} from '../util/actor';
 import {PluginState} from './rtl_text_plugin_status';
-import {SyncRTLPluginStateMessageName} from '../util/actor_messages';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];
@@ -87,7 +86,7 @@ describe('Worker RTLTextPlugin', () => {
             pluginStatus: 'deferred'
         };
 
-        await worker.actor.messageHandlers[SyncRTLPluginStateMessageName]('', mockMessage);
+        await worker.actor.messageHandlers['syncRTLPluginState']('', mockMessage);
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('deferred');
     });
 
@@ -110,7 +109,7 @@ describe('Worker RTLTextPlugin', () => {
             });
         });
 
-        const syncResult: PluginState = await worker.actor.messageHandlers[SyncRTLPluginStateMessageName]('', mockMessage) as any;
+        const syncResult: PluginState = await worker.actor.messageHandlers['syncRTLPluginState']('', mockMessage) as any;
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
         expect(importSpy).toHaveBeenCalledWith(mockURL);
 
@@ -133,7 +132,7 @@ describe('Worker RTLTextPlugin', () => {
             pluginStatus: 'loading'
         };
 
-        const workerResult: PluginState = await worker.actor.messageHandlers[SyncRTLPluginStateMessageName]('', mockMessage) as any;
+        const workerResult: PluginState = await worker.actor.messageHandlers['syncRTLPluginState']('', mockMessage) as any;
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
         expect(rtlWorkerPlugin.getPluginURL()).toBe(originalUrl);
 

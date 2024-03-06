@@ -5,7 +5,6 @@ import {RTLPluginStatus, RTLPluginLoadedEventName, PluginState} from './rtl_text
 import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
 
 import {getArrayBuffer} from '../util/ajax';
-import {SyncRTLPluginStateMessageName} from '../util/actor_messages';
 import {WorkerPool} from '../util/worker_pool';
 
 class RTLMainThreadPlugin extends Evented {
@@ -16,7 +15,7 @@ class RTLMainThreadPlugin extends Evented {
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
         this.status = statusToSend;
-        return this.dispatcher.broadcast(SyncRTLPluginStateMessageName, {pluginStatus: statusToSend, pluginURL: this.url});
+        return this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: statusToSend, pluginURL: this.url});
     }
 
     /** This one is exposed to outside */
@@ -72,21 +71,19 @@ class RTLMainThreadPlugin extends Evented {
 
         try {
             const workerResults = await this._syncState('loading');
-            if (workerResults.length > 0) {
 
-                // expect all of them to be 'loaded'
-                const expectedStatus = 'loaded';
-                const failedToLoadWorkers = workerResults.filter((workerResult) => {
-                    return workerResult.pluginStatus !== expectedStatus;
-                });
+            // expect all of them to be 'loaded'
+            const expectedStatus = 'loaded';
+            const failedToLoadWorkers = workerResults.filter((workerResult) => {
+                return workerResult.pluginStatus !== expectedStatus;
+            });
 
-                if (failedToLoadWorkers.length > 0) {
-                    throw failedToLoadWorkers[0].pluginStatus;
-                } else {
-                    // all success
-                    this.status = expectedStatus;
-                    this.fire(new Event(RTLPluginLoadedEventName));
-                }
+            if (failedToLoadWorkers.length > 0) {
+                throw failedToLoadWorkers[0].pluginStatus;
+            } else {
+                // all success
+                this.status = expectedStatus;
+                this.fire(new Event(RTLPluginLoadedEventName));
             }
         } catch (e) {
             this.status = 'error';
