@@ -12,6 +12,7 @@ describe('RTLMainThreadPlugin', () => {
     let broadcastSpy: jest.SpyInstance;
     const url = 'http://example.com/plugin';
     const SyncRTLPluginStateMessageName = 'syncRTLPluginState';
+    let consoleSpy: jest.SpyInstance;
     beforeEach(() => {
         server = fakeServer.create();
         global.fetch = null;
@@ -64,6 +65,9 @@ describe('RTLMainThreadPlugin', () => {
     afterEach(() => {
         server.restore();
         broadcastSpy.mockRestore();
+        if (consoleSpy) {
+            consoleSpy.mockRestore();
+        }
     });
 
     it('should get the RTL text plugin status', () => {
@@ -97,8 +101,9 @@ describe('RTLMainThreadPlugin', () => {
 
     it('should be in error state if download fails', async () => {
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockFailure as any);
-        const promise = rtlMainThreadPlugin.setRTLTextPlugin(url);
-        await expect(promise).rejects.toThrow(`worker failed to load ${url}`);
+        consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        expect(consoleSpy).toHaveBeenCalledWith(`worker failed to load ${url}, worker status is error`);
         expect(rtlMainThreadPlugin.url).toEqual(url);
         expect(rtlMainThreadPlugin.status).toBe('error');
     });
@@ -155,9 +160,10 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('requested');
     });
 
-    it('should throw error for mixed success and failure', async () => {
+    it('should report error for multiple results and one failure', async () => {
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockMix as any);
-        const promise = rtlMainThreadPlugin.setRTLTextPlugin(url);
-        await expect(promise).rejects.toThrow(`worker failed to load ${url}, worker status is error`);
+        consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        expect(consoleSpy).toHaveBeenCalledWith(`worker failed to load ${url}, worker status is error`);
     });
 });

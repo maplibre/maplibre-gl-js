@@ -87,7 +87,7 @@ class RTLMainThreadPlugin extends Evented {
             }
         } catch (e) {
             this.status = 'error';
-            throw new Error(`worker failed to load ${this.url}, worker status is ${e.toString()}`);
+            console.error(`worker failed to load ${this.url}, worker status is ${e.toString()}`);
         }
     }
 
