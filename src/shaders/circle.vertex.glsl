@@ -55,7 +55,9 @@ void main(void) {
     v_visibility = calculate_visibility(projectTileWithElevation(circle_center, ele));
 
     if (u_pitch_with_map) {
+#ifdef GLOBE
         vec3 center_vector = projectToSphere(circle_center);
+#endif
 
         // This var is only used when globe is enabled and defined.
         float angle_scale = u_globe_extrude_scale;
@@ -69,7 +71,11 @@ void main(void) {
             // Pitching the circle with the map effectively scales it with the map
             // To counteract the effect for pitch-scale: viewport, we rescale the
             // whole circle based on the pitch scaling effect at its central point
+#ifdef GLOBE
             vec4 projected_center = interpolateProjection(circle_center, center_vector, ele);
+#else
+            vec4 projected_center = projectTileWithElevation(circle_center, ele);
+#endif
             corner_position += extrude * u_extrude_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
             angle_scale *= (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
         }
