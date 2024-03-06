@@ -483,7 +483,7 @@ export class SymbolBucket implements Bucket {
                 const resolvedTokens = layer.getValueAndResolveTokens('text-field', evaluationFeature, canonical, availableImages);
                 const formattedText = Formatted.factory(resolvedTokens);
 
-                // hasRTLText only needs to be checked once per bucket
+                // on this instance: if hasRTLText is already true, all future calls to containsRTLText can be skipped.
                 const bucketHasRTLText = this.hasRTLText = (this.hasRTLText || containsRTLText(formattedText));
                 if (
                     !bucketHasRTLText || // non-rtl text so can proceed safely
