@@ -15,6 +15,7 @@ export type CircleUniformsType = {
     'u_extrude_scale': Uniform2f;
     'u_device_pixel_ratio': Uniform1f;
     'u_globe_extrude_scale': Uniform1f;
+    'u_translate': Uniform2f;
 };
 
 const circleUniforms = (context: Context, locations: UniformLocations): CircleUniformsType => ({
@@ -24,12 +25,14 @@ const circleUniforms = (context: Context, locations: UniformLocations): CircleUn
     'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
     'u_globe_extrude_scale': new Uniform1f(context, locations.u_globe_extrude_scale),
+    'u_translate': new Uniform2f(context, locations.u_translate),
 });
 
 const circleUniformValues = (
     painter: Painter,
     tile: Tile,
-    layer: CircleStyleLayer
+    layer: CircleStyleLayer,
+    translate: [number, number]
 ): UniformValues<CircleUniformsType> => {
     const transform = painter.transform;
 
@@ -54,6 +57,7 @@ const circleUniformValues = (
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_extrude_scale': extrudeScale,
         'u_globe_extrude_scale': globeExtrudeScale,
+        'u_translate': translate,
     };
 };
 

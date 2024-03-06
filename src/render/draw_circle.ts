@@ -65,20 +65,17 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
         const bucket: CircleBucket<any> = (tile.getBucket(layer) as any);
         if (!bucket) continue;
 
+        const styleTranslate = layer.paint.get('circle-translate');
+        const styleTranslateAnchor = layer.paint.get('circle-translate-anchor');
+        const translateForUniforms = projection.translatePosition(painter.transform, tile, styleTranslate, styleTranslateAnchor);
+
         const programConfiguration = bucket.programConfigurations.get(layer.id);
         const program = painter.useProgram('circle', programConfiguration);
         const layoutVertexBuffer = bucket.layoutVertexBuffer;
         const indexBuffer = bucket.indexBuffer;
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-        const uniformValues = circleUniformValues(painter, tile, layer);
+        const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms);
 
-        // const styleTranslate = layer.paint.get('circle-translate');
-        // const styleTranslateAnchor = layer.paint.get('circle-translate-anchor');
-        // const matrix = painter.translatePosMatrix(
-        //     coord.posMatrix,
-        //     tile,
-        //     styleTranslate,
-        //     styleTranslateAnchor); // JP: TODO: implement this for globe
         const matrix = coord.posMatrix;
         const projectionData = projection.getProjectionData(coord.canonical, matrix);
 

@@ -4,6 +4,7 @@ uniform vec2 u_extrude_scale;
 uniform highp float u_globe_extrude_scale;
 uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
+uniform vec2 u_translate;
 
 in vec2 a_pos;
 
@@ -50,7 +51,7 @@ void main(void) {
 
     // multiply a_pos by 0.125, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(pos_raw * 0.125);
+    vec2 circle_center = floor(pos_raw * 0.125) + u_translate;
     float ele = get_elevation(circle_center);
     v_visibility = calculate_visibility(projectTileWithElevation(circle_center, ele));
 
