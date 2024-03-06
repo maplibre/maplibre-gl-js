@@ -86,7 +86,7 @@ void main() {
     #endif
 
     vec2 pos = normal.x == 1.0 && normal.y == 0.0 && normal.z == 16384.0
-        ? a_pos // extrusion top
+        ? a_pos // extrusion top - note the lack of u_fill_translate, because translation should not affect the pattern
         : vec2(edgedistance, elevation * u_height_factor); // extrusion side
 
     v_pos_a = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, fromScale * display_size_a, tileRatio, pos);
