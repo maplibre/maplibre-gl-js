@@ -4,9 +4,6 @@ import {Event, Evented} from '../util/evented';
 import {RTLPluginStatus, RTLPluginLoadedEventName, PluginState} from './rtl_text_plugin_status';
 import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
 
-import {getArrayBuffer} from '../util/ajax';
-import {WorkerPool} from '../util/worker_pool';
-
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
     url: string = null;
