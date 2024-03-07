@@ -6,9 +6,8 @@ import posAttributes from '../data/pos_attributes';
 import {SegmentVector} from '../data/segment';
 import {skyUniformValues} from './program/sky_program';
 import {Sky} from '../style/sky';
+import {Mesh} from './mesh';
 import type {Painter} from './painter';
-
-let skyMeshCache = null;
 
 export function drawSky(painter: Painter, sky: Sky) {
     const context = painter.context;
@@ -21,7 +20,7 @@ export function drawSky(painter: Painter, sky: Sky) {
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram('sky');
 
-    if (!skyMeshCache) {
+    if (!sky.mesh) {
         const vertexArray = new PosArray();
         vertexArray.emplaceBack(-1, -1);
         vertexArray.emplaceBack(1, -1);
@@ -32,14 +31,14 @@ export function drawSky(painter: Painter, sky: Sky) {
         indexArray.emplaceBack(0, 1, 2);
         indexArray.emplaceBack(0, 2, 3);
 
-        skyMeshCache = {
-            vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
-            indexBuffer: context.createIndexBuffer(indexArray),
-            segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        };
+        sky.mesh = new Mesh(
+            context.createVertexBuffer(vertexArray, posAttributes.members),
+            context.createIndexBuffer(indexArray),
+            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        );
     }
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
-        CullFaceMode.disabled, skyUniforms, undefined, 'sky', skyMeshCache.vertexBuffer,
-        skyMeshCache.indexBuffer, skyMeshCache.segments);
+        CullFaceMode.disabled, skyUniforms, undefined, 'sky', sky.mesh.vertexBuffer,
+        sky.mesh.indexBuffer, sky.mesh.segments);
 }

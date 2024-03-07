@@ -4,6 +4,7 @@ import {EvaluationParameters} from './evaluation_parameters';
 import {emitValidationErrors, validateSky, validateStyle} from './validate_style';
 import {extend} from '../util/util';
 import {Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
+import {Mesh} from '../render/mesh';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type SkyProps = {
@@ -32,6 +33,10 @@ const TRANSITION_SUFFIX = '-transition';
 export class Sky extends Evented {
     properties: PossiblyEvaluated<SkyProps, SkyPropsPossiblyEvaluated>;
 
+    /**
+     * This is used to cache the gl mesh for the sky, it should be initialized only once.
+     */
+    mesh: Mesh | undefined;
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
 
