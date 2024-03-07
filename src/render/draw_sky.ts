@@ -8,6 +8,8 @@ import {skyUniformValues} from './program/sky_program';
 import {Sky} from '../style/sky';
 import type {Painter} from './painter';
 
+let skyMeshCache = null;
+
 export function drawSky(painter: Painter, sky: Sky) {
     const context = painter.context;
     const gl = context.gl;
@@ -19,21 +21,25 @@ export function drawSky(painter: Painter, sky: Sky) {
     const colorMode = painter.colorModeForRenderPass();
     const program = painter.useProgram('sky');
 
-    const vertexArray = new PosArray();
-    vertexArray.emplaceBack(-1, -1);
-    vertexArray.emplaceBack(1, -1);
-    vertexArray.emplaceBack(1, 1);
-    vertexArray.emplaceBack(-1, 1);
+    if (!skyMeshCache) {
+        const vertexArray = new PosArray();
+        vertexArray.emplaceBack(-1, -1);
+        vertexArray.emplaceBack(1, -1);
+        vertexArray.emplaceBack(1, 1);
+        vertexArray.emplaceBack(-1, 1);
 
-    const indexArray = new TriangleIndexArray();
-    indexArray.emplaceBack(0, 1, 2);
-    indexArray.emplaceBack(0, 2, 3);
+        const indexArray = new TriangleIndexArray();
+        indexArray.emplaceBack(0, 1, 2);
+        indexArray.emplaceBack(0, 2, 3);
 
-    const vertexBuffer = context.createVertexBuffer(vertexArray, posAttributes.members);
-    const indexBuffer = context.createIndexBuffer(indexArray);
-    const segments = SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length);
+        skyMeshCache = {
+            vertexBuffer: context.createVertexBuffer(vertexArray, posAttributes.members),
+            indexBuffer: context.createIndexBuffer(indexArray),
+            segments: SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        };
+    }
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
-        CullFaceMode.disabled, skyUniforms, undefined, 'sky', vertexBuffer,
-        indexBuffer, segments);
+        CullFaceMode.disabled, skyUniforms, undefined, 'sky', skyMeshCache.vertexBuffer,
+        skyMeshCache.indexBuffer, skyMeshCache.segments);
 }
