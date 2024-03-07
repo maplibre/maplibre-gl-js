@@ -64,13 +64,12 @@ class RTLMainThreadPlugin extends Evented {
 
         // expect all of them to be 'loaded'
         const expectedStatus = 'loaded';
-        const failedToLoadWorker = workerResults.find((workerResult) => {
+        const failedToLoadWorkerExist: boolean = workerResults.some((workerResult) => {
             return workerResult.pluginStatus !== expectedStatus;
         });
 
-        if (failedToLoadWorker) {
+        if (failedToLoadWorkerExist) {
             this.status = 'error';
-            throw failedToLoadWorker.pluginStatus;
         } else {
             // all success
             this.status = expectedStatus;
