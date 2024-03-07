@@ -60,25 +60,21 @@ class RTLMainThreadPlugin extends Evented {
 
     /** Send a message to worker which will import the RTL plugin script */
     async _requestImport() : Promise<void> {
-        try {
-            const workerResults = await this._syncState('loading');
+        const workerResults = await this._syncState('loading');
 
-            // expect all of them to be 'loaded'
-            const expectedStatus = 'loaded';
-            const failedToLoadWorker = workerResults.find((workerResult) => {
-                return workerResult.pluginStatus !== expectedStatus;
-            });
+        // expect all of them to be 'loaded'
+        const expectedStatus = 'loaded';
+        const failedToLoadWorker = workerResults.find((workerResult) => {
+            return workerResult.pluginStatus !== expectedStatus;
+        });
 
-            if (failedToLoadWorker) {
-                throw failedToLoadWorker.pluginStatus;
-            } else {
-                // all success
-                this.status = expectedStatus;
-                this.fire(new Event(RTLPluginLoadedEventName));
-            }
-        } catch (e) {
+        if (failedToLoadWorker) {
             this.status = 'error';
-            console.error(`worker failed to load ${this.url}, worker status is ${e.toString()}`);
+            throw failedToLoadWorker.pluginStatus;
+        } else {
+            // all success
+            this.status = expectedStatus;
+            this.fire(new Event(RTLPluginLoadedEventName));
         }
     }
 
