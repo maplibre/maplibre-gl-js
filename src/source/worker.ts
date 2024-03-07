@@ -210,6 +210,10 @@ export default class Worker {
         }
 
         // error case
+        rtlWorkerPlugin.setState({
+            pluginStatus: 'error',
+            pluginURL: ''
+        });
         throw new Error(`RTL Text Plugin failed to import scripts from ${urlToLoad}`);
     }
 

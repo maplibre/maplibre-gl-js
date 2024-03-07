@@ -60,26 +60,17 @@ class RTLMainThreadPlugin extends Evented {
 
     /** Send a message to worker which will import the RTL plugin script */
     async _requestImport() : Promise<void> {
-
-        // Reference PR: https://github.com/mapbox/mapbox-gl-js/pull/9122
-        // if have more than 1 workers, it is better to load once in main thread to warm up browser cache
-        // so all workers can use it --- even though the result of getArrayBuffer is not being used here.
-        // Otherwise, just let worker importScript once.
-        if (WorkerPool.workerCount > 1) {
-            await getArrayBuffer({url: this.url}, new AbortController());
-        }
-
         try {
             const workerResults = await this._syncState('loading');
 
             // expect all of them to be 'loaded'
             const expectedStatus = 'loaded';
-            const failedToLoadWorkers = workerResults.filter((workerResult) => {
+            const failedToLoadWorker = workerResults.find((workerResult) => {
                 return workerResult.pluginStatus !== expectedStatus;
             });
 
-            if (failedToLoadWorkers.length > 0) {
-                throw failedToLoadWorkers[0].pluginStatus;
+            if (failedToLoadWorker) {
+                throw failedToLoadWorker.pluginStatus;
             } else {
                 // all success
                 this.status = expectedStatus;
