@@ -907,7 +907,7 @@ export class Transform {
         // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
         // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
         this.fogMatrix = new Float64Array(16) as any;
-        mat4.perspective(this.fogMatrix, this._fov, this.width / this.height, this.cameraToSeaLevelDistance, farZ);
+        mat4.perspective(this.fogMatrix, this._fov, this.width / this.height, cameraToSeaLevelDistance, farZ);
         this.fogMatrix[8] = -offset.x * 2 / this.width;
         this.fogMatrix[9] = offset.y * 2 / this.height;
         mat4.scale(this.fogMatrix, this.fogMatrix, [1, -1, 1]);
