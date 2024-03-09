@@ -953,6 +953,11 @@ export class SourceCache extends Evented {
     getVisibleCoordinates(symbolLayer?: boolean, deduplicateWrapped?: boolean): Array<OverscaledTileID> {
         let coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
 
+        // When rendering a mercator map, the screen may be larger than the world,
+        // causing multiple "copies" of the world to be visible and
+        // the same tile might be drawn in two different places (see wrap in OverscaledTileID).
+        // For globe, we only ever want to draw a single copy of the world, so no (canonical) tile should be present
+        // multiple times in the resulting list of tile IDs.
         if (deduplicateWrapped) {
             const visibleDeduplicated = [];
             const visibleDictionary = {};
