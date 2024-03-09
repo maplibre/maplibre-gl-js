@@ -711,10 +711,12 @@ export class Transform {
         return this.mercatorMatrix.slice() as any;
     }
 
-    // Get center lngLat and zoom to ensure that
-    // 1) everything beyond the bounds is excluded
-    // 2) a given lngLat is as near the center as possible
-    // Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+    /**
+     * Get center lngLat and zoom to ensure that
+     * 1) everything beyond the bounds is excluded
+     * 2) a given lngLat is as near the center as possible
+     * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+     */
     getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
         zoom = clamp(+zoom, this.minZoom, this.maxZoom);
         const result = {
