@@ -3351,14 +3351,4 @@ export class Map extends Camera {
      * ```
      */
     getProjection(): ProjectionBase { return this.projection; }
-
-    /**
-     * Returns the active projection name.
-     * @returns The projection name
-     * @example
-     * ```ts
-     * let projectionName = map.getProjectionName();
-     * ```
-     */
-    getProjectionName(): string { return this.projection.name; }
 }
