@@ -133,6 +133,7 @@ export class CollisionIndex {
         collisionGroupPredicate: (key: FeatureKey) => boolean,
         circlePixelDiameter: number,
         textPixelPadding: number,
+        translation: [number, number],
         getElevation: (x: number, y: number) => number
     ): {
             circles: Array<number>;
@@ -160,7 +161,8 @@ export class CollisionIndex {
             tileAnchorPoint: tileUnitAnchorPoint,
             unwrappedTileID,
             width: this.transform.width,
-            height: this.transform.height
+            height: this.transform.height,
+            translation
         };
 
         const firstAndLastGlyph = projection.placeFirstAndLastGlyph(

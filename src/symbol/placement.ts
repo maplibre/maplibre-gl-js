@@ -11,7 +11,7 @@ import Point from '@mapbox/point-geometry';
 import type {Transform} from '../geo/transform';
 import type {StyleLayer} from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
-import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated, SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 import {getOverlapMode, OverlapMode} from '../style/style_layer/overlap_mode';
 
 import type {Tile} from '../source/tile';
@@ -87,17 +87,19 @@ export class RetainedQueryData {
     sourceLayerIndex: number;
     bucketIndex: number;
     tileID: OverscaledTileID;
+    tile: Tile;
     featureSortOrder: Array<number>;
     constructor(bucketInstanceId: number,
         featureIndex: FeatureIndex,
         sourceLayerIndex: number,
         bucketIndex: number,
-        tileID: OverscaledTileID) {
+        tile: Tile) {
         this.bucketInstanceId = bucketInstanceId;
         this.featureIndex = featureIndex;
         this.sourceLayerIndex = sourceLayerIndex;
         this.bucketIndex = bucketIndex;
-        this.tileID = tileID;
+        this.tileID = tile.tileID;
+        this.tile = tile;
     }
 }
 
@@ -186,6 +188,7 @@ export type VariableOffset = {
 type TileLayerParameters = {
     bucket: SymbolBucket;
     layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
+    paint: PossiblyEvaluated<SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated>;
     unwrappedTileID: UnwrappedTileID;
     posMatrix: mat4;
     textLabelPlaneMatrix: mat4;
@@ -272,6 +275,7 @@ export class Placement {
         const collisionBoxArray = tile.collisionBoxArray;
 
         const layout = symbolBucket.layers[0].layout;
+        const paint = symbolBucket.layers[0].paint;
 
         const scale = Math.pow(2, this.transform.zoom - tile.tileID.overscaledZ);
         const textPixelRatio = tile.tileSize / EXTENT;
@@ -310,12 +314,13 @@ export class Placement {
             bucketFeatureIndex,
             symbolBucket.sourceLayerIndex,
             symbolBucket.index,
-            tile.tileID
+            tile
         );
 
         const parameters: TileLayerParameters = {
             bucket: symbolBucket,
             layout,
+            paint,
             posMatrix,
             unwrappedTileID,
             textLabelPlaneMatrix,
@@ -424,6 +429,7 @@ export class Placement {
         const {
             bucket,
             layout,
+            paint,
             posMatrix,
             unwrappedTileID,
             textLabelPlaneMatrix,
@@ -467,6 +473,7 @@ export class Placement {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
         }
 
+        const tile = this.retainedQueryData[bucket.bucketInstanceId].tile;
         const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
         const getElevation = this.terrain ? (x: number, y: number) => this.terrain.getElevation(tileID, x, y) : null;
 
@@ -673,6 +680,12 @@ export class Placement {
                 const textPixelPadding = layout.get('text-padding');
                 const circlePixelDiameter = symbolInstance.collisionCircleDiameter;
 
+                const translation = this.collisionIndex.projection.translatePosition(
+                    this.transform,
+                    tile,
+                    paint.get('text-translate'),
+                    paint.get('text-translate-anchor'),);
+
                 placedGlyphCircles = this.collisionIndex.placeCollisionCircles(
                     textOverlapMode,
                     placedSymbol,
@@ -688,6 +701,7 @@ export class Placement {
                     collisionGroup.predicate,
                     circlePixelDiameter,
                     textPixelPadding,
+                    translation,
                     getElevation
                 );
 

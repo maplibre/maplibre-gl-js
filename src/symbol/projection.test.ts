@@ -32,6 +32,7 @@ describe('Vertex to viewport projection', () => {
             unwrappedTileID: null,
             width: 1,
             height: 1,
+            translation: [0, 0]
         };
 
         const syntheticVertexArgs: ProjectionSyntheticVertexArgs = {
@@ -73,6 +74,7 @@ describe('Find offset line intersections', () => {
         unwrappedTileID: null,
         width: 1,
         height: 1,
+        translation: [0, 0]
     };
 
     // Only relevant in "behind the camera" case, can't happen with null projection matrix

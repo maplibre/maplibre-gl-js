@@ -165,6 +165,7 @@ function updateLineLabels(bucket: SymbolBucket,
     unwrappedTileID: UnwrappedTileID,
     viewportWidth: number,
     viewportHeight: number,
+    translation: [number, number],
     getElevation: (x: number, y: number) => number) {
 
     const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
@@ -224,7 +225,8 @@ function updateLineLabels(bucket: SymbolBucket,
             tileAnchorPoint,
             unwrappedTileID,
             width: viewportWidth,
-            height: viewportHeight
+            height: viewportHeight,
+            translation
         };
 
         const placeUnflipped: any = placeGlyphsAlongLine(projectionArgs, symbol, pitchScaledFontSize, false /*unflipped*/, keepUpright, posMatrix, glCoordMatrix,
@@ -480,6 +482,10 @@ export type ProjectionArgs = {
      * Viewport height.
      */
     height: number;
+    /**
+     * Translation in tile units, computed using text-translate and text-translate-anchor paint style properties.
+     */
+    translation: [number, number];
 };
 
 /**
