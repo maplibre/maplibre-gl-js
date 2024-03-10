@@ -96,6 +96,13 @@ export type JumpToOptions = CameraOptions & {
     padding?: PaddingOptions;
 }
 
+export type SnapToIntegerZoomOptions = {
+    boxZoom: boolean;
+    clickZoom: boolean;
+    scrollZoom: boolean;
+    tapZoom: boolean;
+}
+
 /**
  * A options object for the {@link Map#cameraForBounds} method
  */
@@ -114,7 +121,7 @@ export type CameraForBoundsOptions = CameraOptions & {
      */
     maxZoom?: number;
 
-    snapToIntegerZoom?: boolean;
+    snapToIntegerZoomOptions?: SnapToIntegerZoomOptions;
 }
 
 /**
@@ -731,7 +738,7 @@ export abstract class Camera extends Evented {
         }
 
         const floatZoom = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
-        const zoom = options.snapToIntegerZoom ? Math.round(floatZoom) : floatZoom;
+        const zoom = options.snapToIntegerZoomOptions.boxZoom ? Math.round(floatZoom) : floatZoom;
 
         // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of padding.
         const offset = Point.convert(options.offset);

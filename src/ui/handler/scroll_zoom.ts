@@ -157,27 +157,6 @@ export class ScrollZoomHandler implements Handler {
 
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
 
-        if (this._map.getSnapToIntegerZoom()) {
-            //let around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
-            const pos = DOM.mousePos(this._map.getCanvas(), e);
-            e.preventDefault();
-            return {
-                cameraAnimation: (map: Map) => {
-
-                    const zoomTarget = value > 100 ? this._map.getZoom() - 2 :
-                        value > 0 ? this._map.getZoom() - 1 :
-                        value > -100 ? this._map.getZoom() + 1 :
-                        value < -100 ? this._map.getZoom() + 2 : 0;
-
-                    map.easeTo({
-                        duration: 150,
-                        zoom: Math.round(zoomTarget),
-                        around: this._tr.unproject(pos)
-                    }, {originalEvent: e});
-                }
-            };
-        }
-
         const now = browser.now(),
             timeDelta = now - (this._lastWheelEventTime || 0);
 
@@ -193,11 +172,13 @@ export class ScrollZoomHandler implements Handler {
 
         } else if (timeDelta > 400) {
             // This is likely a new scroll action.
-            this._type = null;
-            this._lastValue = value;
+            if (!this._map.getSnapToIntegerZoomOptions().scrollZoom) {
+                this._type = null;
+                this._lastValue = value;
 
-            // Start a timeout in case this was a singular event, and dely it by up to 40ms.
-            this._timeout = setTimeout(this._onTimeout, 40, e);
+                // Start a timeout in case this was a singular event, and dely it by up to 40ms.
+                this._timeout = setTimeout(this._onTimeout, 40, e);
+            }
 
         } else if (!this._type) {
             // This is a repeating event, but we don't know the type of event just yet.
@@ -215,6 +196,24 @@ export class ScrollZoomHandler implements Handler {
 
         // Slow down zoom if shift key is held for more precise zooming
         if (e.shiftKey && value) value = value / 4;
+
+        if (this._map.getSnapToIntegerZoomOptions().scrollZoom && value !== 0) {
+            const pos = DOM.mousePos(this._map.getCanvas(), e);
+            e.preventDefault();
+            let zoomTarget = value > 100 ? this._map.getZoom() - 2 :
+                value > 0 ? this._map.getZoom() - 1 :
+                    value > -100 ? this._map.getZoom() + 1 :
+                        value < -100 ? this._map.getZoom() + 2 : 0;
+
+            zoomTarget = Math.round(zoomTarget);
+
+            this._map.easeTo({
+                duration: 200,
+                zoom: zoomTarget,
+                around: this._tr.unproject(pos)
+            }, {originalEvent: e});
+            return;
+        }
 
         // Only fire the callback if we actually know what type of scrolling device the user uses.
         if (this._type) {

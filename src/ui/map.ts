@@ -37,7 +37,7 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapDataEvent} from './events';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
-import type {PointLike} from './camera';
+import type {PointLike, SnapToIntegerZoomOptions} from './camera';
 import type {ScrollZoomHandler} from './handler/scroll_zoom';
 import type {BoxZoomHandler} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
@@ -147,7 +147,7 @@ export type MapOptions = {
      */
     maxZoom?: number | null;
 
-    snapToIntegerZoom?: boolean;
+    snapToIntegerZoomOptions?: SnapToIntegerZoomOptions | null;
 
     /**
      * The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
@@ -353,7 +353,7 @@ const defaultOptions = {
 
     minZoom: defaultMinZoom,
     maxZoom: defaultMaxZoom,
-    snapToIntegerZoom: false,
+    snapToIntegerZoomOptions: {},
 
     minPitch: defaultMinPitch,
     maxPitch: defaultMaxPitch,
@@ -477,7 +477,7 @@ export class Map extends Camera {
     _overridePixelRatio: number | null;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-    _snapToIntegerZoom: boolean;
+    _snapToIntegerZoomOptions: SnapToIntegerZoomOptions;
 
     /**
      * @internal
@@ -585,7 +585,7 @@ export class Map extends Camera {
         this._overridePixelRatio = options.pixelRatio;
         this._maxCanvasSize = options.maxCanvasSize;
         this.transformCameraUpdate = options.transformCameraUpdate;
-        this._snapToIntegerZoom = options.snapToIntegerZoom;
+        this._snapToIntegerZoomOptions = options.snapToIntegerZoomOptions;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -1014,7 +1014,7 @@ export class Map extends Camera {
         } else throw new Error('maxZoom must be greater than the current minZoom');
     }
 
-    setSnapToIntegerZoom(snap: boolean): Map { this._snapToIntegerZoom = snap; return this; }
+    setSnapToIntegerZoom(snap: SnapToIntegerZoomOptions): Map { this._snapToIntegerZoomOptions = snap; return this; }
 
     /**
      * Returns the map's maximum allowable zoom level.
@@ -1027,7 +1027,7 @@ export class Map extends Camera {
      */
     getMaxZoom(): number { return this.transform.maxZoom; }
 
-    getSnapToIntegerZoom(): boolean { return this._snapToIntegerZoom; }
+    getSnapToIntegerZoomOptions(): SnapToIntegerZoomOptions { return this._snapToIntegerZoomOptions; }
 
     /**
      * Sets or clears the map's minimum pitch.

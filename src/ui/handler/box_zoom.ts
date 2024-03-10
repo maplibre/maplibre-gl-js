@@ -135,7 +135,7 @@ export class BoxZoomHandler implements Handler {
         } else {
             this._map.fire(new Event('boxzoomend', {originalEvent: e}));
             return {
-                cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true, snapToIntegerZoom: this._map.getSnapToIntegerZoom()})
+                cameraAnimation: map => map.fitScreenCoordinates(p0, p1, this._tr.bearing, {linear: true, snapToIntegerZoomOptions: this._map.getSnapToIntegerZoomOptions()})
             };
         }
     }
