@@ -40,6 +40,7 @@ export class Transform {
     pixelMatrixInverse: mat4;
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
+    minElevationForCurrentTile: number;
     _fov: number;
     _pitch: number;
     _zoom: number;
@@ -56,7 +57,6 @@ export class Transform {
     _constraining: boolean;
     _posMatrixCache: {[_: string]: mat4};
     _alignedPosMatrixCache: {[_: string]: mat4};
-    _minEleveationForCurrentTile: number;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
@@ -83,7 +83,7 @@ export class Transform {
         this._edgeInsets = new EdgeInsets();
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
-        this._minEleveationForCurrentTile = 0;
+        this.minElevationForCurrentTile = 0;
     }
 
     clone(): Transform {
@@ -99,7 +99,7 @@ export class Transform {
         this.height = that.height;
         this._center = that._center;
         this._elevation = that._elevation;
-        this._minEleveationForCurrentTile = that._minEleveationForCurrentTile;
+        this.minElevationForCurrentTile = that.minElevationForCurrentTile;
         this.zoom = that.zoom;
         this.angle = that.angle;
         this._fov = that._fov;
@@ -460,7 +460,7 @@ export class Transform {
 
     /**
      * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512)
-     * @param lngLat - the lngLat
+     * @param lnglat - the lngLat
      * @returns Point
      */
     project(lnglat: LngLat) {
@@ -714,6 +714,13 @@ export class Transform {
     _constrain() {
         if (!this.center || !this.width || !this.height || this._constraining) return;
 
+        let lngRange = this.lngRange;
+
+        if (!this._renderWorldCopies && lngRange === null) {
+            const almost180 = 180 - 1e-10;
+            lngRange = [-almost180, almost180];
+        }
+
         this._constraining = true;
 
         let minY = -90;
@@ -731,9 +738,7 @@ export class Transform {
             sy = maxY - minY < size.y ? size.y / (maxY - minY) : 0;
         }
 
-        if (this.lngRange) {
-            const lngRange = this.lngRange;
-
+        if (lngRange) {
             minX = wrap(
                 mercatorXfromLng(lngRange[0]) * this.worldSize,
                 0,
@@ -773,9 +778,12 @@ export class Transform {
             if (y + h2 > maxY) y2 = maxY - h2;
         }
 
-        if (this.lngRange) {
+        if (lngRange) {
             const centerX = (minX + maxX) / 2;
-            const x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+            let x = point.x;
+            if (this._renderWorldCopies) {
+                x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+            }
             const w2 = size.x / 2;
 
             if (x - w2 < minX) x2 = minX + w2;
@@ -816,7 +824,7 @@ export class Transform {
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const cameraToSeaLevelDistance = this.cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
         // In case of negative minimum elevation (e.g. the dead see, under the sea maps) use a lower plane for calculation
-        const minElevation = Math.min(this.elevation, this._minEleveationForCurrentTile);
+        const minElevation = Math.min(this.elevation, this.minElevationForCurrentTile);
         const cameraToLowestPointDistance = cameraToSeaLevelDistance - minElevation * this._pixelPerMeter / Math.cos(this._pitch);
         const lowestPlane = minElevation < 0 ? cameraToLowestPointDistance : cameraToSeaLevelDistance;
 

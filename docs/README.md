@@ -25,7 +25,7 @@ Finally, run:
 npm run start-docs
 ```
 
-Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them. Some tile service providers of the docs example pages such as MapTiler or Staida Maps might only send you tiles if the host is localhost. In that case, try http://localhost:8000. 
+Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them. Some tile service providers of the docs example pages such as MapTiler or Staida Maps might only send you tiles if the host is localhost. In that case, try http://localhost:8000.
 
 The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
@@ -47,6 +47,7 @@ API documentation is written as [TSDoc comments](https://tsdoc.org/) and process
 * Functions that do not return a value (return `void`), should not have a `@returns` annotation.
 * Member descriptions should document what a member represents or gets and sets. They should also indicate whether the member is read-only.
 * Event descriptions should begin with "Fired when..." and so should describe when the event fires. Event entries should clearly document any data passed to the handler, with a link to MDN documentation of native Event objects when applicable.
+* Lists need an empty line above to be formatted as HTML list.
 
 ## Writing Examples
 

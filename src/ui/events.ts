@@ -7,7 +7,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 
 import type {Map} from './map';
 import type {LngLat} from '../geo/lng_lat';
-import {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * An event from the mouse relevant to a specific layer.
@@ -39,7 +39,7 @@ export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
  * @example
  * ```ts
  * // Initialize the map
- * let map = new maplibregl.Map({ // map options });
+ * let map = new Map({ // map options });
  * // Set an event listener for a specific layer
  * map.on('the-event-name', 'poi-label', function(e) {
  *   console.log('An event has occurred on a visible portion of the poi-label layer');
@@ -138,7 +138,7 @@ export type MapLayerEventType = {
  * @example
  * ```ts
  * // Initialize the map
- * let map = new maplibregl.Map({ // map options });
+ * let map = new Map({ // map options });
  * // Set an event listener
  * map.on('the-event-name', () => {
  *   console.log('An event has occurred!');
@@ -458,6 +458,9 @@ export type MapSourceDataEvent = MapLibreEvent & {
 }
 /**
  * `MapMouseEvent` is the event type for mouse-related map events.
+ *
+ * @group Event Related
+ *
  * @example
  * ```ts
  * // The `click` event is an example of a `MapMouseEvent`.

@@ -179,6 +179,17 @@ describe('RasterTileSource', () => {
         expect((server.lastRequest as any).aborted).toBe(true);
     });
 
+    test('supports url property updates', () => {
+        const source = createSource({
+            url: 'http://localhost:2900/source.json'
+        });
+        source.setUrl('http://localhost:2900/source2.json');
+        expect(source.serialize()).toEqual({
+            type: 'raster',
+            url: 'http://localhost:2900/source2.json'
+        });
+    });
+
     it('serializes options', () => {
         const source = createSource({
             tiles: ['http://localhost:2900/raster/{z}/{x}/{y}.png'],

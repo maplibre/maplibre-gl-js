@@ -3,6 +3,9 @@ import {indexTouches} from './handler_util';
 import {Handler} from '../handler_manager';
 import type {Map} from '../map';
 
+/**
+ * A `TouchPanHandler` allows the user to pan the map using touch gestures.
+ */
 export class TouchPanHandler implements Handler {
 
     _enabled: boolean;

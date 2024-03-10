@@ -11,7 +11,7 @@ describe('util', () => {
     expect(keysDifference({a: 1}, {a: 1})).toEqual([]);
     expect(extend({a: 1}, {b: 2})).toEqual({a: 1, b: 2});
     expect(pick({a: 1, b: 2, c: 3}, ['a', 'c'])).toEqual({a: 1, c: 3});
-    expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'])).toEqual({a: 1, c: 3});
+    expect(pick({a: 1, b: 2, c: 3}, ['a', 'c', 'd'] as any)).toEqual({a: 1, c: 3});
     expect(typeof uniqueId() === 'number').toBeTruthy();
 
     test('isPowerOfTwo', done => {

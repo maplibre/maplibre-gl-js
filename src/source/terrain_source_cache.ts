@@ -193,7 +193,7 @@ export class TerrainSourceCache extends Evented {
     }
 
     /**
-     * get a list of tiles, loaded after a spezific time. This is used to update depth & coords framebuffers.
+     * get a list of tiles, loaded after a specific time. This is used to update depth & coords framebuffers.
      * @param time - the time
      * @returns the relevant tiles
      */

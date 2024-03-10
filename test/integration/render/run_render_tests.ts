@@ -7,14 +7,14 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
+import puppeteer, {Page, Browser} from 'puppeteer';
+import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
-import maplibregl from '../../../src/index';
-import type {CanvasSource} from '../../../src/source/canvas_source';
-import type {Map} from '../../../src/ui/map';
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {PointLike} from '../../../src/ui/camera';
-import puppeteer, {Page} from 'puppeteer';
+import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import * as maplibreglModule from '../../../dist/maplibre-gl';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
+let maplibregl: typeof maplibreglModule;
 
 type TestData = {
     id: string;
@@ -35,8 +35,6 @@ type TestData = {
         id: string;
         image: string;
     };
-    axonometric: boolean;
-    skew: [number, number];
     fadeDuration: number;
     debug: boolean;
     showOverdrawInspector: boolean;
@@ -123,13 +121,8 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
  * @returns nothing as it updates the testData object
  */
 function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
-    let stats;
     const dir = path.join(directory, testData.id);
-    try {
-        // @ts-ignore
-        stats = fs.statSync(dir, fs.R_OK | fs.W_OK);
-        if (!stats.isDirectory()) throw new Error();
-    } catch (e) {
+    if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
 
@@ -594,16 +587,11 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             const map = new maplibregl.Map({
                 container: 'map',
                 style,
-
-                // @ts-ignore
-                classes: options.classes,
                 interactive: false,
                 attributionControl: false,
                 maxPitch: options.maxPitch,
                 pixelRatio: options.pixelRatio,
                 preserveDrawingBuffer: true,
-                axonometric: options.axonometric || false,
-                skew: options.skew || [0, 0],
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
                 crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
@@ -765,7 +753,6 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     for (const style of testStyles) {
         try {
             style.metadata.test.error = undefined;
-            //@ts-ignore
             const data = await getImageFromStyle(style, page);
             compareRenderResults(directory, style.metadata.test, data);
         } catch (ex) {
@@ -773,6 +760,46 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
         }
         printProgress(style.metadata.test, testStyles.length, ++index);
     }
+}
+
+async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
+    const page = await browser.newPage();
+    await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+    applyDebugParameter(options, page);
+    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+    await runTests(page, testStyles, directory);
+    return page;
+}
+
+async function closePageAndFinish(page: Page, reportCoverage: boolean) {
+    const coverage = await page.coverage.stopJSCoverage();
+    await page.close();
+    if (!reportCoverage) {
+        return;
+    }
+
+    const rawV8CoverageData = coverage.map((it) => {
+        // Convert to raw v8 coverage format
+        const entry: any =  {
+            source: it.text,
+            ...it.rawScriptCoverage
+        };
+        if (entry.url.endsWith('maplibre-gl-dev.js')) {
+            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
+        }
+        return entry;
+    });
+
+    const coverageReport = new CoverageReport({
+        name: 'MapLibre Coverage Report',
+        outputDir: './coverage/render',
+        reports: [['v8'], ['codecov']]
+    });
+    coverageReport.cleanCache();
+
+    await coverageReport.add(rawV8CoverageData);
+
+    await coverageReport.generate();
 }
 
 /**
@@ -803,7 +830,7 @@ async function executeRenderTests() {
         options.openBrowser = checkParameter(options, '--open-browser');
     }
 
-    const browser = await puppeteer.launch({headless: options.openBrowser ? false : 'new', args: ['--enable-webgl', '--no-sandbox',
+    const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
         '--disable-web-security']});
 
     const server = http.createServer(
@@ -831,24 +858,15 @@ async function executeRenderTests() {
         testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    let page = await browser.newPage();
-    applyDebugParameter(options, page);
-    await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-
-    await runTests(page, testStyles, directory);
-
+    let page = await createPageAndStart(browser, testStyles, directory, options);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
+    await closePageAndFinish(page, failedTests.length === 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
-        page.close();
-        page = await browser.newPage();
         options.debug = true;
-        applyDebugParameter(options, page);
-        await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-        await runTests(page, failedTests, directory);
+        page = await createPageAndStart(browser, failedTests, directory, options);
+        await closePageAndFinish(page, true);
     }
-
-    page.close();
 
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
     const testStats: TestStats = {

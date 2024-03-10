@@ -106,6 +106,9 @@ export function extend(dest: object, ...sources: Array<any>): any {
     return dest;
 }
 
+// See https://stackoverflow.com/questions/49401866/all-possible-keys-of-an-union-type
+type KeysOfUnion<T> = T extends T ? keyof T: never;
+
 /**
  * Given an object and a number of properties as strings, return version
  * of that object with only those properties.
@@ -120,8 +123,8 @@ export function extend(dest: object, ...sources: Array<any>): any {
  * let justName = pick(foo, ['name']); // justName = { name: 'Charlie' }
  * ```
  */
-export function pick(src: any, properties: Array<string>): any {
-    const result = {};
+export function pick<T extends object>(src: T, properties: Array<KeysOfUnion<T>>): Partial<T> {
+    const result: Partial<T> = {};
     for (let i = 0; i < properties.length; i++) {
         const k = properties[i];
         if (k in src) {
@@ -675,4 +678,14 @@ export function subscribe(target: Subscriber, message: keyof WindowEventMap, lis
             target.removeEventListener(message, listener, options);
         }
     };
+}
+
+/**
+ * This method converts degrees to radians.
+ * The return value is the radian value.
+ * @param degrees - The number of degrees
+ * @returns radians
+ */
+export function degreesToRadians(degrees: number): number {
+    return degrees * Math.PI / 180;
 }

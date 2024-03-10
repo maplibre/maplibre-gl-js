@@ -23,16 +23,9 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Check if version changed
+      - name: Check if version has been updated
         id: check
-        run: |
-          latestNpmPackageVersion=$( npm view maplibre-gl versions --json | jq '.[-1]' -r )
-          currentVersion=$( node -e "console.log(require('./package.json').version)" )
-          if [ "$latestNpmPackageVersion" == "$currentVersion" ]; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
+        uses: EndBug/version-check@v2
           
     outputs:
       publish: ${{ steps.check.outputs.changed }}
@@ -73,12 +66,8 @@ jobs:
 
       - name: Build
         run: |
-          npm run build-prod
-          npm run build-csp
-          npm run build-dev
-          npm run build-css
+          npm run build-dist
           npm run build-benchmarks
-          npm run generate-typings
 
       - name: Publish NPM package (regular)
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}

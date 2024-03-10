@@ -16,6 +16,8 @@
 <style>
     #menu {
         position: absolute;
+        top: 0;
+        left: 0;
         background: #fff;
         padding: 10px;
         font-family: 'Open Sans', sans-serif;
@@ -50,6 +52,7 @@
     function switchRenderOption(option) {
         const status = option.target.id;
         map.setRenderWorldCopies(status === 'true');
+        map.panTo(map.getCenter());
     }
 
     for (let i = 0; i < inputs.length; i++) {

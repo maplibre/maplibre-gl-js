@@ -6,7 +6,7 @@ import {ImageManager} from '../render/image_manager';
 import {GlyphManager} from '../render/glyph_manager';
 import {Light} from './light';
 import {LineAtlas} from '../render/line_atlas';
-import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
 import {getJSON, getReferrer} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
@@ -17,7 +17,7 @@ import {Source} from '../source/source';
 import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
-import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, operations as diffOperations} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
 import {PauseablePlacement} from './pauseable_placement';
@@ -47,33 +47,11 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
+    DiffOperations
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import type {GetGlyphsParamerters, GetGlyphsResponse, GetImagesParamerters, GetImagesResponse} from '../util/actor_messages';
-
-const supportedDiffOperations = pick(diffOperations, [
-    'addLayer',
-    'removeLayer',
-    'setPaintProperty',
-    'setLayoutProperty',
-    'setFilter',
-    'addSource',
-    'removeSource',
-    'setLayerZoomRange',
-    'setLight',
-    'setTransition',
-    'setGeoJSONSourceData',
-    'setGlyphs',
-    'setSprite',
-]);
-
-const ignoredDiffOperations = pick(diffOperations, [
-    'setCenter',
-    'setZoom',
-    'setBearing',
-    'setPitch'
-]);
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -681,35 +659,30 @@ export class Style extends Evented {
      *
      * @returns true if any changes were made; false otherwise
      */
-    setState(nextState: StyleSpecification, options: StyleSwapOptions = {}) {
+    setState(nextState: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions = {}) {
         this._checkLoaded();
 
         const serializedStyle =  this.serialize();
         nextState = options.transformStyle ? options.transformStyle(serializedStyle, nextState) : nextState;
-        if (emitValidationErrors(this, validateStyle(nextState))) return false;
+        const validate = options.validate ?? true;
+        if (validate && emitValidationErrors(this, validateStyle(nextState))) return false;
 
         nextState = clone(nextState);
         nextState.layers = deref(nextState.layers);
 
-        const changes = diffStyles(serializedStyle, nextState)
-            .filter(op => !(op.command in ignoredDiffOperations));
+        const changes = diffStyles(serializedStyle, nextState);
+        const operations = this._getOperationsToPerform(changes);
 
-        if (changes.length === 0) {
+        if (operations.unimplemented.length > 0) {
+            throw new Error(`Unimplemented: ${operations.unimplemented.join(', ')}.`);
+        }
+
+        if (operations.operations.length === 0) {
             return false;
         }
 
-        const unimplementedOps = changes.filter(op => !(op.command in supportedDiffOperations));
-        if (unimplementedOps.length > 0) {
-            throw new Error(`Unimplemented: ${unimplementedOps.map(op => op.command).join(', ')}.`);
-        }
-
-        for (const op of changes) {
-            if (op.command === 'setTransition') {
-                // `transition` is always read directly off of
-                // `this.stylesheet`, which we update below
-                continue;
-            }
-            (this as any)[op.command].apply(this, op.args);
+        for (const styleChangeOperation of operations.operations) {
+            styleChangeOperation();
         }
 
         this.stylesheet = nextState;
@@ -718,6 +691,69 @@ export class Style extends Evented {
         this._serializedLayers = null;
 
         return true;
+    }
+
+    _getOperationsToPerform(diff: DiffCommand<DiffOperations>[]) {
+        const operations: Function[] = [];
+        const unimplemented: string[] = [];
+        for (const op of diff) {
+            switch (op.command) {
+                case 'setCenter':
+                case 'setZoom':
+                case 'setBearing':
+                case 'setPitch':
+                    continue;
+                case 'addLayer':
+                    operations.push(() => this.addLayer.apply(this, op.args));
+                    break;
+                case 'removeLayer':
+                    operations.push(() => this.removeLayer.apply(this, op.args));
+                    break;
+                case 'setPaintProperty':
+                    operations.push(() => this.setPaintProperty.apply(this, op.args));
+                    break;
+                case 'setLayoutProperty':
+                    operations.push(() => this.setLayoutProperty.apply(this, op.args));
+                    break;
+                case 'setFilter':
+                    operations.push(() => this.setFilter.apply(this, op.args));
+                    break;
+                case 'addSource':
+                    operations.push(() => this.addSource.apply(this, op.args));
+                    break;
+                case 'removeSource':
+                    operations.push(() => this.removeSource.apply(this, op.args));
+                    break;
+                case 'setLayerZoomRange':
+                    operations.push(() => this.setLayerZoomRange.apply(this, op.args));
+                    break;
+                case 'setLight':
+                    operations.push(() => this.setLight.apply(this, op.args));
+                    break;
+                case 'setGeoJSONSourceData':
+                    operations.push(() => this.setGeoJSONSourceData.apply(this, op.args));
+                    break;
+                case 'setGlyphs':
+                    operations.push(() => this.setGlyphs.apply(this, op.args));
+                    break;
+                case 'setSprite':
+                    operations.push(() => this.setSprite.apply(this, op.args));
+                    break;
+                case 'setTerrain':
+                    operations.push(() => this.map.setTerrain.apply(this, op.args));
+                    break;
+                case 'setTransition':
+                    operations.push(() => {});
+                    break;
+                default:
+                    unimplemented.push(op.command);
+                    break;
+            }
+        }
+        return {
+            operations,
+            unimplemented
+        };
     }
 
     addImage(id: string, image: StyleImage) {
@@ -1457,6 +1493,9 @@ export class Style extends Evented {
         }
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
+        if (mapRemoved) {
+            this.dispatcher.broadcast('removeMap', undefined);
+        }
         this.dispatcher.remove(mapRemoved);
     }
 

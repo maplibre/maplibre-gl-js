@@ -13,6 +13,9 @@ import type {AddressInfo} from 'node:net';
 import {localizeURLs} from '../lib/localize-urls';
 import {globSync} from 'glob';
 
+import * as maplibreglModule from '../../../dist/maplibre-gl';
+let maplibregl: typeof maplibreglModule;
+
 jest.retryTimes(3);
 
 function performQueryOnFixture(fixture)  {
@@ -80,18 +83,13 @@ function performQueryOnFixture(fixture)  {
         const options = style.metadata.test;
         const skipLayerDelete = style.metadata.skipLayerDelete;
 
-        // @ts-ignore
         const map =  new maplibregl.Map({
             container: 'map',
             style,
-            // @ts-ignore
-            classes: options.classes,
             interactive: false,
             attributionControl: false,
             pixelRatio: options.pixelRatio,
             preserveDrawingBuffer: true,
-            axonometric: options.axonometric || false,
-            skew: options.skew || [0, 0],
             fadeDuration: options.fadeDuration || 0,
             localIdeographFontFamily: options.localIdeographFontFamily || false,
             crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions
@@ -135,7 +133,7 @@ describe('query tests', () => {
                 cors: true,
             })
         );
-        browser = await puppeteer.launch({headless: 'new'});
+        browser = await puppeteer.launch({headless: true});
         await new Promise<void>((resolve) => server.listen(resolve));
     }, 60000);
 
@@ -159,14 +157,13 @@ describe('query tests', () => {
     globPattern = globPattern.replace(/\\/g, '/');
     const testStyles = globSync(globPattern);
 
-    for (const [testindex, styleJson] of testStyles.entries()) {
+    for (const styleJson of testStyles) {
         const testCaseRoot = path.dirname(styleJson.replace(/\\/g, '/')); // glob is returning paths that dirname can't handle...
         const caseName = path.relative(allTestsRoot, testCaseRoot);
         // eslint-disable-next-line no-loop-func
         test(caseName, async () => {
             const port = (server.address() as AddressInfo).port;
             const fixture = await dirToJson(testCaseRoot, port);
-            console.log(`${testindex + 1} / ${testStyles.length}: ${caseName}`);
 
             const style = fixture.style;
             const options = style.metadata.test;

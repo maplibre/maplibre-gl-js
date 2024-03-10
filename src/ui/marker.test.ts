@@ -1,4 +1,4 @@
-import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest, sleep} from '../util/test/util';
 import {Marker} from './marker';
 import {Popup} from './popup';
 import {LngLat} from '../geo/lng_lat';
@@ -6,10 +6,15 @@ import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import type {Terrain} from '../render/terrain';
 
-function createMap(options = {}) {
+type MapOptions = {
+    width?: number;
+    renderWorldCopies?: boolean;
+}
+
+function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
-    Object.defineProperty(container, 'clientWidth', {value: 512});
+    Object.defineProperty(container, 'clientWidth', {value: options.width || 512});
     Object.defineProperty(container, 'clientHeight', {value: 512});
     return globalCreateMap({container, ...options});
 }
@@ -284,6 +289,7 @@ describe('marker', () => {
         expect(marker.getPopup().options.offset['top-left']).toEqual([0, 0]);
         expect(marker.getPopup().options.offset['top-right']).toEqual([0, 0]);
 
+        map.remove();
     });
 
     test('Popup anchors around default Marker', () => {
@@ -352,6 +358,41 @@ describe('marker', () => {
             marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
         ).toBeTruthy();
 
+        map.remove();
+    });
+
+    test('Popup is opened at its marker position after marker is moved to another globe', () => {
+        const map = createMap({width: 3000});
+
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map);
+
+        marker._pos = new Point(2999, 242);
+        marker._lngLat = map.unproject(marker._pos);
+        marker.togglePopup();
+
+        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
+    });
+
+    test('Popup is re-opened at its marker position after marker is moved to another globe', () => {
+        const map = createMap({width: 3000});
+
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map)
+            .togglePopup()
+            .togglePopup();
+
+        marker._pos = new Point(2999, 242);
+        marker._lngLat = map.unproject(marker._pos);
+        marker.togglePopup();
+
+        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
     });
 
     test('Marker drag functionality can be added with drag option', () => {
@@ -792,7 +833,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker removed after update when terrain is on should clear timeout', () => {
+    test('Marker removed after update when terrain is on should clear timeout', async () => {
         jest.spyOn(global, 'setTimeout');
         jest.spyOn(global, 'clearTimeout');
         const map = createMap();
@@ -806,6 +847,7 @@ describe('marker', () => {
         map.transform.lngLatToCameraDepth = () => .95;
 
         marker.setOffset([10, 10]);
+        await sleep(100);
 
         expect(setTimeout).toHaveBeenCalled();
         marker.remove();
@@ -839,7 +881,47 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker changes opacity behind terrain and when terrain is removed', () => {
+    test('Sets default opacity if it\'s not provided as option', async () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(500);
+        expect(marker.getElement().style.opacity).toMatch('1');
+        map.remove();
+    });
+
+    test('Sets opacity according to options.opacity', async () => {
+        const map = createMap();
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(500);
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Changes opacity to a new value provided by setOpacity', () => {
+        const map = createMap();
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        marker.setOpacity('0.6');
+        expect(marker.getElement().style.opacity).toMatch('.6');
+        map.remove();
+    });
+
+    test('Resets opacity to default when setOpacity is called without arguments', () => {
+        const map = createMap();
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        marker.setOpacity();
+        expect(marker.getElement().style.opacity).toBe('1');
+        map.remove();
+    });
+
+    test('Marker changes opacity behind terrain and when terrain is removed', async () => {
         const map = createMap();
         map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
         const marker = new Marker()
@@ -853,21 +935,108 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
+        await sleep(500);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
+        await sleep(500);
         map.fire('moveend');
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
+        await sleep(500);
         map.fire('terrain');
         expect(marker.getElement().style.opacity).toMatch('1');
 
         map.remove();
+    });
+
+    test('Applies options.opacity when 3d terrain is enabled and marker is in clear view', async () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .95
+        } as any as Terrain;
+        await sleep(500);
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', async () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
+        } as any as Terrain;
+        await sleep(500);
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', async () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        await sleep(500);
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('0.3');
+        map.remove();
+    });
+
+    test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacityWhenCovered: '0.15'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        map.fire('terrain');
+
+        marker.setOpacity(undefined, '0.35');
+
+        expect(marker.getElement().style.opacity).toMatch('0.35');
+        map.remove();
+    });
+
+    test('Marker\'s lng is wrapped when slightly crossing 180 with {renderWorldCopies: false}', () => {
+        const map = createMap({width: 1024, renderWorldCopies: false});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .addTo(map);
+
+        marker.setLngLat([181, 0]);
+
+        expect(marker._lngLat.lng).toBe(-179);
     });
 });

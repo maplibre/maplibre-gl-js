@@ -15,7 +15,7 @@ import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} 
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {AttributionControl} from './control/attribution_control';
+import {AttributionControl, AttributionControlOptions, defaultAtributionControlOptions} from './control/attribution_control';
 import {LogoControl} from './control/logo_control';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
@@ -91,14 +91,12 @@ export type MapOptions = {
      */
     bearingSnap?: number;
     /**
-     * If `true`, an {@link AttributionControl} will be added to the map.
-     * @defaultValue true
+     * If set, an {@link AttributionControl} will be added to the map with the provided options.
+     * To disable the attribution control, pass `false`.
+     * Note: showing the logo of MapLibre is not required for using MapLibre.
+     * @defaultValue compact: true, customAttribution: "MapLibre ...".
      */
-    attributionControl?: boolean;
-    /**
-     * Attribution text to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
-     */
-    customAttribution?: string | Array<string>;
+    attributionControl?: false | AttributionControlOptions;
     /**
      * If `true`, the MapLibre logo will be shown.
      * @defaultValue false
@@ -200,7 +198,7 @@ export type MapOptions = {
      * If `true` or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link FullscreenControl}.
      * @defaultValue undefined
      */
-    cooperativeGestures?: boolean | GestureOptions;
+    cooperativeGestures?: GestureOptions;
     /**
      * If `true`, the map will automatically resize when the browser window resizes.
      * @defaultValue true
@@ -228,6 +226,7 @@ export type MapOptions = {
     pitch?: number;
     /**
      * If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+     *
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
      * container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
@@ -375,7 +374,7 @@ const defaultOptions = {
     pitchWithRotate: true,
 
     hash: false,
-    attributionControl: true,
+    attributionControl: defaultAtributionControlOptions,
     maplibreLogo: false,
 
     failIfMajorPerformanceCaveat: false,
@@ -407,7 +406,7 @@ const defaultOptions = {
  *
  * @example
  * ```ts
- * let map = new maplibregl.Map({
+ * let map = new Map({
  *   container: 'map',
  *   center: [-122.420679, 37.772537],
  *   zoom: 13,
@@ -472,7 +471,7 @@ export class Map extends Camera {
     _localIdeographFontFamily: string;
     _validateStyle: boolean;
     _requestManager: RequestManager;
-    _locale: any;
+    _locale: typeof defaultLocale;
     _removed: boolean;
     _clickTolerance: number;
     _overridePixelRatio: number | null;
@@ -664,7 +663,7 @@ export class Map extends Camera {
         if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
 
         if (options.attributionControl)
-            this.addControl(new AttributionControl({customAttribution: options.customAttribution}));
+            this.addControl(new AttributionControl(typeof options.attributionControl === 'boolean' ? undefined : options.attributionControl));
 
         if (options.maplibreLogo)
             this.addControl(new LogoControl(), options.logoPosition);
@@ -708,7 +707,7 @@ export class Map extends Camera {
      * @example
      * Add zoom and rotation controls to the map.
      * ```ts
-     * map.addControl(new maplibregl.NavigationControl());
+     * map.addControl(new NavigationControl());
      * ```
      * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
      */
@@ -746,7 +745,7 @@ export class Map extends Camera {
      * @example
      * ```ts
      * // Define a new navigation control.
-     * let navigation = new maplibregl.NavigationControl();
+     * let navigation = new NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Remove zoom and rotation controls from the map.
@@ -772,7 +771,7 @@ export class Map extends Camera {
      * @example
      * ```ts
      * // Define a new navigation control.
-     * let navigation = new maplibregl.NavigationControl();
+     * let navigation = new NavigationControl();
      * // Add zoom and rotation controls to the map.
      * map.addControl(navigation);
      * // Check that the navigation control exists on the map.
@@ -1106,6 +1105,7 @@ export class Map extends Camera {
 
     /**
      * Returns the state of `renderWorldCopies`. If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+     *
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
      * container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
@@ -1123,6 +1123,7 @@ export class Map extends Camera {
      * Sets the state of `renderWorldCopies`.
      *
      * @param renderWorldCopies - If `true`, multiple copies of the world will be rendered side by side beyond -180 and 180 degrees longitude. If set to `false`:
+     *
      * - When the map is zoomed out far enough that a single representation of the world does not fill the map's entire
      * container, there will be blank space beyond 180 and -180 degrees longitude.
      * - Features that cross 180 and -180 degrees longitude will be cut in two (with one portion on the right edge of the
@@ -1358,7 +1359,7 @@ export class Map extends Camera {
      * // Set an event listener that will fire
      * // when a feature on the countries layer of the map is clicked
      * map.on('click', 'countries', (e) => {
-     *   new maplibregl.Popup()
+     *   new Popup()
      *     .setLngLat(e.lngLat)
      *     .setHTML(`Country name: ${e.features[0].properties.name}`)
      *     .addTo(map);
@@ -1731,7 +1732,7 @@ export class Map extends Camera {
         return this;
     }
 
-    _getUIString(key: string) {
+    _getUIString(key: keyof typeof defaultLocale) {
         const str = this._locale[key];
         if (str == null) {
             throw new Error(`Missing UI string '${key}'`);
@@ -1932,12 +1933,14 @@ export class Map extends Camera {
             this.terrain = null;
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
-            this.transform._minEleveationForCurrentTile = 0;
+            this.transform.minElevationForCurrentTile = 0;
             this.transform.elevation = 0;
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
             if (!sourceCache) throw new Error(`cannot load terrain, because there exists no source with ID: ${options.source}`);
+            // Update terrain tiles when adding new terrain
+            if (this.terrain === null) sourceCache.reload();
             // Warn once if user is using the same source for hillshade and terrain
             for (const index in this.style._layers) {
                 const thisLayer = this.style._layers[index];
@@ -1947,14 +1950,14 @@ export class Map extends Camera {
             }
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
-            this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+            this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
                     this.terrain.sourceCache.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
-                        this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+                        this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                         this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
@@ -2703,6 +2706,7 @@ export class Map extends Camera {
      * Features are identified by their `feature.id` attribute, which can be any number or string.
      *
      * This method can only be used with sources that have a `feature.id` attribute. The `feature.id` attribute can be defined in three ways:
+     *
      * - For vector or GeoJSON sources, including an `id` attribute in the original data file.
      * - For vector or GeoJSON sources, using the [`promoteId`](https://maplibre.org/maplibre-style-spec/sources/#vector-promoteId) option at the time the source is defined.
      * - For GeoJSON sources, using the [`generateId`](https://maplibre.org/maplibre-style-spec/sources/#geojson-generateId) option to auto-assign an `id` based on the feature's index in the source data. If you change feature data using `map.getSource('some id').setData(..)`, you may need to re-apply state taking into account updated `id` values.
@@ -3021,6 +3025,7 @@ export class Map extends Camera {
     /**
      * @internal
      * Call when a (re-)render of the map is required:
+     *
      * - The style has changed (`setPaintProperty()`, etc.)
      * - Source data has changed (e.g. tiles have finished loading)
      * - The map has is moving (or just finished moving)
@@ -3080,12 +3085,12 @@ export class Map extends Camera {
         // update terrain stuff
         if (this.terrain) {
             this.terrain.sourceCache.update(this.transform, this.terrain);
-            this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+            this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             if (!this._elevationFreeze) {
                 this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             }
         } else {
-            this.transform._minEleveationForCurrentTile = 0;
+            this.transform.minElevationForCurrentTile = 0;
             this.transform.elevation = 0;
         }
 

@@ -14,13 +14,16 @@ import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 
+/**
+ * Options object for GeoJSONSource.
+ */
 export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     workerOptions?: GeoJSONWorkerOptions;
     collectResourceTiming?: boolean;
     data: GeoJSON.GeoJSON | string;
 }
 
-export type GeoJsonSourceOptions = {
+export type GeoJSONSourceIntenalOptions = {
     data?: GeoJSON.GeoJSON | string | undefined;
     cluster?: boolean;
     clusterMaxZoom?: number;
@@ -113,7 +116,7 @@ export class GeoJSONSource extends Evented implements Source {
     isTileClipped: boolean;
     reparseOverscaled: boolean;
     _data: GeoJSON.GeoJSON | string | undefined;
-    _options: GeoJsonSourceOptions;
+    _options: GeoJSONSourceIntenalOptions;
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
     actor: Actor;
@@ -254,7 +257,6 @@ export class GeoJSONSource extends Evented implements Source {
      * For clustered sources, fetches the zoom at which the given cluster expands.
      *
      * @param clusterId - The value of the cluster's `cluster_id` property.
-     * @param callback - A callback to be called when the zoom value is retrieved (`(error, zoom) => { ... }`).
      * @returns a promise that is resolved with the zoom number
      */
     getClusterExpansionZoom(clusterId: number): Promise<number> {

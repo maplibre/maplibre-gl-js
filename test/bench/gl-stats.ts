@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer, {Page} from 'puppeteer';
 import fs from 'fs';
 import zlib from 'zlib';
 import {execSync} from 'child_process';
@@ -10,19 +10,17 @@ const benchSrc = fs.readFileSync('test/bench/gl-stats.html', 'utf8');
 const benchHTML = benchSrc
     .replace('<script src="/dist\/maplibre-gl.js"></script>', `<script src="data:text/javascript;base64,${maplibreGLJSSrc.toString('base64')}"></script>`);
 
-function waitForConsole(page) {
+function waitForConsole(page: Page): Promise<string> {
     return new Promise((resolve) => {
         function onConsole(msg) {
-            page.removeListener('console', onConsole);
+            page.off('console', onConsole);
             resolve(msg.text());
         }
         page.on('console', onConsole);
     });
 }
 
-const browser = await puppeteer.launch({
-    headless: 'new'
-});
+const browser = await puppeteer.launch({headless: true});
 try {
 
     const page = await browser.newPage();
@@ -31,7 +29,6 @@ try {
     console.log('collecting stats...');
     await page.setContent(benchHTML);
 
-    // @ts-ignore
     const stats = JSON.parse(await waitForConsole(page));
     stats['bundle_size'] = maplibreGLJSSrc.length + maplibreGLCSSSrc.length;
     stats['bundle_size_gz'] = zlib.gzipSync(maplibreGLJSSrc).length + zlib.gzipSync(maplibreGLCSSSrc).length;

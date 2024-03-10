@@ -7,9 +7,9 @@ import type {Map} from '../map';
 import type {IControl} from './control';
 
 /**
- * The {@link FullscreenControl} options
+ * The {@link FullscreenControl} options object
  */
-type FullscreenOptions = {
+type FullscreenControlOptions = {
     /**
      * `container` is the [compatible DOM element](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullScreen#Compatible_elements) which should be made full screen. By default, the map container element will be made full screen.
      */
@@ -27,7 +27,7 @@ type FullscreenOptions = {
  *
  * @example
  * ```ts
- * map.addControl(new maplibregl.FullscreenControl({container: document.querySelector('body')}));
+ * map.addControl(new FullscreenControl({container: document.querySelector('body')}));
  * ```
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/fullscreen/)
  *
@@ -46,7 +46,7 @@ export class FullscreenControl extends Evented implements IControl {
     _container: HTMLElement;
     _prevCooperativeGesturesEnabled: boolean;
 
-    constructor(options: FullscreenOptions = {}) {
+    constructor(options: FullscreenControlOptions = {}) {
         super();
         this._fullscreen = false;
 
@@ -109,11 +109,15 @@ export class FullscreenControl extends Evented implements IControl {
     }
 
     _onFullscreenChange = () => {
-        const fullscreenElement =
+        let fullscreenElement =
             window.document.fullscreenElement ||
             (window.document as any).mozFullScreenElement ||
             (window.document as any).webkitFullscreenElement ||
             (window.document as any).msFullscreenElement;
+
+        while (fullscreenElement?.shadowRoot?.fullscreenElement) {
+            fullscreenElement = fullscreenElement.shadowRoot.fullscreenElement;
+        }
 
         if ((fullscreenElement === this._container) !== this._fullscreen) {
             this._handleFullscreenChange();
