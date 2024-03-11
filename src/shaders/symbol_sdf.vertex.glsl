@@ -103,13 +103,6 @@ void main() {
     highp float angle_cos = cos(segment_angle + symbol_rotation);
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
-    // When to apply u_translation? In the first projection, or in the second?
-    // |             | pitch-map | pitch-viewport |
-    // | ----------: | :-------- | :------------- |
-    // |     is line | second    | apply on cpu   |
-    // | is not line | first     | first          |
-
-    // First projection
     vec4 projected_pos;
     if(u_pitch_with_map || u_is_along_line) {
         projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + (!u_is_along_line ? u_translation : vec2(0.0)), ele, 1.0);
@@ -122,8 +115,7 @@ void main() {
 
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale + a_pxoffset), z, 1.0);
     if(u_pitch_with_map) {
-        // Second projection
-        finalPos = projectTileWithElevation(finalPos.xy + (u_is_along_line ? u_translation : vec2(0.0)), finalPos.z);
+        finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
     }
     float gamma_scale = finalPos.w;
     gl_Position = finalPos;

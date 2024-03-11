@@ -510,7 +510,9 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
     if (cache.projections[index]) {
         return cache.projections[index];
     }
-    const currentVertex = new Point(projectionArgs.lineVertexArray.getx(index), projectionArgs.lineVertexArray.gety(index));
+    const currentVertex = new Point(
+        projectionArgs.lineVertexArray.getx(index),
+        projectionArgs.lineVertexArray.gety(index));
 
     const projection = projectTileCoordinatesToViewport(currentVertex.x, currentVertex.y, projectionArgs);
 
@@ -552,11 +554,11 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: 
 } {
     let projection;
     if (!projectionArgs.pitchWithMap && projectionArgs.projection.useSpecialProjectionForSymbols) {
-        projection = projectionArgs.projection.project(x, y, projectionArgs.unwrappedTileID);
+        projection = projectionArgs.projection.project(x + projectionArgs.translation[0], y + projectionArgs.translation[1], projectionArgs.unwrappedTileID);
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
     } else {
-        projection = project(new Point(x, y), projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
+        projection = project(new Point(x + projectionArgs.translation[0], y + projectionArgs.translation[1]), projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
         projection.isOccluded = false;
     }
     return projection;

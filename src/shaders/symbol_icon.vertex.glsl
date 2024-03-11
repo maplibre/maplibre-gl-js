@@ -93,7 +93,7 @@ void main() {
 
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * max(a_minFontScale, fontScale) + a_pxoffset / 16.0), z, 1.0);
     if(u_pitch_with_map) {
-        finalPos = projectTileWithElevation(finalPos.xy + (u_is_along_line ? u_translation : vec2(0.0)), finalPos.z);
+        finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
     }
     gl_Position = finalPos;
 

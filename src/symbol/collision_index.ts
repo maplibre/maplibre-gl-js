@@ -94,7 +94,12 @@ export class CollisionIndex {
             box: Array<number>;
             offscreen: boolean;
         } {
-        const projectedPoint = this.projectAndGetPerspectiveRatio(posMatrix, collisionBox.anchorPointX, collisionBox.anchorPointY, unwrappedTileID, getElevation);
+        const projectedPoint = this.projectAndGetPerspectiveRatio(
+            posMatrix,
+            collisionBox.anchorPointX,
+            collisionBox.anchorPointY,
+            unwrappedTileID,
+            getElevation);
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
         const tlX = collisionBox.x1 * tileToViewport + projectedPoint.point.x;
         const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
@@ -213,7 +218,10 @@ export class CollisionIndex {
                     mat4.invert(inverseLabelPlaneMatrix, labelPlaneMatrix);
                     screenSpacePath = projectedPath.map(p => {
                         const backProjected = projection.project(p, inverseLabelPlaneMatrix, projectionArgs.getElevation);
-                        const projected = this.projection.project(backProjected.point.x, backProjected.point.y, unwrappedTileID);
+                        const projected = this.projection.project(
+                            backProjected.point.x,
+                            backProjected.point.y,
+                            unwrappedTileID);
                         projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionArgs.width;
                         projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionArgs.height;
                         return projected;
@@ -432,7 +440,7 @@ export class CollisionIndex {
         };
     }
 
-    getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
+    getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number {
         // We don't care about the actual projected point, just its W component.
         let projected;
         if (this.projection.useSpecialProjectionForSymbols) {
