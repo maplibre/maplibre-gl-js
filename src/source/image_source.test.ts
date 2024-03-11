@@ -7,8 +7,6 @@ import {RequestManager} from '../util/request_manager';
 import {sleep, stubAjaxGetImage} from '../util/test/util';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
 import {Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
@@ -165,8 +163,6 @@ describe('ImageSource', () => {
         source.tiles[String(tile.tileID.wrap)] = tile;
         source.image = new ImageBitmap();
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {destroy: () => {}} as VertexBuffer;
-        source.boundsSegments = {} as SegmentVector;
         source.texture = {} as Texture;
         source.prepare();
     });

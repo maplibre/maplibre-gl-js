@@ -166,7 +166,9 @@ export class GlobeProjection implements ProjectionBase {
     }
 
     public destroy() {
-        this._errorMeasurement.destroy(this._map.painter);
+        if (this._errorMeasurement) {
+            this._errorMeasurement.destroy(this._map.painter);
+        }
     }
 
     public skipNextProjectionTransitionAnimation() {

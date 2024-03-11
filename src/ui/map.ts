@@ -59,30 +59,9 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {ProjectionBase} from '../geo/projection/projection_base';
-import {MercatorProjection} from '../geo/projection/mercator';
-import {GlobeProjection} from '../geo/projection/globe';
+import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
 
 const version = packageJSON.version;
-
-/**
- * Name of MapLibre's map projection. Can be:
- *
- * - `mercator` - A classic Web Mercator 2D map
- * - 'globe' - A 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zoom levels.
- */
-type ProjectionName = 'mercator' | 'globe';
-
-function getProjectionFromName(name: ProjectionName, map: Map): ProjectionBase {
-    switch (name) {
-        case 'mercator':
-            return new MercatorProjection();
-        case 'globe':
-            return new GlobeProjection(map);
-        default:
-            warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
-            return new MercatorProjection();
-    }
-}
 
 /**
  * The {@link Map} options object.
@@ -632,7 +611,7 @@ export class Map extends Camera {
             this.setMaxBounds(options.maxBounds);
         }
 
-        this.projection = getProjectionFromName(options.projection, this);
+        this.projection = createProjectionFromName(options.projection, this);
 
         this._setupContainer();
         this._setupPainter();
@@ -3372,14 +3351,4 @@ export class Map extends Camera {
      * ```
      */
     getProjection(): ProjectionBase { return this.projection; }
-
-    /**
-     * Returns the active projection name.
-     * @returns The projection name
-     * @example
-     * ```ts
-     * let projectionName = map.getProjectionName();
-     * ```
-     */
-    getProjectionName(): string { return this.projection.name; }
 }
