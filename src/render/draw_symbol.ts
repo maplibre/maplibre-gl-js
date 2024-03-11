@@ -363,16 +363,16 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, isViewportLine, painter, matrix,
+                    size, rotateInShader, pitchWithMap, alongLine, painter, matrix,
                     uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, isViewportLine, painter, matrix,
+                    size, rotateInShader, pitchWithMap, alongLine, painter, matrix,
                     uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, isViewportLine, painter, matrix,
+                size, rotateInShader, pitchWithMap, alongLine, painter, matrix,
                 uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize);
         }
 

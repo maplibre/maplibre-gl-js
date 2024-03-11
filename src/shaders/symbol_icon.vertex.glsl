@@ -19,7 +19,7 @@ uniform mat4 u_coord_matrix;
 uniform bool u_is_text;
 uniform bool u_pitch_with_map;
 uniform vec2 u_texsize;
-uniform bool u_is_viewport_line;
+uniform bool u_is_along_line;
 uniform vec2 u_translation;
 
 out vec2 v_tex;
@@ -83,8 +83,8 @@ void main() {
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
     vec4 projected_pos;
-    if(u_pitch_with_map || u_is_viewport_line) {
-        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
+    if(u_pitch_with_map || u_is_along_line) {
+        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + (!u_is_along_line ? u_translation : vec2(0.0)), ele, 1.0);
     } else {
         projected_pos = u_label_plane_matrix * projectTileWithElevation(a_projected_pos.xy + u_translation, ele);
     }
@@ -93,7 +93,7 @@ void main() {
 
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * max(a_minFontScale, fontScale) + a_pxoffset / 16.0), z, 1.0);
     if(u_pitch_with_map) {
-        finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
+        finalPos = projectTileWithElevation(finalPos.xy + (u_is_along_line ? u_translation : vec2(0.0)), finalPos.z);
     }
     gl_Position = finalPos;
 

@@ -26,7 +26,7 @@ uniform highp float u_camera_to_center_distance;
 uniform float u_fade_change;
 uniform vec2 u_texsize;
 uniform vec2 u_texsize_icon;
-uniform bool u_is_viewport_line;
+uniform bool u_is_along_line;
 uniform vec2 u_translation;
 
 out vec4 v_data0;
@@ -102,8 +102,8 @@ void main() {
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
     vec4 projected_pos;
-    if(u_pitch_with_map || u_is_viewport_line) {
-        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
+    if(u_pitch_with_map || u_is_along_line) {
+        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + (!u_is_along_line ? u_translation : vec2(0.0)), ele, 1.0);
     } else {
         projected_pos = u_label_plane_matrix * projectTileWithElevation(a_projected_pos.xy + u_translation, ele);
     }
@@ -112,7 +112,7 @@ void main() {
 
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale), z, 1.0);
     if(u_pitch_with_map) {
-        finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
+        finalPos = projectTileWithElevation(finalPos.xy + (u_is_along_line ? u_translation : vec2(0.0)), finalPos.z);
     }
     float gamma_scale = finalPos.w;
     gl_Position = finalPos;
