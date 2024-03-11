@@ -12,7 +12,12 @@ class RTLMainThreadPlugin extends Evented {
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
         this.status = statusToSend;
-        return this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: statusToSend, pluginURL: this.url});
+        try {
+            return this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: statusToSend, pluginURL: this.url});
+        } catch (e) {
+            this.status = 'error';
+            throw e;
+        }
     }
 
     /** This one is exposed to outside */
@@ -57,21 +62,11 @@ class RTLMainThreadPlugin extends Evented {
 
     /** Send a message to worker which will import the RTL plugin script */
     async _requestImport() : Promise<void> {
-        const workerResults = await this._syncState('loading');
 
-        // expect all of them to be 'loaded'
-        const expectedStatus = 'loaded';
-        const failedToLoadWorkerExist: boolean = workerResults.some((workerResult) => {
-            return workerResult.pluginStatus !== expectedStatus;
-        });
-
-        if (failedToLoadWorkerExist) {
-            this.status = 'error';
-        } else {
-            // all success
-            this.status = expectedStatus;
-            this.fire(new Event(RTLPluginLoadedEventName));
-        }
+        // all errors/exceptions will be handled by _syncState
+        await this._syncState('loading');
+        this.status = 'loaded';
+        this.fire(new Event(RTLPluginLoadedEventName));
     }
 
     /** Start a lazy loading process of RTL plugin */
