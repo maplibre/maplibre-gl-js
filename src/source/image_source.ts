@@ -2,10 +2,6 @@ import {CanonicalTileID} from './tile_id';
 import {Event, ErrorEvent, Evented} from '../util/evented';
 import {ImageRequest} from '../util/image_request';
 import {ResourceType} from '../util/request_manager';
-import {EXTENT} from '../data/extent';
-import {RasterBoundsArray} from '../data/array_types.g';
-import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import {SegmentVector} from '../data/segment';
 import {Texture} from '../render/texture';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
@@ -14,7 +10,6 @@ import type {CanvasSourceSpecification} from './canvas_source';
 import type {Map} from '../ui/map';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
-import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification
@@ -102,9 +97,6 @@ export class ImageSource extends Evented implements Source {
     texture: Texture | null;
     image: HTMLImageElement | ImageBitmap;
     tileID: CanonicalTileID;
-    _boundsArray: RasterBoundsArray;
-    boundsBuffer: VertexBuffer;
-    boundsSegments: SegmentVector;
     tileCoords: Array<Point>;
     _loaded: boolean;
     _request: AbortController;
@@ -230,17 +222,6 @@ export class ImageSource extends Evented implements Source {
         // tile.
         this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
 
-        this._boundsArray = new RasterBoundsArray();
-        this._boundsArray.emplaceBack(this.tileCoords[0].x, this.tileCoords[0].y, 0, 0);
-        this._boundsArray.emplaceBack(this.tileCoords[1].x, this.tileCoords[1].y, EXTENT, 0);
-        this._boundsArray.emplaceBack(this.tileCoords[3].x, this.tileCoords[3].y, 0, EXTENT);
-        this._boundsArray.emplaceBack(this.tileCoords[2].x, this.tileCoords[2].y, EXTENT, EXTENT);
-
-        if (this.boundsBuffer) {
-            this.boundsBuffer.destroy();
-            delete this.boundsBuffer;
-        }
-
         this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
         return this;
     }
@@ -252,14 +233,6 @@ export class ImageSource extends Evented implements Source {
 
         const context = this.map.painter.context;
         const gl = context.gl;
-
-        if (!this.boundsBuffer) {
-            this.boundsBuffer = context.createVertexBuffer(this._boundsArray, rasterBoundsAttributes.members);
-        }
-
-        if (!this.boundsSegments) {
-            this.boundsSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
-        }
 
         if (!this.texture) {
             this.texture = new Texture(context, this.image, gl.RGBA);
