@@ -28,6 +28,7 @@ export {
     placeGlyphAlongLine,
     xyTransformMat4,
     projectVertexToViewport,
+    projectTileCoordinatesToViewport,
     findOffsetIntersectionPoint,
     transformToOffsetNormal,
 };

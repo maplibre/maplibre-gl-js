@@ -26,7 +26,7 @@ import type {SourceCache} from '../source/source_cache';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
 import type {Texture, TextureFilter} from '../render/texture';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 import type {UniformValues} from './uniform_binding';
 import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
 import type {CrossTileID, VariableOffset} from '../symbol/placement';
@@ -38,6 +38,7 @@ import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
 import {ProjectionData} from './program/projection_program';
+import { ProjectionBase } from '../geo/projection/projection_base';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -151,7 +152,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
             const tileScale = Math.pow(2, tr.zoom - tile.tileID.overscaledZ);
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
-                tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, getElevation);
+                tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, coord.toUnwrapped(), getElevation);
         }
     }
 }
@@ -167,6 +168,8 @@ function updateVariableAnchorsForBucket(
     tileScale: number,
     size: EvaluatedZoomSize,
     updateTextFitIcon: boolean,
+    projection: ProjectionBase,
+    unwrappedTileID: UnwrappedTileID,
     getElevation: (x: number, y: number) => number) {
     const placedSymbols = bucket.text.placedSymbolArray;
     const dynamicTextLayoutVertexArray = bucket.text.dynamicLayoutVertexArray;
@@ -187,7 +190,19 @@ function updateVariableAnchorsForBucket(
             const tileAnchor = new Point(symbol.anchorX, symbol.anchorY);
             const projectedAnchor = pitchWithMap ?
                 symbolProjection.project(tileAnchor, posMatrix, getElevation) :
-                symbolProjection.project(tileAnchor, labelPlaneMatrix, getElevation);
+                symbolProjection.projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, {
+                    getElevation,
+                    width: transform.width,
+                    height: transform.height,
+                    labelPlaneMatrix,
+                    lineVertexArray: null,
+                    pitchWithMap,
+                    projection,
+                    projectionCache: null,
+                    tileAnchorPoint: tileAnchor,
+                    translation: [0, 0],
+                    unwrappedTileID
+                });
             const perspectiveRatio = symbolProjection.getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
             let renderTextSize = evaluateSizeForFeature(bucket.textSizeData, size, symbol) * perspectiveRatio / ONE_EM;
             if (pitchWithMap) {
@@ -354,7 +369,8 @@ function drawLayerSymbols(
         }
 
         const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
-        const uLabelPlaneMatrix = (alongLine || (isText && hasVariablePlacement) || updateTextFitIcon) ? identityMat4 : labelPlaneMatrix;
+        const noLabelPlane = (alongLine || (isText && hasVariablePlacement) || updateTextFitIcon);
+        const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : labelPlaneMatrix;
         const uglCoordMatrix = glCoordMatrix; // formerly also incorporated translate and translate-anchor
 
         const hasHalo = isSDF && layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(1) !== 0;
@@ -363,16 +379,16 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, painter, matrix,
+                    size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
                     uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, painter, matrix,
+                    size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
                     uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, alongLine, painter, matrix,
+                size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
                 uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize);
         }
 
