@@ -85,7 +85,7 @@ jobs:
 
       - name: Tag commit and push
         id: tag_version
-        uses: mathieudutour/github-tag-action@v6.1
+        uses: mathieudutour/github-tag-action@v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: ${{ steps.package-version.outputs.current-version }}
