@@ -905,6 +905,17 @@ describe('#easeTo', () => {
         }, 0);
     });
 
+    test('does not pan eastward across the antimeridian on a single-globe mercator map', done => {
+        const camera = createCamera({renderWorldCopies: false, zoom: 2});
+        camera.setCenter([170, 0]);
+        const initialLng = camera.getCenter().lng;
+        camera.on('moveend', () => {
+            expect(camera.getCenter().lng).toBeCloseTo(initialLng, 0);
+            done();
+        });
+        camera.easeTo({center: [210, 0], duration: 0});
+    });
+
     test('pans westward across the antimeridian', done => {
         const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
@@ -935,6 +946,17 @@ describe('#easeTo', () => {
                 camera.simulateFrame();
             }, 0);
         }, 0);
+    });
+
+    test('does not pan westward across the antimeridian on a single-globe mercator map', done => {
+        const camera = createCamera({renderWorldCopies: false, zoom: 2});
+        camera.setCenter([-170, 0]);
+        const initialLng = camera.getCenter().lng;
+        camera.on('moveend', () => {
+            expect(camera.getCenter().lng).toBeCloseTo(initialLng, 0);
+            done();
+        });
+        camera.easeTo({center: [-210, 0], duration: 0});
     });
 
     test('animation occurs when prefers-reduced-motion: reduce is set but overridden by essential: true', done => {

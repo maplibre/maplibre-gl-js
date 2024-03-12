@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Improve animation curve when easeTo and flyTo with constraints ([#3793](https://github.com/maplibre/maplibre-gl-js/pull/3793))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
