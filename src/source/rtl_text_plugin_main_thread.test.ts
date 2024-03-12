@@ -11,6 +11,7 @@ describe('RTLMainThreadPlugin', () => {
     let server: FakeServer;
     let broadcastSpy: jest.SpyInstance;
     const url = 'http://example.com/plugin';
+    const failedToLoadMessage = `RTL Text Plugin failed to import scripts from ${url}`;
     const SyncRTLPluginStateMessageName = 'syncRTLPluginState';
 
     beforeEach(() => {
@@ -36,29 +37,10 @@ describe('RTLMainThreadPlugin', () => {
     function broadcastMockFailure(message: MessageType, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
             if (payload.pluginStatus === 'loading') {
-                const resultState: PluginState = {
-                    pluginStatus: 'error',
-                    pluginURL: payload.pluginURL
-                };
-                return Promise.resolve([resultState]);
+                throw new Error(failedToLoadMessage);
             }
-        }
-    }
-
-    /** return two results, one success one failure */
-    function broadcastMockMix(message: MessageType, payload: PluginState): Promise<PluginState[]> {
-        if (message === SyncRTLPluginStateMessageName) {
-            if (payload.pluginStatus === 'loading') {
-                const resultState0: PluginState = {
-                    pluginStatus: 'loaded',
-                    pluginURL: payload.pluginURL
-                };
-                const resultState1: PluginState = {
-                    pluginStatus: 'error',
-                    pluginURL: payload.pluginURL
-                };
-                return Promise.resolve([resultState0, resultState1]);
-            }
+        } else {
+            return Promise.resolve([]);
         }
     }
 
@@ -98,7 +80,9 @@ describe('RTLMainThreadPlugin', () => {
 
     it('should be in error state if download fails', async () => {
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockFailure as any);
-        await rtlMainThreadPlugin.setRTLTextPlugin(url);
+        const result = rtlMainThreadPlugin.setRTLTextPlugin(url);
+
+        await expect(result).rejects.toThrow(failedToLoadMessage);
         expect(rtlMainThreadPlugin.url).toEqual(url);
         expect(rtlMainThreadPlugin.status).toBe('error');
     });
@@ -153,15 +137,5 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('requested');
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');
-    });
-
-    it('should report error for multiple results and one failure', async () => {
-        broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockMix as any);
-
-        await rtlMainThreadPlugin.setRTLTextPlugin(url);
-
-        expect(rtlMainThreadPlugin.url).toEqual(url);
-        expect(rtlMainThreadPlugin.status).toBe('error');
-
     });
 });

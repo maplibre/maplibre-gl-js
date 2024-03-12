@@ -11,12 +11,13 @@ class RTLMainThreadPlugin extends Evented {
 
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
-        this.status = statusToSend;
-        return this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: statusToSend, pluginURL: this.url})
-            .catch((e: any) => {
-                this.status = 'error';
-                throw e;
-            });
+        try {
+            this.status = statusToSend;
+            return this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: statusToSend, pluginURL: this.url});
+        } catch (e) {
+            this.status = 'error';
+            throw e;
+        }
     }
 
     /** This one is exposed to outside */
@@ -64,6 +65,7 @@ class RTLMainThreadPlugin extends Evented {
 
         // all errors/exceptions will be handled by _syncState
         await this._syncState('loading');
+
         this.status = 'loaded';
         this.fire(new Event(RTLPluginLoadedEventName));
     }
