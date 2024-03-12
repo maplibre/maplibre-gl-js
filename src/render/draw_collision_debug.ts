@@ -38,10 +38,8 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         const tile = sourceCache.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
-        let posMatrix = coord.posMatrix;
-        if (translate[0] !== 0 || translate[1] !== 0) {
-            posMatrix = Mercator.translatePosMatrix(painter.transform, tile, coord.posMatrix, translate, translateAnchor);
-        }
+        const posMatrix = coord.posMatrix;
+        const posMatrixTranslated = Mercator.translatePosMatrix(painter.transform, tile, coord.posMatrix, translate, translateAnchor);
         const buffers = isText ? bucket.textCollisionBox : bucket.iconCollisionBox;
         // Get collision circle data of this bucket
         const circleArray: Array<number> = bucket.collisionCircleArray;
@@ -50,7 +48,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             // This might vary between buckets as the symbol placement is a continuous process. This matrix is
             // required for transforming points from previous screen space to the current one
             const invTransform = mat4.create();
-            const transform = posMatrix;
+            const transform = posMatrix; // Ignore translation
 
             mat4.mul(invTransform, bucket.placementInvProjMatrix, painter.transform.glCoordMatrix);
             mat4.mul(invTransform, invTransform, bucket.placementViewportMatrix);
@@ -72,7 +70,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             collisionUniformValues(
-                posMatrix,
+                posMatrixTranslated,
                 painter.transform,
                 tile),
             painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord), null,
