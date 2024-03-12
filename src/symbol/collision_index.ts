@@ -88,16 +88,19 @@ export class CollisionIndex {
         textPixelRatio: number,
         posMatrix: mat4,
         unwrappedTileID: UnwrappedTileID,
+        translation: [number, number],
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
         getElevation?: (x: number, y: number) => number
     ): {
             box: Array<number>;
             offscreen: boolean;
         } {
+        const x = collisionBox.anchorPointX + translation[0];
+        const y = collisionBox.anchorPointY + translation[1];
         const projectedPoint = this.projectAndGetPerspectiveRatio(
             posMatrix,
-            collisionBox.anchorPointX,
-            collisionBox.anchorPointY,
+            x,
+            y,
             unwrappedTileID,
             getElevation);
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
@@ -105,7 +108,7 @@ export class CollisionIndex {
         const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
         const brX = collisionBox.x2 * tileToViewport + projectedPoint.point.x;
         const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
-        const projectionOccluded = this.projection.useSpecialProjectionForSymbols ? this.projection.isOccluded(collisionBox.anchorPointX, collisionBox.anchorPointY, unwrappedTileID) : false;
+        const projectionOccluded = this.projection.useSpecialProjectionForSymbols ? this.projection.isOccluded(x, y, unwrappedTileID) : false;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate)) ||

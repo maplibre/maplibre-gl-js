@@ -11,7 +11,7 @@ import Point from '@mapbox/point-geometry';
 import type {Transform} from '../geo/transform';
 import type {StyleLayer} from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
-import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated, SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
+import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
 import {getOverlapMode, OverlapMode} from '../style/style_layer/overlap_mode';
 
 import type {Tile} from '../source/tile';
@@ -87,19 +87,17 @@ export class RetainedQueryData {
     sourceLayerIndex: number;
     bucketIndex: number;
     tileID: OverscaledTileID;
-    tile: Tile;
     featureSortOrder: Array<number>;
     constructor(bucketInstanceId: number,
         featureIndex: FeatureIndex,
         sourceLayerIndex: number,
         bucketIndex: number,
-        tile: Tile) {
+        tileID: OverscaledTileID) {
         this.bucketInstanceId = bucketInstanceId;
         this.featureIndex = featureIndex;
         this.sourceLayerIndex = sourceLayerIndex;
         this.bucketIndex = bucketIndex;
-        this.tileID = tile.tileID;
-        this.tile = tile;
+        this.tileID = tileID;
     }
 }
 
@@ -188,7 +186,7 @@ export type VariableOffset = {
 type TileLayerParameters = {
     bucket: SymbolBucket;
     layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
-    paint: PossiblyEvaluated<SymbolPaintProps, SymbolPaintPropsPossiblyEvaluated>;
+    translation: [number, number];
     unwrappedTileID: UnwrappedTileID;
     posMatrix: mat4;
     textLabelPlaneMatrix: mat4;
@@ -288,6 +286,12 @@ export class Placement {
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
+        const translation = this.collisionIndex.projection.translatePosition(
+            this.transform,
+            tile,
+            paint.get('text-translate'),
+            paint.get('text-translate-anchor'),);
+
         const textLabelPlaneMatrix = projection.getLabelPlaneMatrix(posMatrix,
             pitchWithMap,
             rotateWithMap,
@@ -314,13 +318,13 @@ export class Placement {
             bucketFeatureIndex,
             symbolBucket.sourceLayerIndex,
             symbolBucket.index,
-            tile
+            tile.tileID
         );
 
         const parameters: TileLayerParameters = {
             bucket: symbolBucket,
             layout,
-            paint,
+            translation,
             posMatrix,
             unwrappedTileID,
             textLabelPlaneMatrix,
@@ -363,6 +367,7 @@ export class Placement {
         symbolInstance: SymbolInstance,
         bucket: SymbolBucket,
         orientation: number,
+        translation: [number, number],
         iconBox?: SingleCollisionBox | null,
         getElevation?: (x: number, y: number) => number
     ): {
@@ -381,14 +386,14 @@ export class Placement {
             shiftVariableCollisionBox(
                 textBox, shift.x, shift.y,
                 rotateWithMap, pitchWithMap, this.transform.angle),
-            textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, collisionGroup.predicate, getElevation);
+            textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, translation, collisionGroup.predicate, getElevation);
 
         if (iconBox) {
             const placedIconBoxes = this.collisionIndex.placeCollisionBox(
                 shiftVariableCollisionBox(
                     iconBox, shift.x, shift.y,
                     rotateWithMap, pitchWithMap, this.transform.angle),
-                textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, collisionGroup.predicate, getElevation);
+                textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, translation, collisionGroup.predicate, getElevation);
             if (placedIconBoxes.box.length === 0) return;
         }
 
@@ -429,7 +434,7 @@ export class Placement {
         const {
             bucket,
             layout,
-            paint,
+            translation,
             posMatrix,
             unwrappedTileID,
             textLabelPlaneMatrix,
@@ -473,7 +478,6 @@ export class Placement {
             bucket.deserializeCollisionBoxes(collisionBoxArray);
         }
 
-        const tile = this.retainedQueryData[bucket.bucketInstanceId].tile;
         const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
         const getElevation = this.terrain ? (x: number, y: number) => this.terrain.getElevation(tileID, x, y) : null;
 
@@ -554,6 +558,7 @@ export class Placement {
                             textPixelRatio,
                             posMatrix,
                             unwrappedTileID,
+                            translation,
                             collisionGroup.predicate,
                             getElevation
                         );
@@ -611,7 +616,7 @@ export class Placement {
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
                                     textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, variableIconBox, getElevation);
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translation, variableIconBox, getElevation);
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
@@ -680,12 +685,6 @@ export class Placement {
                 const textPixelPadding = layout.get('text-padding');
                 const circlePixelDiameter = symbolInstance.collisionCircleDiameter;
 
-                const translation = this.collisionIndex.projection.translatePosition(
-                    this.transform,
-                    tile,
-                    paint.get('text-translate'),
-                    paint.get('text-translate-anchor'),);
-
                 placedGlyphCircles = this.collisionIndex.placeCollisionCircles(
                     textOverlapMode,
                     placedSymbol,
@@ -729,7 +728,7 @@ export class Placement {
                             rotateWithMap, pitchWithMap, this.transform.angle) :
                         iconBox;
                     return this.collisionIndex.placeCollisionBox(shiftedIconBox,
-                        iconOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, collisionGroup.predicate, getElevation);
+                        iconOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, translation, collisionGroup.predicate, getElevation);
                 };
 
                 if (placedVerticalText && placedVerticalText.box && placedVerticalText.box.length && collisionArrays.verticalIconBox) {
