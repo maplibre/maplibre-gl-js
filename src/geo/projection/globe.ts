@@ -60,12 +60,12 @@ export class GlobeProjection implements ProjectionBase {
     private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
 
     // Transition handling
-    private _lastGlobeStateEnabled: boolean = false;
+    private _lastGlobeStateEnabled: boolean = true;
     private _lastGlobeChangeTime: number = -1000.0;
     private _lastLargeZoomStateChange: number = -1000.0;
     private _lastLargeZoomState: boolean = false;
-    private _globeness: number;
-    private _skipNextAnimation: boolean = false;
+    private _globeness: number = 1.0;
+    private _skipNextAnimation: boolean = true;
 
     // GPU atan() error correction
     private _errorMeasurement: ProjectionErrorMeasurement;
@@ -420,7 +420,6 @@ export class GlobeProjection implements ProjectionBase {
         this._globeness = globeState ? globeTransition : (1.0 - globeTransition);
 
         if (this._skipNextAnimation) {
-            // Do not animate globe transition for the first 0.1 seconds of the existence of the map
             this._globeness = globeState ? 1.0 : 0.0;
             this._lastGlobeChangeTime = currentTime - globeTransitionTimeSeconds * 1000.0 * 2.0;
             this._skipNextAnimation = false;
