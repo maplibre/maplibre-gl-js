@@ -2,6 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
+      "description": "Tests that setting projection explicitly to mercator actually renders in mercator.",
       "projection": "mercator"
     }
   },

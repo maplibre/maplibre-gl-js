@@ -2,6 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
+      "description": "Tests that globe projection transitions to mercator at high zoom levels.",
       "height": 256,
       "projection": "globe",
       "operations": [
