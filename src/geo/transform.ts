@@ -218,6 +218,9 @@ export class Transform {
         this._calcMatrices();
     }
 
+    /**
+     * Elevation at current center point, meters above sea level
+     */
     get elevation(): number { return this._elevation; }
     set elevation(elevation: number) {
         if (elevation === this._elevation) return;
