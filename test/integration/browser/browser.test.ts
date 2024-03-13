@@ -385,4 +385,19 @@ describe('Browser tests', () => {
 
         expect(markerOpacity).toBe('1');
     }, 20000);
+
+    test('Load map with RTL plugin should throw exception for invalid URL', async () => {
+
+        const rtlPromise = page.evaluate(() => {
+            // console.log('Testing start');
+            return maplibregl.setRTLTextPlugin('badURL', false);
+        });
+
+        // exact message looks like
+        // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
+        const regex = new RegExp('Failed to execute \'importScripts\'.*');
+
+        await expect(rtlPromise).rejects.toThrow(regex);
+
+    }, 2000);
 });

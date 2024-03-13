@@ -200,7 +200,7 @@ export class Tile {
                 if (bucket instanceof SymbolBucket) {
                     if (bucket.hasRTLText) {
                         this.hasRTLText = true;
-                        rtlMainThreadPluginFactory().lazyLoadRTLTextPlugin();
+                        rtlMainThreadPluginFactory().lazyLoad();
                         break;
                     }
                 }

@@ -62,7 +62,9 @@ export type * from '@maplibre/maplibre-gl-style-spec';
  * ```
  * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
  */
-function setRTLTextPlugin(pluginURL: string, lazy: boolean) { return rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy); }
+function setRTLTextPlugin(pluginURL: string, lazy: boolean): Promise<void> {
+    return rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy);
+}
 /**
  * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
  * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
@@ -73,7 +75,9 @@ function setRTLTextPlugin(pluginURL: string, lazy: boolean) { return rtlMainThre
  * const pluginStatus = getRTLTextPluginStatus();
  * ```
  */
-function getRTLTextPluginStatus() { return rtlMainThreadPluginFactory().getRTLTextPluginStatus(); }
+function getRTLTextPluginStatus(): string {
+    return rtlMainThreadPluginFactory().getRTLTextPluginStatus();
+}
 /**
  * Returns the package version of the library
  * @returns Package version of the library
