@@ -18,7 +18,7 @@ import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {DepthMode} from '../../gl/depth_mode';
 import {CullFaceMode} from '../../gl/cull_face_mode';
 import {projectionErrorMeasurementUniformValues} from '../../render/program/projection_error_measurement_program';
-import {warnOnce} from '../../util/util';
+import {easeCubicInOut, lerp, warnOnce} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {granularitySettings} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
@@ -32,20 +32,6 @@ import {PreparedShader, shaders} from '../../shaders/shaders';
  * Used for globe rendering.
  */
 const EXTENT_STENCIL_BORDER = EXTENT / 128;
-
-function clamp(a: number, min: number, max: number): number {
-    return Math.min(Math.max(a, min), max);
-}
-
-function lerp(a: number, b: number, mix: number): number {
-    return a * (1.0 - mix) + b * mix;
-}
-
-function smoothStep(edge0: number, edge1: number, x: number): number {
-    // Function definition from GLSL: https://registry.khronos.org/OpenGL-Refpages/gl4/html/smoothstep.xhtml
-    const t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return t * t * (3.0 - 2.0 * t);
-}
 
 const globeTransitionTimeSeconds = 0.5;
 const zoomTransitionTimeSeconds = 0.5;
@@ -198,7 +184,7 @@ export class GlobeProjection implements ProjectionBase {
         const sinceUpdateSeconds = (now - this._errorMeasurementLastChangeTime) / 1000.0;
         const mix = Math.min(Math.max(sinceUpdateSeconds / errorTransitionTimeSeconds, 0.0), 1.0);
         const newCorrection = -this._errorMeasurementLastValue; // Note the negation
-        this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, smoothStep(0.0, 1.0, mix));
+        this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, easeCubicInOut(mix));
     }
 
     public updateProjection(transform: Transform): void {
@@ -438,7 +424,7 @@ export class GlobeProjection implements ProjectionBase {
         const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / zoomTransitionTimeSeconds, 0.0), 1.0);
         const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
         this._globeness = Math.min(this._globeness, zoomGlobenessBound);
-        this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
+        this._globeness = easeCubicInOut(this._globeness); // Smooth animation
     }
 
     private _getMeshKey(granularity: number, border: boolean, north: boolean, south: boolean): string {
