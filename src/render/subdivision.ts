@@ -1,22 +1,23 @@
 export class SubdivisionGranularityExpression {
     /**
-     * A tile of zoom level 0 will be subdivided to granularity of 2 raised to this number.
+     * A tile of zoom level 0 will be subdivided to this granularity level.
      * Each subsequent zoom level will have its granularity halved.
      */
-    private readonly _baseZoomGranularityPower: number;
+    private readonly _baseZoomGranularity: number;
 
     /**
-     * No tile will have granularity smaller than 2 raised to this number.
+     * No tile will have granularity level smaller than this.
      */
-    private readonly _minGranularityPower: number;
+    private readonly _minGranularity: number;
 
-    constructor(baseZoomGranularityPower: number, minGranularityPower: number) {
-        this._baseZoomGranularityPower = baseZoomGranularityPower;
-        this._minGranularityPower = minGranularityPower;
+    constructor(baseZoomGranularity: number, minGranularity: number) {
+        this._baseZoomGranularity = baseZoomGranularity;
+        this._minGranularity = minGranularity;
     }
 
     public getGranularityForZoomLevel(zoomLevel: number): number {
-        return 1 << Math.max(this._baseZoomGranularityPower - zoomLevel, this._minGranularityPower, 0);
+        const divisor = 1 << zoomLevel;
+        return Math.max(Math.floor(this._baseZoomGranularity / divisor), this._minGranularity, 0);
     }
 }
 
@@ -38,8 +39,8 @@ export class SubdivisionGranularitySetting {
 }
 
 export const granularitySettings: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
-    fill: new SubdivisionGranularityExpression(7, 1),
-    line: new SubdivisionGranularityExpression(9, 1),
+    fill: new SubdivisionGranularityExpression(128, 1),
+    line: new SubdivisionGranularityExpression(512, 1)
 });
 
 // Lots more code to come once fill, line and fill-extrusion layers get ported.
