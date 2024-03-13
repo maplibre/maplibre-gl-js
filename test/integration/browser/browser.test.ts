@@ -393,13 +393,11 @@ describe('Browser tests', () => {
             return maplibregl.setRTLTextPlugin('badURL', false);
         });
 
-        await rtlPromise.catch(e => {
-            const message: string = e.message;
+        // exact message looks like
+        // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
+        const regex = new RegExp('Failed to execute \'importScripts\'.*');
 
-            // exact message looks like
-            // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
-            const regex = new RegExp('Failed to execute \'importScripts\' on \'WorkerGlobalScope\': The script at \'.*\' failed to load.');
-            expect(regex.test(message)).toBe(true);
-        });
+        await expect(rtlPromise).rejects.toThrow(regex);
+
     }, 2000);
 });
