@@ -1,4 +1,4 @@
-import puppeteer, {Page, Browser} from 'puppeteer';
+import puppeteer, {Page, Browser, ConsoleMessage} from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
@@ -385,4 +385,21 @@ describe('Browser tests', () => {
 
         expect(markerOpacity).toBe('1');
     }, 20000);
+
+    test('Load map with RTL plugin should throw exception for invalid URL', async () => {
+
+        const rtlPromise = page.evaluate(() => {
+            // console.log('Testing start');
+            return maplibregl.setRTLTextPlugin('badURL', false);
+        });
+
+        await rtlPromise.catch(e => {
+            const message: string = e.message;
+
+            // exact message looks like
+            // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
+            const regex = new RegExp('Failed to execute \'importScripts\' on \'WorkerGlobalScope\': The script at \'.*\' failed to load.');
+            expect(regex.test(message)).toBe(true);
+        });
+    }, 2000);
 });
