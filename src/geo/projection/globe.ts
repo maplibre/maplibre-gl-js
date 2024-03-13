@@ -663,7 +663,7 @@ class ProjectionErrorMeasurement {
             if (currentFrame >= this._readbackQueue.frameNumberIssued + this._readbackWaitFrames) {
                 // Try to read back - it is possible that this method does nothing, then
                 // the readback queue will not be cleared and we will retry next frame.
-                this._tryReadback(painter);
+                this._tryReadback(painter.context);
             }
         } else {
             if (currentFrame >= this._lastReadbackFrame + this._measureWaitFrames) {
@@ -700,8 +700,6 @@ class ProjectionErrorMeasurement {
             '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
             this._fullscreenTriangle.segments);
 
-        context.viewport.set([0, 0, painter.width, painter.height]);
-
         if (this._allowWebGL2 && this._pbo && gl instanceof WebGL2RenderingContext) {
             // Read back into PBO
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
@@ -724,8 +722,7 @@ class ProjectionErrorMeasurement {
         }
     }
 
-    private _tryReadback(painter: Painter): void {
-        const context = painter.context;
+    private _tryReadback(context: Context): void {
         const gl = context.gl;
 
         if (this._allowWebGL2 && this._pbo && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
@@ -748,7 +745,7 @@ class ProjectionErrorMeasurement {
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
         } else {
             // WebGL1 compatible
-            this._bindFramebuffer(painter.context);
+            this._bindFramebuffer(context);
             gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, this._resultBuffer);
         }
 

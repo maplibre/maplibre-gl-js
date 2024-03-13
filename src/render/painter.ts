@@ -45,7 +45,6 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
 import {Mesh} from './mesh';
-import {GlobeProjection} from '../geo/projection/globe';
 import {translatePosMatrix as mercatorTranslatePosMatrix, MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 import {Tile} from '../source/tile';
 
@@ -475,6 +474,7 @@ export class Painter {
         this.style.map.projection.updateGPUdependent(this);
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
+        this.context.viewport.set([0, 0, this.width, this.height]);
         this.context.bindFramebuffer.set(null);
 
         // Clear buffers in preparation for drawing to the main framebuffer
