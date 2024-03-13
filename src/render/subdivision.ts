@@ -24,29 +24,29 @@ export class SubdivisionGranularitySetting {
     /**
      * granularity settings used for fill layer (both polygons and their anti-aliasing outlines).
      */
-    public readonly granularityFill;
+    public readonly fill;
 
     /**
      * granularity used for stencil mask tiles.
      */
-    public readonly granularityStencil;
+    public readonly stencil;
 
     /**
      * granularity used for the line layer.
      */
-    public readonly granularityLine;
+    public readonly line;
 
-    constructor(fill: SubdivisionGranularityExpression, line: SubdivisionGranularityExpression, stencil: SubdivisionGranularityExpression) {
-        this.granularityFill = fill;
-        this.granularityLine = line;
-        this.granularityStencil = stencil;
+    constructor(options: {fill: SubdivisionGranularityExpression; line: SubdivisionGranularityExpression; stencil: SubdivisionGranularityExpression}) {
+        this.fill = options.fill;
+        this.line = options.line;
+        this.stencil = options.stencil;
     }
 }
 
-export const granularitySettings: SubdivisionGranularitySetting = new SubdivisionGranularitySetting(
-    new SubdivisionGranularityExpression(7, 1), // Fill
-    new SubdivisionGranularityExpression(9, 1), // Line
-    new SubdivisionGranularityExpression(7, 3) // Stencil
-);
+export const granularitySettings: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
+    fill: new SubdivisionGranularityExpression(7, 1),
+    line: new SubdivisionGranularityExpression(9, 1),
+    stencil: new SubdivisionGranularityExpression(7, 3)
+});
 
 // Lots more code to come once fill, line and fill-extrusion layers get ported.
