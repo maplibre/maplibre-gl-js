@@ -577,9 +577,11 @@ export class Painter {
         }
     }
 
-    // Temporary function - translate & translate-anchor handling will be moved to projection classes,
-    // since it is inherently projection dependent. Most translations will not be handled by the
-    // projection matrix (like the one this function produces), but by specialized code in the vertex shader.
+    /**
+     * Temporary function - translate & translate-anchor handling will be moved to projection classes,
+     * since it is inherently projection dependent. Most translations will not be handled by the
+     * projection matrix (like the one this function produces), but by specialized code in the vertex shader.
+     */
     translatePosMatrix(
         matrix: mat4,
         tile: Tile,
