@@ -236,7 +236,7 @@ export class Painter {
         projectionData['u_projection_matrix'] = matrix;
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
-        this.useProgram('clippingMask', null, [], true).draw(context, gl.TRIANGLES,
+        this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,
@@ -626,7 +626,7 @@ export class Painter {
      * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines: Array<string> = [], forceSimpleProjection: boolean = false): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 
@@ -635,14 +635,13 @@ export class Painter {
         const projectionPrelude = forceSimpleProjection ? shaders.projectionMercator : projection.shaderPreludeCode;
         const projectionDefine = forceSimpleProjection ? MercatorShaderDefine : projection.shaderDefine;
         const projectionKey = `/${forceSimpleProjection ? MercatorShaderVariantKey : projection.shaderVariantName}`;
-        const concatenatedDefines = defines ? [projectionDefine].concat(defines) : [projectionDefine];
+        const concatenatedDefines = [projectionDefine];
 
         const key = name +
             (programConfiguration ? programConfiguration.cacheKey : '') +
             projectionKey +
             (this._showOverdrawInspector ? '/overdraw' : '') +
-            (useTerrain ? '/terrain' : '') +
-            (concatenatedDefines ? (`/defines:${concatenatedDefines.join('//')}`) : '');
+            (useTerrain ? '/terrain' : '');
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
