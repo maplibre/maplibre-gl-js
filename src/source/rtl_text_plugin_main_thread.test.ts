@@ -109,17 +109,15 @@ describe('RTLMainThreadPlugin', () => {
         deferredSpy.mockRestore();
 
         // this is really a fire and forget
-        // two calls to lazyLoad
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         rtlMainThreadPlugin.lazyLoad();
         await sleep(1);
-        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
 
         // 'loading'
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
         expect(broadcastSpy).toHaveBeenCalledTimes(1);
 
-        // // second call to lazyLoad should not change anything
+        // second call to lazyLoad should not change anything
         rtlMainThreadPlugin.lazyLoad();
         expect(broadcastSpy).toHaveBeenCalledTimes(1);
 
