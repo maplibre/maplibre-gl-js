@@ -23,9 +23,9 @@ import {mercatorYfromLat} from '../mercator_coordinate';
 import {granularitySettings} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
-import * as Mercator from './mercator';
 import {ProjectionBase} from './projection_base';
 import {PreparedShader, shaders} from '../../shaders/shaders';
+import {MercatorProjection, translatePosition} from './mercator';
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.
@@ -40,7 +40,7 @@ const errorTransitionTimeSeconds = 0.5;
 
 export class GlobeProjection implements ProjectionBase {
     private _map: Map | undefined;
-    private _mercator: Mercator.MercatorProjection;
+    private _mercator: MercatorProjection;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
     private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
@@ -152,7 +152,7 @@ export class GlobeProjection implements ProjectionBase {
 
     constructor(map: Map) {
         this._map = map;
-        this._mercator = new Mercator.MercatorProjection();
+        this._mercator = new MercatorProjection();
     }
 
     public destroy() {
@@ -453,7 +453,7 @@ export class GlobeProjection implements ProjectionBase {
     public translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
-        return Mercator.translatePosition(transform, tile, translate, translateAnchor);
+        return translatePosition(transform, tile, translate, translateAnchor);
     }
 
     /**
