@@ -13,7 +13,6 @@ import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
-import {GlobeProjection} from '../geo/projection/globe';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -33,7 +32,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     const program = painter.useProgram('raster');
 
     const projection = painter.style.map.projection;
-    const globe = (projection instanceof GlobeProjection && projection.useGlobeRendering);
+    const globe = projection.useSubdivision;
 
     const colorMode = painter.colorModeForRenderPass();
     const align = !painter.options.moving;

@@ -115,6 +115,10 @@ export class GlobeProjection implements ProjectionBase {
         return this._globeness < 1.0;
     }
 
+    get useSubdivision(): boolean {
+        return this.useGlobeRendering;
+    }
+
     get useSpecialProjectionForSymbols(): boolean {
         return this.useGlobeRendering;
     }
@@ -441,10 +445,10 @@ export class GlobeProjection implements ProjectionBase {
         return `${granularity.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
-    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, usePoleVertices: boolean = true): Mesh {
-        const granularity = granularitySettings.stencil.getGranularityForZoomLevel(canonical.z);
-        const north = usePoleVertices && (canonical.y === 0);
-        const south = usePoleVertices && (canonical.y === (1 << canonical.z) - 1);
+    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh {
+        const granularity = granularitySettings.fill.getGranularityForZoomLevel(canonical.z);
+        const north = (canonical.y === 0);
+        const south = (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granularity, hasBorder, north, south);
     }
 

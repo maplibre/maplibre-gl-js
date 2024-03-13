@@ -270,11 +270,7 @@ export class Painter {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
-            let mesh = this.tileExtentMesh;
-
-            if (projection instanceof GlobeProjection) {
-                mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true);
-            }
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true);
 
             const projectionData = projection.getProjectionData(tileID.canonical, tileID.posMatrix);
 

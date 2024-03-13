@@ -27,26 +27,19 @@ export class SubdivisionGranularitySetting {
     public readonly fill;
 
     /**
-     * granularity used for stencil mask tiles.
-     */
-    public readonly stencil;
-
-    /**
      * granularity used for the line layer.
      */
     public readonly line;
 
-    constructor(options: {fill: SubdivisionGranularityExpression; line: SubdivisionGranularityExpression; stencil: SubdivisionGranularityExpression}) {
+    constructor(options: {fill: SubdivisionGranularityExpression; line: SubdivisionGranularityExpression}) {
         this.fill = options.fill;
         this.line = options.line;
-        this.stencil = options.stencil;
     }
 }
 
 export const granularitySettings: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
     fill: new SubdivisionGranularityExpression(7, 1),
     line: new SubdivisionGranularityExpression(9, 1),
-    stencil: new SubdivisionGranularityExpression(7, 3)
 });
 
 // Lots more code to come once fill, line and fill-extrusion layers get ported.
