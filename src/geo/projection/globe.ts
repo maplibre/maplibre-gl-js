@@ -50,7 +50,13 @@ export class GlobeProjection implements ProjectionBase {
     private _lastGlobeChangeTime: number = -1000.0;
     private _lastLargeZoomStateChange: number = -1000.0;
     private _lastLargeZoomState: boolean = false;
+
+    /**
+     * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
+     * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
+     */
     private _globeness: number = 1.0;
+
     private _skipNextAnimation: boolean = true;
 
     // GPU atan() error correction
@@ -63,18 +69,9 @@ export class GlobeProjection implements ProjectionBase {
 
     private _globeProjectionOverride = true;
 
-    private _globeProjMatrix: mat4 = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ];
-    private _globeProjMatrixNoCorrection: mat4 = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ];
+    private _globeProjMatrix: mat4 = mat4.create();
+    private _globeProjMatrixNoCorrection: mat4 = mat4.create();
+
     private _globeCameraPosition: vec3 = [0, 0, 0];
 
     get name(): string {
@@ -229,6 +226,24 @@ export class GlobeProjection implements ProjectionBase {
             cameraPos[2] / cameraPos[3]
         ];
 
+        this._cachedClippingPlane = this._computeClippingPlane(transform, globeRadiusPixels);
+    }
+
+    public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4, useAtanCorrection: boolean = true): ProjectionData {
+        const data = this._mercator.getProjectionData(canonicalTileCoords, tilePosMatrix);
+
+        // Set 'u_projection_matrix' to actual globe transform
+        if (this.useGlobeRendering) {
+            data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
+        }
+
+        data['u_projection_clipping_plane'] = [...this._cachedClippingPlane];
+        data['u_projection_transition'] = this._globeness;
+
+        return data;
+    }
+
+    private _computeClippingPlane(transform: Transform, globeRadiusPixels: number): [number, number, number, number] {
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
         // and all the non-visible parts in the negative half-space.
@@ -292,21 +307,7 @@ export class GlobeProjection implements ProjectionBase {
         // we don't want the actually visible parts of the sphere to end up beyond distance 1 from the plane - otherwise they would be clipped by the near plane.
         const scale = 0.25;
         vec3.scale(planeVector, planeVector, scale);
-        this._cachedClippingPlane = [...planeVector, -tangentPlaneDistanceToC * scale];
-    }
-
-    public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4, useAtanCorrection: boolean = true): ProjectionData {
-        const data = this._mercator.getProjectionData(canonicalTileCoords, tilePosMatrix);
-
-        // Set 'u_projection_matrix' to actual globe transform
-        if (this.useGlobeRendering) {
-            data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
-        }
-
-        data['u_projection_clipping_plane'] = [...this._cachedClippingPlane];
-        data['u_projection_transition'] = this._globeness;
-
-        return data;
+        return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
     private _projectToSphere(mercatorX: number, mercatorY: number): vec3 {
@@ -378,11 +379,7 @@ export class GlobeProjection implements ProjectionBase {
             axisRight[1] * dir[0] + axisDown[1] * dir[1] + spherePos[1] * dir[2],
             axisRight[2] * dir[0] + axisDown[2] * dir[1] + spherePos[2] * dir[2]
         ];
-        // const mixed: vec3 = [
-        //     lerp(dir[0], transformed[0], this._globeness),
-        //     lerp(dir[1], transformed[1], this._globeness),
-        //     lerp(dir[2], transformed[2], this._globeness)
-        // ];
+
         const normalized: vec3 = [0, 0, 0];
         vec3.normalize(normalized, transformed);
         return normalized;
@@ -566,8 +563,6 @@ class ProjectionErrorMeasurement {
     private readonly _texFormat: number;
     private readonly _texType: number;
 
-    private readonly _allowWebGL2 = true;
-
     private _fullscreenTriangle: Mesh;
     private _fbo: Framebuffer;
     private _resultBuffer: Uint8Array;
@@ -622,7 +617,7 @@ class ProjectionErrorMeasurement {
         this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
         this._fbo.colorAttachment.set(texture);
 
-        if (this._allowWebGL2 && gl instanceof WebGL2RenderingContext) {
+        if (gl instanceof WebGL2RenderingContext) {
             this._pbo = gl.createBuffer();
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
             gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
@@ -686,7 +681,7 @@ class ProjectionErrorMeasurement {
             '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
             this._fullscreenTriangle.segments);
 
-        if (this._allowWebGL2 && this._pbo && gl instanceof WebGL2RenderingContext) {
+        if (this._pbo && gl instanceof WebGL2RenderingContext) {
             // Read back into PBO
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
             gl.readBuffer(gl.COLOR_ATTACHMENT0);
@@ -711,7 +706,7 @@ class ProjectionErrorMeasurement {
     private _tryReadback(context: Context): void {
         const gl = context.gl;
 
-        if (this._allowWebGL2 && this._pbo && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
+        if (this._pbo && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
             // WebGL 2 path
             const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
 
