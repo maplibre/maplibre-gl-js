@@ -23,6 +23,7 @@ describe('RTLMainThreadPlugin', () => {
     });
 
     function broadcastMockSuccess(message: MessageType, payload: PluginState): Promise<PluginState[]> {
+        console.log('broadcastMockSuccessDefer', payload.pluginStatus);
         if (message === SyncRTLPluginStateMessageName) {
             if (payload.pluginStatus === 'loading') {
                 const resultState: PluginState = {
@@ -34,10 +35,22 @@ describe('RTLMainThreadPlugin', () => {
         }
     }
 
+    function broadcastMockSuccessDefer(message: MessageType, payload: PluginState): Promise<PluginState[]> {
+        if (message === SyncRTLPluginStateMessageName) {
+            if (payload.pluginStatus === 'deferred') {
+                const resultState: PluginState = {
+                    pluginStatus: 'deferred',
+                    pluginURL: payload.pluginURL
+                };
+                return Promise.resolve([resultState]);
+            }
+        }
+    }
+
     function broadcastMockFailure(message: MessageType, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
             if (payload.pluginStatus === 'loading') {
-                throw new Error(failedToLoadMessage);
+                return Promise.reject(failedToLoadMessage);
             }
         } else {
             return Promise.resolve([]);
@@ -80,39 +93,42 @@ describe('RTLMainThreadPlugin', () => {
 
     it('should be in error state if download fails', async () => {
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockFailure as any);
-        const result = rtlMainThreadPlugin.setRTLTextPlugin(url);
-
-        await expect(result).rejects.toThrow(failedToLoadMessage);
+        const resultPromise = rtlMainThreadPlugin.setRTLTextPlugin(url);
+        await expect(resultPromise).rejects.toBe(failedToLoadMessage);
         expect(rtlMainThreadPlugin.url).toEqual(url);
         expect(rtlMainThreadPlugin.status).toBe('error');
     });
 
     it('should lazy load the plugin if deferred', async () => {
         // use success spy to make sure test case does not throw exception
-        broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
+        const deferredSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccessDefer as any);
         await rtlMainThreadPlugin.setRTLTextPlugin(url, true);
-        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
+        expect(deferredSpy).toHaveBeenCalledTimes(1);
+        expect(deferredSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'deferred', pluginURL: url});
         expect(rtlMainThreadPlugin.status).toBe('deferred');
+        deferredSpy.mockRestore();
 
         // this is really a fire and forget
         // two calls to lazyLoad
+        broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccess as any);
         rtlMainThreadPlugin.lazyLoad();
         await sleep(1);
         expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
 
-        // two times, first for "deferred", second for 'loading'
-        expect(broadcastSpy).toHaveBeenCalledTimes(2);
+        // 'loading'
+        expect(broadcastSpy).toHaveBeenCalledWith(SyncRTLPluginStateMessageName, {pluginStatus: 'loading', pluginURL: url});
+        expect(broadcastSpy).toHaveBeenCalledTimes(1);
 
-        // second call to lazyLoad should not change anything
+        // // second call to lazyLoad should not change anything
         rtlMainThreadPlugin.lazyLoad();
-        expect(broadcastSpy).toHaveBeenCalledTimes(2);
+        expect(broadcastSpy).toHaveBeenCalledTimes(1);
 
         expect(rtlMainThreadPlugin.status).toBe('loaded');
 
         // 3rd call to lazyLoad should not change anything
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('loaded');
-        expect(broadcastSpy).toHaveBeenCalledTimes(2);
+        expect(broadcastSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should set status to requested if RTL plugin was not set', async () => {
@@ -137,5 +153,20 @@ describe('RTLMainThreadPlugin', () => {
         expect(rtlMainThreadPlugin.status).toBe('requested');
         rtlMainThreadPlugin.lazyLoad();
         expect(rtlMainThreadPlugin.status).toBe('requested');
+    });
+
+    it('should be in error state if lazyLoad fails', async () => {
+        broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockSuccessDefer);
+        const resultPromise = rtlMainThreadPlugin.setRTLTextPlugin(url, true);
+        await expect(resultPromise).resolves.toBeUndefined();
+
+        expect(rtlMainThreadPlugin.status).toBe('deferred');
+
+        // the next one should fail
+        broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(broadcastMockFailure as any);
+
+        await expect(rtlMainThreadPlugin._requestImport()).rejects.toBe(failedToLoadMessage);
+        expect(rtlMainThreadPlugin.url).toEqual(url);
+        expect(rtlMainThreadPlugin.status).toBe('error');
     });
 });
