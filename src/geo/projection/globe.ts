@@ -1,6 +1,5 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {Context} from '../../gl/context';
-import {Map} from '../../ui/map';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {Mesh} from '../../render/mesh';
@@ -32,7 +31,6 @@ const maxGlobeZoom = 12.0;
 const errorTransitionTimeSeconds = 0.5;
 
 export class GlobeProjection implements ProjectionBase {
-    private _map: Map | undefined;
     private _mercator: MercatorProjection;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
@@ -130,18 +128,17 @@ export class GlobeProjection implements ProjectionBase {
     /**
      * When true, globe view fill function as normal. When false, mercator will be used at all zoom levels instead.
      * Transitioning between states will be animated.
+     * Map should be updated after changing this value.
      * True by default.
      */
     get globeView(): boolean { return this._globeProjectionOverride; }
     set globeView(value: boolean) {
         if (value !== this._globeProjectionOverride) {
             this._globeProjectionOverride = value;
-            this._map._update(true); // Otherwise the transition animation might not happen until the map is interacted with by the user.
         }
     }
 
-    constructor(map: Map) {
-        this._map = map;
+    constructor() {
         this._mercator = new MercatorProjection();
     }
 
@@ -350,9 +347,9 @@ export class GlobeProjection implements ProjectionBase {
         };
     }
 
-    public transformLightDirection(dir: vec3): vec3 {
-        const sphereX = this._map.transform.center.lng * Math.PI / 180.0;
-        const sphereY = this._map.transform.center.lat * Math.PI / 180.0;
+    public transformLightDirection(transform: Transform, dir: vec3): vec3 {
+        const sphereX = transform.center.lng * Math.PI / 180.0;
+        const sphereY = transform.center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
         const spherePos: vec3 = [

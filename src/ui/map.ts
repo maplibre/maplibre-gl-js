@@ -611,7 +611,7 @@ export class Map extends Camera {
             this.setMaxBounds(options.maxBounds);
         }
 
-        this.projection = createProjectionFromName(options.projection, this);
+        this.projection = createProjectionFromName(options.projection);
 
         this._setupContainer();
         this._setupPainter();
