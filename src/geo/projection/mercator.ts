@@ -28,11 +28,6 @@ export class MercatorProjection implements ProjectionBase {
         return false;
     }
 
-    get isRenderingDirty(): boolean {
-        // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
-        return false;
-    }
-
     get drawWrappedTiles(): boolean {
         // Mercator always needs to draw wrapped/duplicated tiles.
         return true;
@@ -57,6 +52,11 @@ export class MercatorProjection implements ProjectionBase {
 
     get vertexShaderPreludeCode(): string {
         return shaders.projectionMercator.vertexSource;
+    }
+
+    public isRenderingDirty(): boolean {
+        // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
+        return false;
     }
 
     destroy(): void {

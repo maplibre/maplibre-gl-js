@@ -97,18 +97,6 @@ export class GlobeProjection implements ProjectionBase {
         return this.useGlobeRendering;
     }
 
-    get isRenderingDirty(): boolean {
-        const now = browser.now();
-        let dirty = false;
-        // Globe transition
-        dirty = dirty || (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeTransitionTimeSeconds, zoomTransitionTimeSeconds) + 0.2);
-        // Error correction transition
-        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (errorTransitionTimeSeconds + 0.2);
-        // Error correction query in flight
-        dirty = dirty || this._errorMeasurement.awaitingQuery;
-        return dirty;
-    }
-
     get shaderVariantName(): string {
         return this.useGlobeRendering ? 'globe' : this._mercator.shaderVariantName;
     }
@@ -176,7 +164,6 @@ export class GlobeProjection implements ProjectionBase {
 
     public updateProjection(transform: Transform): void {
         this._errorQueryLatitudeDegrees = transform.center.lat;
-
         this._updateAnimation(transform);
 
         // We want zoom levels to be consistent between globe and flat views.
@@ -231,6 +218,18 @@ export class GlobeProjection implements ProjectionBase {
         data['u_projection_transition'] = this._globeness;
 
         return data;
+    }
+
+    public isRenderingDirty(): boolean {
+        const now = browser.now();
+        let dirty = false;
+        // Globe transition
+        dirty = dirty || (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeTransitionTimeSeconds, zoomTransitionTimeSeconds) + 0.2);
+        // Error correction transition
+        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (errorTransitionTimeSeconds + 0.2);
+        // Error correction query in flight
+        dirty = dirty || this._errorMeasurement.awaitingQuery;
+        return dirty;
     }
 
     private _computeClippingPlane(transform: Transform, globeRadiusPixels: number): [number, number, number, number] {

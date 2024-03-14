@@ -33,13 +33,6 @@ export interface ProjectionBase {
 
     /**
      * @internal
-     * True when an animation handled by the projection is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    get isRenderingDirty(): boolean;
-
-    /**
-     * @internal
      * True if this projection requires wrapped copies of the world to be drawn.
      */
     get drawWrappedTiles(): boolean;
@@ -76,6 +69,13 @@ export interface ProjectionBase {
      * Vertex shader code that is injected into every MapLibre vertex shader that uses this projection.
      */
     get vertexShaderPreludeCode(): string;
+
+    /**
+     * @internal
+     * True when an animation handled by the projection is in progress,
+     * requiring MapLibre to keep rendering new frames.
+     */
+    isRenderingDirty(): boolean;
 
     /**
      * @internal
