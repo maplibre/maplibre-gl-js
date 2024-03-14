@@ -422,17 +422,15 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
-        const deduplicateWrapped = !style.map.projection.drawWrappedTiles;
-
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
             if (sourceCache.used) {
                 sourceCache.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates(false, deduplicateWrapped);
+            coordsAscending[id] = sourceCache.getVisibleCoordinates(false);
             coordsDescending[id] = coordsAscending[id].slice().reverse();
-            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true, deduplicateWrapped).reverse();
+            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
         }
 
         this.opaquePassCutoff = Infinity;

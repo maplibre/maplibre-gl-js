@@ -950,28 +950,8 @@ export class SourceCache extends Evented {
         return tileResults;
     }
 
-    getVisibleCoordinates(symbolLayer?: boolean, deduplicateWrapped?: boolean): Array<OverscaledTileID> {
-        let coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
-
-        // When rendering a mercator map, the screen may be larger than the world,
-        // causing multiple "copies" of the world to be visible and
-        // the same tile might be drawn in two different places (see wrap in OverscaledTileID).
-        // For globe, we only ever want to draw a single copy of the world, so no (canonical) tile should be present
-        // multiple times in the resulting list of tile IDs.
-        if (deduplicateWrapped) {
-            const visibleDeduplicated = [];
-            const visibleDictionary = {};
-            // getRenderableIds orders tiles from lowest wrap to highest, we need to preserve this ordering
-            for (const coord of coords) {
-                const key = coord.canonical.key;
-                if (!(key in visibleDictionary)) {
-                    visibleDictionary[key] = true;
-                    visibleDeduplicated.push(coord);
-                }
-            }
-            coords = visibleDeduplicated;
-        }
-
+    getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
+        const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
         for (const coord of coords) {
             coord.posMatrix = this.transform.calculatePosMatrix(coord.toUnwrapped());
         }
