@@ -47,6 +47,7 @@ import {RenderToTexture} from './render_to_texture';
 import {Mesh} from './mesh';
 import {translatePosMatrix as mercatorTranslatePosMatrix, MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 import {Tile} from '../source/tile';
+import {ProjectionData} from './program/projection_program';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -231,8 +232,13 @@ export class Painter {
         mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
-        const projectionData = this.style.map.projection.getProjectionData(null, null);
-        projectionData['u_projection_matrix'] = matrix;
+        const projectionData: ProjectionData = {
+            'u_projection_matrix': matrix,
+            'u_projection_tile_mercator_coords': [0, 0, 1, 1],
+            'u_projection_clipping_plane': [0, 0, 0, 0],
+            'u_projection_transition': 0.0,
+            'u_projection_fallback_matrix': matrix,
+        };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
         this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
