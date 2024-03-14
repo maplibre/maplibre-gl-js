@@ -17,7 +17,7 @@ export type ProjectionGPUContext = {
 /**
  * An abstract class the specializations of which are used internally by MapLibre to handle different projections.
  */
-export interface ProjectionBase {
+export interface Projection {
     /**
      * @internal
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.

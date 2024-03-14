@@ -1,6 +1,6 @@
 import {mat4} from 'gl-matrix';
 import {Transform} from '../transform';
-import {ProjectionBase, ProjectionGPUContext} from './projection_base';
+import {Projection, ProjectionGPUContext} from './projection';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {Tile} from '../../source/tile';
@@ -17,7 +17,7 @@ import posAttributes from '../../data/pos_attributes';
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
-export class MercatorProjection implements ProjectionBase {
+export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
 
     get name(): string {

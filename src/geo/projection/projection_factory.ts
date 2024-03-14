@@ -1,7 +1,7 @@
 import {warnOnce} from '../../util/util';
 import {GlobeProjection} from './globe';
 import {MercatorProjection} from './mercator';
-import {ProjectionBase} from './projection_base';
+import {Projection} from './projection';
 
 /**
  * Name of MapLibre's map projection. Can be:
@@ -11,7 +11,7 @@ import {ProjectionBase} from './projection_base';
  */
 export type ProjectionName = 'mercator' | 'globe';
 
-export function createProjectionFromName(name: ProjectionName): ProjectionBase {
+export function createProjectionFromName(name: ProjectionName): Projection {
     switch (name) {
         case 'mercator':
             return new MercatorProjection();

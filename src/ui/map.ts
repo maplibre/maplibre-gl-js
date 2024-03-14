@@ -58,7 +58,7 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {ProjectionBase} from '../geo/projection/projection_base';
+import {Projection} from '../geo/projection/projection';
 import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
 
 const version = packageJSON.version;
@@ -435,7 +435,7 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
-    projection: ProjectionBase;
+    projection: Projection;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -3350,5 +3350,5 @@ export class Map extends Camera {
      * let projection = map.getProjection();
      * ```
      */
-    getProjection(): ProjectionBase { return this.projection; }
+    getProjection(): Projection { return this.projection; }
 }
