@@ -78,20 +78,23 @@
             );
             this.scene = new BABYLON.Scene(this.engine);
             /**
-            * optionally add 
+            * optionally add
             * this.scene.autoClearDepthAndStencil = false
             * and for renderingGroupIds set this individually via
             * this.scene.setRenderingAutoClearDepthStencil(1,false)
+            * to allow blending with maplibre scene
+            * as documented in https://doc.babylonjs.com/features/featuresDeepDive/scene/optimize_your_scene#reducing-calls-to-glclear
             */
             this.scene.autoClear = false;
-            /** 
+            /**
             * use detachControl if you only want to interact with maplibre-gl and do not need pointer events of babylonjs.
             * alternatively exchange this.scene.detachControl() with the following two lines, they will allow bubbling up events to maplibre-gl.
             * this.scene.preventDefaultOnPointerDown = false
             * this.scene.preventDefaultOnPointerUp = false
+            * https://doc.babylonjs.com/typedoc/classes/BABYLON.Scene#preventDefaultOnPointerDown
             */
             this.scene.detachControl();
-            
+
             this.scene.beforeRender = () => {
                 this.engine.wipeCaches(true);
             };
