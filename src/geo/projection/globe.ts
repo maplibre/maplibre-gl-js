@@ -114,16 +114,28 @@ export class GlobeProjection implements Projection {
     }
 
     /**
-     * When true, globe view fill function as normal. When false, mercator will be used at all zoom levels instead.
-     * Transitioning between states will be animated.
-     * Map should be updated after changing this value.
-     * True by default.
+     * Returns whether globe view is allowed.
+     * When allowed, globe fill function as normal, displaying a 3D planet,
+     * but transitioning to mercator at high zoom levels.
+     * Otherwise, mercator will be used at all zoom levels instead.
+     * Set with {@link setGlobeViewAllowed}.
      */
-    get globeView(): boolean { return this._globeProjectionOverride; }
-    set globeView(value: boolean) {
-        if (value !== this._globeProjectionOverride) {
-            this._globeProjectionOverride = value;
+    public getGlobeViewAllowed(): boolean {
+        return this._globeProjectionOverride;
+    }
+
+    /**
+     * Sets whether globe view is allowed. When allowed, globe fill function as normal, displaying a 3D planet,
+     * but transitioning to mercator at high zoom levels.
+     * Otherwise, mercator will be used at all zoom levels instead.
+     * @param allow - Sets whether glove view is allowed.
+     * @param animateTransition - Controls whether the transition between globe view and mercator (if triggered by this call) should be animated. True by default.
+     */
+    public setGlobeViewAllowed(allow: boolean, animateTransition: boolean = true) {
+        if (!animateTransition && allow !== this._globeProjectionOverride) {
+            this._skipNextAnimation = true;
         }
+        this._globeProjectionOverride = allow;
     }
 
     constructor() {
@@ -134,10 +146,6 @@ export class GlobeProjection implements Projection {
         if (this._errorMeasurement) {
             this._errorMeasurement.destroy();
         }
-    }
-
-    public skipNextProjectionTransitionAnimation() {
-        this._skipNextAnimation = true;
     }
 
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
