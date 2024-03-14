@@ -5,7 +5,11 @@
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
+  "homepage": "https://maplibre.org/",
   "funding": "https://github.com/maplibre/maplibre-gl-js?sponsor=1",
+  "bugs": {
+    "url": "https://github.com/maplibre/maplibre-gl-js/issues/"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/maplibre/maplibre-gl-js.git"
