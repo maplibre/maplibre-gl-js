@@ -203,7 +203,7 @@ export class FillBucket implements Bucket {
                 lineList.push(lineIndices);
             }
 
-            const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, granularitySettings.granularityFill.getGranularityForZoomLevel(canonical.z));
+            const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, granularitySettings.fill.getGranularityForZoomLevel(canonical.z));
             const finalVertices = subdivided.verticesFlattened;
             const finalIndicesTriangles = subdivided.indicesTriangles;
             const finalIndicesLineList = subdivided.indicesLineList;

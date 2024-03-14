@@ -334,7 +334,7 @@ function addFeature(bucket: SymbolBucket,
 
     const subdivideLine = (line) => {
         // Subdivide lines for symbols as well, in order to allow line-following-text to be curved under non-mercator projections.
-        const granularity = (canonical) ? granularitySettings.granularityLine.getGranularityForZoomLevel(canonical.z) : 1;
+        const granularity = (canonical) ? granularitySettings.line.getGranularityForZoomLevel(canonical.z) : 1;
         return subdivideVertexLine(line, granularity);
     };
 

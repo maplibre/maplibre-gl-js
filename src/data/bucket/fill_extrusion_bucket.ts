@@ -189,7 +189,7 @@ export class FillExtrusionBucket implements Bucket {
         polygon: Array<Array<Point>>,
     ): void {
         let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-        const granuality = granularitySettings.granularityFill.getGranularityForZoomLevel(canonical.z);
+        const granuality = granularitySettings.fill.getGranularityForZoomLevel(canonical.z);
 
         for (const ring of polygon) {
             if (ring.length === 0) {
