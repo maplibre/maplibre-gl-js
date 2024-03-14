@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - Improve animation curve when easeTo and flyTo with constraints ([#3793](https://github.com/maplibre/maplibre-gl-js/pull/3793))
+- For filled extrusions, calculate the elevation per polygon (see issue [#3313](https://github.com/maplibre/maplibre-gl-js/issues/3313))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
