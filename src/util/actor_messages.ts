@@ -97,7 +97,7 @@ export type RequestResponseMessageMap = {
     'setImages': [string[], void];
     'setLayers': [Array<LayerSpecification>, void];
     'updateLayers': [UpdateLayersParamaeters, void];
-    'syncRTLPluginState': [PluginState, boolean];
+    'syncRTLPluginState': [PluginState, PluginState];
     'setReferrer': [string, void];
     'removeSource': [RemoveSourceParams, void];
     'removeMap': [undefined, void];

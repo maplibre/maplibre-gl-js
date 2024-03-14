@@ -112,7 +112,7 @@ export class WorkerTile {
 
                 recalculateLayers(family, this.zoom, availableImages);
 
-                const bucket = buckets[layer.id] = layer.createBucket({
+                const bucket: Bucket = buckets[layer.id] = layer.createBucket({
                     index: featureIndex.bucketLayerIDs.length,
                     layers: family,
                     zoom: this.zoom,
@@ -128,7 +128,9 @@ export class WorkerTile {
             }
         }
 
-        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+        // options.glyphDependencies looks like: {"SomeFontName":{"10":true,"32":true}}
+        // this line makes an object like: {"SomeFontName":[10,32]}
+        const stacks: {[_: string]: Array<number>} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
 
         this.inFlightDependencies.forEach((request) => request?.abort());
         this.inFlightDependencies = [];

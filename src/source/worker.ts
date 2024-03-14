@@ -6,7 +6,7 @@ import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
-
+import {PluginState} from './rtl_text_plugin_status';
 import type {
     WorkerSource,
     WorkerSourceConstructor,
@@ -17,8 +17,12 @@ import type {
 
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {PluginState} from './rtl_text_plugin_status';
-import type {ClusterIDAndSource, GetClusterLeavesParams, RemoveSourceParams, UpdateLayersParamaeters} from '../util/actor_messages';
+import {
+    type ClusterIDAndSource,
+    type GetClusterLeavesParams,
+    type RemoveSourceParams,
+    type UpdateLayersParamaeters
+} from '../util/actor_messages';
 
 /**
  * The Worker class responsidble for background thread related execution
@@ -181,18 +185,36 @@ export default class Worker {
         }
     }
 
-    private async _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
-        rtlWorkerPlugin.setState(state);
-        const pluginURL = rtlWorkerPlugin.getPluginURL();
-        if (state.pluginStatus === 'loaded' && !rtlWorkerPlugin.isParsed() && pluginURL != null) {
-            this.self.importScripts(pluginURL);
-            const complete = rtlWorkerPlugin.isParsed();
-            if (complete) {
-                return complete;
-            }
-            throw new Error(`RTL Text Plugin failed to import scripts from ${pluginURL}`);
+    private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
+
+        // Parsed plugin cannot be changed, so just return its current state.
+        if (rtlWorkerPlugin.isParsed()) {
+            return rtlWorkerPlugin.getState();
         }
-        return false;
+
+        if (incomingState.pluginStatus !== 'loading') {
+            // simply sync and done
+            rtlWorkerPlugin.setState(incomingState);
+            return incomingState;
+        }
+        const urlToLoad = incomingState.pluginURL;
+        this.self.importScripts(urlToLoad);
+        const complete = rtlWorkerPlugin.isParsed();
+        if (complete) {
+            const loadedState: PluginState = {
+                pluginStatus: 'loaded',
+                pluginURL: urlToLoad
+            };
+            rtlWorkerPlugin.setState(loadedState);
+            return loadedState;
+        }
+
+        // error case
+        rtlWorkerPlugin.setState({
+            pluginStatus: 'error',
+            pluginURL: ''
+        });
+        throw new Error(`RTL Text Plugin failed to import scripts from ${urlToLoad}`);
     }
 
     private _getAvailableImages(mapId: string) {

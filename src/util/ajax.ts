@@ -158,9 +158,14 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         const body = await response.blob();
         throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
     }
-    const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
-        requestParameters.type === 'json' ? response.json() :
-            response.text();
+    let parsePromise: Promise<any>;
+    if ((requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image')) {
+        parsePromise = response.arrayBuffer();
+    } else if (requestParameters.type === 'json') {
+        parsePromise = response.json();
+    } else {
+        parsePromise = response.text();
+    }
     const result = await parsePromise;
     if (abortController.signal.aborted) {
         throw createAbortError();

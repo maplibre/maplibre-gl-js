@@ -15,6 +15,7 @@ import {EvaluationParameters} from './evaluation_parameters';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {GeoJSONSource} from '../source/geojson_source';
 import {sleep} from '../util/test/util';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -118,7 +119,7 @@ describe('Style', () => {
         jest.spyOn(style.sourceCaches['raster'], 'reload');
         jest.spyOn(style.sourceCaches['vector'], 'reload');
 
-        rtlMainThreadPluginFactory().fire(new Event('pluginStateChange'));
+        rtlMainThreadPluginFactory().fire(new Event(RTLPluginLoadedEventName));
 
         expect(style.sourceCaches['raster'].reload).not.toHaveBeenCalled();
         expect(style.sourceCaches['vector'].reload).toHaveBeenCalled();
