@@ -13,7 +13,6 @@ import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
-import {GlobeProjection} from '../geo/projection/globe';
 
 const cornerCoords = [
     new Point(0, 0),
@@ -27,18 +26,12 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     if (layer.paint.get('raster-opacity') === 0) return;
     if (!tileIDs.length) return;
 
-    const context = painter.context;
-    const gl = context.gl;
     const source = sourceCache.getSource();
-    const program = painter.useProgram('raster');
 
     const projection = painter.style.map.projection;
-    const globe = (projection instanceof GlobeProjection && projection.useGlobeRendering);
+    const useSubdivision = projection.useSubdivision;
 
-    const colorMode = painter.colorModeForRenderPass();
-    const align = !painter.options.moving;
-
-    // When rendering globe, two passes are needed.
+    // When rendering globe (or any other subdivided projection), two passes are needed.
     // Subdivided tiles with different granularities might have tiny gaps between them.
     // To combat this, tile meshes for globe have a slight border region.
     // However tiles borders will overlap, and a part of a tile often
@@ -47,83 +40,86 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     // and then any missing pixels (gaps, not marked in stencil) get overdrawn with tile borders.
     // This approach also avoids pixel shader overdraw, as any pixel is drawn at most once.
 
-    // Stencil and two-pass is not used for ImageSource sources.
-    const passCount = (globe && !(source instanceof ImageSource)) ? 2 : 1;
-
-    let stencilModesLow, stencilModesHigh, coords: Array<OverscaledTileID>;
-
-    if (passCount > 1) {
-        [stencilModesHigh, stencilModesLow, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
+    // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
+    if (source instanceof ImageSource) {
+        // Image source - not stencil is used
+        drawTiles(painter, sourceCache, layer, tileIDs, null, false, source.tileCoords);
+    } else if (useSubdivision) {
+        // Two-pass rendering
+        const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
+        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, cornerCoords); // draw without borders
+        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, cornerCoords); // draw with borders
     } else {
-        [stencilModesHigh, coords] = source instanceof ImageSource ? [{}, tileIDs] : painter.stencilConfigForOverlap(tileIDs);
+        // Simple rendering
+        const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
+        drawTiles(painter, sourceCache, layer, coords, stencil, false, cornerCoords);
     }
+}
 
+function drawTiles(
+    painter: Painter,
+    sourceCache: SourceCache,
+    layer: RasterStyleLayer,
+    coords: Array<OverscaledTileID>,
+    stencilModes: {[_: number]: Readonly<StencilMode>} | null,
+    useBorder: boolean,
+    corners: Array<Point>) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
-    for (let pass = 0; pass < passCount; pass++) {
-        const stencilModes = pass === 0 ? stencilModesHigh : stencilModesLow;
-        const useBorder = pass > 0;
+    const context = painter.context;
+    const gl = context.gl;
+    const program = painter.useProgram('raster');
 
-        // Draw all tiles
-        for (const coord of coords) {
-            // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
-            // Use gl.LESS to prevent double drawing in areas where tiles overlap.
-            const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ,
-                layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
+    const projection = painter.style.map.projection;
 
-            const tile = sourceCache.getTile(coord);
+    const colorMode = painter.colorModeForRenderPass();
+    const align = !painter.options.moving;
 
-            tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
+    // Draw all tiles
+    for (const coord of coords) {
+        // Set the lower zoom level to sublayer 0, and higher zoom levels to higher sublayers
+        // Use gl.LESS to prevent double drawing in areas where tiles overlap.
+        const depthMode = painter.depthModeForSublayer(coord.overscaledZ - minTileZ,
+            layer.paint.get('raster-opacity') === 1 ? DepthMode.ReadWrite : DepthMode.ReadOnly, gl.LESS);
 
-            const parentTile = sourceCache.findLoadedParent(coord, 0),
-                fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, painter.style.map.terrain);
+        const tile = sourceCache.getTile(coord);
 
-            let parentScaleBy, parentTL;
+        tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
-            const textureFilter = layer.paint.get('raster-resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
+        const parentTile = sourceCache.findLoadedParent(coord, 0),
+            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, painter.style.map.terrain);
 
-            context.activeTexture.set(gl.TEXTURE0);
+        let parentScaleBy, parentTL;
+
+        const textureFilter = layer.paint.get('raster-resampling') === 'nearest' ?  gl.NEAREST : gl.LINEAR;
+
+        context.activeTexture.set(gl.TEXTURE0);
+        tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+
+        context.activeTexture.set(gl.TEXTURE1);
+
+        if (parentTile) {
+            parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+            parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
+            parentTL = [tile.tileID.canonical.x * parentScaleBy % 1, tile.tileID.canonical.y * parentScaleBy % 1];
+        } else {
             tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-
-            context.activeTexture.set(gl.TEXTURE1);
-
-            if (parentTile) {
-                parentTile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-                parentScaleBy = Math.pow(2, parentTile.tileID.overscaledZ - tile.tileID.overscaledZ);
-                parentTL = [tile.tileID.canonical.x * parentScaleBy % 1, tile.tileID.canonical.y * parentScaleBy % 1];
-            } else {
-                tile.texture.bind(textureFilter, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
-            }
-
-            const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-
-            const terrainCoord = terrainData ? coord : null;
-            const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
-            const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
-            const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer,
-                (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
-
-            let vertexBuffer = painter.rasterBoundsBufferPosOnly;
-            let indexBuffer = painter.quadTriangleIndexBuffer;
-            let segments = painter.rasterBoundsSegmentsPosOnly;
-
-            if (globe) {
-                const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder);
-                vertexBuffer = mesh.vertexBuffer;
-                indexBuffer = mesh.indexBuffer;
-                segments = mesh.segments;
-            }
-
-            if (source instanceof ImageSource) {
-                program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-                    uniformValues, terrainData, projectionData, layer.id, vertexBuffer,
-                    indexBuffer, segments);
-            } else {
-                program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
-                    uniformValues, terrainData, projectionData, layer.id, vertexBuffer,
-                    indexBuffer, segments);
-            }
         }
+
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+
+        const terrainCoord = terrainData ? coord : null;
+        const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
+        const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
+        const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
+
+        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder);
+
+        const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
+
+        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
+            uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer,
+            mesh.indexBuffer, mesh.segments);
     }
 }
 

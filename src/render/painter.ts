@@ -45,9 +45,9 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
 import {Mesh} from './mesh';
-import {GlobeProjection} from '../geo/projection/globe';
 import {translatePosMatrix as mercatorTranslatePosMatrix, MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 import {Tile} from '../source/tile';
+import {ProjectionData} from './program/projection_program';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -232,11 +232,16 @@ export class Painter {
         mat4.ortho(matrix, 0, this.width, this.height, 0, 0, 1);
         mat4.scale(matrix, matrix, [gl.drawingBufferWidth, gl.drawingBufferHeight, 0]);
 
-        const projectionData = this.style.map.projection.getProjectionData(null, null);
-        projectionData['u_projection_matrix'] = matrix;
+        const projectionData: ProjectionData = {
+            'u_projection_matrix': matrix,
+            'u_projection_tile_mercator_coords': [0, 0, 1, 1],
+            'u_projection_clipping_plane': [0, 0, 0, 0],
+            'u_projection_transition': 0.0,
+            'u_projection_fallback_matrix': matrix,
+        };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
-        this.useProgram('clippingMask', null, [], true).draw(context, gl.TRIANGLES,
+        this.useProgram('clippingMask', null, true).draw(context, gl.TRIANGLES,
             DepthMode.disabled, this.stencilClearMode, ColorMode.disabled, CullFaceMode.disabled,
             null, null, projectionData,
             '$clipping', this.viewportBuffer,
@@ -270,11 +275,7 @@ export class Painter {
             const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
-            let mesh = this.tileExtentMesh;
-
-            if (projection instanceof GlobeProjection) {
-                mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true);
-            }
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true);
 
             const projectionData = projection.getProjectionData(tileID.canonical, tileID.posMatrix);
 
@@ -421,17 +422,15 @@ export class Painter {
         const coordsDescending: {[_: string]: Array<OverscaledTileID>} = {};
         const coordsDescendingSymbol: {[_: string]: Array<OverscaledTileID>} = {};
 
-        const deduplicateWrapped = !style.map.projection.drawWrappedTiles;
-
         for (const id in sourceCaches) {
             const sourceCache = sourceCaches[id];
             if (sourceCache.used) {
                 sourceCache.prepare(this.context);
             }
 
-            coordsAscending[id] = sourceCache.getVisibleCoordinates(false, deduplicateWrapped);
+            coordsAscending[id] = sourceCache.getVisibleCoordinates(false);
             coordsDescending[id] = coordsAscending[id].slice().reverse();
-            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true, deduplicateWrapped).reverse();
+            coordsDescendingSymbol[id] = sourceCache.getVisibleCoordinates(true).reverse();
         }
 
         this.opaquePassCutoff = Infinity;
@@ -479,6 +478,7 @@ export class Painter {
         this.style.map.projection.updateGPUdependent(this);
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
+        this.context.viewport.set([0, 0, this.width, this.height]);
         this.context.bindFramebuffer.set(null);
 
         // Clear buffers in preparation for drawing to the main framebuffer
@@ -577,9 +577,11 @@ export class Painter {
         }
     }
 
-    // Temporary function - translate & translate-anchor handling will be moved to projection classes,
-    // since it is inherently projection dependent. Most translations will not be handled by the
-    // projection matrix (like the one this function produces), but by specialized code in the vertex shader.
+    /**
+     * Temporary function - translate & translate-anchor handling will be moved to projection classes,
+     * since it is inherently projection dependent. Most translations will not be handled by the
+     * projection matrix (like the one this function produces), but by specialized code in the vertex shader.
+     */
     translatePosMatrix(
         matrix: mat4,
         tile: Tile,
@@ -626,7 +628,7 @@ export class Painter {
      * False by default. Use true when drawing with a simple projection matrix is desired, eg. when drawing a fullscreen quad.
      * @returns
      */
-    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, defines: Array<string> = [], forceSimpleProjection: boolean = false): Program<any> {
+    useProgram(name: string, programConfiguration?: ProgramConfiguration | null, forceSimpleProjection: boolean = false): Program<any> {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 
@@ -635,14 +637,13 @@ export class Painter {
         const projectionPrelude = forceSimpleProjection ? shaders.projectionMercator : projection.shaderPreludeCode;
         const projectionDefine = forceSimpleProjection ? MercatorShaderDefine : projection.shaderDefine;
         const projectionKey = `/${forceSimpleProjection ? MercatorShaderVariantKey : projection.shaderVariantName}`;
-        const concatenatedDefines = defines ? [projectionDefine].concat(defines) : [projectionDefine];
 
-        const key = name +
-            (programConfiguration ? programConfiguration.cacheKey : '') +
-            projectionKey +
-            (this._showOverdrawInspector ? '/overdraw' : '') +
-            (useTerrain ? '/terrain' : '') +
-            (concatenatedDefines ? (`/defines:${concatenatedDefines.join('//')}`) : '');
+        const configurationKey = (programConfiguration ? programConfiguration.cacheKey : '');
+        const overdrawKey = (this._showOverdrawInspector ? '/overdraw' : '');
+        const terrainKey = (useTerrain ? '/terrain' : '');
+
+        const key = name + configurationKey + projectionKey + overdrawKey + terrainKey;
+
         if (!this.cache[key]) {
             this.cache[key] = new Program(
                 this.context,
@@ -652,7 +653,7 @@ export class Painter {
                 this._showOverdrawInspector,
                 useTerrain,
                 projectionPrelude,
-                concatenatedDefines
+                projectionDefine
             );
         }
         return this.cache[key];

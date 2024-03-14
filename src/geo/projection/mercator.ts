@@ -1,19 +1,25 @@
 import {mat4} from 'gl-matrix';
-import {Painter} from '../../render/painter';
 import {Transform} from '../transform';
-import {ProjectionBase} from './projection_base';
-import {UnwrappedTileID} from '../../source/tile_id';
+import {ProjectionBase, ProjectionGPUContext} from './projection_base';
+import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {Tile} from '../../source/tile';
 import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {EXTENT} from '../../data/extent';
 import {PreparedShader, shaders} from '../../shaders/shaders';
+import {Context} from '../../gl/context';
+import {Mesh} from '../../render/mesh';
+import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
+import {SegmentVector} from '../../data/segment';
+import posAttributes from '../../data/pos_attributes';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
 export class MercatorProjection implements ProjectionBase {
+    private _cachedMesh: Mesh = null;
+
     get name(): string {
         return 'mercator';
     }
@@ -30,6 +36,11 @@ export class MercatorProjection implements ProjectionBase {
     get drawWrappedTiles(): boolean {
         // Mercator always needs to draw wrapped/duplicated tiles.
         return true;
+    }
+
+    get useSubdivision(): boolean {
+        // Mercator never uses subdivision.
+        return false;
     }
 
     get shaderVariantName(): string {
@@ -52,7 +63,7 @@ export class MercatorProjection implements ProjectionBase {
         // Do nothing.
     }
 
-    updateGPUdependent(_: Painter): void {
+    updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }
 
@@ -106,6 +117,30 @@ export class MercatorProjection implements ProjectionBase {
 
     translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
+    }
+
+    getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
+        if (this._cachedMesh) {
+            return this._cachedMesh;
+        }
+
+        // Both poles/canonicalTileID and borders are ignored for mercator meshes on purpose.
+
+        const tileExtentArray = new PosArray();
+        tileExtentArray.emplaceBack(0, 0);
+        tileExtentArray.emplaceBack(EXTENT, 0);
+        tileExtentArray.emplaceBack(0, EXTENT);
+        tileExtentArray.emplaceBack(EXTENT, EXTENT);
+        const tileExtentBuffer = context.createVertexBuffer(tileExtentArray, posAttributes.members);
+        const tileExtentSegments = SegmentVector.simpleSegment(0, 0, 4, 2);
+
+        const quadTriangleIndices = new TriangleIndexArray();
+        quadTriangleIndices.emplaceBack(1, 0, 2);
+        quadTriangleIndices.emplaceBack(1, 2, 3);
+        const quadTriangleIndexBuffer = context.createIndexBuffer(quadTriangleIndices);
+
+        this._cachedMesh = new Mesh(tileExtentBuffer, quadTriangleIndexBuffer, tileExtentSegments);
+        return this._cachedMesh;
     }
 }
 

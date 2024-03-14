@@ -8,44 +8,23 @@ import {EXTENT} from '../../data/extent';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {Transform} from '../transform';
-import {Painter} from '../../render/painter';
 import {Tile} from '../../source/tile';
 import {browser} from '../../util/browser';
-import {Framebuffer} from '../../gl/framebuffer';
-import {StencilMode} from '../../gl/stencil_mode';
-import {ColorMode} from '../../gl/color_mode';
-import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../../gl/depth_mode';
-import {CullFaceMode} from '../../gl/cull_face_mode';
-import {projectionErrorMeasurementUniformValues} from '../../render/program/projection_error_measurement_program';
-import {warnOnce} from '../../util/util';
+import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {granularitySettings} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
-import * as Mercator from './mercator';
-import {ProjectionBase} from './projection_base';
+import {ProjectionBase, ProjectionGPUContext} from './projection_base';
 import {PreparedShader, shaders} from '../../shaders/shaders';
+import {MercatorProjection, translatePosition} from './mercator';
+import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.
  * Used for globe rendering.
  */
 const EXTENT_STENCIL_BORDER = EXTENT / 128;
-
-function clamp(a: number, min: number, max: number): number {
-    return Math.min(Math.max(a, min), max);
-}
-
-function lerp(a: number, b: number, mix: number): number {
-    return a * (1.0 - mix) + b * mix;
-}
-
-function smoothStep(edge0: number, edge1: number, x: number): number {
-    // Function definition from GLSL: https://registry.khronos.org/OpenGL-Refpages/gl4/html/smoothstep.xhtml
-    const t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return t * t * (3.0 - 2.0 * t);
-}
 
 const globeTransitionTimeSeconds = 0.5;
 const zoomTransitionTimeSeconds = 0.5;
@@ -54,18 +33,24 @@ const errorTransitionTimeSeconds = 0.5;
 
 export class GlobeProjection implements ProjectionBase {
     private _map: Map | undefined;
-    private _mercator: Mercator.MercatorProjection;
+    private _mercator: MercatorProjection;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
     private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
 
     // Transition handling
-    private _lastGlobeStateEnabled: boolean = false;
+    private _lastGlobeStateEnabled: boolean = true;
     private _lastGlobeChangeTime: number = -1000.0;
     private _lastLargeZoomStateChange: number = -1000.0;
     private _lastLargeZoomState: boolean = false;
-    private _globeness: number;
-    private _skipNextAnimation: boolean = false;
+
+    /**
+     * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
+     * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
+     */
+    private _globeness: number = 1.0;
+
+    private _skipNextAnimation: boolean = true;
 
     // GPU atan() error correction
     private _errorMeasurement: ProjectionErrorMeasurement;
@@ -77,18 +62,9 @@ export class GlobeProjection implements ProjectionBase {
 
     private _globeProjectionOverride = true;
 
-    private _globeProjMatrix: mat4 = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ];
-    private _globeProjMatrixNoCorrection: mat4 = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ];
+    private _globeProjMatrix: mat4 = mat4.create();
+    private _globeProjMatrixNoCorrection: mat4 = mat4.create();
+
     private _globeCameraPosition: vec3 = [0, 0, 0];
 
     get name(): string {
@@ -113,6 +89,10 @@ export class GlobeProjection implements ProjectionBase {
      */
     get drawWrappedTiles(): boolean {
         return this._globeness < 1.0;
+    }
+
+    get useSubdivision(): boolean {
+        return this.useGlobeRendering;
     }
 
     get useSpecialProjectionForSymbols(): boolean {
@@ -162,12 +142,12 @@ export class GlobeProjection implements ProjectionBase {
 
     constructor(map: Map) {
         this._map = map;
-        this._mercator = new Mercator.MercatorProjection();
+        this._mercator = new MercatorProjection();
     }
 
     public destroy() {
         if (this._errorMeasurement) {
-            this._errorMeasurement.destroy(this._map.painter);
+            this._errorMeasurement.destroy();
         }
     }
 
@@ -175,13 +155,13 @@ export class GlobeProjection implements ProjectionBase {
         this._skipNextAnimation = true;
     }
 
-    public updateGPUdependent(painter: Painter): void {
+    public updateGPUdependent(renderContext: ProjectionGPUContext): void {
         if (!this._errorMeasurement) {
-            this._errorMeasurement = new ProjectionErrorMeasurement(painter);
+            this._errorMeasurement = new ProjectionErrorMeasurement(renderContext);
         }
         const mercatorY = mercatorYfromLat(this._errorQueryLatitudeDegrees);
         const expectedResult = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
-        const newValue = this._errorMeasurement.updateErrorLoop(painter, mercatorY, expectedResult);
+        const newValue = this._errorMeasurement.updateErrorLoop(mercatorY, expectedResult);
 
         const now = browser.now();
 
@@ -194,7 +174,7 @@ export class GlobeProjection implements ProjectionBase {
         const sinceUpdateSeconds = (now - this._errorMeasurementLastChangeTime) / 1000.0;
         const mix = Math.min(Math.max(sinceUpdateSeconds / errorTransitionTimeSeconds, 0.0), 1.0);
         const newCorrection = -this._errorMeasurementLastValue; // Note the negation
-        this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, smoothStep(0.0, 1.0, mix));
+        this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, easeCubicInOut(mix));
     }
 
     public updateProjection(transform: Transform): void {
@@ -239,6 +219,24 @@ export class GlobeProjection implements ProjectionBase {
             cameraPos[2] / cameraPos[3]
         ];
 
+        this._cachedClippingPlane = this._computeClippingPlane(transform, globeRadiusPixels);
+    }
+
+    public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4, useAtanCorrection: boolean = true): ProjectionData {
+        const data = this._mercator.getProjectionData(canonicalTileCoords, tilePosMatrix);
+
+        // Set 'u_projection_matrix' to actual globe transform
+        if (this.useGlobeRendering) {
+            data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
+        }
+
+        data['u_projection_clipping_plane'] = [...this._cachedClippingPlane];
+        data['u_projection_transition'] = this._globeness;
+
+        return data;
+    }
+
+    private _computeClippingPlane(transform: Transform, globeRadiusPixels: number): [number, number, number, number] {
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
         // and all the non-visible parts in the negative half-space.
@@ -302,21 +300,7 @@ export class GlobeProjection implements ProjectionBase {
         // we don't want the actually visible parts of the sphere to end up beyond distance 1 from the plane - otherwise they would be clipped by the near plane.
         const scale = 0.25;
         vec3.scale(planeVector, planeVector, scale);
-        this._cachedClippingPlane = [...planeVector, -tangentPlaneDistanceToC * scale];
-    }
-
-    public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4, useAtanCorrection: boolean = true): ProjectionData {
-        const data = this._mercator.getProjectionData(canonicalTileCoords, tilePosMatrix);
-
-        // Set 'u_projection_matrix' to actual globe transform
-        if (this.useGlobeRendering) {
-            data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
-        }
-
-        data['u_projection_clipping_plane'] = [...this._cachedClippingPlane];
-        data['u_projection_transition'] = this._globeness;
-
-        return data;
+        return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
     private _projectToSphere(mercatorX: number, mercatorY: number): vec3 {
@@ -388,11 +372,7 @@ export class GlobeProjection implements ProjectionBase {
             axisRight[1] * dir[0] + axisDown[1] * dir[1] + spherePos[1] * dir[2],
             axisRight[2] * dir[0] + axisDown[2] * dir[1] + spherePos[2] * dir[2]
         ];
-        // const mixed: vec3 = [
-        //     lerp(dir[0], transformed[0], this._globeness),
-        //     lerp(dir[1], transformed[1], this._globeness),
-        //     lerp(dir[2], transformed[2], this._globeness)
-        // ];
+
         const normalized: vec3 = [0, 0, 0];
         vec3.normalize(normalized, transformed);
         return normalized;
@@ -420,7 +400,6 @@ export class GlobeProjection implements ProjectionBase {
         this._globeness = globeState ? globeTransition : (1.0 - globeTransition);
 
         if (this._skipNextAnimation) {
-            // Do not animate globe transition for the first 0.1 seconds of the existence of the map
             this._globeness = globeState ? 1.0 : 0.0;
             this._lastGlobeChangeTime = currentTime - globeTransitionTimeSeconds * 1000.0 * 2.0;
             this._skipNextAnimation = false;
@@ -435,17 +414,17 @@ export class GlobeProjection implements ProjectionBase {
         const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / zoomTransitionTimeSeconds, 0.0), 1.0);
         const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
         this._globeness = Math.min(this._globeness, zoomGlobenessBound);
-        this._globeness = smoothStep(0.0, 1.0, this._globeness); // Smooth animation
+        this._globeness = easeCubicInOut(this._globeness); // Smooth animation
     }
 
     private _getMeshKey(granularity: number, border: boolean, north: boolean, south: boolean): string {
         return `${granularity.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
-    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, usePoleVertices: boolean = true): Mesh {
-        const granularity = granularitySettings.granularityStencil.getGranularityForZoomLevel(canonical.z);
-        const north = usePoleVertices && (canonical.y === 0);
-        const south = usePoleVertices && (canonical.y === (1 << canonical.z) - 1);
+    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh {
+        const granularity = granularitySettings.fill.getGranularityForZoomLevel(canonical.z);
+        const north = (canonical.y === 0);
+        const south = (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granularity, hasBorder, north, south);
     }
 
@@ -464,7 +443,7 @@ export class GlobeProjection implements ProjectionBase {
     public translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
-        return Mercator.translatePosition(transform, tile, translate, translateAnchor);
+        return translatePosition(transform, tile, translate, translateAnchor);
     }
 
     /**
@@ -535,234 +514,4 @@ export class GlobeProjection implements ProjectionBase {
 
         return mesh;
     }
-}
-
-/**
- * For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.
- * This projection requires some inverse trigonometry `atan(exp(...))`, which is inaccurate on some GPUs (mainly on AMD and Nvidia).
- * The inaccuracy is severe enough to require a workaround. The uncorrected map is shifted north-south by up to several hundred meters in some latitudes.
- * Since the inaccuracy is hardware-dependant and may change in the future, we need to measure the error at runtime.
- *
- * Our approach relies on several assumptions:
- *
- * - the error is only present in the "latitude" component (longitude doesn't need any inverse trigonometry)
- * - the error is continuous and changes slowly with latitude
- * - at zoom levels where the error is noticeable, the error is more-or-less the same across the entire visible map area (and thus can be described with a single number)
- *
- * Solution:
- *
- * Every few frames, launch a GPU shader that measures the error for the current map center latitude, and writes it to a 1x1 texture.
- * Read back that texture, and offset the globe projection matrix according to the error (interpolating smoothly from old error to new error if needed).
- * The texture readback is done asynchronously using Pixel Pack Buffers (WebGL2) when possible, and has a few frames of latency, but that should not be a problem.
- *
- * General operation of this class each frame is:
- *
- * - render the error shader into a fbo, read that pixel into a PBO, place a fence
- * - wait a few frames to allow the GPU (and driver) to actually execute the shader
- * - wait for the fence to be signalled (guaranteeing the shader to actually be executed)
- * - read back the PBO's contents
- * - wait a few more frames
- * - repeat
- */
-class ProjectionErrorMeasurement {
-    // We wait at least this many frames after measuring until we read back the value.
-    // After this period, we might wait more frames until a fence is signalled to make sure the rendering is completed.
-    private readonly _readbackWaitFrames = 4;
-    // We wait this many frames after *reading back* a measurement until we trigger measure again.
-    // We could in theory render the measurement pixel immediately, but we wait to make sure
-    // no pipeline stall happens.
-    private readonly _measureWaitFrames = 6;
-    private readonly _texWidth = 1;
-    private readonly _texHeight = 1;
-    private readonly _texFormat: number;
-    private readonly _texType: number;
-
-    private readonly _allowWebGL2 = true;
-
-    private _fullscreenTriangle: Mesh;
-    private _fbo: Framebuffer;
-    private _resultBuffer: Uint8Array;
-    private _pbo: WebGLBuffer;
-
-    private _measuredError: number = 0; // Result of last measurement
-    private _updateCount: number = 0;
-    private _lastReadbackFrame: number = -1000;
-
-    get awaitingQuery(): boolean {
-        return !!this._readbackQueue;
-    }
-
-    // There is never more than one readback waiting
-    private _readbackQueue: {
-        frameNumberIssued: number; // Frame number when the data was first computed
-        sync: WebGLSync;
-    } = null;
-
-    public constructor(painter: Painter) {
-        const context = painter.context;
-        const gl = context.gl;
-
-        this._texFormat = gl.RGBA;
-        this._texType = gl.UNSIGNED_BYTE;
-
-        const vertexArray = new PosArray();
-        vertexArray.emplaceBack(-1, -1);
-        vertexArray.emplaceBack(2, -1);
-        vertexArray.emplaceBack(-1, 2);
-        const indexArray = new TriangleIndexArray();
-        indexArray.emplaceBack(0, 1, 2);
-
-        this._fullscreenTriangle = new Mesh(
-            context.createVertexBuffer(vertexArray, posAttributes.members),
-            context.createIndexBuffer(indexArray),
-            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        );
-
-        this._resultBuffer = new Uint8Array(4);
-
-        context.activeTexture.set(gl.TEXTURE1);
-
-        const texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texImage2D(gl.TEXTURE_2D, 0, this._texFormat, this._texWidth, this._texHeight, 0, this._texFormat, this._texType, null);
-
-        this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
-        this._fbo.colorAttachment.set(texture);
-
-        if (this._allowWebGL2 && gl instanceof WebGL2RenderingContext) {
-            this._pbo = gl.createBuffer();
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-            gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-        }
-    }
-
-    public destroy(painter: Painter) {
-        const gl = painter.context.gl;
-        this._fullscreenTriangle.destroy();
-        this._fbo.destroy();
-        gl.deleteBuffer(this._pbo);
-        this._fullscreenTriangle = null;
-        this._fbo = null;
-        this._pbo = null;
-        this._resultBuffer = null;
-    }
-
-    public updateErrorLoop(painter: Painter, normalizedMercatorY: number, expectedAngleY: number): number {
-        const currentFrame = this._updateCount;
-
-        if (this._readbackQueue) {
-            // Try to read back if enough frames elapsed. Otherwise do nothing, just wait another frame.
-            if (currentFrame >= this._readbackQueue.frameNumberIssued + this._readbackWaitFrames) {
-                // Try to read back - it is possible that this method does nothing, then
-                // the readback queue will not be cleared and we will retry next frame.
-                this._tryReadback(painter);
-            }
-        } else {
-            if (currentFrame >= this._lastReadbackFrame + this._measureWaitFrames) {
-                this._renderErrorTexture(painter, normalizedMercatorY, expectedAngleY);
-            }
-        }
-
-        this._updateCount++;
-        return this._measuredError;
-    }
-
-    private _bindFramebuffer(context: Context) {
-        const gl = context.gl;
-        context.activeTexture.set(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this._fbo.colorAttachment.get());
-        context.bindFramebuffer.set(this._fbo.framebuffer);
-    }
-
-    private _renderErrorTexture(painter: Painter, input: number, outputExpected: number): void {
-        const context = painter.context;
-        const gl = context.gl;
-
-        // Update framebuffer contents
-        this._bindFramebuffer(painter.context);
-        context.viewport.set([0, 0, this._texWidth, this._texHeight]);
-        context.clear({color: Color.transparent});
-
-        const program = painter.useProgram('projectionErrorMeasurement');
-
-        program.draw(context, gl.TRIANGLES,
-            DepthMode.disabled, StencilMode.disabled,
-            ColorMode.unblended, CullFaceMode.disabled,
-            projectionErrorMeasurementUniformValues(input, outputExpected), null, null,
-            '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
-            this._fullscreenTriangle.segments);
-
-        context.viewport.set([0, 0, painter.width, painter.height]);
-
-        if (this._allowWebGL2 && this._pbo && gl instanceof WebGL2RenderingContext) {
-            // Read back into PBO
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-            gl.readBuffer(gl.COLOR_ATTACHMENT0);
-            gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, 0);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-            const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-            gl.flush();
-
-            this._readbackQueue = {
-                frameNumberIssued: this._updateCount,
-                sync,
-            };
-        } else {
-            // Read it back later.
-            this._readbackQueue = {
-                frameNumberIssued: this._updateCount,
-                sync: null,
-            };
-        }
-    }
-
-    private _tryReadback(painter: Painter): void {
-        const context = painter.context;
-        const gl = context.gl;
-
-        if (this._allowWebGL2 && this._pbo && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
-            // WebGL 2 path
-            const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
-
-            if (waitResult === gl.WAIT_FAILED) {
-                warnOnce('WebGL2 clientWaitSync failed.');
-                this._readbackQueue = null;
-                this._lastReadbackFrame = this._updateCount;
-                return;
-            }
-
-            if (waitResult === gl.TIMEOUT_EXPIRED) {
-                return; // Wait one more frame
-            }
-
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
-            gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, this._resultBuffer, 0, 4);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-        } else {
-            // WebGL1 compatible
-            this._bindFramebuffer(painter.context);
-            gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, this._resultBuffer);
-        }
-
-        // If we made it here, _resultBuffer contains the new measurement
-        this._readbackQueue = null;
-        this._measuredError = parseRGBA8float(this._resultBuffer);
-        this._lastReadbackFrame = this._updateCount;
-    }
-}
-
-function parseRGBA8float(buffer: Uint8Array): number {
-    let result = 0;
-    result += buffer[0] / 256.0;
-    result += buffer[1] / 65536.0;
-    result += buffer[2] / 16777216.0;
-    if (buffer[3] < 127.0) {
-        result = -result;
-    }
-    return result / 128.0;
 }

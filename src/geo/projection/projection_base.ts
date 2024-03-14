@@ -1,11 +1,18 @@
 import {mat4} from 'gl-matrix';
-import {Painter} from '../../render/painter';
 import {Tile} from '../../source/tile';
-import {UnwrappedTileID} from '../../source/tile_id';
+import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {Transform} from '../transform';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PreparedShader} from '../../shaders/shaders';
+import {Context} from '../../gl/context';
+import {Mesh} from '../../render/mesh';
+import {Program} from '../../render/program';
+
+export type ProjectionGPUContext = {
+    context: Context;
+    useProgram: (name: string) => Program<any>;
+};
 
 /**
  * An abstract class the specializations of which are used internally by MapLibre to handle different projections.
@@ -33,9 +40,17 @@ export interface ProjectionBase {
 
     /**
      * @internal
-     * True if this projection required wrapped copies of the world to be drawn.
+     * True if this projection requires wrapped copies of the world to be drawn.
      */
     get drawWrappedTiles(): boolean;
+
+    /**
+     * @internal
+     * True if this projection needs to render subdivided geometry.
+     * Optimized rendering paths for non-subdivided geometry might be used throughout MapLibre.
+     * The value of this property may change during runtime, for example in globe projection depending on zoom.
+     */
+    get useSubdivision(): boolean;
 
     /**
      * Name of the shader projection variant that should be used for this projection.
@@ -72,7 +87,7 @@ export interface ProjectionBase {
      * @internal
      * Runs any GPU-side tasks this projection required. Called at the beginning of every frame.
      */
-    updateGPUdependent(painter: Painter): void;
+    updateGPUdependent(renderContext: ProjectionGPUContext): void;
 
     /**
      * @internal
@@ -117,4 +132,13 @@ export interface ProjectionBase {
      * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
      */
     translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+
+    /**
+     * @internal
+     * Returns a subdivided mesh for a given canonical tile ID, covering 0..EXTENT range.
+     * @param context - WebGL context.
+     * @param canonical - The tile coordinates for which to return a mesh. Meshes for tiles that border the top/bottom mercator edge might include extra geometry for the north/south pole.
+     * @param hasBorder - When true, the mesh will also include a small border beyond the 0..EXTENT range.
+     */
+    getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh;
 }
