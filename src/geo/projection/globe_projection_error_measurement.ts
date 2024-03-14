@@ -12,6 +12,7 @@ import {SegmentVector} from '../../data/segment';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import posAttributes from '../../data/pos_attributes';
 import {Framebuffer} from '../../gl/framebuffer';
+import {isWebGL2} from '../../gl/webgl2';
 
 /**
  * For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.
@@ -107,7 +108,7 @@ export class ProjectionErrorMeasurement {
         this._fbo = context.createFramebuffer(this._texWidth, this._texHeight, false, false);
         this._fbo.colorAttachment.set(texture);
 
-        if (gl instanceof WebGL2RenderingContext) {
+        if (isWebGL2(gl)) {
             this._pbo = gl.createBuffer();
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
             gl.bufferData(gl.PIXEL_PACK_BUFFER, 4, gl.STREAM_READ);
@@ -171,7 +172,7 @@ export class ProjectionErrorMeasurement {
             '$clipping', this._fullscreenTriangle.vertexBuffer, this._fullscreenTriangle.indexBuffer,
             this._fullscreenTriangle.segments);
 
-        if (this._pbo && gl instanceof WebGL2RenderingContext) {
+        if (this._pbo && isWebGL2(gl)) {
             // Read back into PBO
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._pbo);
             gl.readBuffer(gl.COLOR_ATTACHMENT0);
@@ -196,7 +197,7 @@ export class ProjectionErrorMeasurement {
     private _tryReadback(context: Context): void {
         const gl = context.gl;
 
-        if (this._pbo && this._readbackQueue && gl instanceof WebGL2RenderingContext) {
+        if (this._pbo && this._readbackQueue && isWebGL2(gl)) {
             // WebGL 2 path
             const waitResult = gl.clientWaitSync(this._readbackQueue.sync, 0, 0);
 
@@ -222,18 +223,18 @@ export class ProjectionErrorMeasurement {
 
         // If we made it here, _resultBuffer contains the new measurement
         this._readbackQueue = null;
-        this._measuredError = parseRGBA8float(this._resultBuffer);
+        this._measuredError = ProjectionErrorMeasurement._parseRGBA8float(this._resultBuffer);
         this._lastReadbackFrame = this._updateCount;
     }
-}
 
-function parseRGBA8float(buffer: Uint8Array): number {
-    let result = 0;
-    result += buffer[0] / 256.0;
-    result += buffer[1] / 65536.0;
-    result += buffer[2] / 16777216.0;
-    if (buffer[3] < 127.0) {
-        result = -result;
+    private static _parseRGBA8float(buffer: Uint8Array): number {
+        let result = 0;
+        result += buffer[0] / 256.0;
+        result += buffer[1] / 65536.0;
+        result += buffer[2] / 16777216.0;
+        if (buffer[3] < 127.0) {
+            result = -result;
+        }
+        return result / 128.0;
     }
-    return result / 128.0;
 }
