@@ -43,27 +43,31 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
         // Image source - not stencil is used
-        drawTiles(painter, sourceCache, layer, tileIDs, {}, false);
+        drawTiles(painter, sourceCache, layer, tileIDs, null, false, source.tileCoords);
     } else if (useSubdivision) {
         // Two-pass rendering
-        const stencilConfig = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        const coords: Array<OverscaledTileID> = stencilConfig[2];
-        drawTiles(painter, sourceCache, layer, coords, stencilConfig[0], false); // draw without borders
-        drawTiles(painter, sourceCache, layer, coords, stencilConfig[1], true); // draw with borders
+        const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
+        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, cornerCoords); // draw without borders
+        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, cornerCoords); // draw with borders
     } else {
         // Simple rendering
-        const stencilConfig = painter.stencilConfigForOverlap(tileIDs);
-        const coords: Array<OverscaledTileID> = stencilConfig[1];
-        drawTiles(painter, sourceCache, layer, coords, stencilConfig[0], false);
+        const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
+        drawTiles(painter, sourceCache, layer, coords, stencil, false, cornerCoords);
     }
 }
 
-function drawTiles(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, coords: Array<OverscaledTileID>, stencilModes: {[_: number]: Readonly<StencilMode>}, useBorder: boolean) {
+function drawTiles(
+    painter: Painter,
+    sourceCache: SourceCache,
+    layer: RasterStyleLayer,
+    coords: Array<OverscaledTileID>,
+    stencilModes: {[_: number]: Readonly<StencilMode>} | null,
+    useBorder: boolean,
+    corners: Array<Point>) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
     const context = painter.context;
     const gl = context.gl;
-    const source = sourceCache.getSource();
     const program = painter.useProgram('raster');
 
     const projection = painter.style.map.projection;
@@ -107,20 +111,15 @@ function drawTiles(painter: Painter, sourceCache: SourceCache, layer: RasterStyl
         const terrainCoord = terrainData ? coord : null;
         const posMatrix = terrainCoord ? terrainCoord.posMatrix : painter.transform.calculatePosMatrix(coord.toUnwrapped(), align);
         const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
-        const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer,
-            (source instanceof ImageSource) ? source.tileCoords : cornerCoords);
+        const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
 
         const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder);
 
-        if (source instanceof ImageSource) {
-            program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer,
-                mesh.indexBuffer, mesh.segments);
-        } else {
-            program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
-                uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer,
-                mesh.indexBuffer, mesh.segments);
-        }
+        const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
+
+        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
+            uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer,
+            mesh.indexBuffer, mesh.segments);
     }
 }
 
