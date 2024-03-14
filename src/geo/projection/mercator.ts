@@ -1,7 +1,6 @@
 import {mat4} from 'gl-matrix';
-import {Painter} from '../../render/painter';
 import {Transform} from '../transform';
-import {ProjectionBase} from './projection_base';
+import {ProjectionBase, ProjectionGPUContext} from './projection_base';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {Tile} from '../../source/tile';
@@ -64,7 +63,7 @@ export class MercatorProjection implements ProjectionBase {
         // Do nothing.
     }
 
-    updateGPUdependent(_: Painter): void {
+    updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }
 

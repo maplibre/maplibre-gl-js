@@ -1,18 +1,17 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../../gl/color_mode';
-import {Context} from '../../gl/context';
 import {CullFaceMode} from '../../gl/cull_face_mode';
 import {DepthMode} from '../../gl/depth_mode';
 import {StencilMode} from '../../gl/stencil_mode';
 import {warnOnce} from '../../util/util';
 import {projectionErrorMeasurementUniformValues} from '../../render/program/projection_error_measurement_program';
-import {Painter} from '../../render/painter';
 import {Mesh} from '../../render/mesh';
 import {SegmentVector} from '../../data/segment';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import posAttributes from '../../data/pos_attributes';
 import {Framebuffer} from '../../gl/framebuffer';
 import {isWebGL2} from '../../gl/webgl2';
+import {ProjectionGPUContext} from './projection_base';
 
 /**
  * For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.
@@ -58,6 +57,7 @@ export class ProjectionErrorMeasurement {
     private _fbo: Framebuffer;
     private _resultBuffer: Uint8Array;
     private _pbo: WebGLBuffer;
+    private _cachedRenderContext: ProjectionGPUContext;
 
     private _measuredError: number = 0; // Result of last measurement
     private _updateCount: number = 0;
@@ -73,8 +73,10 @@ export class ProjectionErrorMeasurement {
         sync: WebGLSync;
     } = null;
 
-    public constructor(painter: Painter) {
-        const context = painter.context;
+    public constructor(renderContext: ProjectionGPUContext) {
+        this._cachedRenderContext = renderContext;
+
+        const context = renderContext.context;
         const gl = context.gl;
 
         this._texFormat = gl.RGBA;
@@ -116,8 +118,8 @@ export class ProjectionErrorMeasurement {
         }
     }
 
-    public destroy(painter: Painter) {
-        const gl = painter.context.gl;
+    public destroy() {
+        const gl = this._cachedRenderContext.context.gl;
         this._fullscreenTriangle.destroy();
         this._fbo.destroy();
         gl.deleteBuffer(this._pbo);
@@ -127,7 +129,7 @@ export class ProjectionErrorMeasurement {
         this._resultBuffer = null;
     }
 
-    public updateErrorLoop(painter: Painter, normalizedMercatorY: number, expectedAngleY: number): number {
+    public updateErrorLoop(normalizedMercatorY: number, expectedAngleY: number): number {
         const currentFrame = this._updateCount;
 
         if (this._readbackQueue) {
@@ -135,11 +137,11 @@ export class ProjectionErrorMeasurement {
             if (currentFrame >= this._readbackQueue.frameNumberIssued + this._readbackWaitFrames) {
                 // Try to read back - it is possible that this method does nothing, then
                 // the readback queue will not be cleared and we will retry next frame.
-                this._tryReadback(painter.context);
+                this._tryReadback();
             }
         } else {
             if (currentFrame >= this._lastReadbackFrame + this._measureWaitFrames) {
-                this._renderErrorTexture(painter, normalizedMercatorY, expectedAngleY);
+                this._renderErrorTexture(normalizedMercatorY, expectedAngleY);
             }
         }
 
@@ -147,23 +149,24 @@ export class ProjectionErrorMeasurement {
         return this._measuredError;
     }
 
-    private _bindFramebuffer(context: Context) {
+    private _bindFramebuffer() {
+        const context = this._cachedRenderContext.context;
         const gl = context.gl;
         context.activeTexture.set(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this._fbo.colorAttachment.get());
         context.bindFramebuffer.set(this._fbo.framebuffer);
     }
 
-    private _renderErrorTexture(painter: Painter, input: number, outputExpected: number): void {
-        const context = painter.context;
+    private _renderErrorTexture(input: number, outputExpected: number): void {
+        const context = this._cachedRenderContext.context;
         const gl = context.gl;
 
         // Update framebuffer contents
-        this._bindFramebuffer(painter.context);
+        this._bindFramebuffer();
         context.viewport.set([0, 0, this._texWidth, this._texHeight]);
         context.clear({color: Color.transparent});
 
-        const program = painter.useProgram('projectionErrorMeasurement');
+        const program = this._cachedRenderContext.useProgram('projectionErrorMeasurement');
 
         program.draw(context, gl.TRIANGLES,
             DepthMode.disabled, StencilMode.disabled,
@@ -194,8 +197,8 @@ export class ProjectionErrorMeasurement {
         }
     }
 
-    private _tryReadback(context: Context): void {
-        const gl = context.gl;
+    private _tryReadback(): void {
+        const gl = this._cachedRenderContext.context.gl;
 
         if (this._pbo && this._readbackQueue && isWebGL2(gl)) {
             // WebGL 2 path
@@ -217,7 +220,7 @@ export class ProjectionErrorMeasurement {
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
         } else {
             // WebGL1 compatible
-            this._bindFramebuffer(context);
+            this._bindFramebuffer();
             gl.readPixels(0, 0, this._texWidth, this._texHeight, this._texFormat, this._texType, this._resultBuffer);
         }
 

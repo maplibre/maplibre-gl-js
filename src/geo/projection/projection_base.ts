@@ -1,5 +1,4 @@
 import {mat4} from 'gl-matrix';
-import {Painter} from '../../render/painter';
 import {Tile} from '../../source/tile';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {Transform} from '../transform';
@@ -8,6 +7,12 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {PreparedShader} from '../../shaders/shaders';
 import {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
+import {Program} from '../../render/program';
+
+export type ProjectionGPUContext = {
+    context: Context;
+    useProgram: (name: string) => Program<any>;
+};
 
 /**
  * An abstract class the specializations of which are used internally by MapLibre to handle different projections.
@@ -82,7 +87,7 @@ export interface ProjectionBase {
      * @internal
      * Runs any GPU-side tasks this projection required. Called at the beginning of every frame.
      */
-    updateGPUdependent(painter: Painter): void;
+    updateGPUdependent(renderContext: ProjectionGPUContext): void;
 
     /**
      * @internal

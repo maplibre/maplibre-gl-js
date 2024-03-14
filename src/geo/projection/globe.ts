@@ -8,7 +8,6 @@ import {EXTENT} from '../../data/extent';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {Transform} from '../transform';
-import {Painter} from '../../render/painter';
 import {Tile} from '../../source/tile';
 import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
@@ -16,7 +15,7 @@ import {mercatorYfromLat} from '../mercator_coordinate';
 import {granularitySettings} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
-import {ProjectionBase} from './projection_base';
+import {ProjectionBase, ProjectionGPUContext} from './projection_base';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
@@ -148,7 +147,7 @@ export class GlobeProjection implements ProjectionBase {
 
     public destroy() {
         if (this._errorMeasurement) {
-            this._errorMeasurement.destroy(this._map.painter);
+            this._errorMeasurement.destroy();
         }
     }
 
@@ -156,13 +155,13 @@ export class GlobeProjection implements ProjectionBase {
         this._skipNextAnimation = true;
     }
 
-    public updateGPUdependent(painter: Painter): void {
+    public updateGPUdependent(renderContext: ProjectionGPUContext): void {
         if (!this._errorMeasurement) {
-            this._errorMeasurement = new ProjectionErrorMeasurement(painter);
+            this._errorMeasurement = new ProjectionErrorMeasurement(renderContext);
         }
         const mercatorY = mercatorYfromLat(this._errorQueryLatitudeDegrees);
         const expectedResult = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
-        const newValue = this._errorMeasurement.updateErrorLoop(painter, mercatorY, expectedResult);
+        const newValue = this._errorMeasurement.updateErrorLoop(mercatorY, expectedResult);
 
         const now = browser.now();
 
