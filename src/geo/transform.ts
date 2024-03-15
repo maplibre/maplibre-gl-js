@@ -504,21 +504,25 @@ export class Transform {
      * @param terrain - the terrain
      */
     recalculateZoom(terrain: Terrain) {
+        const origElevation = this.elevation;
+        const origAltitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
+
         // find position the camera is looking on
         const center = this.pointLocation(this.centerPoint, terrain);
         const elevation = terrain.getElevationForLngLatZoom(center, this.tileZoom);
         const deltaElevation = this.elevation - elevation;
         if (!deltaElevation) return;
 
-        // calculate mercator distance between camera & target
-        const cameraPosition = this.getCameraPosition();
-        const camera = MercatorCoordinate.fromLngLat(cameraPosition.lngLat, cameraPosition.altitude);
-        const target = MercatorCoordinate.fromLngLat(center, elevation);
-        const dx = camera.x - target.x, dy = camera.y - target.y, dz = camera.z - target.z;
-        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-        // from this distance we calculate the new zoomlevel
-        const zoom = this.scaleZoom(this.cameraToCenterDistance / distance / this.tileSize);
+        // The camera's altitude off the ground + the ground's elevation = a constant:
+        // this means the camera stays at the same total height.
+        const requiredAltitude = origAltitude + origElevation - elevation;
+        // Since altitude = Math.cos(this._pitch) * this.cameraToCenterDistance / pixelPerMeter:
+        const requiredPixelPerMeter = Math.cos(this._pitch) * this.cameraToCenterDistance / requiredAltitude;
+        // Since pixelPerMeter = mercatorZfromAltitude(1, center.lat) * worldSize:
+        const requiredWorldSize = requiredPixelPerMeter / mercatorZfromAltitude(1, center.lat);
+        // Since worldSize = this.tileSize * scale:
+        const requiredScale = requiredWorldSize / this.tileSize;
+        const zoom = this.scaleZoom(requiredScale);
 
         // update matrices
         this._elevation = elevation;
