@@ -101,7 +101,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             tesselate = tesselate || circleStyle.paint.get('circle-pitch-alignment') === 'map';
         }
 
-        const granuality = tesselate ? 3 : 1;
+        const granularity = tesselate ? 3 : 1;
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
@@ -136,7 +136,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             const {geometry, index, sourceLayerIndex} = bucketFeature;
             const feature = features[index].feature;
 
-            this.addFeature(bucketFeature, geometry, index, canonical, granuality);
+            this.addFeature(bucketFeature, geometry, index, canonical, granularity);
             options.featureIndex.insert(feature, geometry, index, sourceLayerIndex, this.index);
         }
     }
@@ -171,24 +171,24 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.segments.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, granuality?: number) {
-        if (!granuality) {
-            granuality = 1;
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, granularity?: number) {
+        if (!granularity) {
+            granularity = 1;
         }
 
         let extrudes: Array<number>;
 
-        if (granuality === 1) {
+        if (granularity === 1) {
             extrudes = [0, 7];
-        } else if (granuality === 3) {
+        } else if (granularity === 3) {
             extrudes = [0, 2, 5, 7];
-        } else if (granuality === 5) {
+        } else if (granularity === 5) {
             extrudes = [0, 1, 3, 4, 6, 7];
-        } else if (granuality === 7) {
+        } else if (granularity === 7) {
             extrudes = [0, 1, 2, 3, 4, 5, 6, 7];
         } else {
-            warnOnce(`Invalid circle bucket graniality: ${granuality}; valid values are 1, 3, 5, 7.`);
-            granuality = 1;
+            warnOnce(`Invalid circle bucket graniality: ${granularity}; valid values are 1, 3, 5, 7.`);
+            granularity = 1;
             extrudes = [0, 7];
         }
 

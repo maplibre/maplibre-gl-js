@@ -116,12 +116,12 @@ class Subdivider {
 
     private readonly _canonical: CanonicalTileID;
 
-    private readonly _granuality;
-    private readonly _granualityCellSize;
+    private readonly _granularity;
+    private readonly _granularityCellSize;
 
-    constructor(granuality: number, canonical: CanonicalTileID) {
-        this._granuality = granuality;
-        this._granualityCellSize = EXTENT / granuality;
+    constructor(granularity: number, canonical: CanonicalTileID) {
+        this._granularity = granularity;
+        this._granularityCellSize = EXTENT / granularity;
         this._canonical = canonical;
     }
 
@@ -159,7 +159,7 @@ class Subdivider {
     }
 
     private subdivideTrianglesScanline(inputIndices: Array<number>): Array<number> {
-        if (this._granuality < 2) {
+        if (this._granularity < 2) {
             return inputIndices;
         }
 
@@ -202,10 +202,10 @@ class Subdivider {
                 continue; // Skip degenerate linear axis-aligned triangles
             }
 
-            const cellXmin = Math.floor(minX / this._granualityCellSize);
-            const cellXmax = Math.ceil(maxX / this._granualityCellSize);
-            const cellYmin = Math.floor(minY / this._granualityCellSize);
-            const cellYmax = Math.ceil(maxY / this._granualityCellSize);
+            const cellXmin = Math.floor(minX / this._granularityCellSize);
+            const cellXmax = Math.ceil(maxX / this._granularityCellSize);
+            const cellYmin = Math.floor(minY / this._granularityCellSize);
+            const cellYmax = Math.ceil(maxY / this._granularityCellSize);
 
             // Skip trinagles that do not span multiple cells
             if (cellXmin === cellXmax && cellYmin === cellYmax) {
@@ -215,8 +215,8 @@ class Subdivider {
 
             // Iterate over cell rows that intersect this triangle
             for (let cellRow = cellYmin; cellRow < cellYmax; cellRow++) {
-                const cellRowYTop = cellRow * this._granualityCellSize;
-                const cellRowYBottom = cellRowYTop + this._granualityCellSize;
+                const cellRowYTop = cellRow * this._granularityCellSize;
+                const cellRowYBottom = cellRowYTop + this._granularityCellSize;
                 const ring = [];
 
                 let leftmostIndex = 0;
@@ -285,21 +285,21 @@ class Subdivider {
                     // No need to subdivide (along X) edges that are parallel with Y
                     if (!isParallelY) {
                         // Generate edge interior vertices
-                        const edgeSubdivisionLeftCellX = Math.floor(leftX / this._granualityCellSize) + 1;
-                        const edgeSubdivisionRightCellX = Math.ceil(rightX / this._granualityCellSize) - 1;
+                        const edgeSubdivisionLeftCellX = Math.floor(leftX / this._granularityCellSize) + 1;
+                        const edgeSubdivisionRightCellX = Math.ceil(rightX / this._granularityCellSize) - 1;
 
                         const isEdgeLeftToRight = isParallelX ? (aX < bX) : (enterX < exitX);
                         if (isEdgeLeftToRight) {
                             // Left to right
                             for (let cellX = edgeSubdivisionLeftCellX; cellX <= edgeSubdivisionRightCellX; cellX++) {
-                                const x = cellX * this._granualityCellSize;
+                                const x = cellX * this._granularityCellSize;
                                 const y = aY + dirY * (x - aX) / dirX;
                                 ring.push(this.getVertexIndex(x, y));
                             }
                         } else {
                             // Right to left
                             for (let cellX = edgeSubdivisionRightCellX; cellX >= edgeSubdivisionLeftCellX; cellX--) {
-                                const x = cellX * this._granualityCellSize;
+                                const x = cellX * this._granularityCellSize;
                                 const y = aY + dirY * (x - aX) / dirX;
                                 ring.push(this.getVertexIndex(x, y));
                             }
@@ -359,8 +359,8 @@ class Subdivider {
                         const t2Enter = Math.min(t2Top, t2Bottom);
                         const t2Exit = Math.max(t2Top, t2Bottom);
                         const enter2X = bX + dir2X * t2Enter;
-                        let boundarySubdivisionLeftCellX = Math.floor(Math.min(enter2X, exitX) / this._granualityCellSize) + 1;
-                        let boundarySubdivisionRightCellX = Math.ceil(Math.max(enter2X, exitX) / this._granualityCellSize) - 1;
+                        let boundarySubdivisionLeftCellX = Math.floor(Math.min(enter2X, exitX) / this._granularityCellSize) + 1;
+                        let boundarySubdivisionRightCellX = Math.ceil(Math.max(enter2X, exitX) / this._granularityCellSize) - 1;
                         let isBoundaryLeftToRight = exitX < enter2X;
 
                         const isParallelX2 = dir2Y === 0;
@@ -397,8 +397,8 @@ class Subdivider {
                             const t3Bottom = (cellRowYBottom - cY) / dir3Y;
                             const t3Enter = Math.min(t3Top, t3Bottom);
                             const enter3X = cX + dir3X * t3Enter;
-                            boundarySubdivisionLeftCellX = Math.floor(Math.min(enter3X, exitX) / this._granualityCellSize) + 1;
-                            boundarySubdivisionRightCellX = Math.ceil(Math.max(enter3X, exitX) / this._granualityCellSize) - 1;
+                            boundarySubdivisionLeftCellX = Math.floor(Math.min(enter3X, exitX) / this._granularityCellSize) + 1;
+                            boundarySubdivisionRightCellX = Math.ceil(Math.max(enter3X, exitX) / this._granularityCellSize) - 1;
                             isBoundaryLeftToRight = exitX < enter3X;
                         }
 
@@ -406,13 +406,13 @@ class Subdivider {
                         if (isBoundaryLeftToRight) {
                             // Left to right
                             for (let cellX = boundarySubdivisionLeftCellX; cellX <= boundarySubdivisionRightCellX; cellX++) {
-                                const x = cellX * this._granualityCellSize;
+                                const x = cellX * this._granularityCellSize;
                                 ring.push(this.getVertexIndex(x, boundaryY));
                             }
                         } else {
                             // Right to left
                             for (let cellX = boundarySubdivisionRightCellX; cellX >= boundarySubdivisionLeftCellX; cellX--) {
-                                const x = cellX * this._granualityCellSize;
+                                const x = cellX * this._granularityCellSize;
                                 ring.push(this.getVertexIndex(x, boundaryY));
                             }
                         }
@@ -481,7 +481,7 @@ class Subdivider {
             return [];
         }
 
-        if (this._granuality < 2) {
+        if (this._granularity < 2) {
             return lineIndices;
         }
 
@@ -503,10 +503,10 @@ class Subdivider {
             const minY = Math.min(lineVertex0y, lineVertex1y);
             const maxY = Math.max(lineVertex0y, lineVertex1y);
 
-            const cellRangeXmin = Math.floor(minX / this._granualityCellSize + 1);
-            const cellRangeYmin = Math.floor(minY / this._granualityCellSize + 1);
-            const cellRangeXmax = Math.floor((maxX - 1) / this._granualityCellSize);
-            const cellRangeYmax = Math.floor((maxY - 1) / this._granualityCellSize);
+            const cellRangeXmin = Math.floor(minX / this._granularityCellSize + 1);
+            const cellRangeYmin = Math.floor(minY / this._granularityCellSize + 1);
+            const cellRangeXmax = Math.floor((maxX - 1) / this._granularityCellSize);
+            const cellRangeYmax = Math.floor((maxY - 1) / this._granularityCellSize);
 
             const subdividedLineIndices = [];
 
@@ -515,12 +515,12 @@ class Subdivider {
             subdividedLineIndices.push(lineIndex1);
 
             for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
-                const cellEdgeX = cellX * this._granualityCellSize;
+                const cellEdgeX = cellX * this._granularityCellSize;
                 this.checkEdgeSubdivisionX(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, minY, maxY);
             }
 
             for (let cellY = cellRangeYmin; cellY <= cellRangeYmax; cellY += 1) {
-                const cellEdgeY = cellY * this._granualityCellSize;
+                const cellEdgeY = cellY * this._granularityCellSize;
                 this.checkEdgeSubdivisionY(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, minX, maxX);
             }
 
@@ -677,11 +677,10 @@ class Subdivider {
     }
 
     /**
-     * Subdivides an input mesh. Imagine a regular square grid with the target granuality overlaid over the mesh - this is the subdivision's result.
+     * Subdivides an input mesh. Imagine a regular square grid with the target granularity overlaid over the mesh - this is the subdivision's result.
      * Assumes a mesh of tile features - vertex coordinates are integers, visible range where subdivision happens is 0..8191.
      * @param vertices - Input vertex buffer, flattened - two values per vertex (x, y).
      * @param indices - Input index buffer.
-     * @param granuality - Target granuality. If less or equal to 1, the input buffers are returned without modification.
      * @returns Vertex and index buffers with subdivision applied.
      */
     public subdivideFillInternal(vertices: Array<number>, holeIndices: Array<number>, lineIndices: Array<Array<number>>): SubdivisionResult {
@@ -785,7 +784,7 @@ class Subdivider {
                 for (const index of [i0, i1, i2]) {
                     const x = this._finalVertices[index * 2];
                     const y = this._finalVertices[index * 2 + 1];
-                    const isOnCellEdge = (x % this._granualityCellSize === 0) || (y % this._granualityCellSize === 0);
+                    const isOnCellEdge = (x % this._granularityCellSize === 0) || (y % this._granularityCellSize === 0);
                     svg.push(`<circle cx="${x}" cy="${y}" r="1.0" fill="${isOnCellEdge ? 'red' : 'black'}" stroke="none"/>`);
                     svg.push(`<text x="${x + 2}" y="${y - 2}" style="font: 2px sans-serif;">${(index).toString()}</text>`);
                 }
@@ -812,8 +811,8 @@ class Subdivider {
     }
 }
 
-export function subdivideFill(vertices: Array<number>, holeIndices: Array<number>, lineList: Array<Array<number>>, canonical: CanonicalTileID, granuality: number): SubdivisionResult {
-    const subdivider = new Subdivider(granuality, canonical);
+export function subdivideFill(vertices: Array<number>, holeIndices: Array<number>, lineList: Array<Array<number>>, canonical: CanonicalTileID, granularity: number): SubdivisionResult {
+    const subdivider = new Subdivider(granularity, canonical);
     return subdivider.subdivideFillInternal(vertices, holeIndices, lineList);
 }
 
@@ -842,7 +841,7 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
  * Does not assume a line segment from last point to first point.
  * Eg. an array of 4 points describes exactly 3 line segments.
  */
-export function subdivideVertexLine(linePoints: Array<Point>, granuality: number): Array<Point> {
+export function subdivideVertexLine(linePoints: Array<Point>, granularity: number): Array<Point> {
     if (!linePoints) {
         return [];
     }
@@ -851,11 +850,11 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
         return [linePoints[0]];
     }
 
-    if (granuality < 2) {
+    if (granularity < 2) {
         return linePoints;
     }
 
-    const granualityStep = Math.floor(EXTENT / granuality);
+    const granularityStep = Math.floor(EXTENT / granularity);
     const finalLineVertices: Array<Point> = [];
 
     // Add first line vertex
@@ -880,10 +879,10 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
         // Only add the second vertex of this segment.
         subdividedLinePoints.push(linePoints[pointIndex]);
 
-        const cellXstart = Math.floor((minX + granualityStep) / granualityStep);
-        const cellXend = Math.floor((maxX - 1) / granualityStep);
+        const cellXstart = Math.floor((minX + granularityStep) / granularityStep);
+        const cellXend = Math.floor((maxX - 1) / granularityStep);
         for (let cellX = cellXstart; cellX <= cellXend; cellX += 1) {
-            const cellEdgeX = cellX * granualityStep;
+            const cellEdgeX = cellX * granularityStep;
             const y = checkEdgeDivide(lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX);
             if (y !== undefined && y >= minY && y <= maxY) {
                 let add = true;
@@ -899,10 +898,10 @@ export function subdivideVertexLine(linePoints: Array<Point>, granuality: number
             }
         }
 
-        const cellYstart = Math.floor((minY + granualityStep) / granualityStep);
-        const cellYend = Math.floor((maxY - 1) / granualityStep);
+        const cellYstart = Math.floor((minY + granularityStep) / granularityStep);
+        const cellYend = Math.floor((maxY - 1) / granularityStep);
         for (let cellY = cellYstart; cellY <= cellYend; cellY += 1) {
-            const cellEdgeY = cellY * granualityStep;
+            const cellEdgeY = cellY * granularityStep;
             const x = checkEdgeDivide(lineVertex0y, lineVertex0x, lineVertex1y, lineVertex1x, cellEdgeY);
             if (x !== undefined && x >= minX && x <= maxX) {
                 let add = true;

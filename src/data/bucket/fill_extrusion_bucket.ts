@@ -190,7 +190,7 @@ export class FillExtrusionBucket implements Bucket {
         subdivisionGranularity: SubdivisionGranularitySetting
     ): void {
         let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-        const granuality = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+        const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
 
         for (const ring of polygon) {
             if (ring.length === 0) {
@@ -201,7 +201,7 @@ export class FillExtrusionBucket implements Bucket {
                 continue;
             }
 
-            const subdivided = subdivideVertexLine(ring, granuality);
+            const subdivided = subdivideVertexLine(ring, granularity);
 
             let edgeDistance = 0;
 
@@ -275,7 +275,7 @@ export class FillExtrusionBucket implements Bucket {
         }
 
         // Pass empty array as lines, since lines already got subdivided separately earlier.
-        const subdivided = subdivideFill(flattened, holeIndices, [], canonical, granuality);
+        const subdivided = subdivideFill(flattened, holeIndices, [], canonical, granularity);
         const finalVertices = subdivided.verticesFlattened;
         const finalIndicesTriangles = subdivided.indicesTriangles;
 

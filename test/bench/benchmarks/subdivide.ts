@@ -8,18 +8,18 @@ export default class Subdivide extends Benchmark {
     holeIndices: Array<number>;
     lineList: Array<Array<number>>;
     tileID: CanonicalTileID;
-    granuality: number;
+    granularity: number;
 
     async setup(): Promise<void> {
         await super.setup();
 
         // Reasonably fast benchmark parameters:
         // vertexCountMultiplier = 11
-        // granuality = 64
+        // granularity = 64
 
         const vertexCountMultiplier = 11;
 
-        this.granuality = 64;
+        this.granularity = 64;
 
         // Use web mercator base tile, as it borders both north and south poles,
         // so we also benchmark pole geometry generation.
@@ -48,7 +48,7 @@ export default class Subdivide extends Benchmark {
     }
 
     async bench() {
-        subdivideFill(this.flattened, this.holeIndices, this.lineList, this.tileID, this.granuality);
+        subdivideFill(this.flattened, this.holeIndices, this.lineList, this.tileID, this.granularity);
     }
 }
 
