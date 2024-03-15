@@ -6,8 +6,6 @@ import {extend} from '../util/util';
 import type {Dispatcher} from '../util/dispatcher';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
 
 function createSource(options?) {
     const c = options && options.canvas || window.document.createElement('canvas');
@@ -190,8 +188,6 @@ describe('CanvasSource', () => {
 
         source.tiles[String(tile.tileID.wrap)] = tile;
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {} as VertexBuffer;
-        source.boundsSegments = {} as SegmentVector;
         source.texture = {
             update: () => {}
         } as any;

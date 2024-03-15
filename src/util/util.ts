@@ -5,6 +5,16 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * Linearly interpolate between two values, similar to `mix` function from GLSL. No clamping is done.
+ * @param a - The first value to interpolate. This value is returned when mix=0.
+ * @param b - The second value to interpolate. This value is returned when mix=1.
+ * @param mix - The interpolation factor. Range 0..1 interpolates between `a` and `b`, but values outside this range are also accepted.
+ */
+export function lerp(a: number, b: number, mix: number): number {
+    return a * (1.0 - mix) + b * mix;
+}
+
+/**
  * Given a value `t` that varies between 0 and 1, return
  * an interpolation function that eases between 0 and 1 in a pleasing
  * cubic in-out fashion.

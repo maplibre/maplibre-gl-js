@@ -15,6 +15,11 @@ export class CullFaceMode {
     }
 
     static disabled: Readonly<CullFaceMode>;
+
+    /**
+     * The standard GL cull mode. Culls backfacing triangles when counterclockwise vertex order is used.
+     * Use for 3D geometry such as terrain.
+     */
     static backCCW: Readonly<CullFaceMode>;
 }
 

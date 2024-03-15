@@ -58,6 +58,8 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
+import {Projection} from '../geo/projection/projection';
+import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
 
 const version = packageJSON.version;
 
@@ -318,6 +320,13 @@ export type MapOptions = {
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
      */
     maxCanvasSize?: [number, number];
+    /**
+     * Map projection to use. Options are:
+     * - 'mercator' - The default, a classical flat Web Mercator map.
+     * - 'globe' - A 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zoom levels.
+     * @defaultValue 'mercator'
+     */
+    projection?: ProjectionName;
 };
 
 export type AddImageOptions = {
@@ -387,7 +396,8 @@ const defaultOptions = {
     crossSourceCollisions: true,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
-    maxCanvasSize: [4096, 4096]
+    maxCanvasSize: [4096, 4096],
+    projection: 'mercator'
 } as CompleteMapOptions;
 
 /**
@@ -425,6 +435,7 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
+    projection: Projection;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -600,6 +611,8 @@ export class Map extends Camera {
             this.setMaxBounds(options.maxBounds);
         }
 
+        this.projection = createProjectionFromName(options.projection);
+
         this._setupContainer();
         this._setupPainter();
 
@@ -692,7 +705,7 @@ export class Map extends Camera {
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
@@ -732,7 +745,7 @@ export class Map extends Camera {
     /**
      * Removes the control from the map.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param control - The {@link IControl} to remove.
      * @returns `this`
@@ -2130,7 +2143,7 @@ export class Map extends Camera {
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern).
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -2200,7 +2213,7 @@ export class Map extends Camera {
      * in the style's original sprite and any images
      * that have been added at runtime using {@link Map#addImage}.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the image.
      *
@@ -2382,7 +2395,7 @@ export class Map extends Camera {
     /**
      * Removes the layer with the given ID from the map's style.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the layer to remove
      * @returns `this`
@@ -3084,6 +3097,9 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
+        // This projection update should happen *before* placement update
+        this.projection.updateProjection(this.painter.transform);
+
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
         // Actually draw
@@ -3121,7 +3137,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projection.isRenderingDirty();
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -3175,6 +3191,7 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
+        this.projection.destroy();
         this._renderTaskQueue.clear();
         this.painter.destroy();
         this.handlers.destroy();
@@ -3324,4 +3341,14 @@ export class Map extends Camera {
     getCameraTargetElevation(): number {
         return this.transform.elevation;
     }
+
+    /**
+     * Returns the active `ProjectionBase` object.
+     * @returns The projection object.
+     * @example
+     * ```ts
+     * let projection = map.getProjection();
+     * ```
+     */
+    getProjection(): Projection { return this.projection; }
 }

@@ -26,7 +26,7 @@ export function loadGeometry(feature: VectorTileFeature): Array<Array<Point>> {
         for (let p = 0; p < ring.length; p++) {
             const point = ring[p];
             // round here because mapbox-gl-native uses integers to represent
-            // points and we need to do the same to avoid renering differences.
+            // points and we need to do the same to avoid rendering differences.
             const x = Math.round(point.x * scale);
             const y = Math.round(point.y * scale);
 
