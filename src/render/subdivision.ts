@@ -2,6 +2,7 @@ import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
 import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
+import {register} from '../util/web_worker_transfer';
 
 export class SubdivisionGranularityExpression {
     /**
@@ -42,6 +43,9 @@ export class SubdivisionGranularitySetting {
         this.line = options.line;
     }
 }
+
+register('SubdivisionGranularityExpression', SubdivisionGranularityExpression);
+register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);
 
 export const subdivisionGranularitySettingsNoSubdivision = new SubdivisionGranularitySetting({
     fill: new SubdivisionGranularityExpression(1, 1),
