@@ -23,7 +23,7 @@ import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 import {Terrain} from '../render/terrain';
 import {warnOnce} from '../util/util';
 import {TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
-import {ProjectionBase} from '../geo/projection/projection_base';
+import {Projection} from '../geo/projection/projection';
 
 class OpacityState {
     opacity: number;
@@ -242,7 +242,7 @@ export class Placement {
         [k in any]: CollisionCircleArray;
     };
 
-    constructor(transform: Transform, projection: ProjectionBase, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+    constructor(transform: Transform, projection: Projection, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
         this.terrain = terrain;
         this.collisionIndex = new CollisionIndex(this.transform, projection);

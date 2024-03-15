@@ -8,7 +8,7 @@ import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
 import type {Tile} from '../source/tile';
 import type {BucketPart} from '../symbol/placement';
 import {Terrain} from '../render/terrain';
-import {ProjectionBase} from '../geo/projection/projection_base';
+import {Projection} from '../geo/projection/projection';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;
@@ -71,7 +71,7 @@ export class PauseablePlacement {
 
     constructor(
         transform: Transform,
-        projection: ProjectionBase,
+        projection: Projection,
         terrain: Terrain,
         order: Array<string>,
         forceFullPlacement: boolean,

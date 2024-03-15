@@ -15,7 +15,7 @@ import type {
 import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
 import {UnwrappedTileID} from '../source/tile_id';
-import {ProjectionBase} from '../geo/projection/projection_base';
+import {Projection} from '../geo/projection/projection';
 
 export {
     updateLineLabels,
@@ -162,7 +162,7 @@ function updateLineLabels(bucket: SymbolBucket,
     pitchWithMap: boolean,
     keepUpright: boolean,
     rotateToLine: boolean,
-    projection: ProjectionBase,
+    projection: Projection,
     unwrappedTileID: UnwrappedTileID,
     viewportWidth: number,
     viewportHeight: number,
@@ -473,7 +473,7 @@ export type ProjectionArgs = {
      * True when line glyphs are projected onto the map, instead of onto the viewport.
      */
     pitchWithMap: boolean;
-    projection: ProjectionBase;
+    projection: Projection;
     unwrappedTileID: UnwrappedTileID;
     /**
      * Viewport width.

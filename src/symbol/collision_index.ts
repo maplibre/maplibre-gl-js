@@ -18,7 +18,7 @@ import type {
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
 import {ProjectionArgs} from '../symbol/projection';
-import {ProjectionBase} from '../geo/projection/projection_base';
+import {Projection} from '../geo/projection/projection';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -55,7 +55,7 @@ export class CollisionIndex {
     screenBottomBoundary: number;
     gridRightBoundary: number;
     gridBottomBoundary: number;
-    projection: ProjectionBase;
+    projection: Projection;
 
     // With perspectiveRatio the fontsize is calculated for tilted maps (near = bigger, far = smaller).
     // The cutoff defines a threshold to no longer render labels near the horizon.
@@ -63,7 +63,7 @@ export class CollisionIndex {
 
     constructor(
         transform: Transform,
-        projection: ProjectionBase,
+        projection: Projection,
         grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
         ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {

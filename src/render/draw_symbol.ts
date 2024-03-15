@@ -38,7 +38,7 @@ import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
 import {ProjectionData} from './program/projection_program';
-import { ProjectionBase } from '../geo/projection/projection_base';
+import {Projection} from '../geo/projection/projection';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -168,7 +168,7 @@ function updateVariableAnchorsForBucket(
     tileScale: number,
     size: EvaluatedZoomSize,
     updateTextFitIcon: boolean,
-    projection: ProjectionBase,
+    projection: Projection,
     unwrappedTileID: UnwrappedTileID,
     getElevation: (x: number, y: number) => number) {
     const placedSymbols = bucket.text.placedSymbolArray;
