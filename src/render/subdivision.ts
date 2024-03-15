@@ -43,9 +43,9 @@ export class SubdivisionGranularitySetting {
     }
 }
 
-export const granularitySettings: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
-    fill: new SubdivisionGranularityExpression(128, 1),
-    line: new SubdivisionGranularityExpression(512, 1)
+export const subdivisionGranularitySettingsNoSubdivision = new SubdivisionGranularitySetting({
+    fill: new SubdivisionGranularityExpression(1, 1),
+    line: new SubdivisionGranularityExpression(1, 1),
 });
 
 type SubdivisionResult = {

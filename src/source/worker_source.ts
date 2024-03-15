@@ -13,6 +13,7 @@ import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
+import {SubdivisionGranularitySetting} from '../render/subdivision';
 
 /**
  * Parameters to identify a tile
@@ -37,6 +38,7 @@ export type WorkerTileParameters = TileParameters & {
     showCollisionBoxes: boolean;
     collectResourceTiming?: boolean;
     returnDependencies?: boolean;
+    subdivisionGranularity: SubdivisionGranularitySetting;
 };
 
 /**

@@ -23,6 +23,7 @@ import type {
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
 import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages';
+import {SubdivisionGranularitySetting} from '../render/subdivision';
 
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -60,7 +61,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor): Promise<WorkerTileResult> {
+    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
         this.status = 'parsing';
         this.data = data;
 
@@ -77,7 +78,8 @@ export class WorkerTile {
             iconDependencies: {},
             patternDependencies: {},
             glyphDependencies: {},
-            availableImages
+            availableImages,
+            subdivisionGranularity
         };
 
         const layerFamilies = layerIndex.familiesBySource[this.source];
@@ -171,7 +173,8 @@ export class WorkerTile {
                     imageMap: iconMap,
                     imagePositions: imageAtlas.iconPositions,
                     showCollisionBoxes: this.showCollisionBoxes,
-                    canonical: this.tileID.canonical
+                    canonical: this.tileID.canonical,
+                    subdivisionGranularity: options.subdivisionGranularity
                 });
             } else if (bucket.hasPattern &&
                 (bucket instanceof LineBucket ||

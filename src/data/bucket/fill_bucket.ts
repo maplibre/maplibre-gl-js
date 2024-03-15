@@ -28,7 +28,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideFill, granularitySettings} from '../../render/subdivision';
+import {SubdivisionGranularitySetting, subdivideFill} from '../../render/subdivision';
 import {StructArray} from '../../util/struct_array';
 
 export class FillBucket implements Bucket {
@@ -117,7 +117,7 @@ export class FillBucket implements Bucket {
                 // so are stored during populate until later updated with positions by tile worker in addFeatures
                 this.patternFeatures.push(patternFeature);
             } else {
-                this.addFeature(bucketFeature, geometry, index, canonical, {});
+                this.addFeature(bucketFeature, geometry, index, canonical, {}, options.subdivisionGranularity);
             }
 
             const feature = features[index].feature;
@@ -136,7 +136,7 @@ export class FillBucket implements Bucket {
         [_: string]: ImagePosition;
     }) {
         for (const feature of this.patternFeatures) {
-            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions);
+            this.addFeature(feature, feature.geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
         }
     }
 
@@ -169,7 +169,7 @@ export class FillBucket implements Bucket {
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {
         [_: string]: ImagePosition;
-    }) {
+    }, subdivisionGranularity: SubdivisionGranularitySetting) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             const flattened = [];
             const holeIndices = [];
@@ -203,7 +203,7 @@ export class FillBucket implements Bucket {
                 lineList.push(lineIndices);
             }
 
-            const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, granularitySettings.fill.getGranularityForZoomLevel(canonical.z));
+            const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
             const finalVertices = subdivided.verticesFlattened;
             const finalIndicesTriangles = subdivided.indicesTriangles;
             const finalIndicesLineList = subdivided.indicesLineList;

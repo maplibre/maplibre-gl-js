@@ -11,7 +11,7 @@ import {Tile} from '../../source/tile';
 import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
-import {granularitySettings} from '../../render/subdivision';
+import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import {Projection, ProjectionGPUContext} from './projection';
@@ -29,6 +29,11 @@ const globeTransitionTimeSeconds = 0.5;
 const zoomTransitionTimeSeconds = 0.5;
 const maxGlobeZoom = 12.0;
 const errorTransitionTimeSeconds = 0.5;
+
+const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
+    fill: new SubdivisionGranularityExpression(128, 1),
+    line: new SubdivisionGranularityExpression(512, 1)
+});
 
 export class GlobeProjection implements Projection {
     private _mercator: MercatorProjection;
@@ -111,6 +116,10 @@ export class GlobeProjection implements Projection {
 
     get vertexShaderPreludeCode(): string {
         return shaders.projectionMercator.vertexSource;
+    }
+
+    get subdivisionGranularity(): SubdivisionGranularitySetting {
+        return granularitySettingsGlobe;
     }
 
     /**
@@ -426,7 +435,7 @@ export class GlobeProjection implements Projection {
     }
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh {
-        const granularity = granularitySettings.fill.getGranularityForZoomLevel(canonical.z);
+        const granularity = granularitySettingsGlobe.fill.getGranularityForZoomLevel(canonical.z);
         const north = (canonical.y === 0);
         const south = (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granularity, hasBorder, north, south);

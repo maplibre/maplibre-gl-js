@@ -4,6 +4,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {WorkerTileParameters} from './worker_source';
 import {VectorTile} from '@mapbox/vector-tile';
+import {subdivisionGranularitySettingsNoSubdivision} from '../render/subdivision';
 
 function createWorkerTile() {
     return new WorkerTile({
@@ -34,7 +35,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any);
+        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, subdivisionGranularitySettingsNoSubdivision);
         expect(result.buckets[0]).toBeTruthy();
     });
 
@@ -47,7 +48,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any);
+        const result = await tile.parse(createWrapper(), layerIndex, [], {} as any, subdivisionGranularitySettingsNoSubdivision);
         expect(result.buckets).toHaveLength(0);
     });
 
@@ -60,7 +61,7 @@ describe('worker tile', () => {
         }]);
 
         const tile = createWorkerTile();
-        const result = await tile.parse({layers: {}}, layerIndex, [], {} as any);
+        const result = await tile.parse({layers: {}}, layerIndex, [], {} as any, subdivisionGranularitySettingsNoSubdivision);
         expect(result.buckets).toHaveLength(0);
     });
 
@@ -83,7 +84,7 @@ describe('worker tile', () => {
         const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
         const tile = createWorkerTile();
-        await tile.parse(data, layerIndex, [], {} as any);
+        await tile.parse(data, layerIndex, [], {} as any, subdivisionGranularitySettingsNoSubdivision);
         expect(spy.mock.calls[0][0]).toMatch(/does not use vector tile spec v2/);
     });
 
@@ -141,7 +142,7 @@ describe('worker tile', () => {
         const actorMock = {
             sendAsync
         };
-        const result = await tile.parse(data, layerIndex, ['hello'], actorMock);
+        const result = await tile.parse(data, layerIndex, ['hello'], actorMock, subdivisionGranularitySettingsNoSubdivision);
         expect(result).toBeDefined();
         expect(sendAsync).toHaveBeenCalledTimes(3);
         expect(sendAsync).toHaveBeenCalledWith(expect.objectContaining({data: expect.objectContaining({'icons': ['hello'], 'type': 'icons'})}), expect.any(Object));
@@ -213,9 +214,9 @@ describe('worker tile', () => {
         const actorMock = {
             sendAsync
         };
-        tile.parse(data, layerIndex, ['hello'], actorMock).then(() => expect(false).toBeTruthy());
-        tile.parse(data, layerIndex, ['hello'], actorMock).then(() => expect(false).toBeTruthy());
-        const result = await tile.parse(data, layerIndex, ['hello'], actorMock);
+        tile.parse(data, layerIndex, ['hello'], actorMock, subdivisionGranularitySettingsNoSubdivision).then(() => expect(false).toBeTruthy());
+        tile.parse(data, layerIndex, ['hello'], actorMock, subdivisionGranularitySettingsNoSubdivision).then(() => expect(false).toBeTruthy());
+        const result = await tile.parse(data, layerIndex, ['hello'], actorMock, subdivisionGranularitySettingsNoSubdivision);
         expect(result).toBeDefined();
         expect(cancelCount).toBe(6);
         expect(sendAsync).toHaveBeenCalledTimes(9);

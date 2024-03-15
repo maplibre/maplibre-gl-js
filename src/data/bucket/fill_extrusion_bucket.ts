@@ -32,7 +32,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideFill, subdivideVertexLine, granularitySettings} from '../../render/subdivision';
+import {SubdivisionGranularitySetting, subdivideFill, subdivideVertexLine} from '../../render/subdivision';
 import {fillArrays} from './fill_bucket';
 
 const FACTOR = Math.pow(2, 13);
@@ -120,7 +120,7 @@ export class FillExtrusionBucket implements Bucket {
             if (this.hasPattern) {
                 this.features.push(addPatternDependencies('fill-extrusion', this.layers, bucketFeature, this.zoom, options));
             } else {
-                this.addFeature(bucketFeature, bucketFeature.geometry, index, canonical, {});
+                this.addFeature(bucketFeature, bucketFeature.geometry, index, canonical, {}, options.subdivisionGranularity);
             }
 
             options.featureIndex.insert(feature, bucketFeature.geometry, index, sourceLayerIndex, this.index, true);
@@ -130,7 +130,7 @@ export class FillExtrusionBucket implements Bucket {
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
         for (const feature of this.features) {
             const {geometry} = feature;
-            this.addFeature(feature, geometry, feature.index, canonical, imagePositions);
+            this.addFeature(feature, geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
         }
     }
 
@@ -166,11 +166,11 @@ export class FillExtrusionBucket implements Bucket {
         this.centroidVertexBuffer.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
         // Compute polygon centroid to calculate elevation in GPU
         const centroid: CentroidAccumulator = {x: 0, y: 0, vertexCount: 0};
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
-            this.processPolygon(centroid, canonical, feature, polygon);
+            this.processPolygon(centroid, canonical, feature, polygon, subdivisionGranularity);
         }
 
         for (let i = 0; i < centroid.vertexCount; i++) {
@@ -187,9 +187,10 @@ export class FillExtrusionBucket implements Bucket {
         canonical: CanonicalTileID,
         feature: BucketFeature,
         polygon: Array<Array<Point>>,
+        subdivisionGranularity: SubdivisionGranularitySetting
     ): void {
         let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-        const granuality = granularitySettings.fill.getGranularityForZoomLevel(canonical.z);
+        const granuality = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
 
         for (const ring of polygon) {
             if (ring.length === 0) {

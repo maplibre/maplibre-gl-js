@@ -19,6 +19,7 @@ import {StyleImage} from '../../style/style_image';
 import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' assert {type: 'json'};
 import {StyleGlyph} from '../../style/style_glyph';
 import {MercatorProjection} from '../../geo/projection/mercator';
+import {subdivisionGranularitySettingsNoSubdivision} from '../../render/subdivision';
 
 // Load a point feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
@@ -75,7 +76,8 @@ describe('SymbolBucket', () => {
             {
                 bucket: bucketA,
                 glyphMap: stacks,
-                glyphPositions: {}
+                glyphPositions: {},
+                subdivisionGranularity: subdivisionGranularitySettingsNoSubdivision
             } as any);
         const tileA = new Tile(tileID, 512);
         tileA.latestFeatureIndex = new FeatureIndex(tileID);
@@ -85,7 +87,7 @@ describe('SymbolBucket', () => {
         // add same feature from bucket B
         bucketB.populate([{feature} as IndexedFeature], options, undefined as any);
         performSymbolLayout({
-            bucket: bucketB, glyphMap: stacks, glyphPositions: {}
+            bucket: bucketB, glyphMap: stacks, glyphPositions: {}, subdivisionGranularity: subdivisionGranularitySettingsNoSubdivision
         } as any);
         const tileB = new Tile(tileID, 512);
         tileB.buckets = {test: bucketB};
@@ -123,7 +125,8 @@ describe('SymbolBucket', () => {
         performSymbolLayout({
             bucket,
             glyphMap: stacks,
-            glyphPositions: {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph} as any}
+            glyphPositions: {'Test': {97: fakeGlyph, 98: fakeGlyph, 99: fakeGlyph, 100: fakeGlyph, 101: fakeGlyph, 102: fakeGlyph} as any},
+            subdivisionGranularity: subdivisionGranularitySettingsNoSubdivision
         } as any);
 
         expect(spy).toHaveBeenCalledTimes(1);
@@ -164,7 +167,8 @@ describe('SymbolBucket', () => {
         expect(icons.b).toBe(true);
 
         performSymbolLayout({
-            bucket, imageMap, imagePositions: imagePos
+            bucket, imageMap, imagePositions: imagePos,
+            subdivisionGranularity: subdivisionGranularitySettingsNoSubdivision
         } as any);
 
         // undefined SDF should be treated the same as false SDF - no warning raised
@@ -205,7 +209,7 @@ describe('SymbolBucket', () => {
         expect(icons.a).toBe(true);
         expect(icons.b).toBe(true);
 
-        performSymbolLayout({bucket, imageMap, imagePositions: imagePos} as any);
+        performSymbolLayout({bucket, imageMap, imagePositions: imagePos, subdivisionGranularity: subdivisionGranularitySettingsNoSubdivision} as any);
 
         // true SDF and false SDF in same bucket should trigger warning
         expect(spy).toHaveBeenCalledTimes(1);

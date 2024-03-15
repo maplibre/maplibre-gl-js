@@ -11,6 +11,7 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {ZoomHistory} from '../../style/zoom_history';
 import {BucketFeature, BucketParameters} from '../bucket';
+import {subdivisionGranularitySettingsNoSubdivision} from '../../render/subdivision';
 
 // Load a fill feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
@@ -34,15 +35,15 @@ test('FillBucket', () => {
         bucket.addFeature({} as BucketFeature, [[
             new Point(0, 0),
             new Point(10, 10)
-        ]], undefined, undefined, undefined);
+        ]], undefined, undefined, undefined, subdivisionGranularitySettingsNoSubdivision);
 
         bucket.addFeature({} as BucketFeature, [[
             new Point(0, 0),
             new Point(10, 10),
             new Point(10, 20)
-        ]], undefined, undefined, undefined);
+        ]], undefined, undefined, undefined, subdivisionGranularitySettingsNoSubdivision);
 
-        bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined);
+        bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined, subdivisionGranularitySettingsNoSubdivision);
     }).not.toThrow();
 });
 
@@ -66,13 +67,13 @@ test('FillBucket segmentation', () => {
 
     // first add an initial, small feature to make sure the next one starts at
     // a non-zero offset
-    bucket.addFeature({} as BucketFeature, [createPolygon(10)], undefined, undefined, undefined);
+    bucket.addFeature({} as BucketFeature, [createPolygon(10)], undefined, undefined, undefined, subdivisionGranularitySettingsNoSubdivision);
 
     // add a feature that will break across the group boundary
     bucket.addFeature({} as BucketFeature, [
         createPolygon(128),
         createPolygon(128)
-    ], undefined, undefined, undefined);
+    ], undefined, undefined, undefined, subdivisionGranularitySettingsNoSubdivision);
 
     // Each polygon must fit entirely within a segment, so we expect the
     // first segment to include the first feature and the first polygon

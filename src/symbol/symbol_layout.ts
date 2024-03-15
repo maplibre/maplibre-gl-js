@@ -33,7 +33,7 @@ import murmur3 from 'murmurhash-js';
 import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
 import {VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
 import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
-import {subdivideVertexLine, granularitySettings} from '../render/subdivision';
+import {subdivideVertexLine, SubdivisionGranularitySetting} from '../render/subdivision';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:
@@ -78,6 +78,7 @@ export function performSymbolLayout(args: {
     imagePositions: {[_: string]: ImagePosition};
     showCollisionBoxes: boolean;
     canonical: CanonicalTileID;
+    subdivisionGranularity: SubdivisionGranularitySetting;
 }) {
     args.bucket.createArrays();
 
@@ -252,7 +253,7 @@ export function performSymbolLayout(args: {
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
         args.bucket.iconsInText = shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
-            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical);
+            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity);
         }
     }
 
@@ -292,7 +293,8 @@ function addFeature(bucket: SymbolBucket,
     layoutIconSize: number,
     textOffset: [number, number],
     isSDFIcon: boolean,
-    canonical: CanonicalTileID) {
+    canonical: CanonicalTileID,
+    subdivisionGranularity: SubdivisionGranularitySetting) {
     // To reduce the number of labels that jump around when zooming we need
     // to use a text-size value that is the same for all zoom levels.
     // bucket calculates text-size at a high zoom level so that all tiles can
@@ -334,7 +336,7 @@ function addFeature(bucket: SymbolBucket,
 
     const subdivideLine = (line) => {
         // Subdivide lines for symbols as well, in order to allow line-following-text to be curved under non-mercator projections.
-        const granularity = (canonical) ? granularitySettings.line.getGranularityForZoomLevel(canonical.z) : 1;
+        const granularity = (canonical) ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
         return subdivideVertexLine(line, granularity);
     };
 
