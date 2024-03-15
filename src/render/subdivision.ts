@@ -29,18 +29,28 @@ export class SubdivisionGranularityExpression {
 
 export class SubdivisionGranularitySetting {
     /**
-     * granularity settings used for fill layer (both polygons and their anti-aliasing outlines).
+     * Granularity settings used for fill layer (both polygons and their anti-aliasing outlines).
      */
     public readonly fill;
 
     /**
-     * granularity used for the line layer.
+     * Granularity used for the line layer.
      */
     public readonly line;
 
-    constructor(options: {fill: SubdivisionGranularityExpression; line: SubdivisionGranularityExpression}) {
+    /**
+     * Granularity used for geometry covering the entire tile: stencil masks, raster tiles, etc.
+     */
+    public readonly tile;
+
+    constructor(options: {
+        fill: SubdivisionGranularityExpression;
+        line: SubdivisionGranularityExpression;
+        tile: SubdivisionGranularityExpression;
+    }) {
         this.fill = options.fill;
         this.line = options.line;
+        this.tile = options.tile;
     }
 }
 
@@ -50,6 +60,7 @@ register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);
 export const subdivisionGranularitySettingsNoSubdivision = new SubdivisionGranularitySetting({
     fill: new SubdivisionGranularityExpression(1, 1),
     line: new SubdivisionGranularityExpression(1, 1),
+    tile: new SubdivisionGranularityExpression(1, 1),
 });
 
 type SubdivisionResult = {
