@@ -170,7 +170,7 @@ describe('Fill subdivision', () => {
             canonicalDefault,
             granularityForInterval4
         );
-        console.log(result);
+
         expect(result.verticesFlattened).toEqual([
             0, 0,
             2, 0,
@@ -184,6 +184,113 @@ describe('Fill subdivision', () => {
                 1, 2,
                 2, 3,
                 3, 0
+            ]
+        ]);
+    });
+
+    test('Subdivide a polygon', () => {
+        const result = subdivideFillFromRingList([
+            [
+                new Point(0, 0),
+                new Point(8, 0),
+                new Point(0, 8),
+            ],
+            [
+                new Point(1, 1),
+                new Point(5, 1),
+                new Point(1, 5),
+            ]
+        ], canonicalDefault, granularityForInterval4);
+
+        expect(result.verticesFlattened).toEqual([
+            //    //  indices:
+            0, 0, //  0
+            8, 0, //  1
+            0, 8, //  2
+            1, 1, //  3
+            5, 1, //  4
+            1, 5, //  5
+            0, 4, //  6
+            4, 0, //  7
+            4, 4, //  8
+            1, 4, //  9
+            4, 1, // 10
+            4, 2, // 11
+            2, 4, // 12
+            4, 3  // 13
+        ]);
+        //   X: 0   1   2   3   4   5   6   7   8
+        // Y:   |   |   |   |   |   |   |   |   |
+        //  0:  0               7               1
+        //
+        //  1:      3          10   4
+        //
+        //  2:                 11
+        //
+        //  3:                 13
+        //
+        //  4:  6   9  12       8
+        //
+        //  5:      5
+        //
+        //  6:
+        //
+        //  7:
+        //
+        //  8:  2
+        expect(result.indicesTriangles).toEqual([
+            3,   0,  9,
+            10,  0,  3,
+            0,   6,  9,
+            9,   6,  2,
+            9,   2,  5,
+            7,   0, 10,
+            7,  10,  4,
+            7,   4,  1,
+            13, 12,  8,
+            13,  8,  1,
+            5,   2, 12,
+            12,  2,  8,
+            11, 12, 13,
+            11, 13,  4,
+            4,  13,  1,
+        ]);
+        //   X: 0   1   2   3   4   5   6   7   8
+        // Y:   |   |   |   |   |   |   |   |   |
+        //  0:  0⎼⎼⎽⎽__---------7\--------------1
+        //      | ⟍    ⎺⎺⎻⎻⎼⎼⎽⎽ | ⟍     _⎼⎼⎻⎻⎺╱
+        //  1:  ||  3----------10---4⎻⎻⎺    ╱╱
+        //      ||  |              ╱     ╱ ╱
+        //  2:  |⎹  |          11╱╱   ╱  ╱
+        //      | ⎹ |        ╱  |╱ ╱   ╱
+        //  3:  |  ||      ╱  _13    ╱
+        //      |  ⎹|    ╱_⎻⎺⎺  |  ╱
+        //  4:  6---9  12-------8╱
+        //      |  ⎹| ╱ ⎸      ╱
+        //  5:  | ⎹ 5  ⎸     ╱
+        //      | ⎸|  ⎸    ╱
+        //  6:  |⎹⎹  ⎸   ╱
+        //      |⎹⎸ ⎸  ╱
+        //  7:  || ⎸ ╱
+        //      |⎸⎸╱
+        //  8:  2╱
+        expect(result.indicesLineList).toEqual([
+            [
+                2, 6,
+                6, 0,
+                0, 7,
+                7, 1,
+                1, 8,
+                8, 2
+            ],
+            [
+                5, 9,
+                9, 3,
+                3, 10,
+                10, 4,
+                4, 11,
+                11, 12,
+                12, 5
             ]
         ]);
     });
