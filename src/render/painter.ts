@@ -475,7 +475,10 @@ export class Painter {
         }
 
         // Execute offscreen GPU tasks of the projection manager
-        this.style.map.projection.updateGPUdependent(this);
+        this.style.map.projection.updateGPUdependent({
+            context: this.context,
+            useProgram: (name: string) => this.useProgram(name)
+        });
 
         // Rebind the main framebuffer now that all offscreen layers have been rendered:
         this.context.viewport.set([0, 0, this.width, this.height]);

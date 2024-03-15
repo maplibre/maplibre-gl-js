@@ -1,6 +1,5 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {Context} from '../../gl/context';
-import {Map} from '../../ui/map';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {Mesh} from '../../render/mesh';
@@ -15,7 +14,7 @@ import {mercatorYfromLat} from '../mercator_coordinate';
 import {granularitySettings} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
-import {ProjectionBase, ProjectionGPUContext} from './projection_base';
+import {Projection, ProjectionGPUContext} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
@@ -31,8 +30,7 @@ const zoomTransitionTimeSeconds = 0.5;
 const maxGlobeZoom = 12.0;
 const errorTransitionTimeSeconds = 0.5;
 
-export class GlobeProjection implements ProjectionBase {
-    private _map: Map | undefined;
+export class GlobeProjection implements Projection {
     private _mercator: MercatorProjection;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
@@ -99,18 +97,6 @@ export class GlobeProjection implements ProjectionBase {
         return this.useGlobeRendering;
     }
 
-    get isRenderingDirty(): boolean {
-        const now = browser.now();
-        let dirty = false;
-        // Globe transition
-        dirty = dirty || (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeTransitionTimeSeconds, zoomTransitionTimeSeconds) + 0.2);
-        // Error correction transition
-        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (errorTransitionTimeSeconds + 0.2);
-        // Error correction query in flight
-        dirty = dirty || this._errorMeasurement.awaitingQuery;
-        return dirty;
-    }
-
     get shaderVariantName(): string {
         return this.useGlobeRendering ? 'globe' : this._mercator.shaderVariantName;
     }
@@ -128,20 +114,31 @@ export class GlobeProjection implements ProjectionBase {
     }
 
     /**
-     * When true, globe view fill function as normal. When false, mercator will be used at all zoom levels instead.
-     * Transitioning between states will be animated.
-     * True by default.
+     * Returns whether globe view is allowed.
+     * When allowed, globe fill function as normal, displaying a 3D planet,
+     * but transitioning to mercator at high zoom levels.
+     * Otherwise, mercator will be used at all zoom levels instead.
+     * Set with {@link setGlobeViewAllowed}.
      */
-    get globeView(): boolean { return this._globeProjectionOverride; }
-    set globeView(value: boolean) {
-        if (value !== this._globeProjectionOverride) {
-            this._globeProjectionOverride = value;
-            this._map._update(true); // Otherwise the transition animation might not happen until the map is interacted with by the user.
-        }
+    public getGlobeViewAllowed(): boolean {
+        return this._globeProjectionOverride;
     }
 
-    constructor(map: Map) {
-        this._map = map;
+    /**
+     * Sets whether globe view is allowed. When allowed, globe fill function as normal, displaying a 3D planet,
+     * but transitioning to mercator at high zoom levels.
+     * Otherwise, mercator will be used at all zoom levels instead.
+     * @param allow - Sets whether glove view is allowed.
+     * @param animateTransition - Controls whether the transition between globe view and mercator (if triggered by this call) should be animated. True by default.
+     */
+    public setGlobeViewAllowed(allow: boolean, animateTransition: boolean = true) {
+        if (!animateTransition && allow !== this._globeProjectionOverride) {
+            this._skipNextAnimation = true;
+        }
+        this._globeProjectionOverride = allow;
+    }
+
+    constructor() {
         this._mercator = new MercatorProjection();
     }
 
@@ -149,10 +146,6 @@ export class GlobeProjection implements ProjectionBase {
         if (this._errorMeasurement) {
             this._errorMeasurement.destroy();
         }
-    }
-
-    public skipNextProjectionTransitionAnimation() {
-        this._skipNextAnimation = true;
     }
 
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
@@ -179,7 +172,6 @@ export class GlobeProjection implements ProjectionBase {
 
     public updateProjection(transform: Transform): void {
         this._errorQueryLatitudeDegrees = transform.center.lat;
-
         this._updateAnimation(transform);
 
         // We want zoom levels to be consistent between globe and flat views.
@@ -234,6 +226,18 @@ export class GlobeProjection implements ProjectionBase {
         data['u_projection_transition'] = this._globeness;
 
         return data;
+    }
+
+    public isRenderingDirty(): boolean {
+        const now = browser.now();
+        let dirty = false;
+        // Globe transition
+        dirty = dirty || (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeTransitionTimeSeconds, zoomTransitionTimeSeconds) + 0.2);
+        // Error correction transition
+        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (errorTransitionTimeSeconds + 0.2);
+        // Error correction query in flight
+        dirty = dirty || this._errorMeasurement.awaitingQuery;
+        return dirty;
     }
 
     private _computeClippingPlane(transform: Transform, globeRadiusPixels: number): [number, number, number, number] {
@@ -350,9 +354,9 @@ export class GlobeProjection implements ProjectionBase {
         };
     }
 
-    public transformLightDirection(dir: vec3): vec3 {
-        const sphereX = this._map.transform.center.lng * Math.PI / 180.0;
-        const sphereY = this._map.transform.center.lat * Math.PI / 180.0;
+    public transformLightDirection(transform: Transform, dir: vec3): vec3 {
+        const sphereX = transform.center.lng * Math.PI / 180.0;
+        const sphereY = transform.center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
         const spherePos: vec3 = [

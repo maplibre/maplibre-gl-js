@@ -58,7 +58,7 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {ProjectionBase} from '../geo/projection/projection_base';
+import {Projection} from '../geo/projection/projection';
 import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
 
 const version = packageJSON.version;
@@ -435,7 +435,7 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
-    projection: ProjectionBase;
+    projection: Projection;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -611,7 +611,7 @@ export class Map extends Camera {
             this.setMaxBounds(options.maxBounds);
         }
 
-        this.projection = createProjectionFromName(options.projection, this);
+        this.projection = createProjectionFromName(options.projection);
 
         this._setupContainer();
         this._setupPainter();
@@ -3137,7 +3137,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projection.isRenderingDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projection.isRenderingDirty();
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -3350,5 +3350,5 @@ export class Map extends Camera {
      * let projection = map.getProjection();
      * ```
      */
-    getProjection(): ProjectionBase { return this.projection; }
+    getProjection(): Projection { return this.projection; }
 }

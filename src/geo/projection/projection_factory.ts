@@ -1,8 +1,7 @@
-import {Map} from '../../ui/map';
 import {warnOnce} from '../../util/util';
 import {GlobeProjection} from './globe';
 import {MercatorProjection} from './mercator';
-import {ProjectionBase} from './projection_base';
+import {Projection} from './projection';
 
 /**
  * Name of MapLibre's map projection. Can be:
@@ -12,12 +11,12 @@ import {ProjectionBase} from './projection_base';
  */
 export type ProjectionName = 'mercator' | 'globe';
 
-export function createProjectionFromName(name: ProjectionName, map: Map): ProjectionBase {
+export function createProjectionFromName(name: ProjectionName): Projection {
     switch (name) {
         case 'mercator':
             return new MercatorProjection();
         case 'globe':
-            return new GlobeProjection(map);
+            return new GlobeProjection();
         default:
             warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
             return new MercatorProjection();

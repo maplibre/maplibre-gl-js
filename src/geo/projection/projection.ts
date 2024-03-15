@@ -17,7 +17,7 @@ export type ProjectionGPUContext = {
 /**
  * An abstract class the specializations of which are used internally by MapLibre to handle different projections.
  */
-export interface ProjectionBase {
+export interface Projection {
     /**
      * @internal
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
@@ -30,13 +30,6 @@ export interface ProjectionBase {
      * instead of the default (and fast) mercator projection path.
      */
     get useSpecialProjectionForSymbols(): boolean;
-
-    /**
-     * @internal
-     * True when an animation handled by the projection is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    get isRenderingDirty(): boolean;
 
     /**
      * @internal
@@ -76,6 +69,13 @@ export interface ProjectionBase {
      * Vertex shader code that is injected into every MapLibre vertex shader that uses this projection.
      */
     get vertexShaderPreludeCode(): string;
+
+    /**
+     * @internal
+     * True when an animation handled by the projection is in progress,
+     * requiring MapLibre to keep rendering new frames.
+     */
+    isRenderingDirty(): boolean;
 
     /**
      * @internal

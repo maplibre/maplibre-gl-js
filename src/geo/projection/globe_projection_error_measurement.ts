@@ -11,7 +11,7 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import posAttributes from '../../data/pos_attributes';
 import {Framebuffer} from '../../gl/framebuffer';
 import {isWebGL2} from '../../gl/webgl2';
-import {ProjectionGPUContext} from './projection_base';
+import {ProjectionGPUContext} from './projection';
 
 /**
  * For vector globe the vertex shader projects mercator coordinates to angular coordinates on a sphere.

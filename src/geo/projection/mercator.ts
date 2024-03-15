@@ -1,6 +1,6 @@
 import {mat4} from 'gl-matrix';
 import {Transform} from '../transform';
-import {ProjectionBase, ProjectionGPUContext} from './projection_base';
+import {Projection, ProjectionGPUContext} from './projection';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {Tile} from '../../source/tile';
@@ -17,7 +17,7 @@ import posAttributes from '../../data/pos_attributes';
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
-export class MercatorProjection implements ProjectionBase {
+export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
 
     get name(): string {
@@ -25,11 +25,6 @@ export class MercatorProjection implements ProjectionBase {
     }
 
     get useSpecialProjectionForSymbols(): boolean {
-        return false;
-    }
-
-    get isRenderingDirty(): boolean {
-        // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
         return false;
     }
 
@@ -57,6 +52,11 @@ export class MercatorProjection implements ProjectionBase {
 
     get vertexShaderPreludeCode(): string {
         return shaders.projectionMercator.vertexSource;
+    }
+
+    public isRenderingDirty(): boolean {
+        // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
+        return false;
     }
 
     destroy(): void {
