@@ -3,6 +3,7 @@ import {EXTENT} from '../data/extent';
 import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
 import {register} from '../util/web_worker_transfer';
+import {lerp} from '../util/util';
 
 export class SubdivisionGranularityExpression {
     /**
@@ -73,13 +74,6 @@ function addUnique<T>(array: Array<T>, element: T): void {
     if (!array.includes(element)) {
         array.push(element);
     }
-}
-
-/**
- * Linear interpolation between `a` and `b`, same as the GLSL function `mix`.
- */
-function lerp(a: number, b: number, mix: number): number {
-    return a * (1.0 - mix) + b * mix;
 }
 
 /**
