@@ -61,7 +61,7 @@ import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../s
 
 const version = packageJSON.version;
 
-export type SnapToIntegerZoomType = 'boxZoom' | 'scrollZoom' | 'clickZoom' | 'tapZoom';
+export type SnapToIntegerZoomType = keyof SnapToIntegerZoomOptions;
 
 /**
  * The {@link Map} options object.
@@ -1044,6 +1044,8 @@ export class Map extends Camera {
                 return this._snapToIntegerZoomOptions.scrollZoom;
             case 'tapZoom':
                 return this._snapToIntegerZoomOptions.tapZoom;
+            case 'clickZoom':
+                return this._snapToIntegerZoomOptions.clickZoom;
             default:
                 return false;
         }
