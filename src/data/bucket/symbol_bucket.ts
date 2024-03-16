@@ -417,7 +417,13 @@ export class SymbolBucket implements Bucket {
         this.textAnchorOffsets = new TextAnchorOffsetArray();
     }
 
-    calculateGlyphDependencies(text: string, stack: {[_: number]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
+    private calculateGlyphDependencies(
+        text: string,
+        stack: {[_: number]: boolean},
+        textAlongLine: boolean,
+        allowVerticalPlacement: boolean,
+        doesAllowVerticalWritingMode: boolean) {
+
         for (let i = 0; i < text.length; i++) {
             stack[text.charCodeAt(i)] = true;
             if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
@@ -476,13 +482,13 @@ export class SymbolBucket implements Bucket {
                 // conversion here.
                 const resolvedTokens = layer.getValueAndResolveTokens('text-field', evaluationFeature, canonical, availableImages);
                 const formattedText = Formatted.factory(resolvedTokens);
-                if (containsRTLText(formattedText)) {
-                    this.hasRTLText = true;
-                }
+
+                // on this instance: if hasRTLText is already true, all future calls to containsRTLText can be skipped.
+                const bucketHasRTLText = this.hasRTLText = (this.hasRTLText || containsRTLText(formattedText));
                 if (
-                    !this.hasRTLText || // non-rtl text so can proceed safely
+                    !bucketHasRTLText || // non-rtl text so can proceed safely
                     rtlWorkerPlugin.getRTLTextPluginStatus() === 'unavailable' || // We don't intend to lazy-load the rtl text plugin, so proceed with incorrect shaping
-                    this.hasRTLText && rtlWorkerPlugin.isParsed() // Use the rtlText plugin to shape text
+                    bucketHasRTLText && rtlWorkerPlugin.isParsed() // Use the rtlText plugin to shape text
                 ) {
                     text = transformText(formattedText, layer, evaluationFeature);
                 }

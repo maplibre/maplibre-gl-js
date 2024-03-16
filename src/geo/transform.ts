@@ -13,6 +13,8 @@ import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
 
+export const MAX_VALID_LATITUDE = 85.051129;
+
 /**
  * @internal
  * A single transform, generally used for a single tile to be
@@ -23,7 +25,6 @@ export class Transform {
     tileZoom: number;
     lngRange: [number, number];
     latRange: [number, number];
-    maxValidLatitude: number;
     scale: number;
     width: number;
     height: number;
@@ -60,7 +61,6 @@ export class Transform {
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
-        this.maxValidLatitude = 85.051129; // constant
 
         this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
         this._minZoom = minZoom || 0;
@@ -218,6 +218,9 @@ export class Transform {
         this._calcMatrices();
     }
 
+    /**
+     * Elevation at current center point, meters above sea level
+     */
     get elevation(): number { return this._elevation; }
     set elevation(elevation: number) {
         if (elevation === this._elevation) return;
@@ -464,7 +467,7 @@ export class Transform {
      * @returns Point
      */
     project(lnglat: LngLat) {
-        const lat = clamp(lnglat.lat, -this.maxValidLatitude, this.maxValidLatitude);
+        const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
         return new Point(
             mercatorXfromLng(lnglat.lng) * this.worldSize,
             mercatorYfromLat(lat) * this.worldSize);
@@ -501,21 +504,25 @@ export class Transform {
      * @param terrain - the terrain
      */
     recalculateZoom(terrain: Terrain) {
+        const origElevation = this.elevation;
+        const origAltitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
+
         // find position the camera is looking on
         const center = this.pointLocation(this.centerPoint, terrain);
         const elevation = terrain.getElevationForLngLatZoom(center, this.tileZoom);
         const deltaElevation = this.elevation - elevation;
         if (!deltaElevation) return;
 
-        // calculate mercator distance between camera & target
-        const cameraPosition = this.getCameraPosition();
-        const camera = MercatorCoordinate.fromLngLat(cameraPosition.lngLat, cameraPosition.altitude);
-        const target = MercatorCoordinate.fromLngLat(center, elevation);
-        const dx = camera.x - target.x, dy = camera.y - target.y, dz = camera.z - target.z;
-        const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-        // from this distance we calculate the new zoomlevel
-        const zoom = this.scaleZoom(this.cameraToCenterDistance / distance / this.tileSize);
+        // The camera's altitude off the ground + the ground's elevation = a constant:
+        // this means the camera stays at the same total height.
+        const requiredAltitude = origAltitude + origElevation - elevation;
+        // Since altitude = Math.cos(this._pitch) * this.cameraToCenterDistance / pixelPerMeter:
+        const requiredPixelPerMeter = Math.cos(this._pitch) * this.cameraToCenterDistance / requiredAltitude;
+        // Since pixelPerMeter = mercatorZfromAltitude(1, center.lat) * worldSize:
+        const requiredWorldSize = requiredPixelPerMeter / mercatorZfromAltitude(1, center.lat);
+        // Since worldSize = this.tileSize * scale:
+        const requiredScale = requiredWorldSize / this.tileSize;
+        const zoom = this.scaleZoom(requiredScale);
 
         // update matrices
         this._elevation = elevation;
@@ -679,7 +686,7 @@ export class Transform {
             this._constrain();
         } else {
             this.lngRange = null;
-            this.latRange = [-this.maxValidLatitude, this.maxValidLatitude];
+            this.latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
         }
     }
 
@@ -711,8 +718,18 @@ export class Transform {
         return this.mercatorMatrix.slice() as any;
     }
 
-    _constrain() {
-        if (!this.center || !this.width || !this.height || this._constraining) return;
+    /**
+     * Get center lngLat and zoom to ensure that
+     * 1) everything beyond the bounds is excluded
+     * 2) a given lngLat is as near the center as possible
+     * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+     */
+    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+        zoom = clamp(+zoom, this.minZoom, this.maxZoom);
+        const result = {
+            center: new LngLat(lngLat.lng, lngLat.lat),
+            zoom
+        };
 
         let lngRange = this.lngRange;
 
@@ -721,82 +738,90 @@ export class Transform {
             lngRange = [-almost180, almost180];
         }
 
-        this._constraining = true;
-
-        let minY = -90;
-        let maxY = 90;
-        let minX = -180;
-        let maxX = 180;
-        let sy, sx, x2, y2;
-        const size = this.size,
-            unmodified = this._unmodified;
+        const worldSize = this.tileSize * this.zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
+        let minY = 0;
+        let maxY = worldSize;
+        let minX = 0;
+        let maxX = worldSize;
+        let scaleY = 0;
+        let scaleX = 0;
+        const {x: screenWidth, y: screenHeight} = this.size;
 
         if (this.latRange) {
             const latRange = this.latRange;
-            minY = mercatorYfromLat(latRange[1]) * this.worldSize;
-            maxY = mercatorYfromLat(latRange[0]) * this.worldSize;
-            sy = maxY - minY < size.y ? size.y / (maxY - minY) : 0;
+            minY = mercatorYfromLat(latRange[1]) * worldSize;
+            maxY = mercatorYfromLat(latRange[0]) * worldSize;
+            const shouldZoomIn = maxY - minY < screenHeight;
+            if (shouldZoomIn) scaleY = screenHeight / (maxY - minY);
         }
 
         if (lngRange) {
             minX = wrap(
-                mercatorXfromLng(lngRange[0]) * this.worldSize,
+                mercatorXfromLng(lngRange[0]) * worldSize,
                 0,
-                this.worldSize
+                worldSize
             );
             maxX = wrap(
-                mercatorXfromLng(lngRange[1]) * this.worldSize,
+                mercatorXfromLng(lngRange[1]) * worldSize,
                 0,
-                this.worldSize
+                worldSize
             );
 
-            if (maxX < minX) maxX += this.worldSize;
+            if (maxX < minX) maxX += worldSize;
 
-            sx = maxX - minX < size.x ? size.x / (maxX - minX) : 0;
+            const shouldZoomIn = maxX - minX < screenWidth;
+            if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
-        const point = this.point;
+        const {x: originalX, y: originalY} = this.project.call({worldSize}, lngLat);
+        let modifiedX, modifiedY;
 
-        // how much the map should scale to fit the screen into given latitude/longitude ranges
-        const s = Math.max(sx || 0, sy || 0);
+        const scale = Math.max(scaleX || 0, scaleY || 0);
 
-        if (s) {
-            this.center = this.unproject(new Point(
-                sx ? (maxX + minX) / 2 : point.x,
-                sy ? (maxY + minY) / 2 : point.y));
-            this.zoom += this.scaleZoom(s);
-            this._unmodified = unmodified;
-            this._constraining = false;
-            return;
+        if (scale) {
+            // zoom in to exclude all beyond the given lng/lat ranges
+            const newPoint = new Point(
+                scaleX ? (maxX + minX) / 2 : originalX,
+                scaleY ? (maxY + minY) / 2 : originalY);
+            result.center = this.unproject.call({worldSize}, newPoint).wrap();
+            result.zoom += this.scaleZoom(scale);
+            return result;
         }
 
         if (this.latRange) {
-            const y = point.y,
-                h2 = size.y / 2;
-
-            if (y - h2 < minY) y2 = minY + h2;
-            if (y + h2 > maxY) y2 = maxY - h2;
+            const h2 = screenHeight / 2;
+            if (originalY - h2 < minY) modifiedY = minY + h2;
+            if (originalY + h2 > maxY) modifiedY = maxY - h2;
         }
 
         if (lngRange) {
             const centerX = (minX + maxX) / 2;
-            let x = point.x;
+            let wrappedX = originalX;
             if (this._renderWorldCopies) {
-                x = wrap(point.x, centerX - this.worldSize / 2, centerX + this.worldSize / 2);
+                wrappedX = wrap(originalX, centerX - worldSize / 2, centerX + worldSize / 2);
             }
-            const w2 = size.x / 2;
+            const w2 = screenWidth / 2;
 
-            if (x - w2 < minX) x2 = minX + w2;
-            if (x + w2 > maxX) x2 = maxX - w2;
+            if (wrappedX - w2 < minX) modifiedX = minX + w2;
+            if (wrappedX + w2 > maxX) modifiedX = maxX - w2;
         }
 
         // pan the map if the screen goes off the range
-        if (x2 !== undefined || y2 !== undefined) {
-            this.center = this.unproject(new Point(
-                x2 !== undefined ? x2 : point.x,
-                y2 !== undefined ? y2 : point.y)).wrap();
+        if (modifiedX !== undefined || modifiedY !== undefined) {
+            const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
+            result.center = this.unproject.call({worldSize}, newPoint).wrap();
         }
 
+        return result;
+    }
+
+    _constrain() {
+        if (!this.center || !this.width || !this.height || this._constraining) return;
+        this._constraining = true;
+        const unmodified = this._unmodified;
+        const {center, zoom} = this.getConstrained(this.center, this.zoom);
+        this.center = center;
+        this.zoom = zoom;
         this._unmodified = unmodified;
         this._constraining = false;
     }
