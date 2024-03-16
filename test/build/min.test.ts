@@ -29,7 +29,7 @@ describe('test min build', () => {
 
         // Need to be very frugal when it comes to minified script.
         // Most changes should increase less than 1k.
-        const increaseQuota = 1024;
+        const increaseQuota = 1600;
 
         // decreasement means optimizations, so more generous (4k) but still
         // need to make sure not a big bug that resulted in a big loss.

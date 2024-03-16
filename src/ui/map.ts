@@ -149,6 +149,10 @@ export type MapOptions = {
      */
     maxZoom?: number | null;
 
+    /**
+     * Zooming options related to restricting to integer levels.
+     * Useful for raster tiles.
+     */
     snapToIntegerZoomOptions?: SnapToIntegerZoomOptions | null;
 
     /**
