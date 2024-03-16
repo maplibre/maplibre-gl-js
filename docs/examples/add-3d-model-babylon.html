@@ -5,8 +5,8 @@
     <meta property="og:description" content="Use a custom style layer with babylon.js to add a 3D model to the map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -77,7 +77,22 @@
                 true
             );
             this.scene = new BABYLON.Scene(this.engine);
+            /**
+            * optionally add
+            * this.scene.autoClearDepthAndStencil = false
+            * and for renderingGroupIds set this individually via
+            * this.scene.setRenderingAutoClearDepthStencil(1,false)
+            * to allow blending with maplibre scene
+            * as documented in https://doc.babylonjs.com/features/featuresDeepDive/scene/optimize_your_scene#reducing-calls-to-glclear
+            */
             this.scene.autoClear = false;
+            /**
+            * use detachControl if you only want to interact with maplibre-gl and do not need pointer events of babylonjs.
+            * alternatively exchange this.scene.detachControl() with the following two lines, they will allow bubbling up events to maplibre-gl.
+            * this.scene.preventDefaultOnPointerDown = false
+            * this.scene.preventDefaultOnPointerUp = false
+            * https://doc.babylonjs.com/typedoc/classes/BABYLON.Scene#preventDefaultOnPointerDown
+            */
             this.scene.detachControl();
 
             this.scene.beforeRender = () => {
