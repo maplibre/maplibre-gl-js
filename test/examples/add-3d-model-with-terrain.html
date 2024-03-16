@@ -107,9 +107,6 @@
                 return model;
             }
 
-            const model1 = await loadModel();
-            const model2 = model1.clone();
-
             // Known locations. We'll infer the elevation of those locations once terrain is loaded.
             const sceneOrigin = new maplibregl.LngLat(11.53, 47.67);
             const model1Location = new maplibregl.LngLat(11.531, 47.67);
@@ -203,7 +200,10 @@
                 }
             };
 
-            await map.once('load');
+            const results = await Promise.all([map.once('load'), loadModel()]);
+            const model1 = results[1];
+            const model2 = model1.clone();
+
             map.addLayer(customLayer);
         }
 
