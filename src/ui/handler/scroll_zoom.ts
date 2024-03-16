@@ -172,7 +172,7 @@ export class ScrollZoomHandler implements Handler {
 
         } else if (timeDelta > 400) {
             // This is likely a new scroll action.
-            if (!this._map.getSnapToIntegerZoomOptions().scrollZoom) {
+            if (!this._map.shouldSnapToIntegerZoom('scrollZoom')) {
                 this._type = null;
                 this._lastValue = value;
 
@@ -197,7 +197,7 @@ export class ScrollZoomHandler implements Handler {
         // Slow down zoom if shift key is held for more precise zooming
         if (e.shiftKey && value) value = value / 4;
 
-        if (this._map.getSnapToIntegerZoomOptions().scrollZoom && value !== 0) {
+        if (this._map.shouldSnapToIntegerZoom('scrollZoom') && value !== 0) {
             const pos = DOM.mousePos(this._map.getCanvas(), e);
             e.preventDefault();
             let zoomTarget = value > 100 ? this._map.getZoom() - 2 :

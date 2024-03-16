@@ -55,11 +55,13 @@ export class TapZoomHandler implements Handler {
             e.preventDefault();
             setTimeout(() => this.reset(), 0);
             return {
-                cameraAnimation: (map: Map) => map.easeTo({
-                    duration: 300,
-                    zoom: Math.round(tr.zoom + 1),
-                    around: tr.unproject(zoomInPoint)
-                }, {originalEvent: e})
+                cameraAnimation: (map: Map) => {
+                    map.easeTo({
+                        duration: 300,
+                        zoom: map.shouldSnapToIntegerZoom('tapZoom') ? Math.round(tr.zoom + 1) : tr.zoom + 1,
+                        around: tr.unproject(zoomInPoint)
+                    }, {originalEvent: e});
+                }
             };
         } else if (zoomOutPoint) {
             this._active = true;
@@ -68,7 +70,7 @@ export class TapZoomHandler implements Handler {
             return {
                 cameraAnimation: (map: Map) => map.easeTo({
                     duration: 300,
-                    zoom: Math.round(tr.zoom - 1),
+                    zoom: map.shouldSnapToIntegerZoom('tapZoom') ? Math.round(tr.zoom - 1) : tr.zoom - 1,
                     around: tr.unproject(zoomOutPoint)
                 }, {originalEvent: e})
             };

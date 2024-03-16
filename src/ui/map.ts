@@ -61,6 +61,8 @@ import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../s
 
 const version = packageJSON.version;
 
+export type SnapToIntegerZoomType = 'boxZoom' | 'scrollZoom' | 'clickZoom' | 'tapZoom';
+
 /**
  * The {@link Map} options object.
  */
@@ -1014,7 +1016,10 @@ export class Map extends Camera {
         } else throw new Error('maxZoom must be greater than the current minZoom');
     }
 
-    setSnapToIntegerZoom(snap: SnapToIntegerZoomOptions): Map { this._snapToIntegerZoomOptions = snap; return this; }
+    setSnapToIntegerZoom(snap: SnapToIntegerZoomOptions): Map {
+        this._snapToIntegerZoomOptions = snap;
+        return this;
+    }
 
     /**
      * Returns the map's maximum allowable zoom level.
@@ -1027,7 +1032,18 @@ export class Map extends Camera {
      */
     getMaxZoom(): number { return this.transform.maxZoom; }
 
-    getSnapToIntegerZoomOptions(): SnapToIntegerZoomOptions { return this._snapToIntegerZoomOptions; }
+    shouldSnapToIntegerZoom(type: SnapToIntegerZoomType): boolean {
+        switch (type) {
+            case 'boxZoom':
+                return this._snapToIntegerZoomOptions.boxZoom;
+            case 'scrollZoom':
+                return this._snapToIntegerZoomOptions.scrollZoom;
+            case 'tapZoom':
+                return this._snapToIntegerZoomOptions.tapZoom;
+            default:
+                return false;
+        }
+    }
 
     /**
      * Sets or clears the map's minimum pitch.

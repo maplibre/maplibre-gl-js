@@ -30,7 +30,7 @@ export class ClickZoomHandler implements Handler {
                 const floatZoomTarget = this._tr.zoom + (e.shiftKey ? -1 : 1);
                 map.easeTo({
                     duration: 300,
-                    zoom: map.getSnapToIntegerZoomOptions().clickZoom ? Math.round(floatZoomTarget) : floatZoomTarget,
+                    zoom: map.shouldSnapToIntegerZoom('clickZoom') ? Math.round(floatZoomTarget) : floatZoomTarget,
                     around: this._tr.unproject(point)
                 }, {originalEvent: e});
             }
