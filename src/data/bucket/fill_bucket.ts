@@ -171,39 +171,7 @@ export class FillBucket implements Bucket {
         [_: string]: ImagePosition;
     }, subdivisionGranularity: SubdivisionGranularitySetting) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
-            const flattened = [];
-            const holeIndices = [];
-            const lineList = [];
-
-            for (const ring of polygon) {
-                if (ring.length === 0) {
-                    continue;
-                }
-
-                if (ring !== polygon[0]) {
-                    holeIndices.push(flattened.length / 2);
-                }
-
-                const lineIndices = [];
-                const baseIndex = flattened.length / 2;
-
-                // The first/last vertex seems to always be duplicated?
-                //lineIndices.push(baseIndex + ring.length - 1);
-                //lineIndices.push(baseIndex);
-                flattened.push(ring[0].x);
-                flattened.push(ring[0].y);
-
-                for (let i = 1; i < ring.length; i++) {
-                    lineIndices.push(baseIndex + i - 1);
-                    lineIndices.push(baseIndex + i);
-                    flattened.push(ring[i].x);
-                    flattened.push(ring[i].y);
-                }
-
-                lineList.push(lineIndices);
-            }
-
-            const subdivided = subdivideFill(flattened, holeIndices, lineList, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
+            const subdivided = subdivideFill(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
             const finalVertices = subdivided.verticesFlattened;
             const finalIndicesTriangles = subdivided.indicesTriangles;
             const finalIndicesLineList = subdivided.indicesLineList;

@@ -11,7 +11,7 @@ import {Tile} from '../../source/tile';
 import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
-import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision';
+import {NORTH_POLE_Y, SOUTH_POLE_Y, SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import {Projection, ProjectionGPUContext} from './projection';
@@ -486,8 +486,8 @@ export class GlobeProjection implements Projection {
         const endX = granularity + (border ? 1 : 0);
         const endY = granularity + ((border || south) ? 1 : 0);
 
-        const northY = -32768;
-        const southY = 32767;
+        const northY = NORTH_POLE_Y;
+        const southY = SOUTH_POLE_Y;
 
         for (let y = offsetY; y <= endY; y++) {
             for (let x = offsetX; x <= endX; x++) {

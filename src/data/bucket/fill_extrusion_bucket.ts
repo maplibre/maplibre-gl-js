@@ -256,26 +256,8 @@ export class FillExtrusionBucket implements Bucket {
         if (vectorTileFeatureTypes[feature.type] !== 'Polygon')
             return;
 
-        const flattened = [];
-        const holeIndices = [];
-
-        for (const ring of polygon) {
-            if (ring.length === 0) {
-                continue;
-            }
-
-            if (ring !== polygon[0]) {
-                holeIndices.push(flattened.length / 2);
-            }
-
-            for (let i = 0; i < ring.length; i++) {
-                flattened.push(ring[i].x);
-                flattened.push(ring[i].y);
-            }
-        }
-
         // Pass empty array as lines, since lines already got subdivided separately earlier.
-        const subdivided = subdivideFill(flattened, holeIndices, [], canonical, granularity);
+        const subdivided = subdivideFill(polygon, canonical, granularity, false);
         const finalVertices = subdivided.verticesFlattened;
         const finalIndicesTriangles = subdivided.indicesTriangles;
 

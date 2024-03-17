@@ -100,8 +100,8 @@ function checkEdgeDivide(e0x: number, e0y: number, e1x: number, e1y: number, div
 
 // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
 // First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
-const NORTH_POLE_Y = -32768;
-const SOUTH_POLE_Y = 32767;
+export const NORTH_POLE_Y = -32768;
+export const SOUTH_POLE_Y = 32767;
 
 class Subdivider {
     /**
@@ -125,16 +125,16 @@ class Subdivider {
         this._canonical = canonical;
     }
 
-    private getKey(x: number, y: number) {
+    private _getKey(x: number, y: number) {
         x = x + 32768;
         y = y + 32768;
         return (x << 16) | (y << 0);
     }
 
-    private getVertexIndex(x: number, y: number): number {
+    private _getVertexIndex(x: number, y: number): number {
         const xInt = Math.round(x) | 0;
         const yInt = Math.round(y) | 0;
-        const key = this.getKey(xInt, yInt);
+        const key = this._getKey(xInt, yInt);
         if (this._vertexDictionary.has(key)) {
             return this._vertexDictionary.get(key);
         }
@@ -274,7 +274,7 @@ class Subdivider {
                             leftmostX = x;
                             leftmostIndex = ring.length;
                         }
-                        ring.push(this.getVertexIndex(x, y));
+                        ring.push(this._getVertexIndex(x, y));
                     }
 
                     const enterX = aX + dirX * Math.max(tEnter, 0);
@@ -294,14 +294,14 @@ class Subdivider {
                             for (let cellX = edgeSubdivisionLeftCellX; cellX <= edgeSubdivisionRightCellX; cellX++) {
                                 const x = cellX * this._granularityCellSize;
                                 const y = aY + dirY * (x - aX) / dirX;
-                                ring.push(this.getVertexIndex(x, y));
+                                ring.push(this._getVertexIndex(x, y));
                             }
                         } else {
                             // Right to left
                             for (let cellX = edgeSubdivisionRightCellX; cellX >= edgeSubdivisionLeftCellX; cellX--) {
                                 const x = cellX * this._granularityCellSize;
                                 const y = aY + dirY * (x - aX) / dirX;
-                                ring.push(this.getVertexIndex(x, y));
+                                ring.push(this._getVertexIndex(x, y));
                             }
                         }
                     }
@@ -314,7 +314,7 @@ class Subdivider {
                             leftmostX = x;
                             leftmostIndex = ring.length;
                         }
-                        ring.push(this.getVertexIndex(x, y));
+                        ring.push(this._getVertexIndex(x, y));
                     }
 
                     // When to split inter-edge boundary segments?
@@ -407,13 +407,13 @@ class Subdivider {
                             // Left to right
                             for (let cellX = boundarySubdivisionLeftCellX; cellX <= boundarySubdivisionRightCellX; cellX++) {
                                 const x = cellX * this._granularityCellSize;
-                                ring.push(this.getVertexIndex(x, boundaryY));
+                                ring.push(this._getVertexIndex(x, boundaryY));
                             }
                         } else {
                             // Right to left
                             for (let cellX = boundarySubdivisionRightCellX; cellX >= boundarySubdivisionLeftCellX; cellX--) {
                                 const x = cellX * this._granularityCellSize;
-                                ring.push(this.getVertexIndex(x, boundaryY));
+                                ring.push(this._getVertexIndex(x, boundaryY));
                             }
                         }
                     }
@@ -476,89 +476,7 @@ class Subdivider {
         return finalIndices;
     }
 
-    private subdivideLine(lineIndices: Array<number>): Array<number> {
-        if (!lineIndices) {
-            return [];
-        }
-
-        if (this._granularity < 2) {
-            return lineIndices;
-        }
-
-        const finalLineIndices = [];
-
-        // Iterate over all input lines
-        for (let primitiveIndex = 0; primitiveIndex < lineIndices.length; primitiveIndex += 2) {
-            const lineIndex0 = lineIndices[primitiveIndex + 0];
-            const lineIndex1 = lineIndices[primitiveIndex + 1];
-
-            const lineVertex0x = this._finalVertices[lineIndex0 * 2 + 0];
-            const lineVertex0y = this._finalVertices[lineIndex0 * 2 + 1];
-            const lineVertex1x = this._finalVertices[lineIndex1 * 2 + 0];
-            const lineVertex1y = this._finalVertices[lineIndex1 * 2 + 1];
-
-            // Get line AABB
-            const minX = Math.min(lineVertex0x, lineVertex1x);
-            const maxX = Math.max(lineVertex0x, lineVertex1x);
-            const minY = Math.min(lineVertex0y, lineVertex1y);
-            const maxY = Math.max(lineVertex0y, lineVertex1y);
-
-            const cellRangeXmin = Math.floor(minX / this._granularityCellSize + 1);
-            const cellRangeYmin = Math.floor(minY / this._granularityCellSize + 1);
-            const cellRangeXmax = Math.floor((maxX - 1) / this._granularityCellSize);
-            const cellRangeYmax = Math.floor((maxY - 1) / this._granularityCellSize);
-
-            const subdividedLineIndices = [];
-
-            // Add original line vertices
-            subdividedLineIndices.push(lineIndex0);
-            subdividedLineIndices.push(lineIndex1);
-
-            for (let cellX = cellRangeXmin; cellX <= cellRangeXmax; cellX += 1) {
-                const cellEdgeX = cellX * this._granularityCellSize;
-                this.checkEdgeSubdivisionX(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX, minY, maxY);
-            }
-
-            for (let cellY = cellRangeYmin; cellY <= cellRangeYmax; cellY += 1) {
-                const cellEdgeY = cellY * this._granularityCellSize;
-                this.checkEdgeSubdivisionY(subdividedLineIndices, lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeY, minX, maxX);
-            }
-
-            const edgeX = lineVertex1x - lineVertex0x;
-            const edgeY = lineVertex1y - lineVertex0y;
-
-            if (subdividedLineIndices.length < 2) {
-                continue;
-            }
-
-            // JP: TODO: this could be done without sorting
-
-            subdividedLineIndices.sort((a: number, b: number) => {
-                const ax = this._finalVertices[a * 2 + 0] - lineVertex0x;
-                const ay = this._finalVertices[a * 2 + 1] - lineVertex0y;
-                const bx = this._finalVertices[b * 2 + 0] - lineVertex0x;
-                const by = this._finalVertices[b * 2 + 1] - lineVertex0y;
-                const aDist = ax * edgeX + ay * edgeY;
-                const bDist = bx * edgeX + by * edgeY;
-                if (aDist < bDist) {
-                    return -1;
-                }
-                if (aDist > bDist) {
-                    return 1;
-                }
-                return 0;
-            });
-
-            for (let i = 1; i < subdividedLineIndices.length; i++) {
-                finalLineIndices.push(subdividedLineIndices[i - 1]);
-                finalLineIndices.push(subdividedLineIndices[i]);
-            }
-        }
-
-        return finalLineIndices;
-    }
-
-    private ensureNoPoleVertices() {
+    private _ensureNoPoleVertices() {
         const flattened = this._finalVertices;
 
         // Special pole vertices have Y coordinate -32768 for the north pole and 32767 for the south pole.
@@ -589,7 +507,7 @@ class Subdivider {
      * @param north - Whether to generate geometry for the north pole.
      * @param south - Whether to generate geometry for the south pole.
      */
-    private fillPoles(indices: Array<number>, north: boolean, south: boolean): void {
+    private _fillPoles(indices: Array<number>, north: boolean, south: boolean): void {
         const flattened = this._finalVertices;
 
         const northEdge = 0;
@@ -611,68 +529,72 @@ class Subdivider {
                 if (v0y === northEdge && v1y === northEdge) {
                     indices.push(i0);
                     indices.push(i1);
-                    indices.push(this.getVertexIndex(v0x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v0x, NORTH_POLE_Y));
 
                     indices.push(i1);
-                    indices.push(this.getVertexIndex(v1x, NORTH_POLE_Y));
-                    indices.push(this.getVertexIndex(v0x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v1x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v0x, NORTH_POLE_Y));
                 }
                 if (v1y === northEdge && v2y === northEdge) {
                     indices.push(i1);
                     indices.push(i2);
-                    indices.push(this.getVertexIndex(v1x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v1x, NORTH_POLE_Y));
 
                     indices.push(i2);
-                    indices.push(this.getVertexIndex(v2x, NORTH_POLE_Y));
-                    indices.push(this.getVertexIndex(v1x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v2x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v1x, NORTH_POLE_Y));
                 }
                 if (v2y === northEdge && v0y === northEdge) {
                     indices.push(i2);
                     indices.push(i0);
-                    indices.push(this.getVertexIndex(v2x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v2x, NORTH_POLE_Y));
 
                     indices.push(i0);
-                    indices.push(this.getVertexIndex(v0x, NORTH_POLE_Y));
-                    indices.push(this.getVertexIndex(v2x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v0x, NORTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v2x, NORTH_POLE_Y));
                 }
             }
             if (south) {
                 if (v0y === southEdge && v1y === southEdge) {
                     indices.push(i0);
                     indices.push(i1);
-                    indices.push(this.getVertexIndex(v0x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v0x, SOUTH_POLE_Y));
 
                     indices.push(i1);
-                    indices.push(this.getVertexIndex(v1x, SOUTH_POLE_Y));
-                    indices.push(this.getVertexIndex(v0x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v1x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v0x, SOUTH_POLE_Y));
                 }
                 if (v1y === southEdge && v2y === southEdge) {
                     indices.push(i1);
                     indices.push(i2);
-                    indices.push(this.getVertexIndex(v1x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v1x, SOUTH_POLE_Y));
 
                     indices.push(i2);
-                    indices.push(this.getVertexIndex(v2x, SOUTH_POLE_Y));
-                    indices.push(this.getVertexIndex(v1x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v2x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v1x, SOUTH_POLE_Y));
                 }
                 if (v2y === southEdge && v0y === southEdge) {
                     indices.push(i2);
                     indices.push(i0);
-                    indices.push(this.getVertexIndex(v2x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v2x, SOUTH_POLE_Y));
 
                     indices.push(i0);
-                    indices.push(this.getVertexIndex(v0x, SOUTH_POLE_Y));
-                    indices.push(this.getVertexIndex(v2x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v0x, SOUTH_POLE_Y));
+                    indices.push(this._getVertexIndex(v2x, SOUTH_POLE_Y));
                 }
             }
         }
     }
 
-    private initializeVertices(vertices: Array<number>) {
+    private _initializeVertices(polygon: Array<Array<Point>>) {
         this._finalVertices = [];
         this._vertexDictionary = new Map<number, number>();
-        for (let i = 0; i < vertices.length; i += 2) {
-            this.getVertexIndex(vertices[i], vertices[i + 1]);
+        for (let ringIndex = 0; ringIndex < polygon.length; ringIndex++) {
+            const ring = polygon[ringIndex];
+            for (let i = 0; i < ring.length; i++) {
+                const p = ring[i];
+                this._getVertexIndex(p.x, p.y);
+            }
         }
     }
 
@@ -683,32 +605,48 @@ class Subdivider {
      * @param indices - Input index buffer.
      * @returns Vertex and index buffers with subdivision applied.
      */
-    public subdivideFillInternal(vertices: Array<number>, holeIndices: Array<number>, lineIndices: Array<Array<number>>): SubdivisionResult {
+    public subdivideFillInternal(polygon: Array<Array<Point>>, generateOutlineLines: boolean): SubdivisionResult {
         if (this._vertexDictionary) {
             console.error('Subdivider: multiple use not allowed.');
             return undefined;
         }
 
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
-        this.initializeVertices(vertices);
-
-        // Subdivide lines
-        const subdividedLines = [];
-        for (const line of lineIndices) {
-            subdividedLines.push(this.subdivideLine(this.convertIndices(vertices, line)));
-        }
+        const holeIndices = getHoleIndicesFromRings(polygon);
+        this._initializeVertices(polygon);
 
         // Subdivide triangles
         let subdividedTriangles;
         try {
-            const cut = this.convertIndices(vertices, earcut(vertices, holeIndices));
-            subdividedTriangles = this.subdivideTrianglesScanline(cut);
+            // At this point this._finalVertices is just flattened polygon points
+            const earcutResult = earcut(this._finalVertices, holeIndices);
+            const cut = this._convertIndices(this._finalVertices, earcutResult);
+            subdividedTriangles = this._subdivideTrianglesScanline(cut);
         } catch (e) {
             console.error(e);
         }
 
+        // Subdivide lines
+        const subdividedLines = [];
+        if (generateOutlineLines) {
+            for (const ring of polygon) {
+                const line = subdivideVertexLine(ring, this._granularity, true);
+                const pathIndices = this._pointArrayToIndices(line);
+                // Points returned by subdivideVertexLine are "path" waypoints,
+                // for example with indices 0 1 2 3 0.
+                // We need list of individual line segments for rendering,
+                // for example 0, 1, 1, 2, 2, 3, 3, 0.
+                const lineIndices = [];
+                for (let i = 1; i < pathIndices.length; i++) {
+                    lineIndices.push(pathIndices[i - 1]);
+                    lineIndices.push(pathIndices[i]);
+                }
+                subdividedLines.push(lineIndices);
+            }
+        }
+
         // Ensure no vertex has the special value used for pole vertices
-        this.ensureNoPoleVertices();
+        this._ensureNoPoleVertices();
 
         // Add pole vertices if the tile is at north/south mercator edge
         let north = false;
@@ -722,7 +660,7 @@ class Subdivider {
             }
         }
         if (north || south) {
-            this.fillPoles(subdividedTriangles, north, south);
+            this._fillPoles(subdividedTriangles, north, south);
         }
 
         return {
@@ -740,14 +678,23 @@ class Subdivider {
      * @param oldIndices - Indices into the supplied vertex array.
      * @returns Indices transformed so that they are valid indices into `this._finalVertices` (with duplicates removed).
      */
-    private convertIndices(vertices: Array<number>, oldIndices: Array<number>): Array<number> {
+    private _convertIndices(vertices: Array<number>, oldIndices: Array<number>): Array<number> {
         const newIndices = [];
         for (let i = 0; i < oldIndices.length; i++) {
             const x = vertices[oldIndices[i] * 2];
             const y = vertices[oldIndices[i] * 2 + 1];
-            newIndices.push(this.getVertexIndex(x, y));
+            newIndices.push(this._getVertexIndex(x, y));
         }
         return newIndices;
+    }
+
+    private _pointArrayToIndices(array: Array<Point>): Array<number> {
+        const indices = [];
+        for (let i = 0; i < array.length; i++) {
+            const p = array[i];
+            indices.push(this._getVertexIndex(p.x, p.y));
+        }
+        return indices;
     }
 
     /**
@@ -811,9 +758,9 @@ class Subdivider {
     }
 }
 
-export function subdivideFill(vertices: Array<number>, holeIndices: Array<number>, lineList: Array<Array<number>>, canonical: CanonicalTileID, granularity: number): SubdivisionResult {
+export function subdivideFill(polygon: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number, generateOutlineLines: boolean = true): SubdivisionResult {
     const subdivider = new Subdivider(granularity, canonical);
-    return subdivider.subdivideFillInternal(vertices, holeIndices, lineList);
+    return subdivider.subdivideFillInternal(polygon, generateOutlineLines);
 }
 
 export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
@@ -841,7 +788,7 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
  * Does not assume a line segment from last point to first point.
  * Eg. an array of 4 points describes exactly 3 line segments.
  */
-export function subdivideVertexLine(linePoints: Array<Point>, granularity: number): Array<Point> {
+export function subdivideVertexLine(linePoints: Array<Point>, granularity: number, isRing: boolean = false): Array<Point> {
     if (!linePoints) {
         return [];
     }
@@ -861,11 +808,14 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
     finalLineVertices.push(linePoints[0]);
 
     // Iterate over all input lines
-    for (let pointIndex = 1; pointIndex < linePoints.length; pointIndex++) {
-        const lineVertex0x = linePoints[pointIndex - 1].x;
-        const lineVertex0y = linePoints[pointIndex - 1].y;
-        const lineVertex1x = linePoints[pointIndex].x;
-        const lineVertex1y = linePoints[pointIndex].y;
+    const firstIndex = isRing ? 0 : 1;
+    for (let pointIndex = firstIndex; pointIndex < linePoints.length; pointIndex++) {
+        const linePoint0 = pointIndex === 0 ? linePoints[linePoints.length - 1] : linePoints[pointIndex - 1];
+        const linePoint1 = linePoints[pointIndex];
+        const lineVertex0x = linePoint0.x;
+        const lineVertex0y = linePoint0.y;
+        const lineVertex1x = linePoint1.x;
+        const lineVertex1y = linePoint1.y;
 
         // Get line AABB
         const minX = Math.min(lineVertex0x, lineVertex1x);
@@ -938,4 +888,23 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
     }
 
     return finalLineVertices;
+}
+
+function getHoleIndicesFromRings(polygon: Array<Array<Point>>): Array<number> {
+    const holeIndices = [];
+    let vertexCount = 0;
+
+    for (const ring of polygon) {
+        if (ring.length === 0) {
+            continue;
+        }
+
+        if (ring !== polygon[0]) {
+            holeIndices.push(vertexCount);
+        }
+
+        vertexCount += ring.length;
+    }
+
+    return holeIndices;
 }

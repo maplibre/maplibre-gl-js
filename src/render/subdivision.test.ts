@@ -48,6 +48,18 @@ describe('Line geometry subdivision', () => {
         ]));
     });
 
+    test('Simple ring', () => {
+        expect(toSimplePoints(subdivideVertexLine([
+            new Point(1, 1),
+            new Point(6, 1),
+        ], granularityForInterval4, true))).toEqual(toSimplePoints([
+            new Point(1, 1),
+            new Point(4, 1),
+            new Point(6, 1),
+            new Point(1, 1),
+        ]));
+    });
+
     test('Line lies on subdivision axis', () => {
         expect(toSimplePoints(subdivideVertexLine([
             new Point(1, 0),
@@ -151,20 +163,12 @@ describe('Fill subdivision', () => {
     test('Polygon inside cell is unchanged', () => {
         const result = subdivideFill(
             [
-                // x, y
-                0, 0,
-                2, 0,
-                2, 2,
-                0, 2
-            ],
-            [],
-            [
                 [
-                    // indices, each pair forms a line segment
-                    0, 1,
-                    1, 2,
-                    2, 3,
-                    3, 0
+                    // x, y
+                    new Point(0, 0),
+                    new Point(2, 0),
+                    new Point(2, 2),
+                    new Point(0, 2),
                 ]
             ],
             canonicalDefault,
@@ -312,35 +316,6 @@ function toSimplePoints(a: Array<Point>): Array<{x: number; y: number}> {
     return result;
 }
 
-function ringListToFillParams(rings: Array<Array<Point>>) {
-    const flattened = [];
-    const holeIndices = [];
-    const lines = [];
-
-    for (let ringIndex = 0; ringIndex < rings.length; ringIndex++) {
-        if (ringIndex > 0) {
-            holeIndices.push(flattened.length / 2);
-        }
-        const baseVertex = flattened.length / 2;
-        const ring = rings[ringIndex];
-        const outline = [];
-        for (let i = 0; i < ring.length; i++) {
-            flattened.push(ring[i].x);
-            flattened.push(ring[i].y);
-            outline.push(baseVertex + (i + ring.length - 1) % ring.length);
-            outline.push(baseVertex + i);
-        }
-        lines.push(outline);
-    }
-
-    return {
-        flattened,
-        holeIndices,
-        lines
-    };
-}
-
 function subdivideFillFromRingList(rings: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number) {
-    const params = ringListToFillParams(rings);
-    return subdivideFill(params.flattened, params.holeIndices, params.lines, canonical, granularity);
+    return subdivideFill(rings, canonical, granularity);
 }
