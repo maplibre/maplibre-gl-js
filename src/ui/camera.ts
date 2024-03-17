@@ -140,7 +140,7 @@ export type CameraForBoundsOptions = CameraOptions & {
     maxZoom?: number;
 
     /**
-     * Whether the map should snap to integer zoom levels during the transition.
+     * Whether the map should snap to integer zoom levels during the box zoom transition.
      */
     shouldSnapToIntegerZoom?: boolean;
 }

@@ -1037,18 +1037,7 @@ export class Map extends Camera {
     getMaxZoom(): number { return this.transform.maxZoom; }
 
     shouldSnapToIntegerZoom(type: SnapToIntegerZoomType): boolean {
-        switch (type) {
-            case 'boxZoom':
-                return this._snapToIntegerZoomOptions.boxZoom;
-            case 'scrollZoom':
-                return this._snapToIntegerZoomOptions.scrollZoom;
-            case 'tapZoom':
-                return this._snapToIntegerZoomOptions.tapZoom;
-            case 'clickZoom':
-                return this._snapToIntegerZoomOptions.clickZoom;
-            default:
-                return false;
-        }
+        return this._snapToIntegerZoomOptions[type] || false;
     }
 
     /**

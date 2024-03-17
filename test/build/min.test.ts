@@ -29,14 +29,14 @@ describe('test min build', () => {
 
         // Need to be very frugal when it comes to minified script.
         // Most changes should increase less than 1k.
-        const increaseQuota = 1600;
+        const increaseQuota = 1024;
 
         // decreasement means optimizations, so more generous (4k) but still
         // need to make sure not a big bug that resulted in a big loss.
         const decreaseQuota = 4096;
 
         // feel free to update this value after you've checked that it has changed on purpose :-)
-        const expectedBytes = 774450;
+        const expectedBytes = 775000;
 
         expect(actualBytes - expectedBytes).toBeLessThan(increaseQuota);
         expect(expectedBytes - actualBytes).toBeLessThan(decreaseQuota);
