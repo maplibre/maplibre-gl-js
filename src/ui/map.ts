@@ -1020,11 +1020,6 @@ export class Map extends Camera {
         } else throw new Error('maxZoom must be greater than the current minZoom');
     }
 
-    setSnapToIntegerZoom(snap: SnapToIntegerZoomOptions): Map {
-        this._snapToIntegerZoomOptions = snap;
-        return this;
-    }
-
     /**
      * Returns the map's maximum allowable zoom level.
      *
@@ -1036,6 +1031,35 @@ export class Map extends Camera {
      */
     getMaxZoom(): number { return this.transform.maxZoom; }
 
+    /**
+     * Sets or clears the zoom options of snapping to integer levels.
+     *
+     * @param options - The maximum zoom level to set.
+     * If `null` or `undefined` is provided, the function makes zooming to integer levels disabled.
+     * @returns `this`
+     * @example
+     * ```ts
+     * map.setSnapToIntegerZoom({boxZoom: true});
+     * ```
+     */
+    setSnapToIntegerZoom(options: SnapToIntegerZoomOptions | null): Map {
+        if (options === null || options === undefined) {
+            this._snapToIntegerZoomOptions = {boxZoom: false, clickZoom: false, scrollZoom: false, tapZoom: false};
+        } else {
+            this._snapToIntegerZoomOptions = options;
+        }
+        return this;
+    }
+
+    /**
+     * Returns whether should snap to integer zoom levels for a SnapToIntegerZoomType.
+     *
+     * @returns Whether should snap to integer zoom levels.
+     * @example
+     * ```ts
+     * let shouldSnapToIntegerZoom = map.shouldSnapToIntegerZoom("boxZoom");
+     * ```
+     */
     shouldSnapToIntegerZoom(type: SnapToIntegerZoomType): boolean {
         return this._snapToIntegerZoomOptions[type] || false;
     }

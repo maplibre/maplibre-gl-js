@@ -97,7 +97,7 @@ export type JumpToOptions = CameraOptions & {
 }
 
 /**
- * The options object related to the {@link Map#shouldSnapToIntegerZoom} method
+ * The options object related to the {@link Map#setSnapToIntegerZoom} method
  */
 export type SnapToIntegerZoomOptions = {
     /**
