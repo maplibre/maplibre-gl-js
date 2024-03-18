@@ -742,8 +742,44 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
 /**
  * Subdivides a line represented by an array of points.
  * Assumes a line segment between each two consecutive points in the array.
- * Does not assume a line segment from last point to first point.
- * Eg. an array of 4 points describes exactly 3 line segments.
+ * Does not assume a line segment from last point to first point, unless `isRing` is set to `true`.
+ * For example, an array of 4 points describes exactly 3 line segments.
+ * @param linePoints - An array of points describing the line segments.
+ * @param granularity - Subdivision granularity.
+ * @param isRing - When true, an additional line segment is assumed to exist between the input array's last and first point.
+ * @returns A new array of points of the subdivided line segments. If `isRing` is set to `true`, then this also includes the (subdivided) segment from the last point of the input array to the first point.
+ *
+ * @example
+ * ```ts
+ * const result = subdivideVertexLine([
+ *   new Point(0, 0),
+ *   new Point(8, 0),
+ *   new Point(0, 8),
+ * ], EXTENT / 4, false);
+ * // Results in an array of points with these (x, y) coordinates:
+ * //   0, 0
+ * //   4, 0
+ * //   8, 0
+ * //   4, 4
+ * //   0, 8
+ * ```
+ *
+ * @example
+ * ```ts
+ * const result = subdivideVertexLine([
+ *   new Point(0, 0),
+ *   new Point(8, 0),
+ *   new Point(0, 8),
+ * ], EXTENT / 4, true);
+ * // Results in an array of points with these (x, y) coordinates:
+ * //   0, 0
+ * //   4, 0
+ * //   8, 0
+ * //   4, 4
+ * //   0, 8
+ * //   0, 4
+ * //   0, 0
+ * ```
  */
 export function subdivideVertexLine(linePoints: Array<Point>, granularity: number, isRing: boolean = false): Array<Point> {
     if (!linePoints || linePoints.length < 1) {
@@ -751,11 +787,15 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
     }
 
     if (linePoints.length < 2) {
-        return [linePoints[0]];
+        return [];
     }
 
     if (granularity < 2) {
-        return linePoints;
+        if (isRing) {
+            return [...linePoints, linePoints[0]];
+        } else {
+            return [...linePoints];
+        }
     }
 
     const cellSize = Math.floor(EXTENT / granularity);

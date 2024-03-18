@@ -65,6 +65,32 @@ describe('Line geometry subdivision', () => {
         ]));
     });
 
+    test('Simple ring inside cell', () => {
+        expect(toSimplePoints(subdivideVertexLine([
+            new Point(0, 0),
+            new Point(8, 0),
+            new Point(0, 8),
+        ], granularityForInterval128, true))).toEqual(toSimplePoints([
+            new Point(0, 0),
+            new Point(8, 0),
+            new Point(0, 8),
+            new Point(0, 0),
+        ]));
+    });
+
+    test('Simple ring is unchanged when granularity=0', () => {
+        expect(toSimplePoints(subdivideVertexLine([
+            new Point(0, 0),
+            new Point(8, 0),
+            new Point(0, 8),
+        ], 0, true))).toEqual(toSimplePoints([
+            new Point(0, 0),
+            new Point(8, 0),
+            new Point(0, 8),
+            new Point(0, 0),
+        ]));
+    });
+
     test('Line lies on subdivision axis', () => {
         expect(toSimplePoints(subdivideVertexLine([
             new Point(1, 0),
@@ -165,6 +191,39 @@ describe('Line geometry subdivision', () => {
 });
 
 describe('Fill subdivision', () => {
+    test('Polygon is unchanged when granularity=1', () => {
+        const result = subdivideFill(
+            [
+                [
+                    // x, y
+                    new Point(0, 0),
+                    new Point(20000, 0),
+                    new Point(20000, 20000),
+                    new Point(0, 20000),
+                ]
+            ],
+            canonicalDefault,
+            1
+        );
+
+        expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
+        expect(result.verticesFlattened).toEqual([
+            0, 0,
+            20000, 0,
+            20000, 20000,
+            0, 20000
+        ]);
+        expect(result.indicesTriangles).toEqual([2, 3, 0, 0, 1, 2]);
+        expect(result.indicesLineList).toEqual([
+            [
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 0
+            ]
+        ]);
+    });
+
     test('Polygon inside cell is unchanged', () => {
         const result = subdivideFill(
             [
@@ -311,8 +370,8 @@ describe('Fill subdivision', () => {
             const result = subdivideFillFromRingList([
                 [
                     new Point(17, 127),
+                    new Point(19, 111),
                     new Point(126, 13),
-                    new Point(19, 125),
                 ]
             ], canonicalDefault, granularityForInterval128);
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
