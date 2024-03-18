@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
-import {subdivideFill, subdivideVertexLine} from './subdivision';
+import {getDebugSvg, subdivideFill, subdivideVertexLine} from './subdivision';
 import {CanonicalTileID} from '../source/tile_id';
 
 /**
@@ -431,7 +431,7 @@ describe('Fill subdivision', () => {
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
         });
 
-        test('Large polygon with hole, finer granularity', () => {
+        test('Large polygon with hole, granularity=0', () => {
             const result = subdivideFillFromRingList([
                 [
                     new Point(17, 127),
@@ -443,9 +443,193 @@ describe('Fill subdivision', () => {
                     new Point(1502, 1008),
                     new Point(1004, 1523),
                 ]
-            ], canonicalDefault, EXTENT / 32);
+            ], canonicalDefault, 0);
             expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
+        });
+
+        test('Large polygon with hole, finer granularity', () => {
+            const result = subdivideFillFromRingList([
+                [
+                    new Point(17, 1),
+                    new Point(347, 13),
+                    new Point(19, 453),
+                ],
+                [
+                    new Point(23, 7),
+                    new Point(319, 17),
+                    new Point(29, 399),
+                ]
+            ], canonicalDefault, EXTENT / 8);
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
+            testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
+        });
+
+        test('Polygon with hole inside cell', () => {
+            //       0
+            //      / \
+            //     / 3 \
+            //    / / \ \
+            //   / /   \ \
+            //  /  5⎺⎺⎺⎺4 \
+            // 2⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺1
+            const result = subdivideFill(
+                [
+                    [
+                        new Point(0, 0),
+                        new Point(3, 4),
+                        new Point(-3, 4),
+                    ],
+                    [
+                        new Point(0, 1),
+                        new Point(1, 3),
+                        new Point(-1, 3),
+                    ]
+                ],
+                canonicalDefault,
+                0
+            );
+
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
+            expect(result.verticesFlattened).toEqual([
+                0,  0, // 0
+                3,  4, // 1
+                -3, 4, // 2
+                0,  1, // 3
+                1,  3, // 4
+                -1, 3  // 5
+            ]);
+            expect(result.indicesTriangles).toEqual([
+                2, 5, 4,
+                3, 5, 2,
+                1, 2, 4,
+                3, 2, 0,
+                0, 1, 4,
+                4, 3, 0
+            ]);
+            expect(result.indicesLineList).toEqual([
+                [
+                    0, 1,
+                    1, 2,
+                    2, 0
+                ],
+                [
+                    3, 4,
+                    4, 5,
+                    5, 3
+                ]
+            ]);
+        });
+
+        test('Polygon with duplicate vertex with hole inside cell', () => {
+            //       0
+            //      / \
+            //     // \\
+            //    //   \\
+            //   /4⎺⎺⎺⎺⎺3\
+            //  2⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺1
+            const result = subdivideFill(
+                [
+                    [
+                        new Point(0, 0),
+                        new Point(3, 4),
+                        new Point(-3, 4),
+                    ],
+                    [
+                        new Point(0, 0),
+                        new Point(1, 3),
+                        new Point(-1, 3),
+                    ]
+                ],
+                canonicalDefault,
+                0
+            );
+
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
+            expect(result.verticesFlattened).toEqual([
+                0,  0, // 0
+                3,  4, // 1
+                -3, 4, // 2
+                1,  3, // 3
+                -1, 3  // 4
+            ]);
+            expect(result.indicesTriangles).toEqual([
+                2, 4, 3,
+                0, 4, 2,
+                3, 0, 1,
+                1, 2, 3
+            ]);
+            expect(result.indicesLineList).toEqual([
+                [
+                    0, 1,
+                    1, 2,
+                    2, 0
+                ],
+                [
+                    0, 3,
+                    3, 4,
+                    4, 0
+                ]
+            ]);
+        });
+
+        test('Polygon with duplicate edge inside cell', () => {
+            // Test a slightly degenerate polygon, where the hole is achieved using a duplicate edge
+            //       0
+            //      /|\
+            //     / 3 \
+            //    / / \ \
+            //   / /   \ \
+            //  / 4⎺⎺⎺⎺⎺5 \
+            // 2⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺1
+            const result = subdivideFill(
+                [
+                    [
+                        new Point(0, 0),
+                        new Point(3, 4),
+                        new Point(-3, 4),
+                        new Point(0, 0),
+                        new Point(0, 1),
+                        new Point(-1, 3),
+                        new Point(1, 3),
+                        new Point(0, 1),
+                        new Point(0, 0),
+                    ]
+                ],
+                canonicalDefault,
+                0
+            );
+
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
+            expect(result.verticesFlattened).toEqual([
+                0,  0, // 0
+                3,  4, // 1
+                -3, 4, // 2
+                0,  1, // 3
+                -1, 3, // 4
+                1,  3  // 5
+            ]);
+            expect(result.indicesTriangles).toEqual([
+                3, 0, 1,
+                2, 0, 3,
+                5, 3, 1,
+                2, 3, 4,
+                4, 5, 1,
+                1, 2, 4
+            ]);
+            expect(result.indicesLineList).toEqual([
+                [
+                    0, 1,
+                    1, 2,
+                    2, 0,
+                    0, 3,
+                    3, 4,
+                    4, 5,
+                    5, 3,
+                    3, 0,
+                    0, 0
+                ]
+            ]);
         });
     });
 });

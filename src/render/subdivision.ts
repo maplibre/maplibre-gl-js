@@ -543,15 +543,11 @@ class Subdivider {
         }
     }
 
-    private _initializeVertices(polygon: Array<Array<Point>>) {
+    private _initializeVertices(flattened: Array<number>) {
         this._finalVertices = [];
         this._vertexDictionary = new Map<number, number>();
-        for (let ringIndex = 0; ringIndex < polygon.length; ringIndex++) {
-            const ring = polygon[ringIndex];
-            for (let i = 0; i < ring.length; i++) {
-                const p = ring[i];
-                this._getVertexIndex(p.x, p.y);
-            }
+        for (let i = 0; i < flattened.length; i += 2) {
+            this._getVertexIndex(flattened[i], flattened[i + 1]);
         }
     }
 
@@ -569,15 +565,15 @@ class Subdivider {
         }
 
         // Initialize the vertex dictionary with input vertices since we will use all of them anyway
-        const holeIndices = getHoleIndicesFromRings(polygon);
-        this._initializeVertices(polygon);
+        const {flattened, holeIndices} = flatten(polygon);
+        this._initializeVertices(flattened);
 
         // Subdivide triangles
         let subdividedTriangles;
         try {
             // At this point this._finalVertices is just flattened polygon points
-            const earcutResult = earcut(this._finalVertices, holeIndices);
-            const cut = this._convertIndices(this._finalVertices, earcutResult);
+            const earcutResult = earcut(flattened, holeIndices);
+            const cut = this._convertIndices(flattened, earcutResult);
             subdividedTriangles = this._subdivideTrianglesScanline(cut);
         } catch (e) {
             console.error(e);
@@ -631,7 +627,7 @@ class Subdivider {
      * Sometimes the supplies vertex and index array has duplicate vertices - same coordinates that are referenced by multiple different indices.
      * That is not allowed for purposes of subdivision, duplicates are removed in `this.initializeVertices`.
      * This function checks all indices, and replaces any index that references a duplicate vertex with the an index that vertex that is actually valid in `this._finalVertices`.
-     * @param vertices - Flattened vertex array used by the indices. This may contain duplicate vertices.
+     * @param vertices - Flattened vertex array used by the old indices. This may contain duplicate vertices.
      * @param oldIndices - Indices into the supplied vertex array.
      * @returns Indices transformed so that they are valid indices into `this._finalVertices` (with duplicates removed).
      */
@@ -652,66 +648,6 @@ class Subdivider {
             indices.push(this._getVertexIndex(p.x, p.y));
         }
         return indices;
-    }
-
-    /**
-     * Returns a SVG image (as string) that displays the supplied triangles and lines. Only vertices used by the triangles are included in the svg.
-     * @param triangles - Array of triangle indices.
-     * @param edges - List of arrays of edge indices. Every pair of indices forms a line. A triangle would look like `[0 1 1 2 2 0]`.
-     * @returns SVG image as string.
-     */
-    public getDebugSvg(triangles?: Array<number>, edges?: Array<Array<number>>): string {
-        const svg = [];
-
-        let minX = Infinity;
-        let minY = Infinity;
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-
-        for (let i = 0; i < triangles.length; i++) {
-            const x = this._finalVertices[triangles[i] * 2];
-            const y = this._finalVertices[triangles[i] * 2 + 1];
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-        }
-
-        svg.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX - 10} ${minY - 10} ${maxX - minX + 20} ${maxY - minY + 20}">`);
-
-        if (triangles) {
-            for (let i = 0; i < triangles.length; i += 3) {
-                const i0 = triangles[i];
-                const i1 = triangles[i + 1];
-                const i2 = triangles[i + 2];
-
-                for (const index of [i0, i1, i2]) {
-                    const x = this._finalVertices[index * 2];
-                    const y = this._finalVertices[index * 2 + 1];
-                    const isOnCellEdge = (x % this._granularityCellSize === 0) || (y % this._granularityCellSize === 0);
-                    svg.push(`<circle cx="${x}" cy="${y}" r="1.0" fill="${isOnCellEdge ? 'red' : 'black'}" stroke="none"/>`);
-                    svg.push(`<text x="${x + 2}" y="${y - 2}" style="font: 2px sans-serif;">${(index).toString()}</text>`);
-                }
-
-                for (const edge of [[i0, i1], [i1, i2], [i2, i0]]) {
-                    svg.push(`<line x1="${this._finalVertices[edge[0] * 2]}" y1="${this._finalVertices[edge[0] * 2 + 1]}" x2="${this._finalVertices[edge[1] * 2]}" y2="${this._finalVertices[edge[1] * 2 + 1]}" stroke="black" stroke-width="0.5"/>`);
-                }
-            }
-        }
-
-        if (edges) {
-            for (const edgeList of edges) {
-                for (let i = 0; i < edgeList.length; i += 2) {
-                    svg.push(`<circle cx="${this._finalVertices[edgeList[i] * 2]}" cy="${this._finalVertices[edgeList[i] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
-                    svg.push(`<circle cx="${this._finalVertices[edgeList[i + 1] * 2]}" cy="${this._finalVertices[edgeList[i + 1] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
-                    svg.push(`<line x1="${this._finalVertices[edgeList[i] * 2]}" y1="${this._finalVertices[edgeList[i] * 2 + 1]}" x2="${this._finalVertices[edgeList[i + 1] * 2]}" y2="${this._finalVertices[edgeList[i + 1] * 2 + 1]}" stroke="green" stroke-width="0.25"/>`);
-                }
-            }
-        }
-
-        svg.push('</svg>');
-
-        return svg.join('');
     }
 }
 
@@ -884,9 +820,9 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
     return finalLineVertices;
 }
 
-function getHoleIndicesFromRings(polygon: Array<Array<Point>>): Array<number> {
+function flatten(polygon: Array<Array<Point>>) {
     const holeIndices = [];
-    let vertexCount = 0;
+    const flattened = [];
 
     for (const ring of polygon) {
         if (ring.length === 0) {
@@ -894,11 +830,80 @@ function getHoleIndicesFromRings(polygon: Array<Array<Point>>): Array<number> {
         }
 
         if (ring !== polygon[0]) {
-            holeIndices.push(vertexCount);
+            holeIndices.push(flattened.length / 2);
         }
 
-        vertexCount += ring.length;
+        for (let i = 0; i < ring.length; i++) {
+            flattened.push(ring[i].x);
+            flattened.push(ring[i].y);
+        }
     }
 
-    return holeIndices;
+    return {
+        flattened,
+        holeIndices
+    };
+}
+
+/**
+ * Returns a SVG image (as string) that displays the supplied triangles and lines. Only vertices used by the triangles are included in the svg.
+ * @param flattened - Array of flattened vertex coordinates.
+ * @param triangles - Array of triangle indices.
+ * @param edges - List of arrays of edge indices. Every pair of indices forms a line. A triangle would look like `[0 1 1 2 2 0]`.
+ * @returns SVG image as string.
+ */
+export function getDebugSvg(flattened: Array<number>, triangles?: Array<number>, edges?: Array<Array<number>>, granularity: number = 1): string {
+    const svg = [];
+
+    const cellSize = EXTENT / granularity;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (let i = 0; i < triangles.length; i++) {
+        const x = flattened[triangles[i] * 2];
+        const y = flattened[triangles[i] * 2 + 1];
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+    }
+
+    svg.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX - 10} ${minY - 10} ${maxX - minX + 20} ${maxY - minY + 20}">`);
+
+    if (triangles) {
+        for (let i = 0; i < triangles.length; i += 3) {
+            const i0 = triangles[i];
+            const i1 = triangles[i + 1];
+            const i2 = triangles[i + 2];
+
+            for (const index of [i0, i1, i2]) {
+                const x = flattened[index * 2];
+                const y = flattened[index * 2 + 1];
+                const isOnCellEdge = (x % cellSize === 0) || (y % cellSize === 0);
+                svg.push(`<circle cx="${x}" cy="${y}" r="1.0" fill="${isOnCellEdge ? 'red' : 'black'}" stroke="none"/>`);
+                svg.push(`<text x="${x + 2}" y="${y - 2}" style="font: 2px sans-serif;">${(index).toString()}</text>`);
+            }
+
+            for (const edge of [[i0, i1], [i1, i2], [i2, i0]]) {
+                svg.push(`<line x1="${flattened[edge[0] * 2]}" y1="${flattened[edge[0] * 2 + 1]}" x2="${flattened[edge[1] * 2]}" y2="${flattened[edge[1] * 2 + 1]}" stroke="black" stroke-width="0.5"/>`);
+            }
+        }
+    }
+
+    if (edges) {
+        for (const edgeList of edges) {
+            for (let i = 0; i < edgeList.length; i += 2) {
+                svg.push(`<circle cx="${flattened[edgeList[i] * 2]}" cy="${flattened[edgeList[i] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
+                svg.push(`<circle cx="${flattened[edgeList[i + 1] * 2]}" cy="${flattened[edgeList[i + 1] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
+                svg.push(`<line x1="${flattened[edgeList[i] * 2]}" y1="${flattened[edgeList[i] * 2 + 1]}" x2="${flattened[edgeList[i + 1] * 2]}" y2="${flattened[edgeList[i + 1] * 2 + 1]}" stroke="green" stroke-width="0.25"/>`);
+            }
+        }
+    }
+
+    svg.push('</svg>');
+
+    return svg.join('');
 }
