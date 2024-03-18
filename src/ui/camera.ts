@@ -185,6 +185,9 @@ export type FitBoundsOptions = FlyToOptions & {
     maxZoom?: number;
 }
 
+/**
+ * Interface that handle all ease animation property, it avoid any stop/add issue during move events
+ */
 export interface EaseAnimation {
     easeId: string | number;
     easeStart: number;
@@ -198,6 +201,9 @@ export interface EaseAnimation {
     renderFrameCallback: () => void;
 }
 
+/**
+ * Options for {@link Camera#_createEaseAnimation} method
+ */
 export interface EaseAnimationOptions {
     easeId: EaseAnimation['easeId'];
     easeStart: EaseAnimation['easeStart'];
@@ -279,6 +285,12 @@ export abstract class Camera extends Evented {
         easing?: (_: number) => number;
     };
 
+    /**
+     * @internal
+     * Contains ease animations but it's important to understand that it can't have two or more animations at the same time.
+     * It's just used to handle ease animations stop.
+     * Every active animations should be stopped before runnin a new one.
+     */
     _easeAnimations: Array<EaseAnimation>;
 
     _onEaseFrame: (_: number) => void;
@@ -1453,6 +1465,12 @@ export abstract class Camera extends Evented {
         return this;
     }
 
+    /**
+     * @internal
+     * It creates an EaseAnimation interfaced object
+     * @param options - {@link Camera#EaseAnimationOptions}
+     * @returns EaseAnimation {@link Camera#EaseAnimation}
+     */
     _createEaseAnimation(options?: EaseAnimationOptions): EaseAnimation {
         const self = this;
         const easeAnimation = {
