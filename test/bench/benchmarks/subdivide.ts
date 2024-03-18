@@ -47,9 +47,9 @@ export default class Subdivide extends Benchmark {
         this.lineList = lineList;
     }
 
-    async bench() {
-        subdivideFill(this.flattened, this.holeIndices, this.lineList, this.tileID, this.granularity);
-    }
+    // async bench() {
+    //     subdivideFill(this.flattened, this.holeIndices, this.lineList, this.tileID, this.granularity);
+    // }
 }
 
 // Returns line indices for this ring

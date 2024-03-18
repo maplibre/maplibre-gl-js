@@ -50,13 +50,17 @@ describe('Line geometry subdivision', () => {
 
     test('Simple ring', () => {
         expect(toSimplePoints(subdivideVertexLine([
-            new Point(1, 1),
-            new Point(6, 1),
+            new Point(0, 0),
+            new Point(8, 0),
+            new Point(0, 8),
         ], granularityForInterval4, true))).toEqual(toSimplePoints([
-            new Point(1, 1),
-            new Point(4, 1),
-            new Point(6, 1),
-            new Point(1, 1),
+            new Point(0, 0),
+            new Point(4, 0),
+            new Point(8, 0),
+            new Point(4, 4),
+            new Point(0, 8),
+            new Point(0, 4),
+            new Point(0, 0),
         ]));
     });
 

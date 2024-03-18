@@ -3,7 +3,6 @@ import {EXTENT} from '../data/extent';
 import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
 import {register} from '../util/web_worker_transfer';
-import {lerp} from '../util/util';
 
 export class SubdivisionGranularityExpression {
     /**
@@ -70,34 +69,6 @@ type SubdivisionResult = {
     indicesLineList: Array<Array<number>>;
 };
 
-function addUnique<T>(array: Array<T>, element: T): void {
-    if (!array.includes(element)) {
-        array.push(element);
-    }
-}
-
-/**
- * Check whether an edge can be divided by a line parallel to the Y axis, return the X coordinate of the division point if yes.
- * @param e0x - Edge vertex 0 x.
- * @param e0y - Edge vertex 0 y.
- * @param e1x - Edge vertex 1 x.
- * @param e1y - Edge vertex 1 y.
- * @param divideX - Division line X coordinate.
- * @returns Either the Y coordinate of the intersection of the edge and division line, or undefined if the division line doesn't intersect the triangle.
- */
-function checkEdgeDivide(e0x: number, e0y: number, e1x: number, e1y: number, divideX: number): number | undefined {
-    // Do nothing if the edge is parallel to the divide axis (Y)
-    if (e0x === e1x) {
-        return undefined;
-    }
-    // Do nothing if divideX is outside bounds defined by e0x and e1x
-    if ((e0x < e1x && (divideX <= e0x || e1x <= divideX)) || (e0x > e1x && (divideX <= e1x || e0x <= divideX))) {
-        return undefined;
-    }
-    const divideY = lerp(e0y, e1y, (divideX - e0x) / (e1x - e0x));
-    return Math.round(divideY);
-}
-
 // Special pole vertices have coordinates -32768,-32768 for the north pole and 32767,32767 for the south pole.
 // First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
 export const NORTH_POLE_Y = -32768;
@@ -144,21 +115,7 @@ class Subdivider {
         return index;
     }
 
-    private checkEdgeSubdivisionX(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideX: number, boundMin: number, boundMax: number): void {
-        const y = checkEdgeDivide(e0x, e0y, e1x, e1y, divideX);
-        if (y !== undefined && y >= boundMin && y <= boundMax) {
-            addUnique(indicesInsideCell, this.getVertexIndex(divideX, y));
-        }
-    }
-
-    private checkEdgeSubdivisionY(indicesInsideCell: Array<number>, e0x: number, e0y: number, e1x: number, e1y: number, divideY: number, boundMin: number, boundMax: number): void {
-        const x = checkEdgeDivide(e0y, e0x, e1y, e1x, divideY); // reuse checkEdgeDivide that only checks division line parallel to Y by swaping x and y in edge coordinates
-        if (x !== undefined && x >= boundMin && x <= boundMax) {
-            addUnique(indicesInsideCell, this.getVertexIndex(x, divideY));
-        }
-    }
-
-    private subdivideTrianglesScanline(inputIndices: Array<number>): Array<number> {
+    private _subdivideTrianglesScanline(inputIndices: Array<number>): Array<number> {
         if (this._granularity < 2) {
             return inputIndices;
         }
@@ -789,7 +746,7 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
  * Eg. an array of 4 points describes exactly 3 line segments.
  */
 export function subdivideVertexLine(linePoints: Array<Point>, granularity: number, isRing: boolean = false): Array<Point> {
-    if (!linePoints) {
+    if (!linePoints || linePoints.length < 1) {
         return [];
     }
 
@@ -801,94 +758,374 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
         return linePoints;
     }
 
-    const granularityStep = Math.floor(EXTENT / granularity);
+    const cellSize = Math.floor(EXTENT / granularity);
     const finalLineVertices: Array<Point> = [];
 
-    // Add first line vertex
-    finalLineVertices.push(linePoints[0]);
+    finalLineVertices.push(new Point(linePoints[0].x, linePoints[0].y));
 
     // Iterate over all input lines
-    const firstIndex = isRing ? 0 : 1;
-    for (let pointIndex = firstIndex; pointIndex < linePoints.length; pointIndex++) {
-        const linePoint0 = pointIndex === 0 ? linePoints[linePoints.length - 1] : linePoints[pointIndex - 1];
-        const linePoint1 = linePoints[pointIndex];
+    const totalPoints = linePoints.length;
+    const lastIndex = isRing ? totalPoints : (totalPoints - 1);
+    for (let pointIndex = 0; pointIndex < lastIndex; pointIndex++) {
+        const linePoint0 = linePoints[pointIndex];
+        const linePoint1 = pointIndex < (totalPoints - 1) ? linePoints[pointIndex + 1] : linePoints[0];
         const lineVertex0x = linePoint0.x;
         const lineVertex0y = linePoint0.y;
         const lineVertex1x = linePoint1.x;
         const lineVertex1y = linePoint1.y;
 
-        // Get line AABB
-        const minX = Math.min(lineVertex0x, lineVertex1x);
-        const maxX = Math.max(lineVertex0x, lineVertex1x);
-        const minY = Math.min(lineVertex0y, lineVertex1y);
-        const maxY = Math.max(lineVertex0y, lineVertex1y);
+        const dirXnonZero = lineVertex0x !== lineVertex1x;
+        const dirYnonZero = lineVertex0y !== lineVertex1y;
 
-        const subdividedLinePoints = [];
+        if (!dirXnonZero && !dirYnonZero) {
+            continue;
+        }
 
-        // The first vertex of this line segment was already added in previous iteration or at the start of this function.
-        // Only add the second vertex of this segment.
-        subdividedLinePoints.push(linePoints[pointIndex]);
+        const dirX = lineVertex1x - lineVertex0x;
+        const dirY = lineVertex1y - lineVertex0y;
+        const absDirX = Math.abs(dirX);
+        const absDirY = Math.abs(dirY);
 
-        const cellXstart = Math.floor((minX + granularityStep) / granularityStep);
-        const cellXend = Math.floor((maxX - 1) / granularityStep);
-        for (let cellX = cellXstart; cellX <= cellXend; cellX += 1) {
-            const cellEdgeX = cellX * granularityStep;
-            const y = checkEdgeDivide(lineVertex0x, lineVertex0y, lineVertex1x, lineVertex1y, cellEdgeX);
-            if (y !== undefined && y >= minY && y <= maxY) {
-                let add = true;
-                for (const p of subdividedLinePoints) {
-                    if (p.x === cellEdgeX && p.y === y) {
-                        add = false; // the vertex already exists in this line, do not add it
-                        break;
-                    }
-                }
-                if (add) {
-                    subdividedLinePoints.push(new Point(cellEdgeX, y));
-                }
+        let lastPointX = lineVertex0x;
+        let lastPointY = lineVertex0y;
+
+        while (true) {
+            const nextBoundaryX = dirX > 0 ?
+                ((Math.floor(lastPointX / cellSize) + 1) * cellSize) :
+                ((Math.ceil(lastPointX / cellSize) - 1) * cellSize);
+            const nextBoundaryY = dirY > 0 ?
+                ((Math.floor(lastPointY / cellSize) + 1) * cellSize) :
+                ((Math.ceil(lastPointY / cellSize) - 1) * cellSize);
+            const axisDistanceToBoundaryX = Math.abs(lastPointX - nextBoundaryX);
+            const axisDistanceToBoundaryY = Math.abs(lastPointY - nextBoundaryY);
+
+            const axisDistanceToEndX = Math.abs(lastPointX - lineVertex1x);
+            const axisDistanceToEndY = Math.abs(lastPointY - lineVertex1y);
+
+            const realDistanceToBoundaryX = dirXnonZero ? axisDistanceToBoundaryX / absDirX : Number.POSITIVE_INFINITY;
+            const realDistanceToBoundaryY = dirYnonZero ? axisDistanceToBoundaryY / absDirY : Number.POSITIVE_INFINITY;
+
+            if ((axisDistanceToEndX <= axisDistanceToBoundaryX || !dirXnonZero) &&
+            (axisDistanceToEndY <= axisDistanceToBoundaryY || !dirYnonZero)) {
+                break;
+            }
+
+            if ((realDistanceToBoundaryX < realDistanceToBoundaryY && dirXnonZero) || !dirYnonZero) {
+                // We hit the X cell boundary first
+                // Always consider the X cell hit if Y dir is zero
+                lastPointX = nextBoundaryX;
+                lastPointY = lastPointY + dirY * realDistanceToBoundaryX;
+                finalLineVertices.push(new Point(lastPointX, Math.round(lastPointY)));
+            } else {
+                lastPointX = lastPointX + dirX * realDistanceToBoundaryY;
+                lastPointY = nextBoundaryY;
+                finalLineVertices.push(new Point(Math.round(lastPointX), lastPointY));
             }
         }
 
-        const cellYstart = Math.floor((minY + granularityStep) / granularityStep);
-        const cellYend = Math.floor((maxY - 1) / granularityStep);
-        for (let cellY = cellYstart; cellY <= cellYend; cellY += 1) {
-            const cellEdgeY = cellY * granularityStep;
-            const x = checkEdgeDivide(lineVertex0y, lineVertex0x, lineVertex1y, lineVertex1x, cellEdgeY);
-            if (x !== undefined && x >= minX && x <= maxX) {
-                let add = true;
-                for (const p of subdividedLinePoints) {
-                    if (p.x === x && p.y === cellEdgeY) {
-                        add = false;
-                        break;
-                    }
-                }
-                if (add) {
-                    subdividedLinePoints.push(new Point(x, cellEdgeY));
-                }
-            }
-        }
-
-        const edgeX = lineVertex1x - lineVertex0x;
-        const edgeY = lineVertex1y - lineVertex0y;
-
-        subdividedLinePoints.sort((a: Point, b: Point) => {
-            const aDist = a.x * edgeX + a.y * edgeY;
-            const bDist = b.x * edgeX + b.y * edgeY;
-            if (aDist < bDist) {
-                return -1;
-            }
-            if (aDist > bDist) {
-                return 1;
-            }
-            return 0;
-        });
-
-        for (let i = 0; i < subdividedLinePoints.length; i++) {
-            finalLineVertices.push(subdividedLinePoints[i]);
-        }
+        finalLineVertices.push(new Point(lineVertex1x, lineVertex1y));
     }
 
     return finalLineVertices;
 }
+
+/*
+function subdivideLinesScanline(linePoints: Array<Point>, isRing: boolean = false): Array<Point> {
+    if (this._granularity < 2) {
+        return linePoints;
+    }
+
+    const finalPoints = [];
+
+    let isFirstIteration = true;
+
+    // Iterate over all input lines
+    for (let lineIndex = isRing ? 0 : 1; lineIndex < linePoints.length; lineIndex++) {
+        const linePoint0 = lineIndex === 0 ? linePoints[linePoints.length - 1] : linePoints[lineIndex - 1];
+        const linePoint1 = linePoints[lineIndex];
+
+        if (isFirstIteration) {
+            isFirstIteration = false;
+            finalPoints.push(linePoint0);
+        }
+
+        if (linePoint0.x === linePoint1.x || linePoint0.y === linePoint1.y) {
+            continue; // Skip degenerate lines
+        }
+
+        const minX = Math.min(linePoint0.x, linePoint1.x);
+        const maxX = Math.max(linePoint0.x, linePoint1.x);
+        const minY = Math.min(linePoint0.y, linePoint1.y);
+        const maxY = Math.max(linePoint0.y, linePoint1.y);
+
+        const cellXmin = Math.floor(minX / this._granularityCellSize);
+        const cellXmax = Math.ceil(maxX / this._granularityCellSize);
+        const cellYmin = Math.floor(minY / this._granularityCellSize);
+        const cellYmax = Math.ceil(maxY / this._granularityCellSize);
+
+        // Iterate over cell rows that intersect this line
+        for (let cellRow = cellYmin; cellRow < cellYmax; cellRow++) {
+            const cellRowYTop = cellRow * this._granularityCellSize;
+            const cellRowYBottom = cellRowYTop + this._granularityCellSize;
+            const ring = [];
+
+            let leftmostIndex = 0;
+            let leftmostX = Infinity;
+
+            // Generate the vertex ring
+            for (let edgeIndex = 0; edgeIndex < 3; edgeIndex++) {
+                // Current edge that will be subdivided: a --> b
+                // The remaining vertex of the triangle: c
+                const aX = triangleVertices[edgeIndex * 2];
+                const aY = triangleVertices[edgeIndex * 2 + 1];
+                const bX = triangleVertices[((edgeIndex + 1) * 2) % 6];
+                const bY = triangleVertices[((edgeIndex + 1) * 2 + 1) % 6];
+                const cX = triangleVertices[((edgeIndex + 2) * 2) % 6];
+                const cY = triangleVertices[((edgeIndex + 2) * 2 + 1) % 6];
+                // Edge direction
+                const dirX = bX - aX;
+                const dirY = bY - aY;
+
+                // Edges parallel with either axis will need special handling later.
+                const isParallelY = dirX === 0;
+                const isParallelX = dirY === 0;
+
+                // Distance along edge where it enters/exits current cell row
+                const tTop = (cellRowYTop - aY) / dirY;
+                const tBottom = (cellRowYBottom - aY) / dirY;
+                const tEnter = Math.min(tTop, tBottom);
+                const tExit = Math.max(tTop, tBottom);
+
+                // Determine if edge lies entirely outside this cell row.
+                // Check entry and exit points, or if edge is parallel with X, check its Y coordinate.
+                if ((!isParallelX && (tEnter >= 1 || tExit <= 0)) ||
+                    (isParallelX && (aY < cellRowYTop || aY > cellRowYBottom))) {
+                    // Skip this edge
+                    // But make sure to add its endpoint vertex if needed.
+                    if (bY >= cellRowYTop && bY <= cellRowYBottom) {
+                        // The edge endpoint is withing this row, add it to the ring
+                        if (bX < leftmostX) {
+                            leftmostX = bX;
+                            leftmostIndex = ring.length;
+                        }
+                        ring.push(triangleIndices[(edgeIndex + 1) % 3]);
+                    }
+                    continue;
+                }
+
+                // Do not add original triangle vertices now, those are handled separately later
+
+                // Special case: edge vertex for entry into cell row
+                // If edge is parallel with X axis, there is no entry vertex
+                if (!isParallelX && tEnter > 0) {
+                    const x = aX + dirX * tEnter;
+                    const y = aY + dirY * tEnter;
+                    if (x < leftmostX) {
+                        leftmostX = x;
+                        leftmostIndex = ring.length;
+                    }
+                    ring.push(this._getVertexIndex(x, y));
+                }
+
+                const enterX = aX + dirX * Math.max(tEnter, 0);
+                const exitX = aX + dirX * Math.min(tExit, 1);
+                const leftX = isParallelX ? Math.min(aX, bX) : Math.min(enterX, exitX);
+                const rightX = isParallelX ? Math.max(aX, bX) : Math.max(enterX, exitX);
+
+                // No need to subdivide (along X) edges that are parallel with Y
+                if (!isParallelY) {
+                    // Generate edge interior vertices
+                    const edgeSubdivisionLeftCellX = Math.floor(leftX / this._granularityCellSize) + 1;
+                    const edgeSubdivisionRightCellX = Math.ceil(rightX / this._granularityCellSize) - 1;
+
+                    const isEdgeLeftToRight = isParallelX ? (aX < bX) : (enterX < exitX);
+                    if (isEdgeLeftToRight) {
+                        // Left to right
+                        for (let cellX = edgeSubdivisionLeftCellX; cellX <= edgeSubdivisionRightCellX; cellX++) {
+                            const x = cellX * this._granularityCellSize;
+                            const y = aY + dirY * (x - aX) / dirX;
+                            ring.push(this._getVertexIndex(x, y));
+                        }
+                    } else {
+                        // Right to left
+                        for (let cellX = edgeSubdivisionRightCellX; cellX >= edgeSubdivisionLeftCellX; cellX--) {
+                            const x = cellX * this._granularityCellSize;
+                            const y = aY + dirY * (x - aX) / dirX;
+                            ring.push(this._getVertexIndex(x, y));
+                        }
+                    }
+                }
+
+                // Special case: edge vertex for exit from cell row
+                if (!isParallelX && tExit < 1) {
+                    const x = aX + dirX * tExit;
+                    const y = aY + dirY * tExit;
+                    if (x < leftmostX) {
+                        leftmostX = x;
+                        leftmostIndex = ring.length;
+                    }
+                    ring.push(this._getVertexIndex(x, y));
+                }
+
+                // When to split inter-edge boundary segments?
+                // When the boundary doesn't intersect a vertex, its easy. But what if it does?
+
+                //      a
+                //     /|
+                //    / |
+                // --c--|--boundary
+                //    \ |
+                //     \|
+                //      b
+                //
+                // Inter-edge region should be generated when processing the a-b edge.
+                // This happens fine for the top row, for the bottom row,
+                //
+
+                //      x
+                //     /|
+                //    / |
+                // --x--x--boundary
+                //
+                // Edge that lies on boundary should be subdivided in its edge phase.
+                // The inter-edge phase will correctly skip it.
+
+                // Add endpoint vertex
+                if (isParallelX || (bY >= cellRowYTop && bY <= cellRowYBottom)) {
+                    if (bX < leftmostX) {
+                        leftmostX = bX;
+                        leftmostIndex = ring.length;
+                    }
+                    ring.push(triangleIndices[(edgeIndex + 1) % 3]);
+                }
+                // Any edge that has endpoint outside this row or on its boundary gets
+                // inter-edge vertices.
+                // No row boundary to split for edges parallel with X
+                if (!isParallelX && (bY <= cellRowYTop || bY >= cellRowYBottom)) {
+                    const dir2X = cX - bX;
+                    const dir2Y = cY - bY;
+                    const t2Top = (cellRowYTop - bY) / dir2Y;
+                    const t2Bottom = (cellRowYBottom - bY) / dir2Y;
+                    const t2Enter = Math.min(t2Top, t2Bottom);
+                    const t2Exit = Math.max(t2Top, t2Bottom);
+                    const enter2X = bX + dir2X * t2Enter;
+                    let boundarySubdivisionLeftCellX = Math.floor(Math.min(enter2X, exitX) / this._granularityCellSize) + 1;
+                    let boundarySubdivisionRightCellX = Math.ceil(Math.max(enter2X, exitX) / this._granularityCellSize) - 1;
+                    let isBoundaryLeftToRight = exitX < enter2X;
+
+                    const isParallelX2 = dir2Y === 0;
+
+                    if (isParallelX2 && (cY === cellRowYTop || cY === cellRowYBottom)) {
+                        // Special case when edge b->c that lies on the cell boundary.
+                        // Do not generate any inter-edge vertices in this case,
+                        // this b->c edge gets subdivided when it is itself processed.
+                        continue;
+                    }
+
+                    if (isParallelX2 || t2Enter >= 1 || t2Exit <= 0) {
+                        // The next edge (b->c) lies entirely outside this cell row
+                        // Find entry point for the edge after that instead (c->a)
+
+                        // There may be at most 1 edge that is parallel to X in a triangle.
+                        // The main "a->b" edge must not be parallel at this point in the code.
+                        // We know that "a->b" crosses the current cell row boundary, such that point "b" is beyond the boundary.
+                        // If "b->c" is parallel to X, then "c->a" must not be parallel and must cross the cell row boundary back:
+                        //      a
+                        //      |\
+                        // -----|-\--cell row boundary----
+                        //      |  \
+                        //      c---b
+                        // If "b->c" is not parallel to X and doesn't cross the cell row boundary,
+                        // then c->a must also not be parallel to X and must cross the cell boundary back,
+                        // since points "a" and "c" lie on different sides of the boundary and on different Y coordinates.
+                        //
+                        // Thus there is no need for "parallel with X" checks inside this condition branch.
+
+                        const dir3X = aX - cX;
+                        const dir3Y = aY - cY;
+                        const t3Top = (cellRowYTop - cY) / dir3Y;
+                        const t3Bottom = (cellRowYBottom - cY) / dir3Y;
+                        const t3Enter = Math.min(t3Top, t3Bottom);
+                        const enter3X = cX + dir3X * t3Enter;
+                        boundarySubdivisionLeftCellX = Math.floor(Math.min(enter3X, exitX) / this._granularityCellSize) + 1;
+                        boundarySubdivisionRightCellX = Math.ceil(Math.max(enter3X, exitX) / this._granularityCellSize) - 1;
+                        isBoundaryLeftToRight = exitX < enter3X;
+                    }
+
+                    const boundaryY = dirY > 0 ? cellRowYBottom : cellRowYTop;
+                    if (isBoundaryLeftToRight) {
+                        // Left to right
+                        for (let cellX = boundarySubdivisionLeftCellX; cellX <= boundarySubdivisionRightCellX; cellX++) {
+                            const x = cellX * this._granularityCellSize;
+                            ring.push(this._getVertexIndex(x, boundaryY));
+                        }
+                    } else {
+                        // Right to left
+                        for (let cellX = boundarySubdivisionRightCellX; cellX >= boundarySubdivisionLeftCellX; cellX--) {
+                            const x = cellX * this._granularityCellSize;
+                            ring.push(this._getVertexIndex(x, boundaryY));
+                        }
+                    }
+                }
+            }
+
+            // Triangulate the ring
+            // It is guaranteed to be convex and ordered
+            if (ring.length === 0) {
+                console.error('Subdivision vertex ring length 0, smells like a bug!');
+                continue;
+            }
+
+            // Traverse the ring in both directions from the leftmost vertex
+            // Assume ring is in CCW order (to produce CCW triangles)
+            const ringVertexLength = ring.length;
+            let lastEdgeA = leftmostIndex;
+            let lastEdgeB = (lastEdgeA + 1) % ringVertexLength;
+
+            while (true) {
+                const candidateIndexA = (lastEdgeA - 1) >= 0 ? (lastEdgeA - 1) : (ringVertexLength - 1);
+                const candidateIndexB = (lastEdgeB + 1) % ringVertexLength;
+
+                // Pick candidate, move edge
+                const candidateXA = this._finalVertices[ring[candidateIndexA] * 2];
+                const candidateXB = this._finalVertices[ring[candidateIndexB] * 2];
+
+                if (candidateXA < candidateXB) {
+                    // Pick candidate A
+                    const c = ring[candidateIndexA];
+                    const a = ring[lastEdgeA];
+                    const b = ring[lastEdgeB];
+                    if (c !== a && c !== b && a !== b) {
+                        finalIndices.push(b, a, c);
+                    }
+                    lastEdgeA--;
+                    if (lastEdgeA < 0) {
+                        lastEdgeA = ringVertexLength - 1;
+                    }
+                } else {
+                    // Pick candidate B
+                    const c = ring[candidateIndexB];
+                    const a = ring[lastEdgeA];
+                    const b = ring[lastEdgeB];
+                    if (c !== a && c !== b && a !== b) {
+                        finalIndices.push(b, a, c);
+                    }
+                    lastEdgeB++;
+                    if (lastEdgeB >= ringVertexLength) {
+                        lastEdgeB = 0;
+                    }
+                }
+
+                if (candidateIndexA === candidateIndexB) {
+                    break; // We ran out of ring vertices
+                }
+            }
+        }
+    }
+
+    return finalIndices;
+}
+*/
 
 function getHoleIndicesFromRings(polygon: Array<Array<Point>>): Array<number> {
     const holeIndices = [];
