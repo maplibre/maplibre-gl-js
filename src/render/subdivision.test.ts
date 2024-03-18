@@ -180,6 +180,7 @@ describe('Fill subdivision', () => {
             granularityForInterval4
         );
 
+        expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
         expect(result.verticesFlattened).toEqual([
             0, 0,
             2, 0,
@@ -211,6 +212,7 @@ describe('Fill subdivision', () => {
             ]
         ], canonicalDefault, granularityForInterval4);
 
+        expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
         expect(result.verticesFlattened).toEqual([
             //    // indices:
             0, 0, //  0
@@ -313,6 +315,7 @@ describe('Fill subdivision', () => {
                     new Point(19, 125),
                 ]
             ], canonicalDefault, granularityForInterval128);
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
         });
 
@@ -324,6 +327,7 @@ describe('Fill subdivision', () => {
                     new Point(19, 273),
                 ]
             ], canonicalDefault, granularityForInterval128);
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
         });
 
@@ -335,6 +339,7 @@ describe('Fill subdivision', () => {
                     new Point(127, 1045),
                 ]
             ], canonicalDefault, granularityForInterval128);
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
         });
 
@@ -346,6 +351,7 @@ describe('Fill subdivision', () => {
                     new Point(127, 8003),
                 ]
             ], canonicalDefault, granularityForInterval128);
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
         });
 
@@ -362,6 +368,7 @@ describe('Fill subdivision', () => {
                     new Point(1004, 1523),
                 ]
             ], canonicalDefault, granularityForInterval128);
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
         });
 
@@ -378,6 +385,7 @@ describe('Fill subdivision', () => {
                     new Point(1004, 1523),
                 ]
             ], canonicalDefault, EXTENT / 32);
+            expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
             testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
         });
     });
@@ -463,4 +471,18 @@ function testPolygonOutlineMatches(triangleIndices: Array<number>, lineIndicesLi
 
     expect(isSubsetOf(outlineEdges, uncoveredEdges)).toBe(true);
     expect(isSubsetOf(uncoveredEdges, outlineEdges)).toBe(true);
+}
+
+function hasDuplicateVertices(flattened: Array<number>): boolean {
+    const set = new Set<string>();
+    for (let i = 0; i < flattened.length; i += 2) {
+        const vx = flattened[i];
+        const vy = flattened[i + 1];
+        const key = `${vx}_${vy}`;
+        if (set.has(key)) {
+            return true;
+        }
+        set.add(key);
+    }
+    return false;
 }
