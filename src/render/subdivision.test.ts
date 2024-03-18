@@ -7,6 +7,7 @@ import {CanonicalTileID} from '../source/tile_id';
  * With this granularity, all geometry should be subdivided along axes divisible by 4.
  */
 const granularityForInterval4 = EXTENT / 4;
+const granularityForInterval128 = EXTENT / 128;
 
 const canonicalDefault = new CanonicalTileID(20, 1, 1);
 
@@ -300,8 +301,85 @@ describe('Fill subdivision', () => {
                 5,   6,
                 6,   3
             ]
-
         ]);
+    });
+
+    describe('Polygon outline line list is correct', () => {
+        test('Subcell polygon', () => {
+            const result = subdivideFillFromRingList([
+                [
+                    new Point(17, 127),
+                    new Point(126, 13),
+                    new Point(19, 125),
+                ]
+            ], canonicalDefault, granularityForInterval128);
+            testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
+        });
+
+        test('Small polygon', () => {
+            const result = subdivideFillFromRingList([
+                [
+                    new Point(17, 15),
+                    new Point(261, 13),
+                    new Point(19, 273),
+                ]
+            ], canonicalDefault, granularityForInterval128);
+            testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
+        });
+
+        test('Medium polygon', () => {
+            const result = subdivideFillFromRingList([
+                [
+                    new Point(17, 127),
+                    new Point(1029, 13),
+                    new Point(127, 1045),
+                ]
+            ], canonicalDefault, granularityForInterval128);
+            testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
+        });
+
+        test('Large polygon', () => {
+            const result = subdivideFillFromRingList([
+                [
+                    new Point(17, 127),
+                    new Point(8001, 13),
+                    new Point(127, 8003),
+                ]
+            ], canonicalDefault, granularityForInterval128);
+            testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
+        });
+
+        test('Large polygon with hole', () => {
+            const result = subdivideFillFromRingList([
+                [
+                    new Point(17, 127),
+                    new Point(8001, 13),
+                    new Point(127, 8003),
+                ],
+                [
+                    new Point(1001, 1002),
+                    new Point(1502, 1008),
+                    new Point(1004, 1523),
+                ]
+            ], canonicalDefault, granularityForInterval128);
+            testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
+        });
+
+        test('Large polygon with hole, finer granularity', () => {
+            const result = subdivideFillFromRingList([
+                [
+                    new Point(17, 127),
+                    new Point(8001, 13),
+                    new Point(127, 8003),
+                ],
+                [
+                    new Point(1001, 1002),
+                    new Point(1502, 1008),
+                    new Point(1004, 1523),
+                ]
+            ], canonicalDefault, EXTENT / 32);
+            testPolygonOutlineMatches(result.indicesTriangles, result.indicesLineList);
+        });
     });
 });
 
@@ -323,4 +401,66 @@ function toSimplePoints(a: Array<Point>): Array<{x: number; y: number}> {
 
 function subdivideFillFromRingList(rings: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number) {
     return subdivideFill(rings, canonical, granularity);
+}
+
+function testPolygonOutlineMatches(triangleIndices: Array<number>, lineIndicesLists: Array<Array<number>>): void {
+    const edgeOccurences = new Map<string, number>();
+    for (let triangleIndex = 0; triangleIndex < triangleIndices.length; triangleIndex += 3) {
+        const i0 = triangleIndices[triangleIndex];
+        const i1 = triangleIndices[triangleIndex + 1];
+        const i2 = triangleIndices[triangleIndex + 2];
+        for (const edge of [[i0, i1], [i1, i2], [i2, i0]]) {
+            const e0 = Math.min(edge[0], edge[1]);
+            const e1 = Math.max(edge[0], edge[1]);
+            const key = `${e0}_${e1}`;
+            if (edgeOccurences.has(key)) {
+                edgeOccurences.set(key, edgeOccurences.get(key) + 1);
+            } else {
+                edgeOccurences.set(key, 1);
+            }
+        }
+    }
+
+    const uncoveredEdges = new Set<string>();
+
+    for (const pair of edgeOccurences) {
+        if (pair[1] > 2) {
+            throw new Error(`Polygon contains an edge with indices ${pair[0].replace('_', ', ')} that is shared by more than 2 triangles.`);
+        }
+        if (pair[1] === 1) {
+            uncoveredEdges.add(pair[0]);
+        }
+    }
+
+    const outlineEdges = new Set<string>();
+
+    for (const lines of lineIndicesLists) {
+        for (let i = 0; i < lines.length; i += 2) {
+            const i0 = lines[i];
+            const i1 = lines[i + 1];
+            const e0 = Math.min(i0, i1);
+            const e1 = Math.max(i0, i1);
+            const key = `${e0}_${e1}`;
+            if (outlineEdges.has(key)) {
+                throw new Error(`Outline line lists contain edge with indices ${e0}, ${e1} multiple times.`);
+            }
+            outlineEdges.add(key);
+        }
+    }
+
+    if (uncoveredEdges.size !== outlineEdges.size) {
+        throw new Error(`Polygon exposed triangle edge count ${uncoveredEdges.size} and outline line count ${outlineEdges.size} does not match.`);
+    }
+
+    const isSubsetOf = (a: Set<string>, b: Set<string>): boolean => {
+        for (const key of b) {
+            if (!a.has(key)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    expect(isSubsetOf(outlineEdges, uncoveredEdges)).toBe(true);
+    expect(isSubsetOf(uncoveredEdges, outlineEdges)).toBe(true);
 }

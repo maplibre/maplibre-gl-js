@@ -815,15 +815,30 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
                 // Always consider the X cell hit if Y dir is zero
                 lastPointX = nextBoundaryX;
                 lastPointY = lastPointY + dirY * realDistanceToBoundaryX;
-                finalLineVertices.push(new Point(lastPointX, Math.round(lastPointY)));
+                const next = new Point(lastPointX, Math.round(lastPointY));
+
+                // Do not add the next vertex if it is equal to the last added vertex
+                if (finalLineVertices[finalLineVertices.length - 1].x !== next.x ||
+                    finalLineVertices[finalLineVertices.length - 1].y !== next.y) {
+                    finalLineVertices.push(next);
+                }
             } else {
                 lastPointX = lastPointX + dirX * realDistanceToBoundaryY;
                 lastPointY = nextBoundaryY;
-                finalLineVertices.push(new Point(Math.round(lastPointX), lastPointY));
+                const next = new Point(Math.round(lastPointX), lastPointY);
+
+                if (finalLineVertices[finalLineVertices.length - 1].x !== next.x ||
+                    finalLineVertices[finalLineVertices.length - 1].y !== next.y) {
+                    finalLineVertices.push(next);
+                }
             }
         }
 
-        finalLineVertices.push(new Point(lineVertex1x, lineVertex1y));
+        const last = new Point(lineVertex1x, lineVertex1y);
+        if (finalLineVertices[finalLineVertices.length - 1].x !== last.x ||
+            finalLineVertices[finalLineVertices.length - 1].y !== last.y) {
+            finalLineVertices.push(last);
+        }
     }
 
     return finalLineVertices;
