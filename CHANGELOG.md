@@ -89,6 +89,7 @@
 - Fix a bug in showing cooperative gestures when scroll zoom is disabled ([#2498](https://github.com/maplibre/maplibre-gl-js/pull/2498))
 - Handle loading of empty raster tiles (204 No Content) ([#3428](https://github.com/maplibre/maplibre-gl-js/pull/3428))
 - Fixes a security issue in `Actor` against XSS attacks in postMessage / onmessage ([#3239](https://github.com/maplibre/maplibre-gl-js/pull/3239))
+- Fix Map freeze when `Camera.easeTo` is called at any movement event (move, zoom, rotate, pitch) from another `Camera.easeTo` call ([#NA](https://github.com/maplibre/maplibre-gl-js/pull/NA))
 
 ## 4.0.0-pre.6
 
