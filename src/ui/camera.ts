@@ -185,6 +185,29 @@ export type FitBoundsOptions = FlyToOptions & {
     maxZoom?: number;
 }
 
+export interface EaseAnimation {
+    easeId: string | number;
+    easeStart: number;
+    animate: boolean;
+    duration?: number;
+    currentFrameId?: TaskID;
+    canceled: boolean;
+    easing?: (_: number) => number;
+    onEaseFrame: (_: number) => void;
+    onEaseEnd: (easeId?: string | number) => void;
+    renderFrameCallback: () => void;
+}
+
+export interface EaseAnimationOptions {
+    easeId: EaseAnimation['easeId'];
+    easeStart: EaseAnimation['easeStart'];
+    animate: EaseAnimation['animate'];
+    duration: EaseAnimation['duration'];
+    easing: EaseAnimation['easing'];
+    onEaseFrame: EaseAnimation['onEaseFrame'];
+    onEaseEnd: EaseAnimation['onEaseEnd'];
+}
+
 /**
  * Options common to map movement methods that involve animation, such as {@link Map#panBy} and
  * {@link Map#easeTo}, controlling the duration and easing function of the animation. All properties
@@ -255,11 +278,11 @@ export abstract class Camera extends Evented {
         duration?: number;
         easing?: (_: number) => number;
     };
-    _easeId: string | void;
+
+    _easeAnimations: Array<EaseAnimation>;
 
     _onEaseFrame: (_: number) => void;
     _onEaseEnd: (easeId?: string) => void;
-    _easeFrameId: TaskID;
 
     /**
      * @internal
@@ -306,6 +329,7 @@ export abstract class Camera extends Evented {
         this._zooming = false;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
+        this._easeAnimations = [];
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
@@ -1016,7 +1040,6 @@ export abstract class Camera extends Evented {
         this._pitching = this._pitching || (pitch !== startPitch);
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
-        this._easeId = options.easeId;
         this._prepareEase(eventData, options.noMoveStart, currently);
         if (this.terrain) this._prepareElevation(center);
 
@@ -1159,33 +1182,38 @@ export abstract class Camera extends Evented {
         }
     }
 
-    _afterEase(eventData?: any, easeId?: string) {
+    _afterEase(eventData?: any, easeId?: string | number) {
         // if this easing is being stopped to start another easing with
         // the same id then don't fire any events to avoid extra start/stop events
-        if (this._easeId && easeId && this._easeId === easeId) {
-            return;
+        let easeAnimations = this._easeAnimations;
+        if (easeId !== undefined) {
+            easeAnimations = this._easeAnimations.filter(easeAnimation => easeAnimation.easeId === easeId);
         }
-        delete this._easeId;
 
-        const wasZooming = this._zooming;
-        const wasRotating = this._rotating;
-        const wasPitching = this._pitching;
-        this._moving = false;
-        this._zooming = false;
-        this._rotating = false;
-        this._pitching = false;
-        this._padding = false;
+        const idsToRemove = easeAnimations.map(easeAnimation => easeAnimation.easeId);
+        this._easeAnimations = this._easeAnimations.filter(easeAnimation => !idsToRemove.includes(easeAnimation.easeId));
 
-        if (wasZooming) {
-            this.fire(new Event('zoomend', eventData));
+        if (easeAnimations.length === 1) {
+            const wasZooming = this._zooming;
+            const wasRotating = this._rotating;
+            const wasPitching = this._pitching;
+            this._moving = false;
+            this._zooming = false;
+            this._rotating = false;
+            this._pitching = false;
+            this._padding = false;
+
+            if (wasZooming) {
+                this.fire(new Event('zoomend', eventData));
+            }
+            if (wasRotating) {
+                this.fire(new Event('rotateend', eventData));
+            }
+            if (wasPitching) {
+                this.fire(new Event('pitchend', eventData));
+            }
+            this.fire(new Event('moveend', eventData));
         }
-        if (wasRotating) {
-            this.fire(new Event('rotateend', eventData));
-        }
-        if (wasPitching) {
-            this.fire(new Event('pitchend', eventData));
-        }
-        this.fire(new Event('moveend', eventData));
     }
 
     /**
@@ -1384,16 +1412,16 @@ export abstract class Camera extends Evented {
 
             this._fireMoveEvents(eventData);
 
-        }, () => {
+        }, (interruptingEaseId?: string) => {
             if (this.terrain) this._finalizeElevation();
-            this._afterEase(eventData);
+            this._afterEase(eventData, interruptingEaseId);
         }, options);
 
         return this;
     }
 
     isEasing() {
-        return !!this._easeFrameId;
+        return this._easeAnimations.length > 0;
     }
 
     /**
@@ -1406,25 +1434,54 @@ export abstract class Camera extends Evented {
     }
 
     _stop(allowGestures?: boolean, easeId?: string): this {
-        if (this._easeFrameId) {
-            this._cancelRenderFrame(this._easeFrameId);
-            delete this._easeFrameId;
-            delete this._onEaseFrame;
+        let easeAnimations = this._easeAnimations;
+
+        if (easeId) {
+            easeAnimations = this._easeAnimations.filter(easeAnimation => easeAnimation.easeId !== easeId);
         }
 
-        if (this._onEaseEnd) {
-            // The _onEaseEnd function might emit events which trigger new
-            // animation, which sets a new _onEaseEnd. Ensure we don't delete
-            // it unintentionally.
-            const onEaseEnd = this._onEaseEnd;
-            delete this._onEaseEnd;
-            onEaseEnd.call(this, easeId);
+        for (const easeAnimation of easeAnimations) {
+            this._cancelRenderFrame(easeAnimation.currentFrameId);
+            easeAnimation.canceled = true;
+            easeAnimation.onEaseEnd(easeAnimation.easeId);
         }
+
         if (!allowGestures) {
             const handlers = (this as any).handlers;
             if (handlers) handlers.stop(false);
         }
         return this;
+    }
+
+    _createEaseAnimation(options?: EaseAnimationOptions): EaseAnimation {
+        const self = this;
+        const easeAnimation = {
+            easeId: options.easeId ?? self._easeAnimations.length,
+            currentFrameId: null,
+            animate: options.animate ?? true,
+            duration: options.duration ?? null,
+            easing: options.easing ?? null,
+            easeStart: options.easeStart,
+            onEaseFrame: options.onEaseFrame,
+            onEaseEnd: options.onEaseEnd,
+            canceled: false,
+            renderFrameCallback() {
+                if (!easeAnimation.canceled) {
+                    const t = Math.min((browser.now() - easeAnimation.easeStart) / easeAnimation.duration, 1);
+                    easeAnimation.onEaseFrame(easeAnimation.easing(t));
+
+                    if (t < 1 && !easeAnimation.canceled) {
+                        easeAnimation.currentFrameId = self._requestRenderFrame(easeAnimation.renderFrameCallback);
+                    } else {
+                        self.stop();
+                    }
+                } else {
+                    self.stop();
+                }
+            }
+        };
+
+        return easeAnimation;
     }
 
     _ease(frame: (_: number) => void,
@@ -1433,31 +1490,27 @@ export abstract class Camera extends Evented {
             animate?: boolean;
             duration?: number;
             easing?: (_: number) => number;
+            easeId?: string;
         }) {
+
+        const easeAnimation = this._createEaseAnimation({
+            easeId: options.easeId,
+            animate: options.animate,
+            duration: options.duration,
+            easing: options.easing,
+            easeStart: browser.now(),
+            onEaseFrame: frame,
+            onEaseEnd: finish
+        });
+        this._easeAnimations.push(easeAnimation);
+
         if (options.animate === false || options.duration === 0) {
-            frame(1);
-            finish();
+            easeAnimation.onEaseFrame(1);
+            easeAnimation.onEaseEnd(easeAnimation.easeId);
         } else {
-            this._easeStart = browser.now();
-            this._easeOptions = options;
-            this._onEaseFrame = frame;
-            this._onEaseEnd = finish;
-            this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
+            easeAnimation.currentFrameId = this._requestRenderFrame(easeAnimation.renderFrameCallback);
         }
     }
-
-    // Callback for map._requestRenderFrame
-    _renderFrameCallback = () => {
-        const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
-        this._onEaseFrame(this._easeOptions.easing(t));
-
-        // if _stop is called during _onEaseFrame from _fireMoveEvents we should avoid a new _requestRenderFrame, checking it by ensuring _easeFrameId was not deleted
-        if (t < 1 && this._easeFrameId) {
-            this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
-        } else {
-            this.stop();
-        }
-    };
 
     // convert bearing so that it's numerically close to the current one so that it interpolates properly
     _normalizeBearing(bearing: number, currentBearing: number) {
