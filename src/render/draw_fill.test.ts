@@ -14,6 +14,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {drawFill} from './draw_fill';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {ProgramConfiguration, ProgramConfigurationSet} from '../data/program_configuration';
+import {MercatorProjection} from '../geo/projection/mercator';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -85,7 +86,9 @@ describe('drawFill', () => {
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
         painterMock.style = {
-            map: {}
+            map: {
+                projection: new MercatorProjection()
+            }
         } as any as Style;
 
         return painterMock;

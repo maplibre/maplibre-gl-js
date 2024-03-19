@@ -17,7 +17,7 @@ import posAttributes from '../src/data/pos_attributes';
 import pos3dAttributes from '../src/data/pos3d_attributes';
 import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
 import circleAttributes from '../src/data/bucket/circle_attributes';
-import fillAttributes from '../src/data/bucket/fill_attributes';
+import {layout as fillAttributes} from '../src/data/bucket/fill_attributes';
 import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes';
 import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
 import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';

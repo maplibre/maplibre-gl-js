@@ -5,7 +5,6 @@ import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
 import {EXTENT} from '../extent';
-import earcut from 'earcut';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
 import {classifyRings} from '../../util/classify_rings';
@@ -33,6 +32,8 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import {SubdivisionGranularitySetting, subdivideFill, subdivideVertexLine} from '../../render/subdivision';
+import {fillArrays} from './fill_bucket';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -48,6 +49,12 @@ function addVertex(vertexArray, x, y, nx, ny, nz, t, e) {
         // edgedistance (used for wrapping patterns around extrusion sides)
         Math.round(e)
     );
+}
+
+type CentroidAccumulator = {
+    x: number;
+    y: number;
+    vertexCount: number;
 }
 
 export class FillExtrusionBucket implements Bucket {
@@ -113,7 +120,7 @@ export class FillExtrusionBucket implements Bucket {
             if (this.hasPattern) {
                 this.features.push(addPatternDependencies('fill-extrusion', this.layers, bucketFeature, this.zoom, options));
             } else {
-                this.addFeature(bucketFeature, bucketFeature.geometry, index, canonical, {});
+                this.addFeature(bucketFeature, bucketFeature.geometry, index, canonical, {}, options.subdivisionGranularity);
             }
 
             options.featureIndex.insert(feature, bucketFeature.geometry, index, sourceLayerIndex, this.index, true);
@@ -123,7 +130,7 @@ export class FillExtrusionBucket implements Bucket {
     addFeatures(options: PopulateParameters, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
         for (const feature of this.features) {
             const {geometry} = feature;
-            this.addFeature(feature, geometry, feature.index, canonical, imagePositions);
+            this.addFeature(feature, geometry, feature.index, canonical, imagePositions, options.subdivisionGranularity);
         }
     }
 
@@ -159,124 +166,13 @@ export class FillExtrusionBucket implements Bucket {
         this.centroidVertexBuffer.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}) {
-        const centroid = {x: 0, y: 0, vertexCount: 0};
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
+        // Compute polygon centroid to calculate elevation in GPU
+        const centroid: CentroidAccumulator = {x: 0, y: 0, vertexCount: 0};
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
-            let numVertices = 0;
-            for (const ring of polygon) {
-                numVertices += ring.length;
-            }
-            let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-
-            for (const ring of polygon) {
-                if (ring.length === 0) {
-                    continue;
-                }
-
-                if (isEntirelyOutside(ring)) {
-                    continue;
-                }
-
-                let edgeDistance = 0;
-
-                for (let p = 0; p < ring.length; p++) {
-                    const p1 = ring[p];
-
-                    if (p >= 1) {
-                        const p2 = ring[p - 1];
-
-                        if (!isBoundaryEdge(p1, p2)) {
-                            if (segment.vertexLength + 4 > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
-                                segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-                            }
-
-                            const perp = p1.sub(p2)._perp()._unit();
-                            const dist = p2.dist(p1);
-                            if (edgeDistance + dist > 32768) edgeDistance = 0;
-
-                            addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
-                            addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
-                            centroid.x += 2 * p1.x;
-                            centroid.y += 2 * p1.y;
-                            centroid.vertexCount += 2;
-
-                            edgeDistance += dist;
-
-                            addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
-                            addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
-                            centroid.x += 2 * p2.x;
-                            centroid.y += 2 * p2.y;
-                            centroid.vertexCount += 2;
-
-                            const bottomRight = segment.vertexLength;
-
-                            // ┌──────┐
-                            // │ 0  1 │ Counter-clockwise winding order.
-                            // │      │ Triangle 1: 0 => 2 => 1
-                            // │ 2  3 │ Triangle 2: 1 => 2 => 3
-                            // └──────┘
-                            this.indexArray.emplaceBack(bottomRight, bottomRight + 2, bottomRight + 1);
-                            this.indexArray.emplaceBack(bottomRight + 1, bottomRight + 2, bottomRight + 3);
-
-                            segment.vertexLength += 4;
-                            segment.primitiveLength += 2;
-                        }
-                    }
-                }
-
-            }
-
-            if (segment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
-                segment = this.segments.prepareSegment(numVertices, this.layoutVertexArray, this.indexArray);
-            }
-
-            //Only triangulate and draw the area of the feature if it is a polygon
-            //Other feature types (e.g. LineString) do not have area, so triangulation is pointless / undefined
-            if (vectorTileFeatureTypes[feature.type] !== 'Polygon')
-                continue;
-
-            const flattened = [];
-            const holeIndices = [];
-            const triangleIndex = segment.vertexLength;
-
-            for (const ring of polygon) {
-                if (ring.length === 0) {
-                    continue;
-                }
-
-                if (ring !== polygon[0]) {
-                    holeIndices.push(flattened.length / 2);
-                }
-
-                for (let i = 0; i < ring.length; i++) {
-                    const p = ring[i];
-
-                    addVertex(this.layoutVertexArray, p.x, p.y, 0, 0, 1, 1, 0);
-                    centroid.x += p.x;
-                    centroid.y += p.y;
-                    centroid.vertexCount += 1;
-
-                    flattened.push(p.x);
-                    flattened.push(p.y);
-                }
-
-            }
-
-            const indices = earcut(flattened, holeIndices);
-
-            for (let j = 0; j < indices.length; j += 3) {
-                // Counter-clockwise winding order.
-                this.indexArray.emplaceBack(
-                    triangleIndex + indices[j],
-                    triangleIndex + indices[j + 2],
-                    triangleIndex + indices[j + 1]);
-            }
-
-            segment.primitiveLength += indices.length / 3;
-            segment.vertexLength += numVertices;
+            this.processPolygon(centroid, canonical, feature, polygon, subdivisionGranularity);
         }
 
-        // remember polygon centroid to calculate elevation in GPU
         for (let i = 0; i < centroid.vertexCount; i++) {
             this.centroidVertexArray.emplaceBack(
                 Math.floor(centroid.x / centroid.vertexCount),
@@ -284,6 +180,100 @@ export class FillExtrusionBucket implements Bucket {
             );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
+    }
+
+    private processPolygon(
+        centroid: CentroidAccumulator,
+        canonical: CanonicalTileID,
+        feature: BucketFeature,
+        polygon: Array<Array<Point>>,
+        subdivisionGranularity: SubdivisionGranularitySetting
+    ): void {
+        let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
+        const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+
+        for (const ring of polygon) {
+            if (ring.length === 0) {
+                continue;
+            }
+
+            if (isEntirelyOutside(ring)) {
+                continue;
+            }
+
+            const subdivided = subdivideVertexLine(ring, granularity);
+
+            let edgeDistance = 0;
+
+            for (let p = 0; p < subdivided.length; p++) {
+                const p1 = subdivided[p];
+
+                if (p >= 1) {
+                    const p2 = subdivided[p - 1];
+
+                    if (!isBoundaryEdge(p1, p2)) {
+                        if (segment.vertexLength + 4 > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
+                            segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
+                        }
+
+                        const perp = p1.sub(p2)._perp()._unit();
+                        const dist = p2.dist(p1);
+                        if (edgeDistance + dist > 32768) edgeDistance = 0;
+
+                        addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
+                        addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
+                        centroid.x += 2 * p1.x;
+                        centroid.y += 2 * p1.y;
+                        centroid.vertexCount += 2;
+
+                        edgeDistance += dist;
+
+                        addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
+                        addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
+                        centroid.x += 2 * p2.x;
+                        centroid.y += 2 * p2.y;
+                        centroid.vertexCount += 2;
+
+                        const bottomRight = segment.vertexLength;
+
+                        // ┌──────┐
+                        // │ 0  1 │ Counter-clockwise winding order.
+                        // │      │ Triangle 1: 0 => 2 => 1
+                        // │ 2  3 │ Triangle 2: 1 => 2 => 3
+                        // └──────┘
+                        this.indexArray.emplaceBack(bottomRight, bottomRight + 2, bottomRight + 1);
+                        this.indexArray.emplaceBack(bottomRight + 1, bottomRight + 2, bottomRight + 3);
+
+                        segment.vertexLength += 4;
+                        segment.primitiveLength += 2;
+                    }
+                }
+            }
+        }
+
+        // Only triangulate and draw the area of the feature if it is a polygon
+        // Other feature types (e.g. LineString) do not have area, so triangulation is pointless / undefined
+        if (vectorTileFeatureTypes[feature.type] !== 'Polygon')
+            return;
+
+        // Do not generate outlines, since outlines already got subdivided earlier.
+        const subdivided = subdivideFill(polygon, canonical, granularity, false);
+
+        const vertexArray = this.layoutVertexArray;
+
+        fillArrays(
+            this.segments,
+            null,
+            this.layoutVertexArray,
+            this.indexArray,
+            null,
+            subdivided.verticesFlattened,
+            subdivided.indicesTriangles,
+            null,
+            (x, y) => {
+                addVertex(vertexArray, x, y, 0, 0, 1, 1, 0);
+            }
+        );
     }
 }
 
