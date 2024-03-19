@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
-import {getDebugSvg, subdivideFill, subdivideVertexLine} from './subdivision';
+import {subdivideFill, subdivideVertexLine} from './subdivision';
 import {CanonicalTileID} from '../source/tile_id';
 
 /**
