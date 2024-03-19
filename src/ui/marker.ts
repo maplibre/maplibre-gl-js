@@ -561,6 +561,8 @@ export class Marker extends Evented {
         const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
         // Display at full opacity if center is visible.
         const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
+
+        if (this._popup && centerIsInvisible) this._popup.remove();
         this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
     }
 
