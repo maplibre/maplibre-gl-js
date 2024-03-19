@@ -515,6 +515,8 @@ export class Marker extends Evented {
     togglePopup(): this {
         const popup = this._popup;
 
+        if (this._element.style.opacity !== this._opacity) return this;
+
         if (!popup) return this;
         else if (popup.isOpen()) popup.remove();
         else {
