@@ -251,15 +251,13 @@ export class FillExtrusionBucket implements Bucket {
             }
         }
 
-        //Only triangulate and draw the area of the feature if it is a polygon
-        //Other feature types (e.g. LineString) do not have area, so triangulation is pointless / undefined
+        // Only triangulate and draw the area of the feature if it is a polygon
+        // Other feature types (e.g. LineString) do not have area, so triangulation is pointless / undefined
         if (vectorTileFeatureTypes[feature.type] !== 'Polygon')
             return;
 
-        // Pass empty array as lines, since lines already got subdivided separately earlier.
+        // Do not generate outlines, since outlines already got subdivided earlier.
         const subdivided = subdivideFill(polygon, canonical, granularity, false);
-        const finalVertices = subdivided.verticesFlattened;
-        const finalIndicesTriangles = subdivided.indicesTriangles;
 
         const vertexArray = this.layoutVertexArray;
 
@@ -269,8 +267,8 @@ export class FillExtrusionBucket implements Bucket {
             this.layoutVertexArray,
             this.indexArray,
             null,
-            finalVertices,
-            finalIndicesTriangles,
+            subdivided.verticesFlattened,
+            subdivided.indicesTriangles,
             null,
             (x, y) => {
                 addVertex(vertexArray, x, y, 0, 0, 1, 1, 0);

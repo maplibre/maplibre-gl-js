@@ -172,9 +172,6 @@ export class FillBucket implements Bucket {
     }, subdivisionGranularity: SubdivisionGranularitySetting) {
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             const subdivided = subdivideFill(polygon, canonical, subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z));
-            const finalVertices = subdivided.verticesFlattened;
-            const finalIndicesTriangles = subdivided.indicesTriangles;
-            const finalIndicesLineList = subdivided.indicesLineList;
 
             const vertexArray = this.layoutVertexArray;
 
@@ -184,9 +181,9 @@ export class FillBucket implements Bucket {
                 this.layoutVertexArray,
                 this.indexArray,
                 this.indexArray2,
-                finalVertices,
-                finalIndicesTriangles,
-                finalIndicesLineList,
+                subdivided.verticesFlattened,
+                subdivided.indicesTriangles,
+                subdivided.indicesLineList,
                 (x, y) => {
                     vertexArray.emplaceBack(x, y);
                 }
@@ -201,7 +198,7 @@ register('FillBucket', FillBucket, {omit: ['layers', 'patternFeatures']});
 /**
  * This function will take any "mesh" and fill in into vertex buffers, breaking it up into multiple drawcalls as needed
  * if too many vertices are used.
- * Sometimes subdivision might generate more vertices than what fits into 16 bit indices (MAX_VERTEX_ARRAY_LENGTH).
+ * Sometimes subdivision might generate more vertices than what fits into 16 bit indices (\>65535).
  */
 export function fillArrays(
     segmentsTriangles: SegmentVector,
