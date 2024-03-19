@@ -140,7 +140,7 @@ export class Marker extends Evented {
     _pitchAlignment: Alignment;
     _rotationAlignment: Alignment;
     _originalTabIndex: string; // original tabindex of _element
-    _opacity: string;
+    _fullOpacity: string;
     _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
 
@@ -515,7 +515,7 @@ export class Marker extends Evented {
     togglePopup(): this {
         const popup = this._popup;
 
-        if (this._element.style.opacity !== this._opacity) return this;
+        if (this._element.style.opacity !== this._fullOpacity) return this;
 
         if (!popup) return this;
         else if (popup.isOpen()) popup.remove();
@@ -529,7 +529,7 @@ export class Marker extends Evented {
     _updateOpacity(force: boolean = false) {
         const terrain = this._map?.terrain;
         if (!terrain) {
-            if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
+            if (this._element.style.opacity !== this._fullOpacity) { this._element.style.opacity = this._fullOpacity; }
             return;
         }
         if (force) {
@@ -551,7 +551,7 @@ export class Marker extends Evented {
 
         const forgiveness = .006;
         if (markerDistance - terrainDistance < forgiveness) {
-            this._element.style.opacity = this._opacity;
+            this._element.style.opacity = this._fullOpacity;
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
@@ -563,7 +563,7 @@ export class Marker extends Evented {
         const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
 
         if (this._popup && centerIsInvisible) this._popup.remove();
-        this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
+        this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._fullOpacity;
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
@@ -839,11 +839,11 @@ export class Marker extends Evented {
      */
     setOpacity(opacity?: string, opacityWhenCovered?: string): this {
         if (opacity === undefined && opacityWhenCovered === undefined) {
-            this._opacity = '1';
+            this._fullOpacity = '1';
             this._opacityWhenCovered = '0.2';
         }
         if (opacity !== undefined) {
-            this._opacity = opacity;
+            this._fullOpacity = opacity;
         }
         if (opacityWhenCovered !== undefined) {
             this._opacityWhenCovered = opacityWhenCovered;
