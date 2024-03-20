@@ -59,7 +59,7 @@ Additionally, it may be helpful to use a visual jest frontend (e.g. `npx majesti
 
 To run a subset of tests or an individual test, you can pass a specific subdirectory to the `test-render` script. For example, to run all the tests for a given property, e.g. `circle-radius`:
 ```
-$ npm run test-render circle-radius
+$ npm run test-render -- circle-radius
 ...
 * passed circle-radius/antimeridian
 * passed circle-radius/default
@@ -73,7 +73,7 @@ Done in 2.71s.
 ```
 Or to run a single test:
 ```
-$ npm run test-render circle-radius/literal
+$ npm run test-render -- circle-radius/literal
 ...
 * passed circle-radius/literal
 1 passed (100.0%)
@@ -83,7 +83,7 @@ Done in 2.32s.
 ### Detailed debug messages for render tests
 Render tests are executed in browser, and by default console messages are hidden. If need to see them, please pass <code>--debug</code> parameter:
 ```
-$ npm run test-render raster-masking/overlapping-zoom -- --debug
+$ npm run test-render -- raster-masking/overlapping-zoom --debug
 ```
 
 ### Viewing render test results
@@ -106,7 +106,7 @@ open ./test/integration/render/results.html
 
 If want to skip the report, please pass <code>--skip-report</code> parameter
 ```
-$ npm run test-render circle-radius/literal -- --skip-report
+$ npm run test-render -- circle-radius/literal --skip-report
 ```
 
 ### Updating results of render test results
