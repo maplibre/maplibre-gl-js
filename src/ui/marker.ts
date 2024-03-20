@@ -562,7 +562,7 @@ export class Marker extends Evented {
         // Display at full opacity if center is visible.
         const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
 
-        if (this._popup && centerIsInvisible) this._popup.remove();
+        if (this._popup?.isOpen() && centerIsInvisible) this._popup.remove();
         this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._fullOpacity;
     }
 
