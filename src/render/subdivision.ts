@@ -145,7 +145,9 @@ class Subdivider {
         // Most complexity of this function comes from generating correct vertex rings, and from placing the vertices into the ring in the correct order.
 
         if (this._granularity < 2) {
-            return inputIndices;
+            // The actual subdivision code always produces triangles with the correct winding order.
+            // Also apply winding order correction when skipping subdivision altogether to maintain consistency.
+            return fixWindingOrder(this._vertexBuffer, inputIndices);
         }
 
         const finalIndices = [];
@@ -690,6 +692,7 @@ class Subdivider {
 
 /**
  * Subdivides a polygon to a given granularity. Intended for preprocessing geometry for the 'fill' and 'fill-extrusion' layer types.
+ * All returned triangles have the counter-clockwise winding order.
  * @param polygon - An array of point rings that specify the polygon. The first ring is the polygon exterior, all subsequent rings form holes inside the first ring.
  * @param canonical - The canonical tile ID of the tile this polygon belongs to. Needed for generating special geometry for tiles that border the poles.
  * @param granularity - The subdivision granularity. If we assume tile EXTENT=8192, then a granularity of 2 will result in geometry being "cut" on each axis
@@ -922,6 +925,49 @@ function flatten(polygon: Array<Array<Point>>) {
         flattened,
         holeIndices
     };
+}
+
+/**
+ * Returns a new array of indices where all triangles have the counter-clockwise winding order.
+ * @param flattened - Flattened vertex buffer.
+ * @param indices - Triangle indices.
+ */
+export function fixWindingOrder(flattened: Array<number>, indices: Array<number>): Array<number> {
+    const corrected = [];
+
+    for (let i = 0; i < indices.length; i += 3) {
+        const i0 = indices[i];
+        const i1 = indices[i + 1];
+        const i2 = indices[i + 2];
+
+        const v0x = flattened[i0 * 2];
+        const v0y = flattened[i0 * 2 + 1];
+        const v1x = flattened[i1 * 2];
+        const v1y = flattened[i1 * 2 + 1];
+        const v2x = flattened[i2 * 2];
+        const v2y = flattened[i2 * 2 + 1];
+
+        const e0x = v1x - v0x;
+        const e0y = v1y - v0y;
+        const e1x = v2x - v0x;
+        const e1y = v2y - v0y;
+
+        const crossProduct = e0x * e1y - e0y * e1x;
+
+        if (crossProduct > 0) {
+            // Flip
+            corrected.push(i0);
+            corrected.push(i2);
+            corrected.push(i1);
+        } else {
+            // Don't flip
+            corrected.push(i0);
+            corrected.push(i1);
+            corrected.push(i2);
+        }
+    }
+
+    return corrected;
 }
 
 /**

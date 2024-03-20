@@ -214,7 +214,41 @@ describe('Fill subdivision', () => {
             20000, 20000,
             0, 20000
         ]);
-        expect(result.indicesTriangles).toEqual([2, 3, 0, 0, 1, 2]);
+        expect(result.indicesTriangles).toEqual([2, 0, 3, 0, 2, 1]);
+        expect(result.indicesLineList).toEqual([
+            [
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 0
+            ]
+        ]);
+    });
+
+    test('Polygon is unchanged when granularity=1, but winding order is corrected.', () => {
+        const result = subdivideFill(
+            [
+                [
+                    // x, y
+                    new Point(0, 0),
+                    new Point(0, 20000),
+                    new Point(20000, 20000),
+                    new Point(20000, 0),
+                ]
+            ],
+            canonicalDefault,
+            1
+        );
+
+        expect(hasDuplicateVertices(result.verticesFlattened)).toBe(false);
+        testMeshIntegrity(result.indicesTriangles);
+        expect(result.verticesFlattened).toEqual([
+            0, 0,
+            0, 20000,
+            20000, 20000,
+            20000, 0
+        ]);
+        expect(result.indicesTriangles).toEqual([1, 3, 0, 3, 1, 2]);
         expect(result.indicesLineList).toEqual([
             [
                 0, 1,
@@ -521,12 +555,12 @@ describe('Fill subdivision', () => {
                 -1, 3  // 5
             ]);
             expect(result.indicesTriangles).toEqual([
-                2, 5, 4,
-                3, 5, 2,
-                1, 2, 4,
-                3, 2, 0,
-                0, 1, 4,
-                4, 3, 0
+                2, 4, 5,
+                3, 2, 5,
+                1, 4, 2,
+                3, 0, 2,
+                0, 4, 1,
+                4, 0, 3
             ]);
             expect(result.indicesLineList).toEqual([
                 [
@@ -576,10 +610,10 @@ describe('Fill subdivision', () => {
                 -1, 3  // 4
             ]);
             expect(result.indicesTriangles).toEqual([
-                2, 4, 3,
-                0, 4, 2,
-                3, 0, 1,
-                1, 2, 3
+                2, 3, 4,
+                0, 2, 4,
+                3, 1, 0,
+                1, 3, 2
             ]);
             expect(result.indicesLineList).toEqual([
                 [
@@ -633,12 +667,12 @@ describe('Fill subdivision', () => {
                 1,  3  // 5
             ]);
             expect(result.indicesTriangles).toEqual([
-                3, 0, 1,
-                2, 0, 3,
-                5, 3, 1,
-                2, 3, 4,
-                4, 5, 1,
-                1, 2, 4
+                3, 1, 0,
+                2, 3, 0,
+                5, 1, 3,
+                2, 4, 3,
+                4, 1, 5,
+                1, 4, 2
             ]);
             expect(result.indicesLineList).toEqual([
                 [
