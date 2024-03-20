@@ -1040,6 +1040,32 @@ describe('marker', () => {
         map.remove();
     });
 
+    test('Removes an open popup when going behind 3d terrain', async () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map)
+            .setPopup(new Popup());
+
+        await sleep(500);
+        marker.togglePopup();
+
+        expect(marker._popup.isOpen()).toBeTruthy();
+
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        map.fire('terrain');
+
+        await sleep(500);
+
+        expect(marker._popup?.isOpen()).toBeFalsy();
+        map.remove();
+    });
+
     test('Marker\'s lng is wrapped when slightly crossing 180 with {renderWorldCopies: false}', () => {
         const map = createMap({width: 1024, renderWorldCopies: false});
         const marker = new Marker()
