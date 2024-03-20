@@ -54,7 +54,7 @@ function addVertex(vertexArray, x, y, nx, ny, nz, t, e) {
 type CentroidAccumulator = {
     x: number;
     y: number;
-    vertexCount: number;
+    sampleCount: number;
 }
 
 export class FillExtrusionBucket implements Bucket {
@@ -168,17 +168,26 @@ export class FillExtrusionBucket implements Bucket {
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
         // Compute polygon centroid to calculate elevation in GPU
-        const centroid: CentroidAccumulator = {x: 0, y: 0, vertexCount: 0};
+        const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};
+
+        const oldVertexCount = this.layoutVertexArray.length;
+
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             this.processPolygon(centroid, canonical, feature, polygon, subdivisionGranularity);
         }
 
-        for (let i = 0; i < centroid.vertexCount; i++) {
+        const addedVertices = this.layoutVertexArray.length - oldVertexCount;
+
+        const centroidX = Math.floor(centroid.x / centroid.sampleCount);
+        const centroidY = Math.floor(centroid.y / centroid.sampleCount);
+
+        for (let i = 0; i < addedVertices; i++) {
             this.centroidVertexArray.emplaceBack(
-                Math.floor(centroid.x / centroid.vertexCount),
-                Math.floor(centroid.y / centroid.vertexCount)
+                centroidX,
+                centroidY
             );
         }
+
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }
 
@@ -224,7 +233,7 @@ export class FillExtrusionBucket implements Bucket {
                         addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
                         centroid.x += 2 * p1.x;
                         centroid.y += 2 * p1.y;
-                        centroid.vertexCount += 2;
+                        centroid.sampleCount += 2;
 
                         edgeDistance += dist;
 
@@ -232,7 +241,7 @@ export class FillExtrusionBucket implements Bucket {
                         addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
                         centroid.x += 2 * p2.x;
                         centroid.y += 2 * p2.y;
-                        centroid.vertexCount += 2;
+                        centroid.sampleCount += 2;
 
                         const bottomRight = segment.vertexLength;
 
