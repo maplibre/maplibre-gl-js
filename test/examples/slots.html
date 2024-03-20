@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a map</title>
+    <meta property="og:description" content="Initialize a map in an HTML element with MapLibre GL JS." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    const motorway = {
+        'id': 'road_motorway',
+        'type': 'line',
+        'source': 'openmaptiles',
+        'source-layer': 'transportation',
+        'minzoom': 5,
+        'layout': {
+            'line-cap': 'round',
+            'line-join': 'round',
+            'visibility': 'visible'
+        },
+        'paint': {
+            'line-color': 'hsl(26, 87%, 62%)',
+            'line-width': 4
+        }
+    };
+
+    const background = {
+        'id': 'background',
+        'type': 'background',
+        'layout': {
+            'visibility': 'visible'
+        },
+        'paint': {
+            'background-color': 'rgba(246, 241, 100, 1)'
+        }
+    };
+
+    const water = {
+        'id': 'water',
+        'type': 'fill',
+        'source': 'openmaptiles',
+        'source-layer': 'water',
+        'layout': {
+            'visibility': 'visible'
+        },
+        'paint': {
+            'fill-color': 'rgba(134, 204, 250, 1)'
+        },
+        'metadata': {}
+    };
+
+    const highwayShield = {
+        'id': 'highway-shield',
+        'type': 'symbol',
+        'source': 'openmaptiles',
+        'source-layer': 'transportation_name',
+        'minzoom': 8,
+        'layout': {
+            'icon-size': 2,
+            'text-font': [
+                'Noto Sans Regular'
+            ],
+            'text-size': 20,
+            'icon-image': 'road_{ref_length}',
+            'text-field': '{ref}',
+            'symbol-spacing': 80,
+            'symbol-placement': {
+                'base': 1,
+                'stops': [
+                    [
+                        10,
+                        'point'
+                    ],
+                    [
+                        11,
+                        'line'
+                    ]
+                ]
+            },
+            'symbol-avoid-edges': true,
+            'icon-rotation-alignment': 'viewport',
+            'text-rotation-alignment': 'viewport'
+        },
+        'paint': {
+            'text-color': 'rgba(37, 36, 36, 1)'
+        }
+    };
+
+    const style = {
+        'version': 8,
+        'id': 'streets',
+        'name': 'Streets',
+        'sources': {
+            'openmaptiles': {
+                'url': 'https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                'type': 'vector'
+            },
+            'maptiler_attribution': {
+                'attribution': '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+                'type': 'vector'
+            }
+        },
+        'layers': [
+            background,
+            water,
+            {type: 'slot', id: 'motorway-slot'},
+            highwayShield
+        ],
+        'metadata': {
+            'maptiler:copyright': 'This style was generated on MapTiler Cloud. Usage outside of MapTiler Cloud requires valid MapTiler Data Package: https://www.maptiler.com/data/package/ -- please contact us.'
+        },
+        'glyphs': 'https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        'sprite': 'https://api.maptiler.com/maps/streets/sprite',
+        'bearing': 0,
+        'pitch': 0,
+        'center': [
+            12.0488,
+            55.83567
+        ],
+        'zoom': 12.62,
+
+};
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style,
+        hash: true,
+    });
+
+    // map.fillSlot('motorway-slot', motorway);
+
+</script>
+</body>
+</html>
