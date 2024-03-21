@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Hide Popup when its parent Marker is behind terrain ([#3865](https://github.com/maplibre/maplibre-gl-js/pull/3865))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
