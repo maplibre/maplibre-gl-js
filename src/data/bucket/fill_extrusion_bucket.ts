@@ -201,6 +201,8 @@ export class FillExtrusionBucket implements Bucket {
         let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
         const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
 
+        const connectFirstAndLastVertex = vectorTileFeatureTypes[feature.type] === 'Polygon';
+
         for (const ring of polygon) {
             if (ring.length === 0) {
                 continue;
@@ -210,7 +212,7 @@ export class FillExtrusionBucket implements Bucket {
                 continue;
             }
 
-            const subdivided = subdivideVertexLine(ring, granularity, true);
+            const subdivided = subdivideVertexLine(ring, granularity, connectFirstAndLastVertex);
 
             let edgeDistance = 0;
 
