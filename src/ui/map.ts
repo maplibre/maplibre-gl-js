@@ -3324,4 +3324,13 @@ export class Map extends Camera {
     getCameraTargetElevation(): number {
         return this.transform.elevation;
     }
+
+    // Overrides Camera._finalizeElevation.
+    _finalizeElevation() {
+        // Camera's _finalizeElevation method requires an up-to-date coords buffers (see #3872).
+        if (this.terrain && this.painter.renderToTexture) {
+            this.painter.drawDepthAndCoords();
+        }
+        super._finalizeElevation();
+    }
 }

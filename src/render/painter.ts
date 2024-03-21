@@ -383,12 +383,8 @@ export class Painter {
 
             // update coords/depth-framebuffer on camera movement, or tile reloading
             const newTiles = this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
-            if (this.terrainFacilitator.dirty || !mat4.exactEquals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
-                mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
-                this.terrainFacilitator.renderTime = Date.now();
-                this.terrainFacilitator.dirty = false;
-                drawDepth(this, this.style.map.terrain);
-                drawCoords(this, this.style.map.terrain);
+            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
+                this.drawDepthAndCoords();
             }
         }
 
@@ -466,6 +462,14 @@ export class Painter {
         // Set defaults for most GL values so that anyone using the state after the render
         // encounters more expected values.
         this.context.setDefault();
+    }
+
+    drawDepthAndCoords() {
+        mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
+        this.terrainFacilitator.renderTime = Date.now();
+        this.terrainFacilitator.dirty = false;
+        drawDepth(this, this.style.map.terrain);
+        drawCoords(this, this.style.map.terrain);
     }
 
     renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
