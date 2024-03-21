@@ -761,7 +761,7 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
  * @param linePoints - An array of points describing the line segments.
  * @param granularity - Subdivision granularity.
  * @param isRing - When true, an additional line segment is assumed to exist between the input array's last and first point.
- * @returns A new array of points of the subdivided line segments. If `isRing` is set to `true`, then this also includes the (subdivided) segment from the last point of the input array to the first point.
+ * @returns A new array of points of the subdivided line segments. The array may contain some of the original Point objects. If `isRing` is set to `true`, then this also includes the (subdivided) segment from the last point of the input array to the first point.
  *
  * @example
  * ```ts
@@ -804,8 +804,14 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
         return [];
     }
 
+    // Generate an extra line segment between the input array's first and last points,
+    // but only if isRing=true AND the first and last points actually differ.
+    const first = linePoints[0];
+    const last = linePoints[linePoints.length - 1];
+    const addLastToFirstSegment = isRing && (first.x !== last.x || first.y !== last.y);
+
     if (granularity < 2) {
-        if (isRing) {
+        if (addLastToFirstSegment) {
             return [...linePoints, linePoints[0]];
         } else {
             return [...linePoints];
@@ -819,7 +825,7 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
 
     // Iterate over all input lines
     const totalPoints = linePoints.length;
-    const lastIndex = isRing ? totalPoints : (totalPoints - 1);
+    const lastIndex = addLastToFirstSegment ? totalPoints : (totalPoints - 1);
     for (let pointIndex = 0; pointIndex < lastIndex; pointIndex++) {
         const linePoint0 = linePoints[pointIndex];
         const linePoint1 = pointIndex < (totalPoints - 1) ? linePoints[pointIndex + 1] : linePoints[0];
@@ -842,6 +848,12 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
 
         let lastPointX = lineVertex0x;
         let lastPointY = lineVertex0y;
+
+        // Walk along the line segment from start to end. In every step,
+        // find out the distance from start until the line intersects either the X-parallel or Y-parallel subdivision axis.
+        // Pick the closer intersection, add it to the final line points and consider that point the new start of the line.
+        // But also make sure the intersection point does not lie beyond the end of the line.
+        // If none of the intersection points is closer than line end, add the endpoint to the final line and break the loop.
 
         while (true) {
             const nextBoundaryX = dirX > 0 ?

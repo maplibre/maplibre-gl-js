@@ -210,7 +210,7 @@ export class FillExtrusionBucket implements Bucket {
                 continue;
             }
 
-            const subdivided = subdivideVertexLine(ring, granularity);
+            const subdivided = subdivideVertexLine(ring, granularity, true);
 
             let edgeDistance = 0;
 
