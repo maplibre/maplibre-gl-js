@@ -33,7 +33,7 @@ import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {SubdivisionGranularitySetting, subdivideFill, subdivideVertexLine} from '../../render/subdivision';
-import {fillArrays} from './fill_bucket';
+import {fillArrays} from '../../render/fill_arrays';
 
 const FACTOR = Math.pow(2, 13);
 
