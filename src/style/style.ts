@@ -185,6 +185,7 @@ export class Style extends Evented {
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: Array<string>;
+    _orderWithSlots: Array<string>;
     sourceCaches: {[_: string]: SourceCache};
     zoomHistory: ZoomHistory;
     _loaded: boolean;
@@ -339,7 +340,9 @@ export class Style extends Evented {
     }
 
     private _createLayers() {
-        const dereferencedLayers = deref(this.stylesheet.layers);
+        this._orderWithSlots = this.stylesheet.layers.map((layer) => layer.id);
+        const layersWithoutSlots = this.stylesheet.layers.filter(l => l.type !== 'slot');
+        const dereferencedLayers = deref(layersWithoutSlots);
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
