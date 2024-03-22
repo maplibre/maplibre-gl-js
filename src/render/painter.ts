@@ -376,17 +376,7 @@ export class Painter {
             }
         }
 
-        if (this.renderToTexture) {
-            this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
-            // this is disabled, because render-to-texture is rendering all layers from bottom to top.
-            this.opaquePassCutoff = 0;
-
-            // update coords/depth-framebuffer on camera movement, or tile reloading
-            const newTiles = this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime);
-            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || newTiles.length) {
-                this.drawDepthAndCoords();
-            }
-        }
+        this.maybeDrawDepthAndCoords(false);
 
         // Offscreen pass ===============================================
         // We first do all rendering that requires rendering to a separate
@@ -464,12 +454,33 @@ export class Painter {
         this.context.setDefault();
     }
 
-    drawDepthAndCoords() {
-        mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
-        this.terrainFacilitator.renderTime = Date.now();
-        this.terrainFacilitator.dirty = false;
-        drawDepth(this, this.style.map.terrain);
-        drawCoords(this, this.style.map.terrain);
+    /**
+     * Update the depth and coords framebuffers, if the contents of those frame buffers is out of date.
+     * If requireExact is false, then the contents of those frame buffers is not updated if it is close
+     * to accurate (that is, the camera has not moved much since it was updated last).
+     */
+    maybeDrawDepthAndCoords(requireExact: boolean) {
+        if (this.renderToTexture) {
+            this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
+            // this is disabled, because render-to-texture is rendering all layers from bottom to top.
+            this.opaquePassCutoff = 0;
+
+            const prevMatrix = this.terrainFacilitator.matrix;
+            const currMatrix = this.transform.projMatrix
+
+            // update coords/depth-framebuffer on camera movement, or tile reloading
+            let doUpdate = this.terrainFacilitator.dirty;
+            doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix)
+            doUpdate ||= this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime).length > 0;
+
+            if (doUpdate) {
+                mat4.copy(prevMatrix, currMatrix);
+                this.terrainFacilitator.renderTime = Date.now();
+                this.terrainFacilitator.dirty = false;
+                drawDepth(this, this.style.map.terrain);
+                drawCoords(this, this.style.map.terrain);
+            }
+        }
     }
 
     renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
