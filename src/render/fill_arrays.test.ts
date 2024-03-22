@@ -5,9 +5,8 @@ import {clamp} from '../util/util';
 import {fillArrays} from './fill_arrays';
 
 describe('fillArrays', () => {
-    SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-
     test('Tiny mesh is unchanged.', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
         const mesh = getGridMesh(1);
         const split = splitMesh(mesh);
         expect(split.segmentsTriangles).toHaveLength(1);
@@ -15,6 +14,7 @@ describe('fillArrays', () => {
     });
 
     test('Small mesh is unchanged.', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
         const mesh = getGridMesh(2);
         const split = splitMesh(mesh);
         expect(split.segmentsTriangles).toHaveLength(1);
@@ -22,6 +22,7 @@ describe('fillArrays', () => {
     });
 
     test('Large mesh is correctly split into multiple segments.', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
         const mesh = getGridMesh(4);
         const split = splitMesh(mesh);
         expect(split.segmentsTriangles.length).toBeGreaterThan(1);
@@ -29,6 +30,7 @@ describe('fillArrays', () => {
     });
 
     test('Very large mesh is correctly split into multiple segments.', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 1024;
         const mesh = getGridMesh(64);
         const split = splitMesh(mesh);
         expect(split.segmentsTriangles.length).toBeGreaterThan(1);
@@ -36,6 +38,7 @@ describe('fillArrays', () => {
     });
 
     test('Very large random mesh is correctly split into multiple segments.', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 1024;
         const mesh = getGridMeshRandom(64, 8192, 1024);
         const split = splitMesh(mesh);
         expect(split.segmentsTriangles.length).toBeGreaterThan(1);
