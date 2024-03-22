@@ -1,10 +1,9 @@
+uniform mat4 u_matrix;
 uniform vec3 u_lightcolor;
 uniform lowp vec3 u_lightpos;
-uniform lowp vec3 u_lightpos_globe;
 uniform lowp float u_lightintensity;
 uniform float u_vertical_gradient;
 uniform lowp float u_opacity;
-uniform vec2 u_fill_translate;
 
 in vec2 a_pos;
 in vec4 a_normal_ed;
@@ -15,10 +14,6 @@ in vec4 a_normal_ed;
 
 
 out vec4 v_color;
-
-#ifdef GLOBE
-out vec3 v_sphere_pos;
-#endif
 
 #pragma mapbox: define highp float base
 #pragma mapbox: define highp float height
@@ -49,17 +44,8 @@ void main() {
     height = max(0.0, height) + height_terrain3d_offset;
 
     float t = mod(normal.x, 2.0);
-    float elevation = t > 0.0 ? height : base;
-    vec2 posInTile = a_pos + u_fill_translate;
 
-    #ifdef GLOBE
-    vec3 spherePos = projectToSphere(posInTile);
-    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
-    v_sphere_pos = elevatedPos;
-    gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
-    #else
-    gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
-    #endif
+    gl_Position = u_matrix * vec4(a_pos, t > 0.0 ? height : base, 1);
 
     // Relative luminance (how dark/bright is the surface color?)
     float colorvalue = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722;
@@ -71,15 +57,7 @@ void main() {
     color += ambientlight;
 
     // Calculate cos(theta), where theta is the angle between surface normal and diffuse light ray
-    vec3 normalForLighting = normal / 16384.0;
-    float directional = clamp(dot(normalForLighting, u_lightpos), 0.0, 1.0);
-
-    #ifdef GLOBE
-    mat3 rotMatrix = globeGetRotationMatrix(spherePos);
-    normalForLighting = rotMatrix * normalForLighting;
-    // Interpolate dot product result instead of normals and light direction
-    directional = mix(directional, clamp(dot(normalForLighting, u_lightpos_globe), 0.0, 1.0), u_projection_transition);
-    #endif
+    float directional = clamp(dot(normal / 16384.0, u_lightpos), 0.0, 1.0);
 
     // Adjust directional so that
     // the range of values for highlight/shading is narrower
