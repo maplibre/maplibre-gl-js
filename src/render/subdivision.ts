@@ -4,6 +4,9 @@ import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
 import {register} from '../util/web_worker_transfer';
 
+/**
+ * Controls how much subdivision happens for a given type of geometry at different zoom levels.
+ */
 export class SubdivisionGranularityExpression {
     /**
      * A tile of zoom level 0 will be subdivided to this granularity level.
@@ -27,9 +30,12 @@ export class SubdivisionGranularityExpression {
     }
 }
 
+/**
+ * An object describing how much subdivision should be applied to different types of geometry at different zoom levels.
+ */
 export class SubdivisionGranularitySetting {
     /**
-     * Granularity settings used for fill layer (both polygons and their anti-aliasing outlines).
+     * Granularity settings used for fill and fill-extrusion layers (for fill, both polygons and their anti-aliasing outlines).
      */
     public readonly fill;
 
@@ -44,8 +50,17 @@ export class SubdivisionGranularitySetting {
     public readonly tile;
 
     constructor(options: {
+        /**
+         * Granularity settings used for fill and fill-extrusion layers (for fill, both polygons and their anti-aliasing outlines).
+         */
         fill: SubdivisionGranularityExpression;
+        /**
+         * Granularity used for the line layer.
+         */
         line: SubdivisionGranularityExpression;
+        /**
+         * Granularity used for geometry covering the entire tile: stencil masks, raster tiles, etc.
+         */
         tile: SubdivisionGranularityExpression;
     }) {
         this.fill = options.fill;
