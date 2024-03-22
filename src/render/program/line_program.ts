@@ -116,8 +116,8 @@ const lineGradientUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: LineStyleLayer,
-    imageHeight: number,
     ratioScale: number,
+    imageHeight: number,
 ): UniformValues<LineGradientUniformsType> => {
     return extend(lineUniformValues(painter, tile, layer, ratioScale), {
         'u_image': 0,

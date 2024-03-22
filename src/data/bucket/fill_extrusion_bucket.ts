@@ -33,7 +33,7 @@ import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {SubdivisionGranularitySetting, subdivideFill, subdivideVertexLine} from '../../render/subdivision';
-import {fillArrays} from './fill_bucket';
+import {fillArrays} from '../../render/fill_arrays';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -54,7 +54,7 @@ function addVertex(vertexArray, x, y, nx, ny, nz, t, e) {
 type CentroidAccumulator = {
     x: number;
     y: number;
-    vertexCount: number;
+    sampleCount: number;
 }
 
 export class FillExtrusionBucket implements Bucket {
@@ -168,17 +168,26 @@ export class FillExtrusionBucket implements Bucket {
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
         // Compute polygon centroid to calculate elevation in GPU
-        const centroid: CentroidAccumulator = {x: 0, y: 0, vertexCount: 0};
+        const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};
+
+        const oldVertexCount = this.layoutVertexArray.length;
+
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             this.processPolygon(centroid, canonical, feature, polygon, subdivisionGranularity);
         }
 
-        for (let i = 0; i < centroid.vertexCount; i++) {
+        const addedVertices = this.layoutVertexArray.length - oldVertexCount;
+
+        const centroidX = Math.floor(centroid.x / centroid.sampleCount);
+        const centroidY = Math.floor(centroid.y / centroid.sampleCount);
+
+        for (let i = 0; i < addedVertices; i++) {
             this.centroidVertexArray.emplaceBack(
-                Math.floor(centroid.x / centroid.vertexCount),
-                Math.floor(centroid.y / centroid.vertexCount)
+                centroidX,
+                centroidY
             );
         }
+
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
     }
 
@@ -189,8 +198,18 @@ export class FillExtrusionBucket implements Bucket {
         polygon: Array<Array<Point>>,
         subdivisionGranularity: SubdivisionGranularitySetting
     ): void {
+        if (polygon.length < 1) {
+            return;
+        }
+
+        if (isEntirelyOutside(polygon[0])) {
+            return;
+        }
+
         let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
         const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+
+        const connectFirstAndLastVertex = vectorTileFeatureTypes[feature.type] === 'Polygon';
 
         for (const ring of polygon) {
             if (ring.length === 0) {
@@ -201,53 +220,52 @@ export class FillExtrusionBucket implements Bucket {
                 continue;
             }
 
-            const subdivided = subdivideVertexLine(ring, granularity);
+            const subdivided = subdivideVertexLine(ring, granularity, connectFirstAndLastVertex);
 
             let edgeDistance = 0;
 
-            for (let p = 0; p < subdivided.length; p++) {
+            for (let p = 1; p < subdivided.length; p++) {
                 const p1 = subdivided[p];
+                const p2 = subdivided[p - 1];
 
-                if (p >= 1) {
-                    const p2 = subdivided[p - 1];
-
-                    if (!isBoundaryEdge(p1, p2)) {
-                        if (segment.vertexLength + 4 > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
-                            segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-                        }
-
-                        const perp = p1.sub(p2)._perp()._unit();
-                        const dist = p2.dist(p1);
-                        if (edgeDistance + dist > 32768) edgeDistance = 0;
-
-                        addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
-                        addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
-                        centroid.x += 2 * p1.x;
-                        centroid.y += 2 * p1.y;
-                        centroid.vertexCount += 2;
-
-                        edgeDistance += dist;
-
-                        addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
-                        addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
-                        centroid.x += 2 * p2.x;
-                        centroid.y += 2 * p2.y;
-                        centroid.vertexCount += 2;
-
-                        const bottomRight = segment.vertexLength;
-
-                        // ┌──────┐
-                        // │ 0  1 │ Counter-clockwise winding order.
-                        // │      │ Triangle 1: 0 => 2 => 1
-                        // │ 2  3 │ Triangle 2: 1 => 2 => 3
-                        // └──────┘
-                        this.indexArray.emplaceBack(bottomRight, bottomRight + 2, bottomRight + 1);
-                        this.indexArray.emplaceBack(bottomRight + 1, bottomRight + 2, bottomRight + 3);
-
-                        segment.vertexLength += 4;
-                        segment.primitiveLength += 2;
-                    }
+                if (isBoundaryEdge(p1, p2)) {
+                    continue;
                 }
+
+                if (segment.vertexLength + 4 > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
+                    segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
+                }
+
+                const perp = p1.sub(p2)._perp()._unit();
+                const dist = p2.dist(p1);
+                if (edgeDistance + dist > 32768) edgeDistance = 0;
+
+                addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
+                addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
+                centroid.x += 2 * p1.x;
+                centroid.y += 2 * p1.y;
+                centroid.sampleCount += 2;
+
+                edgeDistance += dist;
+
+                addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
+                addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
+                centroid.x += 2 * p2.x;
+                centroid.y += 2 * p2.y;
+                centroid.sampleCount += 2;
+
+                const bottomRight = segment.vertexLength;
+
+                // ┌──────┐
+                // │ 0  1 │ Counter-clockwise winding order.
+                // │      │ Triangle 1: 0 => 2 => 1
+                // │ 2  3 │ Triangle 2: 1 => 2 => 3
+                // └──────┘
+                this.indexArray.emplaceBack(bottomRight, bottomRight + 2, bottomRight + 1);
+                this.indexArray.emplaceBack(bottomRight + 1, bottomRight + 2, bottomRight + 3);
+
+                segment.vertexLength += 4;
+                segment.primitiveLength += 2;
             }
         }
 
