@@ -378,6 +378,12 @@ export class Painter {
 
         this.maybeDrawDepthAndCoords(false);
 
+        if (this.renderToTexture) {
+            this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
+            // this is disabled, because render-to-texture is rendering all layers from bottom to top.
+            this.opaquePassCutoff = 0;
+        }
+
         // Offscreen pass ===============================================
         // We first do all rendering that requires rendering to a separate
         // framebuffer, and then save those for rendering back to the map
@@ -460,26 +466,23 @@ export class Painter {
      * to accurate (that is, the camera has not moved much since it was updated last).
      */
     maybeDrawDepthAndCoords(requireExact: boolean) {
-        if (this.renderToTexture) {
-            this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
-            // this is disabled, because render-to-texture is rendering all layers from bottom to top.
-            this.opaquePassCutoff = 0;
+        if (!this.style.map.terrain) {
+            return;
+        }
+        const prevMatrix = this.terrainFacilitator.matrix;
+        const currMatrix = this.transform.projMatrix;
 
-            const prevMatrix = this.terrainFacilitator.matrix;
-            const currMatrix = this.transform.projMatrix
+        // Update coords/depth-framebuffer on camera movement, or tile reloading
+        let doUpdate = this.terrainFacilitator.dirty;
+        doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
+        doUpdate ||= this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime).length > 0;
 
-            // update coords/depth-framebuffer on camera movement, or tile reloading
-            let doUpdate = this.terrainFacilitator.dirty;
-            doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix)
-            doUpdate ||= this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime).length > 0;
-
-            if (doUpdate) {
-                mat4.copy(prevMatrix, currMatrix);
-                this.terrainFacilitator.renderTime = Date.now();
-                this.terrainFacilitator.dirty = false;
-                drawDepth(this, this.style.map.terrain);
-                drawCoords(this, this.style.map.terrain);
-            }
+        if (doUpdate) {
+            mat4.copy(prevMatrix, currMatrix);
+            this.terrainFacilitator.renderTime = Date.now();
+            this.terrainFacilitator.dirty = false;
+            drawDepth(this, this.style.map.terrain);
+            drawCoords(this, this.style.map.terrain);
         }
     }
 
