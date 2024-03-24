@@ -42,7 +42,7 @@ export type WorkerTileParameters = TileParameters & {
 };
 
 /**
- * The paremeters needed in order to load a DEM tile
+ * The parameters needed in order to load a DEM tile
  */
 export type WorkerDEMTileParameters = TileParameters & {
     rawImageData: RGBAImage | ImageBitmap | ImageData;
