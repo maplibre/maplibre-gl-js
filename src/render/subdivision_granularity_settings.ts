@@ -1,5 +1,3 @@
-import {register} from '../util/web_worker_transfer';
-
 /**
  * Controls how much subdivision happens for a given type of geometry at different zoom levels.
  */
@@ -73,6 +71,3 @@ export class SubdivisionGranularitySetting {
         tile: new SubdivisionGranularityExpression(0, 0),
     });
 }
-
-register('SubdivisionGranularityExpression', SubdivisionGranularityExpression);
-register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);

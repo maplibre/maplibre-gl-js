@@ -2,6 +2,11 @@ import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
 import {CanonicalTileID} from '../source/tile_id';
 import earcut from 'earcut';
+import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from './subdivision_granularity_settings';
+import {register} from '../util/web_worker_transfer';
+
+register('SubdivisionGranularityExpression', SubdivisionGranularityExpression);
+register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);
 
 type SubdivisionResult = {
     verticesFlattened: Array<number>;
