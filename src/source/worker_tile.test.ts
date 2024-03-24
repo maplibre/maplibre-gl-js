@@ -4,7 +4,7 @@ import {OverscaledTileID} from '../source/tile_id';
 import {StyleLayerIndex} from '../style/style_layer_index';
 import {WorkerTileParameters} from './worker_source';
 import {VectorTile} from '@mapbox/vector-tile';
-import {SubdivisionGranularitySetting} from '../render/subdivisionGranularitySettings';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 function createWorkerTile() {
     return new WorkerTile({

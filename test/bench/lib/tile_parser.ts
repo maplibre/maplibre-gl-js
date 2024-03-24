@@ -15,7 +15,7 @@ import type {OverscaledTileID} from '../../../src/source/tile_id';
 import type {TileJSON} from '../../../src/types/tilejson';
 import type {Map} from '../../../src/ui/map';
 import type {IActor} from '../../../src/util/actor';
-import {SubdivisionGranularitySetting} from '../../../src/render/subdivisionGranularitySettings';
+import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
 
 class StubMap extends Evented {
     style: Style;

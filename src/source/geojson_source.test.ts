@@ -6,7 +6,7 @@ import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
 import {Dispatcher} from '../util/dispatcher';
 import {RequestManager} from '../util/request_manager';
-import {SubdivisionGranularitySetting} from '../render/subdivisionGranularitySettings';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 const wrapDispatcher = (dispatcher) => {
     return {

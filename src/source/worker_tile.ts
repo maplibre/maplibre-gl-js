@@ -23,7 +23,7 @@ import type {
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
 import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages';
-import type {SubdivisionGranularitySetting} from '../render/subdivisionGranularitySettings';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 export class WorkerTile {
     tileID: OverscaledTileID;

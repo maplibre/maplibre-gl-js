@@ -11,7 +11,7 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {ZoomHistory} from '../../style/zoom_history';
 import {BucketFeature, BucketParameters} from '../bucket';
-import {SubdivisionGranularitySetting} from '../../render/subdivisionGranularitySettings';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {CanonicalTileID} from '../../source/tile_id';
 
 // Load a fill feature from fixture tile.

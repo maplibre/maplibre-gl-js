@@ -12,7 +12,7 @@ import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../../render/subdivision';
-import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivisionGranularitySettings';
+import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import {Projection, ProjectionGPUContext} from './projection';
