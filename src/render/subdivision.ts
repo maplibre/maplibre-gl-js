@@ -603,14 +603,14 @@ export function subdivideFill(polygon: Array<Array<Point>>, canonical: Canonical
 }
 
 /**
- * Returns an array of line indices for rendering a wireframe of the supplied triangle array.
+ * Returns an array of line indices for rendering a wireframe of the supplied triangle array. Useful for debugging.
  * @param triangleIndices - An index array where each three indices form a triangle.
  * @returns An index array where each pair of indices forms a line segment.
  */
 export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
     const lineIndices = [];
 
-    const edgeSet = new Set<string>();
+    const edgeMap = new Map<string, number>();
 
     const getKey = (i0, i1) => {
         const e0 = Math.min(i0, i1);
@@ -628,22 +628,30 @@ export function generateWireframeFromTriangles(triangleIndices: Array<number>): 
         const k2 = getKey(i2, i0);
 
         // Make sure an edge shared by multiple triangles is only present once.
-        if (!edgeSet.has(k0)) {
-            lineIndices.push(i0);
-            lineIndices.push(i1);
+        if (!edgeMap.has(k0)) {
+            edgeMap.set(k0, 1);
+        } else {
+            edgeMap.set(k0, edgeMap.get(k0) + 1);
         }
-        if (!edgeSet.has(k1)) {
-            lineIndices.push(i1);
-            lineIndices.push(i2);
+        if (!edgeMap.has(k1)) {
+            edgeMap.set(k1, 1);
+        } else {
+            edgeMap.set(k1, edgeMap.get(k1) + 1);
         }
-        if (!edgeSet.has(k2)) {
-            lineIndices.push(i2);
-            lineIndices.push(i0);
+        if (!edgeMap.has(k2)) {
+            edgeMap.set(k2, 1);
+        } else {
+            edgeMap.set(k2, edgeMap.get(k2) + 1);
         }
+    }
 
-        edgeSet.add(k0);
-        edgeSet.add(k1);
-        edgeSet.add(k2);
+    for (const pair of edgeMap) {
+        if (pair[1] === 1) {
+            const split = pair[0].split('_');
+            const i0 = parseInt(split[0]);
+            const i1 = parseInt(split[1]);
+            lineIndices.push(i0, i1);
+        }
     }
 
     return lineIndices;
