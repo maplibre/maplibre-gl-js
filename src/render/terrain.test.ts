@@ -35,7 +35,8 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: 1,
             height: 1,
-            transform: {center: {lng: 0}}
+            transform: {center: {lng: 0}},
+            maybeDrawDepthAndCoords: () => null,
         } as any as Painter;
         const sourceCache = {} as SourceCache;
         const getTileByID = (tileID) : Tile => {
@@ -67,6 +68,7 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: WORLD_WIDTH,
             height: 1,
+            maybeDrawDepthAndCoords: () => null,
         } as any as Painter;
         const sourceCache = {} as SourceCache;
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
