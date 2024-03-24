@@ -1,6 +1,6 @@
 import {FillLayoutArray} from '../array_types.g';
 
-import {layout} from './fill_attributes';
+import {members as layoutAttributes} from './fill_attributes';
 import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type';
@@ -149,7 +149,7 @@ export class FillBucket implements Bucket {
     }
     upload(context: Context) {
         if (!this.uploaded) {
-            this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layout.members);
+            this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
             this.indexBuffer2 = context.createIndexBuffer(this.indexArray2);
         }
