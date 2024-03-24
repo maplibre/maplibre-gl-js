@@ -67,19 +67,19 @@ export class SubdivisionGranularitySetting {
         this.line = options.line;
         this.tile = options.tile;
     }
+
+    /**
+     * Granularity settings that disable subdivision altogether.
+     */
+    public static readonly noSubdivision = new SubdivisionGranularitySetting({
+        fill: new SubdivisionGranularityExpression(0, 0),
+        line: new SubdivisionGranularityExpression(0, 0),
+        tile: new SubdivisionGranularityExpression(0, 0),
+    });
 }
 
 register('SubdivisionGranularityExpression', SubdivisionGranularityExpression);
 register('SubdivisionGranularitySetting', SubdivisionGranularitySetting);
-
-/**
- * Granularity settings that disable subdivision altogether.
- */
-export const subdivisionGranularitySettingsNoSubdivision = new SubdivisionGranularitySetting({
-    fill: new SubdivisionGranularityExpression(0, 0),
-    line: new SubdivisionGranularityExpression(0, 0),
-    tile: new SubdivisionGranularityExpression(0, 0),
-});
 
 type SubdivisionResult = {
     verticesFlattened: Array<number>;

@@ -15,7 +15,7 @@ import type {OverscaledTileID} from '../../../src/source/tile_id';
 import type {TileJSON} from '../../../src/types/tilejson';
 import type {Map} from '../../../src/ui/map';
 import type {IActor} from '../../../src/util/actor';
-import {subdivisionGranularitySettingsNoSubdivision} from '../../../src/render/subdivision';
+import {SubdivisionGranularitySetting} from '../../../src/render/subdivision';
 
 class StubMap extends Evented {
     style: Style;
@@ -134,11 +134,11 @@ export default class TileParser {
             request: {url: ''},
             returnDependencies,
             promoteId: undefined,
-            subdivisionGranularity: subdivisionGranularitySettingsNoSubdivision
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
         });
 
         const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
 
-        return workerTile.parse(vectorTile, this.layerIndex, [], this.actor, subdivisionGranularitySettingsNoSubdivision);
+        return workerTile.parse(vectorTile, this.layerIndex, [], this.actor, SubdivisionGranularitySetting.noSubdivision);
     }
 }
