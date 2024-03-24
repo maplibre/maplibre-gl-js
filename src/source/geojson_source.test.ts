@@ -6,7 +6,7 @@ import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
 import {Dispatcher} from '../util/dispatcher';
 import {RequestManager} from '../util/request_manager';
-import {MercatorProjection} from '../geo/projection/mercator';
+import {SubdivisionGranularitySetting} from '../render/subdivisionGranularitySettings';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -389,7 +389,11 @@ describe('GeoJSONSource#update', () => {
         source.map = {
             transform: {} as Transform,
             getPixelRatio() { return 1; },
-            projection: new MercatorProjection()
+            projection: {
+                get subdivisionGranularity() {
+                    return SubdivisionGranularitySetting.noSubdivision;
+                }
+            }
         } as any;
 
         source.on('data', (e) => {

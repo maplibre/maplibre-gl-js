@@ -14,7 +14,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {drawFill} from './draw_fill';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {ProgramConfiguration, ProgramConfigurationSet} from '../data/program_configuration';
-import {MercatorProjection} from '../geo/projection/mercator';
+import {translatePosition} from '../geo/projection/mercator';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -87,7 +87,20 @@ describe('drawFill', () => {
         painterMock.options = {} as any;
         painterMock.style = {
             map: {
-                projection: new MercatorProjection()
+                projection: {
+                    getProjectionData(_canonical, fallback) {
+                        return {
+                            'u_projection_matrix': fallback,
+                            'u_projection_tile_mercator_coords': [0, 0, 1, 1],
+                            'u_projection_clipping_plane': [0, 0, 0, 0],
+                            'u_projection_transition': 0.0,
+                            'u_projection_fallback_matrix': fallback,
+                        };
+                    },
+                    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+                        return translatePosition(transform, tile, translate, translateAnchor);
+                    }
+                }
             }
         } as any as Style;
 
