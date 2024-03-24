@@ -8,7 +8,7 @@ import {PreparedShader} from '../../shaders/shaders';
 import {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
 import {Program} from '../../render/program';
-import type {SubdivisionGranularitySetting} from '../../render/subdivision';
+import type {SubdivisionGranularitySetting} from '../../render/subdivisionGranularitySettings';
 
 export type ProjectionGPUContext = {
     context: Context;

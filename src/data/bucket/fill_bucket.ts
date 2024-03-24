@@ -28,7 +28,8 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {SubdivisionGranularitySetting, subdivideFill} from '../../render/subdivision';
+import {subdivideFill} from '../../render/subdivision';
+import type {SubdivisionGranularitySetting} from '../../render/subdivisionGranularitySettings';
 import {fillArrays} from '../../render/fill_arrays';
 
 export class FillBucket implements Bucket {
