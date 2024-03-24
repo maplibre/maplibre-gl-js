@@ -140,7 +140,7 @@ class Subdivider {
             // Iterate over cell rows that intersect this triangle
             for (let cellRow = cellYmin; cellRow < cellYmax; cellRow++) {
                 const {ring, leftmostIndex} = this._scanlineGenerateVertexRingForCellRow(cellRow, triangleVertices, triangleIndices);
-                this._scanlineTriangulateVertexRing(ring, leftmostIndex, finalIndices);
+                scanlineTriangulateVertexRing(this._vertexBuffer, ring, leftmostIndex, finalIndices);
             }
         }
 
@@ -370,66 +370,6 @@ class Subdivider {
     }
 
     /**
-     * Triangulates a ring of vertex indices. Appends to the supplied array of final triangle indices.
-     * @param ring - Ordered ring of vertex indices to triangulate.
-     * @param leftmostIndex - The index of the leftmost vertex in the supplied ring.
-     * @param finalIndices - Array of final triangle indices, into where the resulting triangles are appended.
-     */
-    private _scanlineTriangulateVertexRing(ring: Array<number>, leftmostIndex: number, finalIndices: Array<number>): void {
-        // Triangulate the ring
-        // It is guaranteed to be convex and ordered
-        if (ring.length === 0) {
-            console.error('Subdivision vertex ring length 0, smells like a bug!');
-            return;
-        }
-
-        // Traverse the ring in both directions from the leftmost vertex
-        // Assume ring is in CCW order (to produce CCW triangles)
-        const ringVertexLength = ring.length;
-        let lastEdgeA = leftmostIndex;
-        let lastEdgeB = (lastEdgeA + 1) % ringVertexLength;
-
-        while (true) {
-            const candidateIndexA = (lastEdgeA - 1) >= 0 ? (lastEdgeA - 1) : (ringVertexLength - 1);
-            const candidateIndexB = (lastEdgeB + 1) % ringVertexLength;
-
-            // Pick candidate, move edge
-            const candidateXA = this._vertexBuffer[ring[candidateIndexA] * 2];
-            const candidateXB = this._vertexBuffer[ring[candidateIndexB] * 2];
-
-            if (candidateXA < candidateXB) {
-                // Pick candidate A
-                const c = ring[candidateIndexA];
-                const a = ring[lastEdgeA];
-                const b = ring[lastEdgeB];
-                if (c !== a && c !== b && a !== b) {
-                    finalIndices.push(b, a, c);
-                }
-                lastEdgeA--;
-                if (lastEdgeA < 0) {
-                    lastEdgeA = ringVertexLength - 1;
-                }
-            } else {
-                // Pick candidate B
-                const c = ring[candidateIndexB];
-                const a = ring[lastEdgeA];
-                const b = ring[lastEdgeB];
-                if (c !== a && c !== b && a !== b) {
-                    finalIndices.push(b, a, c);
-                }
-                lastEdgeB++;
-                if (lastEdgeB >= ringVertexLength) {
-                    lastEdgeB = 0;
-                }
-            }
-
-            if (candidateIndexA === candidateIndexB) {
-                break; // We ran out of ring vertices
-            }
-        }
-    }
-
-    /**
      * Checks the internal vertex buffer for all vertices that might lie on the special pole coordinates and shifts them by one unit.
      * Use for removing unintended pole vertices that might have been created during subdivision. After calling this function, actual pole vertices can be safely generated.
      */
@@ -470,6 +410,32 @@ class Subdivider {
         const northEdge = 0;
         const southEdge = EXTENT;
 
+        // Generates a quad from an edge to a pole with the correct winding order.
+        // i0, i1 - indices of the edge vertices
+        // v0x, v1x - X coordinates of the edge vertices
+        // poleY - the Y coordinate of the desired pole (NORTH_POLE_Y or SOUTH_POLE_Y)
+        const generatePoleQuad = (i0, i1, v0x, v1x, poleY) => {
+            const flip = (v0x > v1x) !== (poleY === NORTH_POLE_Y);
+
+            if (flip) {
+                indices.push(i0);
+                indices.push(i1);
+                indices.push(this._getVertexIndex(v0x, poleY));
+
+                indices.push(i1);
+                indices.push(this._getVertexIndex(v1x, poleY));
+                indices.push(this._getVertexIndex(v0x, poleY));
+            } else {
+                indices.push(i1);
+                indices.push(i0);
+                indices.push(this._getVertexIndex(v0x, poleY));
+
+                indices.push(this._getVertexIndex(v1x, poleY));
+                indices.push(i1);
+                indices.push(this._getVertexIndex(v0x, poleY));
+            }
+        };
+
         const numIndices = indices.length;
         for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
             const i0 = indices[primitiveIndex - 2];
@@ -484,60 +450,24 @@ class Subdivider {
 
             if (north) {
                 if (v0y === northEdge && v1y === northEdge) {
-                    indices.push(i0);
-                    indices.push(i1);
-                    indices.push(this._getVertexIndex(v0x, NORTH_POLE_Y));
-
-                    indices.push(i1);
-                    indices.push(this._getVertexIndex(v1x, NORTH_POLE_Y));
-                    indices.push(this._getVertexIndex(v0x, NORTH_POLE_Y));
+                    generatePoleQuad(i0, i1, v0x, v1x, NORTH_POLE_Y);
                 }
                 if (v1y === northEdge && v2y === northEdge) {
-                    indices.push(i1);
-                    indices.push(i2);
-                    indices.push(this._getVertexIndex(v1x, NORTH_POLE_Y));
-
-                    indices.push(i2);
-                    indices.push(this._getVertexIndex(v2x, NORTH_POLE_Y));
-                    indices.push(this._getVertexIndex(v1x, NORTH_POLE_Y));
+                    generatePoleQuad(i1, i2, v1x, v2x, NORTH_POLE_Y);
                 }
                 if (v2y === northEdge && v0y === northEdge) {
-                    indices.push(i2);
-                    indices.push(i0);
-                    indices.push(this._getVertexIndex(v2x, NORTH_POLE_Y));
-
-                    indices.push(i0);
-                    indices.push(this._getVertexIndex(v0x, NORTH_POLE_Y));
-                    indices.push(this._getVertexIndex(v2x, NORTH_POLE_Y));
+                    generatePoleQuad(i2, i0, v2x, v0x, NORTH_POLE_Y);
                 }
             }
             if (south) {
                 if (v0y === southEdge && v1y === southEdge) {
-                    indices.push(i0);
-                    indices.push(i1);
-                    indices.push(this._getVertexIndex(v0x, SOUTH_POLE_Y));
-
-                    indices.push(i1);
-                    indices.push(this._getVertexIndex(v1x, SOUTH_POLE_Y));
-                    indices.push(this._getVertexIndex(v0x, SOUTH_POLE_Y));
+                    generatePoleQuad(i0, i1, v0x, v1x, SOUTH_POLE_Y);
                 }
                 if (v1y === southEdge && v2y === southEdge) {
-                    indices.push(i1);
-                    indices.push(i2);
-                    indices.push(this._getVertexIndex(v1x, SOUTH_POLE_Y));
-
-                    indices.push(i2);
-                    indices.push(this._getVertexIndex(v2x, SOUTH_POLE_Y));
-                    indices.push(this._getVertexIndex(v1x, SOUTH_POLE_Y));
+                    generatePoleQuad(i1, i2, v1x, v2x, SOUTH_POLE_Y);
                 }
                 if (v2y === southEdge && v0y === southEdge) {
-                    indices.push(i2);
-                    indices.push(i0);
-                    indices.push(this._getVertexIndex(v2x, SOUTH_POLE_Y));
-
-                    indices.push(i0);
-                    indices.push(this._getVertexIndex(v0x, SOUTH_POLE_Y));
-                    indices.push(this._getVertexIndex(v2x, SOUTH_POLE_Y));
+                    generatePoleQuad(i2, i0, v2x, v0x, SOUTH_POLE_Y);
                 }
             }
         }
@@ -1009,4 +939,93 @@ export function getDebugSvg(flattened: Array<number>, triangles?: Array<number>,
     svg.push('</svg>');
 
     return svg.join('');
+}
+
+/**
+ * Triangulates a ring of vertex indices. Appends to the supplied array of final triangle indices.
+ * @param vertexBuffer - Flattened vertex coordinate array.
+ * @param ring - Ordered ring of vertex indices to triangulate.
+ * @param leftmostIndex - The index of the leftmost vertex in the supplied ring.
+ * @param finalIndices - Array of final triangle indices, into where the resulting triangles are appended.
+ */
+export function scanlineTriangulateVertexRing(vertexBuffer: Array<number>, ring: Array<number>, leftmostIndex: number, finalIndices: Array<number>): void {
+    // Triangulate the ring
+    // It is guaranteed to be convex and ordered
+    if (ring.length === 0) {
+        console.error('Subdivision vertex ring length 0, smells like a bug!');
+        return;
+    }
+
+    // Traverse the ring in both directions from the leftmost vertex
+    // Assume ring is in CCW order (to produce CCW triangles)
+    const ringVertexLength = ring.length;
+    let lastEdgeA = leftmostIndex;
+    let lastEdgeB = (lastEdgeA + 1) % ringVertexLength;
+
+    while (true) {
+        const candidateIndexA = (lastEdgeA - 1) >= 0 ? (lastEdgeA - 1) : (ringVertexLength - 1);
+        const candidateIndexB = (lastEdgeB + 1) % ringVertexLength;
+
+        // Pick candidate, move edge
+        const candidateAx = vertexBuffer[ring[candidateIndexA] * 2];
+        const candidateAy = vertexBuffer[ring[candidateIndexA] * 2 + 1];
+        const candidateBx = vertexBuffer[ring[candidateIndexB] * 2];
+        const candidateBy = vertexBuffer[ring[candidateIndexB] * 2 + 1];
+        const lastEdgeAx = vertexBuffer[ring[lastEdgeA] * 2];
+        const lastEdgeAy = vertexBuffer[ring[lastEdgeA] * 2 + 1];
+        const lastEdgeBx = vertexBuffer[ring[lastEdgeB] * 2];
+        const lastEdgeBy = vertexBuffer[ring[lastEdgeB] * 2 + 1];
+
+        let pickA = false;
+
+        if (candidateAx < candidateBx) {
+            pickA = true;
+        } else if (candidateAx > candidateBx) {
+            pickA = false;
+        } else {
+            // Pick the candidate that is more "right" of the last edge's line
+            const ex = lastEdgeBx - lastEdgeAx;
+            const ey = lastEdgeBy - lastEdgeAy;
+            const nx = ey;
+            const ny = -ex;
+            const sign = (lastEdgeAy < lastEdgeBy) ? 1 : -1;
+            // dot( (candidateA <-- lastEdgeA), normal )
+            const aRight = ((candidateAx - lastEdgeAx) * nx + (candidateAy - lastEdgeAy) * ny) * sign;
+            // dot( (candidateB <-- lastEdgeA), normal )
+            const bRight = ((candidateBx - lastEdgeAx) * nx + (candidateBy - lastEdgeAy) * ny) * sign;
+            if (aRight > bRight) {
+                pickA = true;
+            }
+        }
+
+        if (pickA) {
+            // Pick candidate A
+            const c = ring[candidateIndexA];
+            const a = ring[lastEdgeA];
+            const b = ring[lastEdgeB];
+            if (c !== a && c !== b && a !== b) {
+                finalIndices.push(b, a, c);
+            }
+            lastEdgeA--;
+            if (lastEdgeA < 0) {
+                lastEdgeA = ringVertexLength - 1;
+            }
+        } else {
+            // Pick candidate B
+            const c = ring[candidateIndexB];
+            const a = ring[lastEdgeA];
+            const b = ring[lastEdgeB];
+            if (c !== a && c !== b && a !== b) {
+                finalIndices.push(b, a, c);
+            }
+            lastEdgeB++;
+            if (lastEdgeB >= ringVertexLength) {
+                lastEdgeB = 0;
+            }
+        }
+
+        if (candidateIndexA === candidateIndexB) {
+            break; // We ran out of ring vertices
+        }
+    }
 }
