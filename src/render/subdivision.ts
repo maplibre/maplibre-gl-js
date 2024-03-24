@@ -145,7 +145,7 @@ class Subdivider {
     }
 
     /**
-     * Subdivides a polygon by iterating over rows of granularity subdivision cells. See comments inside the function for more details.
+     * Subdivides a polygon by iterating over rows of granularity subdivision cells and splitting each row along vertical subdivision axes.
      * @param inputIndices - Indices into the internal vertex buffer of the triangulated polygon (after running `earcut`).
      * @returns Indices into the internal vertex buffer for triangles that are a subdivision of the input geometry.
      */
