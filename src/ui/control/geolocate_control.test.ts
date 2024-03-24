@@ -424,11 +424,14 @@ describe('GeolocateControl with no options', () => {
             center: [10, 5]
         });
         await trackPromise;
+        const secondMoveEndPromise = map.once('moveend');
         const lockToDotPromise = geolocate.once('userlocationfocus');
         // click the button to focus on user location and trigger 'userlocationfocus' event
         geolocate._geolocateButton.dispatchEvent(click);
         await lockToDotPromise;
-        expect(map.getCenter()).toEqual({lng: 10, lat: 20});
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
+        await secondMoveEndPromise
+        expect(map.getCenter()).toEqual({lng: 20, lat: 10});
     });
 
     test('does not switch to BACKGROUND and stays in ACTIVE_LOCK state on window resize', async () => {
