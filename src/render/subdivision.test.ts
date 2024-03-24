@@ -779,6 +779,150 @@ describe('Fill subdivision', () => {
         checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
     });
 
+    test('Generates pole geometry for north pole only (geometry not bordering other pole)', () => {
+        const result = subdivideFill(
+            [
+                [
+                    // x, y
+                    new Point(0, 0),
+                    new Point(EXTENT, 0),
+                    new Point(EXTENT, EXTENT), // Note that one of the vertices touches the south edge...
+                    new Point(0, EXTENT - 1),  // ...the other does not.
+                ]
+            ],
+            new CanonicalTileID(0, 0, 0),
+            1
+        );
+        expect(result.verticesFlattened).toEqual([
+            0,         0,
+            8192,      0,
+            8192,   8192,
+            0,      8191,
+            8192, -32768,
+            0,    -32768
+        ]);
+        expect(result.indicesTriangles).toEqual([
+            2, 0, 3, 0, 2,
+            1, 0, 1, 4, 5,
+            0, 4
+        ]);
+        expect(result.indicesLineList).toEqual([
+            [
+                0, 1, 1, 2,
+                2, 3, 3, 0
+            ]
+        ]);
+        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+    });
+
+    test('Generates pole geometry for south pole only (geometry not bordering other pole)', () => {
+        const result = subdivideFill(
+            [
+                [
+                    // x, y
+                    new Point(0, 0),
+                    new Point(EXTENT, 1),
+                    new Point(EXTENT, EXTENT),
+                    new Point(0, EXTENT),
+                ]
+            ],
+            new CanonicalTileID(0, 0, 0),
+            1
+        );
+        expect(result.verticesFlattened).toEqual([
+            0,        0,
+            8192,     1,
+            8192,  8192,
+            0,     8192,
+            0,    32767,
+            8192, 32767
+        ]);
+        expect(result.indicesTriangles).toEqual([
+            2, 0, 3, 0, 2,
+            1, 2, 3, 4, 5,
+            2, 4
+        ]);
+        expect(result.indicesLineList).toEqual([
+            [
+                0, 1, 1, 2,
+                2, 3, 3, 0
+            ]
+        ]);
+        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+    });
+
+    test('Generates pole geometry for north pole only (tile not bordering other pole)', () => {
+        const result = subdivideFill(
+            [
+                [
+                    // x, y
+                    new Point(0, 0),
+                    new Point(EXTENT, 0),
+                    new Point(EXTENT, EXTENT),
+                    new Point(0, EXTENT),
+                ]
+            ],
+            new CanonicalTileID(1, 0, 0),
+            1
+        );
+        expect(result.verticesFlattened).toEqual([
+            0,         0,
+            8192,      0,
+            8192,   8192,
+            0,      8192,
+            8192, -32768,
+            0,    -32768
+        ]);
+        expect(result.indicesTriangles).toEqual([
+            2, 0, 3, 0, 2,
+            1, 0, 1, 4, 5,
+            0, 4
+        ]);
+        expect(result.indicesLineList).toEqual([
+            [
+                0, 1, 1, 2,
+                2, 3, 3, 0
+            ]
+        ]);
+        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+    });
+
+    test('Generates pole geometry for south pole only (tile not bordering other pole)', () => {
+        const result = subdivideFill(
+            [
+                [
+                    // x, y
+                    new Point(0, 0),
+                    new Point(EXTENT, 0),
+                    new Point(EXTENT, EXTENT),
+                    new Point(0, EXTENT),
+                ]
+            ],
+            new CanonicalTileID(1, 0, 1),
+            1
+        );
+        expect(result.verticesFlattened).toEqual([
+            0,        0,
+            8192,     0,
+            8192,  8192,
+            0,     8192,
+            0,    32767,
+            8192, 32767
+        ]);
+        expect(result.indicesTriangles).toEqual([
+            2, 0, 3, 0, 2,
+            1, 2, 3, 4, 5,
+            2, 4
+        ]);
+        expect(result.indicesLineList).toEqual([
+            [
+                0, 1, 1, 2,
+                2, 3, 3, 0
+            ]
+        ]);
+        checkWindingOrder(result.verticesFlattened, result.indicesTriangles);
+    });
+
     test('Scanline subdivision ring generation case 1', () => {
         // Check ring generation on data where it was actually failing
         const vertices = [
