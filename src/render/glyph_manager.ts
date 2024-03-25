@@ -32,7 +32,7 @@ export class GlyphManager {
     static loadGlyphRange = loadGlyphRange;
     static TinySDF = TinySDF;
 
-    constructor(requestManager: RequestManager, localIdeographFontFamily: string | false) {
+    constructor(requestManager: RequestManager, localIdeographFontFamily?: string | false) {
         this.requestManager = requestManager;
         this.localIdeographFontFamily = localIdeographFontFamily;
         this.entries = {};
