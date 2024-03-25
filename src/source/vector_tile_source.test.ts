@@ -9,7 +9,7 @@ import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'j
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
 import {Map} from '../ui/map';
 import {WorkerTileParameters} from './worker_source';
-import { ActorMessage, WorkerMessage } from '../util/actor_messages';
+import {ActorMessage, WorkerMessage} from '../util/actor_messages';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);

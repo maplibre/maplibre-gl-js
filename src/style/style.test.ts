@@ -16,7 +16,7 @@ import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, Sou
 import {GeoJSONSource} from '../source/geojson_source';
 import {sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
-import { WorkerMessage } from '../util/actor_messages';
+import {WorkerMessage} from '../util/actor_messages';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
