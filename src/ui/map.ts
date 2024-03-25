@@ -2361,6 +2361,12 @@ export class Map extends Camera {
         return this._update(true);
     }
 
+    fillSlotWithLayers(slotId: string, layers: AddLayerObject[]) {
+        if (!this.style) return;
+        this.style.fillSlot(slotId, layers);
+        return this._update(true);
+    }
+
     /**
      * Moves a layer to a different z-position.
      *
