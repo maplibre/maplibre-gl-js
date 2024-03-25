@@ -6,6 +6,7 @@ import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
 import {Dispatcher} from '../util/dispatcher';
 import {RequestManager} from '../util/request_manager';
+import {WorkerMessage} from '../util/actor_messages';
 
 const wrapDispatcher = (dispatcher) => {
     return {
@@ -112,7 +113,7 @@ describe('GeoJSONSource#setData', () => {
         } as any;
         source.actor.sendAsync = (message) => {
             return new Promise((resolve) => {
-                if (message.type === 'loadData') {
+                if (message.type === WorkerMessage.loadData) {
                     expect((message.data as any).request.collectResourceTiming).toBeTruthy();
                     setTimeout(() => resolve({} as any), 0);
                     done();

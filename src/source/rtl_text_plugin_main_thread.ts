@@ -3,6 +3,7 @@ import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
 import {RTLPluginStatus, RTLPluginLoadedEventName, PluginState} from './rtl_text_plugin_status';
 import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
+import {WorkerMessage} from '../util/actor_messages';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';
@@ -12,7 +13,7 @@ class RTLMainThreadPlugin extends Evented {
     /** Sync RTL plugin state by broadcasting a message to the worker */
     _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
         this.status = statusToSend;
-        return this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: statusToSend, pluginURL: this.url})
+        return this.dispatcher.broadcast(WorkerMessage.syncRTLPluginState, {pluginStatus: statusToSend, pluginURL: this.url})
             .catch((e: any) => {
                 this.status = 'error';
                 throw e;

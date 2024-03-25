@@ -7,12 +7,13 @@ import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_sou
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 import {ActorTarget, IActor} from '../util/actor';
 import {PluginState} from './rtl_text_plugin_status';
+import {WorkerMessage} from '../util/actor_messages';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];
     constructor(private actor: IActor) {}
     loadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
-        return this.actor.sendAsync({type: 'loadTile', data: {} as any}, new AbortController());
+        return this.actor.sendAsync({type: WorkerMessage.loadTile, data: {} as any}, new AbortController());
     }
     reloadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
         throw new Error('Method not implemented.');

@@ -2,7 +2,10 @@ import {Subscription, isWorker, subscribe} from './util';
 import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
-import type {ActorMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
+import {
+    WorkerMessage,
+    type ActorMessage,
+    type RequestResponseMessageMap} from './actor_messages';
 
 /**
  * An interface to be sent to the actor in order for it to allow communication between the worker and the main thread
@@ -19,7 +22,7 @@ export interface ActorTarget {
  */
 type MessageData = {
     id: string;
-    type: MessageType | '<cancel>' | '<response>';
+    type: WorkerMessage | '<cancel>' | '<response>';
     origin: string;
     data?: Serialized;
     targetMapId?: string | number | null;
@@ -29,7 +32,7 @@ type MessageData = {
 }
 
 type ResolveReject = {
-    resolve: (value?: RequestResponseMessageMap[MessageType][1]) => void;
+    resolve: (value?: RequestResponseMessageMap[WorkerMessage][1]) => void;
     reject: (reason?: Error) => void;
 }
 
@@ -37,10 +40,10 @@ type ResolveReject = {
  * This interface allowing to substitute only the sendAsync method of the Actor class.
  */
 export interface IActor {
-    sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
+    sendAsync<T extends WorkerMessage>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]>;
 }
 
-export type MessageHandler<T extends MessageType> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>
+export type MessageHandler<T extends WorkerMessage> = (mapId: string | number, params: RequestResponseMessageMap[T][0], abortController?: AbortController) => Promise<RequestResponseMessageMap[T][1]>
 
 /**
  * An implementation of the [Actor design pattern](http://en.wikipedia.org/wiki/Actor_model)
@@ -58,7 +61,7 @@ export class Actor implements IActor {
     abortControllers: { [x: number | string]: AbortController };
     invoker: ThrottledInvoker;
     globalScope: ActorTarget;
-    messageHandlers: { [x in MessageType]?: MessageHandler<MessageType>};
+    messageHandlers: { [x in WorkerMessage]?: MessageHandler<WorkerMessage>};
     subscription: Subscription;
 
     /**
@@ -78,7 +81,7 @@ export class Actor implements IActor {
         this.globalScope = isWorker(self) ? target : window;
     }
 
-    registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
+    registerMessageHandler<T extends WorkerMessage>(type: T, handler: MessageHandler<T>) {
         this.messageHandlers[type] = handler;
     }
 
@@ -89,7 +92,7 @@ export class Actor implements IActor {
      * @param abortController - an optional AbortController to abort the request
      * @returns a promise that will be resolved with the response data
      */
-    sendAsync<T extends MessageType>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
+    sendAsync<T extends WorkerMessage>(message: ActorMessage<T>, abortController?: AbortController): Promise<RequestResponseMessageMap[T][1]> {
         return new Promise((resolve, reject) => {
             // We're using a string ID instead of numbers because they are being used as object keys
             // anyway, and thus stringified implicitly. We use random IDs because an actor may receive
@@ -206,7 +209,7 @@ export class Actor implements IActor {
             this.completeTask(id, new Error(`Could not find a registered handler for ${task.type}, map ID: ${this.mapId}, available handlers: ${Object.keys(this.messageHandlers).join(', ')}`));
             return;
         }
-        const params = deserialize(task.data) as RequestResponseMessageMap[MessageType][0];
+        const params = deserialize(task.data) as RequestResponseMessageMap[WorkerMessage][0];
         const abortController = new AbortController();
         this.abortControllers[id] = abortController;
         try {
@@ -217,7 +220,7 @@ export class Actor implements IActor {
         }
     }
 
-    completeTask(id: string, err: Error, data?: RequestResponseMessageMap[MessageType][1]) {
+    completeTask(id: string, err: Error, data?: RequestResponseMessageMap[WorkerMessage][1]) {
         const buffers: Array<Transferable> = [];
         delete this.abortControllers[id];
         const responseMessage: MessageData = {

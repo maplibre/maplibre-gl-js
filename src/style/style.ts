@@ -52,7 +52,13 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
-import type {GetGlyphsParamerters, GetGlyphsResponse, GetImagesParamerters, GetImagesResponse} from '../util/actor_messages';
+import {
+    WorkerMessage,
+    type GetGlyphsParamerters,
+    type GetGlyphsResponse,
+    type GetImagesParamerters,
+    type GetImagesResponse
+} from '../util/actor_messages';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -211,10 +217,10 @@ export class Style extends Evented {
 
         this.map = map;
         this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
-        this.dispatcher.registerMessageHandler('getGlyphs', (mapId, params) => {
+        this.dispatcher.registerMessageHandler(WorkerMessage.getGlyphs, (mapId, params) => {
             return this.getGlyphs(mapId, params);
         });
-        this.dispatcher.registerMessageHandler('getImages', (mapId, params) => {
+        this.dispatcher.registerMessageHandler(WorkerMessage.getImages, (mapId, params) => {
             return this.getImages(mapId, params);
         });
         this.imageManager = new ImageManager();
@@ -234,7 +240,7 @@ export class Style extends Evented {
 
         this._resetUpdates();
 
-        this.dispatcher.broadcast('setReferrer', getReferrer());
+        this.dispatcher.broadcast(WorkerMessage.setReferrer, getReferrer());
         rtlMainThreadPluginFactory().on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
 
         this.on('data', (event) => {
@@ -343,7 +349,7 @@ export class Style extends Evented {
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
-        this.dispatcher.broadcast('setLayers', dereferencedLayers);
+        this.dispatcher.broadcast(WorkerMessage.setLayers, dereferencedLayers);
 
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
@@ -404,7 +410,7 @@ export class Style extends Evented {
                 this._changed = true;
             }
 
-            this.dispatcher.broadcast('setImages', this._availableImages);
+            this.dispatcher.broadcast(WorkerMessage.setImages, this._availableImages);
             this.fire(new Event('data', {dataType: 'style'}));
 
             if (completion) {
@@ -422,7 +428,7 @@ export class Style extends Evented {
         this._spritesImagesIds = {};
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
-        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.dispatcher.broadcast(WorkerMessage.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -632,7 +638,7 @@ export class Style extends Evented {
     }
 
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
-        this.dispatcher.broadcast('updateLayers', {
+        this.dispatcher.broadcast(WorkerMessage.updateLayers, {
             layers: this._serializeByIds(updatedIds),
             removedIds
         });
@@ -785,7 +791,7 @@ export class Style extends Evented {
         this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
         this._changed = true;
-        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.dispatcher.broadcast(WorkerMessage.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -1495,7 +1501,7 @@ export class Style extends Evented {
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
         if (mapRemoved) {
-            this.dispatcher.broadcast('removeMap', undefined);
+            this.dispatcher.broadcast(WorkerMessage.removeMap, undefined);
         }
         this.dispatcher.remove(mapRemoved);
     }
@@ -1698,7 +1704,7 @@ export class Style extends Evented {
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
-        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.dispatcher.broadcast(WorkerMessage.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 

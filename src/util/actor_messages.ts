@@ -80,7 +80,10 @@ export type GetGlyphsResponse = {
  */
 export type GetImagesResponse = {[_: string]: StyleImage}
 
-export const enum MessageTypes {
+/**
+ * All the possible message types that can be sent to and from the worker
+ */
+export const enum WorkerMessage {
     loadDEMTile = 'LDT',
     getClusterExpansionZoom = 'GCEZ',
     getClusterChildren = 'GCC',
@@ -109,38 +112,33 @@ export const enum MessageTypes {
  * The key is the event name, the first parameter is the event input type, and the last parameter is the output type.
  */
 export type RequestResponseMessageMap = {
-    [MessageTypes.loadDEMTile]: [WorkerDEMTileParameters, DEMData];
-    [MessageTypes.getClusterExpansionZoom]: [ClusterIDAndSource, number];
-    [MessageTypes.getClusterChildren]: [ClusterIDAndSource, Array<GeoJSON.Feature>];
-    [MessageTypes.getClusterLeaves]: [GetClusterLeavesParams, Array<GeoJSON.Feature>];
-    [MessageTypes.loadData]: [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
-    [MessageTypes.loadTile]: [WorkerTileParameters, WorkerTileResult];
-    [MessageTypes.reloadTile]: [WorkerTileParameters, WorkerTileResult];
-    [MessageTypes.getGlyphs]: [GetGlyphsParamerters, GetGlyphsResponse];
-    [MessageTypes.getImages]: [GetImagesParamerters, GetImagesResponse];
-    [MessageTypes.setImages]: [string[], void];
-    [MessageTypes.setLayers]: [Array<LayerSpecification>, void];
-    [MessageTypes.updateLayers]: [UpdateLayersParamaeters, void];
-    [MessageTypes.syncRTLPluginState]: [PluginState, PluginState];
-    [MessageTypes.setReferrer]: [string, void];
-    [MessageTypes.removeSource]: [RemoveSourceParams, void];
-    [MessageTypes.removeMap]: [undefined, void];
-    [MessageTypes.importScript]: [string, void];
-    [MessageTypes.removeTile]: [TileParameters, void];
-    [MessageTypes.abortTile]: [TileParameters, void];
-    [MessageTypes.removeDEMTile]: [TileParameters, void];
-    [MessageTypes.getResource]: [RequestParameters, GetResourceResponse<any>];
+    [WorkerMessage.loadDEMTile]: [WorkerDEMTileParameters, DEMData];
+    [WorkerMessage.getClusterExpansionZoom]: [ClusterIDAndSource, number];
+    [WorkerMessage.getClusterChildren]: [ClusterIDAndSource, Array<GeoJSON.Feature>];
+    [WorkerMessage.getClusterLeaves]: [GetClusterLeavesParams, Array<GeoJSON.Feature>];
+    [WorkerMessage.loadData]: [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
+    [WorkerMessage.loadTile]: [WorkerTileParameters, WorkerTileResult];
+    [WorkerMessage.reloadTile]: [WorkerTileParameters, WorkerTileResult];
+    [WorkerMessage.getGlyphs]: [GetGlyphsParamerters, GetGlyphsResponse];
+    [WorkerMessage.getImages]: [GetImagesParamerters, GetImagesResponse];
+    [WorkerMessage.setImages]: [string[], void];
+    [WorkerMessage.setLayers]: [Array<LayerSpecification>, void];
+    [WorkerMessage.updateLayers]: [UpdateLayersParamaeters, void];
+    [WorkerMessage.syncRTLPluginState]: [PluginState, PluginState];
+    [WorkerMessage.setReferrer]: [string, void];
+    [WorkerMessage.removeSource]: [RemoveSourceParams, void];
+    [WorkerMessage.removeMap]: [undefined, void];
+    [WorkerMessage.importScript]: [string, void];
+    [WorkerMessage.removeTile]: [TileParameters, void];
+    [WorkerMessage.abortTile]: [TileParameters, void];
+    [WorkerMessage.removeDEMTile]: [TileParameters, void];
+    [WorkerMessage.getResource]: [RequestParameters, GetResourceResponse<any>];
 }
-
-/**
- * All the possible message types that can be sent to and from the worker
- */
-export type MessageType = keyof RequestResponseMessageMap;
 
 /**
  * The message to be sent by the actor
  */
-export type ActorMessage<T extends MessageType> = {
+export type ActorMessage<T extends WorkerMessage> = {
     type: T;
     data: RequestResponseMessageMap[T][0];
     targetMapId?: string | number | null;
