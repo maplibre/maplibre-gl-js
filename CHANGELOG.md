@@ -5,6 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix order of normalizeSpriteURL and transformRequest in loadSprite ([#3897](https://github.com/maplibre/maplibre-gl-js/issues/3897))
 - _...Add new stuff here..._
 
 ## 4.1.1
