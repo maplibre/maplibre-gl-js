@@ -195,7 +195,7 @@ describe('Actor', () => {
         const spy = jest.fn().mockReturnValue(Promise.resolve({}));
         worker.worker.actor.registerMessageHandler(WorkerMessage.getClusterExpansionZoom, spy);
 
-        actor.target.postMessage({type: 'getClusterExpansionZoom', data: {} as any, origin: 'file://'});
+        actor.target.postMessage({type: WorkerMessage.getClusterExpansionZoom, data: {} as any, origin: 'file://'});
 
         await sleep(0);
 
