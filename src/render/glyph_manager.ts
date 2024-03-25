@@ -24,7 +24,7 @@ type Entry = {
 
 export class GlyphManager {
     requestManager: RequestManager;
-    localIdeographFontFamily: string;
+    localIdeographFontFamily: string | false;
     entries: {[stack: string]: Entry};
     url: string;
 
@@ -32,7 +32,7 @@ export class GlyphManager {
     static loadGlyphRange = loadGlyphRange;
     static TinySDF = TinySDF;
 
-    constructor(requestManager: RequestManager, localIdeographFontFamily?: string | null) {
+    constructor(requestManager: RequestManager, localIdeographFontFamily?: string | false) {
         this.requestManager = requestManager;
         this.localIdeographFontFamily = localIdeographFontFamily;
         this.entries = {};
