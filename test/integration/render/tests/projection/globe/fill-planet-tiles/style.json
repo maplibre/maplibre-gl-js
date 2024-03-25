@@ -11,7 +11,7 @@
   ],
   "zoom": 2,
   "sources": {
-    "mapbox": {
+    "vector_tiles": {
       "type": "vector",
       "maxzoom": 0,
       "tiles": [
@@ -30,7 +30,7 @@
     {
       "id": "land",
       "type": "fill",
-      "source": "mapbox",
+      "source": "vector_tiles",
       "source-layer": "water",
       "paint": {
         "fill-color": "blue"

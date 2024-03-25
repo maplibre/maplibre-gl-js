@@ -13,7 +13,7 @@ import {Mesh} from '../../render/mesh';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
-import {subdivisionGranularitySettingsNoSubdivision, SubdivisionGranularitySetting} from '../../render/subdivision';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -56,7 +56,7 @@ export class MercatorProjection implements Projection {
     }
 
     get subdivisionGranularity(): SubdivisionGranularitySetting {
-        return subdivisionGranularitySettingsNoSubdivision;
+        return SubdivisionGranularitySetting.noSubdivision;
     }
 
     public isRenderingDirty(): boolean {

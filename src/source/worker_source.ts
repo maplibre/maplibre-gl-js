@@ -13,7 +13,7 @@ import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {RemoveSourceParams} from '../util/actor_messages';
 import type {IActor} from '../util/actor';
 import type {StyleLayerIndex} from '../style/style_layer_index';
-import {SubdivisionGranularitySetting} from '../render/subdivision';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 /**
  * Parameters to identify a tile
@@ -42,7 +42,7 @@ export type WorkerTileParameters = TileParameters & {
 };
 
 /**
- * The paremeters needed in order to load a DEM tile
+ * The parameters needed in order to load a DEM tile
  */
 export type WorkerDEMTileParameters = TileParameters & {
     rawImageData: RGBAImage | ImageBitmap | ImageData;

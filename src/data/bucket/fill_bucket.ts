@@ -1,6 +1,6 @@
 import {FillLayoutArray} from '../array_types.g';
 
-import {layout} from './fill_attributes';
+import {members as layoutAttributes} from './fill_attributes';
 import {SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {LineIndexArray, TriangleIndexArray} from '../index_array_type';
@@ -28,7 +28,8 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {SubdivisionGranularitySetting, subdivideFill} from '../../render/subdivision';
+import {subdivideFill} from '../../render/subdivision';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {fillArrays} from '../../render/fill_arrays';
 
 export class FillBucket implements Bucket {
@@ -149,7 +150,7 @@ export class FillBucket implements Bucket {
     }
     upload(context: Context) {
         if (!this.uploaded) {
-            this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layout.members);
+            this.layoutVertexBuffer = context.createVertexBuffer(this.layoutVertexArray, layoutAttributes);
             this.indexBuffer = context.createIndexBuffer(this.indexArray);
             this.indexBuffer2 = context.createIndexBuffer(this.indexArray2);
         }

@@ -11,7 +11,7 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {ZoomHistory} from '../../style/zoom_history';
 import {BucketFeature, BucketParameters} from '../bucket';
-import {subdivisionGranularitySettingsNoSubdivision} from '../../render/subdivision';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {CanonicalTileID} from '../../source/tile_id';
 
 // Load a fill feature from fixture tile.
@@ -38,15 +38,15 @@ test('FillBucket', () => {
         bucket.addFeature({} as BucketFeature, [[
             new Point(0, 0),
             new Point(10, 10)
-        ]], undefined, canonicalTileID, undefined, subdivisionGranularitySettingsNoSubdivision);
+        ]], undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
 
         bucket.addFeature({} as BucketFeature, [[
             new Point(0, 0),
             new Point(10, 10),
             new Point(10, 20)
-        ]], undefined, canonicalTileID, undefined, subdivisionGranularitySettingsNoSubdivision);
+        ]], undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
 
-        bucket.addFeature(feature as any, feature.loadGeometry(), undefined, canonicalTileID, undefined, subdivisionGranularitySettingsNoSubdivision);
+        bucket.addFeature(feature as any, feature.loadGeometry(), undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
     }).not.toThrow();
 });
 
@@ -70,13 +70,13 @@ test('FillBucket segmentation', () => {
 
     // first add an initial, small feature to make sure the next one starts at
     // a non-zero offset
-    bucket.addFeature({} as BucketFeature, [createPolygon(10)], undefined, canonicalTileID, undefined, subdivisionGranularitySettingsNoSubdivision);
+    bucket.addFeature({} as BucketFeature, [createPolygon(10)], undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
 
     // add a feature that will break across the group boundary
     bucket.addFeature({} as BucketFeature, [
         createPolygon(128),
         createPolygon(128)
-    ], undefined, canonicalTileID, undefined, subdivisionGranularitySettingsNoSubdivision);
+    ], undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
 
     // Each polygon must fit entirely within a segment, so we expect the
     // first segment to include the first feature and the first polygon
