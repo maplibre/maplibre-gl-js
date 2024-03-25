@@ -292,7 +292,7 @@ export type MapOptions = {
      * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
      * @defaultValue 'sans-serif'
      */
-    localIdeographFontFamily?: string;
+    localIdeographFontFamily?: string | false;
     /**
      * The map's MapLibre style. This must be a JSON object conforming to
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
@@ -464,7 +464,7 @@ export class Map extends Camera {
     _renderTaskQueue: TaskQueue;
     _controls: Array<IControl>;
     _mapId: number;
-    _localIdeographFontFamily: string;
+    _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _requestManager: RequestManager;
     _locale: typeof defaultLocale;
