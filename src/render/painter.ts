@@ -477,13 +477,15 @@ export class Painter {
         doUpdate ||= requireExact ? !mat4.exactEquals(prevMatrix, currMatrix) : !mat4.equals(prevMatrix, currMatrix);
         doUpdate ||= this.style.map.terrain.sourceCache.tilesAfterTime(this.terrainFacilitator.renderTime).length > 0;
 
-        if (doUpdate) {
-            mat4.copy(prevMatrix, currMatrix);
-            this.terrainFacilitator.renderTime = Date.now();
-            this.terrainFacilitator.dirty = false;
-            drawDepth(this, this.style.map.terrain);
-            drawCoords(this, this.style.map.terrain);
+        if (!doUpdate) {
+            return;
         }
+
+        mat4.copy(prevMatrix, currMatrix);
+        this.terrainFacilitator.renderTime = Date.now();
+        this.terrainFacilitator.dirty = false;
+        drawDepth(this, this.style.map.terrain);
+        drawCoords(this, this.style.map.terrain);
     }
 
     renderLayer(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>) {
