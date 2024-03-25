@@ -466,7 +466,7 @@ export class Painter {
      * to accurate (that is, the camera has not moved much since it was updated last).
      */
     maybeDrawDepthAndCoords(requireExact: boolean) {
-        if (!this.style.map.terrain) {
+        if (!this.style || !this.style.map || !this.style.map.terrain) {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
