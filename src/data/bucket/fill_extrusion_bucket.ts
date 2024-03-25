@@ -32,8 +32,9 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {SubdivisionGranularitySetting, subdivideFill, subdivideVertexLine} from '../../render/subdivision';
+import {subdivideFill, subdivideVertexLine} from '../../render/subdivision';
 import {fillArrays} from '../../render/fill_arrays';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 
 const FACTOR = Math.pow(2, 13);
 

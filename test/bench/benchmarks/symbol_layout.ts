@@ -2,7 +2,7 @@ import Layout from './layout';
 import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket';
 import {performSymbolLayout} from '../../../src/symbol/symbol_layout';
 import {OverscaledTileID} from '../../../src/source/tile_id';
-import {subdivisionGranularitySettingsNoSubdivision} from '../../../src/render/subdivision';
+import {SubdivisionGranularitySetting} from '../../../src/render/subdivision_granularity_settings';
 
 export default class SymbolLayout extends Layout {
     parsedTiles: Array<any>;
@@ -34,7 +34,7 @@ export default class SymbolLayout extends Layout {
                         imagePositions: tileResult.imageAtlas.iconPositions,
                         showCollisionBoxes: false,
                         canonical: tileResult.featureIndex.tileID.canonical,
-                        subdivisionGranularity: subdivisionGranularitySettingsNoSubdivision
+                        subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision
                     });
                 }
             }

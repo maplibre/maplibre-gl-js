@@ -33,7 +33,8 @@ import murmur3 from 'murmurhash-js';
 import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
 import {VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
 import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
-import {subdivideVertexLine, SubdivisionGranularitySetting} from '../render/subdivision';
+import {subdivideVertexLine} from '../render/subdivision';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:
