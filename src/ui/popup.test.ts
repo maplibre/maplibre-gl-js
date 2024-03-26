@@ -132,6 +132,18 @@ describe('popup', () => {
         expect(onClose).toHaveBeenCalled();
     });
 
+    test('Popup does not fire close event when removed if it is not on the map', () => {
+        const onClose = jest.fn();
+
+        new Popup()
+            .setText('Test')
+            .setLngLat([0, 0])
+            .on('close', onClose)
+            .remove();
+
+        expect(onClose).not.toHaveBeenCalled();
+    });
+
     test('Popup fires open event when added', () => {
         const map = createMap();
         const onOpen = jest.fn();
