@@ -8,39 +8,34 @@
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
     <script src='../../dist/maplibre-gl-dev.js'></script>
     <style>
-        body { margin: 0; padding: 0; }
-        html, body, #map { height: 100%; }
+        body { margin: 0; padding: 0; display: flex; flex-direction: column; }
+        html, body { height: 100%; }
+        #map { flex: 1; }
+        .inputs { user-select: none; font-size: 16px; }
+        label { display: inline-block; padding: 8px 10px; cursor: pointer; }
     </style>
 </head>
 <body>
+<div class="inputs">
+    <label>
+        <input type="checkbox" id="roads">
+        Roads
+    </label>
+    <label>
+        <input type="checkbox" id="contours">
+        Contours
+    </label>
+    <label>
+        <input type="checkbox" id="buildings">
+        Buildings
+    </label>
+</div>
 <div id="map"></div>
 <script>
-    const motorway = {
-        'id': 'road_motorway',
-        'type': 'line',
-        'source': 'openmaptiles',
-        'source-layer': 'transportation',
-        'minzoom': 5,
-        'layout': {
-            'line-cap': 'round',
-            'line-join': 'round',
-            'visibility': 'visible'
-        },
-        'paint': {
-            'line-color': 'hsl(26, 87%, 62%)',
-            'line-width': 4
-        }
-    };
-
     const background = {
         'id': 'background',
         'type': 'background',
-        'layout': {
-            'visibility': 'visible'
-        },
-        'paint': {
-            'background-color': 'rgba(246, 241, 100, 1)'
-        }
+        'paint': {'background-color': 'rgb(216, 210, 206)'}
     };
 
     const water = {
@@ -48,50 +43,70 @@
         'type': 'fill',
         'source': 'openmaptiles',
         'source-layer': 'water',
-        'layout': {
-            'visibility': 'visible'
-        },
-        'paint': {
-            'fill-color': 'rgba(134, 204, 250, 1)'
-        },
-        'metadata': {}
+        'paint': {'fill-color': 'rgba(134, 204, 250, 1)'},
     };
 
-    const highwayShield = {
-        'id': 'highway-shield',
-        'type': 'symbol',
-        'source': 'openmaptiles',
-        'source-layer': 'transportation_name',
-        'minzoom': 8,
-        'layout': {
-            'icon-size': 2,
-            'text-font': [
-                'Noto Sans Regular'
-            ],
-            'text-size': 20,
-            'icon-image': 'road_{ref_length}',
-            'text-field': '{ref}',
-            'symbol-spacing': 80,
-            'symbol-placement': {
-                'base': 1,
-                'stops': [
-                    [
-                        10,
-                        'point'
-                    ],
-                    [
-                        11,
-                        'line'
-                    ]
-                ]
-            },
-            'symbol-avoid-edges': true,
-            'icon-rotation-alignment': 'viewport',
-            'text-rotation-alignment': 'viewport'
+    const roadsLayers = [
+        {
+            'id': 'road_motorway',
+            'type': 'line',
+            'source': 'openmaptiles',
+            'source-layer': 'transportation',
+            'paint': {
+                'line-color': 'hsl(16, 47%, 62%)',
+                'line-width': 2
+            }
         },
-        'paint': {
-            'text-color': 'rgba(37, 36, 36, 1)'
+        {
+            'id': 'shield',
+            'type': 'symbol',
+            'source': 'openmaptiles',
+            'source-layer': 'transportation_name',
+            'minzoom': 8,
+            'layout': {
+                'icon-size': 1.5,
+                'text-size': 16,
+                'icon-image': 'road_{ref_length}',
+                'text-field': '{ref}',
+                'symbol-spacing': 120,
+                'symbol-placement': 'line',
+                'icon-rotation-alignment': 'viewport',
+                'text-rotation-alignment': 'viewport'
+            },
+            'paint': {'text-color': 'rgba(37, 36, 36, 1)'},
+            'filter': ['in', 'class', 'primary']
         }
+    ];
+
+    const contoursLayers = [
+        {
+            'id': 'Contour',
+            'source': 'contours',
+            'source-layer': 'contour',
+            'type': 'line',
+            'paint': {'line-color': 'hsla(0, 0%, 62%, 50%)'},
+        },
+        {
+            'id': 'Contour labels',
+            'source': 'contours',
+            'source-layer': 'contour',
+            'type': 'symbol',
+            'layout': {
+                'text-size': 12,
+                'text-field': '{height}',
+                'text-padding': 35,
+                'symbol-placement': 'line',
+            },
+            'paint': {'text-color': 'hsl(9, 16%, 32%)'}
+        },
+    ];
+
+    const buildings = {
+        'id': 'Building',
+        'type': 'fill',
+        'source': 'openmaptiles',
+        'source-layer': 'building',
+        'paint': {'fill-color': 'RGB(175, 185, 200)'}
     };
 
     const style = {
@@ -103,40 +118,48 @@
                 'url': 'https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
                 'type': 'vector'
             },
-            'maptiler_attribution': {
-                'attribution': '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+            'contours': {
+                'url': 'https://api.maptiler.com/tiles/contours/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
                 'type': 'vector'
-            }
-        },
-        'layers': [
-            background,
-            water,
-            {type: 'slot', id: 'motorway-slot'},
-            highwayShield
-        ],
-        'metadata': {
-            'maptiler:copyright': 'This style was generated on MapTiler Cloud. Usage outside of MapTiler Cloud requires valid MapTiler Data Package: https://www.maptiler.com/data/package/ -- please contact us.'
+            },
         },
         'glyphs': 'https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
         'sprite': 'https://api.maptiler.com/maps/streets/sprite',
-        'bearing': 0,
-        'pitch': 0,
-        'center': [
-            12.0488,
-            55.83567
+        'layers': [
+            background,
+            {type: 'slot', id: 'buildings'},
+            {type: 'slot', id: 'contours'},
+            water,
+            {type: 'slot', id: 'roads'}
         ],
-        'zoom': 12.62,
-
-};
+        'center': [
+            10.20328,
+            46.77293
+        ],
+        'zoom': 14.8
+    };
 
     const map = new maplibregl.Map({
         container: 'map',
         style,
-        hash: true,
     });
 
-    // map.fillSlot('motorway-slot', motorway);
+    map.setMaxBounds([[10.150882249176192, 46.74657373570173], [10.255677750822713, 46.79927337210148]]);
 
+    map.on('style.load', () => {
+        map.fillSlotWithLayers('roads', roadsLayers);
+        document.querySelector('input#roads').checked = true;
+    });
+
+    document.querySelector('input#roads').addEventListener('change', e => {
+        map.fillSlotWithLayers('roads', e.target.checked ? roadsLayers : []);
+    });
+    document.querySelector('input#contours').addEventListener('change', e => {
+        map.fillSlotWithLayers('contours', e.target.checked ? contoursLayers : []);
+    });
+    document.querySelector('input#buildings').addEventListener('change', e => {
+        map.fillSlotWithLayers('buildings', e.target.checked ? [buildings] : []);
+    });
 </script>
 </body>
 </html>
