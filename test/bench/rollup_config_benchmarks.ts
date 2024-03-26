@@ -13,7 +13,6 @@ import {RollupOptions} from 'rollup';
  * The thing to note here is that the index.ts file of the benchmarks needs to export the same thing the originla index.ts file is exporting.
  */
 
-
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
 if (process.env.MAPLIBRE_STYLES) {
