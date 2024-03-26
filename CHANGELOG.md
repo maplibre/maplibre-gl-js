@@ -7,6 +7,7 @@
 ### 🐞 Bug fixes
 - Fix type definition on `localIdeographFontFamily` ([#3896](https://github.com/maplibre/maplibre-gl-js/pull/3896))
 - Fix unwanted panning changes at the end of a panning motion ([#3872](https://github.com/maplibre/maplibre-gl-js/issues/3872))
+- Fix `close` events being fired for popups that aren't open
 - _...Add new stuff here..._
 
 ## 4.1.1
