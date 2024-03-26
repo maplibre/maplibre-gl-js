@@ -352,7 +352,8 @@ function drawLayerSymbols(
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const baseMatrix = isViewportLine ? coord.posMatrix : identityMat4;
         const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
-        const glCoordMatrix = symbolProjection.getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+        const glCoordMatrixForShader = symbolProjection.getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+        const glCoordMatrixForSymbolPlacement = symbolProjection.getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = projection.translatePosition(painter.transform, tile, translate, translateAnchor);
         const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
@@ -365,13 +366,13 @@ function drawLayerSymbols(
         if (alongLine) {
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
-            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, projection, coord.toUnwrapped(), tr.width, tr.height, translation, getElevation);
+            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrixForSymbolPlacement, pitchWithMap, keepUpright, rotateToLine, projection, coord.toUnwrapped(), tr.width, tr.height, translation, getElevation);
         }
 
         const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
         const noLabelPlane = (alongLine || (isText && hasVariablePlacement) || updateTextFitIcon);
         const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : labelPlaneMatrix;
-        const uglCoordMatrix = glCoordMatrix; // formerly also incorporated translate and translate-anchor
+        const uglCoordMatrix = glCoordMatrixForShader; // formerly also incorporated translate and translate-anchor
 
         const hasHalo = isSDF && layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(1) !== 0;
 
