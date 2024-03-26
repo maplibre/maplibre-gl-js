@@ -7,6 +7,13 @@ import typescript from '@rollup/plugin-typescript';
 import {execSync} from 'child_process';
 import {RollupOptions} from 'rollup';
 
+/**
+ * This script generates the benchmark bundles for the benchmark suite.
+ * It does it by replacing the index.ts file of maplibre-gl-js with a local index.ts file that registers the releavnt benchmarks.
+ * The thing to note here is that the index.ts file of the benchmarks needs to export the same thing the originla index.ts file is exporting.
+ */
+
+
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
 if (process.env.MAPLIBRE_STYLES) {
@@ -30,13 +37,16 @@ const allPlugins = plugins(true).concat(replace(replaceConfig));
 const intro = fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8');
 
 const splitConfig = (name: string): RollupOptions[] => [{
-    input: [`test/bench/${name}/benchmarks.ts`, 'src/source/worker.ts'],
+    input: [`test/bench/${name}/index.ts`, 'src/source/worker.ts'],
     output: {
         dir: `staging/benchmarks/${name}`,
         format: 'amd',
         indent: false,
         sourcemap: 'inline',
-        chunkFileNames: 'shared.js'
+        chunkFileNames: 'shared.js',
+        amd: {
+            autoId: true,
+        },
     },
     plugins: allPlugins
 }, {
