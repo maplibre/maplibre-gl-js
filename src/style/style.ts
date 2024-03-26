@@ -94,7 +94,7 @@ export type StyleOptions = {
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
      * Forces a full update.
      */
-    localIdeographFontFamily?: string;
+    localIdeographFontFamily?: string | false;
 };
 
 /**
