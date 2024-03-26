@@ -53,7 +53,7 @@ import type {
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
 import {
-    WorkerMessage,
+    MessageType,
     type GetGlyphsParamerters,
     type GetGlyphsResponse,
     type GetImagesParamerters,
@@ -217,10 +217,10 @@ export class Style extends Evented {
 
         this.map = map;
         this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
-        this.dispatcher.registerMessageHandler(WorkerMessage.getGlyphs, (mapId, params) => {
+        this.dispatcher.registerMessageHandler(MessageType.getGlyphs, (mapId, params) => {
             return this.getGlyphs(mapId, params);
         });
-        this.dispatcher.registerMessageHandler(WorkerMessage.getImages, (mapId, params) => {
+        this.dispatcher.registerMessageHandler(MessageType.getImages, (mapId, params) => {
             return this.getImages(mapId, params);
         });
         this.imageManager = new ImageManager();
@@ -240,7 +240,7 @@ export class Style extends Evented {
 
         this._resetUpdates();
 
-        this.dispatcher.broadcast(WorkerMessage.setReferrer, getReferrer());
+        this.dispatcher.broadcast(MessageType.setReferrer, getReferrer());
         rtlMainThreadPluginFactory().on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
 
         this.on('data', (event) => {
@@ -349,7 +349,7 @@ export class Style extends Evented {
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
-        this.dispatcher.broadcast(WorkerMessage.setLayers, dereferencedLayers);
+        this.dispatcher.broadcast(MessageType.setLayers, dereferencedLayers);
 
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
@@ -410,7 +410,7 @@ export class Style extends Evented {
                 this._changed = true;
             }
 
-            this.dispatcher.broadcast(WorkerMessage.setImages, this._availableImages);
+            this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
             this.fire(new Event('data', {dataType: 'style'}));
 
             if (completion) {
@@ -428,7 +428,7 @@ export class Style extends Evented {
         this._spritesImagesIds = {};
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
-        this.dispatcher.broadcast(WorkerMessage.setImages, this._availableImages);
+        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -638,7 +638,7 @@ export class Style extends Evented {
     }
 
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
-        this.dispatcher.broadcast(WorkerMessage.updateLayers, {
+        this.dispatcher.broadcast(MessageType.updateLayers, {
             layers: this._serializeByIds(updatedIds),
             removedIds
         });
@@ -791,7 +791,7 @@ export class Style extends Evented {
         this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
         this._changed = true;
-        this.dispatcher.broadcast(WorkerMessage.setImages, this._availableImages);
+        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -1501,7 +1501,7 @@ export class Style extends Evented {
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
         if (mapRemoved) {
-            this.dispatcher.broadcast(WorkerMessage.removeMap, undefined);
+            this.dispatcher.broadcast(MessageType.removeMap, undefined);
         }
         this.dispatcher.remove(mapRemoved);
     }
@@ -1704,7 +1704,7 @@ export class Style extends Evented {
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
-        this.dispatcher.broadcast(WorkerMessage.setImages, this._availableImages);
+        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 

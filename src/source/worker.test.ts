@@ -7,13 +7,13 @@ import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_sou
 import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
 import {ActorTarget, IActor} from '../util/actor';
 import {PluginState} from './rtl_text_plugin_status';
-import {WorkerMessage} from '../util/actor_messages';
+import {MessageType} from '../util/actor_messages';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];
     constructor(private actor: IActor) {}
     loadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
-        return this.actor.sendAsync({type: WorkerMessage.loadTile, data: {} as any}, new AbortController());
+        return this.actor.sendAsync({type: MessageType.loadTile, data: {} as any}, new AbortController());
     }
     reloadTile(_: WorkerTileParameters): Promise<WorkerTileResult> {
         throw new Error('Method not implemented.');
@@ -87,7 +87,7 @@ describe('Worker RTLTextPlugin', () => {
             pluginStatus: 'deferred'
         };
 
-        await worker.actor.messageHandlers[WorkerMessage.syncRTLPluginState]('', mockMessage);
+        await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', mockMessage);
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('deferred');
     });
 
@@ -110,7 +110,7 @@ describe('Worker RTLTextPlugin', () => {
             });
         });
 
-        const syncResult: PluginState = await worker.actor.messageHandlers[WorkerMessage.syncRTLPluginState]('', mockMessage) as any;
+        const syncResult: PluginState = await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', mockMessage) as any;
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
         expect(importSpy).toHaveBeenCalledWith(mockURL);
 
@@ -133,7 +133,7 @@ describe('Worker RTLTextPlugin', () => {
             pluginStatus: 'loading'
         };
 
-        const workerResult: PluginState = await worker.actor.messageHandlers[WorkerMessage.syncRTLPluginState]('', mockMessage) as any;
+        const workerResult: PluginState = await worker.actor.messageHandlers[MessageType.syncRTLPluginState]('', mockMessage) as any;
         expect(rtlWorkerPlugin.getRTLTextPluginStatus()).toBe('loaded');
         expect(rtlWorkerPlugin.getPluginURL()).toBe(originalUrl);
 
@@ -156,7 +156,7 @@ describe('Worker generic testing', () => {
 
     test('should validate handlers execution in worker for load tile', done => {
         const server = fakeServer.create();
-        worker.actor.messageHandlers[WorkerMessage.loadTile]('0', {
+        worker.actor.messageHandlers[MessageType.loadTile]('0', {
             type: 'vector',
             source: 'source',
             uid: '0',
@@ -171,11 +171,11 @@ describe('Worker generic testing', () => {
     });
 
     test('isolates different instances\' data', () => {
-        worker.actor.messageHandlers[WorkerMessage.setLayers]('0', [
+        worker.actor.messageHandlers[MessageType.setLayers]('0', [
             {id: 'one', type: 'circle'} as LayerSpecification
         ]);
 
-        worker.actor.messageHandlers[WorkerMessage.setLayers]('1', [
+        worker.actor.messageHandlers[MessageType.setLayers]('1', [
             {id: 'one', type: 'circle'} as LayerSpecification,
             {id: 'two', type: 'circle'} as LayerSpecification,
         ]);
@@ -187,7 +187,7 @@ describe('Worker generic testing', () => {
         const extenalSourceName = 'test';
 
         worker.actor.sendAsync = (message, abortController) => {
-            expect(message.type).toBe(WorkerMessage.loadTile);
+            expect(message.type).toBe(MessageType.loadTile);
             expect(message.targetMapId).toBe('999');
             expect(abortController).toBeDefined();
             done();
@@ -200,17 +200,17 @@ describe('Worker generic testing', () => {
             _self.registerWorkerSource(extenalSourceName, WorkerSourceMock);
         }).toThrow(`Worker source with name "${extenalSourceName}" already registered.`);
 
-        worker.actor.messageHandlers[WorkerMessage.loadTile]('999', {type: extenalSourceName} as WorkerTileParameters);
+        worker.actor.messageHandlers[MessageType.loadTile]('999', {type: extenalSourceName} as WorkerTileParameters);
     });
 
     test('Referrer is set', () => {
-        worker.actor.messageHandlers[WorkerMessage.setReferrer]('fakeId', 'myMap');
+        worker.actor.messageHandlers[MessageType.setReferrer]('fakeId', 'myMap');
         expect(worker.referrer).toBe('myMap');
     });
 
     test('calls callback on error', done => {
         const server = fakeServer.create();
-        worker.actor.messageHandlers[WorkerMessage.importScript]('0', '/error').catch((err) => {
+        worker.actor.messageHandlers[MessageType.importScript]('0', '/error').catch((err) => {
             expect(err).toBeTruthy();
             server.restore();
             done();
@@ -220,14 +220,14 @@ describe('Worker generic testing', () => {
 
     test('set images', () => {
         expect(worker.availableImages['0']).toBeUndefined();
-        worker.actor.messageHandlers[WorkerMessage.setImages]('0', ['availableImages']);
+        worker.actor.messageHandlers[MessageType.setImages]('0', ['availableImages']);
         expect(worker.availableImages['0']).toEqual(['availableImages']);
     });
 
     test('clears resources when map is removed', () => {
-        worker.actor.messageHandlers[WorkerMessage.setLayers]('0', []);
+        worker.actor.messageHandlers[MessageType.setLayers]('0', []);
         expect(worker.layerIndexes['0']).toBeDefined();
-        worker.actor.messageHandlers[WorkerMessage.removeMap]('0', undefined);
+        worker.actor.messageHandlers[MessageType.removeMap]('0', undefined);
         expect(worker.layerIndexes['0']).toBeUndefined();
     });
 });

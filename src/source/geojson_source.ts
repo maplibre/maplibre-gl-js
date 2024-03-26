@@ -13,7 +13,7 @@ import type {Actor} from '../util/actor';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
-import {WorkerMessage} from '../util/actor_messages';
+import {MessageType} from '../util/actor_messages';
 
 /**
  * Options object for GeoJSONSource.
@@ -261,7 +261,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise that is resolved with the zoom number
      */
     getClusterExpansionZoom(clusterId: number): Promise<number> {
-        return this.actor.sendAsync({type: WorkerMessage.getClusterExpansionZoom, data: {type: this.type, clusterId, source: this.id}});
+        return this.actor.sendAsync({type: MessageType.getClusterExpansionZoom, data: {type: this.type, clusterId, source: this.id}});
     }
 
     /**
@@ -271,7 +271,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @returns a promise that is resolved when the features are retrieved
      */
     getClusterChildren(clusterId: number): Promise<Array<GeoJSON.Feature>> {
-        return this.actor.sendAsync({type: WorkerMessage.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
+        return this.actor.sendAsync({type: MessageType.getClusterChildren, data: {type: this.type, clusterId, source: this.id}});
     }
 
     /**
@@ -300,7 +300,7 @@ export class GeoJSONSource extends Evented implements Source {
      * ```
      */
     getClusterLeaves(clusterId: number, limit: number, offset: number): Promise<Array<GeoJSON.Feature>> {
-        return this.actor.sendAsync({type: WorkerMessage.getClusterLeaves, data: {
+        return this.actor.sendAsync({type: MessageType.getClusterLeaves, data: {
             type: this.type,
             source: this.id,
             clusterId,
@@ -328,7 +328,7 @@ export class GeoJSONSource extends Evented implements Source {
         this._pendingLoads++;
         this.fire(new Event('dataloading', {dataType: 'source'}));
         try {
-            const result = await this.actor.sendAsync({type: WorkerMessage.loadData, data: options});
+            const result = await this.actor.sendAsync({type: MessageType.loadData, data: options});
             this._pendingLoads--;
             if (this._removed || result.abandoned) {
                 this.fire(new Event('dataabort', {dataType: 'source'}));
@@ -364,7 +364,7 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     async loadTile(tile: Tile): Promise<void> {
-        const message = !tile.actor ?  WorkerMessage.loadTile :  WorkerMessage.reloadTile;
+        const message = !tile.actor ?  MessageType.loadTile :  MessageType.reloadTile;
         tile.actor = this.actor;
         const params = {
             type: this.type,
@@ -385,7 +385,7 @@ export class GeoJSONSource extends Evented implements Source {
         tile.unloadVectorData();
 
         if (!tile.aborted) {
-            tile.loadVectorData(data, this.map.painter, message ===  WorkerMessage.reloadTile);
+            tile.loadVectorData(data, this.map.painter, message ===  MessageType.reloadTile);
         }
     }
 
@@ -399,12 +399,12 @@ export class GeoJSONSource extends Evented implements Source {
 
     async unloadTile(tile: Tile) {
         tile.unloadVectorData();
-        await this.actor.sendAsync({type: WorkerMessage.removeTile, data: {uid: tile.uid, type: this.type, source: this.id}});
+        await this.actor.sendAsync({type: MessageType.removeTile, data: {uid: tile.uid, type: this.type, source: this.id}});
     }
 
     onRemove() {
         this._removed = true;
-        this.actor.sendAsync({type: WorkerMessage.removeSource, data: {type: this.type, source: this.id}});
+        this.actor.sendAsync({type: MessageType.removeSource, data: {type: this.type, source: this.id}});
     }
 
     serialize(): GeoJSONSourceSpecification {

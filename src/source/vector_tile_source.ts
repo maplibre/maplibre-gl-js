@@ -12,7 +12,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from './worker_source';
-import {WorkerMessage} from '../util/actor_messages';
+import {MessageType} from '../util/actor_messages';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -205,10 +205,10 @@ export class VectorTileSource extends Evented implements Source {
             promoteId: this.promoteId
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
-        let messageType: WorkerMessage.loadTile | WorkerMessage.reloadTile = WorkerMessage.reloadTile;
+        let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getActor();
-            messageType = WorkerMessage.loadTile;
+            messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
             return new Promise<void>((resolve, reject) => {
                 tile.reloadPromise = {resolve, reject};
@@ -260,7 +260,7 @@ export class VectorTileSource extends Evented implements Source {
         }
         if (tile.actor) {
             await tile.actor.sendAsync({
-                type: WorkerMessage.abortTile,
+                type: MessageType.abortTile,
                 data: {uid: tile.uid, type: this.type, source: this.id}
             });
         }
@@ -270,7 +270,7 @@ export class VectorTileSource extends Evented implements Source {
         tile.unloadVectorData();
         if (tile.actor) {
             await tile.actor.sendAsync({
-                type: WorkerMessage.removeTile,
+                type: MessageType.removeTile,
                 data: {
                     uid: tile.uid,
                     type: this.type,

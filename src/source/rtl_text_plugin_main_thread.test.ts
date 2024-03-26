@@ -4,7 +4,7 @@ import {sleep} from '../util/test/util';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {PluginState} from './rtl_text_plugin_status';
-import {WorkerMessage} from '../util/actor_messages';
+import {MessageType} from '../util/actor_messages';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
 describe('RTLMainThreadPlugin', () => {
@@ -12,7 +12,7 @@ describe('RTLMainThreadPlugin', () => {
     let broadcastSpy: jest.SpyInstance;
     const url = 'http://example.com/plugin';
     const failedToLoadMessage = `RTL Text Plugin failed to import scripts from ${url}`;
-    const SyncRTLPluginStateMessageName = WorkerMessage.syncRTLPluginState;
+    const SyncRTLPluginStateMessageName = MessageType.syncRTLPluginState;
 
     beforeEach(() => {
         server = fakeServer.create();
@@ -22,7 +22,7 @@ describe('RTLMainThreadPlugin', () => {
         broadcastSpy = jest.spyOn(Dispatcher.prototype, 'broadcast').mockImplementation(() => { return Promise.resolve({} as any); });
     });
 
-    function broadcastMockSuccess(message: WorkerMessage, payload: PluginState): Promise<PluginState[]> {
+    function broadcastMockSuccess(message: MessageType, payload: PluginState): Promise<PluginState[]> {
         console.log('broadcastMockSuccessDefer', payload.pluginStatus);
         if (message === SyncRTLPluginStateMessageName) {
             if (payload.pluginStatus === 'loading') {
@@ -35,7 +35,7 @@ describe('RTLMainThreadPlugin', () => {
         }
     }
 
-    function broadcastMockSuccessDefer(message: WorkerMessage, payload: PluginState): Promise<PluginState[]> {
+    function broadcastMockSuccessDefer(message: MessageType, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
             if (payload.pluginStatus === 'deferred') {
                 const resultState: PluginState = {
@@ -47,7 +47,7 @@ describe('RTLMainThreadPlugin', () => {
         }
     }
 
-    function broadcastMockFailure(message: WorkerMessage, payload: PluginState): Promise<PluginState[]> {
+    function broadcastMockFailure(message: MessageType, payload: PluginState): Promise<PluginState[]> {
         if (message === SyncRTLPluginStateMessageName) {
             if (payload.pluginStatus === 'loading') {
                 return Promise.reject(failedToLoadMessage);

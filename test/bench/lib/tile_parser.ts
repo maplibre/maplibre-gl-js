@@ -15,7 +15,7 @@ import type {OverscaledTileID} from '../../../src/source/tile_id';
 import type {TileJSON} from '../../../src/types/tilejson';
 import type {Map} from '../../../src/ui/map';
 import type {IActor} from '../../../src/util/actor';
-import {WorkerMessage} from '../../../src/util/actor_messages';
+import {MessageType} from '../../../src/util/actor_messages';
 
 class StubMap extends Evented {
     style: Style;
@@ -89,10 +89,10 @@ export default class TileParser {
         const parser = this;
         this.actor = {
             sendAsync(message) {
-                if (message.type === WorkerMessage.getImages) {
+                if (message.type === MessageType.getImages) {
                     return parser.loadImages(message.data);
                 }
-                if (message.type === WorkerMessage.getGlyphs) {
+                if (message.type === MessageType.getGlyphs) {
                     return parser.loadGlyphs(message.data);
                 }
                 throw new Error(`Invalid action ${message.type}`);

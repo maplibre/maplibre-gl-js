@@ -5,7 +5,7 @@ import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax';
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
 import type {RequestResponseMessageMap} from './actor_messages';
-import {WorkerMessage} from './actor_messages';
+import {MessageType} from './actor_messages';
 
 /**
  * Responsible for sending messages from a {@link Source} to an associated
@@ -35,7 +35,7 @@ export class Dispatcher {
     /**
      * Broadcast a message to all Workers.
      */
-    broadcast<T extends WorkerMessage>(type: T, data: RequestResponseMessageMap[T][0]): Promise<RequestResponseMessageMap[T][1][]> {
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<RequestResponseMessageMap[T][1][]> {
         const promises: Promise<RequestResponseMessageMap[T][1]>[] = [];
         for (const actor of this.actors) {
             promises.push(actor.sendAsync({type, data}));
@@ -58,7 +58,7 @@ export class Dispatcher {
         if (mapRemoved) this.workerPool.release(this.id);
     }
 
-    public registerMessageHandler<T extends WorkerMessage>(type: T, handler: MessageHandler<T>) {
+    public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
         for (const actor of this.actors) {
             actor.registerMessageHandler(type, handler);
         }
@@ -70,7 +70,7 @@ let globalDispatcher: Dispatcher;
 export function getGlobalDispatcher(): Dispatcher {
     if (!globalDispatcher) {
         globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
-        globalDispatcher.registerMessageHandler(WorkerMessage.getResource, (_mapId, params, abortController) => {
+        globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
             return makeRequest(params, abortController);
         });
     }

@@ -16,7 +16,7 @@ import type {Tile} from './tile';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
 import {RGBAImage} from '../util/image';
-import {WorkerMessage} from '../util/actor_messages';
+import {MessageType} from '../util/actor_messages';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)
@@ -87,7 +87,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
                 if (!tile.actor || tile.state === 'expired') {
                     tile.actor = this.dispatcher.getActor();
                     /* eslint-disable require-atomic-updates */
-                    const data = await tile.actor.sendAsync({type: WorkerMessage.loadDEMTile, data: params});
+                    const data = await tile.actor.sendAsync({type: MessageType.loadDEMTile, data: params});
                     tile.dem = data;
                     tile.needsHillshadePrepare = true;
                     tile.needsTerrainPrepare = true;
@@ -160,7 +160,7 @@ export class RasterDEMTileSource extends RasterTileSource implements Source {
 
         tile.state = 'unloaded';
         if (tile.actor) {
-            await tile.actor.sendAsync({type: WorkerMessage.removeDEMTile, data: {type: this.type, uid: tile.uid, source: this.id}});
+            await tile.actor.sendAsync({type: MessageType.removeDEMTile, data: {type: this.type, uid: tile.uid, source: this.id}});
         }
     }
 }
