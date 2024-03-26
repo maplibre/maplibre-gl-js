@@ -18,8 +18,6 @@ import {IndexBuffer} from '../gl/index_buffer';
 import {SegmentVector} from '../data/segment';
 import {GlobeProjection} from '../geo/projection/globe';
 
-const MAX_PRERENDERS_PER_FRAME = 1;
-
 export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
@@ -31,15 +29,10 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
 
     if (painter.renderPass === 'offscreen') {
         // Prepare tiles
-        let prerenderCount = 0;
         for (const coord of tileIDs) {
             const tile = sourceCache.getTile(coord);
             if (typeof tile.needsHillshadePrepare !== 'undefined' && tile.needsHillshadePrepare) {
                 prepareHillshade(painter, tile, layer, depthMode, StencilMode.disabled, colorMode);
-                prerenderCount++;
-            }
-            if (prerenderCount >= MAX_PRERENDERS_PER_FRAME) {
-                break;
             }
         }
         context.viewport.set([0, 0, painter.width, painter.height]);
