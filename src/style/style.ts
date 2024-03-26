@@ -962,7 +962,7 @@ export class Style extends Evented {
         }
     }
 
-    fillSlot(slotId: string, layers: AddLayerObject[]) {
+    populateSlot(slotId: string, layers: AddLayerObject[]) {
         if (!Array.isArray(layers) || !this._slots[slotId]) return;
         for (const oldLayerId of this._slots[slotId].layerIds) {
             this.removeLayer(oldLayerId);

@@ -2,25 +2,25 @@
 describe('Slots', () => {
     test('Empty slot does not affect rendering of free layers', () => {
     });
-    test('fillSlotWithLayers adds 2 layers before a layer that comes after a slot', () => {
+    test('populateSlot adds 2 layers before a layer that comes after a slot', () => {
     });
-    test('fillSlotWithLayers appends 2 layers when there is no more layers after a slot', () => {
+    test('populateSlot appends 2 layers when there is no more layers after a slot', () => {
     });
-    test('Layers are inserted into Style._layers in the same order as provided to fillSlotWithLayers', () => {
+    test('Layers are inserted into Style._layers in the same order as provided to populateSlot', () => {
     });
-    test('fillSlotWithLayers empties the slot if empty array is passed to fillSlot', () => {
+    test('populateSlot empties the slot if empty array is passed to it', () => {
     });
-    test('fillSlotWithLayers empties the slot before inserting new layers', () => {
+    test('populateSlot empties the slot before inserting new layers', () => {
     });
-    test('fillSlotWithLayers does not throw when called with wrong slotId', () => {
+    test('populateSlot does not throw when called with wrong slotId', () => {
     });
-    test('fillSlotWithLayers keeps layers in slot untouched when called with invalid layers argument', () => {
+    test('populateSlot keeps layers in slot untouched when called with invalid layers argument', () => {
     });
-    test('fillSlotWithLayers adds layers when Style._layers was empty', () => {
+    test('populateSlot adds layers when Style._layers was empty', () => {
     });
-    test('fillSlotWithLayers adds layers in correct position when the next layer was an empty slot and there were no layers after that', () => {
+    test('populateSlot adds layers in correct position when the next layer was an empty slot and there were no layers after that', () => {
     });
-    test('fillSlotWithLayers adds layers in correct position when the next layer was a filled slot', () => {
+    test('populateSlot adds layers in correct position when the next layer was a filled slot', () => {
     });
     test('map.addLayer adds a layer before a slot when called with beforeId === slotId', () => {
     });
@@ -33,9 +33,9 @@ describe('Slots', () => {
     test('After setStyle with {diff: true} slots are emptied and can be filled again', () => {
         // This can be an inconvenience to a user but I think it'll be difficult to do it otherwise
         // Also, with slots there will less reason to call setStyle
-        // - because in many cases fillSlotWithLayers will be a good alternative
+        // - because in many cases populateSlot will be a good alternative
     });
-    test('fillSlotWithLayers does not insert layers when called called with an id of free layer', () => {
+    test('populateSlot does not insert layers when called called with an id of free layer', () => {
     });
     test('New slot cannot be added via map.addLayer', () => {
     });

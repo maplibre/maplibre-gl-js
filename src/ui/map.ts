@@ -2361,9 +2361,9 @@ export class Map extends Camera {
         return this._update(true);
     }
 
-    fillSlotWithLayers(slotId: string, layers: AddLayerObject[]) {
+    populateSlot(slotId: string, layers: AddLayerObject[]) {
         if (!this.style) return;
-        this.style.fillSlot(slotId, [...layers]);
+        this.style.populateSlot(slotId, [...layers]);
         return this._update(true);
     }
 

@@ -147,18 +147,18 @@
     map.setMaxBounds([[10.150882249176192, 46.74657373570173], [10.255677750822713, 46.79927337210148]]);
 
     map.on('style.load', () => {
-        map.fillSlotWithLayers('roads', roadsLayers);
+        map.populateSlot('roads', roadsLayers);
         document.querySelector('input#roads').checked = true;
     });
 
     document.querySelector('input#roads').addEventListener('change', e => {
-        map.fillSlotWithLayers('roads', e.target.checked ? roadsLayers : []);
+        map.populateSlot('roads', e.target.checked ? roadsLayers : []);
     });
     document.querySelector('input#contours').addEventListener('change', e => {
-        map.fillSlotWithLayers('contours', e.target.checked ? contoursLayers : []);
+        map.populateSlot('contours', e.target.checked ? contoursLayers : []);
     });
     document.querySelector('input#buildings').addEventListener('change', e => {
-        map.fillSlotWithLayers('buildings', e.target.checked ? [buildings] : []);
+        map.populateSlot('buildings', e.target.checked ? [buildings] : []);
     });
 </script>
 </body>
