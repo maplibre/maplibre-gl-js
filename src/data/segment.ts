@@ -44,7 +44,7 @@ export class SegmentVector {
         const lastSegment: Segment = this.segments[this.segments.length - 1];
 
         if (numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
-            warnOnce(`Max vertices per segment is ${SegmentVector.MAX_VERTEX_ARRAY_LENGTH}: bucket requested ${numVertices}`);
+            warnOnce(`Max vertices per segment is ${SegmentVector.MAX_VERTEX_ARRAY_LENGTH}: bucket requested ${numVertices}. Consider using the \`fillLargeMeshArrays\` function if you require meshes with more than ${SegmentVector.MAX_VERTEX_ARRAY_LENGTH} vertices.`);
         }
 
         if (!lastSegment || lastSegment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH || lastSegment.sortKey !== sortKey || this._invalidateLast) {
