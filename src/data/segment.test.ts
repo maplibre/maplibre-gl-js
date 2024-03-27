@@ -1,5 +1,6 @@
 import {StructArray} from '../util/struct_array';
 import {SegmentVector} from './segment';
+import {VirtualIndexBufferTriangles, VirtualVertexBuffer} from '../../test/unit/lib/virtual_gl_buffers';
 
 describe('SegmentVector', () => {
     test('constructor', () => {
@@ -158,36 +159,6 @@ describe('SegmentVector', () => {
         expect(segmentVector.segments).toHaveLength(2);
     });
 });
-
-class VirtualVertexBuffer {
-    public data: Array<number> = [];
-
-    public get length(): number {
-        return this.data.length / 2;
-    }
-
-    public emplaceBack(x, y) {
-        this.data.push(x, y);
-    }
-
-    public addVertices(numVertices: number) {
-        for (let i = 0; i < numVertices; i++) {
-            this.emplaceBack(0, 0);
-        }
-    }
-}
-
-class VirtualIndexBufferTriangles {
-    public data: Array<number> = [];
-
-    public get length(): number {
-        return this.data.length / 3;
-    }
-
-    public emplaceBack(i0, i1, i2) {
-        this.data.push(i0, i1, i2);
-    }
-}
 
 /**
  * Mocks the usage of a segment from SegmentVector. Returns the used segment.

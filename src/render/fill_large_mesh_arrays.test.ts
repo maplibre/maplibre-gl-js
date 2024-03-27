@@ -3,6 +3,7 @@ import {SegmentVector} from '../data/segment';
 import {StructArray} from '../util/struct_array';
 import {clamp} from '../util/util';
 import {fillLargeMeshArrays} from './fill_large_mesh_arrays';
+import {VirtualIndexBufferLines, VirtualIndexBufferTriangles, VirtualVertexBuffer} from '../../test/unit/lib/virtual_gl_buffers';
 
 describe('fillArrays', () => {
     test('Tiny mesh is unchanged.', () => {
@@ -45,42 +46,6 @@ describe('fillArrays', () => {
         testMeshesEqual(mesh, split);
     });
 });
-
-class VirtualVertexBuffer {
-    public data: Array<number> = [];
-
-    public get length(): number {
-        return this.data.length / 2;
-    }
-
-    public emplaceBack(x, y) {
-        this.data.push(x, y);
-    }
-}
-
-class VirtualIndexBufferTriangles {
-    public data: Array<number> = [];
-
-    public get length(): number {
-        return this.data.length / 3;
-    }
-
-    public emplaceBack(i0, i1, i2) {
-        this.data.push(i0, i1, i2);
-    }
-}
-
-class VirtualIndexBufferLines {
-    public data: Array<number> = [];
-
-    public get length(): number {
-        return this.data.length / 2;
-    }
-
-    public emplaceBack(i0, i1) {
-        this.data.push(i0, i1);
-    }
-}
 
 type SimpleSegment = {
     vertexOffset: number;
