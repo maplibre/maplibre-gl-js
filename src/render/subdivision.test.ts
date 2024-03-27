@@ -1,6 +1,7 @@
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
-import {generateWireframeFromTriangles, scanlineTriangulateVertexRing, subdivideFill, subdivideVertexLine} from './subdivision';
+import {scanlineTriangulateVertexRing, subdivideFill, subdivideVertexLine} from './subdivision';
+import {generateWireframeFromTriangles} from '../../test/unit/lib/mesh_utils';
 import {CanonicalTileID} from '../source/tile_id';
 
 /**

@@ -608,61 +608,6 @@ export function subdivideFill(polygon: Array<Array<Point>>, canonical: Canonical
 }
 
 /**
- * Returns an array of line indices for rendering a wireframe of the supplied triangle array. Useful for debugging.
- * @param triangleIndices - An index array where each three indices form a triangle.
- * @returns An index array where each pair of indices forms a line segment.
- */
-export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
-    const lineIndices = [];
-
-    const edgeMap = new Map<string, number>();
-
-    const getKey = (i0, i1) => {
-        const e0 = Math.min(i0, i1);
-        const e1 = Math.max(i0, i1);
-        return `${e0}_${e1}`;
-    };
-
-    for (let i = 2; i < triangleIndices.length; i += 3) {
-        const i0 = triangleIndices[i - 2];
-        const i1 = triangleIndices[i - 1];
-        const i2 = triangleIndices[i];
-
-        const k0 = getKey(i0, i1);
-        const k1 = getKey(i1, i2);
-        const k2 = getKey(i2, i0);
-
-        // Make sure an edge shared by multiple triangles is only present once.
-        if (!edgeMap.has(k0)) {
-            edgeMap.set(k0, 1);
-        } else {
-            edgeMap.set(k0, edgeMap.get(k0) + 1);
-        }
-        if (!edgeMap.has(k1)) {
-            edgeMap.set(k1, 1);
-        } else {
-            edgeMap.set(k1, edgeMap.get(k1) + 1);
-        }
-        if (!edgeMap.has(k2)) {
-            edgeMap.set(k2, 1);
-        } else {
-            edgeMap.set(k2, edgeMap.get(k2) + 1);
-        }
-    }
-
-    for (const pair of edgeMap) {
-        if (pair[1] === 1) {
-            const split = pair[0].split('_');
-            const i0 = parseInt(split[0]);
-            const i1 = parseInt(split[1]);
-            lineIndices.push(i0, i1);
-        }
-    }
-
-    return lineIndices;
-}
-
-/**
  * Subdivides a line represented by an array of points. Mainly intended for preprocessing geometry for the 'line' layer type.
  * Assumes a line segment between each two consecutive points in the array.
  * Does not assume a line segment from last point to first point, unless `isRing` is set to `true`.
@@ -889,69 +834,6 @@ export function fixWindingOrder(flattened: Array<number>, indices: Array<number>
     }
 
     return corrected;
-}
-
-/**
- * Returns a SVG image (as string) that displays the supplied triangles and lines. Only vertices used by the triangles are included in the svg.
- * @param flattened - Array of flattened vertex coordinates.
- * @param triangles - Array of triangle indices.
- * @param edges - List of arrays of edge indices. Every pair of indices forms a line. A single triangle would look like `[[0 1 1 2 2 0]]`.
- * @returns SVG image as string.
- */
-export function getDebugSvg(flattened: Array<number>, triangles?: Array<number>, edges?: Array<Array<number>>, granularity: number = 1): string {
-    const svg = [];
-
-    const cellSize = EXTENT / granularity;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (let i = 0; i < triangles.length; i++) {
-        const x = flattened[triangles[i] * 2];
-        const y = flattened[triangles[i] * 2 + 1];
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-    }
-
-    svg.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX - 10} ${minY - 10} ${maxX - minX + 20} ${maxY - minY + 20}">`);
-
-    if (triangles) {
-        for (let i = 0; i < triangles.length; i += 3) {
-            const i0 = triangles[i];
-            const i1 = triangles[i + 1];
-            const i2 = triangles[i + 2];
-
-            for (const index of [i0, i1, i2]) {
-                const x = flattened[index * 2];
-                const y = flattened[index * 2 + 1];
-                const isOnCellEdge = (x % cellSize === 0) || (y % cellSize === 0);
-                svg.push(`<circle cx="${x}" cy="${y}" r="1.0" fill="${isOnCellEdge ? 'red' : 'black'}" stroke="none"/>`);
-                svg.push(`<text x="${x + 2}" y="${y - 2}" style="font: 2px sans-serif;">${(index).toString()}</text>`);
-            }
-
-            for (const edge of [[i0, i1], [i1, i2], [i2, i0]]) {
-                svg.push(`<line x1="${flattened[edge[0] * 2]}" y1="${flattened[edge[0] * 2 + 1]}" x2="${flattened[edge[1] * 2]}" y2="${flattened[edge[1] * 2 + 1]}" stroke="black" stroke-width="0.5"/>`);
-            }
-        }
-    }
-
-    if (edges) {
-        for (const edgeList of edges) {
-            for (let i = 0; i < edgeList.length; i += 2) {
-                svg.push(`<circle cx="${flattened[edgeList[i] * 2]}" cy="${flattened[edgeList[i] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
-                svg.push(`<circle cx="${flattened[edgeList[i + 1] * 2]}" cy="${flattened[edgeList[i + 1] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
-                svg.push(`<line x1="${flattened[edgeList[i] * 2]}" y1="${flattened[edgeList[i] * 2 + 1]}" x2="${flattened[edgeList[i + 1] * 2]}" y2="${flattened[edgeList[i + 1] * 2 + 1]}" stroke="green" stroke-width="0.25"/>`);
-            }
-        }
-    }
-
-    svg.push('</svg>');
-
-    return svg.join('');
 }
 
 /**
