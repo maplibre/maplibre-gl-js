@@ -1,11 +1,160 @@
 import {LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
 import {SegmentVector} from '../data/segment';
 import {StructArray} from '../util/struct_array';
-import {clamp} from '../util/util';
 import {fillLargeMeshArrays} from './fill_large_mesh_arrays';
 import {VirtualIndexBufferLines, VirtualIndexBufferTriangles, VirtualVertexBuffer} from '../../test/unit/lib/virtual_gl_buffers';
+import {SimpleMesh, getGridMesh, getGridMeshRandom} from '../../test/unit/lib/mesh_utils';
 
 describe('fillArrays', () => {
+    test('Mesh comparison works', () => {
+        const meshA: SimpleMesh = {
+            vertices: [
+                0, 0, // 0       0 ---- 1
+                1, 0, // 1       |      |
+                1, 1, // 2       |      |
+                0, 1  // 3       3 ---- 2
+            ],
+            indicesTriangles: [
+                0, 3, 1,
+                3, 2, 1
+            ],
+            indicesLines: [
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 0
+            ],
+            segmentsTriangles: [
+                {
+                    vertexOffset: 0,
+                    primitiveLength: 2,
+                    primitiveOffset: 0,
+                }
+            ],
+            segmentsLines: [
+                {
+                    vertexOffset: 0,
+                    primitiveLength: 4,
+                    primitiveOffset: 0,
+                }
+            ]
+        };
+
+        // Check string representation
+        const stringsA = getRenderedGeometryRepresentation(meshA);
+        expect(stringsA.stringsTriangles).toEqual(['(0 0) (0 1) (1 0)', '(0 1) (1 1) (1 0)']);
+        expect(stringsA.stringsLines).toEqual(['(0 0) (1 0)', '(1 0) (1 1)', '(1 1) (0 1)', '(0 1) (0 0)']);
+
+        const meshB: SimpleMesh = {
+            vertices: [
+                0, 0, // 0
+                0, 1, // 1
+                1, 0, // 2
+                0, 1, // 3
+                1, 1, // 4
+                1, 0, // 5
+                0, 0,
+                1, 0,
+                1, 1,
+                0, 1,
+            ],
+            indicesTriangles: [
+                0, 1, 2,
+                0, 1, 2
+            ],
+            indicesLines: [
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 0
+            ],
+            segmentsTriangles: [
+                {
+                    vertexOffset: 0,
+                    primitiveLength: 1,
+                    primitiveOffset: 0,
+                },
+                {
+                    vertexOffset: 3,
+                    primitiveLength: 1,
+                    primitiveOffset: 1,
+                }
+            ],
+            segmentsLines: [
+                {
+                    vertexOffset: 6,
+                    primitiveLength: 4,
+                    primitiveOffset: 0,
+                }
+            ]
+        };
+
+        testMeshesEqual(meshA, meshB);
+
+        // same as mesh A, but contains one error
+        const meshC: SimpleMesh = {
+            vertices: [
+                0, 0, // 0       0 ---- 1
+                1, 0, // 1       |      |
+                1, 1, // 2       |      |
+                0, 1  // 3       3 ---- 2
+            ],
+            indicesTriangles: [
+                0, 3, 1,
+                1, 2, 3 // flip vertex order
+            ],
+            indicesLines: [
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 0
+            ],
+            segmentsTriangles: [
+                {
+                    vertexOffset: 0,
+                    primitiveLength: 2,
+                    primitiveOffset: 0,
+                }
+            ],
+            segmentsLines: [
+                {
+                    vertexOffset: 0,
+                    primitiveLength: 4,
+                    primitiveOffset: 0,
+                }
+            ]
+        };
+        const stringsC = getRenderedGeometryRepresentation(meshC);
+        // String representations should be different
+        expect(stringsC.stringsTriangles).not.toEqual(stringsA.stringsTriangles);
+    });
+
+    test('Mesh grid generation', () => {
+        const mesh = getGridMesh(2);
+        const strings = getRenderedGeometryRepresentation(mesh);
+        // Note that this forms a correct 2x2 quad mesh.
+        expect(strings.stringsTriangles).toEqual([
+            '(0 0) (1 1) (1 0)',
+            '(0 0) (0 1) (1 1)',
+            '(1 0) (2 1) (2 0)',
+            '(1 0) (1 1) (2 1)',
+            '(0 1) (1 2) (1 1)',
+            '(0 1) (0 2) (1 2)',
+            '(1 1) (2 2) (2 1)',
+            '(1 1) (1 2) (2 2)'
+        ]);
+        expect(strings.stringsLines).toEqual([
+            '(0 0) (1 0)',
+            '(1 0) (2 0)',
+            '(0 2) (1 2)',
+            '(1 2) (2 2)',
+            '(0 0) (0 1)',
+            '(0 1) (0 2)',
+            '(2 0) (2 1)',
+            '(2 1) (2 2)'
+        ]);
+    });
+
     test('Tiny mesh is unchanged.', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
         const mesh = getGridMesh(1);
@@ -46,20 +195,6 @@ describe('fillArrays', () => {
         testMeshesEqual(mesh, split);
     });
 });
-
-type SimpleSegment = {
-    vertexOffset: number;
-    primitiveOffset: number;
-    primitiveLength: number;
-};
-
-type SimpleMesh = {
-    segmentsTriangles: Array<SimpleSegment>;
-    segmentsLines: Array<SimpleSegment>;
-    vertices: Array<number>;
-    indicesTriangles: Array<number>;
-    indicesLines: Array<number>;
-}
 
 function splitMesh(mesh: SimpleMesh): SimpleMesh {
     const segmentsTriangles = new SegmentVector();
@@ -145,153 +280,5 @@ function getRenderedGeometryRepresentation(mesh: SimpleMesh) {
     return {
         stringsTriangles,
         stringsLines
-    };
-}
-
-/**
- * Generates a simple grid mesh that has `size` by `size` quads.
- */
-function getGridMesh(size: number): SimpleMesh {
-    const vertices = [];
-    const indicesTriangles = [];
-    const indicesLines = [];
-
-    const verticesPerAxis = size + 1;
-
-    // Generate vertices
-    for (let y = 0; y < verticesPerAxis; y++) {
-        for (let x = 0; x < verticesPerAxis; x++) {
-            vertices.push(x);
-            vertices.push(y);
-        }
-    }
-
-    // Generate indices
-    for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-            const i00 = (y * verticesPerAxis) + x;
-            const i10 = (y * verticesPerAxis) + (x + 1);
-            const i01 = ((y + 1) * verticesPerAxis) + x;
-            const i11 = ((y + 1) * verticesPerAxis) + (x + 1);
-            indicesTriangles.push(i00);
-            indicesTriangles.push(i11);
-            indicesTriangles.push(i10);
-            indicesTriangles.push(i00);
-            indicesTriangles.push(i01);
-            indicesTriangles.push(i11);
-        }
-    }
-
-    // Generate lines
-
-    // Top
-    for (let i = 0; i < size; i++) {
-        indicesLines.push(i);
-        indicesLines.push(i + 1);
-    }
-    // Bottom
-    for (let i = 0; i < size; i++) {
-        indicesLines.push(verticesPerAxis * size + i);
-        indicesLines.push(verticesPerAxis * size + i + 1);
-    }
-    // Left
-    for (let i = 0; i < size; i++) {
-        indicesLines.push(i * verticesPerAxis);
-        indicesLines.push((i + 1) * verticesPerAxis);
-    }
-    // Right
-    for (let i = 0; i < size; i++) {
-        indicesLines.push(i * verticesPerAxis + size);
-        indicesLines.push((i + 1) * verticesPerAxis + size);
-    }
-
-    return {
-        segmentsTriangles: [{
-            primitiveLength: indicesTriangles.length / 3,
-            primitiveOffset: 0,
-            vertexOffset: 0,
-        }],
-        segmentsLines: [{
-            primitiveLength: indicesLines.length / 2,
-            primitiveOffset: 0,
-            vertexOffset: 0,
-        }],
-        vertices,
-        indicesTriangles,
-        indicesLines
-    };
-}
-
-// https://stackoverflow.com/a/47593316
-// https://gist.github.com/tommyettinger/46a874533244883189143505d203312c?permalink_comment_id=4365431#gistcomment-4365431
-function splitmix32(a) {
-    return function() {
-        a |= 0;
-        a = a + 0x9e3779b9 | 0;
-        let t = a ^ a >>> 16;
-        t = Math.imul(t, 0x21f0aaad);
-        t = t ^ t >>> 15;
-        t = Math.imul(t, 0x735a2d97);
-        return ((t = t ^ t >>> 15) >>> 0) / 4294967296;
-    };
-}
-
-/**
- * Generates a mesh with the vertices of a grid, but random triangles and lines.
- */
-function getGridMeshRandom(size: number, triangleCount: number, lineCount: number): SimpleMesh {
-    const vertices = [];
-    const indicesTriangles = [];
-    const indicesLines = [];
-
-    const verticesPerAxis = size + 1;
-
-    // Generate vertices
-    for (let y = 0; y < verticesPerAxis; y++) {
-        for (let x = 0; x < verticesPerAxis; x++) {
-            vertices.push(x);
-            vertices.push(y);
-        }
-    }
-
-    const vertexCount = vertices.length / 2;
-    const random = splitmix32(0x0badf00d);
-
-    for (let i = 0; i < triangleCount; i++) {
-        const i0 = clamp(Math.floor(random() * vertexCount), 0, vertexCount);
-        let i1 = clamp(Math.floor(random() * vertexCount), 0, vertexCount);
-        let i2 = clamp(Math.floor(random() * vertexCount), 0, vertexCount);
-        while (i1 === i0) {
-            i1 = (i1 + 1) % vertexCount;
-        }
-        while (i2 === i0 || i2 === i1) {
-            i2 = (i2 + 1) % vertexCount;
-        }
-        indicesTriangles.push(i0, i1, i2);
-    }
-
-    for (let i = 0; i < lineCount; i++) {
-        const i0 = clamp(Math.floor(random() * vertexCount), 0, vertexCount);
-        let i1 = clamp(Math.floor(random() * vertexCount), 0, vertexCount);
-        while (i1 === i0) {
-            i1 = (i1 + 1) % vertexCount;
-        }
-        indicesLines.push(i0, i1);
-    }
-
-    return {
-        segmentsTriangles: [{
-            primitiveLength: indicesTriangles.length / 3,
-            primitiveOffset: 0,
-            vertexOffset: 0,
-        }],
-        segmentsLines: [{
-            primitiveLength: indicesLines.length / 2,
-            primitiveOffset: 0,
-            vertexOffset: 0,
-        }],
-        vertices,
-        indicesTriangles,
-        indicesLines
     };
 }
