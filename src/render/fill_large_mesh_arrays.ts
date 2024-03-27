@@ -8,7 +8,7 @@ import {StructArray} from '../util/struct_array';
  * This function is mainly intended for use with subdivided geometry, since sometimes subdivision might generate
  * more vertices than what fits into 16 bit indices.
  */
-export function fillArrays(
+export function fillLargeMeshArrays(
     segmentsTriangles: SegmentVector,
     segmentsLines: SegmentVector,
     vertexArray: StructArray,

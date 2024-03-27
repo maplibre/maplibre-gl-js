@@ -2,7 +2,7 @@ import {LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
 import {SegmentVector} from '../data/segment';
 import {StructArray} from '../util/struct_array';
 import {clamp} from '../util/util';
-import {fillArrays} from './fill_arrays';
+import {fillLargeMeshArrays} from './fill_large_mesh_arrays';
 
 describe('fillArrays', () => {
     test('Tiny mesh is unchanged.', () => {
@@ -104,7 +104,7 @@ function splitMesh(mesh: SimpleMesh): SimpleMesh {
     const virtualIndicesTriangles = new VirtualIndexBufferTriangles();
     const virtualIndicesLines = new VirtualIndexBufferLines();
 
-    fillArrays(
+    fillLargeMeshArrays(
         segmentsTriangles,
         segmentsLines,
         virtualVertices as any as StructArray,
