@@ -18,6 +18,13 @@ class RTLWorkerPlugin implements RTLTextPlugin {
         this.pluginURL = state.pluginURL;
     }
 
+    getState(): PluginState {
+        return {
+            pluginStatus: this.pluginStatus,
+            pluginURL: this.pluginURL
+        };
+    }
+
     setMethods(rtlTextPlugin: RTLTextPlugin) {
         this.applyArabicShaping = rtlTextPlugin.applyArabicShaping;
         this.processBidirectionalText = rtlTextPlugin.processBidirectionalText;

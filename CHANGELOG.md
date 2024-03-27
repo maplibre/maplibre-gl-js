@@ -6,6 +6,28 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 4.1.2
+
+### ✨ Features and improvements
+
+- Hide Popup when its parent Marker is behind terrain ([#3865](https://github.com/maplibre/maplibre-gl-js/pull/3865))
+
+### 🐞 Bug fixes
+
+- Fix type definition on `localIdeographFontFamily` ([#3896](https://github.com/maplibre/maplibre-gl-js/pull/3896))
+- Fix unwanted panning changes at the end of a panning motion ([#3872](https://github.com/maplibre/maplibre-gl-js/issues/3872))
+- Fix `close` events being fired for popups that aren't open
+
+## 4.1.1
+
+### ✨ Features and improvements
+
+- Improve animation curve when easeTo and flyTo with constraints ([#3793](https://github.com/maplibre/maplibre-gl-js/pull/3793))
+
+### 🐞 Bug fixes
+
+- Fix unwanted zoom changes at the end of a panning motion ([#2094](https://github.com/maplibre/maplibre-gl-js/issues/2094))
+
 ## 4.1.0
 
 ### ✨ Features and improvements
@@ -19,6 +41,7 @@
 - Set text color to ensure contrast in the attribution pill ([3737](https://github.com/maplibre/maplibre-gl-js/pull/3737))
 - Fix memory leak in Worker when map is removed ([3734](https://github.com/maplibre/maplibre-gl-js/pull/3734))
 - Fix issue with `FullscreenControl` when MapLibre is within a [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) ([#3573](https://github.com/maplibre/maplibre-gl-js/pull/3573))
+- Fix performance regression with `setRTLTextPlugin` which can cause 1 or 2 extra frames to render. ([#3728](https://github.com/maplibre/maplibre-gl-js/pull/3728))
 
 ## 4.0.2
 

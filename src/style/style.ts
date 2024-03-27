@@ -20,6 +20,7 @@ import {GeoJSONSource} from '../source/geojson_source';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
 import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {PauseablePlacement} from './pauseable_placement';
 import {ZoomHistory} from './zoom_history';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
@@ -87,7 +88,7 @@ export type StyleOptions = {
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
      * Forces a full update.
      */
-    localIdeographFontFamily?: string;
+    localIdeographFontFamily?: string | false;
 };
 
 /**
@@ -234,7 +235,7 @@ export class Style extends Evented {
         this._resetUpdates();
 
         this.dispatcher.broadcast('setReferrer', getReferrer());
-        rtlMainThreadPluginFactory().on('pluginStateChange', this._rtlTextPluginStateChange);
+        rtlMainThreadPluginFactory().on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
 
         this.on('data', (event) => {
             if (event.dataType !== 'source' || event.sourceDataType !== 'metadata') {
@@ -260,7 +261,7 @@ export class Style extends Evented {
         });
     }
 
-    _rtlTextPluginStateChange = () => {
+    _rtlPluginLoaded = () => {
         for (const id in this.sourceCaches) {
             const sourceType = this.sourceCaches[id].getSource().type;
             if (sourceType === 'vector' || sourceType === 'geojson') {
@@ -1481,7 +1482,7 @@ export class Style extends Evented {
             this._spriteRequest.abort();
             this._spriteRequest = null;
         }
-        rtlMainThreadPluginFactory().off('pluginStateChange', this._rtlTextPluginStateChange);
+        rtlMainThreadPluginFactory().off(RTLPluginLoadedEventName, this._rtlPluginLoaded);
         for (const layerId in this._layers) {
             const layer: StyleLayer = this._layers[layerId];
             layer.setEventedParent(null);
