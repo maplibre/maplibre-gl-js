@@ -177,17 +177,17 @@ export class FillBucket implements Bucket {
             const vertexArray = this.layoutVertexArray;
 
             fillLargeMeshArrays(
-                this.segments,
-                this.segments2,
-                this.layoutVertexArray,
-                this.indexArray,
-                this.indexArray2,
-                subdivided.verticesFlattened,
-                subdivided.indicesTriangles,
-                subdivided.indicesLineList,
                 (x, y) => {
                     vertexArray.emplaceBack(x, y);
-                }
+                },
+                this.segments,
+                this.layoutVertexArray,
+                this.indexArray,
+                subdivided.verticesFlattened,
+                subdivided.indicesTriangles,
+                this.segments2,
+                this.indexArray2,
+                subdivided.indicesLineList,
             );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);

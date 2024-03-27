@@ -205,17 +205,17 @@ function splitMesh(mesh: SimpleMesh): SimpleMesh {
     const virtualIndicesLines = new VirtualIndexBufferLines();
 
     fillLargeMeshArrays(
-        segmentsTriangles,
-        segmentsLines,
-        virtualVertices as any as StructArray,
-        virtualIndicesTriangles as any as TriangleIndexArray,
-        virtualIndicesLines as any as LineIndexArray,
-        mesh.vertices,
-        mesh.indicesTriangles,
-        [mesh.indicesLines],
         (x, y) => {
             virtualVertices.emplaceBack(x, y);
-        });
+        },
+        segmentsTriangles,
+        virtualVertices as any as StructArray,
+        virtualIndicesTriangles as any as TriangleIndexArray,
+        mesh.vertices,
+        mesh.indicesTriangles,
+        segmentsLines,
+        virtualIndicesLines as any as LineIndexArray,
+        [mesh.indicesLines]);
 
     return {
         segmentsTriangles: segmentsTriangles.segments,

@@ -1,5 +1,5 @@
 import {LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
-import {SegmentVector} from '../data/segment';
+import {Segment, SegmentVector} from '../data/segment';
 import {StructArray} from '../util/struct_array';
 
 /**
@@ -7,17 +7,32 @@ import {StructArray} from '../util/struct_array';
  * if too many (\>65535) vertices are used.
  * This function is mainly intended for use with subdivided geometry, since sometimes subdivision might generate
  * more vertices than what fits into 16 bit indices.
+ *
+ * Accepts a triangle mesh, optionally with a line list (for fill outlines) as well.
+ *
+ * Mutates the provided `segmentsTriangles` and `segmentsLines` SegmentVectors,
+ * `vertexArray`, `triangleIndexArray` and optionally `lineIndexArray`.
+ * Does not mutate the input `flattened` vertices, `triangleIndices` and `lineList`.
+ * @param addVertex - A function for adding a new vertex into `vertexArray`. We might sometimes want to add more values per vertex than just X and Y coordinates, which can be handled in this function.
+ * @param segmentsTriangles - The segment array for triangle draw calls. New segments will be placed here.
+ * @param vertexArray - The vertex array into which new vertices are placed by the provided `addVertex` function.
+ * @param triangleIndexArray - Index array for drawing triangles. New triangle indices are placed here.
+ * @param flattened - The input flattened array or vertex coordinates.
+ * @param triangleIndices - Triangle indices into `flattened`.
+ * @param segmentsLines - Segment array for line draw calls. New segments will be placed here. Only needed if the mesh also contains lines.
+ * @param lineIndexArray - Index array for drawing lines. New triangle indices are placed here. Only needed if the mesh also contains lines.
+ * @param lineList - Line indices into `flattened`. Only needed if the mesh also contains lines.
  */
 export function fillLargeMeshArrays(
+    addVertex: (x: number, y: number) => void,
     segmentsTriangles: SegmentVector,
-    segmentsLines: SegmentVector,
     vertexArray: StructArray,
     triangleIndexArray: TriangleIndexArray,
-    lineIndexArray: LineIndexArray,
     flattened: Array<number>,
     triangleIndices: Array<number>,
-    lineList: Array<Array<number>>,
-    addVertex: (x: number, y: number) => void) {
+    segmentsLines?: SegmentVector,
+    lineIndexArray?: LineIndexArray,
+    lineList?: Array<Array<number>>) {
 
     const numVertices = flattened.length / 2;
 
@@ -36,11 +51,13 @@ export function fillLargeMeshArrays(
         triangleSegment.vertexLength += numVertices;
         triangleSegment.primitiveLength += triangleIndices.length / 3;
 
-        let lineIndicesStart;
-        let lineSegment;
+        let lineIndicesStart: number;
+        let lineSegment: Segment;
 
-        if (segmentsLines && lineIndexArray) {
-            // Note that segment creation must happen before we add vertices into the vertex buffer
+        const hasLines = segmentsLines && lineIndexArray && lineList;
+
+        if (hasLines) {
+            // Note that segment creation must happen *before* we add vertices into the vertex buffer
             lineSegment = segmentsLines.prepareSegment(numVertices, vertexArray, lineIndexArray);
             lineIndicesStart = lineSegment.vertexLength;
             lineSegment.vertexLength += numVertices;
@@ -51,7 +68,7 @@ export function fillLargeMeshArrays(
             addVertex(flattened[i], flattened[i + 1]);
         }
 
-        if (segmentsLines && lineIndexArray) {
+        if (hasLines) {
             for (let listIndex = 0; listIndex < lineList.length; listIndex++) {
                 const lineIndices = lineList[listIndex];
 
