@@ -91,17 +91,25 @@ function splitMesh(mesh: SimpleMesh): SimpleMesh {
     };
 }
 
+/**
+ * Our goal is to check that a mesh (in this context, a mesh is a vertex buffer, index buffer and segment vector)
+ * with potentially more than `SegmentVector.MAX_VERTEX_ARRAY_LENGTH` vertices results in the same rendered geometry
+ * as the result of passing that mesh through `fillLargeMeshArrays`, which creates a mesh that respects the vertex count limit.
+ * @param expected - The original mesh that might overflow the vertex count limit.
+ * @param actual - The result of passing the original mesh through `fillLargeMeshArrays`.
+ */
 function testMeshesEqual(expected: SimpleMesh, actual: SimpleMesh) {
-    const stringsExpected = getStrings(expected);
-    const stringsActual = getStrings(actual);
+    const stringsExpected = getRenderedGeometryRepresentation(expected);
+    const stringsActual = getRenderedGeometryRepresentation(actual);
     expect(stringsActual.stringsTriangles).toEqual(stringsExpected.stringsTriangles);
     expect(stringsActual.stringsLines).toEqual(stringsExpected.stringsLines);
 }
 
 /**
- * Returns a string representation of the geometry of the mesh.
+ * Returns an ordered string representation of the geometry that would be fetched by the GPU's vertex fetch
+ * if it were to draw the specified mesh segments, respecting `vertexOffset` and `primitiveOffset`.
  */
-function getStrings(mesh: SimpleMesh) {
+function getRenderedGeometryRepresentation(mesh: SimpleMesh) {
     const stringsTriangles = [];
     const stringsLines = [];
 
