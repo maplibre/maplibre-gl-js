@@ -715,7 +715,11 @@ export class Transform {
     }
 
     customLayerMatrix(): mat4 {
-        return this.mercatorMatrix.slice() as any;
+        // Mercator matrix is translated by -transform.elevation to match the elevation of projMatrix
+        // This allows to use above-sea-level elevation when positioning custom layer objects
+        const zTranslation = -((this.elevation * this._pixelPerMeter) / this.worldSize);
+        const loweredMercatorMatrix = mat4.translate([] as any, this.mercatorMatrix, [0, 0, zTranslation]);
+        return loweredMercatorMatrix;
     }
 
     /**

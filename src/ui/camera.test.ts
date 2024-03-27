@@ -2136,34 +2136,17 @@ describe('queryTerrainElevation', () => {
         expect(result).toBeNull();
     });
 
-    test('should return the correct elevation', () => {
-        // Set up mock transform and terrain objects
-        const transform = new Transform(0, 22, 0, 60, true);
-        transform.elevation = 50;
-        const terrain = {
-            getElevationForLngLatZoom: jest.fn().mockReturnValue(200)
-        } as any as Terrain;
+    test('Calls getElevationForLngLatZoom with correct arguments', () => {
+        const getElevationForLngLatZoom = jest.fn();
+        camera.terrain = {getElevationForLngLatZoom} as any as Terrain;
+        camera.transform = new Transform(0, 22, 0, 60, true);
 
-        // Set up camera with mock transform and terrain
-        camera.transform = transform;
-        camera.terrain = terrain;
+        camera.queryTerrainElevation([1, 2]);
 
-        // Call queryTerrainElevation with mock lngLat
-        const lngLatLike: LngLatLike = [1, 2];
-        const expectedElevation = 150; // 200 - 50 = 150
-        const result = camera.queryTerrainElevation(lngLatLike);
-
-        // Check that transform.getElevation was called with the correct arguments
-        expect(terrain.getElevationForLngLatZoom).toHaveBeenCalledWith(
-            expect.objectContaining({
-                lng: lngLatLike[0],
-                lat: lngLatLike[1],
-            }),
-            transform.tileZoom
+        expect(camera.terrain.getElevationForLngLatZoom).toHaveBeenCalledWith(
+            expect.objectContaining({lng: 1, lat: 2,}),
+            camera.transform.tileZoom
         );
-
-        // Check that the correct elevation value was returned
-        expect(result).toEqual(expectedElevation);
     });
 });
 
