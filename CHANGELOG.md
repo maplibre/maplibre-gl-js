@@ -17,6 +17,7 @@
 - Fix type definition on `localIdeographFontFamily` ([#3896](https://github.com/maplibre/maplibre-gl-js/pull/3896))
 - Fix unwanted panning changes at the end of a panning motion ([#3872](https://github.com/maplibre/maplibre-gl-js/issues/3872))
 - Fix `close` events being fired for popups that aren't open
+- Added const enum for actor messages to improve readability and maintainability. In tsconfig.json, `isolatedModules` flag is set to false in favor of generated JS size. ([#3879](https://github.com/maplibre/maplibre-gl-js/issues/3879))
 
 ## 4.1.1
 
