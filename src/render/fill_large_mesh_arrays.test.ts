@@ -1,8 +1,7 @@
-import {LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
+import {FillLayoutArray, LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
 import {SegmentVector} from '../data/segment';
 import {StructArray} from '../util/struct_array';
 import {fillLargeMeshArrays} from './fill_large_mesh_arrays';
-import {VirtualIndexBufferLines, VirtualIndexBufferTriangles, VirtualVertexBuffer} from '../../test/unit/lib/virtual_gl_buffers';
 import {SimpleMesh, getGridMesh, getGridMeshRandom} from '../../test/unit/lib/mesh_utils';
 
 describe('fillArrays', () => {
@@ -200,29 +199,29 @@ function splitMesh(mesh: SimpleMesh): SimpleMesh {
     const segmentsTriangles = new SegmentVector();
     const segmentsLines = new SegmentVector();
 
-    const virtualVertices = new VirtualVertexBuffer();
-    const virtualIndicesTriangles = new VirtualIndexBufferTriangles();
-    const virtualIndicesLines = new VirtualIndexBufferLines();
+    const vertices = new FillLayoutArray();
+    const indicesTriangles = new TriangleIndexArray();
+    const indicesLines = new LineIndexArray();
 
     fillLargeMeshArrays(
         (x, y) => {
-            virtualVertices.emplaceBack(x, y);
+            vertices.emplaceBack(x, y);
         },
         segmentsTriangles,
-        virtualVertices as any as StructArray,
-        virtualIndicesTriangles as any as TriangleIndexArray,
+        vertices as any as StructArray,
+        indicesTriangles as any as TriangleIndexArray,
         mesh.vertices,
         mesh.indicesTriangles,
         segmentsLines,
-        virtualIndicesLines as any as LineIndexArray,
+        indicesLines as any as LineIndexArray,
         [mesh.indicesLines]);
 
     return {
         segmentsTriangles: segmentsTriangles.segments,
         segmentsLines: segmentsLines.segments,
-        vertices: virtualVertices.data,
-        indicesTriangles: virtualIndicesTriangles.data,
-        indicesLines: virtualIndicesLines.data
+        vertices: Array.from(vertices.int16),
+        indicesTriangles: Array.from(indicesTriangles.uint16),
+        indicesLines: Array.from(indicesLines.uint16)
     };
 }
 

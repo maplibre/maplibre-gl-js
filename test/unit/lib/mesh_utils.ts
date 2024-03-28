@@ -28,8 +28,7 @@ export function getGridMesh(size: number): SimpleMesh {
     // Generate vertices
     for (let y = 0; y < verticesPerAxis; y++) {
         for (let x = 0; x < verticesPerAxis; x++) {
-            vertices.push(x);
-            vertices.push(y);
+            vertices.push(x, y);
         }
     }
 
@@ -40,12 +39,8 @@ export function getGridMesh(size: number): SimpleMesh {
             const i10 = (y * verticesPerAxis) + (x + 1);
             const i01 = ((y + 1) * verticesPerAxis) + x;
             const i11 = ((y + 1) * verticesPerAxis) + (x + 1);
-            indicesTriangles.push(i00);
-            indicesTriangles.push(i11);
-            indicesTriangles.push(i10);
-            indicesTriangles.push(i00);
-            indicesTriangles.push(i01);
-            indicesTriangles.push(i11);
+            indicesTriangles.push(i00, i11, i10);
+            indicesTriangles.push(i00, i01, i11);
         }
     }
 
@@ -53,23 +48,31 @@ export function getGridMesh(size: number): SimpleMesh {
 
     // Top
     for (let i = 0; i < size; i++) {
-        indicesLines.push(i);
-        indicesLines.push(i + 1);
+        indicesLines.push(
+            i,
+            i +  1
+        );
     }
     // Bottom
     for (let i = 0; i < size; i++) {
-        indicesLines.push(verticesPerAxis * size + i);
-        indicesLines.push(verticesPerAxis * size + i + 1);
+        indicesLines.push(
+            verticesPerAxis * size + i,
+            verticesPerAxis * size + i + 1
+        );
     }
     // Left
     for (let i = 0; i < size; i++) {
-        indicesLines.push(i * verticesPerAxis);
-        indicesLines.push((i + 1) * verticesPerAxis);
+        indicesLines.push(
+            i * verticesPerAxis,
+            (i + 1) * verticesPerAxis
+        );
     }
     // Right
     for (let i = 0; i < size; i++) {
-        indicesLines.push(i * verticesPerAxis + size);
-        indicesLines.push((i + 1) * verticesPerAxis + size);
+        indicesLines.push(
+            i * verticesPerAxis + size,
+            (i + 1) * verticesPerAxis + size
+        );
     }
 
     return {
@@ -116,8 +119,7 @@ export function getGridMeshRandom(size: number, triangleCount: number, lineCount
     // Generate vertices
     for (let y = 0; y < verticesPerAxis; y++) {
         for (let x = 0; x < verticesPerAxis; x++) {
-            vertices.push(x);
-            vertices.push(y);
+            vertices.push(x, y);
         }
     }
 
