@@ -36,10 +36,14 @@ export default class Subdivide extends Benchmark {
         generateHole(0.25, 0.5, 0.15, 16 * vertexCountMultiplier);
         generateHole(0.75, 0.5, 0.15, 2 * vertexCountMultiplier);
         generateHole(0.5, 0.1, 0.05, 4 * vertexCountMultiplier);
+
+        this.polygon = polygon;
     }
 
     async bench() {
-        subdivideFill(this.polygon, this.tileID, this.granularity, true);
+        for (let i = 0; i < 10; i++) {
+            subdivideFill(this.polygon, this.tileID, this.granularity, true);
+        }
     }
 }
 
