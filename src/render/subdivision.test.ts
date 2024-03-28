@@ -1056,17 +1056,17 @@ function testPolygonOutlineMatches(triangleIndices: Array<number>, lineIndicesLi
         throw new Error(`Polygon exposed triangle edge count ${uncoveredEdges.size} and outline line count ${outlineEdges.size} does not match.`);
     }
 
-    const isSubsetOf = (a: Set<string>, b: Set<string>): boolean => {
-        for (const key of b) {
-            if (!a.has(key)) {
-                return false;
-            }
-        }
-        return true;
-    };
-
     expect(isSubsetOf(outlineEdges, uncoveredEdges)).toBe(true);
     expect(isSubsetOf(uncoveredEdges, outlineEdges)).toBe(true);
+}
+
+function isSubsetOf(a: Set<string>, b: Set<string>): boolean {
+    for (const key of b) {
+        if (!a.has(key)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 function hasDuplicateVertices(flattened: Array<number>): boolean {
