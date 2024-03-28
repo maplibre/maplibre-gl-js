@@ -33,8 +33,8 @@ import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideFill, subdivideVertexLine} from '../../render/subdivision';
-import {fillArrays} from '../../render/fill_arrays';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
 
 const FACTOR = Math.pow(2, 13);
 
@@ -280,18 +280,15 @@ export class FillExtrusionBucket implements Bucket {
 
         const vertexArray = this.layoutVertexArray;
 
-        fillArrays(
-            this.segments,
-            null,
-            this.layoutVertexArray,
-            this.indexArray,
-            null,
-            subdivided.verticesFlattened,
-            subdivided.indicesTriangles,
-            null,
+        fillLargeMeshArrays(
             (x, y) => {
                 addVertex(vertexArray, x, y, 0, 0, 1, 1, 0);
-            }
+            },
+            this.segments,
+            this.layoutVertexArray,
+            this.indexArray,
+            subdivided.verticesFlattened,
+            subdivided.indicesTriangles
         );
     }
 }
