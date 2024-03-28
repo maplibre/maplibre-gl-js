@@ -21,6 +21,7 @@ import {StyleImageInterface} from '../style/style_image';
 import {Style} from '../style/style';
 import {MapSourceDataEvent} from './events';
 import {config} from '../util/config';
+import {MessageType} from '../util/actor_messages';
 
 function createStyleSource() {
     return {
@@ -1372,7 +1373,7 @@ describe('Map', () => {
         const map = createMap();
         const _broadcastSpyOn = jest.spyOn(map.style.dispatcher, 'broadcast');
         map.remove();
-        expect(_broadcastSpyOn).toHaveBeenCalledWith('removeMap', undefined);
+        expect(_broadcastSpyOn).toHaveBeenCalledWith(MessageType.removeMap, undefined);
     });
 
     test('#redraw', async () => {
@@ -1584,7 +1585,7 @@ describe('Map', () => {
 
             map.on('style.load', () => {
                 map.style.dispatcher.broadcast = function (key, value: any) {
-                    expect(key).toBe('updateLayers');
+                    expect(key).toBe(MessageType.updateLayers);
                     expect(value.layers.map((layer) => { return layer.id; })).toEqual(['symbol']);
                     return Promise.resolve({} as any);
                 };

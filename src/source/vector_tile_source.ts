@@ -12,6 +12,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from './worker_source';
+import {MessageType} from '../util/actor_messages';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -204,10 +205,10 @@ export class VectorTileSource extends Evented implements Source {
             promoteId: this.promoteId
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
-        let messageType: 'loadTile' | 'reloadTile' = 'reloadTile';
+        let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getActor();
-            messageType = 'loadTile';
+            messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
             return new Promise<void>((resolve, reject) => {
                 tile.reloadPromise = {resolve, reject};
@@ -258,14 +259,23 @@ export class VectorTileSource extends Evented implements Source {
             delete tile.abortController;
         }
         if (tile.actor) {
-            await tile.actor.sendAsync({type: 'abortTile', data: {uid: tile.uid, type: this.type, source: this.id}});
+            await tile.actor.sendAsync({
+                type: MessageType.abortTile,
+                data: {uid: tile.uid, type: this.type, source: this.id}
+            });
         }
     }
 
     async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         if (tile.actor) {
-            await tile.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
+            await tile.actor.sendAsync({
+                type: MessageType.removeTile,
+                data: {
+                    uid: tile.uid,
+                    type: this.type,
+                    source: this.id}
+            });
         }
     }
 

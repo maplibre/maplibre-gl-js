@@ -18,6 +18,7 @@ import type {
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {
+    MessageType,
     type ClusterIDAndSource,
     type GetClusterLeavesParams,
     type RemoveSourceParams,
@@ -88,47 +89,47 @@ export default class Worker {
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
 
-        this.actor.registerMessageHandler('loadDEMTile', (mapId: string, params: WorkerDEMTileParameters) => {
+        this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);
         });
 
-        this.actor.registerMessageHandler('removeDEMTile', async (mapId: string, params: TileParameters) => {
+        this.actor.registerMessageHandler(MessageType.removeDEMTile, async (mapId: string, params: TileParameters) => {
             this._getDEMWorkerSource(mapId, params.source).removeTile(params);
         });
 
-        this.actor.registerMessageHandler('getClusterExpansionZoom', async (mapId: string, params: ClusterIDAndSource) => {
+        this.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, async (mapId: string, params: ClusterIDAndSource) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterExpansionZoom(params);
         });
 
-        this.actor.registerMessageHandler('getClusterChildren', async (mapId: string, params: ClusterIDAndSource) => {
+        this.actor.registerMessageHandler(MessageType.getClusterChildren, async (mapId: string, params: ClusterIDAndSource) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterChildren(params);
         });
 
-        this.actor.registerMessageHandler('getClusterLeaves', async (mapId: string, params: GetClusterLeavesParams) => {
+        this.actor.registerMessageHandler(MessageType.getClusterLeaves, async (mapId: string, params: GetClusterLeavesParams) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterLeaves(params);
         });
 
-        this.actor.registerMessageHandler('loadData', (mapId: string, params: LoadGeoJSONParameters) => {
+        this.actor.registerMessageHandler(MessageType.loadData, (mapId: string, params: LoadGeoJSONParameters) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).loadData(params);
         });
 
-        this.actor.registerMessageHandler('loadTile', (mapId: string, params: WorkerTileParameters) => {
+        this.actor.registerMessageHandler(MessageType.loadTile, (mapId: string, params: WorkerTileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).loadTile(params);
         });
 
-        this.actor.registerMessageHandler('reloadTile', (mapId: string, params: WorkerTileParameters) => {
+        this.actor.registerMessageHandler(MessageType.reloadTile, (mapId: string, params: WorkerTileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).reloadTile(params);
         });
 
-        this.actor.registerMessageHandler('abortTile', (mapId: string, params: TileParameters) => {
+        this.actor.registerMessageHandler(MessageType.abortTile, (mapId: string, params: TileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).abortTile(params);
         });
 
-        this.actor.registerMessageHandler('removeTile', (mapId: string, params: TileParameters) => {
+        this.actor.registerMessageHandler(MessageType.removeTile, (mapId: string, params: TileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).removeTile(params);
         });
 
-        this.actor.registerMessageHandler('removeSource', async (mapId: string, params: RemoveSourceParams) => {
+        this.actor.registerMessageHandler(MessageType.removeSource, async (mapId: string, params: RemoveSourceParams) => {
             if (!this.workerSources[mapId] ||
                 !this.workerSources[mapId][params.type] ||
                 !this.workerSources[mapId][params.type][params.source]) {
@@ -143,34 +144,34 @@ export default class Worker {
             }
         });
 
-        this.actor.registerMessageHandler('removeMap', async (mapId: string) => {
+        this.actor.registerMessageHandler(MessageType.removeMap, async (mapId: string) => {
             delete this.layerIndexes[mapId];
             delete this.availableImages[mapId];
             delete this.workerSources[mapId];
             delete this.demWorkerSources[mapId];
         });
 
-        this.actor.registerMessageHandler('setReferrer', async (_mapId: string, params: string) => {
+        this.actor.registerMessageHandler(MessageType.setReferrer, async (_mapId: string, params: string) => {
             this.referrer = params;
         });
 
-        this.actor.registerMessageHandler('syncRTLPluginState', (mapId: string, params: PluginState) => {
+        this.actor.registerMessageHandler(MessageType.syncRTLPluginState, (mapId: string, params: PluginState) => {
             return this._syncRTLPluginState(mapId, params);
         });
 
-        this.actor.registerMessageHandler('importScript', async (_mapId: string, params: string) => {
+        this.actor.registerMessageHandler(MessageType.importScript, async (_mapId: string, params: string) => {
             this.self.importScripts(params);
         });
 
-        this.actor.registerMessageHandler('setImages', (mapId: string, params: string[]) => {
+        this.actor.registerMessageHandler(MessageType.setImages, (mapId: string, params: string[]) => {
             return this._setImages(mapId, params);
         });
 
-        this.actor.registerMessageHandler('updateLayers', async (mapId: string, params: UpdateLayersParamaeters) => {
+        this.actor.registerMessageHandler(MessageType.updateLayers, async (mapId: string, params: UpdateLayersParamaeters) => {
             this._getLayerIndex(mapId).update(params.layers, params.removedIds);
         });
 
-        this.actor.registerMessageHandler('setLayers', async (mapId: string, params: Array<LayerSpecification>) => {
+        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: Array<LayerSpecification>) => {
             this._getLayerIndex(mapId).replace(params);
         });
     }
