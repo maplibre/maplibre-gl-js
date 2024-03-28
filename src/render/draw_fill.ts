@@ -71,6 +71,11 @@ function drawFillTiles(
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
+    const projection = painter.style.map.projection;
+
+    const propertyFillTranslate = layer.paint.get('fill-translate');
+    const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
+
     if (!isOutline) {
         programName = image ? 'fillPattern' : 'fill';
         drawMode = gl.TRIANGLES;
@@ -100,28 +105,25 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const terrainCoord = terrainData ? coord : null;
-        const posMatrix = terrainCoord ? terrainCoord.posMatrix : coord.posMatrix;
-        const tileMatrix = painter.translatePosMatrix(posMatrix, tile,
-            layer.paint.get('fill-translate'), layer.paint.get('fill-translate-anchor'));
+        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
+
+        const translateForUniforms = projection.translatePosition(painter.transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;
             segments = bucket.segments;
-            uniformValues = image ?
-                fillPatternUniformValues(tileMatrix, painter, crossfade, tile) :
-                fillUniformValues(tileMatrix);
+            uniformValues = image ? fillPatternUniformValues(painter, crossfade, tile, translateForUniforms) : fillUniformValues(translateForUniforms);
         } else {
             indexBuffer = bucket.indexBuffer2;
             segments = bucket.segments2;
             const drawingBufferSize = [gl.drawingBufferWidth, gl.drawingBufferHeight] as [number, number];
             uniformValues = (programName === 'fillOutlinePattern' && image) ?
-                fillOutlinePatternUniformValues(tileMatrix, painter, crossfade, tile, drawingBufferSize) :
-                fillOutlineUniformValues(tileMatrix, drawingBufferSize);
+                fillOutlinePatternUniformValues(painter, crossfade, tile, drawingBufferSize, translateForUniforms) :
+                fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
 
         program.draw(painter.context, drawMode, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, null,
+            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

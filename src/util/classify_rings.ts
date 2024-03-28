@@ -4,8 +4,12 @@ import {calculateSignedArea} from './util';
 
 import type Point from '@mapbox/point-geometry';
 
-// classifies an array of rings into polygons with outer rings and holes
-export function classifyRings(rings: Array<Array<Point>>, maxRings: number) {
+/**
+ * Classifies an array of rings into polygons with outer rings and holes.
+ * Returns array of polygons, where each polygon is itself an array
+ * of vertex rings, and each ring is itself an array of points.
+ */
+export function classifyRings(rings: Array<Array<Point>>, maxRings: number): Array<Array<Array<Point>>> {
     const len = rings.length;
 
     if (len <= 1) return [rings];
