@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display a map</title>
+    <meta property="og:description" content="Initialize a map in an HTML element with MapLibre GL JS." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; display: flex; flex-direction: column; }
+        html, body { height: 100%; }
+        #map { flex: 1; }
+        .inputs { user-select: none; font-size: 16px; }
+        label { display: inline-block; padding: 8px 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="inputs">
+    <label>
+        <input type="checkbox" id="roads">
+        Roads
+    </label>
+    <label>
+        <input type="checkbox" id="contours">
+        Contours
+    </label>
+    <label>
+        <input type="checkbox" id="buildings">
+        Buildings
+    </label>
+</div>
+<div id="map"></div>
+<script>
+    const background = {
+        'id': 'background',
+        'type': 'background',
+        'paint': {'background-color': 'rgb(216, 210, 206)'}
+    };
+
+    const water = {
+        'id': 'water',
+        'type': 'fill',
+        'source': 'openmaptiles',
+        'source-layer': 'water',
+        'paint': {'fill-color': 'rgba(134, 204, 250, 1)'},
+    };
+
+    const roadsLayers = [
+        {
+            'id': 'road_motorway',
+            'type': 'line',
+            'source': 'openmaptiles',
+            'source-layer': 'transportation',
+            'paint': {
+                'line-color': 'hsl(16, 47%, 62%)',
+                'line-width': 2
+            }
+        },
+        {
+            'id': 'shield',
+            'type': 'symbol',
+            'source': 'openmaptiles',
+            'source-layer': 'transportation_name',
+            'minzoom': 8,
+            'layout': {
+                'icon-size': 1.5,
+                'text-size': 16,
+                'icon-image': 'road_{ref_length}',
+                'text-field': '{ref}',
+                'symbol-spacing': 120,
+                'symbol-placement': 'line',
+                'icon-rotation-alignment': 'viewport',
+                'text-rotation-alignment': 'viewport'
+            },
+            'paint': {'text-color': 'rgba(37, 36, 36, 1)'},
+            'filter': ['in', 'class', 'primary']
+        }
+    ];
+
+    const contoursLayers = [
+        {
+            'id': 'Contour',
+            'source': 'contours',
+            'source-layer': 'contour',
+            'type': 'line',
+            'paint': {'line-color': 'hsla(0, 0%, 62%, 50%)'},
+        },
+        {
+            'id': 'Contour labels',
+            'source': 'contours',
+            'source-layer': 'contour',
+            'type': 'symbol',
+            'layout': {
+                'text-size': 12,
+                'text-field': '{height}',
+                'text-padding': 35,
+                'symbol-placement': 'line',
+            },
+            'paint': {'text-color': 'hsl(9, 16%, 32%)'}
+        },
+    ];
+
+    const buildings = {
+        'id': 'Building',
+        'type': 'fill',
+        'source': 'openmaptiles',
+        'source-layer': 'building',
+        'paint': {'fill-color': 'RGB(175, 185, 200)'}
+    };
+
+    const style = {
+        'version': 8,
+        'id': 'streets',
+        'name': 'Streets',
+        'sources': {
+            'openmaptiles': {
+                'url': 'https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                'type': 'vector'
+            },
+            'contours': {
+                'url': 'https://api.maptiler.com/tiles/contours/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+                'type': 'vector'
+            },
+        },
+        'glyphs': 'https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
+        'sprite': 'https://api.maptiler.com/maps/streets/sprite',
+        'layers': [
+            background,
+            {type: 'slot', id: 'buildings'},
+            {type: 'slot', id: 'contours'},
+            water,
+            {type: 'slot', id: 'roads'}
+        ],
+        'center': [
+            10.20328,
+            46.77293
+        ],
+        'zoom': 14.8
+    };
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style,
+    });
+
+    map.setMaxBounds([[10.150882249176192, 46.74657373570173], [10.255677750822713, 46.79927337210148]]);
+
+    map.on('style.load', () => {
+        map.populateSlot('roads', roadsLayers);
+        document.querySelector('input#roads').checked = true;
+    });
+
+    document.querySelector('input#roads').addEventListener('change', e => {
+        map.populateSlot('roads', e.target.checked ? roadsLayers : []);
+    });
+    document.querySelector('input#contours').addEventListener('change', e => {
+        map.populateSlot('contours', e.target.checked ? contoursLayers : []);
+    });
+    document.querySelector('input#buildings').addEventListener('change', e => {
+        map.populateSlot('buildings', e.target.checked ? [buildings] : []);
+    });
+</script>
+</body>
+</html>

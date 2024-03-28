@@ -191,6 +191,8 @@ export class Style extends Evented {
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: Array<string>;
+    _orderWithSlots: Array<string>;
+    _slots: {[_: string]: { layerIds: string[]}};
     sourceCaches: {[_: string]: SourceCache};
     zoomHistory: ZoomHistory;
     _loaded: boolean;
@@ -233,6 +235,8 @@ export class Style extends Evented {
         this._layers = {};
 
         this._order = [];
+        this._orderWithSlots = [];
+        this._slots = {};
         this.sourceCaches = {};
         this.zoomHistory = new ZoomHistory();
         this._loaded = false;
@@ -345,7 +349,13 @@ export class Style extends Evented {
     }
 
     private _createLayers() {
-        const dereferencedLayers = deref(this.stylesheet.layers);
+        for (const layer of this.stylesheet.layers) {
+            this._orderWithSlots.push(layer.id);
+            if (layer.type === 'slot') this._slots[layer.id] = {layerIds: []};
+        }
+
+        const layersWithoutSlots = this.stylesheet.layers.filter(l => l.type !== 'slot');
+        const dereferencedLayers = deref(layersWithoutSlots);
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
@@ -956,6 +966,39 @@ export class Style extends Evented {
         if (layer.onAdd) {
             layer.onAdd(this.map);
         }
+    }
+
+    populateSlot(slotId: string, layers: AddLayerObject[]) {
+        if (!Array.isArray(layers) || !this._slots[slotId]) return;
+        for (const oldLayerId of this._slots[slotId].layerIds) {
+            this.removeLayer(oldLayerId);
+        }
+
+        this._slots[slotId].layerIds = layers.map(l => l.id);
+
+        const indexOfSlot = this._orderWithSlots.indexOf(slotId);
+
+        // Find first actual layer after the slot. It will be used to insert layers before it
+        // It can be an independent layer or one within another slot
+        let nextActualLayerId;
+        for (let i = indexOfSlot + 1; i <= this._orderWithSlots.length - 1; i++) {
+            const isIndependentLayer = this._order.includes(this._orderWithSlots[i]);
+            if (isIndependentLayer) {
+                nextActualLayerId = this._orderWithSlots[i];
+                break;
+            }
+            const maybeSlot = this._slots[this._orderWithSlots[i]];
+            if (maybeSlot?.layerIds[0]) {
+                nextActualLayerId = maybeSlot?.layerIds[0];
+                break;
+            }
+        }
+
+        for (const layer of layers.reverse()) {
+            this.addLayer(layer, nextActualLayerId);
+            nextActualLayerId = layer.id;
+        }
+
     }
 
     /**

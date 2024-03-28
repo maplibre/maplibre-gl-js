@@ -14,7 +14,8 @@ import type {Bucket} from '../data/bucket';
 import type Point from '@mapbox/point-geometry';
 import type {FeatureFilter, FeatureState,
     LayerSpecification,
-    FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
+    FilterSpecification,
+    SlotLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {TransitionParameters, PropertyValue} from './properties';
 import {EvaluationParameters} from './evaluation_parameters';
 import type {CrossfadeParameters} from './evaluation_parameters';
@@ -77,9 +78,9 @@ export abstract class StyleLayer extends Evented {
         this.type = layer.type;
         this._featureFilter = {filter: () => true, needGeometry: false};
 
-        if (layer.type === 'custom') return;
+        if (layer.type === 'custom' || layer.type === 'slot') return;
 
-        layer = (layer as any as LayerSpecification);
+        layer = (layer as any as Exclude<LayerSpecification, SlotLayerSpecification>);
 
         this.metadata = layer.metadata;
         this.minzoom = layer.minzoom;
