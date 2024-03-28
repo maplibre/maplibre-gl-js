@@ -58,7 +58,7 @@ class Subdivider {
      * Returns an index into the internal vertex buffer for a vertex at the given coordinates.
      * If the internal vertex buffer contains no such vertex, then it is added.
      */
-    private _getVertexIndex(x: number, y: number): number {
+    private _vertexToIndex(x: number, y: number): number {
         const xInt = Math.round(x) | 0;
         const yInt = Math.round(y) | 0;
         const key = this._getKey(xInt, yInt);
@@ -223,7 +223,7 @@ class Subdivider {
                     leftmostX = x;
                     leftmostIndex = ring.length;
                 }
-                ring.push(this._getVertexIndex(x, y));
+                ring.push(this._vertexToIndex(x, y));
             }
 
             const enterX = aX + dirX * Math.max(tEnter, 0);
@@ -243,14 +243,14 @@ class Subdivider {
                     for (let cellX = edgeSubdivisionLeftCellX; cellX <= edgeSubdivisionRightCellX; cellX++) {
                         const x = cellX * this._granularityCellSize;
                         const y = aY + dirY * (x - aX) / dirX;
-                        ring.push(this._getVertexIndex(x, y));
+                        ring.push(this._vertexToIndex(x, y));
                     }
                 } else {
                     // Right to left
                     for (let cellX = edgeSubdivisionRightCellX; cellX >= edgeSubdivisionLeftCellX; cellX--) {
                         const x = cellX * this._granularityCellSize;
                         const y = aY + dirY * (x - aX) / dirX;
-                        ring.push(this._getVertexIndex(x, y));
+                        ring.push(this._vertexToIndex(x, y));
                     }
                 }
             }
@@ -263,7 +263,7 @@ class Subdivider {
                     leftmostX = x;
                     leftmostIndex = ring.length;
                 }
-                ring.push(this._getVertexIndex(x, y));
+                ring.push(this._vertexToIndex(x, y));
             }
 
             // When to split inter-edge boundary segments?
@@ -356,13 +356,13 @@ class Subdivider {
                     // Left to right
                     for (let cellX = boundarySubdivisionLeftCellX; cellX <= boundarySubdivisionRightCellX; cellX++) {
                         const x = cellX * this._granularityCellSize;
-                        ring.push(this._getVertexIndex(x, boundaryY));
+                        ring.push(this._vertexToIndex(x, boundaryY));
                     }
                 } else {
                     // Right to left
                     for (let cellX = boundarySubdivisionRightCellX; cellX >= boundarySubdivisionLeftCellX; cellX--) {
                         const x = cellX * this._granularityCellSize;
-                        ring.push(this._getVertexIndex(x, boundaryY));
+                        ring.push(this._vertexToIndex(x, boundaryY));
                     }
                 }
             }
@@ -375,26 +375,64 @@ class Subdivider {
     }
 
     /**
+     * Generates an outline for a given polygon, returns a list of arrays of line indices.
+     */
+    private _generateOutline(polygon: Array<Array<Point>>): Array<Array<number>> {
+        const subdividedLines = [];
+        for (const ring of polygon) {
+            const line = subdivideVertexLine(ring, this._granularity, true);
+            const pathIndices = this._pointArrayToIndices(line);
+            // Points returned by subdivideVertexLine are "path" waypoints,
+            // for example with indices 0 1 2 3 0.
+            // We need list of individual line segments for rendering,
+            // for example 0, 1, 1, 2, 2, 3, 3, 0.
+            const lineIndices = [];
+            for (let i = 1; i < pathIndices.length; i++) {
+                lineIndices.push(pathIndices[i - 1]);
+                lineIndices.push(pathIndices[i]);
+            }
+            subdividedLines.push(lineIndices);
+        }
+        return subdividedLines;
+    }
+
+    /**
+     * Adds pole geometry if needed.
+     * @param subdividedTriangles - Array of generated triangle indices, new pole geometry is appended here.
+     */
+    private _handlePoles(subdividedTriangles: Array<number>) {
+        // Add pole vertices if the tile is at north/south mercator edge
+        let north = false;
+        let south = false;
+        if (this._canonical) {
+            if (this._canonical.y === 0) {
+                north = true;
+            }
+            if (this._canonical.y === (1 << this._canonical.z) - 1) {
+                south = true;
+            }
+        }
+        if (north || south) {
+            this._fillPoles(subdividedTriangles, north, south);
+        }
+    }
+
+    /**
      * Checks the internal vertex buffer for all vertices that might lie on the special pole coordinates and shifts them by one unit.
      * Use for removing unintended pole vertices that might have been created during subdivision. After calling this function, actual pole vertices can be safely generated.
      */
     private _ensureNoPoleVertices() {
         const flattened = this._vertexBuffer;
 
-        // Special pole vertices have Y coordinate -32768 for the north pole and 32767 for the south pole.
-        // First, find any *non-pole* vertices at those coordinates and move them slightly elsewhere.
-        const northY = NORTH_POLE_Y;
-        const southY = SOUTH_POLE_Y;
-
         for (let i = 0; i < flattened.length; i += 2) {
             const vy = flattened[i + 1];
-            if (vy === northY) {
+            if (vy === NORTH_POLE_Y) {
                 // Move slightly down
-                flattened[i + 1] = northY + 1;
+                flattened[i + 1] = NORTH_POLE_Y + 1;
             }
-            if (vy === southY) {
+            if (vy === SOUTH_POLE_Y) {
                 // Move slightly down
-                flattened[i + 1] = southY - 1;
+                flattened[i + 1] = SOUTH_POLE_Y - 1;
             }
         }
     }
@@ -425,19 +463,19 @@ class Subdivider {
             if (flip) {
                 indices.push(i0);
                 indices.push(i1);
-                indices.push(this._getVertexIndex(v0x, poleY));
+                indices.push(this._vertexToIndex(v0x, poleY));
 
                 indices.push(i1);
-                indices.push(this._getVertexIndex(v1x, poleY));
-                indices.push(this._getVertexIndex(v0x, poleY));
+                indices.push(this._vertexToIndex(v1x, poleY));
+                indices.push(this._vertexToIndex(v0x, poleY));
             } else {
                 indices.push(i1);
                 indices.push(i0);
-                indices.push(this._getVertexIndex(v0x, poleY));
+                indices.push(this._vertexToIndex(v0x, poleY));
 
-                indices.push(this._getVertexIndex(v1x, poleY));
+                indices.push(this._vertexToIndex(v1x, poleY));
                 indices.push(i1);
-                indices.push(this._getVertexIndex(v0x, poleY));
+                indices.push(this._vertexToIndex(v0x, poleY));
             }
         };
 
@@ -483,7 +521,7 @@ class Subdivider {
      */
     private _initializeVertices(flattened: Array<number>) {
         for (let i = 0; i < flattened.length; i += 2) {
-            this._getVertexIndex(flattened[i], flattened[i + 1]);
+            this._vertexToIndex(flattened[i], flattened[i + 1]);
         }
     }
 
@@ -496,8 +534,7 @@ class Subdivider {
      */
     public subdivideFillInternal(polygon: Array<Array<Point>>, generateOutlineLines: boolean): SubdivisionResult {
         if (this._used) {
-            console.error('Subdivider: multiple use not allowed.');
-            return undefined;
+            throw new Error('Subdivision: multiple use not allowed.');
         }
         this._used = true;
 
@@ -517,41 +554,16 @@ class Subdivider {
         }
 
         // Subdivide lines
-        const subdividedLines = [];
+        let subdividedLines = [];
         if (generateOutlineLines) {
-            for (const ring of polygon) {
-                const line = subdivideVertexLine(ring, this._granularity, true);
-                const pathIndices = this._pointArrayToIndices(line);
-                // Points returned by subdivideVertexLine are "path" waypoints,
-                // for example with indices 0 1 2 3 0.
-                // We need list of individual line segments for rendering,
-                // for example 0, 1, 1, 2, 2, 3, 3, 0.
-                const lineIndices = [];
-                for (let i = 1; i < pathIndices.length; i++) {
-                    lineIndices.push(pathIndices[i - 1]);
-                    lineIndices.push(pathIndices[i]);
-                }
-                subdividedLines.push(lineIndices);
-            }
+            subdividedLines = this._generateOutline(polygon);
         }
 
         // Ensure no vertex has the special value used for pole vertices
         this._ensureNoPoleVertices();
 
-        // Add pole vertices if the tile is at north/south mercator edge
-        let north = false;
-        let south = false;
-        if (this._canonical) {
-            if (this._canonical.y === 0) {
-                north = true;
-            }
-            if (this._canonical.y === (1 << this._canonical.z) - 1) {
-                south = true;
-            }
-        }
-        if (north || south) {
-            this._fillPoles(subdividedTriangles, north, south);
-        }
+        // Add pole geometry if needed
+        this._handlePoles(subdividedTriangles);
 
         return {
             verticesFlattened: this._vertexBuffer,
@@ -563,9 +575,10 @@ class Subdivider {
     /**
      * Sometimes the supplies vertex and index array has duplicate vertices - same coordinates that are referenced by multiple different indices.
      * That is not allowed for purposes of subdivision, duplicates are removed in `this.initializeVertices`.
-     * This function checks all indices, and replaces any index that references a duplicate vertex with the an index that vertex that is actually valid in `this._finalVertices`.
+     * This function converts the original index array that indexes into the original vertex array with duplicates
+     * into an index array that indexes into `this._finalVertices`.
      * @param vertices - Flattened vertex array used by the old indices. This may contain duplicate vertices.
-     * @param oldIndices - Indices into the supplied vertex array.
+     * @param oldIndices - Indices into the old vertex array.
      * @returns Indices transformed so that they are valid indices into `this._finalVertices` (with duplicates removed).
      */
     private _convertIndices(vertices: Array<number>, oldIndices: Array<number>): Array<number> {
@@ -573,7 +586,7 @@ class Subdivider {
         for (let i = 0; i < oldIndices.length; i++) {
             const x = vertices[oldIndices[i] * 2];
             const y = vertices[oldIndices[i] * 2 + 1];
-            newIndices.push(this._getVertexIndex(x, y));
+            newIndices.push(this._vertexToIndex(x, y));
         }
         return newIndices;
     }
@@ -585,7 +598,7 @@ class Subdivider {
         const indices = [];
         for (let i = 0; i < array.length; i++) {
             const p = array[i];
-            indices.push(this._getVertexIndex(p.x, p.y));
+            indices.push(this._vertexToIndex(p.x, p.y));
         }
         return indices;
     }
@@ -605,61 +618,6 @@ class Subdivider {
 export function subdivideFill(polygon: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number, generateOutlineLines: boolean = true): SubdivisionResult {
     const subdivider = new Subdivider(granularity, canonical);
     return subdivider.subdivideFillInternal(polygon, generateOutlineLines);
-}
-
-/**
- * Returns an array of line indices for rendering a wireframe of the supplied triangle array. Useful for debugging.
- * @param triangleIndices - An index array where each three indices form a triangle.
- * @returns An index array where each pair of indices forms a line segment.
- */
-export function generateWireframeFromTriangles(triangleIndices: Array<number>): Array<number> {
-    const lineIndices = [];
-
-    const edgeMap = new Map<string, number>();
-
-    const getKey = (i0, i1) => {
-        const e0 = Math.min(i0, i1);
-        const e1 = Math.max(i0, i1);
-        return `${e0}_${e1}`;
-    };
-
-    for (let i = 2; i < triangleIndices.length; i += 3) {
-        const i0 = triangleIndices[i - 2];
-        const i1 = triangleIndices[i - 1];
-        const i2 = triangleIndices[i];
-
-        const k0 = getKey(i0, i1);
-        const k1 = getKey(i1, i2);
-        const k2 = getKey(i2, i0);
-
-        // Make sure an edge shared by multiple triangles is only present once.
-        if (!edgeMap.has(k0)) {
-            edgeMap.set(k0, 1);
-        } else {
-            edgeMap.set(k0, edgeMap.get(k0) + 1);
-        }
-        if (!edgeMap.has(k1)) {
-            edgeMap.set(k1, 1);
-        } else {
-            edgeMap.set(k1, edgeMap.get(k1) + 1);
-        }
-        if (!edgeMap.has(k2)) {
-            edgeMap.set(k2, 1);
-        } else {
-            edgeMap.set(k2, edgeMap.get(k2) + 1);
-        }
-    }
-
-    for (const pair of edgeMap) {
-        if (pair[1] === 1) {
-            const split = pair[0].split('_');
-            const i0 = parseInt(split[0]);
-            const i1 = parseInt(split[1]);
-            lineIndices.push(i0, i1);
-        }
-    }
-
-    return lineIndices;
 }
 
 /**
@@ -823,7 +781,10 @@ export function subdivideVertexLine(linePoints: Array<Point>, granularity: numbe
  * Takes a polygon as an array of point rings, returns a flattened array of the X,Y coordinates of these points.
  * Also creates an array of hole indices. Both returned arrays are required for `earcut`.
  */
-function flatten(polygon: Array<Array<Point>>) {
+function flatten(polygon: Array<Array<Point>>): {
+    flattened: Array<number>;
+    holeIndices: Array<number>;
+} {
     const holeIndices = [];
     const flattened = [];
 
@@ -892,69 +853,6 @@ export function fixWindingOrder(flattened: Array<number>, indices: Array<number>
 }
 
 /**
- * Returns a SVG image (as string) that displays the supplied triangles and lines. Only vertices used by the triangles are included in the svg.
- * @param flattened - Array of flattened vertex coordinates.
- * @param triangles - Array of triangle indices.
- * @param edges - List of arrays of edge indices. Every pair of indices forms a line. A single triangle would look like `[[0 1 1 2 2 0]]`.
- * @returns SVG image as string.
- */
-export function getDebugSvg(flattened: Array<number>, triangles?: Array<number>, edges?: Array<Array<number>>, granularity: number = 1): string {
-    const svg = [];
-
-    const cellSize = EXTENT / granularity;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (let i = 0; i < triangles.length; i++) {
-        const x = flattened[triangles[i] * 2];
-        const y = flattened[triangles[i] * 2 + 1];
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-    }
-
-    svg.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX - 10} ${minY - 10} ${maxX - minX + 20} ${maxY - minY + 20}">`);
-
-    if (triangles) {
-        for (let i = 0; i < triangles.length; i += 3) {
-            const i0 = triangles[i];
-            const i1 = triangles[i + 1];
-            const i2 = triangles[i + 2];
-
-            for (const index of [i0, i1, i2]) {
-                const x = flattened[index * 2];
-                const y = flattened[index * 2 + 1];
-                const isOnCellEdge = (x % cellSize === 0) || (y % cellSize === 0);
-                svg.push(`<circle cx="${x}" cy="${y}" r="1.0" fill="${isOnCellEdge ? 'red' : 'black'}" stroke="none"/>`);
-                svg.push(`<text x="${x + 2}" y="${y - 2}" style="font: 2px sans-serif;">${(index).toString()}</text>`);
-            }
-
-            for (const edge of [[i0, i1], [i1, i2], [i2, i0]]) {
-                svg.push(`<line x1="${flattened[edge[0] * 2]}" y1="${flattened[edge[0] * 2 + 1]}" x2="${flattened[edge[1] * 2]}" y2="${flattened[edge[1] * 2 + 1]}" stroke="black" stroke-width="0.5"/>`);
-            }
-        }
-    }
-
-    if (edges) {
-        for (const edgeList of edges) {
-            for (let i = 0; i < edgeList.length; i += 2) {
-                svg.push(`<circle cx="${flattened[edgeList[i] * 2]}" cy="${flattened[edgeList[i] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
-                svg.push(`<circle cx="${flattened[edgeList[i + 1] * 2]}" cy="${flattened[edgeList[i + 1] * 2 + 1]}" r="0.5" fill="green" stroke="none"/>`);
-                svg.push(`<line x1="${flattened[edgeList[i] * 2]}" y1="${flattened[edgeList[i] * 2 + 1]}" x2="${flattened[edgeList[i + 1] * 2]}" y2="${flattened[edgeList[i + 1] * 2 + 1]}" stroke="green" stroke-width="0.25"/>`);
-            }
-        }
-    }
-
-    svg.push('</svg>');
-
-    return svg.join('');
-}
-
-/**
  * Triangulates a ring of vertex indices. Appends to the supplied array of final triangle indices.
  * @param vertexBuffer - Flattened vertex coordinate array.
  * @param ring - Ordered ring of vertex indices to triangulate.
@@ -965,8 +863,7 @@ export function scanlineTriangulateVertexRing(vertexBuffer: Array<number>, ring:
     // Triangulate the ring
     // It is guaranteed to be convex and ordered
     if (ring.length === 0) {
-        console.error('Subdivision vertex ring length 0, smells like a bug!');
-        return;
+        throw new Error('Subdivision vertex ring is empty.');
     }
 
     // Traverse the ring in both directions from the leftmost vertex

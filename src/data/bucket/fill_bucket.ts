@@ -30,7 +30,7 @@ import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 import {subdivideFill} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {fillArrays} from '../../render/fill_arrays';
+import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
 
 export class FillBucket implements Bucket {
     index: number;
@@ -176,18 +176,18 @@ export class FillBucket implements Bucket {
 
             const vertexArray = this.layoutVertexArray;
 
-            fillArrays(
-                this.segments,
-                this.segments2,
-                this.layoutVertexArray,
-                this.indexArray,
-                this.indexArray2,
-                subdivided.verticesFlattened,
-                subdivided.indicesTriangles,
-                subdivided.indicesLineList,
+            fillLargeMeshArrays(
                 (x, y) => {
                     vertexArray.emplaceBack(x, y);
-                }
+                },
+                this.segments,
+                this.layoutVertexArray,
+                this.indexArray,
+                subdivided.verticesFlattened,
+                subdivided.indicesTriangles,
+                this.segments2,
+                this.indexArray2,
+                subdivided.indicesLineList,
             );
         }
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);

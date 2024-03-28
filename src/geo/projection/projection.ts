@@ -75,6 +75,7 @@ export interface Projection {
      * @internal
      * An object describing how much subdivision should be applied to rendered geometry.
      * The subdivision settings should be a constant for a given projection.
+     * Projections that do not require subdivision should return {@link SubdivisionGranularitySetting.noSubdivision}.
      */
     get subdivisionGranularity(): SubdivisionGranularitySetting;
 

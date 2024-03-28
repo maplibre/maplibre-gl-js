@@ -1,4 +1,4 @@
-import {StructArray} from '../util/struct_array';
+import {FillLayoutArray, TriangleIndexArray} from './array_types.g';
 import {SegmentVector} from './segment';
 
 describe('SegmentVector', () => {
@@ -16,18 +16,18 @@ describe('SegmentVector', () => {
 
     test('prepareSegment returns a segment', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
-        const result = segmentVector.prepareSegment(10, vertexBuffer as any as StructArray, indexBuffer as any as StructArray);
+        const result = segmentVector.prepareSegment(10, vertexBuffer, indexBuffer);
         expect(result).toBeTruthy();
         expect(result.vertexLength).toBe(0);
     });
 
     test('prepareSegment handles vertex overflow', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 10);
         const second = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 10);
@@ -41,8 +41,8 @@ describe('SegmentVector', () => {
 
     test('prepareSegment reuses segments', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         const second = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
@@ -54,13 +54,13 @@ describe('SegmentVector', () => {
 
     test('createNewSegment returns a new segment', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
-        const second = segmentVector.createNewSegment(vertexBuffer as any as StructArray, indexBuffer as any as StructArray);
+        const second = segmentVector.createNewSegment(vertexBuffer, indexBuffer);
         second.vertexLength += 5;
-        vertexBuffer.addVertices(5);
+        addVertices(vertexBuffer, 5);
         const third = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         expect(first).toBeTruthy();
         expect(second).toBeTruthy();
@@ -73,14 +73,14 @@ describe('SegmentVector', () => {
 
     test('createNewSegment returns a new segment and resets invalidateLast', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         segmentVector.invalidateLast();
-        const second = segmentVector.createNewSegment(vertexBuffer as any as StructArray, indexBuffer as any as StructArray);
+        const second = segmentVector.createNewSegment(vertexBuffer, indexBuffer);
         second.vertexLength += 5;
-        vertexBuffer.addVertices(5);
+        addVertices(vertexBuffer, 5);
         const third = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         expect(first).toBeTruthy();
         expect(second).toBeTruthy();
@@ -93,23 +93,23 @@ describe('SegmentVector', () => {
 
     test('getOrCreateLatestSegment creates a new segment if SegmentVector was empty', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
-        const first = segmentVector.getOrCreateLatestSegment(vertexBuffer as any as StructArray, indexBuffer as any as StructArray);
+        const first = segmentVector.getOrCreateLatestSegment(vertexBuffer, indexBuffer);
         expect(first).toBeTruthy();
         expect(segmentVector.segments).toHaveLength(1);
     });
 
     test('getOrCreateLatestSegment returns the last segment if invalidateLast=false', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
-        const second = segmentVector.getOrCreateLatestSegment(vertexBuffer as any as StructArray, indexBuffer as any as StructArray);
+        const second = segmentVector.getOrCreateLatestSegment(vertexBuffer, indexBuffer);
         second.vertexLength += 5;
-        vertexBuffer.addVertices(5);
+        addVertices(vertexBuffer, 5);
         const third = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         expect(first).toBeTruthy();
         expect(second).toBeTruthy();
@@ -121,14 +121,14 @@ describe('SegmentVector', () => {
 
     test('getOrCreateLatestSegment respects invalidateLast and returns a new segment', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         segmentVector.invalidateLast();
-        const second = segmentVector.getOrCreateLatestSegment(vertexBuffer as any as StructArray, indexBuffer as any as StructArray);
+        const second = segmentVector.getOrCreateLatestSegment(vertexBuffer, indexBuffer);
         second.vertexLength += 5;
-        vertexBuffer.addVertices(5);
+        addVertices(vertexBuffer, 5);
         const third = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         expect(first).toBeTruthy();
         expect(second).toBeTruthy();
@@ -141,8 +141,8 @@ describe('SegmentVector', () => {
 
     test('prepareSegment respects invalidateLast', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
-        const vertexBuffer = new VirtualVertexBuffer();
-        const indexBuffer = new VirtualIndexBufferTriangles();
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         segmentVector.invalidateLast();
@@ -159,42 +159,18 @@ describe('SegmentVector', () => {
     });
 });
 
-class VirtualVertexBuffer {
-    public data: Array<number> = [];
-
-    public get length(): number {
-        return this.data.length / 2;
-    }
-
-    public emplaceBack(x, y) {
-        this.data.push(x, y);
-    }
-
-    public addVertices(numVertices: number) {
-        for (let i = 0; i < numVertices; i++) {
-            this.emplaceBack(0, 0);
-        }
-    }
-}
-
-class VirtualIndexBufferTriangles {
-    public data: Array<number> = [];
-
-    public get length(): number {
-        return this.data.length / 3;
-    }
-
-    public emplaceBack(i0, i1, i2) {
-        this.data.push(i0, i1, i2);
-    }
-}
-
 /**
  * Mocks the usage of a segment from SegmentVector. Returns the used segment.
  */
-function mockUseSegment(segmentVector: SegmentVector, vertexBuffer: VirtualVertexBuffer, indexBuffer: VirtualIndexBufferTriangles, numVertices: number) {
-    const seg = segmentVector.prepareSegment(numVertices, vertexBuffer as any as StructArray, indexBuffer as any as StructArray);
+function mockUseSegment(segmentVector: SegmentVector, vertexBuffer: FillLayoutArray, indexBuffer: TriangleIndexArray, numVertices: number) {
+    const seg = segmentVector.prepareSegment(numVertices, vertexBuffer, indexBuffer);
     seg.vertexLength += numVertices;
-    vertexBuffer.addVertices(numVertices);
+    addVertices(vertexBuffer, numVertices);
     return seg;
+}
+
+function addVertices(array: FillLayoutArray, count: number) {
+    for (let i = 0; i < count; i++) {
+        array.emplaceBack(0, 0);
+    }
 }

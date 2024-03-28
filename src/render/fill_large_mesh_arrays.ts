@@ -1,5 +1,5 @@
 import {LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
-import {SegmentVector} from '../data/segment';
+import {Segment, SegmentVector} from '../data/segment';
 import {StructArray} from '../util/struct_array';
 
 /**
@@ -7,17 +7,32 @@ import {StructArray} from '../util/struct_array';
  * if too many (\>65535) vertices are used.
  * This function is mainly intended for use with subdivided geometry, since sometimes subdivision might generate
  * more vertices than what fits into 16 bit indices.
+ *
+ * Accepts a triangle mesh, optionally with a line list (for fill outlines) as well.
+ *
+ * Mutates the provided `segmentsTriangles` and `segmentsLines` SegmentVectors,
+ * `vertexArray`, `triangleIndexArray` and optionally `lineIndexArray`.
+ * Does not mutate the input `flattened` vertices, `triangleIndices` and `lineList`.
+ * @param addVertex - A function for adding a new vertex into `vertexArray`. We might sometimes want to add more values per vertex than just X and Y coordinates, which can be handled in this function.
+ * @param segmentsTriangles - The segment array for triangle draw calls. New segments will be placed here.
+ * @param vertexArray - The vertex array into which new vertices are placed by the provided `addVertex` function.
+ * @param triangleIndexArray - Index array for drawing triangles. New triangle indices are placed here.
+ * @param flattened - The input flattened array or vertex coordinates.
+ * @param triangleIndices - Triangle indices into `flattened`.
+ * @param segmentsLines - Segment array for line draw calls. New segments will be placed here. Only needed if the mesh also contains lines.
+ * @param lineIndexArray - Index array for drawing lines. New triangle indices are placed here. Only needed if the mesh also contains lines.
+ * @param lineList - Line indices into `flattened`. Only needed if the mesh also contains lines.
  */
-export function fillArrays(
+export function fillLargeMeshArrays(
+    addVertex: (x: number, y: number) => void,
     segmentsTriangles: SegmentVector,
-    segmentsLines: SegmentVector,
     vertexArray: StructArray,
     triangleIndexArray: TriangleIndexArray,
-    lineIndexArray: LineIndexArray,
     flattened: Array<number>,
     triangleIndices: Array<number>,
-    lineList: Array<Array<number>>,
-    addVertex: (x: number, y: number) => void) {
+    segmentsLines?: SegmentVector,
+    lineIndexArray?: LineIndexArray,
+    lineList?: Array<Array<number>>) {
 
     const numVertices = flattened.length / 2;
 
@@ -36,11 +51,13 @@ export function fillArrays(
         triangleSegment.vertexLength += numVertices;
         triangleSegment.primitiveLength += triangleIndices.length / 3;
 
-        let lineIndicesStart;
-        let lineSegment;
+        let lineIndicesStart: number;
+        let lineSegment: Segment;
 
-        if (segmentsLines && lineIndexArray) {
-            // Note that segment creation must happen before we add vertices into the vertex buffer
+        const hasLines = segmentsLines && lineIndexArray && lineList;
+
+        if (hasLines) {
+            // Note that segment creation must happen *before* we add vertices into the vertex buffer
             lineSegment = segmentsLines.prepareSegment(numVertices, vertexArray, lineIndexArray);
             lineIndicesStart = lineSegment.vertexLength;
             lineSegment.vertexLength += numVertices;
@@ -51,7 +68,7 @@ export function fillArrays(
             addVertex(flattened[i], flattened[i + 1]);
         }
 
-        if (segmentsLines && lineIndexArray) {
+        if (hasLines) {
             for (let listIndex = 0; listIndex < lineList.length; listIndex++) {
                 const lineIndices = lineList[listIndex];
 
@@ -104,10 +121,21 @@ function fillSegmentsTriangles(
 
     let totalVerticesCreated = 0;
 
+    const copyOrReuseVertex = (index, needsCopy, segment) => {
+        if (needsCopy) {
+            const newIndex = totalVerticesCreated;
+            addVertex(flattened[index * 2], flattened[index * 2 + 1]);
+            actualVertexIndices[index] = totalVerticesCreated;
+            totalVerticesCreated++;
+            segment.vertexLength++;
+            return newIndex;
+        } else {
+            return actualVertexIndices[index];
+        }
+    };
+
     let currentSegmentCutoff = 0;
-
     let segment = segmentsTriangles.getOrCreateLatestSegment(vertexArray, triangleIndexArray);
-
     let baseVertex = segment.vertexLength;
 
     for (let primitiveEndIndex = 2; primitiveEndIndex < triangleIndices.length; primitiveEndIndex += 3) {
@@ -132,39 +160,9 @@ function fillSegmentsTriangles(
             baseVertex = 0;
         }
 
-        let actualIndex0 = -1;
-        let actualIndex1 = -1;
-        let actualIndex2 = -1;
-
-        if (i0needsVertexCopy) {
-            actualIndex0 = totalVerticesCreated;
-            addVertex(flattened[i0 * 2], flattened[i0 * 2 + 1]);
-            actualVertexIndices[i0] = totalVerticesCreated;
-            totalVerticesCreated++;
-            segment.vertexLength++;
-        } else {
-            actualIndex0 = actualVertexIndices[i0];
-        }
-
-        if (i1needsVertexCopy) {
-            actualIndex1 = totalVerticesCreated;
-            addVertex(flattened[i1 * 2], flattened[i1 * 2 + 1]);
-            actualVertexIndices[i1] = totalVerticesCreated;
-            totalVerticesCreated++;
-            segment.vertexLength++;
-        } else {
-            actualIndex1 = actualVertexIndices[i1];
-        }
-
-        if (i2needsVertexCopy) {
-            actualIndex2 = totalVerticesCreated;
-            addVertex(flattened[i2 * 2], flattened[i2 * 2 + 1]);
-            actualVertexIndices[i2] = totalVerticesCreated;
-            totalVerticesCreated++;
-            segment.vertexLength++;
-        } else {
-            actualIndex2 = actualVertexIndices[i2];
-        }
+        const actualIndex0 = copyOrReuseVertex(i0, i0needsVertexCopy, segment);
+        const actualIndex1 = copyOrReuseVertex(i1, i1needsVertexCopy, segment);
+        const actualIndex2 = copyOrReuseVertex(i2, i2needsVertexCopy, segment);
 
         triangleIndexArray.emplaceBack(
             baseVertex + actualIndex0 - currentSegmentCutoff,
@@ -192,10 +190,21 @@ function fillSegmentsLines(
 
     let totalVerticesCreated = 0;
 
+    const copyOrReuseVertex = (index, needsCopy, segment) => {
+        if (needsCopy) {
+            const newIndex = totalVerticesCreated;
+            addVertex(flattened[index * 2], flattened[index * 2 + 1]);
+            actualVertexIndices[index] = totalVerticesCreated;
+            totalVerticesCreated++;
+            segment.vertexLength++;
+            return newIndex;
+        } else {
+            return actualVertexIndices[index];
+        }
+    };
+
     let currentSegmentCutoff = 0;
-
     let segment = segmentsLines.getOrCreateLatestSegment(vertexArray, lineIndexArray);
-
     let baseVertex = segment.vertexLength;
 
     for (let lineListIndex = 0; lineListIndex < lineList.length; lineListIndex++) {
@@ -219,28 +228,8 @@ function fillSegmentsLines(
                 baseVertex = 0;
             }
 
-            let actualIndex0 = -1;
-            let actualIndex1 = -1;
-
-            if (i0needsVertexCopy) {
-                actualIndex0 = totalVerticesCreated;
-                addVertex(flattened[i0 * 2], flattened[i0 * 2 + 1]);
-                actualVertexIndices[i0] = totalVerticesCreated;
-                totalVerticesCreated++;
-                segment.vertexLength++;
-            } else {
-                actualIndex0 = actualVertexIndices[i0];
-            }
-
-            if (i1needsVertexCopy) {
-                actualIndex1 = totalVerticesCreated;
-                addVertex(flattened[i1 * 2], flattened[i1 * 2 + 1]);
-                actualVertexIndices[i1] = totalVerticesCreated;
-                totalVerticesCreated++;
-                segment.vertexLength++;
-            } else {
-                actualIndex1 = actualVertexIndices[i1];
-            }
+            const actualIndex0 = copyOrReuseVertex(i0, i0needsVertexCopy, segment);
+            const actualIndex1 = copyOrReuseVertex(i1, i1needsVertexCopy, segment);
 
             lineIndexArray.emplaceBack(
                 baseVertex + actualIndex0 - currentSegmentCutoff,
