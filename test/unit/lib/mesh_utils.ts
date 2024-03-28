@@ -229,7 +229,8 @@ export function getDebugSvg(flattened: Array<number>, triangles?: Array<number>,
 }
 
 /**
- * Returns an array of line indices for rendering a wireframe of the supplied triangle array. Useful for debugging.
+ * Returns an array of line indices for rendering a wireframe of the supplied triangle array.
+ * Useful for debugging the output of subdivision or similar geometry processing.
  * @param triangleIndices - An index array where each three indices form a triangle.
  * @returns An index array where each pair of indices forms a line segment.
  */
