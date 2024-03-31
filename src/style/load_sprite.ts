@@ -17,7 +17,7 @@ export type LoadSpriteResult = {
 
 export function normalizeSpriteURL(url: string, format: string, extension: string): string {
     const parsed = new URL(url);
-    parsed.pathname += `${format}${extension}`
+    parsed.pathname += `${format}${extension}`;
     return parsed.toString();
 }
 
