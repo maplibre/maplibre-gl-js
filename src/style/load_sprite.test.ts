@@ -26,10 +26,10 @@ describe('normalizeSpriteURL', () => {
         ).toBe('http://www.foo.com/bar@2x.png?fresh=true');
     });
 
-    test('test relative URL', () => {
+    test('No Path', () => {
         expect(
-            normalizeSpriteURL('/bar?fresh=true', '@2x', '.png')
-        ).toBe('/bar@2x.png?fresh=true');
+            normalizeSpriteURL('http://www.foo.com?fresh=true', '@2x', '.json')
+        ).toBe('http://www.foo.com/@2x.json?fresh=true');
     });
 });
 
@@ -81,7 +81,7 @@ describe('loadSprite', () => {
         expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
     });
 
-    test('transform of invalid url', async () => {
+    test('transform of relative url', async () => {
         const transform = jest.fn().mockImplementation((url, type) => {
             return {url: `http://localhost:9966${url}`, type};
         });
@@ -99,6 +99,37 @@ describe('loadSprite', () => {
 
         expect(transform).toHaveBeenCalledTimes(1);
         expect(transform).toHaveBeenNthCalledWith(1, '/test/unit/assets/sprite1', 'Sprite');
+
+        expect(Object.keys(result)).toHaveLength(1);
+        expect(Object.keys(result)[0]).toBe('default');
+
+        Object.values(result['default']).forEach(styleImage => {
+            expect(styleImage.spriteData).toBeTruthy();
+            expect(styleImage.spriteData.context).toBeInstanceOf(CanvasRenderingContext2D);
+        });
+
+        expect(server.requests[0].url).toBe('http://localhost:9966/test/unit/assets/sprite1.json');
+        expect(server.requests[1].url).toBe('http://localhost:9966/test/unit/assets/sprite1.png');
+    });
+
+    test('transform of random Sprite String', async () => {
+        const transform = jest.fn().mockImplementation((url, type) => {
+            return {url: 'http://localhost:9966/test/unit/assets/sprite1', type};
+        });
+
+        const manager = new RequestManager(transform);
+
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.json', fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.json')).toString());
+        server.respondWith('GET', 'http://localhost:9966/test/unit/assets/sprite1.png', bufferToArrayBuffer(fs.readFileSync(path.join(__dirname, '../../test/unit/assets/sprite1.png'))));
+
+        const promise = loadSprite('foobar', manager, 1, new AbortController());
+
+        server.respond();
+
+        const result = await promise;
+
+        expect(transform).toHaveBeenCalledTimes(1);
+        expect(transform).toHaveBeenNthCalledWith(1, 'foobar', 'Sprite');
 
         expect(Object.keys(result)).toHaveLength(1);
         expect(Object.keys(result)[0]).toBe('default');
