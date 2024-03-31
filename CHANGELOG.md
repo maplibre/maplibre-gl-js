@@ -4,7 +4,7 @@
 - Added const enum for actor messages to improve readability and maintainability. In tsconfig.json, `isolatedModules` flag is set to false in favor of generated JS size. ([#3879](https://github.com/maplibre/maplibre-gl-js/issues/3879))
 
 ### 🐞 Bug fixes
-- Fix normalizeSpriteURL before transformRequest throwing an Error with reelative URLs ([#3897](https://github.com/maplibre/maplibre-gl-js/issues/3897))
+- Fix normalizeSpriteURL before transformRequest throwing an Error with relative URLs ([#3897](https://github.com/maplibre/maplibre-gl-js/issues/3897))
 - _...Add new stuff here..._
 
 ## 4.1.2
