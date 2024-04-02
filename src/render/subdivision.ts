@@ -147,8 +147,8 @@ class Subdivider {
 
             // Iterate over cell rows that intersect this triangle
             for (let cellRow = cellYmin; cellRow < cellYmax; cellRow++) {
-                const {ring, leftmostIndex} = this._scanlineGenerateVertexRingForCellRow(cellRow, triangleVertices, triangleIndices);
-                scanlineTriangulateVertexRing(this._vertexBuffer, ring, leftmostIndex, finalIndices);
+                const ring = this._scanlineGenerateVertexRingForCellRow(cellRow, triangleVertices, triangleIndices);
+                scanlineTriangulateVertexRing(this._vertexBuffer, ring, finalIndices);
             }
         }
 
@@ -170,9 +170,6 @@ class Subdivider {
         const cellRowYTop = cellRow * this._granularityCellSize;
         const cellRowYBottom = cellRowYTop + this._granularityCellSize;
         const ring = [];
-
-        let leftmostIndex = 0;
-        let leftmostX = Infinity;
 
         // Generate the vertex ring
         for (let edgeIndex = 0; edgeIndex < 3; edgeIndex++) {
@@ -206,10 +203,6 @@ class Subdivider {
                 // But make sure to add its endpoint vertex if needed.
                 if (bY >= cellRowYTop && bY <= cellRowYBottom) {
                     // The edge endpoint is withing this row, add it to the ring
-                    if (bX < leftmostX) {
-                        leftmostX = bX;
-                        leftmostIndex = ring.length;
-                    }
                     ring.push(triangleIndices[(edgeIndex + 1) % 3]);
                 }
                 continue;
@@ -222,10 +215,6 @@ class Subdivider {
             if (!isParallelX && tEnter > 0) {
                 const x = aX + dirX * tEnter;
                 const y = aY + dirY * tEnter;
-                if (x < leftmostX) {
-                    leftmostX = x;
-                    leftmostIndex = ring.length;
-                }
                 ring.push(this._vertexToIndex(x, y));
             }
 
@@ -262,10 +251,6 @@ class Subdivider {
             if (!isParallelX && tExit < 1) {
                 const x = aX + dirX * tExit;
                 const y = aY + dirY * tExit;
-                if (x < leftmostX) {
-                    leftmostX = x;
-                    leftmostIndex = ring.length;
-                }
                 ring.push(this._vertexToIndex(x, y));
             }
 
@@ -294,10 +279,6 @@ class Subdivider {
 
             // Add endpoint vertex
             if (isParallelX || (bY >= cellRowYTop && bY <= cellRowYBottom)) {
-                if (bX < leftmostX) {
-                    leftmostX = bX;
-                    leftmostIndex = ring.length;
-                }
                 ring.push(triangleIndices[(edgeIndex + 1) % 3]);
             }
             // Any edge that has endpoint outside this row or on its boundary gets
@@ -371,10 +352,7 @@ class Subdivider {
             }
         }
 
-        return {
-            ring,
-            leftmostIndex
-        };
+        return ring;
     }
 
     /**
@@ -868,11 +846,22 @@ export function fixWindingOrder(flattened: Array<number>, indices: Array<number>
  * @param leftmostIndex - The index of the leftmost vertex in the supplied ring.
  * @param finalIndices - Array of final triangle indices, into where the resulting triangles are appended.
  */
-export function scanlineTriangulateVertexRing(vertexBuffer: Array<number>, ring: Array<number>, leftmostIndex: number, finalIndices: Array<number>): void {
+export function scanlineTriangulateVertexRing(vertexBuffer: Array<number>, ring: Array<number>, finalIndices: Array<number>): void {
     // Triangulate the ring
     // It is guaranteed to be convex and ordered
     if (ring.length === 0) {
         throw new Error('Subdivision vertex ring is empty.');
+    }
+
+    // Find the leftmost vertex in the ring
+    let leftmostIndex = 0;
+    let leftmostX = vertexBuffer[ring[0] * 2];
+    for (let i = 1; i < ring.length; i++) {
+        const x = vertexBuffer[ring[i] * 2];
+        if (x < leftmostX) {
+            leftmostX = x;
+            leftmostIndex = i;
+        }
     }
 
     // Traverse the ring in both directions from the leftmost vertex
