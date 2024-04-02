@@ -532,7 +532,7 @@ class Subdivider {
      * @param generateOutlineLines - When true, also generates line indices for outline of the supplied polygon.
      * @returns Vertex and index buffers with subdivision applied.
      */
-    public subdivideFillInternal(polygon: Array<Array<Point>>, generateOutlineLines: boolean): SubdivisionResult {
+    public subdividePolygonInternal(polygon: Array<Array<Point>>, generateOutlineLines: boolean): SubdivisionResult {
         if (this._used) {
             throw new Error('Subdivision: multiple use not allowed.');
         }
@@ -615,9 +615,9 @@ class Subdivider {
  * @param generateOutlineLines - When true, also generates index arrays for subdivided lines that form the outline of the supplied polygon. True by default.
  * @returns An object that contains the generated vertex array, triangle index array and, if specified, line index arrays.
  */
-export function subdivideFill(polygon: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number, generateOutlineLines: boolean = true): SubdivisionResult {
+export function subdividePolygon(polygon: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number, generateOutlineLines: boolean = true): SubdivisionResult {
     const subdivider = new Subdivider(granularity, canonical);
-    return subdivider.subdivideFillInternal(polygon, generateOutlineLines);
+    return subdivider.subdividePolygonInternal(polygon, generateOutlineLines);
 }
 
 /**

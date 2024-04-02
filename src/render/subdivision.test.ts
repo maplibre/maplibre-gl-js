@@ -1,7 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
-import {scanlineTriangulateVertexRing, subdivideFill, subdivideVertexLine} from './subdivision';
-import {generateWireframeFromTriangles} from '../../test/unit/lib/mesh_utils';
+import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision';
 import {CanonicalTileID} from '../source/tile_id';
 
 /**
@@ -193,7 +192,7 @@ describe('Line geometry subdivision', () => {
 
 describe('Fill subdivision', () => {
     test('Polygon is unchanged when granularity=1', () => {
-        const result = subdivideFill(
+        const result = subdividePolygon(
             [
                 [
                     // x, y
@@ -228,7 +227,7 @@ describe('Fill subdivision', () => {
     });
 
     test('Polygon is unchanged when granularity=1, but winding order is corrected.', () => {
-        const result = subdivideFill(
+        const result = subdividePolygon(
             [
                 [
                     // x, y
@@ -263,7 +262,7 @@ describe('Fill subdivision', () => {
     });
 
     test('Polygon inside cell is unchanged', () => {
-        const result = subdivideFill(
+        const result = subdividePolygon(
             [
                 [
                     // x, y
@@ -539,7 +538,7 @@ describe('Fill subdivision', () => {
             //   / /   \ \
             //  /  5⎺⎺⎺⎺4 \
             // 2⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺1
-            const result = subdivideFill(
+            const result = subdividePolygon(
                 [
                     [
                         new Point(0, 0),
@@ -596,7 +595,7 @@ describe('Fill subdivision', () => {
             //    //   \\
             //   /4⎺⎺⎺⎺⎺3\
             //  2⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺1
-            const result = subdivideFill(
+            const result = subdividePolygon(
                 [
                     [
                         new Point(0, 0),
@@ -652,7 +651,7 @@ describe('Fill subdivision', () => {
             //   / /   \ \
             //  / 4⎺⎺⎺⎺⎺5 \
             // 2⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺1
-            const result = subdivideFill(
+            const result = subdividePolygon(
                 [
                     [
                         new Point(0, 0),
@@ -705,7 +704,7 @@ describe('Fill subdivision', () => {
     });
 
     test('Generates pole geometry for both poles', () => {
-        const result = subdivideFill(
+        const result = subdividePolygon(
             [
                 [
                     // x, y
@@ -781,7 +780,7 @@ describe('Fill subdivision', () => {
     });
 
     test('Generates pole geometry for north pole only (geometry not bordering other pole)', () => {
-        const result = subdivideFill(
+        const result = subdividePolygon(
             [
                 [
                     // x, y
@@ -817,7 +816,7 @@ describe('Fill subdivision', () => {
     });
 
     test('Generates pole geometry for south pole only (geometry not bordering other pole)', () => {
-        const result = subdivideFill(
+        const result = subdividePolygon(
             [
                 [
                     // x, y
@@ -853,7 +852,7 @@ describe('Fill subdivision', () => {
     });
 
     test('Generates pole geometry for north pole only (tile not bordering other pole)', () => {
-        const result = subdivideFill(
+        const result = subdividePolygon(
             [
                 [
                     // x, y
@@ -889,7 +888,7 @@ describe('Fill subdivision', () => {
     });
 
     test('Generates pole geometry for south pole only (tile not bordering other pole)', () => {
-        const result = subdivideFill(
+        const result = subdividePolygon(
             [
                 [
                     // x, y
@@ -964,11 +963,6 @@ describe('Fill subdivision', () => {
         scanlineTriangulateVertexRing(vertices, ring, leftMost, finalIndices);
         checkWindingOrder(vertices, finalIndices);
     });
-
-    test('generateWireframeFromTriangles', () => {
-        const result = generateWireframeFromTriangles([0, 1, 2, 2, 1, 3]);
-        expect(result).toEqual([0, 1, 0, 2, 1, 3, 2, 3]);
-    });
 });
 
 /**
@@ -988,7 +982,7 @@ function toSimplePoints(a: Array<Point>): Array<{x: number; y: number}> {
 }
 
 function subdivideFillFromRingList(rings: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number) {
-    return subdivideFill(rings, canonical, granularity);
+    return subdividePolygon(rings, canonical, granularity);
 }
 
 function getEdgeOccurrencesMap(triangleIndices: Array<number>): Map<string, number> {
