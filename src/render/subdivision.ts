@@ -316,7 +316,7 @@ class Subdivider {
      * Generates vertices along the cell edge between the exit point from cell row
      * of edge A-\>B and entry of edge B-\>C, or entry of C-\>A if both A and C lie outside the cell row.
      * @param ring - Ordered array of vertex indices for the constructed ring. New indices are placed here.
-     * @param exitX - The X coordinate of the point where edge A->B exits the current cell row.
+     * @param exitX - The X coordinate of the point where edge A-\>B exits the current cell row.
      * @param cellRowYTop - The current cell row top Y coordinate.
      * @param cellRowYBottom - The current cell row bottom Y coordinate.
      */
