@@ -197,7 +197,8 @@ export class ScrollZoomHandler implements Handler {
         // Slow down zoom if shift key is held for more precise zooming
         if (e.shiftKey && value) value = value / 4;
 
-        if (this._map.shouldSnapToIntegerZoom('scrollZoom') && value !== 0) {
+        if (this._map.shouldSnapToIntegerZoom('scrollZoom') && this._type === 'wheel') {
+            // Skip inertial zoom for wheel scroll.
             const pos = DOM.mousePos(this._map.getCanvas(), e);
             e.preventDefault();
             let zoomTarget = value > 100 ? this._map.getZoom() - 2 :
@@ -335,8 +336,15 @@ export class ScrollZoomHandler implements Handler {
             this._finishTimeout = setTimeout(() => {
                 this._zooming = false;
                 this._triggerRenderFrame();
+
                 delete this._targetZoom;
                 delete this._finishTimeout;
+
+                if (this._map.shouldSnapToIntegerZoom('scrollZoom') && this._type === 'trackpad') {
+                    // For trackpad scroll, we have to snap zoom at the end of the inertia animation.
+                    this._map.zoomTo(Math.round(this._map.getZoom()), {duration: 100});
+                }
+
             }, 200);
         }
 
