@@ -220,31 +220,11 @@ class Subdivider {
 
             const enterX = aX + dirX * Math.max(tEnter, 0);
             const exitX = aX + dirX * Math.min(tExit, 1);
-            const leftX = isParallelX ? Math.min(aX, bX) : Math.min(enterX, exitX);
-            const rightX = isParallelX ? Math.max(aX, bX) : Math.max(enterX, exitX);
 
+            // Generate edge interior vertices
             // No need to subdivide (along X) edges that are parallel with Y
             if (!isParallelY) {
-                // Generate edge interior vertices
-                const edgeSubdivisionLeftCellX = Math.floor(leftX / this._granularityCellSize) + 1;
-                const edgeSubdivisionRightCellX = Math.ceil(rightX / this._granularityCellSize) - 1;
-
-                const isEdgeLeftToRight = isParallelX ? (aX < bX) : (enterX < exitX);
-                if (isEdgeLeftToRight) {
-                    // Left to right
-                    for (let cellX = edgeSubdivisionLeftCellX; cellX <= edgeSubdivisionRightCellX; cellX++) {
-                        const x = cellX * this._granularityCellSize;
-                        const y = aY + dirY * (x - aX) / dirX;
-                        ring.push(this._vertexToIndex(x, y));
-                    }
-                } else {
-                    // Right to left
-                    for (let cellX = edgeSubdivisionRightCellX; cellX >= edgeSubdivisionLeftCellX; cellX--) {
-                        const x = cellX * this._granularityCellSize;
-                        const y = aY + dirY * (x - aX) / dirX;
-                        ring.push(this._vertexToIndex(x, y));
-                    }
-                }
+                this._generateIntraEdgeVertices(ring, aX, aY, bX, bY, enterX, exitX);
             }
 
             // Special case: edge vertex for exit from cell row
@@ -285,74 +265,139 @@ class Subdivider {
             // inter-edge vertices.
             // No row boundary to split for edges parallel with X
             if (!isParallelX && (bY <= cellRowYTop || bY >= cellRowYBottom)) {
-                const dir2X = cX - bX;
-                const dir2Y = cY - bY;
-                const t2Top = (cellRowYTop - bY) / dir2Y;
-                const t2Bottom = (cellRowYBottom - bY) / dir2Y;
-                const t2Enter = Math.min(t2Top, t2Bottom);
-                const t2Exit = Math.max(t2Top, t2Bottom);
-                const enter2X = bX + dir2X * t2Enter;
-                let boundarySubdivisionLeftCellX = Math.floor(Math.min(enter2X, exitX) / this._granularityCellSize) + 1;
-                let boundarySubdivisionRightCellX = Math.ceil(Math.max(enter2X, exitX) / this._granularityCellSize) - 1;
-                let isBoundaryLeftToRight = exitX < enter2X;
-
-                const isParallelX2 = dir2Y === 0;
-
-                if (isParallelX2 && (cY === cellRowYTop || cY === cellRowYBottom)) {
-                    // Special case when edge b->c that lies on the cell boundary.
-                    // Do not generate any inter-edge vertices in this case,
-                    // this b->c edge gets subdivided when it is itself processed.
-                    continue;
-                }
-
-                if (isParallelX2 || t2Enter >= 1 || t2Exit <= 0) {
-                    // The next edge (b->c) lies entirely outside this cell row
-                    // Find entry point for the edge after that instead (c->a)
-
-                    // There may be at most 1 edge that is parallel to X in a triangle.
-                    // The main "a->b" edge must not be parallel at this point in the code.
-                    // We know that "a->b" crosses the current cell row boundary, such that point "b" is beyond the boundary.
-                    // If "b->c" is parallel to X, then "c->a" must not be parallel and must cross the cell row boundary back:
-                    //      a
-                    //      |\
-                    // -----|-\--cell row boundary----
-                    //      |  \
-                    //      c---b
-                    // If "b->c" is not parallel to X and doesn't cross the cell row boundary,
-                    // then c->a must also not be parallel to X and must cross the cell boundary back,
-                    // since points "a" and "c" lie on different sides of the boundary and on different Y coordinates.
-                    //
-                    // Thus there is no need for "parallel with X" checks inside this condition branch.
-
-                    const dir3X = aX - cX;
-                    const dir3Y = aY - cY;
-                    const t3Top = (cellRowYTop - cY) / dir3Y;
-                    const t3Bottom = (cellRowYBottom - cY) / dir3Y;
-                    const t3Enter = Math.min(t3Top, t3Bottom);
-                    const enter3X = cX + dir3X * t3Enter;
-                    boundarySubdivisionLeftCellX = Math.floor(Math.min(enter3X, exitX) / this._granularityCellSize) + 1;
-                    boundarySubdivisionRightCellX = Math.ceil(Math.max(enter3X, exitX) / this._granularityCellSize) - 1;
-                    isBoundaryLeftToRight = exitX < enter3X;
-                }
-
-                const boundaryY = dirY > 0 ? cellRowYBottom : cellRowYTop;
-                if (isBoundaryLeftToRight) {
-                    // Left to right
-                    for (let cellX = boundarySubdivisionLeftCellX; cellX <= boundarySubdivisionRightCellX; cellX++) {
-                        const x = cellX * this._granularityCellSize;
-                        ring.push(this._vertexToIndex(x, boundaryY));
-                    }
-                } else {
-                    // Right to left
-                    for (let cellX = boundarySubdivisionRightCellX; cellX >= boundarySubdivisionLeftCellX; cellX--) {
-                        const x = cellX * this._granularityCellSize;
-                        ring.push(this._vertexToIndex(x, boundaryY));
-                    }
-                }
+                this._generateInterEdgeVertices(ring, aX, aY, bX, bY, cX, cY,
+                    exitX, cellRowYTop, cellRowYBottom);
             }
         }
 
         return ring;
+    }
+
+    private _generateIntraEdgeVertices(
+        ring: Array<number>,
+        aX: number,
+        aY: number,
+        bX: number,
+        bY: number,
+        enterX: number,
+        exitX: number
+    ): void {
+        const dirX = bX - aX;
+        const dirY = bY - aY;
+        const isParallelX = dirY === 0;
+
+        const leftX = isParallelX ? Math.min(aX, bX) : Math.min(enterX, exitX);
+        const rightX = isParallelX ? Math.max(aX, bX) : Math.max(enterX, exitX);
+
+        const edgeSubdivisionLeftCellX = Math.floor(leftX / this._granularityCellSize) + 1;
+        const edgeSubdivisionRightCellX = Math.ceil(rightX / this._granularityCellSize) - 1;
+
+        const isEdgeLeftToRight = isParallelX ? (aX < bX) : (enterX < exitX);
+        if (isEdgeLeftToRight) {
+            // Left to right
+            for (let cellX = edgeSubdivisionLeftCellX; cellX <= edgeSubdivisionRightCellX; cellX++) {
+                const x = cellX * this._granularityCellSize;
+                const y = aY + dirY * (x - aX) / dirX;
+                ring.push(this._vertexToIndex(x, y));
+            }
+        } else {
+            // Right to left
+            for (let cellX = edgeSubdivisionRightCellX; cellX >= edgeSubdivisionLeftCellX; cellX--) {
+                const x = cellX * this._granularityCellSize;
+                const y = aY + dirY * (x - aX) / dirX;
+                ring.push(this._vertexToIndex(x, y));
+            }
+        }
+    }
+
+    /**
+     * Generates ring vertices along cell border.
+     * Call when processing an edge A-\>B that exits the current row (B lies outside the current row).
+     * Generates vertices along the cell edge between the exit point from cell row
+     * of edge A-\>B and entry of edge B-\>C, or entry of C-\>A if both A and C lie outside the cell row.
+     * @param ring - Ordered array of vertex indices for the constructed ring. New indices are placed here.
+     * @param exitX - The X coordinate of the point where edge A->B exits the current cell row.
+     * @param cellRowYTop - The current cell row top Y coordinate.
+     * @param cellRowYBottom - The current cell row bottom Y coordinate.
+     */
+    private _generateInterEdgeVertices(
+        ring: Array<number>,
+        aX: number,
+        aY: number,
+        bX: number,
+        bY: number,
+        cX: number,
+        cY: number,
+        exitX: number,
+        cellRowYTop: number,
+        cellRowYBottom: number
+    ): void {
+        const dirY = bY - aY;
+
+        const dir2X = cX - bX;
+        const dir2Y = cY - bY;
+        const t2Top = (cellRowYTop - bY) / dir2Y;
+        const t2Bottom = (cellRowYBottom - bY) / dir2Y;
+        const t2Enter = Math.min(t2Top, t2Bottom);
+        const t2Exit = Math.max(t2Top, t2Bottom);
+        const enter2X = bX + dir2X * t2Enter;
+        let boundarySubdivisionLeftCellX = Math.floor(Math.min(enter2X, exitX) / this._granularityCellSize) + 1;
+        let boundarySubdivisionRightCellX = Math.ceil(Math.max(enter2X, exitX) / this._granularityCellSize) - 1;
+        let isBoundaryLeftToRight = exitX < enter2X;
+
+        const isParallelX2 = dir2Y === 0;
+
+        if (isParallelX2 && (cY === cellRowYTop || cY === cellRowYBottom)) {
+            // Special case when edge b->c that lies on the cell boundary.
+            // Do not generate any inter-edge vertices in this case,
+            // this b->c edge gets subdivided when it is itself processed.
+            return;
+        }
+
+        if (isParallelX2 || t2Enter >= 1 || t2Exit <= 0) {
+            // The next edge (b->c) lies entirely outside this cell row
+            // Find entry point for the edge after that instead (c->a)
+
+            // There may be at most 1 edge that is parallel to X in a triangle.
+            // The main "a->b" edge must not be parallel at this point in the code.
+            // We know that "a->b" crosses the current cell row boundary, such that point "b" is beyond the boundary.
+            // If "b->c" is parallel to X, then "c->a" must not be parallel and must cross the cell row boundary back:
+            //      a
+            //      |\
+            // -----|-\--cell row boundary----
+            //      |  \
+            //      c---b
+            // If "b->c" is not parallel to X and doesn't cross the cell row boundary,
+            // then c->a must also not be parallel to X and must cross the cell boundary back,
+            // since points "a" and "c" lie on different sides of the boundary and on different Y coordinates.
+            //
+            // Thus there is no need for "parallel with X" checks inside this condition branch.
+
+            const dir3X = aX - cX;
+            const dir3Y = aY - cY;
+            const t3Top = (cellRowYTop - cY) / dir3Y;
+            const t3Bottom = (cellRowYBottom - cY) / dir3Y;
+            const t3Enter = Math.min(t3Top, t3Bottom);
+            const enter3X = cX + dir3X * t3Enter;
+            boundarySubdivisionLeftCellX = Math.floor(Math.min(enter3X, exitX) / this._granularityCellSize) + 1;
+            boundarySubdivisionRightCellX = Math.ceil(Math.max(enter3X, exitX) / this._granularityCellSize) - 1;
+            isBoundaryLeftToRight = exitX < enter3X;
+        }
+
+        const boundaryY = dirY > 0 ? cellRowYBottom : cellRowYTop;
+        if (isBoundaryLeftToRight) {
+            // Left to right
+            for (let cellX = boundarySubdivisionLeftCellX; cellX <= boundarySubdivisionRightCellX; cellX++) {
+                const x = cellX * this._granularityCellSize;
+                ring.push(this._vertexToIndex(x, boundaryY));
+            }
+        } else {
+            // Right to left
+            for (let cellX = boundarySubdivisionRightCellX; cellX >= boundarySubdivisionLeftCellX; cellX--) {
+                const x = cellX * this._granularityCellSize;
+                ring.push(this._vertexToIndex(x, boundaryY));
+            }
+        }
     }
 
     /**
