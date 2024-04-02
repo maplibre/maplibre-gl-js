@@ -441,6 +441,38 @@ class Subdivider {
     }
 
     /**
+     * Generates a quad from an edge to a pole with the correct winding order.
+     * Helper function used inside {@link _fillPoles}.
+     * @param indices - Index array into which the geometry is generated.
+     * @param i0 - Index of the first edge vertex.
+     * @param i1 - Index of the second edge vertex.
+     * @param v0x - X coordinate of the first edge vertex.
+     * @param v1x - X coordinate of the second edge vertex.
+     * @param poleY - The Y coordinate of the desired pole (NORTH_POLE_Y or SOUTH_POLE_Y).
+     */
+    private _generatePoleQuad(indices, i0, i1, v0x, v1x, poleY): void {
+        const flip = (v0x > v1x) !== (poleY === NORTH_POLE_Y);
+
+        if (flip) {
+            indices.push(i0);
+            indices.push(i1);
+            indices.push(this._vertexToIndex(v0x, poleY));
+
+            indices.push(i1);
+            indices.push(this._vertexToIndex(v1x, poleY));
+            indices.push(this._vertexToIndex(v0x, poleY));
+        } else {
+            indices.push(i1);
+            indices.push(i0);
+            indices.push(this._vertexToIndex(v0x, poleY));
+
+            indices.push(this._vertexToIndex(v1x, poleY));
+            indices.push(i1);
+            indices.push(this._vertexToIndex(v0x, poleY));
+        }
+    }
+
+    /**
      * Detects edges that border the north or south tile edge
      * and adds triangles that extend those edges to the poles.
      * Only run this function on tiles that border the poles.
@@ -456,32 +488,6 @@ class Subdivider {
         const northEdge = 0;
         const southEdge = EXTENT;
 
-        // Generates a quad from an edge to a pole with the correct winding order.
-        // i0, i1 - indices of the edge vertices
-        // v0x, v1x - X coordinates of the edge vertices
-        // poleY - the Y coordinate of the desired pole (NORTH_POLE_Y or SOUTH_POLE_Y)
-        const generatePoleQuad = (i0, i1, v0x, v1x, poleY) => {
-            const flip = (v0x > v1x) !== (poleY === NORTH_POLE_Y);
-
-            if (flip) {
-                indices.push(i0);
-                indices.push(i1);
-                indices.push(this._vertexToIndex(v0x, poleY));
-
-                indices.push(i1);
-                indices.push(this._vertexToIndex(v1x, poleY));
-                indices.push(this._vertexToIndex(v0x, poleY));
-            } else {
-                indices.push(i1);
-                indices.push(i0);
-                indices.push(this._vertexToIndex(v0x, poleY));
-
-                indices.push(this._vertexToIndex(v1x, poleY));
-                indices.push(i1);
-                indices.push(this._vertexToIndex(v0x, poleY));
-            }
-        };
-
         const numIndices = indices.length;
         for (let primitiveIndex = 2; primitiveIndex < numIndices; primitiveIndex += 3) {
             const i0 = indices[primitiveIndex - 2];
@@ -496,24 +502,24 @@ class Subdivider {
 
             if (north) {
                 if (v0y === northEdge && v1y === northEdge) {
-                    generatePoleQuad(i0, i1, v0x, v1x, NORTH_POLE_Y);
+                    this._generatePoleQuad(indices, i0, i1, v0x, v1x, NORTH_POLE_Y);
                 }
                 if (v1y === northEdge && v2y === northEdge) {
-                    generatePoleQuad(i1, i2, v1x, v2x, NORTH_POLE_Y);
+                    this._generatePoleQuad(indices, i1, i2, v1x, v2x, NORTH_POLE_Y);
                 }
                 if (v2y === northEdge && v0y === northEdge) {
-                    generatePoleQuad(i2, i0, v2x, v0x, NORTH_POLE_Y);
+                    this._generatePoleQuad(indices, i2, i0, v2x, v0x, NORTH_POLE_Y);
                 }
             }
             if (south) {
                 if (v0y === southEdge && v1y === southEdge) {
-                    generatePoleQuad(i0, i1, v0x, v1x, SOUTH_POLE_Y);
+                    this._generatePoleQuad(indices, i0, i1, v0x, v1x, SOUTH_POLE_Y);
                 }
                 if (v1y === southEdge && v2y === southEdge) {
-                    generatePoleQuad(i1, i2, v1x, v2x, SOUTH_POLE_Y);
+                    this._generatePoleQuad(indices, i1, i2, v1x, v2x, SOUTH_POLE_Y);
                 }
                 if (v2y === southEdge && v0y === southEdge) {
-                    generatePoleQuad(i2, i0, v2x, v0x, SOUTH_POLE_Y);
+                    this._generatePoleQuad(indices, i2, i0, v2x, v0x, SOUTH_POLE_Y);
                 }
             }
         }
