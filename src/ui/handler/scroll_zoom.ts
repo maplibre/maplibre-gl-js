@@ -342,7 +342,12 @@ export class ScrollZoomHandler implements Handler {
 
                 if (this._map.shouldSnapToIntegerZoom('scrollZoom') && this._type === 'trackpad') {
                     // For trackpad scroll, we have to snap zoom at the end of the inertia animation.
-                    this._map.zoomTo(Math.round(this._map.getZoom()), {duration: 100});
+                    const zoomTarget = Math.round(this._map.getZoom());
+                    this._map.easeTo({
+                        duration: 200,
+                        zoom: zoomTarget,
+                        around: this._tr.unproject(this._aroundPoint)
+                    });
                 }
 
             }, 200);
