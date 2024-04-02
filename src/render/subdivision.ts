@@ -59,6 +59,9 @@ class Subdivider {
      * If the internal vertex buffer contains no such vertex, then it is added.
      */
     private _vertexToIndex(x: number, y: number): number {
+        if (x < -32768 || y < -32768 || x > 32767 || y > 32767) {
+            throw new Error('Vertex coordinates are out of signed 16 bit integer range.');
+        }
         const xInt = Math.round(x) | 0;
         const yInt = Math.round(y) | 0;
         const key = this._getKey(xInt, yInt);
