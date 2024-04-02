@@ -1,7 +1,6 @@
 import Point from '@mapbox/point-geometry';
 import {EXTENT} from '../data/extent';
 import {scanlineTriangulateVertexRing, subdividePolygon, subdivideVertexLine} from './subdivision';
-import {generateWireframeFromTriangles} from '../../test/unit/lib/mesh_utils';
 import {CanonicalTileID} from '../source/tile_id';
 
 /**
@@ -963,11 +962,6 @@ describe('Fill subdivision', () => {
         const finalIndices = [];
         scanlineTriangulateVertexRing(vertices, ring, leftMost, finalIndices);
         checkWindingOrder(vertices, finalIndices);
-    });
-
-    test('generateWireframeFromTriangles', () => {
-        const result = generateWireframeFromTriangles([0, 1, 2, 2, 1, 3]);
-        expect(result).toEqual([0, 1, 0, 2, 1, 3, 2, 3]);
     });
 });
 
