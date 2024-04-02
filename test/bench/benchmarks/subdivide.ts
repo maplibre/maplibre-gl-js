@@ -1,7 +1,7 @@
 import {CanonicalTileID} from '../../../src/source/tile_id';
 import Benchmark from '../lib/benchmark';
 import {EXTENT} from '../../../src/data/extent';
-import {subdivideFill} from '../../../src/render/subdivision';
+import {subdividePolygon} from '../../../src/render/subdivision';
 import Point from '@mapbox/point-geometry';
 
 export default class Subdivide extends Benchmark {
@@ -42,7 +42,7 @@ export default class Subdivide extends Benchmark {
 
     async bench() {
         for (let i = 0; i < 10; i++) {
-            subdivideFill(this.polygon, this.tileID, this.granularity, true);
+            subdividePolygon(this.polygon, this.tileID, this.granularity, true);
         }
     }
 }

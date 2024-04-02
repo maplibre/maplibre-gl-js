@@ -32,7 +32,7 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {subdivideFill, subdivideVertexLine} from '../../render/subdivision';
+import {subdividePolygon, subdivideVertexLine} from '../../render/subdivision';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {fillLargeMeshArrays} from '../../render/fill_large_mesh_arrays';
 
@@ -276,7 +276,7 @@ export class FillExtrusionBucket implements Bucket {
             return;
 
         // Do not generate outlines, since outlines already got subdivided earlier.
-        const subdivided = subdivideFill(polygon, canonical, granularity, false);
+        const subdivided = subdividePolygon(polygon, canonical, granularity, false);
 
         const vertexArray = this.layoutVertexArray;
 
