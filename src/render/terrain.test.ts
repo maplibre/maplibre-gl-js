@@ -35,6 +35,7 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: 1,
             height: 1,
+            pixelRatio: 1,
             transform: {center: {lng: 0}},
             maybeDrawDepthAndCoords: jest.fn(),
         } as any as Painter;
@@ -70,6 +71,7 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: WORLD_WIDTH,
             height: 1,
+            pixelRatio: 1,
             maybeDrawDepthAndCoords: jest.fn(),
         } as any as Painter;
         const sourceCache = {} as SourceCache;
