@@ -35,6 +35,7 @@ export function fillLargeMeshArrays(
     lineList?: Array<Array<number>>) {
 
     const numVertices = flattened.length / 2;
+    const hasLines = segmentsLines && lineIndexArray && lineList;
 
     if (numVertices < SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
         // The fast path - no segmentation needed
@@ -53,8 +54,6 @@ export function fillLargeMeshArrays(
 
         let lineIndicesStart: number;
         let lineSegment: Segment;
-
-        const hasLines = segmentsLines && lineIndexArray && lineList;
 
         if (hasLines) {
             // Note that segment creation must happen *before* we add vertices into the vertex buffer
@@ -94,7 +93,7 @@ export function fillLargeMeshArrays(
         // it is easier to just consider (out)lines separately and duplicate their vertices.
 
         fillSegmentsTriangles(segmentsTriangles, vertexArray, triangleIndexArray, flattened, triangleIndices, addVertex);
-        if (segmentsLines && lineIndexArray) {
+        if (hasLines) {
             fillSegmentsLines(segmentsLines, vertexArray, lineIndexArray, flattened, lineList, addVertex);
         }
         // Triangles and lines share vertex buffer, but we increment vertex counts of their segments by different amounts.
