@@ -104,6 +104,38 @@ export function fillLargeMeshArrays(
     }
 }
 
+/**
+ * Determines the new index of a vertex given by its old index.
+ * @param actualVertexIndices - Array that maps the old index of a given vertex to a new index in the final vertex buffer.
+ * @param flattened - Old vertex buffer.
+ * @param addVertex - Function for creating a new vertex in the final vertex buffer.
+ * @param totalVerticesCreated - Reference to an int holding how many vertices were added to the final vertex buffer.
+ * @param oldIndex - The old index of the desired vertex.
+ * @param needsCopy - Whether to duplicate the desired vertex in the final vertex buffer.
+ * @param segment - The current segment.
+ * @returns Index of the vertex in the final vertex array.
+ */
+function copyOrReuseVertex(
+    actualVertexIndices: Array<number>,
+    flattened: Array<number>,
+    addVertex: (x: number, y: number) => void,
+    totalVerticesCreated: {count: number},
+    oldIndex: number,
+    needsCopy: boolean,
+    segment: Segment
+): number {
+    if (needsCopy) {
+        const newIndex = totalVerticesCreated.count;
+        addVertex(flattened[oldIndex * 2], flattened[oldIndex * 2 + 1]);
+        actualVertexIndices[oldIndex] = totalVerticesCreated.count;
+        totalVerticesCreated.count++;
+        segment.vertexLength++;
+        return newIndex;
+    } else {
+        return actualVertexIndices[oldIndex];
+    }
+}
+
 function fillSegmentsTriangles(
     segmentsTriangles: SegmentVector,
     vertexArray: StructArray,
@@ -118,20 +150,7 @@ function fillSegmentsTriangles(
         actualVertexIndices.push(-1);
     }
 
-    let totalVerticesCreated = 0;
-
-    const copyOrReuseVertex = (index, needsCopy, segment) => {
-        if (needsCopy) {
-            const newIndex = totalVerticesCreated;
-            addVertex(flattened[index * 2], flattened[index * 2 + 1]);
-            actualVertexIndices[index] = totalVerticesCreated;
-            totalVerticesCreated++;
-            segment.vertexLength++;
-            return newIndex;
-        } else {
-            return actualVertexIndices[index];
-        }
-    };
+    const totalVerticesCreated = {count: 0};
 
     let currentSegmentCutoff = 0;
     let segment = segmentsTriangles.getOrCreateLatestSegment(vertexArray, triangleIndexArray);
@@ -152,16 +171,22 @@ function fillSegmentsTriangles(
         if (segment.vertexLength + vertexCopyCount > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
             // Break up into a new segment if not.
             segment = segmentsTriangles.createNewSegment(vertexArray, triangleIndexArray);
-            currentSegmentCutoff = totalVerticesCreated;
+            currentSegmentCutoff = totalVerticesCreated.count;
             i0needsVertexCopy = true;
             i1needsVertexCopy = true;
             i2needsVertexCopy = true;
             baseVertex = 0;
         }
 
-        const actualIndex0 = copyOrReuseVertex(i0, i0needsVertexCopy, segment);
-        const actualIndex1 = copyOrReuseVertex(i1, i1needsVertexCopy, segment);
-        const actualIndex2 = copyOrReuseVertex(i2, i2needsVertexCopy, segment);
+        const actualIndex0 = copyOrReuseVertex(
+            actualVertexIndices, flattened, addVertex, totalVerticesCreated,
+            i0, i0needsVertexCopy, segment);
+        const actualIndex1 = copyOrReuseVertex(
+            actualVertexIndices, flattened, addVertex, totalVerticesCreated,
+            i1, i1needsVertexCopy, segment);
+        const actualIndex2 = copyOrReuseVertex(
+            actualVertexIndices, flattened, addVertex, totalVerticesCreated,
+            i2, i2needsVertexCopy, segment);
 
         triangleIndexArray.emplaceBack(
             baseVertex + actualIndex0 - currentSegmentCutoff,
@@ -187,20 +212,7 @@ function fillSegmentsLines(
         actualVertexIndices.push(-1);
     }
 
-    let totalVerticesCreated = 0;
-
-    const copyOrReuseVertex = (index, needsCopy, segment) => {
-        if (needsCopy) {
-            const newIndex = totalVerticesCreated;
-            addVertex(flattened[index * 2], flattened[index * 2 + 1]);
-            actualVertexIndices[index] = totalVerticesCreated;
-            totalVerticesCreated++;
-            segment.vertexLength++;
-            return newIndex;
-        } else {
-            return actualVertexIndices[index];
-        }
-    };
+    const totalVerticesCreated = {count: 0};
 
     let currentSegmentCutoff = 0;
     let segment = segmentsLines.getOrCreateLatestSegment(vertexArray, lineIndexArray);
@@ -221,14 +233,18 @@ function fillSegmentsLines(
             if (segment.vertexLength + vertexCopyCount > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
                 // Break up into a new segment if not.
                 segment = segmentsLines.createNewSegment(vertexArray, lineIndexArray);
-                currentSegmentCutoff = totalVerticesCreated;
+                currentSegmentCutoff = totalVerticesCreated.count;
                 i0needsVertexCopy = true;
                 i1needsVertexCopy = true;
                 baseVertex = 0;
             }
 
-            const actualIndex0 = copyOrReuseVertex(i0, i0needsVertexCopy, segment);
-            const actualIndex1 = copyOrReuseVertex(i1, i1needsVertexCopy, segment);
+            const actualIndex0 = copyOrReuseVertex(
+                actualVertexIndices, flattened, addVertex, totalVerticesCreated,
+                i0, i0needsVertexCopy, segment);
+            const actualIndex1 = copyOrReuseVertex(
+                actualVertexIndices, flattened, addVertex, totalVerticesCreated,
+                i1, i1needsVertexCopy, segment);
 
             lineIndexArray.emplaceBack(
                 baseVertex + actualIndex0 - currentSegmentCutoff,
