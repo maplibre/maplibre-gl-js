@@ -62,12 +62,13 @@ export class SegmentVector {
         indexArray: StructArray,
         sortKey?: number
     ): Segment {
-        const segment = ({
+        const segment: Segment = {
             vertexOffset: layoutVertexArray.length,
             primitiveOffset: indexArray.length,
             vertexLength: 0,
-            primitiveLength: 0
-        } as any);
+            primitiveLength: 0,
+            vaos: {}
+        };
 
         if (sortKey !== undefined) {
             segment.sortKey = sortKey;
