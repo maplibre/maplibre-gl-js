@@ -1038,7 +1038,7 @@ export abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            if (this.terrain) this._finalizeElevation();
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData, interruptingEaseId);
         }, options as any);
 
@@ -1366,7 +1366,7 @@ export abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, () => {
-            if (this.terrain) this._finalizeElevation();
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData);
         }, options);
 

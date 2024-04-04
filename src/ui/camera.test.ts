@@ -1728,7 +1728,40 @@ describe('#flyTo', () => {
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
     });
 
-    test('check freezeElevation events', done => {
+    test('check elevation events freezeElevation=false', done => {
+        const camera = createCamera();
+        const stub = jest.spyOn(browser, 'now');
+
+        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        camera.terrain = {} as Terrain;
+        camera._prepareElevation = () => { terrainCallbacks.prepare++; };
+        camera._updateElevation = () => { terrainCallbacks.update++; };
+        camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
+
+        camera.setCenter([-10, 0]);
+
+        camera.on('moveend', () => {
+            expect(terrainCallbacks.prepare).toBe(1);
+            expect(terrainCallbacks.update).toBe(2);
+            expect(terrainCallbacks.finalize).toBe(0);
+            done();
+        });
+
+        stub.mockImplementation(() => 0);
+        camera.flyTo({center: [10, 0], duration: 20, freezeElevation: false});
+
+        setTimeout(() => {
+            stub.mockImplementation(() => 1);
+            camera.simulateFrame();
+
+            setTimeout(() => {
+                stub.mockImplementation(() => 20);
+                camera.simulateFrame();
+            }, 0);
+        }, 0);
+    });
+
+    test('check elevation events freezeElevation=true', done => {
         const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
