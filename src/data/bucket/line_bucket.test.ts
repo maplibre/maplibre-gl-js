@@ -128,11 +128,13 @@ describe('LineBucket', () => {
         expect(bucket.segments.get()).toEqual([{
             vertexOffset: 0,
             vertexLength: 20,
+            vaos: {},
             primitiveOffset: 0,
             primitiveLength: 18
         }, {
             vertexOffset: 20,
             vertexLength: 256,
+            vaos: {},
             primitiveOffset: 18,
             primitiveLength: 254
         }]);

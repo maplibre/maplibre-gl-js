@@ -86,12 +86,14 @@ test('FillBucket segmentation', () => {
     expect(bucket.segments.get()[0]).toEqual({
         vertexOffset: 0,
         vertexLength: 138,
+        vaos: {},
         primitiveOffset: 0,
         primitiveLength: 134
     });
     expect(bucket.segments.get()[1]).toEqual({
         vertexOffset: 138,
         vertexLength: 128,
+        vaos: {},
         primitiveOffset: 134,
         primitiveLength: 126
     });

@@ -273,6 +273,13 @@ class Subdivider {
         return ring;
     }
 
+    /**
+     * Generates ring vertices along an edge A-\>B, but only in the part that intersects a given cell row.
+     * Does not handle adding edge endpoint vertices or edge cell row enter/exit vertices.
+     * @param ring - Ordered array of vertex indices for the constructed ring. New indices are placed here.
+     * @param enterX - The X coordinate of the point where edge A-\>B enters the current cell row.
+     * @param exitX - The X coordinate of the point where edge A-\>B exits the current cell row.
+     */
     private _generateIntraEdgeVertices(
         ring: Array<number>,
         aX: number,
@@ -315,6 +322,7 @@ class Subdivider {
      * Call when processing an edge A-\>B that exits the current row (B lies outside the current row).
      * Generates vertices along the cell edge between the exit point from cell row
      * of edge A-\>B and entry of edge B-\>C, or entry of C-\>A if both A and C lie outside the cell row.
+     * Does not handle adding edge endpoint vertices or edge cell row enter/exit vertices.
      * @param ring - Ordered array of vertex indices for the constructed ring. New indices are placed here.
      * @param exitX - The X coordinate of the point where edge A-\>B exits the current cell row.
      * @param cellRowYTop - The current cell row top Y coordinate.
