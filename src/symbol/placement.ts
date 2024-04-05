@@ -286,7 +286,7 @@ export class Placement {
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
-        const translation = this.collisionIndex.projection.translatePosition(
+        const translation = this.collisionIndex.mapProjection.translatePosition(
             this.transform,
             tile,
             paint.get('text-translate'),

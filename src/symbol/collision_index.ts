@@ -50,12 +50,12 @@ export class CollisionIndex {
     grid: GridIndex<FeatureKey>;
     ignoredGrid: GridIndex<FeatureKey>;
     transform: Transform;
-    pitchfactor: number;
+    pitchFactor: number;
     screenRightBoundary: number;
     screenBottomBoundary: number;
     gridRightBoundary: number;
     gridBottomBoundary: number;
-    projection: Projection;
+    mapProjection: Projection;
 
     // With perspectiveRatio the fontsize is calculated for tilted maps (near = bigger, far = smaller).
     // The cutoff defines a threshold to no longer render labels near the horizon.
@@ -68,11 +68,11 @@ export class CollisionIndex {
         ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
-        this.projection = projection;
+        this.mapProjection = projection;
 
         this.grid = grid;
         this.ignoredGrid = ignoredGrid;
-        this.pitchfactor = Math.cos(transform._pitch) * transform.cameraToCenterDistance;
+        this.pitchFactor = Math.cos(transform._pitch) * transform.cameraToCenterDistance;
 
         this.screenRightBoundary = transform.width + viewportPadding;
         this.screenBottomBoundary = transform.height + viewportPadding;
@@ -108,7 +108,7 @@ export class CollisionIndex {
         const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
         const brX = collisionBox.x2 * tileToViewport + projectedPoint.point.x;
         const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
-        const projectionOccluded = this.projection.useSpecialProjectionForSymbols ? this.projection.isOccluded(x, y, unwrappedTileID) : false;
+        const projectionOccluded = this.mapProjection.useSpecialProjectionForSymbols ? this.mapProjection.isOccluded(x, y, unwrappedTileID) : false;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate)) ||
@@ -165,7 +165,7 @@ export class CollisionIndex {
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            projection: this.projection,
+            projection: this.mapProjection,
             tileAnchorPoint: tileUnitAnchorPoint,
             unwrappedTileID,
             width: this.transform.width,
@@ -313,7 +313,7 @@ export class CollisionIndex {
             mat4.invert(inverseLabelPlaneMatrix, projectionArgs.labelPlaneMatrix);
             screenSpacePath = projectedPath.map(p => {
                 const backProjected = projection.project(p, inverseLabelPlaneMatrix, projectionArgs.getElevation);
-                const projected = this.projection.project(
+                const projected = this.mapProjection.project(
                     backProjected.point.x,
                     backProjected.point.y,
                     projectionArgs.unwrappedTileID);
@@ -430,8 +430,8 @@ export class CollisionIndex {
 
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
         let projected;
-        if (this.projection.useSpecialProjectionForSymbols) {
-            projected = this.projection.project(x, y, unwrappedTileID);
+        if (this.mapProjection.useSpecialProjectionForSymbols) {
+            projected = this.mapProjection.project(x, y, unwrappedTileID);
         } else {
             projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }
@@ -450,8 +450,8 @@ export class CollisionIndex {
     getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number {
         // We don't care about the actual projected point, just its W component.
         let projected;
-        if (this.projection.useSpecialProjectionForSymbols) {
-            projected = this.projection.project(x, y, unwrappedTileID);
+        if (this.mapProjection.useSpecialProjectionForSymbols) {
+            projected = this.mapProjection.project(x, y, unwrappedTileID);
         } else {
             projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }
