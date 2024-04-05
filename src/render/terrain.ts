@@ -332,9 +332,12 @@ export class Terrain {
 
         const rgba = new Uint8Array(4);
         const context = this.painter.context, gl = context.gl;
+        const px = Math.round(p.x * this.painter.pixelRatio / devicePixelRatio);
+        const py = Math.round(p.y * this.painter.pixelRatio / devicePixelRatio);
+        const fbHeight = Math.round(this.painter.height / devicePixelRatio);
         // grab coordinate pixel from coordinates framebuffer
         context.bindFramebuffer.set(this.getFramebuffer('coords').framebuffer);
-        gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        gl.readPixels(px, fbHeight - py - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
