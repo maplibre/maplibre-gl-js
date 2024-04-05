@@ -335,11 +335,7 @@ function addFeature(bucket: SymbolBucket,
         }
     }
 
-    const subdivideLine = (line) => {
-        // Subdivide lines for symbols as well, in order to allow line-following-text to be curved under non-mercator projections.
-        const granularity = (canonical) ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
-        return subdivideVertexLine(line, granularity);
-    };
+    const granularity = (canonical) ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
 
     const addSymbolAtAnchor = (line, anchor) => {
         if (anchor.x < 0 || anchor.x >= EXTENT || anchor.y < 0 || anchor.y >= EXTENT) {
@@ -357,7 +353,7 @@ function addFeature(bucket: SymbolBucket,
 
     if (symbolPlacement === 'line') {
         for (const line of clipLine(feature.geometry, 0, 0, EXTENT, EXTENT)) {
-            const subdividedLine = subdivideLine(line);
+            const subdividedLine = subdivideVertexLine(line, granularity);
             const anchors = getAnchors(
                 subdividedLine,
                 symbolMinDistance,
@@ -381,7 +377,7 @@ function addFeature(bucket: SymbolBucket,
         // "lines" with only one point are ignored as in clipLines
         for (const line of feature.geometry) {
             if (line.length > 1) {
-                const subdividedLine = subdivideLine(line);
+                const subdividedLine = subdivideVertexLine(line, granularity);
                 const anchor = getCenterAnchor(
                     subdividedLine,
                     textMaxAngle,
@@ -398,13 +394,13 @@ function addFeature(bucket: SymbolBucket,
         for (const polygon of classifyRings(feature.geometry, 0)) {
             // 16 here represents 2 pixels
             const poi = findPoleOfInaccessibility(polygon, 16);
-            const subdividedLine = subdivideLine(polygon[0]);
+            const subdividedLine = subdivideVertexLine(polygon[0], granularity, true);
             addSymbolAtAnchor(subdividedLine, new Anchor(poi.x, poi.y, 0));
         }
     } else if (feature.type === 'LineString') {
         // https://github.com/mapbox/mapbox-gl-js/issues/3808
         for (const line of feature.geometry) {
-            const subdividedLine = subdivideLine(line);
+            const subdividedLine = subdivideVertexLine(line, granularity);
             addSymbolAtAnchor(subdividedLine, new Anchor(subdividedLine[0].x, subdividedLine[0].y, 0));
         }
     } else if (feature.type === 'Point') {
