@@ -321,6 +321,32 @@ describe('GeolocateControl with no options', () => {
         // send through a location update which should reposition the map and trigger the 'moveend' event above
         geolocation.send({latitude: 10, longitude: 20, accuracy: 30});
         await moveEndPromise;
+        const trackPromise = geolocate.once('trackuserlocationend');
+        // manually pan the map away from the geolocation position which should trigger the 'trackuserlocationend' event above
+        map.jumpTo({
+            center: [10, 5]
+        });
+        await trackPromise;
+        expect(map.getCenter()).toEqual({lng: 10, lat: 5});
+    }); // deprecated
+
+    test('userlocationlostfocus event', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            fitBoundsOptions: {
+                duration: 0
+            }
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const click = new window.Event('click');
+
+        const moveEndPromise = map.once('moveend');
+        // click the button to activate it into the enabled watch state
+        geolocate._geolocateButton.dispatchEvent(click);
+        // send through a location update which should reposition the map and trigger the 'moveend' event above
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30});
+        await moveEndPromise;
         const trackPromise = geolocate.once('userlocationlostfocus');
         // manually pan the map away from the geolocation position which should trigger the 'userlocationlostfocus' event above
         map.jumpTo({

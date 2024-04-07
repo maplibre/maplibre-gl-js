@@ -90,9 +90,9 @@ let noTimeout = false;
  *
  * ### Events
  *
- * @event `trackuserlocationend` - Fired when the `GeolocateControl` changes to the off state, which happens when a user cick on geolocate button and turns it off. This only applies when `trackUserLocation` is `true`.
+ * @event `trackuserlocationend` - Fired when the `GeolocateControl` changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when `trackUserLocation` is `true`. In the background state, the dot on the map will update with location updates but the camera will not.
  *
- * @event `trackuserlocationstart` - Fired when the `GeolocateControl` changes to the wating active state, which happens upon first obtaining a successful Geolocation API position for the user (a `geolocate` event will follow).
+ * @event `trackuserlocationstart` - Fired when the `GeolocateControl` changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a `geolocate` event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no `geolocate` event will follow unless the users's location changes).
  *
  * @event `userlocationlostfocus` - Fired when the `GeolocateControl` changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when `trackUserLocation` is `true`. In the background state, the dot on the map will update with location updates but the camera will not.
  *
@@ -156,9 +156,9 @@ let noTimeout = false;
  * // Add the control to the map.
  * map.addControl(geolocate);
  * // Set an event listener that fires
- * // when a userlocationlostfocus event occurs.
+ * // when an userlocationlostfocus event occurs.
  * geolocate.on('userlocationlostfocus', function() {
- *   console.log('A userlocationlostfocus event has occurred.')
+ *   console.log('An userlocationlostfocus event has occurred.')
  * });
  * ```
  *
@@ -174,9 +174,9 @@ let noTimeout = false;
  * // Add the control to the map.
  * map.addControl(geolocate);
  * // Set an event listener that fires
- * // when a userlocationfocus event occurs.
+ * // when an userlocationfocus event occurs.
  * geolocate.on('userlocationfocus', function() {
- *   console.log('A userlocationfocus event has occurred.')
+ *   console.log('An userlocationfocus event has occurred.')
  * });
  * ```
  *
@@ -574,6 +574,7 @@ export class GeolocateControl extends Evented implements IControl {
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
 
+                    this.fire(new Event('trackuserlocationend')); // deprecated
                     this.fire(new Event('userlocationlostfocus'));
                 }
             });
@@ -636,6 +637,7 @@ export class GeolocateControl extends Evented implements IControl {
                     // set camera to last known location
                     if (this._lastKnownPosition) this._updateCamera(this._lastKnownPosition);
 
+                    this.fire(new Event('trackuserlocationstart')); // deprecated
                     this.fire(new Event('userlocationfocus'));
                     break;
                 default:
