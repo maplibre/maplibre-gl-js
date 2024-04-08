@@ -40,7 +40,7 @@ export default class Subdivide extends Benchmark {
         this.polygon = polygon;
     }
 
-    async bench() {
+    bench() {
         for (let i = 0; i < 10; i++) {
             subdividePolygon(this.polygon, this.tileID, this.granularity, true);
         }
