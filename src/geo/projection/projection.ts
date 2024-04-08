@@ -8,6 +8,7 @@ import {PreparedShader} from '../../shaders/shaders';
 import {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
 import {Program} from '../../render/program';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 
 export type ProjectionGPUContext = {
     context: Context;
@@ -69,6 +70,14 @@ export interface Projection {
      * Vertex shader code that is injected into every MapLibre vertex shader that uses this projection.
      */
     get vertexShaderPreludeCode(): string;
+
+    /**
+     * @internal
+     * An object describing how much subdivision should be applied to rendered geometry.
+     * The subdivision settings should be a constant for a given projection.
+     * Projections that do not require subdivision should return {@link SubdivisionGranularitySetting.noSubdivision}.
+     */
+    get subdivisionGranularity(): SubdivisionGranularitySetting;
 
     /**
      * @internal

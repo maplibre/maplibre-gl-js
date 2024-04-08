@@ -11,7 +11,8 @@ import {Tile} from '../../source/tile';
 import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
-import {granularitySettings} from '../../render/subdivision';
+import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../../render/subdivision';
+import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import {Projection, ProjectionGPUContext} from './projection';
@@ -29,6 +30,16 @@ const globeTransitionTimeSeconds = 0.5;
 const zoomTransitionTimeSeconds = 0.5;
 const maxGlobeZoom = 12.0;
 const errorTransitionTimeSeconds = 0.5;
+
+const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionGranularitySetting({
+    fill: new SubdivisionGranularityExpression(128, 1),
+    line: new SubdivisionGranularityExpression(512, 1),
+    // Always keep at least some subdivision on raster tiles, etc,
+    // otherwise they will be visibly warped at high zooms (before mercator transition).
+    // This si not needed on fill, because fill geometry tends to already be
+    // highly tesselated and granular at high zooms.
+    tile: new SubdivisionGranularityExpression(128, 16),
+});
 
 export class GlobeProjection implements Projection {
     private _mercator: MercatorProjection;
@@ -111,6 +122,10 @@ export class GlobeProjection implements Projection {
 
     get vertexShaderPreludeCode(): string {
         return shaders.projectionMercator.vertexSource;
+    }
+
+    get subdivisionGranularity(): SubdivisionGranularitySetting {
+        return granularitySettingsGlobe;
     }
 
     /**
@@ -426,7 +441,7 @@ export class GlobeProjection implements Projection {
     }
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh {
-        const granularity = granularitySettings.fill.getGranularityForZoomLevel(canonical.z);
+        const granularity = granularitySettingsGlobe.tile.getGranularityForZoomLevel(canonical.z);
         const north = (canonical.y === 0);
         const south = (canonical.y === (1 << canonical.z) - 1);
         return this.getMesh(context, granularity, hasBorder, north, south);
@@ -472,8 +487,8 @@ export class GlobeProjection implements Projection {
         const endX = granularity + (border ? 1 : 0);
         const endY = granularity + ((border || south) ? 1 : 0);
 
-        const northY = -32768;
-        const southY = 32767;
+        const northY = NORTH_POLE_Y;
+        const southY = SOUTH_POLE_Y;
 
         for (let y = offsetY; y <= endY; y++) {
             for (let x = offsetX; x <= endX; x++) {

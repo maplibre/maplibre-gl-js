@@ -9,6 +9,7 @@ import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'j
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
 import {Map} from '../ui/map';
 import {WorkerTileParameters} from './worker_source';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
     const source = new VectorTileSource('id', options, getMockDispatcher(), options.eventedParent);
@@ -17,7 +18,12 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
         style: {sourceCaches: {id: {clearTiles}}},
-        getPixelRatio() { return 1; }
+        getPixelRatio() { return 1; },
+        projection: {
+            get subdivisionGranularity() {
+                return SubdivisionGranularitySetting.noSubdivision;
+            }
+        }
     } as any as Map);
 
     source.on('error', () => { }); // to prevent console log of errors
