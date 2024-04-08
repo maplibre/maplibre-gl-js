@@ -189,7 +189,8 @@ class Subdivider {
             const isParallelY = dirX === 0;
             const isParallelX = dirY === 0;
 
-            // Distance along edge where it enters/exits current cell row
+            // Distance along edge where it enters/exits current cell row,
+            // where distance 0 is the edge start point, 1 the endpoint, 0.5 the mid point, etc.
             const tTop = (cellRowYTop - aY) / dirY;
             const tBottom = (cellRowYBottom - aY) / dirY;
             const tEnter = Math.min(tTop, tBottom);
@@ -218,6 +219,8 @@ class Subdivider {
                 ring.push(this._vertexToIndex(x, y));
             }
 
+            // The X coordinates of the points where the edge enters/exits the current cell row,
+            // or the edge start/endpoint, if the entry/exit happens beyond the edge bounds.
             const enterX = aX + dirX * Math.max(tEnter, 0);
             const exitX = aX + dirX * Math.min(tExit, 1);
 
@@ -346,6 +349,8 @@ class Subdivider {
         const dir2Y = cY - bY;
         const t2Top = (cellRowYTop - bY) / dir2Y;
         const t2Bottom = (cellRowYBottom - bY) / dir2Y;
+        // The distance along edge B->C where it enters/exits the current cell row,
+        // where distance 0 is B, 1 is C, 0.5 is the edge midpoint, etc.
         const t2Enter = Math.min(t2Top, t2Bottom);
         const t2Exit = Math.max(t2Top, t2Bottom);
         const enter2X = bX + dir2X * t2Enter;
@@ -381,12 +386,14 @@ class Subdivider {
             //
             // Thus there is no need for "parallel with X" checks inside this condition branch.
 
+            // Compute the X coordinate where edge C->A enters the current cell row
             const dir3X = aX - cX;
             const dir3Y = aY - cY;
             const t3Top = (cellRowYTop - cY) / dir3Y;
             const t3Bottom = (cellRowYBottom - cY) / dir3Y;
             const t3Enter = Math.min(t3Top, t3Bottom);
             const enter3X = cX + dir3X * t3Enter;
+
             boundarySubdivisionLeftCellX = Math.floor(Math.min(enter3X, exitX) / this._granularityCellSize) + 1;
             boundarySubdivisionRightCellX = Math.ceil(Math.max(enter3X, exitX) / this._granularityCellSize) - 1;
             isBoundaryLeftToRight = exitX < enter3X;
