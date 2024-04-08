@@ -432,7 +432,8 @@ function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, current
  *
  * Projects a "virtual" vertex along a line segment.
  * If `projectionMatrix` is not undefined, does a simple projection using this matrix.
- * Otherwise, projects to viewport using either the `labelPlaneMatrix` or the special map projection (mostly for globe) by calling {@link projectTileCoordinatesToViewport}.
+ * Otherwise, either projects to label plane using the `labelPlaneMatrix`
+ * or projects to viewport using the special map projection (mostly for globe) by calling {@link projectTileCoordinatesToViewport}.
  */
 function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4 | undefined, projectionArgs: ProjectionArgs) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
@@ -580,6 +581,7 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: 
 } {
     let projection;
     if (!projectionArgs.pitchWithMap && projectionArgs.projection.useSpecialProjectionForSymbols) {
+        // TODO: terrain support
         projection = projectionArgs.projection.project(x + projectionArgs.translation[0], y + projectionArgs.translation[1], projectionArgs.unwrappedTileID);
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
