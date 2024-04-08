@@ -157,13 +157,57 @@ describe('SegmentVector', () => {
         expect(second.vertexLength).toBe(10);
         expect(segmentVector.segments).toHaveLength(2);
     });
+
+    test('invalidateLast called twice has no effect', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
+        const segmentVector = new SegmentVector();
+        const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
+        segmentVector.forceNewSegmentOnTextPrepare();
+        segmentVector.forceNewSegmentOnTextPrepare();
+        const second = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
+        expect(first).toBeTruthy();
+        expect(second).toBeTruthy();
+        expect(first === second).toBe(false);
+        expect(first.vertexLength).toBe(5);
+        expect(second.vertexLength).toBe(5);
+        expect(segmentVector.segments).toHaveLength(2);
+    });
+
+    test('invalidateLast called on an empty SegmentVector has no effect', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
+        const segmentVector = new SegmentVector();
+        segmentVector.forceNewSegmentOnTextPrepare();
+        const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
+        expect(first).toBeTruthy();
+        expect(first.vertexLength).toBe(5);
+        expect(segmentVector.segments).toHaveLength(1);
+    });
+
+    test('prepareSegment respects different sortKey', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
+        const vertexBuffer = new FillLayoutArray();
+        const indexBuffer = new TriangleIndexArray();
+        const segmentVector = new SegmentVector();
+        const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5, 1);
+        const second = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5, 2);
+        expect(first).toBeTruthy();
+        expect(second).toBeTruthy();
+        expect(first === second).toBe(false);
+        expect(first.vertexLength).toBe(5);
+        expect(second.vertexLength).toBe(5);
+        expect(segmentVector.segments).toHaveLength(2);
+    });
 });
 
 /**
  * Mocks the usage of a segment from SegmentVector. Returns the used segment.
  */
-function mockUseSegment(segmentVector: SegmentVector, vertexBuffer: FillLayoutArray, indexBuffer: TriangleIndexArray, numVertices: number) {
-    const seg = segmentVector.prepareSegment(numVertices, vertexBuffer, indexBuffer);
+function mockUseSegment(segmentVector: SegmentVector, vertexBuffer: FillLayoutArray, indexBuffer: TriangleIndexArray, numVertices: number, sortKey?: number) {
+    const seg = segmentVector.prepareSegment(numVertices, vertexBuffer, indexBuffer, sortKey);
     seg.vertexLength += numVertices;
     addVertices(vertexBuffer, numVertices);
     return seg;
