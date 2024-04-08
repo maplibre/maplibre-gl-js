@@ -99,8 +99,8 @@ export function fillLargeMeshArrays(
         // Triangles and lines share vertex buffer, but we increment vertex counts of their segments by different amounts.
         // This can cause incorrect indices to be used if we reuse those segments, so we force the segment vector
         // to create new segments on the next `prepareSegment` call.
-        segmentsTriangles.invalidateLast();
-        segmentsLines?.invalidateLast();
+        segmentsTriangles.forceNewSegmentOnTextPrepare();
+        segmentsLines?.forceNewSegmentOnTextPrepare();
     }
 }
 
