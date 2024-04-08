@@ -96,7 +96,7 @@ export class SegmentVector {
      * Causes the next call to {@link prepareSegment} to always return a new segment,
      * not reusing the current segment even if the new geometry would fit it.
      */
-    forceNewSegmentOnTextPrepare() {
+    forceNewSegmentOnNextPrepare() {
         this._forceNewSegmentOnNextPrepare = true;
     }
 

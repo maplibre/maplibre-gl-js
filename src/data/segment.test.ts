@@ -77,7 +77,7 @@ describe('SegmentVector', () => {
         const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
-        segmentVector.forceNewSegmentOnTextPrepare();
+        segmentVector.forceNewSegmentOnNextPrepare();
         const second = segmentVector.createNewSegment(vertexBuffer, indexBuffer);
         second.vertexLength += 5;
         addVertices(vertexBuffer, 5);
@@ -125,7 +125,7 @@ describe('SegmentVector', () => {
         const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
-        segmentVector.forceNewSegmentOnTextPrepare();
+        segmentVector.forceNewSegmentOnNextPrepare();
         const second = segmentVector.getOrCreateLatestSegment(vertexBuffer, indexBuffer);
         second.vertexLength += 5;
         addVertices(vertexBuffer, 5);
@@ -145,7 +145,7 @@ describe('SegmentVector', () => {
         const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
-        segmentVector.forceNewSegmentOnTextPrepare();
+        segmentVector.forceNewSegmentOnNextPrepare();
         const second = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         const third = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         expect(first).toBeTruthy();
@@ -164,8 +164,8 @@ describe('SegmentVector', () => {
         const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
-        segmentVector.forceNewSegmentOnTextPrepare();
-        segmentVector.forceNewSegmentOnTextPrepare();
+        segmentVector.forceNewSegmentOnNextPrepare();
+        segmentVector.forceNewSegmentOnNextPrepare();
         const second = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         expect(first).toBeTruthy();
         expect(second).toBeTruthy();
@@ -180,7 +180,7 @@ describe('SegmentVector', () => {
         const vertexBuffer = new FillLayoutArray();
         const indexBuffer = new TriangleIndexArray();
         const segmentVector = new SegmentVector();
-        segmentVector.forceNewSegmentOnTextPrepare();
+        segmentVector.forceNewSegmentOnNextPrepare();
         const first = mockUseSegment(segmentVector, vertexBuffer, indexBuffer, 5);
         expect(first).toBeTruthy();
         expect(first.vertexLength).toBe(5);
