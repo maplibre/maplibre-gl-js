@@ -474,11 +474,8 @@ type ProjectionCache = {
     /**
      * Was any projected point occluded by the map itself (eg. occluded by the planet when using globe projection).
      *
-     * TODO: This is a pretty hacky way to hide viewport-pitched line-following texts
-     * that are at least partially hidden behind the curve of the planet.
-     * Come up with something better in the future?
-     * But this works, and viewport-pitched line texts seem to be an seldom-used edge case anyway,
-     * and planetary-scale texts where this matters are even less likely.
+     * Viewport-pitched line-following texts where *any* of the line points is hidden behind the planet curve becomes entirely hidden.
+     * This is perhaps not the most ideal behavior, but it works, it is simple and planetary-scale texts such as this seem to be a rare edge case.
      */
     anyProjectionOccluded: boolean;
 };
