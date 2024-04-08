@@ -297,7 +297,7 @@ describe('Fill subdivision', () => {
     });
 
     test('Subdivide a polygon', () => {
-        const result = subdivideFillFromRingList([
+        const result = subdividePolygon([
             [
                 new Point(0, 0),
                 new Point(8, 0),
@@ -408,7 +408,7 @@ describe('Fill subdivision', () => {
 
     describe('Polygon outline line list is correct', () => {
         test('Subcell polygon', () => {
-            const result = subdivideFillFromRingList([
+            const result = subdividePolygon([
                 [
                     new Point(17, 127),
                     new Point(19, 111),
@@ -422,7 +422,7 @@ describe('Fill subdivision', () => {
         });
 
         test('Small polygon', () => {
-            const result = subdivideFillFromRingList([
+            const result = subdividePolygon([
                 [
                     new Point(17, 15),
                     new Point(261, 13),
@@ -436,7 +436,7 @@ describe('Fill subdivision', () => {
         });
 
         test('Medium polygon', () => {
-            const result = subdivideFillFromRingList([
+            const result = subdividePolygon([
                 [
                     new Point(17, 127),
                     new Point(1029, 13),
@@ -450,7 +450,7 @@ describe('Fill subdivision', () => {
         });
 
         test('Large polygon', () => {
-            const result = subdivideFillFromRingList([
+            const result = subdividePolygon([
                 [
                     new Point(17, 127),
                     new Point(8001, 13),
@@ -464,7 +464,7 @@ describe('Fill subdivision', () => {
         });
 
         test('Large polygon with hole', () => {
-            const result = subdivideFillFromRingList([
+            const result = subdividePolygon([
                 [
                     new Point(17, 127),
                     new Point(8001, 13),
@@ -483,7 +483,7 @@ describe('Fill subdivision', () => {
         });
 
         test('Large polygon with hole, granularity=0', () => {
-            const result = subdivideFillFromRingList([
+            const result = subdividePolygon([
                 [
                     new Point(17, 127),
                     new Point(8001, 13),
@@ -502,7 +502,7 @@ describe('Fill subdivision', () => {
         });
 
         test('Large polygon with hole, finer granularity', () => {
-            const result = subdivideFillFromRingList([
+            const result = subdividePolygon([
                 [
                     new Point(17, 1),
                     new Point(347, 13),
@@ -977,10 +977,6 @@ function toSimplePoints(a: Array<Point>): Array<{x: number; y: number}> {
         });
     }
     return result;
-}
-
-function subdivideFillFromRingList(rings: Array<Array<Point>>, canonical: CanonicalTileID, granularity: number) {
-    return subdividePolygon(rings, canonical, granularity);
 }
 
 function getEdgeOccurrencesMap(triangleIndices: Array<number>): Map<string, number> {
