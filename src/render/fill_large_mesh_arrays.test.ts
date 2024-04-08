@@ -1,6 +1,5 @@
 import {FillLayoutArray, LineIndexArray, TriangleIndexArray} from '../data/array_types.g';
 import {SegmentVector} from '../data/segment';
-import {StructArray} from '../util/struct_array';
 import {fillLargeMeshArrays} from './fill_large_mesh_arrays';
 import {SimpleMesh, getGridMesh, getGridMeshRandom} from '../../test/unit/lib/mesh_utils';
 
@@ -157,7 +156,7 @@ describe('fillArrays', () => {
     test('Tiny mesh is unchanged.', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
         const mesh = getGridMesh(1);
-        const split = splitMesh(mesh);
+        const split = createSegmentsAndSplitMesh(mesh);
         expect(split.segmentsTriangles).toHaveLength(1);
         testMeshesEqual(mesh, split);
     });
@@ -165,7 +164,7 @@ describe('fillArrays', () => {
     test('Small mesh is unchanged.', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
         const mesh = getGridMesh(2);
-        const split = splitMesh(mesh);
+        const split = createSegmentsAndSplitMesh(mesh);
         expect(split.segmentsTriangles).toHaveLength(1);
         testMeshesEqual(mesh, split);
     });
@@ -173,7 +172,7 @@ describe('fillArrays', () => {
     test('Large mesh is correctly split into multiple segments.', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
         const mesh = getGridMesh(4);
-        const split = splitMesh(mesh);
+        const split = createSegmentsAndSplitMesh(mesh);
         expect(split.segmentsTriangles.length).toBeGreaterThan(1);
         testMeshesEqual(mesh, split);
     });
@@ -181,7 +180,7 @@ describe('fillArrays', () => {
     test('Very large mesh is correctly split into multiple segments.', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 1024;
         const mesh = getGridMesh(64);
-        const split = splitMesh(mesh);
+        const split = createSegmentsAndSplitMesh(mesh);
         expect(split.segmentsTriangles.length).toBeGreaterThan(1);
         testMeshesEqual(mesh, split);
     });
@@ -189,39 +188,194 @@ describe('fillArrays', () => {
     test('Very large random mesh is correctly split into multiple segments.', () => {
         SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 1024;
         const mesh = getGridMeshRandom(64, 8192, 1024);
-        const split = splitMesh(mesh);
+        const split = createSegmentsAndSplitMesh(mesh);
         expect(split.segmentsTriangles.length).toBeGreaterThan(1);
         testMeshesEqual(mesh, split);
     });
+
+    test('Several small meshes are correctly placed into a single segment.', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
+
+        const buffers = createMeshBuffers();
+
+        const smallMesh = getGridMesh(1); // 4 vertices
+
+        fillMesh(buffers, smallMesh);
+        fillMesh(buffers, smallMesh);
+        const result = convertBuffersToMesh(buffers);
+        expect(result.vertices).toEqual([
+            0, 0, // 0
+            1, 0, // 1
+            0, 1, // 2
+            1, 1, // 3
+            0, 0,
+            1, 0,
+            0, 1,
+            1, 1
+        ]);
+        expect(result.indicesTriangles).toEqual([
+            0, 3, 1,
+            0, 2, 3,
+            4, 7, 5,
+            4, 6, 7
+        ]);
+        expect(result.indicesLines).toEqual([
+            0, 1, 2, 3, 0, 2, 1, 3,
+            4, 5, 6, 7, 4, 6, 5, 7
+        ]);
+        expect(result.segmentsTriangles).toHaveLength(1);
+        expect(result.segmentsLines).toHaveLength(1);
+    });
+
+    test('Several small and large meshes are correctly split into multiple segments.', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
+
+        const buffers = createMeshBuffers();
+
+        const smallMesh = getGridMesh(1); // 4 vertices
+        const largeMesh = getGridMesh(2); // 9 vertices
+
+        const meshList = [
+            smallMesh,
+            largeMesh,
+            // Previous mesh still fits into first segment: 9+4 = 13
+            largeMesh,
+            // Only the first triangle fits, usage is second segment is 8 vertices
+            smallMesh,
+            // This last one brings up second segment usage to 12 vertices
+        ];
+
+        for (const mesh of meshList) {
+            fillMesh(buffers, mesh);
+        }
+
+        const result = convertBuffersToMesh(buffers);
+        const merge = mergeMeshes(meshList);
+
+        expect(result.segmentsTriangles).toHaveLength(2);
+        expect(result.segmentsTriangles[0].primitiveLength).toBe(10); // 2 + 8 triangles
+        expect(result.segmentsTriangles[1].primitiveLength).toBe(10); // 8 + 2 triangles
+        testMeshesEqual(merge, result);
+    });
+
+    test('Many small and large meshes are correctly split into multiple segments.', () => {
+        SegmentVector.MAX_VERTEX_ARRAY_LENGTH = 16;
+
+        const buffers = createMeshBuffers();
+
+        const smallMesh = getGridMesh(1); // 4 vertices
+        const largeMesh = getGridMesh(2); // 9 vertices
+
+        const meshList = [
+            smallMesh,
+            largeMesh,
+            largeMesh,
+            smallMesh,
+            smallMesh,
+            smallMesh,
+            largeMesh,
+            largeMesh,
+            largeMesh,
+            largeMesh,
+            largeMesh,
+        ];
+
+        for (const mesh of meshList) {
+            fillMesh(buffers, mesh);
+        }
+
+        const result = convertBuffersToMesh(buffers);
+        const merge = mergeMeshes(meshList);
+        testMeshesEqual(merge, result);
+        expect(result.segmentsTriangles.length).toBeGreaterThan(merge.vertices.length / 2 / SegmentVector.MAX_VERTEX_ARRAY_LENGTH);
+        expect(result.segmentsTriangles.length).toBeLessThan(meshList.length);
+    });
 });
 
-function splitMesh(mesh: SimpleMesh): SimpleMesh {
-    const segmentsTriangles = new SegmentVector();
-    const segmentsLines = new SegmentVector();
+type MeshBuffers = {
+    segmentsTriangles: SegmentVector;
+    segmentsLines: SegmentVector;
+    vertices: FillLayoutArray;
+    indicesTriangles: TriangleIndexArray;
+    indicesLines: LineIndexArray;
+};
 
-    const vertices = new FillLayoutArray();
-    const indicesTriangles = new TriangleIndexArray();
-    const indicesLines = new LineIndexArray();
+function createMeshBuffers(): MeshBuffers {
+    return {
+        segmentsTriangles: new SegmentVector(),
+        segmentsLines: new SegmentVector(),
+        vertices: new FillLayoutArray(),
+        indicesTriangles: new TriangleIndexArray(),
+        indicesLines: new LineIndexArray(),
+    };
+}
 
+/**
+ * Creates a mesh the geometry of which is a merge of the specified input meshes,
+ * useful for comparing the result of using {@link fillLargeMeshArrays} on several meshes.
+ */
+function mergeMeshes(meshes: Array<SimpleMesh>): SimpleMesh {
+    const result: SimpleMesh = {
+        vertices: [],
+        indicesTriangles: [],
+        indicesLines: [],
+        segmentsTriangles: [],
+        segmentsLines: [],
+    };
+
+    for (const mesh of meshes) {
+        const baseVertex = result.vertices.length / 2;
+        result.vertices.push(...mesh.vertices);
+        result.indicesTriangles.push(...(mesh.indicesTriangles.map(x => x + baseVertex)));
+        result.indicesLines.push(...(mesh.indicesLines.map(x => x + baseVertex)));
+    }
+
+    result.segmentsTriangles.push({
+        vertexOffset: 0,
+        primitiveOffset: 0,
+        primitiveLength: result.indicesTriangles.length / 3,
+    });
+    result.segmentsLines.push({
+        vertexOffset: 0,
+        primitiveOffset: 0,
+        primitiveLength: result.indicesLines.length / 2,
+    });
+
+    return result;
+}
+
+/**
+ * Creates a mesh that is equal to the actual rendered output of a single
+ * {@link fillLargeMeshArrays} call that is run in isolation.
+ */
+function createSegmentsAndSplitMesh(mesh: SimpleMesh): SimpleMesh {
+    const buffers = createMeshBuffers();
+    fillMesh(buffers, mesh);
+    return convertBuffersToMesh(buffers);
+}
+
+function fillMesh(buffers: MeshBuffers, mesh: SimpleMesh): void {
     fillLargeMeshArrays(
         (x, y) => {
-            vertices.emplaceBack(x, y);
+            buffers.vertices.emplaceBack(x, y);
         },
-        segmentsTriangles,
-        vertices as any as StructArray,
-        indicesTriangles as any as TriangleIndexArray,
+        buffers.segmentsTriangles,
+        buffers.vertices,
+        buffers.indicesTriangles,
         mesh.vertices,
         mesh.indicesTriangles,
-        segmentsLines,
-        indicesLines as any as LineIndexArray,
+        buffers.segmentsLines,
+        buffers.indicesLines,
         [mesh.indicesLines]);
+}
 
+function convertBuffersToMesh(buffers: MeshBuffers): SimpleMesh {
     return {
-        segmentsTriangles: segmentsTriangles.segments,
-        segmentsLines: segmentsLines.segments,
-        vertices: Array.from(vertices.int16),
-        indicesTriangles: Array.from(indicesTriangles.uint16),
-        indicesLines: Array.from(indicesLines.uint16)
+        segmentsTriangles: buffers.segmentsTriangles.segments,
+        segmentsLines: buffers.segmentsLines.segments,
+        vertices: Array.from(buffers.vertices.int16).slice(0, buffers.vertices.length * 2),
+        indicesTriangles: Array.from(buffers.indicesTriangles.uint16).slice(0, buffers.indicesTriangles.length * 3),
+        indicesLines: Array.from(buffers.indicesLines.uint16).slice(0, buffers.indicesLines.length * 2)
     };
 }
 

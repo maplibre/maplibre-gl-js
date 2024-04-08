@@ -8,7 +8,7 @@ import {StructArray} from '../util/struct_array';
  * This function is mainly intended for use with subdivided geometry, since sometimes subdivision might generate
  * more vertices than what fits into 16 bit indices.
  *
- * Accepts a triangle mesh, optionally with a line list (for fill outlines) as well.
+ * Accepts a triangle mesh, optionally with a line list (for fill outlines) as well. The triangle and line segments are expected to share a single vertex buffer.
  *
  * Mutates the provided `segmentsTriangles` and `segmentsLines` SegmentVectors,
  * `vertexArray`, `triangleIndexArray` and optionally `lineIndexArray`.
