@@ -27,7 +27,7 @@ export {
     placeFirstAndLastGlyph,
     placeGlyphAlongLine,
     xyTransformMat4,
-    projectVertexToViewport,
+    projectLineVertexToViewport as projectVertexToViewport,
     projectTileCoordinatesToViewport,
     findOffsetIntersectionPoint,
     transformToOffsetNormal,
@@ -376,7 +376,7 @@ function placeGlyphsAlongLine(projectionArgs: ProjectionArgs, symbol, fontSize, 
             // point on the segment.
             const b = (projectedVertex.signedDistanceFromCamera > 0) ?
                 projectedVertex.point :
-                projectTruncatedLineSegment(projectionArgs.tileAnchorPoint, tileSegmentEnd, a, 1, posMatrix, projectionArgs.getElevation);
+                projectTruncatedLineSegmentToLabelPlane(projectionArgs.tileAnchorPoint, tileSegmentEnd, a, 1, posMatrix, projectionArgs);
 
             const orientationChange = requiresOrientationChange(symbol.writingMode, a, b, aspectRatio);
             if (orientationChange) {
@@ -397,15 +397,56 @@ function placeGlyphsAlongLine(projectionArgs: ProjectionArgs, symbol, fontSize, 
     return {};
 }
 
-function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4, getElevation: (x: number, y: number) => number) {
+/**
+ * Takes a line and direction from `previousTilePoint` to `currentTilePoint`,
+ * projects it to *label plane*,
+ * and returns a projected point along this projected line that is `minimumLength` distance away from `previousProjectedPoint`.
+ * @param previousTilePoint - Line start point, in tile coordinates.
+ * @param currentTilePoint - Line end point, in tile coordinates.
+ * @param previousProjectedPoint - Projection of `previousTilePoint` into *label plane*.
+ * @param minimumLength - Distance in the projected space along the line for the returned point.
+ * @param projectionMatrix - Matrix to use during projection.
+ * @param projectionArgs - Projection args, used only for terrain's `getElevation`.
+ */
+function projectTruncatedLineSegmentToLabelPlane(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4, projectionArgs: ProjectionArgs) {
+    return projectTruncatedLineSegment(previousTilePoint, currentTilePoint, previousProjectedPoint, minimumLength, projectionMatrix, projectionArgs);
+}
+
+/**
+ * Takes a line and direction from `previousTilePoint` to `currentTilePoint`,
+ * projects it to *viewport*,
+ * and returns a projected point along this projected line that is `minimumLength` distance away from `previousProjectedPoint`.
+ * @param previousTilePoint - Line start point, in tile coordinates.
+ * @param currentTilePoint - Line end point, in tile coordinates.
+ * @param previousProjectedPoint - Projection of `previousTilePoint` into *viewport*.
+ * @param minimumLength - Distance in the projected space along the line for the returned point.
+ * @param projectionArgs - Projection args, used for terrain's `getElevation`, and either the `labelPlaneMatrix` or the map's special projection (mostly for globe).
+ */
+function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionArgs: ProjectionArgs) {
+    return projectTruncatedLineSegment(previousTilePoint, currentTilePoint, previousProjectedPoint, minimumLength, undefined, projectionArgs);
+}
+
+/**
+ * Do not use directly, use {@link projectTruncatedLineSegmentToLabelPlane} or {@link projectTruncatedLineSegmentToViewport} instead,
+ * depending on the target space.
+ *
+ * Projects a "virtual" vertex along a line segment.
+ * If `projectionMatrix` is not undefined, does a simple projection using this matrix.
+ * Otherwise, projects to viewport using either the `labelPlaneMatrix` or the special map projection (mostly for globe) by calling {@link projectTileCoordinatesToViewport}.
+ */
+function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4 | undefined, projectionArgs: ProjectionArgs) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
     // If it did, that would mean our label extended all the way out from within the viewport to a (very distant)
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
     // plane of the camera.
-    const unitVertextoBeProjected = previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit());
-    const projectedUnitVertex = project(unitVertextoBeProjected, projectionMatrix, getElevation).point;
+    const unitVertexToBeProjected = previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit());
+    let projectedUnitVertex;
+    if (projectionMatrix !== undefined) {
+        projectedUnitVertex = project(unitVertexToBeProjected, projectionMatrix, projectionArgs.getElevation).point;
+    } else {
+        projectedUnitVertex = projectTileCoordinatesToViewport(unitVertexToBeProjected.x, unitVertexToBeProjected.y, projectionArgs).point;
+    }
     const projectedUnitSegment = previousProjectedPoint.sub(projectedUnitVertex);
-
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
 }
 
@@ -505,7 +546,7 @@ export type ProjectionSyntheticVertexArgs = {
  * @param projectionArgs - necessary data to project a vertex
  * @returns the vertex projected to the label plane
  */
-function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
+function projectLineVertexToViewport(index: number, projectionArgs: ProjectionArgs, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
     const cache = projectionArgs.projectionCache;
 
     if (cache.projections[index]) {
@@ -531,21 +572,8 @@ function projectVertexToViewport(index: number, projectionArgs: ProjectionArgs, 
         new Point(projectionArgs.lineVertexArray.getx(previousLineVertexIndex), projectionArgs.lineVertexArray.gety(previousLineVertexIndex));
 
     // Don't cache because the new vertex might not be far enough out for future glyphs on the same segment
-
-    // Now, do the equivalent of projectTruncatedLineSegment, but potentially using globe projection.
     const minimumLength = syntheticVertexArgs.absOffsetX - syntheticVertexArgs.distanceFromAnchor + 1;
-    const unitVertextoBeProjected = previousTilePoint.add(previousTilePoint.sub(currentVertex)._unit());
-    let projectedUnitVertex;
-    if (projectionArgs.projection.useSpecialProjectionForSymbols) {
-        projectedUnitVertex = projectionArgs.projection.project(unitVertextoBeProjected.x, unitVertextoBeProjected.y, projectionArgs.unwrappedTileID).point;
-        projectedUnitVertex.x = (projectedUnitVertex.x * 0.5 + 0.5) * projectionArgs.width;
-        projectedUnitVertex.y = (-projectedUnitVertex.y * 0.5 + 0.5) * projectionArgs.height;
-    } else {
-        projectedUnitVertex = project(unitVertextoBeProjected, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation).point;
-    }
-    const projectedUnitSegment = syntheticVertexArgs.previousVertex.sub(projectedUnitVertex);
-
-    return syntheticVertexArgs.previousVertex.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
+    return projectTruncatedLineSegmentToViewport(previousTilePoint, currentVertex, syntheticVertexArgs.previousVertex, minimumLength, projectionArgs);
 }
 
 function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: ProjectionArgs): {
@@ -612,7 +640,7 @@ function findOffsetIntersectionPoint(
         return offsetCurrentVertex;
     }
     // Offset the vertices for the next segment
-    const nextVertex = projectVertexToViewport(index + syntheticVertexArgs.direction, projectionArgs, syntheticVertexArgs);
+    const nextVertex = projectLineVertexToViewport(index + syntheticVertexArgs.direction, projectionArgs, syntheticVertexArgs);
     const currentToNextOffsetNormal = transformToOffsetNormal(nextVertex.sub(currentVertex), lineOffsetY, syntheticVertexArgs.direction);
     const offsetNextSegmentBegin = currentVertex.add(currentToNextOffsetNormal);
     const offsetNextSegmentEnd = nextVertex.add(currentToNextOffsetNormal);
@@ -722,7 +750,7 @@ function placeGlyphAlongLine(
         };
 
         // find next vertex in viewport space
-        currentVertex = projectVertexToViewport(currentIndex, projectionArgs, syntheticVertexArgs);
+        currentVertex = projectLineVertexToViewport(currentIndex, projectionArgs, syntheticVertexArgs);
         if (lineOffsetY === 0) {
             // Store vertices for collision detection and update current segment geometry
             pathVertices.push(previousVertex);
@@ -734,7 +762,7 @@ function placeGlyphAlongLine(
             if (prevToCurrent.mag() === 0) {
                 // We are starting with our anchor point directly on the vertex, so look one vertex ahead
                 // to calculate a normal
-                const nextVertex = projectVertexToViewport(currentIndex + direction, projectionArgs, syntheticVertexArgs);
+                const nextVertex = projectLineVertexToViewport(currentIndex + direction, projectionArgs, syntheticVertexArgs);
                 prevToCurrentOffsetNormal = transformToOffsetNormal(nextVertex.sub(currentVertex), lineOffsetY, direction);
             } else {
                 prevToCurrentOffsetNormal = transformToOffsetNormal(prevToCurrent, lineOffsetY, direction);
