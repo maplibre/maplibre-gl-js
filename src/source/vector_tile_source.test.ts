@@ -9,6 +9,7 @@ import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'j
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
 import {Map} from '../ui/map';
 import {WorkerTileParameters} from './worker_source';
+import {ActorMessage, MessageType} from '../util/actor_messages';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 function createSource(options, transformCallback?, clearTiles = () => {}) {
@@ -143,7 +144,7 @@ describe('VectorTileSource', () => {
                 scheme
             });
 
-            let receivedMessage = null;
+            let receivedMessage: ActorMessage<MessageType> = null;
 
             source.dispatcher = getWrapDispatcher()({
                 sendAsync(message) {
@@ -158,7 +159,7 @@ describe('VectorTileSource', () => {
                 tileID: new OverscaledTileID(10, 0, 10, 5, 5)
             } as any as Tile);
 
-            expect(receivedMessage.type).toBe('loadTile');
+            expect(receivedMessage.type).toBe(MessageType.loadTile);
             expect(expectedURL).toBe((receivedMessage.data as WorkerTileParameters).request.url);
         });
     }
@@ -282,7 +283,7 @@ describe('VectorTileSource', () => {
 
         expect(tile.state).toBe('loading');
         await source.loadTile(tile);
-        expect(events).toEqual(['loadTile', 'tileLoaded', 'reloadTile', 'tileLoaded']);
+        expect(events).toEqual([MessageType.loadTile, 'tileLoaded', MessageType.reloadTile, 'tileLoaded']);
         await expect(initialLoadPromise).resolves.toBeUndefined();
     });
 

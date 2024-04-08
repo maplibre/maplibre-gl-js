@@ -4,7 +4,9 @@ import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax';
 
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
-import type {MessageType, RequestResponseMessageMap} from './actor_messages';
+import type {RequestResponseMessageMap} from './actor_messages';
+import {MessageType} from './actor_messages';
+
 /**
  * Responsible for sending messages from a {@link Source} to an associated
  * {@link WorkerSource}.
@@ -68,7 +70,7 @@ let globalDispatcher: Dispatcher;
 export function getGlobalDispatcher(): Dispatcher {
     if (!globalDispatcher) {
         globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
-        globalDispatcher.registerMessageHandler('getResource', (_mapId, params, abortController) => {
+        globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
             return makeRequest(params, abortController);
         });
     }

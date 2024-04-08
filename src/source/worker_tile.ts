@@ -22,7 +22,7 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages';
+import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 export class WorkerTile {
@@ -141,7 +141,7 @@ export class WorkerTile {
         if (Object.keys(stacks).length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            getGlyphsPromise = actor.sendAsync({type: 'getGlyphs', data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController);
+            getGlyphsPromise = actor.sendAsync({type: MessageType.getGlyphs, data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController);
         }
 
         const icons = Object.keys(options.iconDependencies);
@@ -149,7 +149,7 @@ export class WorkerTile {
         if (icons.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            getIconsPromise = actor.sendAsync({type: 'getImages', data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController);
+            getIconsPromise = actor.sendAsync({type: MessageType.getImages, data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController);
         }
 
         const patterns = Object.keys(options.patternDependencies);
@@ -157,7 +157,7 @@ export class WorkerTile {
         if (patterns.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            getPatternsPromise = actor.sendAsync({type: 'getImages', data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
+            getPatternsPromise = actor.sendAsync({type: MessageType.getImages, data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
         }
 
         const [glyphMap, iconMap, patternMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);
