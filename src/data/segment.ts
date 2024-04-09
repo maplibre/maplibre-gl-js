@@ -25,7 +25,7 @@ export type Segment = {
 export class SegmentVector {
     static MAX_VERTEX_ARRAY_LENGTH: number;
     segments: Array<Segment>;
-    private _invalidateLast: boolean = false;
+    private _forceNewSegmentOnNextPrepare: boolean = false;
 
     constructor(segments: Array<Segment> = []) {
         this.segments = segments;
@@ -47,7 +47,7 @@ export class SegmentVector {
             warnOnce(`Max vertices per segment is ${SegmentVector.MAX_VERTEX_ARRAY_LENGTH}: bucket requested ${numVertices}. Consider using the \`fillLargeMeshArrays\` function if you require meshes with more than ${SegmentVector.MAX_VERTEX_ARRAY_LENGTH} vertices.`);
         }
 
-        if (!lastSegment || lastSegment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH || lastSegment.sortKey !== sortKey || this._invalidateLast) {
+        if (this._forceNewSegmentOnNextPrepare || !lastSegment || lastSegment.vertexLength + numVertices > SegmentVector.MAX_VERTEX_ARRAY_LENGTH || lastSegment.sortKey !== sortKey) {
             return this.createNewSegment(layoutVertexArray, indexArray, sortKey);
         } else {
             return lastSegment;
@@ -74,7 +74,9 @@ export class SegmentVector {
             segment.sortKey = sortKey;
         }
 
-        this._invalidateLast = false;
+        // If this was set, we have no need to create a new segment on next prepareSegment call,
+        // since this function already created a new, empty segment.
+        this._forceNewSegmentOnNextPrepare = false;
         this.segments.push(segment);
         return segment;
     }
@@ -90,8 +92,12 @@ export class SegmentVector {
         return this.prepareSegment(0, layoutVertexArray, indexArray, sortKey);
     }
 
-    invalidateLast() {
-        this._invalidateLast = true;
+    /**
+     * Causes the next call to {@link prepareSegment} to always return a new segment,
+     * not reusing the current segment even if the new geometry would fit it.
+     */
+    forceNewSegmentOnNextPrepare() {
+        this._forceNewSegmentOnNextPrepare = true;
     }
 
     get() {

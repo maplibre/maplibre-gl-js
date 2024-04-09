@@ -8,7 +8,7 @@ import {StructArray} from '../util/struct_array';
  * This function is mainly intended for use with subdivided geometry, since sometimes subdivision might generate
  * more vertices than what fits into 16 bit indices.
  *
- * Accepts a triangle mesh, optionally with a line list (for fill outlines) as well.
+ * Accepts a triangle mesh, optionally with a line list (for fill outlines) as well. The triangle and line segments are expected to share a single vertex buffer.
  *
  * Mutates the provided `segmentsTriangles` and `segmentsLines` SegmentVectors,
  * `vertexArray`, `triangleIndexArray` and optionally `lineIndexArray`.
@@ -96,11 +96,15 @@ export function fillLargeMeshArrays(
         if (hasLines) {
             fillSegmentsLines(segmentsLines, vertexArray, lineIndexArray, flattened, lineList, addVertex);
         }
-        // Triangles and lines share vertex buffer, but we increment vertex counts of their segments by different amounts.
-        // This can cause incorrect indices to be used if we reuse those segments, so we force the segment vector
-        // to create new segments on the next `prepareSegment` call.
-        segmentsTriangles.invalidateLast();
-        segmentsLines?.invalidateLast();
+
+        // Triangles and lines share the same vertex buffer, and they usually also share the same vertices.
+        // But this method might create the vertices for triangles and for lines separately, and thus increasing the vertex count
+        // of the triangle and line segments by different amounts.
+
+        // The non-splitting fillLargeMeshArrays logic (and old fill-bucket logic) assumes the vertex counts to be the same,
+        // and forcing both SegmentVectors to return a new segment upon next prepare call satisfies this.
+        segmentsTriangles.forceNewSegmentOnNextPrepare();
+        segmentsLines?.forceNewSegmentOnNextPrepare();
     }
 }
 
