@@ -267,7 +267,7 @@ export class LineBucket implements Bucket {
 
         const granularity = (canonical) ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
 
-        // First, subdivide the line for globe rendering
+        // First, subdivide the line if needed (mostly for globe rendering)
         vertices = subdivideVertexLine(vertices, granularity);
 
         if (this.lineClips) {
