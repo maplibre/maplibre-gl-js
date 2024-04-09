@@ -979,7 +979,6 @@ export abstract class Camera extends Evented {
             startPitch = this.getPitch(),
             startPadding = this.getPadding(),
 
-            zoom = 'zoom' in options ? +options.zoom : startZoom,
             bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
             pitch = 'pitch' in options ? +options.pitch : startPitch,
             padding = 'padding' in options ? options.padding : tr.padding;
@@ -987,7 +986,11 @@ export abstract class Camera extends Evented {
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        const center = LngLat.convert(options.center || locationAtOffset);
+
+        const {center, zoom} = tr.getConstrained(
+            LngLat.convert(options.center || locationAtOffset),
+            options.zoom ?? startZoom
+        );
         this._normalizeCenter(center);
 
         const from = tr.project(locationAtOffset);
@@ -1251,17 +1254,20 @@ export abstract class Camera extends Evented {
             startPitch = this.getPitch(),
             startPadding = this.getPadding();
 
-        const zoom = 'zoom' in options ? clamp(+options.zoom, tr.minZoom, tr.maxZoom) : startZoom;
         const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
         const pitch = 'pitch' in options ? +options.pitch : startPitch;
         const padding = 'padding' in options ? options.padding : tr.padding;
 
-        const scale = tr.zoomScale(zoom - startZoom);
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        const center = LngLat.convert(options.center || locationAtOffset);
+
+        const {center, zoom} = tr.getConstrained(
+            LngLat.convert(options.center || locationAtOffset),
+            options.zoom ?? startZoom
+        );
         this._normalizeCenter(center);
+        const scale = tr.zoomScale(zoom - startZoom);
 
         const from = tr.project(locationAtOffset);
         const delta = tr.project(center).sub(from);
@@ -1475,21 +1481,19 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Query the current elevation of location. Returns `null` if terrain is not enabled. Elevation is in meters relative to mean sea-level.
+     * Get the elevation difference between a given point
+     * and a point that is currently in the middle of the screen.
+     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+     * Returns null if terrain is not enabled.
+     * This method is subject to change in Maplibre GL JS v5.
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
-     * @returns elevation in meters
+     * @returns elevation offset in meters
      */
     queryTerrainElevation(lngLatLike: LngLatLike): number | null {
         if (!this.terrain) {
             return null;
         }
         const elevation = this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
-        /**
-         * Different zoomlevels with different terrain-tiles the elevation-values are not the same.
-         * map.transform.elevation variable with the center-altitude.
-         * In maplibre the proj-matrix is translated by this value in negative z-direction.
-         * So we need to add this value to the elevation to get the correct value.
-         */
         return elevation - this.transform.elevation;
     }
 }

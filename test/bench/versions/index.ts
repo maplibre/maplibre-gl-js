@@ -1,4 +1,3 @@
-import * as maplibregl from '../../../src';
 import locationsWithTileID from '../lib/locations_with_tile_id';
 import styleBenchmarkLocations from '../data/style-benchmark-locations.json' assert {type: 'json'};
 import Layout from '../benchmarks/layout';
@@ -83,4 +82,4 @@ Promise.resolve().then(() => {
     getGlobalWorkerPool().acquire(-1);
 });
 
-export default maplibregl;
+export * from '../../../src';

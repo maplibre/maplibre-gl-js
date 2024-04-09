@@ -30,12 +30,13 @@ describe('Terrain', () => {
     });
 
     test('pointCoordinate should not return null', () => {
-        expect.assertions(1);
+        expect.assertions(2);
         const painter = {
             context: new Context(gl),
             width: 1,
             height: 1,
-            transform: {center: {lng: 0}}
+            transform: {center: {lng: 0}},
+            maybeDrawDepthAndCoords: jest.fn(),
         } as any as Painter;
         const sourceCache = {} as SourceCache;
         const getTileByID = (tileID) : Tile => {
@@ -59,6 +60,8 @@ describe('Terrain', () => {
         const coordinate = terrain.pointCoordinate(new Point(0, 0));
 
         expect(coordinate).not.toBeNull();
+        expect(painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
+
     });
 
     const setupMercatorOverflow = () => {
@@ -67,6 +70,7 @@ describe('Terrain', () => {
             context: new Context(gl),
             width: WORLD_WIDTH,
             height: 1,
+            maybeDrawDepthAndCoords: jest.fn(),
         } as any as Painter;
         const sourceCache = {} as SourceCache;
         const terrain = new Terrain(painter, sourceCache, {} as any as TerrainSpecification);
@@ -94,24 +98,26 @@ describe('Terrain', () => {
         `pointCoordinate should return negative mercator x
         if the point is on the LEFT outside the central globe`,
         () => {
-            expect.assertions(1);
+            expect.assertions(2);
             const pointX = 0;
             const terrain = setupMercatorOverflow();
             const coordinate = terrain.pointCoordinate(new Point(pointX, 0));
 
             expect(coordinate.x).toBe(-1);
+            expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
         });
 
     test(
         `pointCoordinate should return mercator x greater than 1
         if the point is on the RIGHT outside the central globe`,
         () => {
-            expect.assertions(1);
+            expect.assertions(2);
             const pointX = 3;
             const terrain = setupMercatorOverflow();
             const coordinate = terrain.pointCoordinate(new Point(pointX, 0));
 
             expect(coordinate.x).toBe(2);
+            expect(terrain.painter.maybeDrawDepthAndCoords).toHaveBeenCalled();
         });
 
     test('Calculate tile minimum and maximum elevation', () => {

@@ -1,60 +1,79 @@
-import {getArrayBuffer} from '../util/ajax';
+
 import {browser} from '../util/browser';
 import {Event, Evented} from '../util/evented';
-import {RTLPluginStatus, PluginState} from './rtl_text_plugin_status';
+import {RTLPluginStatus, RTLPluginLoadedEventName, PluginState} from './rtl_text_plugin_status';
 import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
 
 class RTLMainThreadPlugin extends Evented {
-    pluginStatus: RTLPluginStatus = 'unavailable';
-    pluginURL: string = null;
+    status: RTLPluginStatus = 'unavailable';
+    url: string = null;
     dispatcher: Dispatcher = getGlobalDispatcher();
-    queue: PluginState[] = [];
 
-    async _sendPluginStateToWorker() {
-        await this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL});
-        this.fire(new Event('pluginStateChange', {pluginStatus: this.pluginStatus, pluginURL: this.pluginURL}));
+    /** Sync RTL plugin state by broadcasting a message to the worker */
+    _syncState(statusToSend: RTLPluginStatus): Promise<PluginState[]> {
+        this.status = statusToSend;
+        return this.dispatcher.broadcast('syncRTLPluginState', {pluginStatus: statusToSend, pluginURL: this.url})
+            .catch((e: any) => {
+                this.status = 'error';
+                throw e;
+            });
     }
 
-    getRTLTextPluginStatus() {
-        return this.pluginStatus;
+    /** This one is exposed to outside */
+    getRTLTextPluginStatus(): RTLPluginStatus {
+        return this.status;
     }
 
-    clearRTLTextPlugin() {
-        this.pluginStatus = 'unavailable';
-        this.pluginURL = null;
+    clearRTLTextPlugin(): void {
+        this.status = 'unavailable';
+        this.url = null;
     }
 
     async setRTLTextPlugin(url: string, deferred: boolean = false): Promise<void> {
-        if (this.pluginStatus === 'deferred' || this.pluginStatus === 'loading' || this.pluginStatus === 'loaded') {
+        if (this.url) {
+            // error
             throw new Error('setRTLTextPlugin cannot be called multiple times.');
         }
-        this.pluginURL = browser.resolveURL(url);
-        this.pluginStatus = 'deferred';
-        await this._sendPluginStateToWorker();
-        if (!deferred) {
-            //Start downloading the plugin immediately if not intending to lazy-load
-            await this._downloadRTLTextPlugin();
+
+        this.url = browser.resolveURL(url);
+        if (!this.url) {
+            throw new Error(`requested url ${url} is invalid`);
+        }
+        if (this.status === 'unavailable') {
+
+            // from initial state:
+            if (deferred) {
+
+                this.status = 'deferred';
+                // fire and forget: in this case it does not need wait for the broadcasting result
+                // it is important to sync the deferred status once because
+                // symbol_bucket will be checking it in worker
+                this._syncState(this.status);
+
+            } else {
+                return this._requestImport();
+            }
+
+        } else if (this.status === 'requested') {
+            return this._requestImport();
         }
     }
 
-    async _downloadRTLTextPlugin() {
-        if (this.pluginStatus !== 'deferred' || !this.pluginURL) {
-            throw new Error('rtl-text-plugin cannot be downloaded unless a pluginURL is specified');
-        }
-        try {
-            this.pluginStatus = 'loading';
-            await this._sendPluginStateToWorker();
-            await getArrayBuffer({url: this.pluginURL}, new AbortController());
-            this.pluginStatus = 'loaded';
-        } catch {
-            this.pluginStatus = 'error';
-        }
-        await this._sendPluginStateToWorker();
+    /** Send a message to worker which will import the RTL plugin script */
+    async _requestImport() : Promise<void> {
+
+        // all errors/exceptions will be handled by _syncState
+        await this._syncState('loading');
+        this.status = 'loaded';
+        this.fire(new Event(RTLPluginLoadedEventName));
     }
 
-    async lazyLoadRTLTextPlugin() {
-        if (this.pluginStatus === 'deferred') {
-            await this._downloadRTLTextPlugin();
+    /** Start a lazy loading process of RTL plugin */
+    lazyLoad(): void {
+        if (this.status === 'unavailable') {
+            this.status = 'requested';
+        } else if (this.status === 'deferred') {
+            this._requestImport();
         }
     }
 }
