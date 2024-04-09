@@ -11,6 +11,8 @@ import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {BucketFeature, BucketParameters} from '../bucket';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 
+const noSubdivision = SubdivisionGranularitySetting.noSubdivision;
+
 // Load a line feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.road.feature(0);
@@ -43,61 +45,61 @@ describe('LineBucket', () => {
 
             bucket.addLine([
                 new Point(0, 0)
-            ], line, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            ], line, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             bucket.addLine([
                 new Point(0, 0)
-            ], polygon, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
-
-            bucket.addLine([
-                new Point(0, 0),
-                new Point(0, 0)
-            ], line, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(0, 0)
-            ], polygon, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            ], line, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             bucket.addLine([
                 new Point(0, 0),
-                new Point(10, 10),
                 new Point(0, 0)
-            ], line, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
                 new Point(0, 0)
-            ], polygon, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            ], line, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
-                new Point(10, 20)
-            ], line, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+                new Point(0, 0)
+            ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
                 new Point(10, 20)
-            ], polygon, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            ], line, undefined, undefined, undefined, undefined, undefined, noSubdivision);
+
+            bucket.addLine([
+                new Point(0, 0),
+                new Point(10, 10),
+                new Point(10, 20)
+            ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
                 new Point(10, 20),
                 new Point(0, 0)
-            ], line, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            ], line, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
             bucket.addLine([
                 new Point(0, 0),
                 new Point(10, 10),
                 new Point(10, 20),
                 new Point(0, 0)
-            ], polygon, undefined, undefined, undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            ], polygon, undefined, undefined, undefined, undefined, undefined, noSubdivision);
 
-            bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+            bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined, noSubdivision);
         }).not.toThrow();
     });
 
@@ -115,10 +117,10 @@ describe('LineBucket', () => {
 
         // first add an initial, small feature to make sure the next one starts at
         // a non-zero offset
-        bucket.addFeature({} as BucketFeature, [createLine(10)], undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+        bucket.addFeature({} as BucketFeature, [createLine(10)], undefined, undefined, undefined, noSubdivision);
 
         // add a feature that will break across the group boundary
-        bucket.addFeature({} as BucketFeature, [createLine(128)], undefined, undefined, undefined, SubdivisionGranularitySetting.noSubdivision);
+        bucket.addFeature({} as BucketFeature, [createLine(128)], undefined, undefined, undefined, noSubdivision);
 
         // Each polygon must fit entirely within a segment, so we expect the
         // first segment to include the first feature and the first polygon
