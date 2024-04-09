@@ -76,6 +76,8 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
         updateVariableAnchors(coords, painter, layer, sourceCache,
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
+            layer.paint.get('text-translate'),
+            layer.paint.get('text-translate-anchor'),
             variableOffsets
         );
     }
@@ -131,8 +133,11 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     layer:SymbolStyleLayer, sourceCache: SourceCache,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
+    translate: [number, number],
+    translateAnchor: 'map' | 'viewport',
     variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
-    const tr = painter.transform;
+    const transform = painter.transform;
+    const projection = painter.style.map.projection;
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
 
@@ -142,17 +147,18 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
         if (!bucket || !bucket.text || !bucket.text.segments.get().length) continue;
 
         const sizeData = bucket.textSizeData;
-        const size = evaluateSizeForZoom(sizeData, tr.zoom);
+        const size = evaluateSizeForZoom(sizeData, transform.zoom);
 
         const pixelToTileScale = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, pixelToTileScale);
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' && bucket.hasIconData();
 
         if (size) {
-            const tileScale = Math.pow(2, tr.zoom - tile.tileID.overscaledZ);
+            const tileScale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
+            const translation = projection.translatePosition(transform, tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
-                tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, coord.toUnwrapped(), getElevation);
+                transform, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
         }
     }
 }
@@ -169,6 +175,7 @@ function updateVariableAnchorsForBucket(
     size: EvaluatedZoomSize,
     updateTextFitIcon: boolean,
     projection: Projection,
+    translation: [number, number],
     unwrappedTileID: UnwrappedTileID,
     getElevation: (x: number, y: number) => number) {
     const placedSymbols = bucket.text.placedSymbolArray;
@@ -200,7 +207,7 @@ function updateVariableAnchorsForBucket(
                     projection,
                     projectionCache: null,
                     tileAnchorPoint: tileAnchor,
-                    translation: [0, 0],
+                    translation,
                     unwrappedTileID
                 });
             const perspectiveRatio = symbolProjection.getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
