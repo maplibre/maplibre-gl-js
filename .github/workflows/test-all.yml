@@ -52,6 +52,7 @@ jobs:
           files: ${{ github.workspace }}/coverage/unit/codecov.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
 
   integration-tests:
     name: Integration tests
@@ -110,6 +111,7 @@ jobs:
           files: ${{ github.workspace }}/coverage/render/codecov.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
       - name: Upload render test failure
         if: failure()
         uses: actions/upload-artifact@v4
