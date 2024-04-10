@@ -1,7 +1,7 @@
 import {FillExtrusionLayoutArray, PosArray} from '../array_types.g';
 
 import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes';
-import {SegmentVector} from '../segment';
+import {Segment, SegmentVector} from '../segment';
 import {ProgramConfigurationSet} from '../program_configuration';
 import {TriangleIndexArray} from '../index_array_type';
 import {EXTENT} from '../extent';
@@ -207,10 +207,21 @@ export class FillExtrusionBucket implements Bucket {
             return;
         }
 
-        let segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-        const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+        // Only consider the un-subdivided polygon outer ring for centroid calculation
+        for (const ring of polygon) {
+            if (ring.length === 0) {
+                continue;
+            }
 
-        const connectFirstAndLastVertex = vectorTileFeatureTypes[feature.type] === 'Polygon';
+            // Here we don't mind if a hole ring is entirely outside, unlike when generating geometry later.
+            accumulatePointsToCentroid(centroid, ring);
+        }
+
+        const segmentReference = {
+            segment: this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray)
+        };
+        const granularity = subdivisionGranularity.fill.getGranularityForZoomLevel(canonical.z);
+        const isPolygon = vectorTileFeatureTypes[feature.type] === 'Polygon';
 
         for (const ring of polygon) {
             if (ring.length === 0) {
@@ -221,63 +232,17 @@ export class FillExtrusionBucket implements Bucket {
                 continue;
             }
 
-            const subdivided = subdivideVertexLine(ring, granularity, connectFirstAndLastVertex);
-
-            let edgeDistance = 0;
-
-            for (let p = 1; p < subdivided.length; p++) {
-                const p1 = subdivided[p];
-                const p2 = subdivided[p - 1];
-
-                if (isBoundaryEdge(p1, p2)) {
-                    continue;
-                }
-
-                if (segment.vertexLength + 4 > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
-                    segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
-                }
-
-                const perp = p1.sub(p2)._perp()._unit();
-                const dist = p2.dist(p1);
-                if (edgeDistance + dist > 32768) edgeDistance = 0;
-
-                addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
-                addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
-                centroid.x += 2 * p1.x;
-                centroid.y += 2 * p1.y;
-                centroid.sampleCount += 2;
-
-                edgeDistance += dist;
-
-                addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
-                addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
-                centroid.x += 2 * p2.x;
-                centroid.y += 2 * p2.y;
-                centroid.sampleCount += 2;
-
-                const bottomRight = segment.vertexLength;
-
-                // ┌──────┐
-                // │ 0  1 │ Counter-clockwise winding order.
-                // │      │ Triangle 1: 0 => 2 => 1
-                // │ 2  3 │ Triangle 2: 1 => 2 => 3
-                // └──────┘
-                this.indexArray.emplaceBack(bottomRight, bottomRight + 2, bottomRight + 1);
-                this.indexArray.emplaceBack(bottomRight + 1, bottomRight + 2, bottomRight + 3);
-
-                segment.vertexLength += 4;
-                segment.primitiveLength += 2;
-            }
+            const subdividedRing = subdivideVertexLine(ring, granularity, isPolygon);
+            this._generateSideFaces(subdividedRing, segmentReference);
         }
 
         // Only triangulate and draw the area of the feature if it is a polygon
         // Other feature types (e.g. LineString) do not have area, so triangulation is pointless / undefined
-        if (vectorTileFeatureTypes[feature.type] !== 'Polygon')
+        if (!isPolygon)
             return;
 
         // Do not generate outlines, since outlines already got subdivided earlier.
-        const subdivided = subdividePolygon(polygon, canonical, granularity, false);
-
+        const subdividedPolygon = subdividePolygon(polygon, canonical, granularity, false);
         const vertexArray = this.layoutVertexArray;
 
         fillLargeMeshArrays(
@@ -287,9 +252,73 @@ export class FillExtrusionBucket implements Bucket {
             this.segments,
             this.layoutVertexArray,
             this.indexArray,
-            subdivided.verticesFlattened,
-            subdivided.indicesTriangles
+            subdividedPolygon.verticesFlattened,
+            subdividedPolygon.indicesTriangles
         );
+    }
+
+    /**
+     * Generates side faces for the supplied geometry. Assumes `geometry` to be a line string, like the output of {@link subdivideVertexLine}.
+     * For rings, it is assumed that the first and last vertex of `geometry` are equal.
+     */
+    private _generateSideFaces(geometry: Array<Point>, segmentReference: {segment: Segment}) {
+        let edgeDistance = 0;
+
+        for (let p = 1; p < geometry.length; p++) {
+            const p1 = geometry[p];
+            const p2 = geometry[p - 1];
+
+            if (isBoundaryEdge(p1, p2)) {
+                continue;
+            }
+
+            if (segmentReference.segment.vertexLength + 4 > SegmentVector.MAX_VERTEX_ARRAY_LENGTH) {
+                segmentReference.segment = this.segments.prepareSegment(4, this.layoutVertexArray, this.indexArray);
+            }
+
+            const perp = p1.sub(p2)._perp()._unit();
+            const dist = p2.dist(p1);
+            if (edgeDistance + dist > 32768) edgeDistance = 0;
+
+            addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 0, edgeDistance);
+            addVertex(this.layoutVertexArray, p1.x, p1.y, perp.x, perp.y, 0, 1, edgeDistance);
+
+            edgeDistance += dist;
+
+            addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 0, edgeDistance);
+            addVertex(this.layoutVertexArray, p2.x, p2.y, perp.x, perp.y, 0, 1, edgeDistance);
+
+            const bottomRight = segmentReference.segment.vertexLength;
+
+            // ┌──────┐
+            // │ 0  1 │ Counter-clockwise winding order.
+            // │      │ Triangle 1: 0 => 2 => 1
+            // │ 2  3 │ Triangle 2: 1 => 2 => 3
+            // └──────┘
+            this.indexArray.emplaceBack(bottomRight, bottomRight + 2, bottomRight + 1);
+            this.indexArray.emplaceBack(bottomRight + 1, bottomRight + 2, bottomRight + 3);
+
+            segmentReference.segment.vertexLength += 4;
+            segmentReference.segment.primitiveLength += 2;
+        }
+    }
+}
+
+/**
+ * Accumulates geometry to centroid. Geometry can be either a polygon ring, a line string or a closed line string.
+ * In case of a polygon ring or line ring, the last vertex is ignored if it is the same as the first vertex.
+ */
+function accumulatePointsToCentroid(centroid: CentroidAccumulator, geometry: Array<Point>): void {
+    for (let i = 0; i < geometry.length; i++) {
+        const p = geometry[i];
+
+        if (i === geometry.length - 1 && geometry[0].x === p.x && geometry[0].y === p.y) {
+            continue;
+        }
+
+        centroid.x += p.x;
+        centroid.y += p.y;
+        centroid.sampleCount++;
     }
 }
 

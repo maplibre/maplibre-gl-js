@@ -74,7 +74,7 @@ export class GlobeProjection implements Projection {
     private _globeProjMatrix: mat4 = mat4.create();
     private _globeProjMatrixNoCorrection: mat4 = mat4.create();
 
-    private _globeCameraPosition: vec3 = [0, 0, 0];
+    private _cameraPosition: vec3 = [0, 0, 0];
 
     get name(): string {
         return 'globe';
@@ -88,8 +88,8 @@ export class GlobeProjection implements Projection {
         return this._globeness > 0.0;
     }
 
-    get globeCameraPosition(): [number, number, number] {
-        return [this._globeCameraPosition[0], this._globeCameraPosition[1], this._globeCameraPosition[2]];
+    get cameraPosition(): vec3 {
+        return [this._cameraPosition[0], this._cameraPosition[1], this._cameraPosition[2]];
     }
 
     /**
@@ -220,7 +220,7 @@ export class GlobeProjection implements Projection {
 
         const cameraPos: vec4 = [0, 0, -1, 1];
         vec4.transformMat4(cameraPos, cameraPos, invProj);
-        this._globeCameraPosition = [
+        this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
             cameraPos[2] / cameraPos[3]

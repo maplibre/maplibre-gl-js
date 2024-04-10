@@ -54,7 +54,7 @@ describe('GlobeProjection', () => {
             });
 
             test('camera is in positive halfspace', () => {
-                expect(planeDistance((globe as any)._globeCameraPosition, projectionData.u_projection_clipping_plane)).toBeGreaterThan(0);
+                expect(planeDistance(globe.cameraPosition as [number, number, number], projectionData.u_projection_clipping_plane)).toBeGreaterThan(0);
             });
 
             test('coordinates 0E,0N are in positive halfspace', () => {
