@@ -6,7 +6,7 @@ import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
-
+import {PluginState} from './rtl_text_plugin_status';
 import type {
     WorkerSource,
     WorkerSourceConstructor,
@@ -17,8 +17,13 @@ import type {
 
 import type {WorkerGlobalScopeInterface} from '../util/web_worker';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {PluginState} from './rtl_text_plugin_status';
-import type {ClusterIDAndSource, GetClusterLeavesParams, RemoveSourceParams, UpdateLayersParamaeters} from '../util/actor_messages';
+import {
+    MessageType,
+    type ClusterIDAndSource,
+    type GetClusterLeavesParams,
+    type RemoveSourceParams,
+    type UpdateLayersParamaeters
+} from '../util/actor_messages';
 
 /**
  * The Worker class responsidble for background thread related execution
@@ -84,47 +89,47 @@ export default class Worker {
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
         };
 
-        this.actor.registerMessageHandler('loadDEMTile', (mapId: string, params: WorkerDEMTileParameters) => {
+        this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {
             return this._getDEMWorkerSource(mapId, params.source).loadTile(params);
         });
 
-        this.actor.registerMessageHandler('removeDEMTile', async (mapId: string, params: TileParameters) => {
+        this.actor.registerMessageHandler(MessageType.removeDEMTile, async (mapId: string, params: TileParameters) => {
             this._getDEMWorkerSource(mapId, params.source).removeTile(params);
         });
 
-        this.actor.registerMessageHandler('getClusterExpansionZoom', async (mapId: string, params: ClusterIDAndSource) => {
+        this.actor.registerMessageHandler(MessageType.getClusterExpansionZoom, async (mapId: string, params: ClusterIDAndSource) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterExpansionZoom(params);
         });
 
-        this.actor.registerMessageHandler('getClusterChildren', async (mapId: string, params: ClusterIDAndSource) => {
+        this.actor.registerMessageHandler(MessageType.getClusterChildren, async (mapId: string, params: ClusterIDAndSource) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterChildren(params);
         });
 
-        this.actor.registerMessageHandler('getClusterLeaves', async (mapId: string, params: GetClusterLeavesParams) => {
+        this.actor.registerMessageHandler(MessageType.getClusterLeaves, async (mapId: string, params: GetClusterLeavesParams) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getClusterLeaves(params);
         });
 
-        this.actor.registerMessageHandler('loadData', (mapId: string, params: LoadGeoJSONParameters) => {
+        this.actor.registerMessageHandler(MessageType.loadData, (mapId: string, params: LoadGeoJSONParameters) => {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).loadData(params);
         });
 
-        this.actor.registerMessageHandler('loadTile', (mapId: string, params: WorkerTileParameters) => {
+        this.actor.registerMessageHandler(MessageType.loadTile, (mapId: string, params: WorkerTileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).loadTile(params);
         });
 
-        this.actor.registerMessageHandler('reloadTile', (mapId: string, params: WorkerTileParameters) => {
+        this.actor.registerMessageHandler(MessageType.reloadTile, (mapId: string, params: WorkerTileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).reloadTile(params);
         });
 
-        this.actor.registerMessageHandler('abortTile', (mapId: string, params: TileParameters) => {
+        this.actor.registerMessageHandler(MessageType.abortTile, (mapId: string, params: TileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).abortTile(params);
         });
 
-        this.actor.registerMessageHandler('removeTile', (mapId: string, params: TileParameters) => {
+        this.actor.registerMessageHandler(MessageType.removeTile, (mapId: string, params: TileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).removeTile(params);
         });
 
-        this.actor.registerMessageHandler('removeSource', async (mapId: string, params: RemoveSourceParams) => {
+        this.actor.registerMessageHandler(MessageType.removeSource, async (mapId: string, params: RemoveSourceParams) => {
             if (!this.workerSources[mapId] ||
                 !this.workerSources[mapId][params.type] ||
                 !this.workerSources[mapId][params.type][params.source]) {
@@ -139,34 +144,34 @@ export default class Worker {
             }
         });
 
-        this.actor.registerMessageHandler('removeMap', async (mapId: string) => {
+        this.actor.registerMessageHandler(MessageType.removeMap, async (mapId: string) => {
             delete this.layerIndexes[mapId];
             delete this.availableImages[mapId];
             delete this.workerSources[mapId];
             delete this.demWorkerSources[mapId];
         });
 
-        this.actor.registerMessageHandler('setReferrer', async (_mapId: string, params: string) => {
+        this.actor.registerMessageHandler(MessageType.setReferrer, async (_mapId: string, params: string) => {
             this.referrer = params;
         });
 
-        this.actor.registerMessageHandler('syncRTLPluginState', (mapId: string, params: PluginState) => {
+        this.actor.registerMessageHandler(MessageType.syncRTLPluginState, (mapId: string, params: PluginState) => {
             return this._syncRTLPluginState(mapId, params);
         });
 
-        this.actor.registerMessageHandler('importScript', async (_mapId: string, params: string) => {
+        this.actor.registerMessageHandler(MessageType.importScript, async (_mapId: string, params: string) => {
             this.self.importScripts(params);
         });
 
-        this.actor.registerMessageHandler('setImages', (mapId: string, params: string[]) => {
+        this.actor.registerMessageHandler(MessageType.setImages, (mapId: string, params: string[]) => {
             return this._setImages(mapId, params);
         });
 
-        this.actor.registerMessageHandler('updateLayers', async (mapId: string, params: UpdateLayersParamaeters) => {
+        this.actor.registerMessageHandler(MessageType.updateLayers, async (mapId: string, params: UpdateLayersParamaeters) => {
             this._getLayerIndex(mapId).update(params.layers, params.removedIds);
         });
 
-        this.actor.registerMessageHandler('setLayers', async (mapId: string, params: Array<LayerSpecification>) => {
+        this.actor.registerMessageHandler(MessageType.setLayers, async (mapId: string, params: Array<LayerSpecification>) => {
             this._getLayerIndex(mapId).replace(params);
         });
     }
@@ -181,18 +186,36 @@ export default class Worker {
         }
     }
 
-    private async _syncRTLPluginState(map: string, state: PluginState): Promise<boolean> {
-        rtlWorkerPlugin.setState(state);
-        const pluginURL = rtlWorkerPlugin.getPluginURL();
-        if (state.pluginStatus === 'loaded' && !rtlWorkerPlugin.isParsed() && pluginURL != null) {
-            this.self.importScripts(pluginURL);
-            const complete = rtlWorkerPlugin.isParsed();
-            if (complete) {
-                return complete;
-            }
-            throw new Error(`RTL Text Plugin failed to import scripts from ${pluginURL}`);
+    private async _syncRTLPluginState(mapId: string, incomingState: PluginState): Promise<PluginState> {
+
+        // Parsed plugin cannot be changed, so just return its current state.
+        if (rtlWorkerPlugin.isParsed()) {
+            return rtlWorkerPlugin.getState();
         }
-        return false;
+
+        if (incomingState.pluginStatus !== 'loading') {
+            // simply sync and done
+            rtlWorkerPlugin.setState(incomingState);
+            return incomingState;
+        }
+        const urlToLoad = incomingState.pluginURL;
+        this.self.importScripts(urlToLoad);
+        const complete = rtlWorkerPlugin.isParsed();
+        if (complete) {
+            const loadedState: PluginState = {
+                pluginStatus: 'loaded',
+                pluginURL: urlToLoad
+            };
+            rtlWorkerPlugin.setState(loadedState);
+            return loadedState;
+        }
+
+        // error case
+        rtlWorkerPlugin.setState({
+            pluginStatus: 'error',
+            pluginURL: ''
+        });
+        throw new Error(`RTL Text Plugin failed to import scripts from ${urlToLoad}`);
     }
 
     private _getAvailableImages(mapId: string) {

@@ -15,6 +15,8 @@ import {EvaluationParameters} from './evaluation_parameters';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {GeoJSONSource} from '../source/geojson_source';
 import {sleep} from '../util/test/util';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
+import {MessageType} from '../util/actor_messages';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -118,7 +120,7 @@ describe('Style', () => {
         jest.spyOn(style.sourceCaches['raster'], 'reload');
         jest.spyOn(style.sourceCaches['vector'], 'reload');
 
-        rtlMainThreadPluginFactory().fire(new Event('pluginStateChange'));
+        rtlMainThreadPluginFactory().fire(new Event(RTLPluginLoadedEventName));
 
         expect(style.sourceCaches['raster'].reload).not.toHaveBeenCalled();
         expect(style.sourceCaches['vector'].reload).toHaveBeenCalled();
@@ -489,7 +491,7 @@ describe('Style#_load', () => {
 
     test('layers are broadcasted to worker', () => {
         const style = new Style(getStubMap());
-        let dispatchType;
+        let dispatchType: MessageType;
         let dispatchData;
         const styleSpec = createStyleJSON({
             layers: [{
@@ -508,7 +510,7 @@ describe('Style#_load', () => {
         style._load(styleSpec, {});
 
         expect(_broadcastSpyOn).toHaveBeenCalled();
-        expect(dispatchType).toBe('setLayers');
+        expect(dispatchType).toBe(MessageType.setLayers);
 
         expect(dispatchData).toHaveLength(1);
         expect(dispatchData[0].id).toBe('background');
@@ -615,7 +617,7 @@ describe('Style#update', () => {
             style.removeLayer('second');
 
             style.dispatcher.broadcast = function(key, value) {
-                expect(key).toBe('updateLayers');
+                expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
                 expect(value['removedIds']).toEqual(['second']);
                 done();
@@ -1944,7 +1946,7 @@ describe('Style#setFilter', () => {
 
         style.on('style.load', () => {
             style.dispatcher.broadcast = function(key, value) {
-                expect(key).toBe('updateLayers');
+                expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toEqual(['==', 'id', 1]);
                 done();
@@ -1980,7 +1982,7 @@ describe('Style#setFilter', () => {
             style.update({} as EvaluationParameters); // flush pending operations
 
             style.dispatcher.broadcast = function(key, value) {
-                expect(key).toBe('updateLayers');
+                expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toEqual(['==', 'id', 2]);
                 done();
@@ -2032,7 +2034,7 @@ describe('Style#setFilter', () => {
 
         style.on('style.load', () => {
             style.dispatcher.broadcast = function(key, value) {
-                expect(key).toBe('updateLayers');
+                expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toBe('notafilter');
                 done();
@@ -2073,7 +2075,7 @@ describe('Style#setLayerZoomRange', () => {
 
         style.on('style.load', () => {
             style.dispatcher.broadcast = function(key, value) {
-                expect(key).toBe('updateLayers');
+                expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['symbol']);
                 done();
                 return Promise.resolve({} as any);
