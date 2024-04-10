@@ -448,16 +448,6 @@ export class Painter {
             this.renderToTexture.prepareForRender(this.style, this.transform.zoom);
             // this is disabled, because render-to-texture is rendering all layers from bottom to top.
             this.opaquePassCutoff = 0;
-
-            // update coords/depth-framebuffer on camera movement, or tile reloading
-            const hasNewTiles = this.style.map.terrain.sourceCache.anyTilesAfterTime(this.terrainFacilitator.renderTime);
-            if (this.terrainFacilitator.dirty || !mat4.equals(this.terrainFacilitator.matrix, this.transform.projMatrix) || hasNewTiles) {
-                mat4.copy(this.terrainFacilitator.matrix, this.transform.projMatrix);
-                this.terrainFacilitator.renderTime = Date.now();
-                this.terrainFacilitator.dirty = false;
-                drawDepth(this, this.style.map.terrain);
-                drawCoords(this, this.style.map.terrain);
-            }
         }
 
         // Offscreen pass ===============================================
