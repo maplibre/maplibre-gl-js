@@ -6,8 +6,8 @@ import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
 import {Dispatcher} from '../util/dispatcher';
 import {RequestManager} from '../util/request_manager';
-import {ActorMessage, MessageType} from '../util/actor_messages';
 import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {ActorMessage, MessageType} from '../util/actor_messages';
 import {Actor} from '../util/actor';
 
 const wrapDispatcher = (dispatcher) => {
