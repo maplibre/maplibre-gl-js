@@ -45,6 +45,7 @@ import {CooperativeGesturesHandler} from './ui/handler/cooperative_gestures';
 import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
 import {KeyboardHandler} from './ui/handler/keyboard';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler} from './ui/handler/two_fingers_touch';
+import {MessageType} from './util/actor_messages';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -167,7 +168,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
-function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast('importScript', workerUrl); }
+function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
 
 export {
     Map,
