@@ -27,17 +27,20 @@ void main() {
     // Luckily the planet is (assumed to be) a perfect sphere,
     // so the ray-planet intersection test is quite simple.
     // We discard any fragments that are occluded by the planet.
-    vec3 toPlanetCenter = -v_sphere_pos;
-    vec3 toCameraNormalized = normalize(u_camera_pos_globe - v_sphere_pos);
-    float t = dot(toPlanetCenter, toCameraNormalized);
+
     // Get nearest point along the ray from fragment to camera.
     // Remember that planet center is at 0,0,0.
     // Also clamp t to not consider intersections that happened behind the ray origin.
+    vec3 toPlanetCenter = -v_sphere_pos;
+    vec3 toCameraNormalized = normalize(u_camera_pos_globe - v_sphere_pos);
+    float t = dot(toPlanetCenter, toCameraNormalized);
     vec3 nearest = v_sphere_pos + toCameraNormalized * max(t, 0.0);
+    
     // We want to remove planet occlusion during the animated transition out of globe view.
     // Thus we animate the "radius" of the planet sphere used in ray-sphere collision.
-    // Radius of 1.0 is equal to full size planet (since we raycast agains a unit sphere).
+    // Radius of 1.0 is equal to full size planet (since we raycast against a unit sphere).
     // Note that unsquared globeness is intentionally compared to squared distance from planet center,
+    // (because `dot(nearest, nearest)` returns the squared length of the vector `nearest`)
     // effectively using sqrt(globeness) as the planet radius. This is done to make the animation look better.
     float distance_to_planet_center_squared = dot(nearest, nearest);
     if (distance_to_planet_center_squared < u_projection_transition) {

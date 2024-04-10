@@ -83,14 +83,17 @@ function drawExtrusionTiles(
         const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const translate = layer.paint.get('fill-extrusion-translate');
-        const translateAnchor = layer.paint.get('fill-extrusion-translate-anchor');
-        const translateForUniforms = projection.translatePosition(painter.transform, tile, translate, translateAnchor);
+        const translate = projection.translatePosition(
+            painter.transform,
+            tile,
+            layer.paint.get('fill-extrusion-translate'),
+            layer.paint.get('fill-extrusion-translate-anchor')
+        );
 
         const shouldUseVerticalGradient = layer.paint.get('fill-extrusion-vertical-gradient');
         const uniformValues = image ?
-            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translateForUniforms, projection, globeCameraPosition, coord, crossfade, tile) :
-            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translateForUniforms, projection, globeCameraPosition);
+            fillExtrusionPatternUniformValues(painter, shouldUseVerticalGradient, opacity, translate, projection, globeCameraPosition, coord, crossfade, tile) :
+            fillExtrusionUniformValues(painter, shouldUseVerticalGradient, opacity, translate, projection, globeCameraPosition);
 
         program.draw(context, context.gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
