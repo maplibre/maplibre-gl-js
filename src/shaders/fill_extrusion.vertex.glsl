@@ -17,7 +17,7 @@ in vec4 a_normal_ed;
 out vec4 v_color;
 
 #ifdef GLOBE
-out vec3 v_sphere_pos;
+    out vec3 v_sphere_pos;
 #endif
 
 #pragma mapbox: define highp float base
@@ -33,11 +33,11 @@ void main() {
     vec3 normal = a_normal_ed.xyz;
 
     #ifdef TERRAIN3D
-	// Raise the "ceiling" of elements by the elevation of the centroid, in meters.
+	    // Raise the "ceiling" of elements by the elevation of the centroid, in meters.
         float height_terrain3d_offset = get_elevation(a_centroid);
-	// To avoid having buildings "hang above a slope", create a "basement"
-	// by lowering the "floor" of ground-level (and below) elements.
-	// This is in addition to the elevation of the centroid, in meters.
+        // To avoid having buildings "hang above a slope", create a "basement"
+        // by lowering the "floor" of ground-level (and below) elements.
+        // This is in addition to the elevation of the centroid, in meters.
         float base_terrain3d_offset = height_terrain3d_offset - (base > 0.0 ? 0.0 : 10.0);
     #else
         float height_terrain3d_offset = 0.0;
@@ -53,12 +53,12 @@ void main() {
     vec2 posInTile = a_pos + u_fill_translate;
 
     #ifdef GLOBE
-    vec3 spherePos = projectToSphere(posInTile);
-    vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
-    v_sphere_pos = elevatedPos;
-    gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
+        vec3 spherePos = projectToSphere(posInTile);
+        vec3 elevatedPos = spherePos * (1.0 + elevation / GLOBE_RADIUS);
+        v_sphere_pos = elevatedPos;
+        gl_Position = interpolateProjectionFor3D(posInTile, spherePos, elevation);
     #else
-    gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
+        gl_Position = u_projection_matrix * vec4(posInTile, elevation, 1.0);
     #endif
 
     // Relative luminance (how dark/bright is the surface color?)
@@ -75,10 +75,10 @@ void main() {
     float directional = clamp(dot(normalForLighting, u_lightpos), 0.0, 1.0);
 
     #ifdef GLOBE
-    mat3 rotMatrix = globeGetRotationMatrix(spherePos);
-    normalForLighting = rotMatrix * normalForLighting;
-    // Interpolate dot product result instead of normals and light direction
-    directional = mix(directional, clamp(dot(normalForLighting, u_lightpos_globe), 0.0, 1.0), u_projection_transition);
+        mat3 rotMatrix = globeGetRotationMatrix(spherePos);
+        normalForLighting = rotMatrix * normalForLighting;
+        // Interpolate dot product result instead of normals and light direction
+        directional = mix(directional, clamp(dot(normalForLighting, u_lightpos_globe), 0.0, 1.0), u_projection_transition);
     #endif
 
     // Adjust directional so that
