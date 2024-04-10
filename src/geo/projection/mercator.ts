@@ -1,4 +1,4 @@
-import {mat4} from 'gl-matrix';
+import {mat4, vec3, vec4} from 'gl-matrix';
 import {Transform} from '../transform';
 import {Projection, ProjectionGPUContext} from './projection';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
@@ -20,6 +20,7 @@ export const MercatorShaderVariantKey = 'mercator';
 
 export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
+    private _cameraPosition: vec3 = [0, 0, 0];
 
     get name(): string {
         return 'mercator';
@@ -27,6 +28,10 @@ export class MercatorProjection implements Projection {
 
     get useSpecialProjectionForSymbols(): boolean {
         return false;
+    }
+
+    get cameraPosition(): vec3 {
+        return [this._cameraPosition[0], this._cameraPosition[1], this._cameraPosition[2]];
     }
 
     get drawWrappedTiles(): boolean {
@@ -72,8 +77,14 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    updateProjection(_: Transform): void {
-        // Do nothing.
+    updateProjection(t: Transform): void {
+        const cameraPos: vec4 = [0, 0, -1, 1];
+        vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
+        this._cameraPosition = [
+            cameraPos[0] / cameraPos[3],
+            cameraPos[1] / cameraPos[3],
+            cameraPos[2] / cameraPos[3]
+        ];
     }
 
     getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
@@ -146,6 +157,10 @@ export class MercatorProjection implements Projection {
 
         this._cachedMesh = new Mesh(tileExtentBuffer, quadTriangleIndexBuffer, tileExtentSegments);
         return this._cachedMesh;
+    }
+
+    transformLightDirection(_: Transform, dir: vec3): vec3 {
+        return [dir[0], dir[1], dir[2]];
     }
 }
 

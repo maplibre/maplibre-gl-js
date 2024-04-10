@@ -15,7 +15,6 @@ import type {OverscaledTileID} from '../../source/tile_id';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import type {CrossfadeParameters} from '../../style/evaluation_parameters';
 import type {Tile} from '../../source/tile';
-import {GlobeProjection} from '../../geo/projection/globe';
 import {Projection} from '../../geo/projection/projection';
 
 export type FillExtrusionUniformsType = {
@@ -84,7 +83,7 @@ const fillExtrusionUniformValues = (
     opacity: number,
     translate: [number, number],
     projection: Projection,
-    cameraPosGlobe: [number, number, number]
+    cameraPosGlobe: vec3
 ): UniformValues<FillExtrusionUniformsType> => {
     const light = painter.style.light;
     const _lp = light.properties.get('position');
@@ -94,7 +93,7 @@ const fillExtrusionUniformValues = (
         mat3.fromRotation(lightMat, -painter.transform.angle);
     }
     vec3.transformMat3(lightPos, lightPos, lightMat);
-    const transformedLightPos = projection instanceof GlobeProjection ? projection.transformLightDirection(painter.transform, lightPos) : lightPos;
+    const transformedLightPos = projection.transformLightDirection(painter.transform, lightPos);
 
     const lightColor = light.properties.get('color');
 
@@ -116,7 +115,7 @@ const fillExtrusionPatternUniformValues = (
     opacity: number,
     translate: [number, number],
     projection: Projection,
-    cameraPosGlobe: [number, number, number],
+    cameraPosGlobe: vec3,
     coord: OverscaledTileID,
     crossfade: CrossfadeParameters,
     tile: Tile

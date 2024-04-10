@@ -1,4 +1,4 @@
-import {mat4} from 'gl-matrix';
+import {mat4, vec3} from 'gl-matrix';
 import {Tile} from '../../source/tile';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {Transform} from '../transform';
@@ -31,6 +31,12 @@ export interface Projection {
      * instead of the default (and fast) mercator projection path.
      */
     get useSpecialProjectionForSymbols(): boolean;
+
+    /**
+     * @internal
+     * Returns the camera's position transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
+     */
+    get cameraPosition(): vec3;
 
     /**
      * @internal
@@ -150,4 +156,13 @@ export interface Projection {
      * @param hasBorder - When true, the mesh will also include a small border beyond the 0..EXTENT range.
      */
     getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh;
+
+    /**
+     * @internal
+     * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
+     * @param transform - Current map transform.
+     * @param dir - The light direction.
+     * @returns A new vector with the transformed light direction.
+     */
+    transformLightDirection(transform: Transform, dir: vec3): vec3;
 }
