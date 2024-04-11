@@ -482,6 +482,7 @@ export class Popup extends Evented {
         if (this._container) {
             this._container.classList.add(className);
         }
+        return this;
     }
 
     /**
@@ -499,6 +500,7 @@ export class Popup extends Evented {
         if (this._container) {
             this._container.classList.remove(className);
         }
+        return this;
     }
 
     /**
