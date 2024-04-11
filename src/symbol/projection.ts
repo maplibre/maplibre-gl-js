@@ -579,14 +579,15 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: 
     signedDistanceFromCamera: number;
     isOccluded: boolean;
 } {
+    const translatedX = x + projectionArgs.translation[0];
+    const translatedY = y + projectionArgs.translation[1];
     let projection;
     if (!projectionArgs.pitchWithMap && projectionArgs.projection.useSpecialProjectionForSymbols) {
-        // TODO: terrain support
-        projection = projectionArgs.projection.project(x + projectionArgs.translation[0], y + projectionArgs.translation[1], projectionArgs.unwrappedTileID);
+        projection = projectionArgs.projection.project(translatedX, translatedY, projectionArgs.unwrappedTileID, projectionArgs.getElevation);
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
     } else {
-        projection = project(new Point(x + projectionArgs.translation[0], y + projectionArgs.translation[1]), projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
+        projection = project(new Point(translatedX, translatedY), projectionArgs.labelPlaneMatrix, projectionArgs.getElevation);
         projection.isOccluded = false;
     }
     return projection;

@@ -19,6 +19,7 @@ import {Projection, ProjectionGPUContext} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
+import {earthRadius} from '../lng_lat';
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.
@@ -351,9 +352,11 @@ export class GlobeProjection implements Projection {
         return dotResult < 0.0;
     }
 
-    public project(x: number, y: number, unwrappedTileID: UnwrappedTileID) {
+    public project(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number) {
         const spherePos = this._projectToSphereTile(x, y, unwrappedTileID);
-        const pos: vec4 = [spherePos[0], spherePos[1], spherePos[2], 1];
+        const elevation = getElevation ? getElevation(x, y) : 0.0;
+        const vectorMultiplier = 1.0 + elevation / earthRadius;
+        const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
         vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
 
         // Also check whether the point projects to the backfacing side of the sphere.

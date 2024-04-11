@@ -316,7 +316,9 @@ export class CollisionIndex {
                 const projected = this.mapProjection.project(
                     backProjected.point.x,
                     backProjected.point.y,
-                    projectionArgs.unwrappedTileID);
+                    projectionArgs.unwrappedTileID,
+                    projectionArgs.getElevation
+                );
                 projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionArgs.width;
                 projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionArgs.height;
                 return projected;
@@ -431,7 +433,7 @@ export class CollisionIndex {
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
         let projected;
         if (this.mapProjection.useSpecialProjectionForSymbols) {
-            projected = this.mapProjection.project(x, y, unwrappedTileID);
+            projected = this.mapProjection.project(x, y, unwrappedTileID, getElevation);
         } else {
             projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }
@@ -451,7 +453,7 @@ export class CollisionIndex {
         // We don't care about the actual projected point, just its W component.
         let projected;
         if (this.mapProjection.useSpecialProjectionForSymbols) {
-            projected = this.mapProjection.project(x, y, unwrappedTileID);
+            projected = this.mapProjection.project(x, y, unwrappedTileID, getElevation);
         } else {
             projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }

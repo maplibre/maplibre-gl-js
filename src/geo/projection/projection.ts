@@ -131,7 +131,7 @@ export interface Projection {
      * @internal
      * Projects a point in tile coordinates. Used in symbol rendering.
      */
-    project(x: number, y: number, unwrappedTileID: UnwrappedTileID): {
+    project(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): {
         point: Point;
         signedDistanceFromCamera: number;
         isOccluded: boolean;
