@@ -13,19 +13,16 @@ import type {Painter} from './painter';
 import type {SourceCache} from '../source/source_cache';
 import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import type {OverscaledTileID} from '../source/tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
-import {SegmentVector} from '../data/segment';
-import {GlobeProjection} from '../geo/projection/globe';
 
 export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     const context = painter.context;
+    const projection = painter.style.map.projection;
+    const useSubdivision = projection.useSubdivision;
+
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
     const colorMode = painter.colorModeForRenderPass();
-    const projection = painter.style.map.projection;
-    const globe = (projection instanceof GlobeProjection && projection.useGlobeRendering);
 
     if (painter.renderPass === 'offscreen') {
         // Prepare tiles
@@ -37,66 +34,56 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
         }
         context.viewport.set([0, 0, painter.width, painter.height]);
     } else if (painter.renderPass === 'translucent') {
-        // Render tiles
-        if (globe) {
-            // Globe needs two-pass rendering to avoid artifacts when rendering texture tiles.
-            // See comments in draw_raster.ts for more details.
-            const [stencilModesHigh, stencilModesLow, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-
-            // Draw borderless tile meshes
-            for (const coord of coords) {
-                const tile = sourceCache.getTile(coord);
-                const mesh = projection.getMeshFromTileID(context, coord.canonical, false);
-                renderHillshade(painter, coord, tile, layer, depthMode, stencilModesHigh[coord.overscaledZ], colorMode,
-                    mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
-            }
-
-            // Fill gaps with meshes with borders
-            for (const coord of coords) {
-                const tile = sourceCache.getTile(coord);
-                const mesh = projection.getMeshFromTileID(context, coord.canonical, true);
-                renderHillshade(painter, coord, tile, layer, depthMode, stencilModesLow[coord.overscaledZ], colorMode,
-                    mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
-            }
+        // Globe (or any projection with subdivision) needs two-pass rendering to avoid artifacts when rendering texture tiles.
+        // See comments in draw_raster.ts for more details.
+        if (useSubdivision) {
+            // Two-pass rendering
+            const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
+            renderHillshade(painter, sourceCache, layer, coords, stencilBorderless, depthMode, colorMode, false); // draw without borders
+            renderHillshade(painter, sourceCache, layer, coords, stencilBorders, depthMode, colorMode, true); // draw with borders
         } else {
-            const [stencilModes, coords] = painter.stencilConfigForOverlap(tileIDs);
-            for (const coord of coords) {
-                const tile = sourceCache.getTile(coord);
-                renderHillshade(painter, coord, tile, layer, depthMode, stencilModes[coord.overscaledZ], colorMode,
-                    painter.rasterBoundsBufferPosOnly, painter.quadTriangleIndexBuffer, painter.rasterBoundsSegmentsPosOnly);
-            }
+            // Simple rendering
+            const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
+            renderHillshade(painter, sourceCache, layer, coords, stencil, depthMode, colorMode, false);
         }
     }
 }
 
 function renderHillshade(
     painter: Painter,
-    coord: OverscaledTileID,
-    tile: Tile,
+    sourceCache: SourceCache,
     layer: HillshadeStyleLayer,
+    coords: Array<OverscaledTileID>,
+    stencilModes: {[_: number]: Readonly<StencilMode>},
     depthMode: Readonly<DepthMode>,
-    stencilMode: Readonly<StencilMode>,
     colorMode: Readonly<ColorMode>,
-    vertexBuffer: VertexBuffer,
-    indexBuffer: IndexBuffer,
-    segments: SegmentVector) {
+    useBorder: boolean
+) {
+    const projection = painter.style.map.projection;
     const context = painter.context;
     const gl = context.gl;
-    const fbo = tile.fbo;
-    if (!fbo) return;
-
     const program = painter.useProgram('hillshade');
-    const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
-
-    context.activeTexture.set(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
-
     const align = !painter.options.moving;
-    const matrix = terrainData ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align);
-    const projectionData = painter.style.map.projection.getProjectionData(coord.canonical, matrix);
 
-    program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, vertexBuffer, indexBuffer, segments);
+    for (const coord of coords) {
+        const tile = sourceCache.getTile(coord);
+        const fbo = tile.fbo;
+        if (!fbo) {
+            continue;
+        }
+        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder);
+
+        const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
+
+        context.activeTexture.set(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
+
+        const posMatrix = terrainData ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align);
+        const projectionData = painter.style.map.projection.getProjectionData(coord.canonical, posMatrix);
+
+        program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
+            hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    }
 }
 
 // hillshade rendering is done in two steps. the prepare step first calculates the slope of the terrain in the x and y
