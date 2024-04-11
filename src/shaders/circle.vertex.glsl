@@ -33,8 +33,7 @@ out float v_visibility;
 //   3D: circles "printed" onto map surface, far away circles are enlarged (implemented but questionable whether it does anything)
 // m+m:
 //   2D: circles "printed" onto map surface, far away circles are naturally smaller due to perspective projection
-//   3D: circles "printed" onto globe surface, far away circles are naturally smaller due to perspective projectionp
-// JP: TODO: put this into style specs
+//   3D: circles "printed" onto globe surface, far away circles are naturally smaller due to perspective projection
 
 void main(void) {
     #pragma mapbox: initialize highp vec4 color
