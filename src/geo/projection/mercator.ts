@@ -31,7 +31,7 @@ export class MercatorProjection implements Projection {
     }
 
     get cameraPosition(): vec3 {
-        return [this._cameraPosition[0], this._cameraPosition[1], this._cameraPosition[2]];
+        return vec3.clone(this._cameraPosition); // Return a copy - don't let outside code mutate our precomputed camera position.
     }
 
     get drawWrappedTiles(): boolean {
@@ -160,7 +160,7 @@ export class MercatorProjection implements Projection {
     }
 
     transformLightDirection(_: Transform, dir: vec3): vec3 {
-        return [dir[0], dir[1], dir[2]];
+        return vec3.clone(dir);
     }
 }
 
