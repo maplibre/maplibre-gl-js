@@ -89,7 +89,7 @@ export class GlobeProjection implements Projection {
     }
 
     get cameraPosition(): vec3 {
-        return [this._cameraPosition[0], this._cameraPosition[1], this._cameraPosition[2]];
+        return vec3.clone(this._cameraPosition); // Return a copy - don't let outside code mutate our precomputed camera position.
     }
 
     /**
