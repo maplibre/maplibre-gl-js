@@ -551,7 +551,7 @@ export class Style extends Evented {
         }
 
         const changed = this._changed;
-        if (changed) {
+        if (this._changed) {
             const updatedIds = Object.keys(this._updatedLayers);
             const removedIds = Object.keys(this._removedLayers);
 
