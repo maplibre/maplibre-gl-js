@@ -666,7 +666,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
  */
 function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
-        console.log('\x1b[31m', `${index}/${total}: errored ${test.id} ${test.error.message}`, '\x1b[0m');
+        console.log('\x1b[91m', `${index}/${total}: errored ${test.id} ${test.error.message}`, '\x1b[0m');
     } else if (!test.ok) {
         console.log('\x1b[31m', `${index}/${total}: failed ${test.id} ${test.difference}`, '\x1b[0m');
     } else {
@@ -881,7 +881,11 @@ async function executeRenderTests() {
     };
 
     if (process.env.UPDATE) {
-        console.log(`Updated ${testStyles.length} tests.`);
+        if (testStats.failed.length > 0) {
+            console.log(`Updated ${testStats.failed.length}/${testStats.total} tests, ${testStats.errored.length} errored.`);
+        } else {
+            console.log(`Updated ${testStats.total} tests.`);
+        }
         process.exit(0);
     }
 
