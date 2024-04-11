@@ -419,7 +419,7 @@ class Subdivider {
      * Generates an outline for a given polygon, returns a list of arrays of line indices.
      */
     private _generateOutline(polygon: Array<Array<Point>>): Array<Array<number>> {
-        const subdividedLines = [];
+        const subdividedLines: Array<Array<number>> = [];
         for (const ring of polygon) {
             const line = subdivideVertexLine(ring, this._granularity, true);
             const pathIndices = this._pointArrayToIndices(line);
@@ -427,7 +427,7 @@ class Subdivider {
             // for example with indices 0 1 2 3 0.
             // We need list of individual line segments for rendering,
             // for example 0, 1, 1, 2, 2, 3, 3, 0.
-            const lineIndices = [];
+            const lineIndices: Array<number> = [];
             for (let i = 1; i < pathIndices.length; i++) {
                 lineIndices.push(pathIndices[i - 1]);
                 lineIndices.push(pathIndices[i]);
@@ -590,7 +590,7 @@ class Subdivider {
         this._initializeVertices(flattened);
 
         // Subdivide triangles
-        let subdividedTriangles;
+        let subdividedTriangles: Array<number>;
         try {
             // At this point this._finalVertices is just flattened polygon points
             const earcutResult = earcut(flattened, holeIndices);
@@ -601,7 +601,7 @@ class Subdivider {
         }
 
         // Subdivide lines
-        let subdividedLines = [];
+        let subdividedLines: Array<Array<number>> = [];
         if (generateOutlineLines) {
             subdividedLines = this._generateOutline(polygon);
         }
