@@ -40,6 +40,7 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     // This si not needed on fill, because fill geometry tends to already be
     // highly tessellated and granular at high zooms.
     tile: new SubdivisionGranularityExpression(128, 16),
+    circle: 3
 });
 
 export class GlobeProjection implements Projection {

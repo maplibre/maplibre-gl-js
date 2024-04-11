@@ -27,7 +27,6 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {warnOnce} from '../../util/util';
 
 // Extrude is in range 0..7, which will be mapped to -1..1 in the shader.
 function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
@@ -84,11 +83,11 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         let circleSortKey = null;
         let sortFeaturesByKey = false;
 
-        let tesselate = false;
+        let subdivide = false;
 
         if (styleLayer.type === 'heatmap') {
-            // Heatmap circles are usually large, tesselate them to allow curvature along the globe.
-            tesselate = true;
+            // Heatmap circles are usually large (and map-pitch-aligned), tessellate them to allow curvature along the globe.
+            subdivide = true;
         }
 
         // Heatmap layers are handled in this bucket and have no evaluated properties, so we check our access
@@ -97,11 +96,11 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             circleSortKey = circleStyle.layout.get('circle-sort-key');
             sortFeaturesByKey = !circleSortKey.isConstant();
 
-            // Circles that are "printed" onto the map surface should be tesselated to follow the globe's curvature.
-            tesselate = tesselate || circleStyle.paint.get('circle-pitch-alignment') === 'map';
+            // Circles that are "printed" onto the map surface should be tessellated to follow the globe's curvature.
+            subdivide = subdivide || circleStyle.paint.get('circle-pitch-alignment') === 'map';
         }
 
-        const granularity = tesselate ? 3 : 1;
+        const granularity = subdivide ? options.subdivisionGranularity.circle : 1;
 
         for (const {feature, id, index, sourceLayerIndex} of features) {
             const needGeometry = this.layers[0]._featureFilter.needGeometry;
@@ -176,6 +175,11 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
             granularity = 1;
         }
 
+        // Since we store the circle's center in each vertex, we only have 3 bits for actual vertex position in each axis.
+        // Thus the valid range of positions is 0..7.
+        // This gives us 4 possible granularity settings that are symmetrical.
+
+        // This array stores vertex positions that should by used by the tessellated quad.
         let extrudes: Array<number>;
 
         if (granularity === 1) {
@@ -187,9 +191,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         } else if (granularity === 7) {
             extrudes = [0, 1, 2, 3, 4, 5, 6, 7];
         } else {
-            warnOnce(`Invalid circle bucket graniality: ${granularity}; valid values are 1, 3, 5, 7.`);
-            granularity = 1;
-            extrudes = [0, 7];
+            throw new Error(`Invalid circle bucket granularity: ${granularity}; valid values are 1, 3, 5, 7.`);
         }
 
         const verticesPerAxis = extrudes.length;
@@ -200,17 +202,9 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
                 const vy = point.y;
 
                 // Do not include points that are outside the tile boundaries.
-                if (vx < 0 || vx >= EXTENT || vy < 0 || vy >= EXTENT) continue;
-
-                // this geometry will be of the Point type, and we'll derive
-                // two triangles from it.
-                //
-                // ┌─────────┐
-                // │ 3     2 │
-                // │         │
-                // │ 0     1 │
-                // └─────────┘
-                // triangles are 0,1,2 and 0,3,2
+                if (vx < 0 || vx >= EXTENT || vy < 0 || vy >= EXTENT) {
+                    continue;
+                }
 
                 const segment = this.segments.prepareSegment(verticesPerAxis * verticesPerAxis, this.layoutVertexArray, this.indexArray, feature.sortKey);
                 const index = segment.vertexLength;
