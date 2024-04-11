@@ -37,7 +37,7 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     // Always keep at least some subdivision on raster tiles, etc,
     // otherwise they will be visibly warped at high zooms (before mercator transition).
     // This si not needed on fill, because fill geometry tends to already be
-    // highly tesselated and granular at high zooms.
+    // highly tessellated and granular at high zooms.
     tile: new SubdivisionGranularityExpression(128, 16),
 });
 
