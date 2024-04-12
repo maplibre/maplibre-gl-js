@@ -37,7 +37,7 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     // Always keep at least some subdivision on raster tiles, etc,
     // otherwise they will be visibly warped at high zooms (before mercator transition).
     // This si not needed on fill, because fill geometry tends to already be
-    // highly tesselated and granular at high zooms.
+    // highly tessellated and granular at high zooms.
     tile: new SubdivisionGranularityExpression(128, 16),
 });
 
@@ -441,13 +441,14 @@ export class GlobeProjection implements Projection {
     }
 
     public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh {
-        const granularity = granularitySettingsGlobe.tile.getGranularityForZoomLevel(canonical.z);
+        // Stencil granularity must match fill granularity
+        const granularity = granularitySettingsGlobe.fill.getGranularityForZoomLevel(canonical.z);
         const north = (canonical.y === 0);
         const south = (canonical.y === (1 << canonical.z) - 1);
-        return this.getMesh(context, granularity, hasBorder, north, south);
+        return this._getMesh(context, granularity, hasBorder, north, south);
     }
 
-    public getMesh(context: Context, granularity: number, hasBorder: boolean, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
+    private _getMesh(context: Context, granularity: number, hasBorder: boolean, hasNorthEdge: boolean, hasSouthEdge: boolean): Mesh {
         const key = this._getMeshKey(granularity, hasBorder, hasNorthEdge, hasSouthEdge);
 
         if (key in this._tileMeshCache) {
