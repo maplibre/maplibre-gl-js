@@ -551,7 +551,7 @@ export class Style extends Evented {
         }
 
         const changed = this._changed;
-        if (this._changed) {
+        if (changed) {
             const updatedIds = Object.keys(this._updatedLayers);
             const removedIds = Object.keys(this._removedLayers);
 
@@ -584,12 +584,15 @@ export class Style extends Evented {
 
         const sourcesUsedBefore = {};
 
-        for (const sourceId in this.sourceCaches) {
-            const sourceCache = this.sourceCaches[sourceId];
-            sourcesUsedBefore[sourceId] = sourceCache.used;
+        // save 'used' status to sourcesUsedBefore object and reset all sourceCaches 'used' field to false
+        for (const sourceCacheId of Object.keys(this.sourceCaches)) {
+            const sourceCache = this.sourceCaches[sourceCacheId];
+            sourcesUsedBefore[sourceCacheId] = sourceCache.used;
             sourceCache.used = false;
         }
 
+        // loop all layers and find layers that are not hidden at parameters.zoom
+        // and set used to true in sourceCaches dictionary for the sources of these layers
         for (const layerId of this._order) {
             const layer = this._layers[layerId];
 
@@ -599,10 +602,26 @@ export class Style extends Evented {
             }
         }
 
-        for (const sourceId in sourcesUsedBefore) {
-            const sourceCache = this.sourceCaches[sourceId];
-            if (sourcesUsedBefore[sourceId] !== sourceCache.used) {
-                sourceCache.fire(new Event('data', {sourceDataType: 'visibility', dataType: 'source', sourceId}));
+        // cross check sourcesUsedBefore against updated this.sourceCaches dictionary
+        // if "used" field is different fire visibility event
+        for (const sourcesUsedBeforeId of Object.keys(sourcesUsedBefore)) {
+            const sourceCache = this.sourceCaches[sourcesUsedBeforeId];
+            console.log(`p ${this.map._getMapId()} _changed=${changed} sourcesUsedBefore`,
+                `keys=${JSON.stringify(Object.keys(sourcesUsedBefore))}`,
+                `sourcesUsedBefore=${JSON.stringify(sourcesUsedBefore)}`,
+                `sourceId=${sourcesUsedBeforeId}`,
+                `sourceCache=${sourceCache.id}`,
+                `sourcesUsedBefore[sourceId]=${sourcesUsedBefore[sourcesUsedBeforeId]}`,
+                `sourceCache.used=${sourceCache.used}`);
+            // (undefine !== false) will evaluate to true and fire an useless visibility event
+            // need force "falsy" values to boolean to avoid the case above
+            if (!!sourcesUsedBefore[sourcesUsedBeforeId] !== !!sourceCache.used) {
+                sourceCache.fire(new Event('data',
+                    {
+                        sourceDataType: 'visibility',
+                        dataType: 'source',
+                        sourceId: sourcesUsedBeforeId
+                    }));
             }
         }
 
@@ -612,7 +631,6 @@ export class Style extends Evented {
         if (changed) {
             this.fire(new Event('data', {dataType: 'style'}));
         }
-
     }
 
     /*
@@ -815,7 +833,7 @@ export class Style extends Evented {
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
         const shouldValidate = builtIns.indexOf(source.type) >= 0;
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
-
+        // console.log(`p: ${this.map._getMapId()}, shouldValidate=${shouldValidate}, _validate finished`);
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
         sourceCache.style = this;
