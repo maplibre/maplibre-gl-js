@@ -587,6 +587,8 @@ export class Style extends Evented {
         // save 'used' status to sourcesUsedBefore object and reset all sourceCaches 'used' field to false
         for (const sourceCacheId of Object.keys(this.sourceCaches)) {
             const sourceCache = this.sourceCaches[sourceCacheId];
+
+            // sourceCache.used could be undefined, and sourcesUsedBefore[sourceCacheId] is also 'undefined'
             sourcesUsedBefore[sourceCacheId] = sourceCache.used;
             sourceCache.used = false;
         }
@@ -606,13 +608,7 @@ export class Style extends Evented {
         // if "used" field is different fire visibility event
         for (const sourcesUsedBeforeId of Object.keys(sourcesUsedBefore)) {
             const sourceCache = this.sourceCaches[sourcesUsedBeforeId];
-            console.log(`p ${this.map._getMapId()} _changed=${changed} sourcesUsedBefore`,
-                `keys=${JSON.stringify(Object.keys(sourcesUsedBefore))}`,
-                `sourcesUsedBefore=${JSON.stringify(sourcesUsedBefore)}`,
-                `sourceId=${sourcesUsedBeforeId}`,
-                `sourceCache=${sourceCache.id}`,
-                `sourcesUsedBefore[sourceId]=${sourcesUsedBefore[sourcesUsedBeforeId]}`,
-                `sourceCache.used=${sourceCache.used}`);
+
             // (undefine !== false) will evaluate to true and fire an useless visibility event
             // need force "falsy" values to boolean to avoid the case above
             if (!!sourcesUsedBefore[sourcesUsedBeforeId] !== !!sourceCache.used) {
