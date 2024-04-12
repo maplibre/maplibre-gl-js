@@ -677,7 +677,7 @@ function printProgress(test: TestData, total: number, index: number) {
 /**
  * Prints the summary at the end of the run
  *
- * @param tests - all the tests with their resutls
+ * @param tests - all the tests with their results
  * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {

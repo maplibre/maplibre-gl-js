@@ -84,7 +84,7 @@
     "cssnano": "^6.1.2",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
-    "devtools-protocol": "^0.0.1284894",
+    "devtools-protocol": "^0.0.1285609",
     "diff": "^5.2.0",
     "dts-bundle-generator": "^9.3.1",
     "eslint": "^8.57.0",
@@ -134,7 +134,7 @@
     "typedoc": "^0.25.13",
     "typedoc-plugin-markdown": "^3.17.1",
     "typedoc-plugin-missing-exports": "^2.2.0",
-    "typescript": "^5.4.4"
+    "typescript": "^5.4.5"
   },
   "overrides": {
     "postcss-inline-svg": {
