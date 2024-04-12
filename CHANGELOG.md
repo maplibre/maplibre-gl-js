@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix different unwanted panning changes at the end of a panning motion, that happen on a large screen ([#3935](https://github.com/maplibre/maplibre-gl-js/issues/3935))
+- Fix image sources not being marked as loaded on error
 
 ## 4.1.2
 

@@ -50,6 +50,7 @@ describe('ImageSource', () => {
         global.fetch = null;
         server = fakeServer.create();
         server.respondWith(new ArrayBuffer(1));
+        server.respondWith('/missing-image.png', [404, {}, '']);
     });
 
     test('constructor', () => {
@@ -207,5 +208,28 @@ describe('ImageSource', () => {
 
         source.updateImage({url: '/image2.png'});
         expect(spy).toHaveBeenCalled();
+    });
+
+    test('marks the source as loaded when the request has received a response', async () => {
+        const map = new StubMap() as any;
+        const source = createSource({url: '/image.png', eventedParent: map});
+
+        expect(source.loaded()).toBe(false);
+        source.onAdd(map);
+        server.respond();
+        await sleep(0);
+        expect(source.loaded()).toBe(true);
+
+        const missingImagesource = createSource({url: '/missing-image.png', eventedParent: map});
+
+        // Suppress errors as we're loading a missing image.
+        map.on('error', () => {});
+
+        expect(missingImagesource.loaded()).toBe(false);
+        missingImagesource.onAdd(map);
+        server.respond();
+        await sleep(0);
+
+        expect(missingImagesource.loaded()).toBe(true);
     });
 });
