@@ -75,6 +75,11 @@ export class SourceCache extends Evented {
         this.dispatcher = dispatcher;
 
         this.on('data', (e: MapSourceDataEvent) => {
+
+            //     console.log(`pmap ${this.map._getMapId()}, ${this.id}, handler in SC:\
+            //     e.dataType=${e.dataType}, e.sourceDataType=${e.sourceDataType}, e.sourceId=${e.sourceId},\
+            // this._didEmitContent=${this._didEmitContent}, this.transform=${!!this.transform}`);
+
             // this._sourceLoaded signifies that the TileJSON is loaded if applicable.
             // if the source type does not come with a TileJSON, the flag signifies the
             // source data has loaded (i.e geojson has been tiled on the worker and is ready)
@@ -85,7 +90,7 @@ export class SourceCache extends Evented {
             if (this._sourceLoaded && !this._paused && e.dataType === 'source' && e.sourceDataType === 'content') {
                 this.reload();
                 if (this.transform) {
-                    this.update(this.transform, this.terrain);
+                    this.update(this.transform, this.terrain, 'sc data handler');
                 }
 
                 this._didEmitContent = true;
@@ -167,7 +172,7 @@ export class SourceCache extends Evented {
         this._paused = false;
         this._shouldReloadOnResume = false;
         if (shouldReload) this.reload();
-        if (this.transform) this.update(this.transform, this.terrain);
+        if (this.transform) this.update(this.transform, this.terrain, 'resume');
     }
 
     async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
@@ -180,7 +185,7 @@ export class SourceCache extends Evented {
                 this._source.fire(new ErrorEvent(err, {tile}));
             } else {
                 // continue to try loading parent/children tiles if a tile doesn't exist (404)
-                this.update(this.transform, this.terrain);
+                this.update(this.transform, this.terrain, '_loadTile');
             }
         }
     }
@@ -497,10 +502,15 @@ export class SourceCache extends Evented {
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(transform: Transform, terrain?: Terrain) {
+    update(transform: Transform, terrain?: Terrain, caller?: string) {
+        console.log(`!!pmap ${this.map._getMapId()}, ${this.id} entering update, by ${caller},
+        this.transform=${!!this.transform}, incoming transform=${!!transform} (!this._sourceLoaded || this._paused)=${(!this._sourceLoaded || this._paused)}`);
         this.transform = transform;
         this.terrain = terrain;
-        if (!this._sourceLoaded || this._paused) { return; }
+        if (!this._sourceLoaded || this._paused) {
+            console.log(`!!pmap ${this.map._getMapId()}, ${this.id} entering update, by ${caller}, ABORT!`);
+            return;
+        }
 
         this.updateCacheSize(transform);
         this.handleWrapJump(this.transform.center.lng);
@@ -510,6 +520,7 @@ export class SourceCache extends Evented {
         this._coveredTiles = {};
 
         let idealTileIDs;
+
         if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
         } else if (this._source.tileID) {
@@ -550,11 +561,16 @@ export class SourceCache extends Evented {
             idealTileIDs = idealTileIDs.concat(Object.values(parents));
         }
 
+        console.log(`pmap ${this.map._getMapId()}, ${this.id}, ${caller}, idealTileIDs.length=${idealTileIDs.length}, 
+        !this._updated=${!this._updated},
+        this._didEmitContent=${this._didEmitContent}`);
+
         const noPendingDataEmissions = idealTileIDs.length === 0 && !this._updated && this._didEmitContent;
         this._updated = true;
         // if we won't have any tiles to fetch and content is already emitted
         // there will be no more data emissions, so we need to emit the event with isSourceLoaded = true
         if (noPendingDataEmissions) {
+            console.log(`pmap ${this.map._getMapId()}, ${this.id}, idle event fired.`);
             this.fire(new Event('data', {sourceDataType: 'idle', dataType: 'source', sourceId: this.id}));
         }
 
