@@ -585,7 +585,7 @@ export class Style extends Evented {
         const sourcesUsedBefore = {};
 
         // save 'used' status to sourcesUsedBefore object and reset all sourceCaches 'used' field to false
-        for (const sourceCacheId of Object.keys(this.sourceCaches)) {
+        for (const sourceCacheId in this.sourceCaches) {
             const sourceCache = this.sourceCaches[sourceCacheId];
 
             // sourceCache.used could be undefined, and sourcesUsedBefore[sourceCacheId] is also 'undefined'
@@ -606,7 +606,7 @@ export class Style extends Evented {
 
         // cross check sourcesUsedBefore against updated this.sourceCaches dictionary
         // if "used" field is different fire visibility event
-        for (const sourcesUsedBeforeId of Object.keys(sourcesUsedBefore)) {
+        for (const sourcesUsedBeforeId in sourcesUsedBefore) {
             const sourceCache = this.sourceCaches[sourcesUsedBeforeId];
 
             // (undefine !== false) will evaluate to true and fire an useless visibility event
