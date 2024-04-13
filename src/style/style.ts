@@ -829,7 +829,6 @@ export class Style extends Evented {
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
         const shouldValidate = builtIns.indexOf(source.type) >= 0;
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
-        // console.log(`p: ${this.map._getMapId()}, shouldValidate=${shouldValidate}, _validate finished`);
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
         sourceCache.style = this;
