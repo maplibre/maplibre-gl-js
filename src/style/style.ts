@@ -470,11 +470,6 @@ export class Style extends Evented {
         return true;
     }
 
-    /**
-     * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
-     * @param ids - an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
-     * @returns generated result
-     */
     private _serializeByIds(ids?: Array<string>): Array<LayerSpecification> {
 
         const serializedLayersDictionary = this._serializedAllLayers();
@@ -493,10 +488,6 @@ export class Style extends Evented {
         return serializedLayers;
     }
 
-    /**
-     * Lazy initialization of this._serializedLayers dictionary and return it
-     * @returns this._serializedLayers dictionary
-     */
     private _serializedAllLayers(): {[_: string]: LayerSpecification} {
         let serializedLayers = this._serializedLayers;
         if (serializedLayers) {
