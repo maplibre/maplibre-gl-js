@@ -304,6 +304,10 @@ describe('GeolocateControl with no options', () => {
         expect(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')).toBeTruthy();
     });
 
+    /**
+     * @deprecated 'trackuserlocationend' event will not be thrown in this situation later,
+     * 'userlocationlostfocus event' test added instead.
+     */
     test('watching map background event', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
@@ -328,7 +332,7 @@ describe('GeolocateControl with no options', () => {
         });
         await trackPromise;
         expect(map.getCenter()).toEqual({lng: 10, lat: 5});
-    }); // deprecated
+    });
 
     test('userlocationlostfocus event', async () => {
         const geolocate = new GeolocateControl({
