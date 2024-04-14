@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix different unwanted panning changes at the end of a panning motion, that happen on a large screen ([#3935](https://github.com/maplibre/maplibre-gl-js/issues/3935))
+- Fix image sources not being marked as loaded on error
 
 - Fix paint property not being updated by setPaintProperty ([#3373](https://github.com/maplibre/maplibre-gl-js/issues/3373))([#2651](https://github.com/maplibre/maplibre-gl-js/issues/2651))
 
