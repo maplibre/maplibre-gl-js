@@ -1,27 +1,11 @@
 import {Map, MapOptions} from './map';
-import {createMap, beforeMapTest, sleep, createStyle, createStyleSource} from '../util/test/util';
-import {LngLat} from '../geo/lng_lat';
-import {Tile} from '../source/tile';
-import {OverscaledTileID} from '../source/tile_id';
+import {createMap, beforeMapTest, createStyle, createStyleSource} from '../util/test/util';
 import {Event as EventedEvent, ErrorEvent} from '../util/evented';
-import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {GeoJSONSourceSpecification, LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
-import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
-import {IControl} from './control/control';
-import {EvaluationParameters} from '../style/evaluation_parameters';
 import {fakeServer, FakeServer} from 'nise';
-import {CameraOptions} from './camera';
-import {Terrain} from '../render/terrain';
-import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import {Transform} from '../geo/transform';
-import {StyleImageInterface} from '../style/style_image';
 import {Style} from '../style/style';
-import {MapSourceDataEvent} from './events';
-import {config} from '../util/config';
-import {MessageType} from '../util/actor_messages';
+import {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;
 
@@ -355,4 +339,140 @@ describe('#setStyle', () => {
 
         expect(validationOption).toBeFalsy();
     });
+});
+
+describe('#getStyle', () => {
+    test('returns undefined if the style has not loaded yet', done => {
+        const style = createStyle();
+        const map = createMap({style});
+        expect(map.getStyle()).toBeUndefined();
+        done();
+    });
+
+    test('returns the style', done => {
+        const style = createStyle();
+        const map = createMap({style});
+
+        map.on('load', () => {
+            expect(map.getStyle()).toEqual(style);
+            done();
+        });
+    });
+
+    test('returns the style with added sources', done => {
+        const style = createStyle();
+        const map = createMap({style});
+
+        map.on('load', () => {
+            map.addSource('geojson', createStyleSource());
+            expect(map.getStyle()).toEqual(extend(createStyle(), {
+                sources: {geojson: createStyleSource()}
+            }));
+            done();
+        });
+    });
+
+    test('fires an error on checking if non-existant source is loaded', done => {
+        const style = createStyle();
+        const map = createMap({style});
+
+        map.on('load', () => {
+            map.on('error', ({error}) => {
+                expect(error.message).toMatch(/There is no source with ID/);
+                done();
+            });
+            map.isSourceLoaded('geojson');
+        });
+    });
+
+    test('returns the style with added layers', done => {
+        const style = createStyle();
+        const map = createMap({style});
+        const layer = {
+            id: 'background',
+            type: 'background'
+        } as LayerSpecification;
+
+        map.on('load', () => {
+            map.addLayer(layer);
+            expect(map.getStyle()).toEqual(extend(createStyle(), {
+                layers: [layer]
+            }));
+            done();
+        });
+    });
+
+    test('a layer can be added even if a map is created without a style', () => {
+        const map = createMap({deleteStyle: true});
+        const layer = {
+            id: 'background',
+            type: 'background'
+        } as LayerSpecification;
+        map.addLayer(layer);
+    });
+
+    test('a source can be added even if a map is created without a style', () => {
+        const map = createMap({deleteStyle: true});
+        const source = createStyleSource();
+        map.addSource('fill', source);
+    });
+
+    test('a layer can be added with an embedded source specification', () => {
+        const map = createMap({deleteStyle: true});
+        const source: GeoJSONSourceSpecification = {
+            type: 'geojson',
+            data: {type: 'Point', coordinates: [0, 0]}
+        };
+        map.addLayer({
+            id: 'foo',
+            type: 'symbol',
+            source
+        });
+    });
+
+    test('returns the style with added source and layer', done => {
+        const style = createStyle();
+        const map = createMap({style});
+        const source = createStyleSource();
+        const layer = {
+            id: 'fill',
+            type: 'fill',
+            source: 'fill'
+        } as LayerSpecification;
+
+        map.on('load', () => {
+            map.addSource('fill', source);
+            map.addLayer(layer);
+            expect(map.getStyle()).toEqual(extend(createStyle(), {
+                sources: {fill: source},
+                layers: [layer]
+            }));
+            done();
+        });
+    });
+
+    test('creates a new Style if diff fails', () => {
+        const style = createStyle();
+        const map = createMap({style});
+        jest.spyOn(map.style, 'setState').mockImplementation(() => {
+            throw new Error('Dummy error');
+        });
+        jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const previousStyle = map.style;
+        map.setStyle(style);
+        expect(map.style && map.style !== previousStyle).toBeTruthy();
+    });
+
+    test('creates a new Style if diff option is false', () => {
+        const style = createStyle();
+        const map = createMap({style});
+        const spy = jest.spyOn(map.style, 'setState');
+
+        const previousStyle = map.style;
+        map.setStyle(style, {diff: false});
+        expect(map.style && map.style !== previousStyle).toBeTruthy();
+        expect(spy).not.toHaveBeenCalled();
+    });
+
 });
