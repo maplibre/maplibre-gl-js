@@ -298,7 +298,7 @@ export type MapOptions = {
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
      */
-    style: StyleSpecification | string;
+    style?: StyleSpecification | string;
     /**
      * If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
      * @defaultValue true
@@ -387,7 +387,8 @@ const defaultOptions = {
     crossSourceCollisions: true,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
-    maxCanvasSize: [4096, 4096]
+    maxCanvasSize: [4096, 4096],
+    style: '',
 } as CompleteMapOptions;
 
 /**
