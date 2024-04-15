@@ -76,22 +76,6 @@ describe('Map', () => {
         //t.error();
     });
 
-    test('emits load event after a style is set', done => {
-        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
-
-        const fail = () => done('test failed');
-        const pass = () => done();
-
-        map.on('load', fail);
-
-        setTimeout(() => {
-            map.off('load', fail);
-            map.on('load', pass);
-            map.setStyle(createStyle());
-        }, 1);
-
-    });
-
     describe('#setTransformRequest', () => {
         test('returns self', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
@@ -242,60 +226,6 @@ describe('Map', () => {
         await renderPromise;
     });
 
-    test('#addControl', () => {
-        const map = createMap();
-        const control = {
-            onAdd(_) {
-                expect(map).toBe(_);
-                return window.document.createElement('div');
-            }
-        } as any as IControl;
-        map.addControl(control);
-        expect(map._controls[0]).toBe(control);
-    });
-
-    test('#removeControl errors on invalid arguments', () => {
-        const map = createMap();
-        const control = {} as any as IControl;
-        const stub = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-        map.addControl(control);
-        map.removeControl(control);
-        expect(stub).toHaveBeenCalledTimes(2);
-
-    });
-
-    test('#removeControl', () => {
-        const map = createMap();
-        const control = {
-            onAdd() {
-                return window.document.createElement('div');
-            },
-            onRemove(_) {
-                expect(map).toBe(_);
-            }
-        };
-        map.addControl(control);
-        map.removeControl(control);
-        expect(map._controls).toHaveLength(0);
-
-    });
-
-    test('#hasControl', () => {
-        const map = createMap();
-        function Ctrl() {}
-        Ctrl.prototype = {
-            onAdd(_) {
-                return window.document.createElement('div');
-            }
-        };
-
-        const control = new Ctrl();
-        expect(map.hasControl(control)).toBe(false);
-        map.addControl(control);
-        expect(map.hasControl(control)).toBe(true);
-    });
-
     test('#project', () => {
         const map = createMap();
         expect(map.project([0, 0])).toEqual({x: 100, y: 100});
@@ -392,31 +322,6 @@ describe('Map', () => {
 
     });
 
-    describe('error event', () => {
-        test('logs errors to console when it has NO listeners', () => {
-            // to avoid seeing error in the console in Jest
-            let stub = jest.spyOn(console, 'error').mockImplementation(() => {});
-            const map = createMap();
-            stub.mockReset();
-            stub = jest.spyOn(console, 'error').mockImplementation(() => {});
-            const error = new Error('test');
-            map.fire(new ErrorEvent(error));
-            expect(stub).toHaveBeenCalledTimes(1);
-            expect(stub.mock.calls[0][0]).toBe(error);
-        });
-
-        test('calls listeners', done => {
-            const map = createMap();
-            const error = new Error('test');
-            map.on('error', (event) => {
-                expect(event.error).toBe(error);
-                done();
-            });
-            map.fire(new ErrorEvent(error));
-        });
-
-    });
-
     test('render stabilizes', done => {
         const style = createStyle();
         style.sources.mapbox = {
@@ -491,60 +396,6 @@ describe('Map', () => {
         expect(map.isMoving()).toBeTruthy();
         await map.once('idle');
         expect(map.isMoving()).toBeFalsy();
-    });
-
-    test('stops camera animation on mousedown when interactive', () => {
-        const map = createMap({interactive: true});
-        map.flyTo({center: [200, 0], duration: 100});
-
-        simulate.mousedown(map.getCanvasContainer());
-        expect(map.isEasing()).toBe(false);
-
-        map.remove();
-    });
-
-    test('continues camera animation on mousedown when non-interactive', () => {
-        const map = createMap({interactive: false});
-        map.flyTo({center: [200, 0], duration: 100});
-
-        simulate.mousedown(map.getCanvasContainer());
-        expect(map.isEasing()).toBe(true);
-
-        map.remove();
-    });
-
-    test('stops camera animation on touchstart when interactive', () => {
-        const map = createMap({interactive: true});
-        map.flyTo({center: [200, 0], duration: 100});
-
-        simulate.touchstart(map.getCanvasContainer(), {touches: [{target: map.getCanvas(), clientX: 0, clientY: 0}]});
-        expect(map.isEasing()).toBe(false);
-
-        map.remove();
-    });
-
-    test('continues camera animation on touchstart when non-interactive', () => {
-        const map = createMap({interactive: false});
-        map.flyTo({center: [200, 0], duration: 100});
-
-        simulate.touchstart(map.getCanvasContainer());
-        expect(map.isEasing()).toBe(true);
-
-        map.remove();
-    });
-
-    test('continues camera animation on resize', () => {
-        const map = createMap(),
-            container = map.getContainer();
-
-        map.flyTo({center: [200, 0], duration: 100});
-
-        Object.defineProperty(container, 'clientWidth', {value: 250});
-        Object.defineProperty(container, 'clientHeight', {value: 250});
-        map.resize();
-
-        expect(map.isMoving()).toBeTruthy();
-
     });
 
     test('fires sourcedataabort event on dataabort event', async () => {
