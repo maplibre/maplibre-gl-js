@@ -3,7 +3,7 @@ import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/tes
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
 import {Map} from '../../ui/map';
-import {MapDataEvent, MapSourceDataEvent} from '../events';
+import {MapSourceDataEvent} from '../events';
 
 function createMap() {
 
