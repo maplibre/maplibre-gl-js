@@ -40,7 +40,15 @@ export class SourceCache extends Evented {
     style: Style;
 
     _source: Source;
+
+    /**
+     * @internal
+     * signifies that the TileJSON is loaded if applicable.
+     * if the source type does not come with a TileJSON, the flag signifies the
+     * source data has loaded (i.e geojson has been tiled on the worker and is ready)
+     */
     _sourceLoaded: boolean;
+
     _sourceErrored: boolean;
     _tiles: {[_: string]: Tile};
     _prevLng: number;
@@ -74,23 +82,7 @@ export class SourceCache extends Evented {
         this.id = id;
         this.dispatcher = dispatcher;
 
-        this.on('data', (e: MapSourceDataEvent) => {
-            // this._sourceLoaded signifies that the TileJSON is loaded if applicable.
-            // if the source type does not come with a TileJSON, the flag signifies the
-            // source data has loaded (i.e geojson has been tiled on the worker and is ready)
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') this._sourceLoaded = true;
-
-            // for sources with mutable data, this event fires when the underlying data
-            // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
-            if (this._sourceLoaded && !this._paused && e.dataType === 'source' && e.sourceDataType === 'content') {
-                this.reload();
-                if (this.transform) {
-                    this.update(this.transform, this.terrain);
-                }
-
-                this._didEmitContent = true;
-            }
-        });
+        this.on('data', (e: MapSourceDataEvent) => this._dataHandler(e));
 
         this.on('dataloading', () => {
             this._sourceErrored = false;
@@ -498,9 +490,11 @@ export class SourceCache extends Evented {
      * are inside the viewport.
      */
     update(transform: Transform, terrain?: Terrain) {
+        if (!this._sourceLoaded || this._paused) {
+            return;
+        }
         this.transform = transform;
         this.terrain = terrain;
-        if (!this._sourceLoaded || this._paused) { return; }
 
         this.updateCacheSize(transform);
         this.handleWrapJump(this.transform.center.lng);
@@ -509,7 +503,8 @@ export class SourceCache extends Evented {
         // better, retained tiles. They are not drawn separately.
         this._coveredTiles = {};
 
-        let idealTileIDs;
+        let idealTileIDs: OverscaledTileID[];
+
         if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
         } else if (this._source.tileID) {
@@ -866,6 +861,26 @@ export class SourceCache extends Evented {
             tile.aborted = true;
             this._abortTile(tile);
             this._unloadTile(tile);
+        }
+    }
+
+    /** @internal */
+    private _dataHandler(e: MapSourceDataEvent) {
+
+        const eventSourceDataType = e.sourceDataType;
+        if (e.dataType === 'source' && eventSourceDataType === 'metadata') {
+            this._sourceLoaded = true;
+        }
+
+        // for sources with mutable data, this event fires when the underlying data
+        // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
+        if (this._sourceLoaded && !this._paused && e.dataType === 'source' && eventSourceDataType === 'content') {
+            this.reload();
+            if (this.transform) {
+                this.update(this.transform, this.terrain);
+            }
+
+            this._didEmitContent = true;
         }
     }
 
