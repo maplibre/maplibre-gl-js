@@ -1,9 +1,9 @@
 import {browser} from '../util/browser';
-import {mat4} from 'gl-matrix';
+import {mat4, vec3} from 'gl-matrix';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
-import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
+import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray, AtmosphereBoundsArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import posAttributes from '../data/pos_attributes';
 import {ProgramConfiguration} from '../data/program_configuration';
@@ -27,10 +27,12 @@ import {drawFillExtrusion} from './draw_fill_extrusion';
 import {drawHillshade} from './draw_hillshade';
 import {drawRaster} from './draw_raster';
 import {drawBackground} from './draw_background';
+import {drawAtmosphere} from './draw_atmosphere';
 import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
+import {atmosphereAttributes} from '../data/atmosphere_attributes';
 
 import type {Transform} from '../geo/transform';
 import type {Style} from '../style/style';
@@ -81,6 +83,7 @@ export class Painter {
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
     tileExtentMesh: Mesh;
+    atmosphereMesh: Mesh;
 
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
@@ -210,6 +213,22 @@ export class Painter {
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
 
         this.tileExtentMesh = new Mesh(this.tileExtentBuffer, this.quadTriangleIndexBuffer, this.tileExtentSegments);
+
+        const vertexArray = new AtmosphereBoundsArray();
+        vertexArray.emplaceBack(-1, -1, 0.0, 1.0);
+        vertexArray.emplaceBack(+1, -1, 0.0, 1.0);
+        vertexArray.emplaceBack(+1, +1, 0.0, 1.0);
+        vertexArray.emplaceBack(-1, +1, 0.0, 1.0);
+
+        const indexArray = new TriangleIndexArray();
+        indexArray.emplaceBack(0, 1, 2);
+        indexArray.emplaceBack(0, 2, 3);
+
+        this.atmosphereMesh = new Mesh(
+            context.createVertexBuffer(vertexArray, atmosphereAttributes.members),
+            context.createIndexBuffer(indexArray),
+            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
+        );
     }
 
     /*
@@ -238,6 +257,9 @@ export class Painter {
             'u_projection_clipping_plane': [0, 0, 0, 0],
             'u_projection_transition': 0.0,
             'u_projection_fallback_matrix': matrix,
+            'u_globe_position': vec3.fromValues(0, 0, 0),
+            'u_globe_radius': 0.0,
+            'u_inv_proj_matrix': mat4.create(),
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.
@@ -485,7 +507,9 @@ export class Painter {
         this.context.bindFramebuffer.set(null);
 
         // Clear buffers in preparation for drawing to the main framebuffer
-        this.context.clear({color: options.showOverdrawInspector ? Color.black : Color.transparent, depth: 1});
+        const blackBackground = true;
+        const clearColor = blackBackground ? Color.black : Color.transparent;
+        this.context.clear({color: options.showOverdrawInspector ? Color.black : clearColor, depth: 1});
         this.clearStencil();
 
         this._showOverdrawInspector = options.showOverdrawInspector;
@@ -524,6 +548,8 @@ export class Painter {
             this._renderTileClippingMasks(layer, coordsAscending[layer.source]);
             this.renderLayer(this, sourceCache, layer, coords);
         }
+
+        drawAtmosphere(this);
 
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);

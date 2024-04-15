@@ -61,6 +61,8 @@ import projectionErrorMeasurementVert from './projection_error_measurement.verte
 import projectionErrorMeasurementFrag from './projection_error_measurement.fragment.glsl.g';
 import projectionMercatorVert from './_projection_mercator.vertex.glsl.g';
 import projectionGlobeVert from './_projection_globe.vertex.glsl.g';
+import atmosphereFrag from './atmosphere.fragment.glsl.g';
+import atmosphereVert from './atmosphere.vertex.glsl.g';
 
 export type PreparedShader = {
     fragmentSource: string;
@@ -101,7 +103,8 @@ export const shaders = {
     terrain: compile(terrainFrag, terrainVert),
     terrainDepth: compile(terrainDepthFrag, terrainVert),
     terrainCoords: compile(terrainCoordsFrag, terrainVert),
-    projectionErrorMeasurement: compile(projectionErrorMeasurementFrag, projectionErrorMeasurementVert)
+    projectionErrorMeasurement: compile(projectionErrorMeasurementFrag, projectionErrorMeasurementVert),
+    atmosphere: compile(atmosphereFrag, atmosphereVert),
 };
 
 // Expand #pragmas to #ifdefs.

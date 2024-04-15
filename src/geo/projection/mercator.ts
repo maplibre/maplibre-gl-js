@@ -1,4 +1,4 @@
-import {mat4} from 'gl-matrix';
+import {mat4, vec3} from 'gl-matrix';
 import {Transform} from '../transform';
 import {Projection, ProjectionGPUContext} from './projection';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
@@ -13,6 +13,7 @@ import {Mesh} from '../../render/mesh';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
+import {LngLat} from '../lng_lat';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -93,6 +94,9 @@ export class MercatorProjection implements Projection {
             'u_projection_clipping_plane': [0, 0, 0, 0],
             'u_projection_transition': 0.0,
             'u_projection_fallback_matrix': mainMatrix,
+            'u_globe_position': [0, 0, 0],
+            'u_globe_radius': 0,
+            'u_inv_proj_matrix': mat4.create(),
         };
 
         return data;
@@ -142,6 +146,11 @@ export class MercatorProjection implements Projection {
         this._cachedMesh = new Mesh(tileExtentBuffer, quadTriangleIndexBuffer, tileExtentSegments);
         return this._cachedMesh;
     }
+
+    public transformPosition(_lngLat: LngLat, _elev: number): vec3 {
+        return vec3.fromValues(0, 0, 0);
+    }
+
 }
 
 /**

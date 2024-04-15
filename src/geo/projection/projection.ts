@@ -1,4 +1,4 @@
-import {mat4} from 'gl-matrix';
+import {mat4, vec3} from 'gl-matrix';
 import {Tile} from '../../source/tile';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {Transform} from '../transform';
@@ -8,6 +8,7 @@ import {PreparedShader} from '../../shaders/shaders';
 import {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
 import {Program} from '../../render/program';
+import {LngLat} from '../lng_lat';
 
 export type ProjectionGPUContext = {
     context: Context;
@@ -141,4 +142,6 @@ export interface Projection {
      * @param hasBorder - When true, the mesh will also include a small border beyond the 0..EXTENT range.
      */
     getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh;
+
+    transformPosition(lngLat: LngLat, elev: number): vec3;
 }
