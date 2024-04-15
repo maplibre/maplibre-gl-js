@@ -410,6 +410,11 @@ export class GlobeProjection implements Projection {
         return flatPixelScale;
     }
 
+    public getCircleRadiusCorrection(transform: Transform): number {
+        const globeRadiusAtCenterLatitude = Math.cos(transform.center.lat * Math.PI / 180);
+        return globeRadiusAtCenterLatitude;
+    }
+
     private _updateAnimation(transform: Transform) {
         // Update globe transition animation
         const globeState = this._globeProjectionOverride;

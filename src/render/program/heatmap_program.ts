@@ -43,9 +43,9 @@ const heatmapTextureUniforms = (context: Context, locations: UniformLocations): 
     'u_opacity': new Uniform1f(context, locations.u_opacity)
 });
 
-const heatmapUniformValues = (tile: Tile, zoom: number, intensity: number): UniformValues<HeatmapUniformsType> => {
+const heatmapUniformValues = (tile: Tile, zoom: number, intensity: number, radiusCorrectionFactor: number): UniformValues<HeatmapUniformsType> => {
     const pixelRatio = pixelsToTileUnits(tile, 1, zoom);
-    const globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI;
+    const globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI * radiusCorrectionFactor;
     return {
         'u_extrude_scale': pixelsToTileUnits(tile, 1, zoom),
         'u_intensity': intensity,

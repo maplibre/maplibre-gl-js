@@ -81,7 +81,7 @@ void main(void) {
         }
 
 #ifdef GLOBE
-        vec2 angles = extrude * angle_scale / projectCircleRadius(circle_center.y);
+        vec2 angles = extrude * angle_scale;
         vec3 corner_vector = globeRotateVector(center_vector, angles);
         gl_Position = interpolateProjection(corner_position, corner_vector, ele);
 #else

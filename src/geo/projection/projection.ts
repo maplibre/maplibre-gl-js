@@ -144,6 +144,13 @@ export interface Projection {
 
     /**
      * @internal
+     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the transform's zoom level and latitude.
+     * Circle and kernel radius is multiplied by this value.
+     */
+    getCircleRadiusCorrection(transform: Transform): number;
+
+    /**
+     * @internal
      * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
      */
     translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];

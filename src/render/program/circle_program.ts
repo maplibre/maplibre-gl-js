@@ -32,7 +32,8 @@ const circleUniformValues = (
     painter: Painter,
     tile: Tile,
     layer: CircleStyleLayer,
-    translate: [number, number]
+    translate: [number, number],
+    radiusCorrectionFactor: number
 ): UniformValues<CircleUniformsType> => {
     const transform = painter.transform;
 
@@ -43,8 +44,9 @@ const circleUniformValues = (
         pitchWithMap = true;
         extrudeScale = [pixelRatio, pixelRatio];
 
-        // the whole calculation: (one pixel in tile units) / (earth circumference in tile units) * (2PI radians)
-        globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI;
+        // For globe rendering we need to know how much to extrude the circle as an *angle*.
+        // The calculation: (one pixel in tile units) / (earth circumference in tile units) * (2PI radians) * radiusCorrectionFactor
+        globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI * radiusCorrectionFactor;
     } else {
         pitchWithMap = false;
         extrudeScale = transform.pixelsToGLUnits;

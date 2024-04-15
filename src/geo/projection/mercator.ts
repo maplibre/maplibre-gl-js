@@ -131,6 +131,10 @@ export class MercatorProjection implements Projection {
         return 1.0;
     }
 
+    getCircleRadiusCorrection(_: Transform): number {
+        return 1.0;
+    }
+
     translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
