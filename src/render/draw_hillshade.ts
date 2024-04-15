@@ -3,7 +3,6 @@ import {StencilMode} from '../gl/stencil_mode';
 import {DepthMode} from '../gl/depth_mode';
 import {CullFaceMode} from '../gl/cull_face_mode';
 import {ColorMode} from '../gl/color_mode';
-import {Tile} from '../source/tile';
 import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
@@ -26,12 +25,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
 
     if (painter.renderPass === 'offscreen') {
         // Prepare tiles
-        for (const coord of tileIDs) {
-            const tile = sourceCache.getTile(coord);
-            if (typeof tile.needsHillshadePrepare !== 'undefined' && tile.needsHillshadePrepare) {
-                prepareHillshade(painter, tile, layer, depthMode, StencilMode.disabled, colorMode);
-            }
-        }
+        prepareHillshade(painter, sourceCache, tileIDs, layer, depthMode, StencilMode.disabled, colorMode);
         context.viewport.set([0, 0, painter.width, painter.height]);
     } else if (painter.renderPass === 'translucent') {
         // Globe (or any projection with subdivision) needs two-pass rendering to avoid artifacts when rendering texture tiles.
@@ -90,15 +84,28 @@ function renderHillshade(
 // directions for each pixel, and saves those values to a framebuffer texture in the r and g channels.
 function prepareHillshade(
     painter: Painter,
-    tile: Tile,
+    sourceCache: SourceCache,
+    tileIDs: Array<OverscaledTileID>,
     layer: HillshadeStyleLayer,
     depthMode: Readonly<DepthMode>,
     stencilMode: Readonly<StencilMode>,
     colorMode: Readonly<ColorMode>) {
+
     const context = painter.context;
     const gl = context.gl;
-    const dem = tile.dem;
-    if (dem && dem.data) {
+
+    for (const coord of tileIDs) {
+        const tile = sourceCache.getTile(coord);
+        const dem = tile.dem;
+
+        if (!dem || !dem.data) {
+            continue;
+        }
+
+        if (!tile.needsHillshadePrepare) {
+            continue;
+        }
+
         const tileSize = dem.dim;
         const textureStride = dem.stride;
 

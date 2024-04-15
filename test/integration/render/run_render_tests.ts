@@ -881,7 +881,7 @@ async function executeRenderTests() {
     };
 
     if (process.env.UPDATE) {
-        if (testStats.failed.length > 0) {
+        if (testStats.errored.length > 0) {
             console.log(`Updated ${testStats.failed.length}/${testStats.total} tests, ${testStats.errored.length} errored.`);
         } else {
             console.log(`Updated ${testStats.total} tests.`);

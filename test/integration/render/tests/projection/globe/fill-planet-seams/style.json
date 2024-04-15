@@ -1,0 +1,44 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that single-pixel seams are not visible. These seams were caused by a mismatch between stencil mask and fill layer subdivision granularity.",
+      "projection": "globe",
+      "width": 64,
+      "height": 1024
+    }
+  },
+  "center": [
+    -150.52,
+    61.00
+  ],
+  "pitch": 60.0,
+  "bearing": 180.0,
+  "zoom": 7,
+  "sources": {
+    "vector_tiles": {
+      "type": "vector",
+      "tiles": [
+        "local://tiles/ocean-only/{z}-{x}-{y}.mvt"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "ocean",
+      "type": "fill",
+      "source": "vector_tiles",
+      "source-layer": "water",
+      "paint": {
+        "fill-color": "blue"
+      }
+    }
+  ]
+}
