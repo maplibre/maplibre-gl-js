@@ -401,7 +401,7 @@ export class Transform {
                 fullyVisible = intersectResult === 2;
             }
 
-            const refPoint = options.terrain ? cameraPoint : centerPoint;
+            const refPoint = /*options.terrain ? cameraPoint : centerPoint;*/ centerPoint;
             const distanceX = it.aabb.distanceX(refPoint);
             const distanceY = it.aabb.distanceY(refPoint);
             const longestDim = Math.max(Math.abs(distanceX), Math.abs(distanceY));
