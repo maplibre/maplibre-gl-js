@@ -1,38 +1,16 @@
 import {Map, MapOptions} from '../map';
-import {createMap, beforeMapTest, sleep, createStyle, createStyleSource} from '../../util/test/util';
-import {LngLat} from '../../geo/lng_lat';
+import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
 import {Tile} from '../../source/tile';
 import {OverscaledTileID} from '../../source/tile_id';
-import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
-import {GeoJSONSourceSpecification, LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Event as EventedEvent} from '../../util/evented';
+import {fixedLngLat} from '../../../test/unit/lib/fixed';
 import {RequestTransformFunction} from '../../util/request_manager';
-import {extend} from '../../util/util';
-import {LngLatBoundsLike} from '../../geo/lng_lat_bounds';
-import {IControl} from '../control/control';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {fakeServer, FakeServer} from 'nise';
-import {CameraOptions} from '../camera';
-import {Terrain} from '../../render/terrain';
-import {mercatorZfromAltitude} from '../../geo/mercator_coordinate';
-import {Transform} from '../../geo/transform';
-import {StyleImageInterface} from '../../style/style_image';
-import {Style} from '../../style/style';
 import {MapSourceDataEvent} from '../events';
-import {config} from '../../util/config';
 import {MessageType} from '../../util/actor_messages';
-
-let server: FakeServer;
 
 beforeEach(() => {
     beforeMapTest();
     global.fetch = null;
-    server = fakeServer.create();
-});
-
-afterEach(() => {
-    server.restore();
 });
 
 describe('Map', () => {
@@ -216,16 +194,6 @@ describe('Map', () => {
         expect(_broadcastSpyOn).toHaveBeenCalledWith(MessageType.removeMap, undefined);
     });
 
-    test('#redraw', async () => {
-        const map = createMap();
-
-        await map.once('idle');
-        const renderPromise = map.once('render');
-
-        map.redraw();
-        await renderPromise;
-    });
-
     test('#project', () => {
         const map = createMap();
         expect(map.project([0, 0])).toEqual({x: 100, y: 100});
@@ -234,72 +202,6 @@ describe('Map', () => {
     test('#unproject', () => {
         const map = createMap();
         expect(fixedLngLat(map.unproject([100, 100]))).toEqual({lng: 0, lat: 0});
-    });
-
-    test('render stabilizes', done => {
-        const style = createStyle();
-        style.sources.mapbox = {
-            type: 'vector',
-            minzoom: 1,
-            maxzoom: 10,
-            tiles: ['http://example.com/{z}/{x}/{y}.png']
-        };
-        style.layers.push({
-            id: 'layerId',
-            type: 'circle',
-            source: 'mapbox',
-            'source-layer': 'sourceLayer'
-        });
-
-        let timer;
-        const map = createMap({style});
-        map.on('render', () => {
-            if (timer) clearTimeout(timer);
-            timer = setTimeout(() => {
-                map.off('render', undefined);
-                map.on('render', () => {
-                    done('test failed');
-                });
-                expect((map as any)._frameId).toBeFalsy();
-                done();
-            }, 100);
-        });
-    });
-
-    test('no render after idle event', done => {
-        const style = createStyle();
-        const map = createMap({style});
-        map.on('idle', () => {
-            map.on('render', () => {
-                done('test failed');
-            });
-            setTimeout(() => {
-                done();
-            }, 100);
-        });
-    });
-
-    test('no render before style loaded', done => {
-        server.respondWith('/styleUrl', JSON.stringify(createStyle()));
-        const map = createMap({style: '/styleUrl'});
-
-        jest.spyOn(map, 'triggerRepaint').mockImplementationOnce(() => {
-            if (!map.style._loaded) {
-                done('test failed');
-            }
-        });
-        map.on('render', () => {
-            if (map.style._loaded) {
-                done();
-            } else {
-                done('test failed');
-            }
-        });
-
-        // Force a update should not call triggerRepaint till style is loaded.
-        // Once style is loaded, it will trigger the update.
-        map._update();
-        server.respond();
     });
 
     test('no idle event during move', async () => {

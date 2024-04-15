@@ -1,6 +1,6 @@
 import {Map, MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
-import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
+import {Event as EventedEvent} from '../../util/evented';
 import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
 import {extend} from '../../util/util';
 import {fakeServer, FakeServer} from 'nise';

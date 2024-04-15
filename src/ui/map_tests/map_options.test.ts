@@ -1,19 +1,11 @@
 import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {fakeServer, FakeServer} from 'nise';
 import {Style} from '../../style/style';
 import {config} from '../../util/config';
-
-let server: FakeServer;
 
 beforeEach(() => {
     beforeMapTest();
     global.fetch = null;
-    server = fakeServer.create();
-});
-
-afterEach(() => {
-    server.restore();
 });
 
 describe('#mapOptions', () => {
