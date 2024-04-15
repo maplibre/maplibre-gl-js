@@ -2,7 +2,6 @@ import {Map, MapOptions} from '../map';
 import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
 import {Tile} from '../../source/tile';
 import {OverscaledTileID} from '../../source/tile_id';
-import {Event as EventedEvent} from '../../util/evented';
 import {fixedLngLat} from '../../../test/unit/lib/fixed';
 import {RequestTransformFunction} from '../../util/request_manager';
 import {MapSourceDataEvent} from '../events';
@@ -202,23 +201,6 @@ describe('Map', () => {
     test('#unproject', () => {
         const map = createMap();
         expect(fixedLngLat(map.unproject([100, 100]))).toEqual({lng: 0, lat: 0});
-    });
-
-    test('no idle event during move', async () => {
-        const style = createStyle();
-        const map = createMap({style, fadeDuration: 0});
-        await map.once('idle');
-        map.zoomTo(0.5, {duration: 100});
-        expect(map.isMoving()).toBeTruthy();
-        await map.once('idle');
-        expect(map.isMoving()).toBeFalsy();
-    });
-
-    test('fires sourcedataabort event on dataabort event', async () => {
-        const map = createMap();
-        const sourcePromise = map.once('sourcedataabort');
-        map.fire(new EventedEvent('dataabort'));
-        await sourcePromise;
     });
 
     describe('cooperativeGestures option', () => {

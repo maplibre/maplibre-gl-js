@@ -4,7 +4,7 @@ import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
 import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
 import {MapLayerEventType, MapLibreEvent} from '../events';
 import {Map, MapOptions} from '../map';
-import {ErrorEvent} from '../../util/evented';
+import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -719,6 +719,23 @@ describe('map events', () => {
             map.on('load', pass);
             map.setStyle(createStyle());
         }, 1);
+    });
+
+    test('no idle event during move', async () => {
+        const style = createStyle();
+        const map = createMap({style, fadeDuration: 0});
+        await map.once('idle');
+        map.zoomTo(0.5, {duration: 100});
+        expect(map.isMoving()).toBeTruthy();
+        await map.once('idle');
+        expect(map.isMoving()).toBeFalsy();
+    });
+
+    test('fires sourcedataabort event on dataabort event', async () => {
+        const map = createMap();
+        const sourcePromise = map.once('sourcedataabort');
+        map.fire(new EventedEvent('dataabort'));
+        await sourcePromise;
     });
 
     describe('error event', () => {
