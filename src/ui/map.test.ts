@@ -1,12 +1,12 @@
 import {Map, MapOptions} from './map';
-import {createMap, beforeMapTest, sleep, createStyle, createStyleSource} from '../util/test/util';
+import {createMap, beforeMapTest, sleep} from '../util/test/util';
 import {LngLat} from '../geo/lng_lat';
 import {Tile} from '../source/tile';
 import {OverscaledTileID} from '../source/tile_id';
 import {Event as EventedEvent, ErrorEvent} from '../util/evented';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {GeoJSONSourceSpecification, LayerSpecification, SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {RequestTransformFunction} from '../util/request_manager';
 import {extend} from '../util/util';
 import {LngLatBoundsLike} from '../geo/lng_lat_bounds';
@@ -22,6 +22,16 @@ import {Style} from '../style/style';
 import {MapSourceDataEvent} from './events';
 import {config} from '../util/config';
 import {MessageType} from '../util/actor_messages';
+
+function createStyleSource() {
+    return {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: []
+        }
+    } as SourceSpecification;
+}
 
 let server: FakeServer;
 
@@ -540,6 +550,73 @@ describe('Map', () => {
             const transformRequest = (() => {}) as any as RequestTransformFunction;
             map.setTransformRequest(transformRequest);
             map.setTransformRequest(transformRequest);
+        });
+    });
+
+    describe('#is_Loaded', () => {
+
+        test('Map#isSourceLoaded', async () => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            await map.once('load');
+            const promise = new Promise<void>((resolve) => {
+                map.on('data', (e) => {
+                    if (e.dataType === 'source' && e.sourceDataType === 'idle') {
+                        expect(map.isSourceLoaded('geojson')).toBe(true);
+                        resolve();
+                    }
+                });
+            });
+            map.addSource('geojson', createStyleSource());
+            expect(map.isSourceLoaded('geojson')).toBe(false);
+            await promise;
+        });
+
+        test('Map#isSourceLoaded (equivalent to event.isSourceLoaded)', async () => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            await map.once('load');
+            const promise = new Promise<void>((resolve) => {
+                map.on('data', (e: MapSourceDataEvent) => {
+                    if (e.dataType === 'source' && 'source' in e) {
+                        expect(map.isSourceLoaded('geojson')).toBe(e.isSourceLoaded);
+                        if (e.sourceDataType === 'idle') {
+                            resolve();
+                        }
+                    }
+                });
+            });
+            map.addSource('geojson', createStyleSource());
+            expect(map.isSourceLoaded('geojson')).toBe(false);
+            await promise;
+        });
+
+        test('Map#isStyleLoaded', done => {
+            const style = createStyle();
+            const map = createMap({style});
+
+            expect(map.isStyleLoaded()).toBe(false);
+            map.on('load', () => {
+                expect(map.isStyleLoaded()).toBe(true);
+                done();
+            });
+        });
+
+        test('Map#areTilesLoaded', done => {
+            const style = createStyle();
+            const map = createMap({style});
+            expect(map.areTilesLoaded()).toBe(true);
+            map.on('load', () => {
+                const fakeTileId = new OverscaledTileID(0, 0, 0, 0, 0);
+                map.addSource('geojson', createStyleSource());
+                map.style.sourceCaches.geojson._tiles[fakeTileId.key] = new Tile(fakeTileId, undefined);
+                expect(map.areTilesLoaded()).toBe(false);
+                map.style.sourceCaches.geojson._tiles[fakeTileId.key].state = 'loaded';
+                expect(map.areTilesLoaded()).toBe(true);
+                done();
+            });
         });
     });
 
@@ -2872,3 +2949,15 @@ describe('Map', () => {
     });
 
 });
+
+function createStyle() {
+    return {
+        version: 8,
+        center: [-73.9749, 40.7736],
+        zoom: 12.5,
+        bearing: 29,
+        pitch: 50,
+        sources: {},
+        layers: []
+    } as StyleSpecification;
+}
