@@ -9,6 +9,8 @@ import {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
 import {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {Terrain} from '../../render/terrain';
+import {LngLat} from '../lng_lat';
 
 export type ProjectionGPUContext = {
     context: Context;
@@ -87,6 +89,13 @@ export interface Projection {
 
     /**
      * @internal
+     * When true, any transforms resulting from user interactions with the map (panning, zooming, etc.)
+     * will assume the underlying map is a spherical surface, as opposed to a plane.
+     */
+    get useGlobeControls(): boolean;
+
+    /**
+     * @internal
      * True when an animation handled by the projection is in progress,
      * requiring MapLibre to keep rendering new frames.
      */
@@ -129,16 +138,6 @@ export interface Projection {
 
     /**
      * @internal
-     * Projects a point in tile coordinates. Used in symbol rendering.
-     */
-    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): {
-        point: Point;
-        signedDistanceFromCamera: number;
-        isOccluded: boolean;
-    };
-
-    /**
-     * @internal
      */
     getPixelScale(transform: Transform): number;
 
@@ -172,4 +171,28 @@ export interface Projection {
      * @returns A new vector with the transformed light direction.
      */
     transformLightDirection(transform: Transform, dir: vec3): vec3;
+
+    //
+    // Projection and unprojection of points, LatLng coordinates, tile coordinates, etc.
+    //
+
+    /**
+     * @internal
+     * Projects a point in tile coordinates. Used in symbol rendering.
+     */
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): {
+        point: Point;
+        signedDistanceFromCamera: number;
+        isOccluded: boolean;
+    };
+
+    /**
+     * @internal
+     * Returns a {@link LngLat} representing geographical coordinates that correspond
+     * to the specified pixel coordinates.
+     * @param p - Screen point in pixels to unproject.
+     * @param transform - The map's transform.
+     * @param terrain - Optional terrain.
+     */
+    unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat;
 }

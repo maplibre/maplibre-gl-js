@@ -14,6 +14,8 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {Terrain} from '../../render/terrain';
+import {LngLat} from '../lng_lat';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -64,20 +66,24 @@ export class MercatorProjection implements Projection {
         return SubdivisionGranularitySetting.noSubdivision;
     }
 
+    get useGlobeControls(): boolean {
+        return false;
+    }
+
     public isRenderingDirty(): boolean {
         // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
         return false;
     }
 
-    destroy(): void {
+    public destroy(): void {
         // Do nothing.
     }
 
-    updateGPUdependent(_: ProjectionGPUContext): void {
+    public updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }
 
-    updateProjection(t: Transform): void {
+    public updateProjection(t: Transform): void {
         const cameraPos: vec4 = [0, 0, -1, 1];
         vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
         this._cameraPosition = [
@@ -87,7 +93,7 @@ export class MercatorProjection implements Projection {
         ];
     }
 
-    getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
+    public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
         let tileOffsetSize: [number, number, number, number];
 
         if (canonicalTileCoords) {
@@ -114,32 +120,23 @@ export class MercatorProjection implements Projection {
         return data;
     }
 
-    isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
+    public isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
         return false;
     }
 
-    projectTileCoordinates(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID, _getElevation: (x: number, y: number) => number): {
-        point: Point;
-        signedDistanceFromCamera: number;
-        isOccluded: boolean;
-    } {
-        // This function should only be used when useSpecialProjectionForSymbols is set to true.
-        throw new Error('Not implemented.');
-    }
-
-    getPixelScale(_: Transform): number {
+    public getPixelScale(_: Transform): number {
         return 1.0;
     }
 
-    getCircleRadiusCorrection(_: Transform): number {
+    public getCircleRadiusCorrection(_: Transform): number {
         return 1.0;
     }
 
-    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
-    getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
+    public getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
         if (this._cachedMesh) {
             return this._cachedMesh;
         }
@@ -163,8 +160,21 @@ export class MercatorProjection implements Projection {
         return this._cachedMesh;
     }
 
-    transformLightDirection(_: Transform, dir: vec3): vec3 {
+    public transformLightDirection(_: Transform, dir: vec3): vec3 {
         return vec3.clone(dir);
+    }
+
+    public projectTileCoordinates(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID, _getElevation: (x: number, y: number) => number): {
+        point: Point;
+        signedDistanceFromCamera: number;
+        isOccluded: boolean;
+    } {
+        // This function should only be used when useSpecialProjectionForSymbols is set to true.
+        throw new Error('Not implemented.');
+    }
+
+    public unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat {
+        return transform.pointLocation(Point.convert(p), terrain);
     }
 }
 

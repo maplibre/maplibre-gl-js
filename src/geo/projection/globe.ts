@@ -19,7 +19,8 @@ import {Projection, ProjectionGPUContext} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
-import {earthRadius} from '../lng_lat';
+import {LngLat, earthRadius} from '../lng_lat';
+import {Terrain} from '../../render/terrain';
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.
@@ -75,6 +76,7 @@ export class GlobeProjection implements Projection {
 
     private _globeProjMatrix: mat4 = mat4.create();
     private _globeProjMatrixNoCorrection: mat4 = mat4.create();
+    private _globeProjMatrixNoCorrectionInverted: mat4 = mat4.create();
 
     private _cameraPosition: vec3 = [0, 0, 0];
 
@@ -128,6 +130,10 @@ export class GlobeProjection implements Projection {
 
     get subdivisionGranularity(): SubdivisionGranularitySetting {
         return granularitySettingsGlobe;
+    }
+
+    get useGlobeControls(): boolean {
+        return this._globeness > 0.5;
     }
 
     /**
@@ -217,11 +223,10 @@ export class GlobeProjection implements Projection {
         mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrix = globeMatrix;
 
-        const invProj = mat4.create();
-        mat4.invert(invProj, globeMatrix);
+        mat4.invert(this._globeProjMatrixNoCorrectionInverted, globeMatrix);
 
         const cameraPos: vec4 = [0, 0, -1, 1];
-        vec4.transformMat4(cameraPos, cameraPos, invProj);
+        vec4.transformMat4(cameraPos, cameraPos, this._globeProjMatrixNoCorrectionInverted);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
@@ -324,6 +329,9 @@ export class GlobeProjection implements Projection {
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
+    /**
+     * Given a 2D point in the mercator base tile, returns its 3D coordinates on the surface of a unit sphere.
+     */
     private _projectToSphere(mercatorX: number, mercatorY: number): vec3 {
         const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
         const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
@@ -334,6 +342,25 @@ export class GlobeProjection implements Projection {
             Math.sin(sphericalY),
             Math.cos(sphericalX) * len
         ];
+    }
+
+    /**
+     * Given a 3D point on the surface of a unit sphere, returns its angular coordinates in degrees.
+     */
+    private _sphereSurfacePointToCoordinates(surface: vec3): LngLat {
+        const latRadians = Math.asin(surface[1]);
+        const latDegrees = latRadians / Math.PI * 180.0;
+        const lengthXZ = Math.sqrt(surface[0] * surface[0] + surface[2] * surface[2]);
+        if (lengthXZ > 1e-6) {
+            const projX = surface[0] / lengthXZ;
+            const projZ = surface[2] / lengthXZ;
+            const acosZ = Math.acos(projZ);
+            const lngRadians = (projX > 0) ? acosZ : -acosZ;
+            const lngDegrees = lngRadians / Math.PI * 180.0;
+            return new LngLat(lngDegrees, latDegrees);
+        } else {
+            return new LngLat(0.0, latDegrees);
+        }
     }
 
     private _projectToSphereTile(inTileX: number, inTileY: number, unwrappedTileID: UnwrappedTileID): vec3 {
@@ -351,26 +378,6 @@ export class GlobeProjection implements Projection {
         // dot(position on sphere, occlusion plane equation)
         const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
         return dotResult < 0.0;
-    }
-
-    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number) {
-        const spherePos = this._projectToSphereTile(x, y, unwrappedTileID);
-        const elevation = getElevation ? getElevation(x, y) : 0.0;
-        const vectorMultiplier = 1.0 + elevation / earthRadius;
-        const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
-        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
-
-        // Also check whether the point projects to the backfacing side of the sphere.
-        const plane = this._cachedClippingPlane;
-        // dot(position on sphere, occlusion plane equation)
-        const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
-        const isOccluded = dotResult < 0.0;
-
-        return {
-            point: new Point(pos[0] / pos[3], pos[1] / pos[3]),
-            signedDistanceFromCamera: pos[3],
-            isOccluded
-        };
     }
 
     public transformLightDirection(transform: Transform, dir: vec3): vec3 {
@@ -542,5 +549,109 @@ export class GlobeProjection implements Projection {
         );
 
         return mesh;
+    }
+
+    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number) {
+        const spherePos = this._projectToSphereTile(x, y, unwrappedTileID);
+        const elevation = getElevation ? getElevation(x, y) : 0.0;
+        const vectorMultiplier = 1.0 + elevation / earthRadius;
+        const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
+        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
+
+        // Also check whether the point projects to the backfacing side of the sphere.
+        const plane = this._cachedClippingPlane;
+        // dot(position on sphere, occlusion plane equation)
+        const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
+        const isOccluded = dotResult < 0.0;
+
+        return {
+            point: new Point(pos[0] / pos[3], pos[1] / pos[3]),
+            signedDistanceFromCamera: pos[3],
+            isOccluded
+        };
+    }
+
+    public unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat {
+        if (this.useGlobeControls) {
+            const pos: vec4 = [
+                (p.x / transform.width) * 2.0 - 1.0,
+                (p.y / transform.height) * 2.0 - 1.0,
+                1.0,
+                0.0
+            ];
+            vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrectionInverted);
+            pos[0] /= pos[3];
+            pos[1] /= pos[3];
+            pos[2] /= pos[3];
+            const ray: vec3 = [
+                pos[0] - this._cameraPosition[0],
+                pos[1] - this._cameraPosition[1],
+                pos[2] - this._cameraPosition[2],
+            ];
+            const rayNormalized: vec3 = vec3.create();
+            vec3.normalize(rayNormalized, ray);
+
+            // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
+            // As always, we assume that the planet is centered at 0,0,0 and has radius 1.
+            // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
+
+            const originDotOrigin = vec3.dot(this._cameraPosition, this._cameraPosition);
+            const originDotDirection = vec3.dot(this._cameraPosition, rayNormalized);
+            const directionDotDirection = vec3.dot(rayNormalized, rayNormalized);
+            const planetRadiusSquared = 1.0;
+
+            // Ray-sphere intersection involves a quadratic equation ax^2 +bx + c = 0
+            const a = directionDotDirection;
+            const b = 2 * originDotDirection;
+            const c = originDotOrigin - planetRadiusSquared;
+
+            const d = b * b - 4.0 * a * c;
+
+            if (d >= 0.0) {
+                const sqrtD = Math.sqrt(d);
+                const t0 = (-b + sqrtD) / (2.0 * a);
+                const t1 = (-b - sqrtD) / (2.0 * a);
+                // Assume the ray origin is never inside the sphere
+                const tMin = Math.min(t0, t1);
+                const intersection = vec3.create();
+                vec3.add(intersection, this._cameraPosition, [
+                    rayNormalized[0] * tMin,
+                    rayNormalized[1] * tMin,
+                    rayNormalized[2] * tMin
+                ]);
+                return this._sphereSurfacePointToCoordinates(intersection);
+            } else {
+                // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
+                // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
+
+                // dot(vec4(p,1), plane) == 0
+                // dot(vec4(o+td,1), plane) == 0
+                // (o.x+t*d.x)*plane.x + (o.y+t*d.y)*plane.y + (o.z+t*d.z)*plane.z + plane.w == 0
+                // t*d.x*plane.x + t*d.y*plane.y + t*d.z*plane.z + dot((o,1), plane) == 0
+                // t*dot(d, plane.xyz) + dot((o,1), plane) == 0
+                // t*dot(d, plane.xyz) == -dot((o,1), plane)
+                // t == -dot((o,1), plane) / dot(d, plane.xyz)
+                const originDotPlaneXyz = this._cachedClippingPlane[0] * this._cameraPosition[0] + this._cachedClippingPlane[1] * this._cameraPosition[1] + this._cachedClippingPlane[2] * this._cameraPosition[2];
+                const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayNormalized[0] + this._cachedClippingPlane[1] * rayNormalized[1] + this._cachedClippingPlane[2] * rayNormalized[2];
+                const tPlane = -(originDotPlaneXyz + this._cachedClippingPlane[3]) / directionDotPlaneXyz;
+                const planeIntersection = vec3.create();
+                vec3.add(planeIntersection, this._cameraPosition, [
+                    rayNormalized[0] * tPlane,
+                    rayNormalized[1] * tPlane,
+                    rayNormalized[2] * tPlane
+                ]);
+                const closestOnHorizon = vec3.create();
+                vec3.normalize(closestOnHorizon, planeIntersection);
+                return this._sphereSurfacePointToCoordinates(closestOnHorizon);
+            }
+
+            // get ray from camera to point
+            // ray-sphere intersection
+            // apply sphere rotation
+            // return angular coordinates
+            // terrain???
+        } else {
+            return this._mercator.unprojectScreenPoint(p, transform, terrain);
+        }
     }
 }
