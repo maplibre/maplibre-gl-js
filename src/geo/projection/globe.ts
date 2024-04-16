@@ -644,7 +644,29 @@ export class GlobeProjection implements Projection {
                 ]);
                 const closestOnHorizon = vec3.create();
                 vec3.normalize(closestOnHorizon, planeIntersection);
-                return this._sphereSurfacePointToCoordinates(closestOnHorizon);
+
+                // Now, since we want to somehow map every pixel on screen to a different coordinate,
+                // add the ray from camera to horizon to the computed point,
+                // multiplied by the plane intersection's distance from the planet surface.
+
+                const toHorizon = vec3.create();
+                vec3.sub(toHorizon, closestOnHorizon, this._cameraPosition);
+                const toHorizonNormalized = vec3.create();
+                vec3.normalize(toHorizonNormalized, toHorizon);
+
+                const planeIntersectionAltitude = Math.max(vec3.length(planeIntersection) - 1.0, 0.0);
+
+                const offsetPoint = vec3.create();
+                vec3.add(offsetPoint, closestOnHorizon, [
+                    toHorizonNormalized[0] * planeIntersectionAltitude,
+                    toHorizonNormalized[1] * planeIntersectionAltitude,
+                    toHorizonNormalized[2] * planeIntersectionAltitude
+                ]);
+
+                const finalPoint = vec3.create();
+                vec3.normalize(finalPoint, offsetPoint);
+
+                return this._sphereSurfacePointToCoordinates(finalPoint);
             }
 
             // get ray from camera to point
