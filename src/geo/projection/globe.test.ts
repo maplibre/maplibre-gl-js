@@ -3,6 +3,8 @@ import {GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
 import {Transform} from '../transform';
 import {expectToBeCloseToArray} from './mercator.test';
+import Point from '@mapbox/point-geometry';
+import {LngLat} from '../lng_lat';
 
 describe('GlobeProjection', () => {
     describe('getProjectionData', () => {
@@ -35,7 +37,7 @@ describe('GlobeProjection', () => {
         describe('general plane properties', () => {
             const mat = mat4.create();
             const transform = createMockTransform({
-                pitchDegrees: 0,
+                pitch: 0,
             });
             globe.updateProjection(transform);
             const projectionData = globe.getProjectionData({
@@ -78,6 +80,75 @@ describe('GlobeProjection', () => {
             });
         });
     });
+
+    describe('projection', () => {
+        test('mercator coordinate to sphere point', () => {
+            const precisionDigits = 10;
+            const globe = new GlobeProjection();
+            let projected = (globe as any)._projectToSphere(0.5, 0.5);
+            expectToBeCloseToArray(projected, [0, 0, 1], precisionDigits);
+            projected = (globe as any)._projectToSphere(0, 0.5);
+            expectToBeCloseToArray(projected, [0, 0, -1], precisionDigits);
+            projected = (globe as any)._projectToSphere(0.75, 0.5);
+            expectToBeCloseToArray(projected, [1, 0, 0], precisionDigits);
+            projected = (globe as any)._projectToSphere(0.5, 0);
+            expectToBeCloseToArray(projected, [0, 0.99627207622075, 0.08626673833405434], precisionDigits);
+        });
+
+        test('sphere point to coordinate', () => {
+            const precisionDigits = 10;
+            const globe = new GlobeProjection();
+            let unprojected = (globe as any)._sphereSurfacePointToCoordinates([0, 0, 1]) as LngLat;
+            expect(unprojected.lng).toBeCloseTo(0, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(0, precisionDigits);
+            unprojected = (globe as any)._sphereSurfacePointToCoordinates([0, 1, 0]) as LngLat;
+            expect(unprojected.lng).toBeCloseTo(0, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(90, precisionDigits);
+            unprojected = (globe as any)._sphereSurfacePointToCoordinates([1, 0, 0]) as LngLat;
+            expect(unprojected.lng).toBeCloseTo(90, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(0, precisionDigits);
+        });
+
+        const screenCenter = new Point(640 / 2 - 0.5, 480 / 2 - 0.5); // We need the exact screen center
+        const screenTopEdgeCenter = new Point(640 / 2 - 0.5, 0.5);
+
+        test('unproject screen center', () => {
+            const precisionDigits = 2;
+            const globe = new GlobeProjection();
+            const transform = createMockTransform({});
+            globe.updateProjection(transform);
+            let unprojected = globe.unprojectScreenPoint(screenCenter, transform);
+            expect(unprojected.lng).toBeCloseTo(transform.center.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(transform.center.lat, precisionDigits);
+
+            transform.center.lng = 90.0;
+            globe.updateProjection(transform);
+            unprojected = globe.unprojectScreenPoint(screenCenter, transform);
+            expect(unprojected.lng).toBeCloseTo(transform.center.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(transform.center.lat, precisionDigits);
+
+            transform.center.lng = 0.0;
+            transform.center.lat = 60.0;
+            globe.updateProjection(transform);
+            unprojected = globe.unprojectScreenPoint(screenCenter, transform);
+            expect(unprojected.lng).toBeCloseTo(transform.center.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(transform.center.lat, precisionDigits);
+        });
+
+        test('unproject outside of sphere', () => {
+            const precisionDigits = 2;
+            const globe = new GlobeProjection();
+            // Try unprojection a point somewhere above the western horizon
+            const transform = createMockTransform({
+                pitch: 60,
+                bearing: -90,
+            });
+            globe.updateProjection(transform);
+            const unprojected = globe.unprojectScreenPoint(screenTopEdgeCenter, transform);
+            expect(unprojected.lng).toBeLessThan(-38.0);
+            expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
+        });
+    });
 });
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
@@ -98,26 +169,28 @@ function planeDistance(point: Array<number>, plane: Array<number>) {
 
 function createMockTransform(object: {
     center?: {
-        latDegrees: number;
-        lngDegrees: number;
+        lat: number;
+        lng: number;
     };
-    pitchDegrees?: number;
-    angleDegrees?: number;
+    pitch?: number;
+    bearing?: number;
+    width?: number;
+    height?: number;
 }): Transform {
-    const pitchDegrees = object.pitchDegrees ? object.pitchDegrees : 0;
+    const pitchDegrees = (object && object.pitch) ? object.pitch : 0;
     return {
         center: {
-            lat: object.center ? (object.center.latDegrees / 180.0 * Math.PI) : 0,
-            lng: object.center ? (object.center.lngDegrees / 180.0 * Math.PI) : 0,
+            lat: (object && object.center) ? object.center.lat : 0,
+            lng: (object && object.center) ? object.center.lng : 0,
         },
         worldSize: 10.5 * 512,
         _fov: Math.PI / 4.0,
-        width: 640,
-        height: 480,
+        width: (object && object.width) ? object.width : 640,
+        height: (object && object.height) ? object.height : 480,
         cameraToCenterDistance: 759,
         _pitch: pitchDegrees / 180.0 * Math.PI, // in radians
         pitch: pitchDegrees, // in degrees
-        angle: object.angleDegrees ? (object.angleDegrees / 180.0 * Math.PI) : 0,
+        angle: (object && object.bearing) ? (-object.bearing / 180.0 * Math.PI) : 0,
         zoom: 0,
     } as Transform;
 }

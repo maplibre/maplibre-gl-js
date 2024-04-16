@@ -574,10 +574,10 @@ export class GlobeProjection implements Projection {
     public unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat {
         if (this.useGlobeControls) {
             const pos: vec4 = [
-                (p.x / transform.width) * 2.0 - 1.0,
-                (p.y / transform.height) * 2.0 - 1.0,
+                ((p.x + 0.5) / transform.width) * 2.0 - 1.0,
+                (((p.y + 0.5) / transform.height) * 2.0 - 1.0) * -1.0,
                 1.0,
-                0.0
+                1.0
             ];
             vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrectionInverted);
             pos[0] /= pos[3];
@@ -619,7 +619,9 @@ export class GlobeProjection implements Projection {
                     rayNormalized[1] * tMin,
                     rayNormalized[2] * tMin
                 ]);
-                return this._sphereSurfacePointToCoordinates(intersection);
+                const sphereSurface = vec3.create();
+                vec3.normalize(sphereSurface, intersection);
+                return this._sphereSurfacePointToCoordinates(sphereSurface);
             } else {
                 // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
                 // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
