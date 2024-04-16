@@ -1818,7 +1818,7 @@ describe('Map', () => {
             });
         });
 
-        test('#3373 paint property should be synchronized with an update', done => {
+        test('#3373 paint property should be synchronized with an update', async() => {
             const colors = ['red', 'blue'];
             const map = createMap({
                 style: {
@@ -1834,15 +1834,13 @@ describe('Map', () => {
                 }
             });
 
-            map.on('style.load', () => {
-                expect(map.getPaintProperty('background', 'background-color')).toBe(colors[0]);
-                expect(map.getStyle().layers.filter(l => l.id === 'background')[0].paint['background-color']).toBe(colors[0]);
-                // update property
-                map.setPaintProperty('background', 'background-color', colors[1]);
-                expect(map.getPaintProperty('background', 'background-color')).toBe(colors[1]);
-                expect(map.getStyle().layers.filter(l => l.id === 'background')[0].paint['background-color']).toBe(colors[1]);
-                done();
-            });
+            await map.once('style.load');
+            expect(map.getPaintProperty('background', 'background-color')).toBe(colors[0]);
+            expect(map.getStyle().layers.filter(l => l.id === 'background')[0].paint['background-color']).toBe(colors[0]);
+            // update property
+            map.setPaintProperty('background', 'background-color', colors[1]);
+            expect(map.getPaintProperty('background', 'background-color')).toBe(colors[1]);
+            expect(map.getStyle().layers.filter(l => l.id === 'background')[0].paint['background-color']).toBe(colors[1]);
         });
 
         test('throw before loaded', () => {
