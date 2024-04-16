@@ -583,7 +583,7 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionArgs: 
     const translatedY = y + projectionArgs.translation[1];
     let projection;
     if (!projectionArgs.pitchWithMap && projectionArgs.projection.useSpecialProjectionForSymbols) {
-        projection = projectionArgs.projection.project(translatedX, translatedY, projectionArgs.unwrappedTileID, projectionArgs.getElevation);
+        projection = projectionArgs.projection.projectTileCoordinates(translatedX, translatedY, projectionArgs.unwrappedTileID, projectionArgs.getElevation);
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionArgs.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionArgs.height;
     } else {

@@ -313,7 +313,7 @@ export class CollisionIndex {
             mat4.invert(inverseLabelPlaneMatrix, projectionArgs.labelPlaneMatrix);
             screenSpacePath = projectedPath.map(p => {
                 const backProjected = projection.project(p, inverseLabelPlaneMatrix, projectionArgs.getElevation);
-                const projected = this.mapProjection.project(
+                const projected = this.mapProjection.projectTileCoordinates(
                     backProjected.point.x,
                     backProjected.point.y,
                     projectionArgs.unwrappedTileID,
@@ -433,7 +433,7 @@ export class CollisionIndex {
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
         let projected;
         if (this.mapProjection.useSpecialProjectionForSymbols) {
-            projected = this.mapProjection.project(x, y, unwrappedTileID, getElevation);
+            projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         } else {
             projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }
@@ -453,7 +453,7 @@ export class CollisionIndex {
         // We don't care about the actual projected point, just its W component.
         let projected;
         if (this.mapProjection.useSpecialProjectionForSymbols) {
-            projected = this.mapProjection.project(x, y, unwrappedTileID, getElevation);
+            projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         } else {
             projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }

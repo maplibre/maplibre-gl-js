@@ -118,7 +118,7 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
-    project(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID, _getElevation: (x: number, y: number) => number): {
+    projectTileCoordinates(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID, _getElevation: (x: number, y: number) => number): {
         point: Point;
         signedDistanceFromCamera: number;
         isOccluded: boolean;
