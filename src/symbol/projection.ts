@@ -454,6 +454,7 @@ function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint:
 type IndexToPointCache = { [lineIndex: number]: Point };
 
 /**
+ * @internal
  * We calculate label-plane projected points for line vertices as we place glyphs along the line
  * Since we will use the same vertices for potentially many glyphs, cache the results for this bucket
  * over the course of the render. Each vertex location also potentially has one offset equivalent
@@ -482,6 +483,7 @@ type ProjectionCache = {
 };
 
 /**
+ * @internal
  * Arguments necessary to project a vertex to the label plane
  */
 export type ProjectionArgs = {
