@@ -545,6 +545,11 @@ export class Transform {
         this.zoom = zoom;
     }
 
+    /**
+     * Set's the transform's center so that the given point on screen is at the given world coordinates.
+     * @param lnglat - Desired world coordinates of the point.
+     * @param point - The screen point that should lie at the given coordinates.
+     */
     setLocationAtPoint(lnglat: LngLat, point: Point) {
         const a = this.pointCoordinate(point);
         const b = this.pointCoordinate(this.centerPoint);
