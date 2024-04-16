@@ -342,7 +342,7 @@ const defaultMaxPitch = 60;
 // use this variable to check maxPitch for validity
 const maxPitchThreshold = 85;
 
-const defaultOptions = {
+const defaultOptions: Readonly<CompleteMapOptions> = {
     center: [0, 0],
     zoom: 0,
     bearing: 0,
@@ -389,7 +389,16 @@ const defaultOptions = {
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     style: '',
-} as CompleteMapOptions;
+    container: '',
+    logoPosition: 'bottom-left',
+    antialias: false,
+    maxBounds: undefined,
+    locale: null,
+    collectResourceTiming: false,
+    bounds: undefined,
+    fitBoundsOptions: undefined,
+    pixelRatio: undefined
+};
 
 /**
  * The `Map` object represents the map on your page. It exposes methods
@@ -471,7 +480,7 @@ export class Map extends Camera {
     _locale: typeof defaultLocale;
     _removed: boolean;
     _clickTolerance: number;
-    _overridePixelRatio: number | null;
+    _overridePixelRatio?: number;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
@@ -539,66 +548,66 @@ export class Map extends Camera {
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
-        options = extend({}, defaultOptions, options);
+        const resolvedOptions: CompleteMapOptions = {...defaultOptions, ...options};
 
-        if (options.minZoom != null && options.maxZoom != null && options.minZoom > options.maxZoom) {
+        if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
             throw new Error('maxZoom must be greater than or equal to minZoom');
         }
 
-        if (options.minPitch != null && options.maxPitch != null && options.minPitch > options.maxPitch) {
+        if (resolvedOptions.minPitch != null && resolvedOptions.maxPitch != null && resolvedOptions.minPitch > resolvedOptions.maxPitch) {
             throw new Error('maxPitch must be greater than or equal to minPitch');
         }
 
-        if (options.minPitch != null && options.minPitch < defaultMinPitch) {
+        if (resolvedOptions.minPitch != null && resolvedOptions.minPitch < defaultMinPitch) {
             throw new Error(`minPitch must be greater than or equal to ${defaultMinPitch}`);
         }
 
-        if (options.maxPitch != null && options.maxPitch > maxPitchThreshold) {
+        if (resolvedOptions.maxPitch != null && resolvedOptions.maxPitch > maxPitchThreshold) {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new Transform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
-        super(transform, {bearingSnap: options.bearingSnap});
+        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies);
+        super(transform, {bearingSnap: resolvedOptions.bearingSnap});
 
-        this._interactive = options.interactive;
-        this._maxTileCacheSize = options.maxTileCacheSize;
-        this._maxTileCacheZoomLevels = options.maxTileCacheZoomLevels;
-        this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
-        this._preserveDrawingBuffer = options.preserveDrawingBuffer;
-        this._antialias = options.antialias;
-        this._trackResize = options.trackResize;
-        this._bearingSnap = options.bearingSnap;
-        this._refreshExpiredTiles = options.refreshExpiredTiles;
-        this._fadeDuration = options.fadeDuration;
-        this._crossSourceCollisions = options.crossSourceCollisions;
+        this._interactive = resolvedOptions.interactive;
+        this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
+        this._maxTileCacheZoomLevels = resolvedOptions.maxTileCacheZoomLevels;
+        this._failIfMajorPerformanceCaveat = resolvedOptions.failIfMajorPerformanceCaveat;
+        this._preserveDrawingBuffer = resolvedOptions.preserveDrawingBuffer;
+        this._antialias = resolvedOptions.antialias;
+        this._trackResize = resolvedOptions.trackResize;
+        this._bearingSnap = resolvedOptions.bearingSnap;
+        this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles;
+        this._fadeDuration = resolvedOptions.fadeDuration;
+        this._crossSourceCollisions = resolvedOptions.crossSourceCollisions;
         this._crossFadingFactor = 1;
-        this._collectResourceTiming = options.collectResourceTiming;
+        this._collectResourceTiming = resolvedOptions.collectResourceTiming;
         this._renderTaskQueue = new TaskQueue();
         this._controls = [];
         this._mapId = uniqueId();
-        this._locale = extend({}, defaultLocale, options.locale);
-        this._clickTolerance = options.clickTolerance;
-        this._overridePixelRatio = options.pixelRatio;
-        this._maxCanvasSize = options.maxCanvasSize;
-        this.transformCameraUpdate = options.transformCameraUpdate;
+        this._locale = {...defaultLocale, ...resolvedOptions.locale};
+        this._clickTolerance = resolvedOptions.clickTolerance;
+        this._overridePixelRatio = resolvedOptions.pixelRatio;
+        this._maxCanvasSize = resolvedOptions.maxCanvasSize;
+        this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
-        this._requestManager = new RequestManager(options.transformRequest);
+        this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
-        if (typeof options.container === 'string') {
-            this._container = document.getElementById(options.container);
+        if (typeof resolvedOptions.container === 'string') {
+            this._container = document.getElementById(resolvedOptions.container);
             if (!this._container) {
-                throw new Error(`Container '${options.container}' not found.`);
+                throw new Error(`Container '${resolvedOptions.container}' not found.`);
             }
-        } else if (options.container instanceof HTMLElement) {
-            this._container = options.container;
+        } else if (resolvedOptions.container instanceof HTMLElement) {
+            this._container = resolvedOptions.container;
         } else {
             throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
         }
 
-        if (options.maxBounds) {
-            this.setMaxBounds(options.maxBounds);
+        if (resolvedOptions.maxBounds) {
+            this.setMaxBounds(resolvedOptions.maxBounds);
         }
 
         this._setupContainer();
@@ -631,37 +640,37 @@ export class Map extends Camera {
             this._resizeObserver.observe(this._container);
         }
 
-        this.handlers = new HandlerManager(this, options as CompleteMapOptions);
+        this.handlers = new HandlerManager(this, resolvedOptions);
 
-        const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
-        this._hash = options.hash && (new Hash(hashName)).addTo(this);
+        const hashName = (typeof resolvedOptions.hash === 'string' && resolvedOptions.hash) || undefined;
+        this._hash = resolvedOptions.hash && (new Hash(hashName)).addTo(this);
         // don't set position from options if set through hash
         if (!this._hash || !this._hash._onHashChange()) {
             this.jumpTo({
-                center: options.center,
-                zoom: options.zoom,
-                bearing: options.bearing,
-                pitch: options.pitch
+                center: resolvedOptions.center,
+                zoom: resolvedOptions.zoom,
+                bearing: resolvedOptions.bearing,
+                pitch: resolvedOptions.pitch
             });
 
-            if (options.bounds) {
+            if (resolvedOptions.bounds) {
                 this.resize();
-                this.fitBounds(options.bounds, extend({}, options.fitBoundsOptions, {duration: 0}));
+                this.fitBounds(resolvedOptions.bounds, extend({}, resolvedOptions.fitBoundsOptions, {duration: 0}));
             }
         }
 
         this.resize();
 
-        this._localIdeographFontFamily = options.localIdeographFontFamily;
-        this._validateStyle = options.validateStyle;
+        this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
+        this._validateStyle = resolvedOptions.validateStyle;
 
-        if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
+        if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
-        if (options.attributionControl)
-            this.addControl(new AttributionControl(typeof options.attributionControl === 'boolean' ? undefined : options.attributionControl));
+        if (resolvedOptions.attributionControl)
+            this.addControl(new AttributionControl(typeof resolvedOptions.attributionControl === 'boolean' ? undefined : resolvedOptions.attributionControl));
 
-        if (options.maplibreLogo)
-            this.addControl(new LogoControl(), options.logoPosition);
+        if (resolvedOptions.maplibreLogo)
+            this.addControl(new LogoControl(), resolvedOptions.logoPosition);
 
         this.on('style.load', () => {
             if (this.transform.unmodified) {
@@ -1767,7 +1776,7 @@ export class Map extends Camera {
 
     _lazyInitEmptyStyle() {
         if (!this.style) {
-            this.style = new Style(this, {});
+            this.style = new Style(this);
             this.style.setEventedParent(this, {style: this.style});
             this.style.loadEmpty();
         }

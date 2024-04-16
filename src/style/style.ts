@@ -60,7 +60,6 @@ import {
     type GetImagesResponse
 } from '../util/actor_messages';
 
-const empty = emptyStyle() as StyleSpecification;
 /**
  * A feature identifier that is bound to a source
  */
@@ -311,7 +310,7 @@ export class Style extends Evented {
 
     loadEmpty() {
         this.fire(new Event('dataloading', {dataType: 'style'}));
-        this._load(empty, {validate: false});
+        this._load(emptyStyle(), {validate: false});
     }
 
     _load(json: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions, previousStyle?: StyleSpecification) {
