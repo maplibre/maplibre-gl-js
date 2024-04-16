@@ -16,7 +16,7 @@ export type ProjectionGPUContext = {
 };
 
 /**
- * An abstract class the specializations of which are used internally by MapLibre to handle different projections.
+ * An interface the implementations of which are used internally by MapLibre to handle different projections.
  */
 export interface Projection {
     /**
