@@ -1818,7 +1818,7 @@ describe('Map', () => {
             });
         });
 
-        test('#3373 paint property should be synchronized with an update', async() => {
+        test('#3373 paint property should be synchronized with an update', async () => {
             const colors = ['red', 'blue'];
             const map = createMap({
                 style: {
