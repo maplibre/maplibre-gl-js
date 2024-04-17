@@ -93,9 +93,6 @@ export function drawAtmosphere(painter: Painter) {
     const program = painter.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
 
-    //context.bindFramebuffer.set(null);
-    //context.viewport.set([0, 0, painter.width, painter.height]);
-
     const projection = painter.style.map.projection;
     const projectionData = projection.getProjectionData(null, null);
 

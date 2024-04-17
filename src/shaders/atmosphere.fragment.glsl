@@ -148,7 +148,7 @@ void main() {
     vec4 color = atmosphere(
         normalize(view_direction),      // ray direction
         scale_camera_pos,               // ray origin
-        u_sun_pos,                        // position of the sun
+        u_sun_pos,                      // position of the sun
         22.0,                           // intensity of the sun
         EARTH_RADIUS,                   // radius of the planet in meters
         ATMOS_RADIUS,                   // radius of the atmosphere in meters
