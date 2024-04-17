@@ -471,6 +471,7 @@ export class Style extends Evented {
     }
 
     /**
+     * @hidden
      * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
      * @param ids - an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
      * @returns generated result
@@ -494,6 +495,7 @@ export class Style extends Evented {
     }
 
     /**
+     * @hidden
      * Lazy initialization of this._serializedLayers dictionary and return it
      * @returns this._serializedLayers dictionary
      */
@@ -1176,6 +1178,8 @@ export class Style extends Evented {
 
         this._changed = true;
         this._updatedPaintProps[layerId] = true;
+        // reset serialization field, to be populated only when needed
+        this._serializedLayers = null;
     }
 
     getPaintProperty(layer: string, name: string) {
