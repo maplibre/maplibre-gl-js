@@ -80,6 +80,8 @@ export class GlobeProjection implements Projection {
 
     private _cameraPosition: vec3 = [0, 0, 0];
 
+    private _oldTransformState: {zoom: number; lat: number} = undefined;
+
     get name(): string {
         return 'globe';
     }
@@ -194,6 +196,21 @@ export class GlobeProjection implements Projection {
     }
 
     public updateProjection(transform: Transform): void {
+        if (this._oldTransformState) {
+            if (this.useGlobeControls) {
+                const oldCircumference = Math.cos(this._oldTransformState.lat * Math.PI / 180.0);
+                const newCircumference = Math.cos(transform.center.lat * Math.PI / 180.0);
+                transform.zoom += Math.log2(newCircumference / oldCircumference);
+            }
+            this._oldTransformState.zoom = transform.zoom;
+            this._oldTransformState.lat = transform.center.lat;
+        } else {
+            this._oldTransformState = {
+                zoom: transform.zoom,
+                lat: transform.center.lat
+            };
+        }
+
         this._errorQueryLatitudeDegrees = transform.center.lat;
         this._updateAnimation(transform);
 
