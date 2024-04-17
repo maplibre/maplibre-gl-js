@@ -1,4 +1,4 @@
-import {createMap, beforeMapTest} from '../../../src/util/test/util';
+import {createMap, beforeMapTest} from '../../util/test/util';
 
 beforeEach(() => {
     beforeMapTest();
