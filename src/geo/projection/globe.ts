@@ -594,10 +594,12 @@ export class GlobeProjection implements Projection {
             // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
             // As always, we assume that the planet is centered at 0,0,0 and has radius 1.
             // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
+            const rayOrigin = this._cameraPosition;
+            const rayDirection = rayNormalized;
 
-            const originDotOrigin = vec3.dot(this._cameraPosition, this._cameraPosition);
-            const originDotDirection = vec3.dot(this._cameraPosition, rayNormalized);
-            const directionDotDirection = vec3.dot(rayNormalized, rayNormalized);
+            const originDotOrigin = vec3.dot(rayOrigin, rayOrigin);
+            const originDotDirection = vec3.dot(rayOrigin, rayDirection);
+            const directionDotDirection = vec3.dot(rayDirection, rayDirection);
             const planetRadiusSquared = 1.0;
 
             // Ray-sphere intersection involves a quadratic equation ax^2 +bx + c = 0
@@ -614,10 +616,10 @@ export class GlobeProjection implements Projection {
                 // Assume the ray origin is never inside the sphere
                 const tMin = Math.min(t0, t1);
                 const intersection = vec3.create();
-                vec3.add(intersection, this._cameraPosition, [
-                    rayNormalized[0] * tMin,
-                    rayNormalized[1] * tMin,
-                    rayNormalized[2] * tMin
+                vec3.add(intersection, rayOrigin, [
+                    rayDirection[0] * tMin,
+                    rayDirection[1] * tMin,
+                    rayDirection[2] * tMin
                 ]);
                 const sphereSurface = vec3.create();
                 vec3.normalize(sphereSurface, intersection);
@@ -633,14 +635,14 @@ export class GlobeProjection implements Projection {
                 // t*dot(d, plane.xyz) + dot((o,1), plane) == 0
                 // t*dot(d, plane.xyz) == -dot((o,1), plane)
                 // t == -dot((o,1), plane) / dot(d, plane.xyz)
-                const originDotPlaneXyz = this._cachedClippingPlane[0] * this._cameraPosition[0] + this._cachedClippingPlane[1] * this._cameraPosition[1] + this._cachedClippingPlane[2] * this._cameraPosition[2];
-                const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayNormalized[0] + this._cachedClippingPlane[1] * rayNormalized[1] + this._cachedClippingPlane[2] * rayNormalized[2];
+                const originDotPlaneXyz = this._cachedClippingPlane[0] * rayOrigin[0] + this._cachedClippingPlane[1] * rayOrigin[1] + this._cachedClippingPlane[2] * rayOrigin[2];
+                const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
                 const tPlane = -(originDotPlaneXyz + this._cachedClippingPlane[3]) / directionDotPlaneXyz;
                 const planeIntersection = vec3.create();
-                vec3.add(planeIntersection, this._cameraPosition, [
-                    rayNormalized[0] * tPlane,
-                    rayNormalized[1] * tPlane,
-                    rayNormalized[2] * tPlane
+                vec3.add(planeIntersection, rayOrigin, [
+                    rayDirection[0] * tPlane,
+                    rayDirection[1] * tPlane,
+                    rayDirection[2] * tPlane
                 ]);
                 const closestOnHorizon = vec3.create();
                 vec3.normalize(closestOnHorizon, planeIntersection);
@@ -650,7 +652,7 @@ export class GlobeProjection implements Projection {
                 // multiplied by the plane intersection's distance from the planet surface.
 
                 const toHorizon = vec3.create();
-                vec3.sub(toHorizon, closestOnHorizon, this._cameraPosition);
+                vec3.sub(toHorizon, closestOnHorizon, rayOrigin);
                 const toHorizonNormalized = vec3.create();
                 vec3.normalize(toHorizonNormalized, toHorizon);
 
