@@ -1,6 +1,6 @@
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
-import {LngLatBoundsLike} from '../../geo/lng_lat_bounds';
+import {createMap, beforeMapTest} from '../../../src/util/test/util';
+import {fixedLngLat, fixedNum} from '../../unit/lib/fixed';
+import {LngLatBoundsLike} from '../../../src/geo/lng_lat_bounds';
 
 beforeEach(() => {
     beforeMapTest();

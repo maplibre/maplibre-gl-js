@@ -1,8 +1,8 @@
-import {Map} from '../../ui/map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {browser} from '../../util/browser';
-import {beforeMapTest} from '../../util/test/util';
+import {Map} from '../../../src/ui/map';
+import {DOM} from '../../../src/util/dom';
+import simulate from '../../unit/lib/simulate_interaction';
+import {browser} from '../../../src/util/browser';
+import {beforeMapTest} from '../../../src/util/test/util';
 
 let map;
 

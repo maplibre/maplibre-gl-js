@@ -1,5 +1,5 @@
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {StyleImageInterface} from '../../style/style_image';
+import {createMap, beforeMapTest} from '../../../src/util/test/util';
+import {StyleImageInterface} from '../../../src/style/style_image';
 
 beforeEach(() => {
     beforeMapTest();

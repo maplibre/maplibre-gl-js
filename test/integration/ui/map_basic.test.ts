@@ -1,11 +1,11 @@
-import {Map, MapOptions} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
-import {Tile} from '../../source/tile';
-import {OverscaledTileID} from '../../source/tile_id';
-import {fixedLngLat} from '../../../test/unit/lib/fixed';
-import {RequestTransformFunction} from '../../util/request_manager';
-import {MapSourceDataEvent} from '../events';
-import {MessageType} from '../../util/actor_messages';
+import {Map, MapOptions} from '../../../src/ui/map';
+import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../../src/util/test/util';
+import {Tile} from '../../../src/source/tile';
+import {OverscaledTileID} from '../../../src/source/tile_id';
+import {fixedLngLat} from '../../unit/lib/fixed';
+import {RequestTransformFunction} from '../../../src/util/request_manager';
+import {MapSourceDataEvent} from '../../../src/ui/events';
+import {MessageType} from '../../../src/util/actor_messages';
 
 beforeEach(() => {
     beforeMapTest();
