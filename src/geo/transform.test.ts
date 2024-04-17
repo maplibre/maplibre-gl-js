@@ -390,7 +390,6 @@ describe('transform', () => {
         transform.zoom = 20.25;
         transform.pitch = 67.25;
         transform.center = new LngLat(0.0, 0.0);
-        transform._calcMatrices();
 
         expect(transform.customLayerMatrix()[0].toString().length).toBeGreaterThan(10);
         expect(transform.glCoordMatrix[0].toString().length).toBeGreaterThan(10);
