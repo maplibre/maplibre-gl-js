@@ -20,6 +20,8 @@ import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
+import {Transform} from '../geo/transform';
+import {LngLat} from '../geo/lng_lat';
 
 const isMoving = p => p.zoom || p.drag || p.pitch || p.rotate;
 
@@ -479,6 +481,11 @@ export class HandlerManager {
         this._changes = [];
     }
 
+    _setLocationAtPoint(tr: Transform, loc: LngLat, around: Point): void {
+        const center = this._map.projection.getCenterForLocationAtPoint(loc, around, tr);
+        tr.center = center;
+    }
+
     _updateMapTransform(combinedResult: HandlerResult,
         combinedEventsInProgress: EventsInProgress,
         deactivatedHandlers: {[handlerName: string]: Event}) {
@@ -500,13 +507,13 @@ export class HandlerManager {
         map._stop(true);
 
         around = around || map.transform.centerPoint;
-        const loc = tr.pointLocation(panDelta ? around.sub(panDelta) : around);
+        const loc = this._map.projection.unprojectScreenPoint(panDelta ? around.sub(panDelta) : around, tr);
         if (bearingDelta) tr.bearing += bearingDelta;
         if (pitchDelta) tr.pitch += pitchDelta;
         if (zoomDelta) tr.zoom += zoomDelta;
 
         if (!terrain) {
-            tr.setLocationAtPoint(loc, around);
+            this._setLocationAtPoint(tr, loc, around);
         } else {
             // when 3d-terrain is enabled act a little different:
             //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
@@ -518,7 +525,7 @@ export class HandlerManager {
                 // When starting to drag or move, flag it and register moveend to clear flagging
                 this._terrainMovement = true;
                 this._map._elevationFreeze = true;
-                tr.setLocationAtPoint(loc, around);
+                this._setLocationAtPoint(tr, loc, around);
                 this._map.once('moveend', () => {
                     this._map._elevationFreeze = false;
                     this._terrainMovement = false;
@@ -526,9 +533,9 @@ export class HandlerManager {
                 });
             } else if (combinedEventsInProgress.drag && this._terrainMovement) {
                 // drag map
-                tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
+                tr.center = this._map.projection.unprojectScreenPoint(tr.centerPoint.sub(panDelta), tr);
             } else {
-                tr.setLocationAtPoint(loc, around);
+                this._setLocationAtPoint(tr, loc, around);
             }
         }
 

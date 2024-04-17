@@ -1176,7 +1176,7 @@ export class Map extends Camera {
      * ```
      */
     unproject(point: PointLike): LngLat {
-        return this.transform.pointLocation(Point.convert(point), this.terrain);
+        return this.projection.unprojectScreenPoint(Point.convert(point), this.transform, this.terrain);
     }
 
     /**

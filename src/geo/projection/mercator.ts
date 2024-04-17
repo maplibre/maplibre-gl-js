@@ -16,6 +16,7 @@ import posAttributes from '../../data/pos_attributes';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {Terrain} from '../../render/terrain';
 import {LngLat} from '../lng_lat';
+import {MercatorCoordinate} from '../mercator_coordinate';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -173,8 +174,26 @@ export class MercatorProjection implements Projection {
         throw new Error('Not implemented.');
     }
 
+    public projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point {
+        return transform.locationPoint(LngLat.convert(lnglat), terrain);
+    }
+
     public unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat {
         return transform.pointLocation(Point.convert(p), terrain);
+    }
+
+    public getCenterForLocationAtPoint(lnglat: LngLat, point: Point, transform: Transform): LngLat {
+        const a = transform.pointCoordinate(point);
+        const b = transform.pointCoordinate(transform.centerPoint);
+        const loc = transform.locationCoordinate(lnglat);
+        const newCenter = new MercatorCoordinate(
+            loc.x - (a.x - b.x),
+            loc.y - (a.y - b.y));
+        let center = transform.coordinateLocation(newCenter);
+        if (transform._renderWorldCopies) {
+            center = center.wrap();
+        }
+        return center;
     }
 }
 

@@ -352,12 +352,15 @@ export class GlobeProjection implements Projection {
     private _projectToSphere(mercatorX: number, mercatorY: number): vec3 {
         const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
         const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
+        return this._angularCoordinatesToVector(sphericalX, sphericalY);
+    }
 
-        const len = Math.cos(sphericalY);
+    private _angularCoordinatesToVector(lng: number, lat: number): vec3 {
+        const len = Math.cos(lat);
         return [
-            Math.sin(sphericalX) * len,
-            Math.sin(sphericalY),
-            Math.cos(sphericalX) * len
+            Math.sin(lng) * len,
+            Math.sin(lat),
+            Math.cos(lng) * len
         ];
     }
 
@@ -588,113 +591,139 @@ export class GlobeProjection implements Projection {
         };
     }
 
-    public unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat {
+    public projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point {
         if (this.useGlobeControls) {
-            const pos: vec4 = [
-                ((p.x + 0.5) / transform.width) * 2.0 - 1.0,
-                (((p.y + 0.5) / transform.height) * 2.0 - 1.0) * -1.0,
-                1.0,
-                1.0
-            ];
-            vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrectionInverted);
+            const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
+            vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
             pos[0] /= pos[3];
             pos[1] /= pos[3];
-            pos[2] /= pos[3];
-            const ray: vec3 = [
-                pos[0] - this._cameraPosition[0],
-                pos[1] - this._cameraPosition[1],
-                pos[2] - this._cameraPosition[2],
-            ];
-            const rayNormalized: vec3 = vec3.create();
-            vec3.normalize(rayNormalized, ray);
-
-            // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
-            // As always, we assume that the planet is centered at 0,0,0 and has radius 1.
-            // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
-            const rayOrigin = this._cameraPosition;
-            const rayDirection = rayNormalized;
-
-            const originDotOrigin = vec3.dot(rayOrigin, rayOrigin);
-            const originDotDirection = vec3.dot(rayOrigin, rayDirection);
-            const directionDotDirection = vec3.dot(rayDirection, rayDirection);
-            const planetRadiusSquared = 1.0;
-
-            // Ray-sphere intersection involves a quadratic equation ax^2 +bx + c = 0
-            const a = directionDotDirection;
-            const b = 2 * originDotDirection;
-            const c = originDotOrigin - planetRadiusSquared;
-
-            const d = b * b - 4.0 * a * c;
-
-            if (d >= 0.0) {
-                const sqrtD = Math.sqrt(d);
-                const t0 = (-b + sqrtD) / (2.0 * a);
-                const t1 = (-b - sqrtD) / (2.0 * a);
-                // Assume the ray origin is never inside the sphere
-                const tMin = Math.min(t0, t1);
-                const intersection = vec3.create();
-                vec3.add(intersection, rayOrigin, [
-                    rayDirection[0] * tMin,
-                    rayDirection[1] * tMin,
-                    rayDirection[2] * tMin
-                ]);
-                const sphereSurface = vec3.create();
-                vec3.normalize(sphereSurface, intersection);
-                return this._sphereSurfacePointToCoordinates(sphereSurface);
-            } else {
-                // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
-                // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
-
-                // dot(vec4(p,1), plane) == 0
-                // dot(vec4(o+td,1), plane) == 0
-                // (o.x+t*d.x)*plane.x + (o.y+t*d.y)*plane.y + (o.z+t*d.z)*plane.z + plane.w == 0
-                // t*d.x*plane.x + t*d.y*plane.y + t*d.z*plane.z + dot((o,1), plane) == 0
-                // t*dot(d, plane.xyz) + dot((o,1), plane) == 0
-                // t*dot(d, plane.xyz) == -dot((o,1), plane)
-                // t == -dot((o,1), plane) / dot(d, plane.xyz)
-                const originDotPlaneXyz = this._cachedClippingPlane[0] * rayOrigin[0] + this._cachedClippingPlane[1] * rayOrigin[1] + this._cachedClippingPlane[2] * rayOrigin[2];
-                const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
-                const tPlane = -(originDotPlaneXyz + this._cachedClippingPlane[3]) / directionDotPlaneXyz;
-                const planeIntersection = vec3.create();
-                vec3.add(planeIntersection, rayOrigin, [
-                    rayDirection[0] * tPlane,
-                    rayDirection[1] * tPlane,
-                    rayDirection[2] * tPlane
-                ]);
-                const closestOnHorizon = vec3.create();
-                vec3.normalize(closestOnHorizon, planeIntersection);
-
-                // Now, since we want to somehow map every pixel on screen to a different coordinate,
-                // add the ray from camera to horizon to the computed point,
-                // multiplied by the plane intersection's distance from the planet surface.
-
-                const toHorizon = vec3.create();
-                vec3.sub(toHorizon, closestOnHorizon, rayOrigin);
-                const toHorizonNormalized = vec3.create();
-                vec3.normalize(toHorizonNormalized, toHorizon);
-
-                const planeIntersectionAltitude = Math.max(vec3.length(planeIntersection) - 1.0, 0.0);
-
-                const offsetPoint = vec3.create();
-                vec3.add(offsetPoint, closestOnHorizon, [
-                    toHorizonNormalized[0] * planeIntersectionAltitude,
-                    toHorizonNormalized[1] * planeIntersectionAltitude,
-                    toHorizonNormalized[2] * planeIntersectionAltitude
-                ]);
-
-                const finalPoint = vec3.create();
-                vec3.normalize(finalPoint, offsetPoint);
-
-                return this._sphereSurfacePointToCoordinates(finalPoint);
-            }
-
-            // get ray from camera to point
-            // ray-sphere intersection
-            // apply sphere rotation
-            // return angular coordinates
-            // terrain???
+            return new Point(
+                (pos[0] * 0.5 + 0.5) * transform.width,
+                (pos[1] * 0.5 + 0.5) * transform.height
+            );
         } else {
+            this._mercator.projectScreenPoint(lnglat, transform, terrain);
+        }
+    }
+
+    // JP: TODO: unprojectExact for waypoint placement, unproject for interaction?
+    public unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat {
+        // JP: TODO: terrain???
+        if (!this.useGlobeControls) {
             return this._mercator.unprojectScreenPoint(p, transform, terrain);
+        }
+        const pos: vec4 = [
+            ((p.x + 0.5) / transform.width) * 2.0 - 1.0,
+            (((p.y + 0.5) / transform.height) * 2.0 - 1.0) * -1.0,
+            1.0,
+            1.0
+        ];
+        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrectionInverted);
+        pos[0] /= pos[3];
+        pos[1] /= pos[3];
+        pos[2] /= pos[3];
+        const ray: vec3 = [
+            pos[0] - this._cameraPosition[0],
+            pos[1] - this._cameraPosition[1],
+            pos[2] - this._cameraPosition[2],
+        ];
+        const rayNormalized: vec3 = vec3.create();
+        vec3.normalize(rayNormalized, ray);
+
+        // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
+        // As always, we assume that the planet is centered at 0,0,0 and has radius 1.
+        // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
+        const rayOrigin = this._cameraPosition;
+        const rayDirection = rayNormalized;
+
+        const originDotOrigin = vec3.dot(rayOrigin, rayOrigin);
+        const originDotDirection = vec3.dot(rayOrigin, rayDirection);
+        const directionDotDirection = vec3.dot(rayDirection, rayDirection);
+        const planetRadiusSquared = 1.0;
+
+        // Ray-sphere intersection involves a quadratic equation ax^2 +bx + c = 0
+        const a = directionDotDirection;
+        const b = 2 * originDotDirection;
+        const c = originDotOrigin - planetRadiusSquared;
+
+        const d = b * b - 4.0 * a * c;
+
+        if (d >= 0.0) {
+            const sqrtD = Math.sqrt(d);
+            const t0 = (-b + sqrtD) / (2.0 * a);
+            const t1 = (-b - sqrtD) / (2.0 * a);
+            // Assume the ray origin is never inside the sphere
+            const tMin = Math.min(t0, t1);
+            const intersection = vec3.create();
+            vec3.add(intersection, rayOrigin, [
+                rayDirection[0] * tMin,
+                rayDirection[1] * tMin,
+                rayDirection[2] * tMin
+            ]);
+            const sphereSurface = vec3.create();
+            vec3.normalize(sphereSurface, intersection);
+            return this._sphereSurfacePointToCoordinates(sphereSurface);
+        } else {
+            // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
+            // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
+
+            // dot(vec4(p,1), plane) == 0
+            // dot(vec4(o+td,1), plane) == 0
+            // (o.x+t*d.x)*plane.x + (o.y+t*d.y)*plane.y + (o.z+t*d.z)*plane.z + plane.w == 0
+            // t*d.x*plane.x + t*d.y*plane.y + t*d.z*plane.z + dot((o,1), plane) == 0
+            // t*dot(d, plane.xyz) + dot((o,1), plane) == 0
+            // t*dot(d, plane.xyz) == -dot((o,1), plane)
+            // t == -dot((o,1), plane) / dot(d, plane.xyz)
+            const originDotPlaneXyz = this._cachedClippingPlane[0] * rayOrigin[0] + this._cachedClippingPlane[1] * rayOrigin[1] + this._cachedClippingPlane[2] * rayOrigin[2];
+            const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
+            const tPlane = -(originDotPlaneXyz + this._cachedClippingPlane[3]) / directionDotPlaneXyz;
+            const planeIntersection = vec3.create();
+            vec3.add(planeIntersection, rayOrigin, [
+                rayDirection[0] * tPlane,
+                rayDirection[1] * tPlane,
+                rayDirection[2] * tPlane
+            ]);
+            const closestOnHorizon = vec3.create();
+            vec3.normalize(closestOnHorizon, planeIntersection);
+
+            // Now, since we want to somehow map every pixel on screen to a different coordinate,
+            // add the ray from camera to horizon to the computed point,
+            // multiplied by the plane intersection's distance from the planet surface.
+
+            const toHorizon = vec3.create();
+            vec3.sub(toHorizon, closestOnHorizon, rayOrigin);
+            const toHorizonNormalized = vec3.create();
+            vec3.normalize(toHorizonNormalized, toHorizon);
+
+            const planeIntersectionAltitude = Math.max(vec3.length(planeIntersection) - 1.0, 0.0);
+
+            const offsetPoint = vec3.create();
+            vec3.add(offsetPoint, closestOnHorizon, [
+                toHorizonNormalized[0] * planeIntersectionAltitude,
+                toHorizonNormalized[1] * planeIntersectionAltitude,
+                toHorizonNormalized[2] * planeIntersectionAltitude
+            ]);
+
+            const finalPoint = vec3.create();
+            vec3.normalize(finalPoint, offsetPoint);
+
+            return this._sphereSurfacePointToCoordinates(finalPoint);
+        }
+    }
+
+    public getCenterForLocationAtPoint(lnglat: LngLat, point: Point, transform: Transform): LngLat {
+        if (this.useGlobeControls) {
+            const pointLoc = this.unprojectScreenPoint(point, transform);
+            const lngDelta = pointLoc.lng - transform.center.lng;
+            const latDelta = pointLoc.lat - transform.center.lat;
+            const newCenter = new LngLat(
+                lnglat.lng - lngDelta,
+                lnglat.lat - latDelta
+            );
+            newCenter.wrap();
+            return newCenter;
+        } else {
+            return this._mercator.getCenterForLocationAtPoint(lnglat, point, transform);
         }
     }
 }

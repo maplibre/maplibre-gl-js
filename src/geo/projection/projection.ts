@@ -188,6 +188,15 @@ export interface Projection {
 
     /**
      * @internal
+     * Given geographical coordinates, returns their location on screen in pixels.
+     * @param loc - The geographical location to project.
+     * @param transform - The map's transform.
+     * @param terrain - Optional terrain.
+     */
+    projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point;
+
+    /**
+     * @internal
      * Returns a {@link LngLat} representing geographical coordinates that correspond
      * to the specified pixel coordinates.
      * @param p - Screen point in pixels to unproject.
@@ -195,4 +204,6 @@ export interface Projection {
      * @param terrain - Optional terrain.
      */
     unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat;
+
+    getCenterForLocationAtPoint(lnglat: LngLat, point: Point, transform: Transform): LngLat;
 }
