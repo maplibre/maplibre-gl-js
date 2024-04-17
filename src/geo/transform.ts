@@ -278,7 +278,7 @@ export class Transform {
      * @param target - the target padding
      * @param t - the step/weight
      */
-    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number) {
+    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
         this._unmodified = false;
         this._edgeInsets.interpolate(start, target, t);
         this._constrain();
@@ -311,7 +311,7 @@ export class Transform {
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
      */
-    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID) {
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
         const result = [new UnwrappedTileID(0, tileID)];
         if (this._renderWorldCopies) {
             const utl = this.pointCoordinate(new Point(0, 0));
@@ -518,7 +518,7 @@ export class Transform {
      * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
      * @param terrain - the terrain
      */
-    recalculateZoom(terrain: Terrain) {
+    recalculateZoom(terrain: Terrain): void {
         const origElevation = this.elevation;
         const origAltitude = Math.cos(this._pitch) * this.cameraToCenterDistance / this._pixelPerMeter;
 
@@ -699,7 +699,7 @@ export class Transform {
      * Sets or clears the map's geographical constraints.
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
-    setMaxBounds(bounds?: LngLatBounds | null) {
+    setMaxBounds(bounds?: LngLatBounds | null): void {
         if (bounds) {
             this.lngRange = [bounds.getWest(), bounds.getEast()];
             this.latRange = [bounds.getSouth(), bounds.getNorth()];
@@ -835,7 +835,7 @@ export class Transform {
         return result;
     }
 
-    _constrain() {
+    _constrain(): void {
         if (!this.center || !this.width || !this.height || this._constraining) return;
         this._constraining = true;
         const unmodified = this._unmodified;
@@ -846,7 +846,7 @@ export class Transform {
         this._constraining = false;
     }
 
-    _calcMatrices() {
+    _calcMatrices(): void {
         if (!this.height) return;
 
         const halfFov = this._fov / 2;
@@ -956,7 +956,7 @@ export class Transform {
         this._alignedPosMatrixCache = {};
     }
 
-    maxPitchScaleFactor() {
+    maxPitchScaleFactor(): number {
         // calcMatrices hasn't run yet
         if (!this.pixelMatrixInverse) return 1;
 
@@ -977,7 +977,7 @@ export class Transform {
      * When the map is not pitched the `cameraPoint` is equivalent to the center of the map because
      * the camera is right above the center of the map.
      */
-    getCameraPoint() {
+    getCameraPoint(): Point {
         const pitch = this._pitch;
         const yOffset = Math.tan(pitch) * (this.cameraToCenterDistance || 1);
         return this.centerPoint.add(new Point(0, yOffset));
