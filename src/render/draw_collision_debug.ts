@@ -13,7 +13,6 @@ import {SegmentVector} from '../data/segment';
 import {mat4} from 'gl-matrix';
 import {VertexBuffer} from '../gl/vertex_buffer';
 import {IndexBuffer} from '../gl/index_buffer';
-import * as Mercator from '../geo/projection/mercator';
 
 type TileBatch = {
     circleArray: Array<number>;
@@ -28,6 +27,7 @@ let quadTriangles: QuadTriangleArray;
 export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, translate: [number, number], translateAnchor: 'map' | 'viewport', isText: boolean) {
     const context = painter.context;
     const gl = context.gl;
+    const projection = painter.style.map.projection;
     const program = painter.useProgram('collisionBox');
     const tileBatches: Array<TileBatch> = [];
     let circleCount = 0;
@@ -39,7 +39,6 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
         const posMatrix = coord.posMatrix;
-        const posMatrixTranslated = Mercator.translatePosMatrix(painter.transform, tile, coord.posMatrix, translate, translateAnchor);
         const buffers = isText ? bucket.textCollisionBox : bucket.iconCollisionBox;
         // Get collision circle data of this bucket
         const circleArray: Array<number> = bucket.collisionCircleArray;
@@ -64,16 +63,22 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             circleCount += circleArray.length / 4;  // 4 values per circle
             circleOffset = circleCount;
         }
-        if (!buffers) continue;
+
+        // Draw collision boxes
+        if (!buffers) {
+            continue;
+        }
+        const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
         program.draw(context, gl.LINES,
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             collisionUniformValues(
-                posMatrixTranslated,
+                projection.translatePosition(painter.transform, tile, translate, translateAnchor),
                 painter.transform,
                 tile),
-            painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord), null,
+            painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
+            projectionData,
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);

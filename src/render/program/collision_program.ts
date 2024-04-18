@@ -8,7 +8,7 @@ import type {Tile} from '../../source/tile';
 import {mat4} from 'gl-matrix';
 
 export type CollisionUniformsType = {
-    'u_matrix': UniformMatrix4f;
+    'u_translation': Uniform2f;
     'u_camera_to_center_distance': Uniform1f;
     'u_pixels_to_tile_units': Uniform1f;
     'u_extrude_scale': Uniform2f;
@@ -23,7 +23,7 @@ export type CollisionCircleUniformsType = {
 };
 
 const collisionUniforms = (context: Context, locations: UniformLocations): CollisionUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
+    'u_translation': new Uniform2f(context, locations.u_translation),
     'u_camera_to_center_distance': new Uniform1f(context, locations.u_camera_to_center_distance),
     'u_pixels_to_tile_units': new Uniform1f(context, locations.u_pixels_to_tile_units),
     'u_extrude_scale': new Uniform2f(context, locations.u_extrude_scale),
@@ -37,12 +37,12 @@ const collisionCircleUniforms = (context: Context, locations: UniformLocations):
     'u_viewport_size': new Uniform2f(context, locations.u_viewport_size)
 });
 
-const collisionUniformValues = (matrix: mat4, transform: Transform, tile: Tile): UniformValues<CollisionUniformsType> => {
+const collisionUniformValues = (translation: [number, number], transform: Transform, tile: Tile): UniformValues<CollisionUniformsType> => {
     const pixelRatio = pixelsToTileUnits(tile, 1, transform.zoom);
     const scale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
     const overscaleFactor = tile.tileID.overscaleFactor();
     return {
-        'u_matrix': matrix,
+        'u_translation': translation,
         'u_camera_to_center_distance': transform.cameraToCenterDistance,
         'u_pixels_to_tile_units': pixelRatio,
         'u_extrude_scale': [transform.pixelsToGLUnits[0] / (pixelRatio * scale),
