@@ -7,7 +7,7 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
-import puppeteer, {Page, Browser, registerCustomQueryHandler} from 'puppeteer';
+import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
@@ -677,12 +677,12 @@ function printSpecificStatistics(status: 'passed' | 'failed' | 'errored', subset
         return;
     }
     console.log(`${statusCount} ${status} (${(100 * statusCount / total).toFixed(1)}%)`);
-    for (let testDate of subsetStats) {
-        let testCase = suite.testCase().className(testDate.id).name(testDate.id);
+    for (const testDate of subsetStats) {
+        const testCase = suite.testCase().className(testDate.id).name(testDate.id);
         if (status === 'failed') {
-            testCase.failure()
-        } else if (status == 'errored') {
-            testCase.error()
+            testCase.failure();
+        } else if (status === 'errored') {
+            testCase.error();
         }
     }
     if (status === 'passed') {
@@ -700,7 +700,7 @@ function printSpecificStatistics(status: 'passed' | 'failed' | 'errored', subset
  * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {
-    let suite = jnuitReportBuilder.testSuite().name('render-tests');
+    const suite = jnuitReportBuilder.testSuite().name('render-tests');
     printSpecificStatistics('passed', stats.passed, stats.total, suite);
     printSpecificStatistics('failed', stats.failed, stats.total, suite);
     printSpecificStatistics('errored', stats.errored, stats.total, suite);
