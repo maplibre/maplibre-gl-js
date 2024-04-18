@@ -5,6 +5,7 @@ import {expectToBeCloseToArray} from './mercator.test';
 import type {TransformLike} from './projection';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
+import type {Transform} from '../transform';
 
 describe('GlobeProjection', () => {
     describe('getProjectionData', () => {
@@ -115,7 +116,7 @@ describe('GlobeProjection', () => {
         test('unproject screen center', () => {
             const precisionDigits = 2;
             const globe = new GlobeProjection();
-            const transform = createMockTransform({});
+            const transform = createMockTransform({}) as any as Transform;
             globe.updateProjection(transform);
             let unprojected = globe.unprojectScreenPoint(screenCenter, transform);
             expect(unprojected.lng).toBeCloseTo(transform.center.lng, precisionDigits);
@@ -142,7 +143,7 @@ describe('GlobeProjection', () => {
             const transform = createMockTransform({
                 pitch: 60,
                 bearing: -90,
-            });
+            }) as any as Transform;
             globe.updateProjection(transform);
             const unprojected = globe.unprojectScreenPoint(screenTopEdgeCenter, transform);
             expect(unprojected.lng).toBeLessThan(-38.0);
@@ -172,12 +173,12 @@ function createMockTransform(object: {
         latDegrees: number;
         lngDegrees: number;
     };
-    pitchDegrees?: number;
+    pitch?: number;
     angleDegrees?: number;
     width?: number;
     height?: number;
-}): Transform {
-    const pitchDegrees = (object && object.pitch) ? object.pitch : 0;
+    bearing?: number;
+}): TransformLike {
     return {
         center: new LngLat(
             object.center ? (object.center.lngDegrees / 180.0 * Math.PI) : 0,
@@ -187,7 +188,7 @@ function createMockTransform(object: {
         width: (object && object.width) ? object.width : 640,
         height: (object && object.height) ? object.height : 480,
         cameraToCenterDistance: 759,
-        pitch: pitchDegrees, // in degrees
+        pitch: (object && object.pitch) ? object.pitch : 0, // in degrees
         angle: (object && object.bearing) ? (-object.bearing / 180.0 * Math.PI) : 0,
         zoom: 0,
         invProjMatrix: null,

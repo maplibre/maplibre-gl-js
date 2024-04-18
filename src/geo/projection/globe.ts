@@ -20,6 +20,7 @@ import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {LngLat, earthRadius} from '../lng_lat';
 import {Terrain} from '../../render/terrain';
+import {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.
@@ -200,7 +201,7 @@ export class GlobeProjection implements Projection {
         return Math.log2(newCircumference / oldCircumference);
     }
 
-    public updateProjection(transform: Transform): void {
+    public updateProjection(transform: TransformLike): void {
         if (this._oldTransformState) {
             if (this.useGlobeControls) {
                 transform.zoom += this._getZoomAdjustment(this._oldTransformState.lat, transform.center.lat);

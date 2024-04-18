@@ -3,7 +3,6 @@ import type {Tile} from '../../source/tile';
 import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import type {ProjectionData} from '../../render/program/projection_program';
 import type {PreparedShader} from '../../shaders/shaders';
-import Point from '@mapbox/point-geometry';
 import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
@@ -11,6 +10,7 @@ import type {SubdivisionGranularitySetting} from '../../render/subdivision_granu
 import Point from '@mapbox/point-geometry';
 import {Terrain} from '../../render/terrain';
 import {LngLat} from '../lng_lat';
+import {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 export type ProjectionGPUContext = {
     context: Context;
