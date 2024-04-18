@@ -98,9 +98,9 @@ export function drawAtmosphere(painter: Painter) {
 
     const sunPos = computeSunPos(new Date(), painter.style.map.projection);
 
-    const zoomFullAtmo = 5;
-    const zoomNoAtmo = 7;
-    const coefficient = 0; //painter.transform.zoom < zoomFullAtmo ? 0 : (painter.transform.zoom > zoomNoAtmo ? 1 : (painter.transform.zoom - zoomFullAtmo) / (zoomNoAtmo - zoomFullAtmo));
+    const fullAtmoZoom = painter.style.map.atmosphereOptions.fullAtmoZoom;
+    const noAtmoZoom = painter.style.map.atmosphereOptions.NoAtmoZoom;
+    const coefficient = painter.transform.zoom < fullAtmoZoom ? 0 : (painter.transform.zoom > noAtmoZoom ? 1 : (painter.transform.zoom - fullAtmoZoom) / (noAtmoZoom - fullAtmoZoom));
 
     const uniformValues = atmosphereUniformValues(sunPos, coefficient);
     const mesh = painter.atmosphereMesh;

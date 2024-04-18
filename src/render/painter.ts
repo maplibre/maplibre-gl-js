@@ -549,7 +549,9 @@ export class Painter {
             this.renderLayer(this, sourceCache, layer, coords);
         }
 
-        drawAtmosphere(this);
+        if (this.style.map.atmosphere) {
+            drawAtmosphere(this);
+        }
 
         if (this.options.showTileBoundaries) {
             const selectedSource = selectDebugSource(this.style, this.transform.zoom);

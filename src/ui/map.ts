@@ -53,7 +53,8 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
-    TerrainSpecification
+    TerrainSpecification,
+    PropertyValueSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
@@ -327,10 +328,17 @@ export type MapOptions = {
      * @defaultValue 'mercator'
      */
     projection?: ProjectionName;
+    atmosphere?: boolean;
+    atmosphereOptions?: AtmosphereOption;
 };
 
 export type AddImageOptions = {
 
+}
+
+export type AtmosphereOption = {
+    fullAtmoZoom: number;
+    NoAtmoZoom: number;
 }
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
@@ -397,7 +405,12 @@ const defaultOptions = {
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
-    projection: 'mercator'
+    projection: 'mercator',
+    atmosphere: false,
+    atmosphereOptions: {
+        fullAtmoZoom: 5,
+        NoAtmoZoom: 7
+    }
 } as CompleteMapOptions;
 
 /**
@@ -484,6 +497,8 @@ export class Map extends Camera {
     _overridePixelRatio: number | null;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+    atmosphere: boolean;
+    atmosphereOptions: AtmosphereOption;
 
     /**
      * @internal
@@ -612,6 +627,11 @@ export class Map extends Camera {
         }
 
         this.projection = createProjectionFromName(options.projection);
+
+        this.atmosphere = options.atmosphere;
+        if (options.atmosphereOptions) {
+            this.atmosphereOptions = options.atmosphereOptions;
+        }
 
         this._setupContainer();
         this._setupPainter();
