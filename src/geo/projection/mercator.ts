@@ -1,5 +1,5 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import type {Projection, ProjectionGPUContext, TransformLike} from './projection';
+import type {Projection, ProjectionGPUContext} from './projection';
 import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import type Point from '@mapbox/point-geometry';
 import type {Tile} from '../../source/tile';
@@ -76,7 +76,7 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public updateProjection(t: TransformLike): void {
+    public updateProjection(t: { invProjMatrix: mat4 }): void {
         const cameraPos: vec4 = [0, 0, -1, 1];
         vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
         this._cameraPosition = [
@@ -134,7 +134,7 @@ export class MercatorProjection implements Projection {
         return 1.0;
     }
 
-    public translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
@@ -162,7 +162,7 @@ export class MercatorProjection implements Projection {
         return this._cachedMesh;
     }
 
-    public transformLightDirection(_: TransformLike, dir: vec3): vec3 {
+    public transformLightDirection(_: any, dir: vec3): vec3 {
         return vec3.clone(dir);
     }
 }
@@ -173,7 +173,7 @@ export class MercatorProjection implements Projection {
  * @returns matrix
  */
 export function translatePosMatrix(
-    transform: TransformLike,
+    transform: { angle: number; zoom: number },
     tile: Tile,
     matrix: mat4,
     translate: [number, number],
@@ -193,7 +193,7 @@ export function translatePosMatrix(
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: TransformLike,
+    transform: { angle: number; zoom: number },
     tile: Tile,
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',

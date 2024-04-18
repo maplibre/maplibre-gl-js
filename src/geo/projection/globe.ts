@@ -256,7 +256,10 @@ export class GlobeProjection implements Projection {
         return dirty;
     }
 
-    private _computeClippingPlane(transform: TransformLike, globeRadiusPixels: number): [number, number, number, number] {
+    private _computeClippingPlane(
+        transform: { center: LngLat; pitch: number; angle: number; cameraToCenterDistance: number },
+        globeRadiusPixels: number
+    ): [number, number, number, number] {
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
         // and all the non-visible parts in the negative half-space.
@@ -376,7 +379,7 @@ export class GlobeProjection implements Projection {
         };
     }
 
-    public transformLightDirection(transform: TransformLike, dir: vec3): vec3 {
+    public transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3 {
         const sphereX = transform.center.lng * Math.PI / 180.0;
         const sphereY = transform.center.lat * Math.PI / 180.0;
 
@@ -404,8 +407,8 @@ export class GlobeProjection implements Projection {
         return normalized;
     }
 
-    public getPixelScale(transformCenter: LngLat): number {
-        const globePixelScale = 1.0 / Math.cos(transformCenter.lat * Math.PI / 180);
+    public getPixelScale(transform: { center: LngLat }): number {
+        const globePixelScale = 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
         const flatPixelScale = 1.0;
         if (this.useGlobeRendering) {
             return lerp(flatPixelScale, globePixelScale, this._globeness);
@@ -413,8 +416,8 @@ export class GlobeProjection implements Projection {
         return flatPixelScale;
     }
 
-    public getCircleRadiusCorrection(transformCenter: LngLat): number {
-        return Math.cos(transformCenter.lat * Math.PI / 180);
+    public getCircleRadiusCorrection(transform: { center: LngLat }): number {
+        return Math.cos(transform.center.lat * Math.PI / 180);
     }
 
     private _updateAnimation(currentZoom: number) {
@@ -471,7 +474,7 @@ export class GlobeProjection implements Projection {
         return mesh;
     }
 
-    public translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
         return translatePosition(transform, tile, translate, translateAnchor);
