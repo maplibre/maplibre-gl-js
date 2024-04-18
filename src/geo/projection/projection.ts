@@ -143,7 +143,17 @@ export interface Projection {
      */
     getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh;
 
+    /**
+     * @internal
+     * Transform of `LngLat` coordinate with its `elevation` with the projection.
+     * @param lngLat - The longitude and latitude coordinate to transform.
+     * @param elev - The elevation coordinate to transform.
+     */
     transformPosition(lngLat: LngLat, elev: number): vec3;
 
+    /**
+     * @internal
+     * Return true if the projection correspond to a Globe.
+     */
     isGlobe(): boolean;
 }

@@ -549,6 +549,7 @@ export class Painter {
             this.renderLayer(this, sourceCache, layer, coords);
         }
 
+        // Render atmosphere, only for Globe projection
         if (this.style.map.atmosphere && this.style.map.projection.isGlobe()) {
             drawAtmosphere(this);
         }
