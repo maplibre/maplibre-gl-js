@@ -45,6 +45,7 @@ const heatmapTextureUniforms = (context: Context, locations: UniformLocations): 
 
 const heatmapUniformValues = (tile: Tile, zoom: number, intensity: number, radiusCorrectionFactor: number): UniformValues<HeatmapUniformsType> => {
     const pixelRatio = pixelsToTileUnits(tile, 1, zoom);
+    // See comment in circle_program.ts
     const globeExtrudeScale = pixelRatio / (EXTENT * Math.pow(2, tile.tileID.overscaledZ)) * 2.0 * Math.PI * radiusCorrectionFactor;
     return {
         'u_extrude_scale': pixelsToTileUnits(tile, 1, zoom),
