@@ -46,7 +46,7 @@ export class GlobeProjection implements Projection {
     private _mercator: MercatorProjection;
 
     private _tileMeshCache: {[_: string]: Mesh} = {};
-    private _cachedClippingPlane: [number, number, number, number] = [1, 0, 0, 0];
+    private _cachedClippingPlane: vec4 = [1, 0, 0, 0];
 
     // Transition handling
     private _lastGlobeStateEnabled: boolean = true;
@@ -238,7 +238,7 @@ export class GlobeProjection implements Projection {
             data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
         }
 
-        data['u_projection_clipping_plane'] = [...this._cachedClippingPlane];
+        data['u_projection_clipping_plane'] = this._cachedClippingPlane as [number, number, number, number];
         data['u_projection_transition'] = this._globeness;
 
         return data;
@@ -259,7 +259,7 @@ export class GlobeProjection implements Projection {
     private _computeClippingPlane(
         transform: { center: LngLat; pitch: number; angle: number; cameraToCenterDistance: number },
         globeRadiusPixels: number
-    ): [number, number, number, number] {
+    ): vec4 {
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
         // and all the non-visible parts in the negative half-space.
