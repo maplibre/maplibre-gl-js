@@ -154,14 +154,14 @@ export interface Projection {
     /**
      * @internal
      */
-    getPixelScale(transform: TransformLike): number;
+    getPixelScale(transformCenter: LngLat): number;
 
     /**
      * @internal
      * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the transform's zoom level and latitude.
      * Circle and kernel radius is multiplied by this value.
      */
-    getCircleRadiusCorrection(transform: TransformLike): number;
+    getCircleRadiusCorrection(transformCenter: LngLat): number;
 
     /**
      * @internal

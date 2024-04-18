@@ -18,6 +18,7 @@ import {Projection, ProjectionGPUContext, TransformLike} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
+import type {LngLat} from '../lng_lat';
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.
@@ -403,8 +404,8 @@ export class GlobeProjection implements Projection {
         return normalized;
     }
 
-    public getPixelScale(transform: TransformLike): number {
-        const globePixelScale = 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
+    public getPixelScale(transformCenter: LngLat): number {
+        const globePixelScale = 1.0 / Math.cos(transformCenter.lat * Math.PI / 180);
         const flatPixelScale = 1.0;
         if (this.useGlobeRendering) {
             return lerp(flatPixelScale, globePixelScale, this._globeness);
@@ -412,8 +413,8 @@ export class GlobeProjection implements Projection {
         return flatPixelScale;
     }
 
-    public getCircleRadiusCorrection(transform: TransformLike): number {
-        const globeRadiusAtCenterLatitude = Math.cos(transform.center.lat * Math.PI / 180);
+    public getCircleRadiusCorrection(transformCenter: LngLat): number {
+        const globeRadiusAtCenterLatitude = Math.cos(transformCenter.lat * Math.PI / 180);
         return globeRadiusAtCenterLatitude;
     }
 
