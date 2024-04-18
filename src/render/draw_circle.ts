@@ -59,7 +59,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
 
     const segmentsRenderStates: Array<SegmentsTileRenderState> = [];
 
-    // Note: due to how the shader is written, this only has effect when globe rendering is enabled and `circle-pitch-alignment` is set to 'map'.
+    // Note: due to how the shader is written, this value only has effect when globe rendering is enabled and `circle-pitch-alignment` is set to 'map'.
     const radiusCorrectionFactor = projection.getCircleRadiusCorrection(transform);
 
     for (let i = 0; i < coords.length; i++) {

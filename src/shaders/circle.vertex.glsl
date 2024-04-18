@@ -19,22 +19,6 @@ out float v_visibility;
 #pragma mapbox: define mediump float stroke_width
 #pragma mapbox: define lowp float stroke_opacity
 
-// Interaction of globe (3D) with circle-pitch-alignment + circle-pitch-scale.
-// This is a summary of behaviour, where "v" stands for "viewport" and "m" for map.
-// First letter is alignment, second is scale.
-// v+v:
-//   2D: circles have constant screenspace size
-//   3D: same as 2D
-// v+m:
-//   2D: circles have constant screenspace size, far away circles are shrunk, like with perspective projection (only has effect if map is pitched)
-//   3D: same as 2D
-// m+v:
-//   2D: circles "printed" onto map surface, far away circles are enlarged (counteracts shirnking due to perspective projection)
-//   3D: circles "printed" onto map surface, far away circles are enlarged (implemented but questionable whether it does anything)
-// m+m:
-//   2D: circles "printed" onto map surface, far away circles are naturally smaller due to perspective projection
-//   3D: circles "printed" onto globe surface, far away circles are naturally smaller due to perspective projection
-
 void main(void) {
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize mediump float radius

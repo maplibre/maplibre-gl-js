@@ -171,7 +171,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, granularity?: number) {
-        if (!granularity) {
+        if (granularity === undefined) {
             granularity = 1;
         }
 

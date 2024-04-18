@@ -332,12 +332,12 @@ export class GlobeProjection implements Projection {
         return this._angularCoordinatesToVector(sphericalX, sphericalY);
     }
 
-    private _angularCoordinatesToVector(lng: number, lat: number): vec3 {
-        const len = Math.cos(lat);
+    private _angularCoordinatesToVector(lngRadians: number, latRadians: number): vec3 {
+        const len = Math.cos(latRadians);
         return [
-            Math.sin(lng) * len,
-            Math.sin(lat),
-            Math.cos(lng) * len
+            Math.sin(lngRadians) * len,
+            Math.sin(latRadians),
+            Math.cos(lngRadians) * len
         ];
     }
 

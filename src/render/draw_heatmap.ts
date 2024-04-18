@@ -52,14 +52,13 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
 
             const programConfiguration = bucket.programConfigurations.get(layer.id);
             const program = painter.useProgram('heatmap', programConfiguration);
-            const {zoom} = transform;
 
             const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
 
             const radiusCorrectionFactor = projection.getCircleRadiusCorrection(transform);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-                heatmapUniformValues(tile, zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
+                heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
                 null, projectionData,
                 layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
                 bucket.segments, layer.paint, transform.zoom,
