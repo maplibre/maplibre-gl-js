@@ -47,7 +47,7 @@ void main(void) {
     // mesh position
     vec2 extrude = v_extrude * radius * u_extrude_scale;
 
-    // multiply a_pos by 0.125, since we had it * 8 in order to sneak
+    // Divide a_pos by 8, since we had it * 8 in order to sneak
     // in extrusion data
     vec2 circle_center = floor(pos_raw / 8.0);
 
