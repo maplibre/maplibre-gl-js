@@ -11,6 +11,7 @@ import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
 import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import jnuitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import * as maplibreglModule from '../../../dist/maplibre-gl';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -670,6 +671,28 @@ function printProgress(test: TestData, total: number, index: number) {
     }
 }
 
+function printSpecificStatistics(status: 'passed' | 'failed' | 'errored', subsetStats: TestData[], total: number, suite: TestSuite) {
+    const statusCount = subsetStats.length;
+    if (statusCount === 0) {
+        return;
+    }
+    console.log(`${statusCount} ${status} (${(100 * statusCount / total).toFixed(1)}%)`);
+    for (const testData of subsetStats) {
+        const testCase = suite.testCase().className(testData.id).name(testData.id);
+        if (status === 'failed') {
+            testCase.failure();
+        } else if (status === 'errored') {
+            testCase.error();
+        }
+    }
+    if (status === 'passed') {
+        return;
+    }
+    for (let i = 0; i < subsetStats.length; i++) {
+        printProgress(subsetStats[i], statusCount, i + 1);
+    }
+}
+
 /**
  * Prints the summary at the end of the run
  *
@@ -677,23 +700,12 @@ function printProgress(test: TestData, total: number, index: number) {
  * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {
+    const suite = jnuitReportBuilder.testSuite().name('render-tests');
+    printSpecificStatistics('passed', stats.passed, stats.total, suite);
+    printSpecificStatistics('failed', stats.failed, stats.total, suite);
+    printSpecificStatistics('errored', stats.errored, stats.total, suite);
 
-    function printStat(status: string, subsetStats: TestData[]) {
-        const statusCount = subsetStats.length;
-        if (statusCount > 0) {
-            console.log(`${statusCount} ${status} (${(100 * statusCount / stats.total).toFixed(1)}%)`);
-            if (status !== 'passed') {
-                for (let i = 0; i < subsetStats.length; i++) {
-                    printProgress(subsetStats[i], statusCount, i + 1);
-                }
-            }
-        }
-    }
-
-    printStat('passed', stats.passed);
-    printStat('failed', stats.failed);
-    printStat('errored', stats.errored);
-
+    jnuitReportBuilder.writeTo('junit.xml');
     return (stats.failed.length + stats.errored.length) === 0;
 }
 
