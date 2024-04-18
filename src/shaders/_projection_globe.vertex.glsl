@@ -43,15 +43,6 @@ float projectLineThickness(float tileY) {
     }
 }
 
-float projectCircleRadius(float tileY) {
-    float thickness = 1.0 / circumferenceRatioAtTileY(tileY);    
-    if (u_projection_transition < 0.999) {
-        return mix(1.0, thickness, u_projection_transition);
-    } else {
-        return thickness;
-    }
-}
-
 // get position inside the tile in range 0..8192 and project it onto the surface of a unit sphere
 vec3 projectToSphere(vec2 posInTile) {
     // Compute position in range 0..1 of the base tile of web mercator

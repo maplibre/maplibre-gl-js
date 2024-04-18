@@ -2,13 +2,13 @@ import {mat4, vec3} from 'gl-matrix';
 import {Tile} from '../../source/tile';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {Transform} from '../transform';
-import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PreparedShader} from '../../shaders/shaders';
 import {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
 import {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import Point from '@mapbox/point-geometry';
 
 export type ProjectionGPUContext = {
     context: Context;
@@ -16,7 +16,7 @@ export type ProjectionGPUContext = {
 };
 
 /**
- * An abstract class the specializations of which are used internally by MapLibre to handle different projections.
+ * An interface the implementations of which are used internally by MapLibre to handle different projections.
  */
 export interface Projection {
     /**
@@ -141,6 +141,13 @@ export interface Projection {
      * @internal
      */
     getPixelScale(transform: Transform): number;
+
+    /**
+     * @internal
+     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the transform's zoom level and latitude.
+     * Circle and kernel radius is multiplied by this value.
+     */
+    getCircleRadiusCorrection(transform: Transform): number;
 
     /**
      * @internal

@@ -1,9 +1,10 @@
-uniform mat4 u_matrix;
 uniform bool u_scale_with_map;
 uniform bool u_pitch_with_map;
 uniform vec2 u_extrude_scale;
+uniform highp float u_globe_extrude_scale;
 uniform lowp float u_device_pixel_ratio;
 uniform highp float u_camera_to_center_distance;
+uniform vec2 u_translate;
 
 in vec2 a_pos;
 
@@ -18,6 +19,22 @@ out float v_visibility;
 #pragma mapbox: define mediump float stroke_width
 #pragma mapbox: define lowp float stroke_opacity
 
+// Interaction of globe (3D) with circle-pitch-alignment + circle-pitch-scale.
+// This is a summary of behaviour, where "v" stands for "viewport" and "m" for map.
+// First letter is alignment, second is scale.
+// v+v:
+//   2D: circles have constant screenspace size
+//   3D: same as 2D
+// v+m:
+//   2D: circles have constant screenspace size, far away circles are shrunk, like with perspective projection (only has effect if map is pitched)
+//   3D: same as 2D
+// m+v:
+//   2D: circles "printed" onto map surface, far away circles are enlarged (counteracts shirnking due to perspective projection)
+//   3D: circles "printed" onto map surface, far away circles are enlarged (implemented but questionable whether it does anything)
+// m+m:
+//   2D: circles "printed" onto map surface, far away circles are naturally smaller due to perspective projection
+//   3D: circles "printed" onto globe surface, far away circles are naturally smaller due to perspective projection
+
 void main(void) {
     #pragma mapbox: initialize highp vec4 color
     #pragma mapbox: initialize mediump float radius
@@ -28,29 +45,50 @@ void main(void) {
     #pragma mapbox: initialize lowp float stroke_opacity
 
     // unencode the extrusion vector that we snuck into the a_pos vector
-    vec2 extrude = vec2(mod(a_pos, 2.0) * 2.0 - 1.0);
+    vec2 pos_raw = a_pos + 32768.0;
+    vec2 extrude = vec2(mod(pos_raw, 8.0) / 7.0 * 2.0 - 1.0);
 
-    // multiply a_pos by 0.5, since we had it * 2 in order to sneak
+    // multiply a_pos by 0.125, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(a_pos * 0.5);
+    vec2 circle_center = floor(pos_raw * 0.125) + u_translate;
     float ele = get_elevation(circle_center);
-    v_visibility = calculate_visibility(u_matrix * vec4(circle_center, ele, 1.0));
+    v_visibility = calculate_visibility(projectTileWithElevation(circle_center, ele));
 
     if (u_pitch_with_map) {
+#ifdef GLOBE
+        vec3 center_vector = projectToSphere(circle_center);
+#endif
+
+        // This var is only used when globe is enabled and defined.
+        float angle_scale = u_globe_extrude_scale;
+
+        // Keep track of "2D" corner position to allow smooth interpolation between globe and mercator
         vec2 corner_position = circle_center;
         if (u_scale_with_map) {
-            corner_position += extrude * (radius + stroke_width) * u_extrude_scale;
+            angle_scale *= (radius + stroke_width);
+            corner_position += extrude * u_extrude_scale * (radius + stroke_width);
         } else {
             // Pitching the circle with the map effectively scales it with the map
             // To counteract the effect for pitch-scale: viewport, we rescale the
             // whole circle based on the pitch scaling effect at its central point
-            vec4 projected_center = u_matrix * vec4(circle_center, 0, 1);
-            corner_position += extrude * (radius + stroke_width) * u_extrude_scale * (projected_center.w / u_camera_to_center_distance);
+#ifdef GLOBE
+            vec4 projected_center = interpolateProjection(circle_center, center_vector, ele);
+#else
+            vec4 projected_center = projectTileWithElevation(circle_center, ele);
+#endif
+            corner_position += extrude * u_extrude_scale * (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
+            angle_scale *= (radius + stroke_width) * (projected_center.w / u_camera_to_center_distance);
         }
 
-        gl_Position = u_matrix * vec4(corner_position, ele, 1);
+#ifdef GLOBE
+        vec2 angles = extrude * angle_scale;
+        vec3 corner_vector = globeRotateVector(center_vector, angles);
+        gl_Position = interpolateProjection(corner_position, corner_vector, ele);
+#else
+        gl_Position = projectTileWithElevation(corner_position, ele);
+#endif
     } else {
-        gl_Position = u_matrix * vec4(circle_center, ele, 1);
+        gl_Position = projectTileWithElevation(circle_center, ele);
 
         if (u_scale_with_map) {
             gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale * u_camera_to_center_distance;

@@ -39,6 +39,7 @@ const granularitySettingsGlobe: SubdivisionGranularitySetting = new SubdivisionG
     // This si not needed on fill, because fill geometry tends to already be
     // highly tessellated and granular at high zooms.
     tile: new SubdivisionGranularityExpression(128, 16),
+    circle: 3
 });
 
 export class GlobeProjection implements Projection {
@@ -187,7 +188,7 @@ export class GlobeProjection implements Projection {
 
     public updateProjection(transform: Transform): void {
         this._errorQueryLatitudeDegrees = transform.center.lat;
-        this._updateAnimation(transform);
+        this._updateAnimation(transform.zoom);
 
         // We want zoom levels to be consistent between globe and flat views.
         // This means that the pixel size of features at the map center point
@@ -322,15 +323,21 @@ export class GlobeProjection implements Projection {
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
+    /**
+     * Given a 2D point in the mercator base tile, returns its 3D coordinates on the surface of a unit sphere.
+     */
     private _projectToSphere(mercatorX: number, mercatorY: number): vec3 {
         const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
         const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
+        return this._angularCoordinatesToVector(sphericalX, sphericalY);
+    }
 
-        const len = Math.cos(sphericalY);
+    private _angularCoordinatesToVector(lng: number, lat: number): vec3 {
+        const len = Math.cos(lat);
         return [
-            Math.sin(sphericalX) * len,
-            Math.sin(sphericalY),
-            Math.cos(sphericalX) * len
+            Math.sin(lng) * len,
+            Math.sin(lat),
+            Math.cos(lng) * len
         ];
     }
 
@@ -406,7 +413,12 @@ export class GlobeProjection implements Projection {
         return flatPixelScale;
     }
 
-    private _updateAnimation(transform: Transform) {
+    public getCircleRadiusCorrection(transform: Transform): number {
+        const globeRadiusAtCenterLatitude = Math.cos(transform.center.lat * Math.PI / 180);
+        return globeRadiusAtCenterLatitude;
+    }
+
+    private _updateAnimation(currentZoom: number) {
         // Update globe transition animation
         const globeState = this._globeProjectionOverride;
         const currentTime = browser.now();
@@ -425,7 +437,7 @@ export class GlobeProjection implements Projection {
         }
 
         // Update globe zoom transition
-        const currentZoomState = transform.zoom >= maxGlobeZoom;
+        const currentZoomState = currentZoom >= maxGlobeZoom;
         if (currentZoomState !== this._lastLargeZoomState) {
             this._lastLargeZoomState = currentZoomState;
             this._lastLargeZoomStateChange = currentTime;
