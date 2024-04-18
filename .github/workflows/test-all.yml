@@ -106,7 +106,7 @@ jobs:
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-dist
       - name: Run Render tests
-      - run: npm run test-render
+        run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
       - name: Upload coverage reports to Codecov
