@@ -1,6 +1,5 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {Transform} from '../transform';
-import {Projection, ProjectionGPUContext} from './projection';
+import {Projection, ProjectionGPUContext, TransformLike} from './projection';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {Tile} from '../../source/tile';
@@ -77,7 +76,7 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public updateProjection(t: Transform): void {
+    public updateProjection(t: TransformLike): void {
         const cameraPos: vec4 = [0, 0, -1, 1];
         vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
         this._cameraPosition = [
@@ -127,15 +126,15 @@ export class MercatorProjection implements Projection {
         throw new Error('Not implemented.');
     }
 
-    public getPixelScale(_: Transform): number {
+    public getPixelScale(_: any): number {
         return 1.0;
     }
 
-    public getCircleRadiusCorrection(_: Transform): number {
+    public getCircleRadiusCorrection(_: any): number {
         return 1.0;
     }
 
-    public translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
@@ -163,7 +162,7 @@ export class MercatorProjection implements Projection {
         return this._cachedMesh;
     }
 
-    public transformLightDirection(_: Transform, dir: vec3): vec3 {
+    public transformLightDirection(_: TransformLike, dir: vec3): vec3 {
         return vec3.clone(dir);
     }
 }
@@ -174,7 +173,7 @@ export class MercatorProjection implements Projection {
  * @returns matrix
  */
 export function translatePosMatrix(
-    transform: Transform,
+    transform: TransformLike,
     tile: Tile,
     matrix: mat4,
     translate: [number, number],
@@ -194,7 +193,7 @@ export function translatePosMatrix(
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: Transform,
+    transform: TransformLike,
     tile: Tile,
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',

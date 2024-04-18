@@ -1,7 +1,6 @@
 import {mat4, vec3} from 'gl-matrix';
 import {Tile} from '../../source/tile';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
-import {Transform} from '../transform';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PreparedShader} from '../../shaders/shaders';
 import {Context} from '../../gl/context';
@@ -9,11 +8,26 @@ import {Mesh} from '../../render/mesh';
 import {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import Point from '@mapbox/point-geometry';
+import {LngLat} from '../lng_lat';
 
 export type ProjectionGPUContext = {
     context: Context;
     useProgram: (name: string) => Program<any>;
 };
+
+// Thin type with only the relevant fields from the Transform class
+export type TransformLike = {
+    center: LngLat;
+    angle: number; // same as bearing, but negated and in radians
+    pitch: number; // in degrees
+    zoom: number;
+    worldSize: number;
+    fov: number; // in degrees
+    width: number;
+    height: number;
+    cameraToCenterDistance: number;
+    invProjMatrix: mat4;
+}
 
 /**
  * An interface the implementations of which are used internally by MapLibre to handle different projections.
@@ -109,7 +123,7 @@ export interface Projection {
      * Updates the projection for current transform, such as recomputing internal matrices.
      * May change the value of `isRenderingDirty`.
      */
-    updateProjection(transform: Transform): void;
+    updateProjection(transform: TransformLike): void;
 
     /**
      * @internal
@@ -140,20 +154,20 @@ export interface Projection {
     /**
      * @internal
      */
-    getPixelScale(transform: Transform): number;
+    getPixelScale(transform: TransformLike): number;
 
     /**
      * @internal
      * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the transform's zoom level and latitude.
      * Circle and kernel radius is multiplied by this value.
      */
-    getCircleRadiusCorrection(transform: Transform): number;
+    getCircleRadiusCorrection(transform: TransformLike): number;
 
     /**
      * @internal
      * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
      */
-    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+    translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
 
     /**
      * @internal
@@ -171,5 +185,5 @@ export interface Projection {
      * @param dir - The light direction.
      * @returns A new vector with the transformed light direction.
      */
-    transformLightDirection(transform: Transform, dir: vec3): vec3;
+    transformLightDirection(transform: TransformLike, dir: vec3): vec3;
 }
