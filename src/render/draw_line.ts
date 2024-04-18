@@ -69,7 +69,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
         const rttCoord = terrainData ? coord : null;
         const posMatrix = rttCoord ? rttCoord.posMatrix : tile.tileID.posMatrix;
         const projectionData = painter.style.map.projection.getProjectionData(coord.canonical, posMatrix);
-        const pixelRatio = painter.style.map.projection.getPixelScale(painter.style.map.transform.center);
+        const pixelRatio = painter.style.map.projection.getPixelScale(painter.style.map.transform);
 
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :
             dasharray ? lineSDFUniformValues(painter, tile, layer, pixelRatio, dasharray, crossfade) :
