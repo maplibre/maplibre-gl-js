@@ -195,12 +195,16 @@ export class GlobeProjection implements Projection {
         this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, easeCubicInOut(mix));
     }
 
+    private _getZoomAdjustment(oldLat: number, newLat: number): number {
+        const oldCircumference = Math.cos(oldLat * Math.PI / 180.0);
+        const newCircumference = Math.cos(newLat * Math.PI / 180.0);
+        return Math.log2(newCircumference / oldCircumference);
+    }
+
     public updateProjection(transform: Transform): void {
         if (this._oldTransformState) {
             if (this.useGlobeControls) {
-                const oldCircumference = Math.cos(this._oldTransformState.lat * Math.PI / 180.0);
-                const newCircumference = Math.cos(transform.center.lat * Math.PI / 180.0);
-                transform.zoom += Math.log2(newCircumference / oldCircumference);
+                transform.zoom += this._getZoomAdjustment(this._oldTransformState.lat, transform.center.lat);
             }
             this._oldTransformState.zoom = transform.zoom;
             this._oldTransformState.lat = transform.center.lat;
@@ -212,7 +216,7 @@ export class GlobeProjection implements Projection {
         }
 
         this._errorQueryLatitudeDegrees = transform.center.lat;
-        this._updateAnimation(transform);
+        this._updateAnimation(transform.zoom);
 
         // We want zoom levels to be consistent between globe and flat views.
         // This means that the pixel size of features at the map center point
@@ -442,7 +446,7 @@ export class GlobeProjection implements Projection {
         return globeRadiusAtCenterLatitude;
     }
 
-    private _updateAnimation(transform: Transform) {
+    private _updateAnimation(currentZoom: number) {
         // Update globe transition animation
         const globeState = this._globeProjectionOverride;
         const currentTime = browser.now();
@@ -461,7 +465,7 @@ export class GlobeProjection implements Projection {
         }
 
         // Update globe zoom transition
-        const currentZoomState = transform.zoom >= maxGlobeZoom;
+        const currentZoomState = currentZoom >= maxGlobeZoom;
         if (currentZoomState !== this._lastLargeZoomState) {
             this._lastLargeZoomState = currentZoomState;
             this._lastLargeZoomStateChange = currentTime;
