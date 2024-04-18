@@ -1,14 +1,14 @@
-import {mat4, vec3} from 'gl-matrix';
-import {Tile} from '../../source/tile';
-import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
-import {ProjectionData} from '../../render/program/projection_program';
-import {PreparedShader} from '../../shaders/shaders';
-import {Context} from '../../gl/context';
-import {Mesh} from '../../render/mesh';
-import {Program} from '../../render/program';
+import type {mat4, vec3} from 'gl-matrix';
+import type {Tile} from '../../source/tile';
+import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
+import type {ProjectionData} from '../../render/program/projection_program';
+import type {PreparedShader} from '../../shaders/shaders';
+import type {Context} from '../../gl/context';
+import type {Mesh} from '../../render/mesh';
+import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import Point from '@mapbox/point-geometry';
-import {LngLat} from '../lng_lat';
+import type Point from '@mapbox/point-geometry';
+import type {LngLat} from '../lng_lat';
 
 export type ProjectionGPUContext = {
     context: Context;
