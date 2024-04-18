@@ -338,7 +338,8 @@ export type AddImageOptions = {
 
 export type AtmosphereOption = {
     fullAtmoZoom: number;
-    NoAtmoZoom: number;
+    noAtmoZoom: number;
+    sunDateAndTime?: string;
 }
 
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
@@ -409,7 +410,7 @@ const defaultOptions = {
     atmosphere: false,
     atmosphereOptions: {
         fullAtmoZoom: 5,
-        NoAtmoZoom: 7
+        noAtmoZoom: 7
     }
 } as CompleteMapOptions;
 
@@ -630,6 +631,9 @@ export class Map extends Camera {
 
         this.atmosphere = options.atmosphere;
         if (options.atmosphereOptions) {
+            if (options.atmosphereOptions.sunDateAndTime != null && isNaN(Date.parse(options.atmosphereOptions.sunDateAndTime))) {
+                throw new Error('atmosphereOptions.sunDateAndTime must be use a YYYY-MM-DDTHH:mm:ss.sssZ format.');
+            }
             this.atmosphereOptions = options.atmosphereOptions;
         }
 
