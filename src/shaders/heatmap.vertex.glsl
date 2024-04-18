@@ -49,7 +49,7 @@ void main(void) {
 
     // multiply a_pos by 0.125, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(pos_raw * 0.125);
+    vec2 circle_center = floor(pos_raw / 8.0);
 
 #ifdef GLOBE
     vec2 angles = v_extrude * radius * u_globe_extrude_scale;

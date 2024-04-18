@@ -34,7 +34,7 @@ void main(void) {
 
     // multiply a_pos by 0.125, since we had it * 8 in order to sneak
     // in extrusion data
-    vec2 circle_center = floor(pos_raw * 0.125) + u_translate;
+    vec2 circle_center = floor(pos_raw / 8.0) + u_translate;
     float ele = get_elevation(circle_center);
     v_visibility = calculate_visibility(projectTileWithElevation(circle_center, ele));
 
