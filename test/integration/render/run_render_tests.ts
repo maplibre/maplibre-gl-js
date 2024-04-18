@@ -677,8 +677,8 @@ function printSpecificStatistics(status: 'passed' | 'failed' | 'errored', subset
         return;
     }
     console.log(`${statusCount} ${status} (${(100 * statusCount / total).toFixed(1)}%)`);
-    for (const testDate of subsetStats) {
-        const testCase = suite.testCase().className(testDate.id).name(testDate.id);
+    for (const testData of subsetStats) {
+        const testCase = suite.testCase().className(testData.id).name(testData.id);
         if (status === 'failed') {
             testCase.failure();
         } else if (status === 'errored') {
