@@ -414,8 +414,7 @@ export class GlobeProjection implements Projection {
     }
 
     public getCircleRadiusCorrection(transformCenter: LngLat): number {
-        const globeRadiusAtCenterLatitude = Math.cos(transformCenter.lat * Math.PI / 180);
-        return globeRadiusAtCenterLatitude;
+        return Math.cos(transformCenter.lat * Math.PI / 180);
     }
 
     private _updateAnimation(currentZoom: number) {

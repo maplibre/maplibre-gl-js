@@ -27,12 +27,16 @@ import type Point from '@mapbox/point-geometry';
 import type {FeatureStates} from '../../source/source_state';
 import type {ImagePosition} from '../../render/image_atlas';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
+import {CircleGranularity} from '../../render/subdivision_granularity_settings';
+
+const VERTEX_MIN_VALUE = -32768; // -(2^15)
 
 // Extrude is in range 0..7, which will be mapped to -1..1 in the shader.
 function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {
+    // We pack circle position and extrude into range 0..65535, but vertices are stored as *signed* 16-bit integers, so we need to offset the number by 2^15.
     layoutVertexArray.emplaceBack(
-        (x * 8) + extrudeX - 32768,
-        (y * 8) + extrudeY - 32768);
+        VERTEX_MIN_VALUE + (x * 8) + extrudeX,
+        VERTEX_MIN_VALUE + (y * 8) + extrudeY);
 }
 
 /**
@@ -83,12 +87,8 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         let circleSortKey = null;
         let sortFeaturesByKey = false;
 
-        let subdivide = false;
-
-        if (styleLayer.type === 'heatmap') {
-            // Heatmap circles are usually large (and map-pitch-aligned), tessellate them to allow curvature along the globe.
-            subdivide = true;
-        }
+        // Heatmap circles are usually large (and map-pitch-aligned), tessellate them to allow curvature along the globe.
+        let subdivide = styleLayer.type === 'heatmap';
 
         // Heatmap layers are handled in this bucket and have no evaluated properties, so we check our access
         if (styleLayer.type === 'circle') {
@@ -170,11 +170,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         this.segments.destroy();
     }
 
-    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, granularity?: number) {
-        if (granularity === undefined) {
-            granularity = 1;
-        }
-
+    addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, granularity: CircleGranularity = 1) {
         // Since we store the circle's center in each vertex, we only have 3 bits for actual vertex position in each axis.
         // Thus the valid range of positions is 0..7.
         // This gives us 4 possible granularity settings that are symmetrical.
@@ -182,16 +178,21 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
         // This array stores vertex positions that should by used by the tessellated quad.
         let extrudes: Array<number>;
 
-        if (granularity === 1) {
-            extrudes = [0, 7];
-        } else if (granularity === 3) {
-            extrudes = [0, 2, 5, 7];
-        } else if (granularity === 5) {
-            extrudes = [0, 1, 3, 4, 6, 7];
-        } else if (granularity === 7) {
-            extrudes = [0, 1, 2, 3, 4, 5, 6, 7];
-        } else {
-            throw new Error(`Invalid circle bucket granularity: ${granularity}; valid values are 1, 3, 5, 7.`);
+        switch (granularity) {
+            case 1:
+                extrudes = [0, 7];
+                break;
+            case 3:
+                extrudes = [0, 2, 5, 7];
+                break;
+            case 5:
+                extrudes = [0, 1, 3, 4, 6, 7];
+                break;
+            case 7:
+                extrudes = [0, 1, 2, 3, 4, 5, 6, 7];
+                break;
+            default:
+                throw new Error(`Invalid circle bucket granularity: ${granularity}; valid values are 1, 3, 5, 7.`);
         }
 
         const verticesPerAxis = extrudes.length;
