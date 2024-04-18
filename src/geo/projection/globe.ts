@@ -565,4 +565,8 @@ export class GlobeProjection implements Projection {
 
         return mesh;
     }
+
+    isGlobe(): boolean {
+        return true;
+    }
 }

@@ -549,7 +549,7 @@ export class Painter {
             this.renderLayer(this, sourceCache, layer, coords);
         }
 
-        if (this.style.map.atmosphere) {
+        if (this.style.map.atmosphere && this.style.map.projection.isGlobe()) {
             drawAtmosphere(this);
         }
 

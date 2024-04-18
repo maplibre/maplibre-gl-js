@@ -144,4 +144,6 @@ export interface Projection {
     getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh;
 
     transformPosition(lngLat: LngLat, elev: number): vec3;
+
+    isGlobe(): boolean;
 }

@@ -151,6 +151,9 @@ export class MercatorProjection implements Projection {
         return vec3.fromValues(0, 0, 0);
     }
 
+    isGlobe(): boolean {
+        return false;
+    }
 }
 
 /**
