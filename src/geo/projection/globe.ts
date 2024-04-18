@@ -1,21 +1,20 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {Context} from '../../gl/context';
-import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
+import type {Context} from '../../gl/context';
+import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {Mesh} from '../../render/mesh';
 import {EXTENT} from '../../data/extent';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
-import {Transform} from '../transform';
-import {Tile} from '../../source/tile';
+import type {Tile} from '../../source/tile';
 import {browser} from '../../util/browser';
 import {easeCubicInOut, lerp} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../../render/subdivision';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import Point from '@mapbox/point-geometry';
-import {ProjectionData} from '../../render/program/projection_program';
-import {Projection, ProjectionGPUContext} from './projection';
+import type {ProjectionData} from '../../render/program/projection_program';
+import type {Projection, ProjectionGPUContext, TransformLike} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
@@ -226,9 +225,9 @@ export class GlobeProjection implements Projection {
         // Construct a completely separate matrix for globe view
         const globeMatrix = new Float64Array(16) as any;
         const globeMatrixUncorrected = new Float64Array(16) as any;
-        mat4.perspective(globeMatrix, transform._fov, transform.width / transform.height, 0.5, transform.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        mat4.perspective(globeMatrix, transform.fov * Math.PI / 180, transform.width / transform.height, 0.5, transform.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -transform.cameraToCenterDistance]);
-        mat4.rotateX(globeMatrix, globeMatrix, -transform._pitch);
+        mat4.rotateX(globeMatrix, globeMatrix, -transform.pitch * Math.PI / 180);
         mat4.rotateZ(globeMatrix, globeMatrix, -transform.angle);
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
@@ -283,7 +282,7 @@ export class GlobeProjection implements Projection {
         return dirty;
     }
 
-    private _computeClippingPlane(transform: Transform, globeRadiusPixels: number): [number, number, number, number] {
+    private _computeClippingPlane(transform: TransformLike, globeRadiusPixels: number): [number, number, number, number] {
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
         // and all the non-visible parts in the negative half-space.
@@ -404,7 +403,7 @@ export class GlobeProjection implements Projection {
         return dotResult < 0.0;
     }
 
-    public transformLightDirection(transform: Transform, dir: vec3): vec3 {
+    public transformLightDirection(transform: TransformLike, dir: vec3): vec3 {
         const sphereX = transform.center.lng * Math.PI / 180.0;
         const sphereY = transform.center.lat * Math.PI / 180.0;
 
@@ -432,8 +431,8 @@ export class GlobeProjection implements Projection {
         return normalized;
     }
 
-    public getPixelScale(transform: Transform): number {
-        const globePixelScale = 1.0 / Math.cos(transform.center.lat * Math.PI / 180);
+    public getPixelScale(transformCenter: LngLat): number {
+        const globePixelScale = 1.0 / Math.cos(transformCenter.lat * Math.PI / 180);
         const flatPixelScale = 1.0;
         if (this.useGlobeRendering) {
             return lerp(flatPixelScale, globePixelScale, this._globeness);
@@ -441,9 +440,8 @@ export class GlobeProjection implements Projection {
         return flatPixelScale;
     }
 
-    public getCircleRadiusCorrection(transform: Transform): number {
-        const globeRadiusAtCenterLatitude = Math.cos(transform.center.lat * Math.PI / 180);
-        return globeRadiusAtCenterLatitude;
+    public getCircleRadiusCorrection(transformCenter: LngLat): number {
+        return Math.cos(transformCenter.lat * Math.PI / 180);
     }
 
     private _updateAnimation(currentZoom: number) {
@@ -500,7 +498,7 @@ export class GlobeProjection implements Projection {
         return mesh;
     }
 
-    public translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
         return translatePosition(transform, tile, translate, translateAnchor);

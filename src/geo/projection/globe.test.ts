@@ -1,8 +1,8 @@
 import {mat4} from 'gl-matrix';
 import {GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
-import {Transform} from '../transform';
 import {expectToBeCloseToArray} from './mercator.test';
+import type {TransformLike} from './projection';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 
@@ -169,28 +169,27 @@ function planeDistance(point: Array<number>, plane: Array<number>) {
 
 function createMockTransform(object: {
     center?: {
-        lat: number;
-        lng: number;
+        latDegrees: number;
+        lngDegrees: number;
     };
-    pitch?: number;
-    bearing?: number;
+    pitchDegrees?: number;
+    angleDegrees?: number;
     width?: number;
     height?: number;
 }): Transform {
     const pitchDegrees = (object && object.pitch) ? object.pitch : 0;
     return {
-        center: {
-            lat: (object && object.center) ? object.center.lat : 0,
-            lng: (object && object.center) ? object.center.lng : 0,
-        },
+        center: new LngLat(
+            object.center ? (object.center.lngDegrees / 180.0 * Math.PI) : 0,
+            object.center ? (object.center.latDegrees / 180.0 * Math.PI) : 0),
         worldSize: 10.5 * 512,
-        _fov: Math.PI / 4.0,
+        fov: 45.0,
         width: (object && object.width) ? object.width : 640,
         height: (object && object.height) ? object.height : 480,
         cameraToCenterDistance: 759,
-        _pitch: pitchDegrees / 180.0 * Math.PI, // in radians
         pitch: pitchDegrees, // in degrees
         angle: (object && object.bearing) ? (-object.bearing / 180.0 * Math.PI) : 0,
         zoom: 0,
-    } as Transform;
+        invProjMatrix: null,
+    };
 }
