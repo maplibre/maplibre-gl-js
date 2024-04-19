@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Sprites include optional textFitHeight and textFitWidth values (TODO: Add PR)
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._

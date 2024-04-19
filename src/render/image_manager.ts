@@ -226,6 +226,8 @@ export class ImageManager extends Evented {
                     stretchX: image.stretchX,
                     stretchY: image.stretchY,
                     content: image.content,
+                    textFitWidth: image.textFitWidth,
+                    textFitHeight: image.textFitHeight,
                     hasRenderCallback: Boolean(image.userImage && image.userImage.render)
                 };
             } else {

@@ -10,6 +10,7 @@ import {warnOnce} from '../util/util';
 
 import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
+import {TextFit} from '../style/style_image';
 import type {ImagePosition} from '../render/image_atlas';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {Rect, GlyphPosition} from '../render/glyph_atlas';
@@ -23,7 +24,7 @@ enum WritingMode {
 }
 
 const SHAPING_DEFAULT_OFFSET = -17;
-export {shapeText, shapeIcon, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
+export {shapeText, shapeIcon, applyTextFit, fitIconToText, getAnchorAlignment, WritingMode, SHAPING_DEFAULT_OFFSET};
 
 // The position of a glyph relative to the text's anchor point.
 export type PositionedGlyph = {
@@ -800,6 +801,52 @@ function shapeIcon(
     const y1 = dy - image.displaySize[1] * verticalAlign;
     const y2 = y1 + image.displaySize[1];
     return {image, top: y1, bottom: y2, left: x1, right: x2};
+}
+
+/**
+ * Called after a PositionedIcon has already been run through fitIconToText,
+ * but needs further adjustment to apply textFitWidth and textFitHeight.
+ * @param shapedIcon - The icon that will be adjusted.
+ * @returns Extents of the shapedIcon with text fit adjustments if necessary.
+ */
+function applyTextFit(shapedIcon) {
+    // Assume shapedIcon.image is set or this wouldn't be called.
+    var _a, _b;
+    // Size of the icon after it was adjusted using stretchX and Y
+    let iconLeft = shapedIcon.left;
+    let iconTop = shapedIcon.top;
+    let iconWidth = shapedIcon.right - iconLeft;
+    let iconHeight = shapedIcon.bottom - iconTop;
+    // Size of the origional content area
+    const contentWidth = shapedIcon.image.content[2] - shapedIcon.image.content[0];
+    const contentHeight = shapedIcon.image.content[3] - shapedIcon.image.content[1];
+    const textFitWidth = (_a = shapedIcon.image.textFitWidth) !== null && _a !== void 0 ? _a : TextFit.stretchOrShrink;
+    const textFitHeight = (_b = shapedIcon.image.textFitHeight) !== null && _b !== void 0 ? _b : TextFit.stretchOrShrink;
+    const contentAspectRatio = contentWidth / contentHeight;
+    // Scale to the proportional axis first note that height takes precidence if
+    // both axes are set to proportional.
+    if (textFitHeight === TextFit.proportional) {
+        if ((textFitWidth === TextFit.stretchOnly && iconWidth / iconHeight < contentAspectRatio) || textFitWidth === TextFit.proportional) {
+            // Push the width of the icon back out to match the content aspect ratio
+            const newIconWidth = iconHeight * contentAspectRatio;
+            iconLeft *= newIconWidth / iconWidth;
+            iconWidth = newIconWidth;
+        }
+    }
+    else if (textFitWidth === TextFit.proportional) {
+        if (textFitHeight === TextFit.stretchOnly && contentAspectRatio !== 0 && iconWidth / iconHeight > contentAspectRatio) {
+            // Push the height of the icon back out to match the content aspect ratio
+            const newIconHeight = iconWidth / contentAspectRatio;
+            iconTop *= newIconHeight / iconHeight;
+            iconHeight = newIconHeight;
+        }
+    }
+    else {
+        // If neither textFitHeight nor textFitWidth are proportional then
+        // there is no effect since the content rectangle should be precisely
+        // matched to the content
+    }
+    return { x1: iconLeft, y1: iconTop, x2: iconLeft + iconWidth, y2: iconTop + iconHeight };
 }
 
 function fitIconToText(

@@ -1,0 +1,99 @@
+{
+    "version": 8,
+    "metadata": {
+      "test": {
+        "width": 64,
+        "height": 64
+      }
+    },
+    "sources": {
+        "geojson": {
+            "type": "geojson",
+            "data": {
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "Feature",
+                    "properties": {
+                        "order": "no-match"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-6.6, 12]
+                    }
+                }, {
+                    "type": "Feature",
+                    "properties": {
+                        "order": "no-match"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [6.6, 12]
+                    }
+                }, {
+                    "type": "Feature",
+                    "properties": {
+                        "order": "match"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-6.6, -11.5]
+                    }
+                }, {
+                    "type": "Feature",
+                    "properties": {
+                        "order": "match"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [6.6, -11.5]
+                    }
+                }]
+            }
+        }
+    },
+    "sprite": "local://sprites/stretch",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "layers": [
+      {
+        "id": "symbol",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "order", "no-match"],
+        "layout": {
+          "text-field": "I",
+          "text-font": [
+            "Open Sans Semibold",
+            "Arial Unicode MS Bold"
+          ],
+          "icon-image": "nine-part-content",
+          "icon-text-fit": "both"
+        }
+      },
+      {
+        "id": "symbol_with_offset",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "order", "match"],
+        "layout": {
+          "text-field": "I",
+          "text-font": [
+            "Open Sans Semibold",
+            "Arial Unicode MS Bold"
+          ],
+          "icon-image": "nine-part-textfit-wh-stretchOnly-proportional",
+          "icon-text-fit": "both"
+        }
+      },
+      {
+        "id": "anchors",
+        "type": "circle",
+        "source": "geojson",
+        "paint": {
+          "circle-radius": 2,
+          "circle-color": "green",
+          "circle-stroke-color": "white",
+          "circle-stroke-width": 1
+        }
+      }
+    ]
+  }
