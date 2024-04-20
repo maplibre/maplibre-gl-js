@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- Sprites include optional textFitHeight and textFitWidth values (TODO: Add PR)
+- Sprites include optional textFitHeight and textFitWidth values ([#4019](https://github.com/maplibre/maplibre-gl-js/pull/4019))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
