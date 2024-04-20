@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-- _...Add new stuff here..._
+- Add option to display a realistic atmosphere when using a Globe projection ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
