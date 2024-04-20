@@ -2,6 +2,8 @@ import {AttributionControl, defaultAtributionControlOptions} from './attribution
 import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
+import {Map} from '../../ui/map';
+import {MapSourceDataEvent} from '../events';
 
 function createMap() {
 
@@ -18,7 +20,7 @@ function createMap() {
     }, undefined);
 }
 
-let map;
+let map: Map;
 
 beforeEach(() => {
     beforeMapTest();
@@ -255,12 +257,21 @@ describe('AttributionControl', () => {
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
         map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Not used'});
         map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Vibility none'});
-        map.addLayer({id: '1', type: 'fill', source: '1'});
-        map.addLayer({id: '3', type: 'fill', source: '3', layout: {visibility: 'none'}});
+        map.addLayer({id: 'layer1', type: 'fill', source: '1'});
+        map.addLayer({id: 'layer3', type: 'fill', source: '3', layout: {visibility: 'none'}});
 
         await sleep(100);
 
-        expect(spy.mock.calls.filter((call) => call[0].dataType === 'source' && call[0].sourceDataType === 'visibility')).toHaveLength(3);
+        expect(spy.mock.calls.filter((call) => {
+            const mapDataEvent: MapSourceDataEvent = call[0];
+
+            // the only one visible should be '1'.
+            // source 2 does not have layer and source 3 is not visible
+            return mapDataEvent.dataType === 'source' &&
+                   mapDataEvent.sourceDataType === 'visibility' &&
+                   mapDataEvent.sourceId === '1';
+        })).toHaveLength(1);
+
         expect(attribution._innerContainer.innerHTML).toBe(`Used | ${defaultAtributionControlOptions.customAttribution}`);
     });
 
@@ -286,7 +297,13 @@ describe('AttributionControl', () => {
 
         await sleep(100);
 
-        expect(spy.mock.calls.filter((call) => call[0].dataType === 'source' && call[0].sourceDataType === 'visibility')).toHaveLength(1);
+        // there should not be a visibility event since there is no layer
+        expect(spy.mock.calls.filter((call) => {
+            const mapDataEvent: MapSourceDataEvent = call[0];
+            return mapDataEvent.dataType === 'source' &&
+                   mapDataEvent.sourceDataType === 'visibility';
+        })).toHaveLength(0);
+
         expect(attribution._innerContainer.innerHTML).toBe(defaultAtributionControlOptions.customAttribution);
     });
 
@@ -312,7 +329,13 @@ describe('AttributionControl', () => {
         map.setTerrain({source: '1'});
         await sleep(100);
 
-        expect(spy.mock.calls.filter((call) => call[0].dataType === 'source' && call[0].sourceDataType === 'visibility')).toHaveLength(1);
+        // there should not be a visibility event since there is no layer
+        expect(spy.mock.calls.filter((call) => {
+            const mapDataEvent: MapSourceDataEvent = call[0];
+            return mapDataEvent.dataType === 'source' &&
+                   mapDataEvent.sourceDataType === 'visibility';
+        })).toHaveLength(0);
+
         expect(attribution._innerContainer.innerHTML).toBe(`Terrain | ${defaultAtributionControlOptions.customAttribution}`);
     });
 

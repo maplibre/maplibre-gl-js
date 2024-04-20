@@ -1,0 +1,23 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "projection": "globe"
+    }
+  },
+  "center": [
+    0.0,
+    0.0
+  ],
+  "zoom": 1,
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "green"
+      }
+    }
+  ]
+}

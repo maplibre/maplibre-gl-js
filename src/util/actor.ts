@@ -2,7 +2,10 @@ import {Subscription, isWorker, subscribe} from './util';
 import {serialize, deserialize, Serialized} from './web_worker_transfer';
 import {ThrottledInvoker} from './throttled_invoker';
 
-import type {ActorMessage, MessageType, RequestResponseMessageMap} from './actor_messages';
+import {
+    MessageType,
+    type ActorMessage,
+    type RequestResponseMessageMap} from './actor_messages';
 
 /**
  * An interface to be sent to the actor in order for it to allow communication between the worker and the main thread

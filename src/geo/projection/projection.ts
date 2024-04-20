@@ -1,22 +1,36 @@
 import {mat4, vec3} from 'gl-matrix';
 import {Tile} from '../../source/tile';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
-import {Transform} from '../transform';
 import Point from '@mapbox/point-geometry';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PreparedShader} from '../../shaders/shaders';
 import {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
 import {Program} from '../../render/program';
-import {LngLat} from '../lng_lat';
+import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import type {LngLat} from '../lng_lat';
 
 export type ProjectionGPUContext = {
     context: Context;
     useProgram: (name: string) => Program<any>;
 };
 
+// Thin type with only the relevant fields from the Transform class
+export type TransformLike = {
+    center: LngLat;
+    angle: number; // same as bearing, but negated and in radians
+    pitch: number; // in degrees
+    zoom: number;
+    worldSize: number;
+    fov: number; // in degrees
+    width: number;
+    height: number;
+    cameraToCenterDistance: number;
+    invProjMatrix: mat4;
+}
+
 /**
- * An abstract class the specializations of which are used internally by MapLibre to handle different projections.
+ * An interface the implementations of which are used internally by MapLibre to handle different projections.
  */
 export interface Projection {
     /**
@@ -31,6 +45,12 @@ export interface Projection {
      * instead of the default (and fast) mercator projection path.
      */
     get useSpecialProjectionForSymbols(): boolean;
+
+    /**
+     * @internal
+     * Returns the camera's position transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
+     */
+    get cameraPosition(): vec3;
 
     /**
      * @internal
@@ -73,6 +93,14 @@ export interface Projection {
 
     /**
      * @internal
+     * An object describing how much subdivision should be applied to rendered geometry.
+     * The subdivision settings should be a constant for a given projection.
+     * Projections that do not require subdivision should return {@link SubdivisionGranularitySetting.noSubdivision}.
+     */
+    get subdivisionGranularity(): SubdivisionGranularitySetting;
+
+    /**
+     * @internal
      * True when an animation handled by the projection is in progress,
      * requiring MapLibre to keep rendering new frames.
      */
@@ -95,7 +123,7 @@ export interface Projection {
      * Updates the projection for current transform, such as recomputing internal matrices.
      * May change the value of `isRenderingDirty`.
      */
-    updateProjection(transform: Transform): void;
+    updateProjection(transform: TransformLike): void;
 
     /**
      * @internal
@@ -126,13 +154,20 @@ export interface Projection {
     /**
      * @internal
      */
-    getPixelScale(transform: Transform): number;
+    getPixelScale(transform: { center: LngLat }): number;
+
+    /**
+     * @internal
+     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the transform's zoom level and latitude.
+     * Circle and kernel radius is multiplied by this value.
+     */
+    getCircleRadiusCorrection(transform: { center: LngLat }): number;
 
     /**
      * @internal
      * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
      */
-    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+    translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
 
     /**
      * @internal
@@ -156,4 +191,13 @@ export interface Projection {
      * Return true if the projection correspond to a Globe.
      */
     isGlobe(): boolean;
+
+    /**
+     * @internal
+     * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
+     * @param transform - Current map transform.
+     * @param dir - The light direction.
+     * @returns A new vector with the transformed light direction.
+     */
+    transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3;
 }

@@ -25,6 +25,8 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
     if (painter.renderPass === 'offscreen') {
         const context = painter.context;
         const gl = context.gl;
+        const projection = painter.style.map.projection;
+        const transform = painter.transform;
 
         // Allow kernels to be drawn across boundaries, so that
         // large kernels are not clipped to tiles
@@ -50,12 +52,16 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
 
             const programConfiguration = bucket.programConfigurations.get(layer.id);
             const program = painter.useProgram('heatmap', programConfiguration);
-            const {zoom} = painter.transform;
+
+            const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
+
+            const radiusCorrectionFactor = projection.getCircleRadiusCorrection(transform);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
-                heatmapUniformValues(coord.posMatrix, tile, zoom, layer.paint.get('heatmap-intensity')), null, null,
+                heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
+                null, projectionData,
                 layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,
-                bucket.segments, layer.paint, painter.transform.zoom,
+                bucket.segments, layer.paint, transform.zoom,
                 programConfiguration);
         }
 

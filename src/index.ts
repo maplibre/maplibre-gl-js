@@ -45,6 +45,7 @@ import {CooperativeGesturesHandler} from './ui/handler/cooperative_gestures';
 import {DoubleClickZoomHandler} from './ui/handler/shim/dblclick_zoom';
 import {KeyboardHandler} from './ui/handler/keyboard';
 import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTouchZoomHandler} from './ui/handler/two_fingers_touch';
+import {MessageType} from './util/actor_messages';
 const version = packageJSON.version;
 
 export type * from '@maplibre/maplibre-gl-style-spec';
@@ -62,7 +63,9 @@ export type * from '@maplibre/maplibre-gl-style-spec';
  * ```
  * @see [Add support for right-to-left scripts](https://maplibre.org/maplibre-gl-js/docs/examples/mapbox-gl-rtl-text/)
  */
-function setRTLTextPlugin(pluginURL: string, lazy: boolean) { return rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy); }
+function setRTLTextPlugin(pluginURL: string, lazy: boolean): Promise<void> {
+    return rtlMainThreadPluginFactory().setRTLTextPlugin(pluginURL, lazy);
+}
 /**
  * Gets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text) status.
  * The status can be `unavailable` (i.e. not requested or removed), `loading`, `loaded` or `error`.
@@ -73,7 +76,9 @@ function setRTLTextPlugin(pluginURL: string, lazy: boolean) { return rtlMainThre
  * const pluginStatus = getRTLTextPluginStatus();
  * ```
  */
-function getRTLTextPluginStatus() { return rtlMainThreadPluginFactory().getRTLTextPluginStatus(); }
+function getRTLTextPluginStatus(): string {
+    return rtlMainThreadPluginFactory().getRTLTextPluginStatus();
+}
 /**
  * Returns the package version of the library
  * @returns Package version of the library
@@ -163,7 +168,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  * importScriptInWorkers('add-protocol-worker.js');
  * ```
  */
-function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast('importScript', workerUrl); }
+function importScriptInWorkers(workerUrl: string) { return getGlobalDispatcher().broadcast(MessageType.importScript, workerUrl); }
 
 export {
     Map,

@@ -22,7 +22,8 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import type {GetGlyphsResponse, GetImagesResponse} from '../util/actor_messages';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
+import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
 
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -60,7 +61,7 @@ export class WorkerTile {
         this.inFlightDependencies = [];
     }
 
-    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor): Promise<WorkerTileResult> {
+    async parse(data: VectorTile, layerIndex: StyleLayerIndex, availableImages: Array<string>, actor: IActor, subdivisionGranularity: SubdivisionGranularitySetting): Promise<WorkerTileResult> {
         this.status = 'parsing';
         this.data = data;
 
@@ -77,7 +78,8 @@ export class WorkerTile {
             iconDependencies: {},
             patternDependencies: {},
             glyphDependencies: {},
-            availableImages
+            availableImages,
+            subdivisionGranularity
         };
 
         const layerFamilies = layerIndex.familiesBySource[this.source];
@@ -112,7 +114,7 @@ export class WorkerTile {
 
                 recalculateLayers(family, this.zoom, availableImages);
 
-                const bucket = buckets[layer.id] = layer.createBucket({
+                const bucket: Bucket = buckets[layer.id] = layer.createBucket({
                     index: featureIndex.bucketLayerIDs.length,
                     layers: family,
                     zoom: this.zoom,
@@ -128,7 +130,9 @@ export class WorkerTile {
             }
         }
 
-        const stacks = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
+        // options.glyphDependencies looks like: {"SomeFontName":{"10":true,"32":true}}
+        // this line makes an object like: {"SomeFontName":[10,32]}
+        const stacks: {[_: string]: Array<number>} = mapObject(options.glyphDependencies, (glyphs) => Object.keys(glyphs).map(Number));
 
         this.inFlightDependencies.forEach((request) => request?.abort());
         this.inFlightDependencies = [];
@@ -137,7 +141,7 @@ export class WorkerTile {
         if (Object.keys(stacks).length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            getGlyphsPromise = actor.sendAsync({type: 'getGlyphs', data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController);
+            getGlyphsPromise = actor.sendAsync({type: MessageType.getGlyphs, data: {stacks, source: this.source, tileID: this.tileID, type: 'glyphs'}}, abortController);
         }
 
         const icons = Object.keys(options.iconDependencies);
@@ -145,7 +149,7 @@ export class WorkerTile {
         if (icons.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            getIconsPromise = actor.sendAsync({type: 'getImages', data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController);
+            getIconsPromise = actor.sendAsync({type: MessageType.getImages, data: {icons, source: this.source, tileID: this.tileID, type: 'icons'}}, abortController);
         }
 
         const patterns = Object.keys(options.patternDependencies);
@@ -153,7 +157,7 @@ export class WorkerTile {
         if (patterns.length) {
             const abortController = new AbortController();
             this.inFlightDependencies.push(abortController);
-            getPatternsPromise = actor.sendAsync({type: 'getImages', data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
+            getPatternsPromise = actor.sendAsync({type: MessageType.getImages, data: {icons: patterns, source: this.source, tileID: this.tileID, type: 'patterns'}}, abortController);
         }
 
         const [glyphMap, iconMap, patternMap] = await Promise.all([getGlyphsPromise, getIconsPromise, getPatternsPromise]);

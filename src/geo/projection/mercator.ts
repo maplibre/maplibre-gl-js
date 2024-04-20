@@ -1,5 +1,4 @@
-import {mat4, vec3} from 'gl-matrix';
-import {Transform} from '../transform';
+import {mat4, vec3, vec4} from 'gl-matrix';
 import {Projection, ProjectionGPUContext} from './projection';
 import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
@@ -8,18 +7,20 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {EXTENT} from '../../data/extent';
 import {PreparedShader, shaders} from '../../shaders/shaders';
-import {Context} from '../../gl/context';
+import type {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {LngLat} from '../lng_lat';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
 export class MercatorProjection implements Projection {
-    private _cachedMesh: Mesh = null;
+    private _cachedMesh: Mesh | null = null;
+    private _cameraPosition: vec3 = [0, 0, 0];
 
     get name(): string {
         return 'mercator';
@@ -27,6 +28,10 @@ export class MercatorProjection implements Projection {
 
     get useSpecialProjectionForSymbols(): boolean {
         return false;
+    }
+
+    get cameraPosition(): vec3 {
+        return vec3.clone(this._cameraPosition); // Return a copy - don't let outside code mutate our precomputed camera position.
     }
 
     get drawWrappedTiles(): boolean {
@@ -55,24 +60,34 @@ export class MercatorProjection implements Projection {
         return shaders.projectionMercator.vertexSource;
     }
 
+    get subdivisionGranularity(): SubdivisionGranularitySetting {
+        return SubdivisionGranularitySetting.noSubdivision;
+    }
+
     public isRenderingDirty(): boolean {
         // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
         return false;
     }
 
-    destroy(): void {
+    public destroy(): void {
         // Do nothing.
     }
 
-    updateGPUdependent(_: ProjectionGPUContext): void {
+    public updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }
 
-    updateProjection(_: Transform): void {
-        // Do nothing.
+    public updateProjection(t: { invProjMatrix: mat4 }): void {
+        const cameraPos: vec4 = [0, 0, -1, 1];
+        vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
+        this._cameraPosition = [
+            cameraPos[0] / cameraPos[3],
+            cameraPos[1] / cameraPos[3],
+            cameraPos[2] / cameraPos[3]
+        ];
     }
 
-    getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
+    public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
         let tileOffsetSize: [number, number, number, number];
 
         if (canonicalTileCoords) {
@@ -102,11 +117,11 @@ export class MercatorProjection implements Projection {
         return data;
     }
 
-    isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
+    public isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
         return false;
     }
 
-    project(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID): {
+    public project(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID): {
         point: Point;
         signedDistanceFromCamera: number;
         isOccluded: boolean;
@@ -115,15 +130,19 @@ export class MercatorProjection implements Projection {
         throw new Error('Not implemented.');
     }
 
-    getPixelScale(_: Transform): number {
+    public getPixelScale(_: any): number {
         return 1.0;
     }
 
-    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public getCircleRadiusCorrection(_: any): number {
+        return 1.0;
+    }
+
+    public translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
-    getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
+    public getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
         if (this._cachedMesh) {
             return this._cachedMesh;
         }
@@ -154,6 +173,10 @@ export class MercatorProjection implements Projection {
     isGlobe(): boolean {
         return false;
     }
+
+    public transformLightDirection(_: any, dir: vec3): vec3 {
+        return vec3.clone(dir);
+    }
 }
 
 /**
@@ -162,7 +185,7 @@ export class MercatorProjection implements Projection {
  * @returns matrix
  */
 export function translatePosMatrix(
-    transform: Transform,
+    transform: { angle: number; zoom: number },
     tile: Tile,
     matrix: mat4,
     translate: [number, number],
@@ -182,7 +205,7 @@ export function translatePosMatrix(
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: Transform,
+    transform: { angle: number; zoom: number },
     tile: Tile,
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
