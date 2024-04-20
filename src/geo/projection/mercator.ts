@@ -1,14 +1,13 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {Transform} from '../transform';
-import {Projection, ProjectionGPUContext} from './projection';
-import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
-import Point from '@mapbox/point-geometry';
-import {Tile} from '../../source/tile';
-import {ProjectionData} from '../../render/program/projection_program';
+import type {Projection, ProjectionGPUContext} from './projection';
+import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
+import type Point from '@mapbox/point-geometry';
+import type {Tile} from '../../source/tile';
+import type {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {EXTENT} from '../../data/extent';
 import {PreparedShader, shaders} from '../../shaders/shaders';
-import {Context} from '../../gl/context';
+import type {Context} from '../../gl/context';
 import {Mesh} from '../../render/mesh';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
@@ -69,15 +68,15 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
-    destroy(): void {
+    public destroy(): void {
         // Do nothing.
     }
 
-    updateGPUdependent(_: ProjectionGPUContext): void {
+    public updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }
 
-    updateProjection(t: Transform): void {
+    public updateProjection(t: { invProjMatrix: mat4 }): void {
         const cameraPos: vec4 = [0, 0, -1, 1];
         vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
         this._cameraPosition = [
@@ -87,7 +86,7 @@ export class MercatorProjection implements Projection {
         ];
     }
 
-    getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
+    public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
         let tileOffsetSize: [number, number, number, number];
 
         if (canonicalTileCoords) {
@@ -114,11 +113,11 @@ export class MercatorProjection implements Projection {
         return data;
     }
 
-    isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
+    public isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
         return false;
     }
 
-    project(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID): {
+    public project(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID): {
         point: Point;
         signedDistanceFromCamera: number;
         isOccluded: boolean;
@@ -127,15 +126,19 @@ export class MercatorProjection implements Projection {
         throw new Error('Not implemented.');
     }
 
-    getPixelScale(_: Transform): number {
+    public getPixelScale(_: any): number {
         return 1.0;
     }
 
-    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public getCircleRadiusCorrection(_: any): number {
+        return 1.0;
+    }
+
+    public translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
-    getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
+    public getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
         if (this._cachedMesh) {
             return this._cachedMesh;
         }
@@ -159,7 +162,7 @@ export class MercatorProjection implements Projection {
         return this._cachedMesh;
     }
 
-    transformLightDirection(_: Transform, dir: vec3): vec3 {
+    public transformLightDirection(_: any, dir: vec3): vec3 {
         return vec3.clone(dir);
     }
 }
@@ -170,7 +173,7 @@ export class MercatorProjection implements Projection {
  * @returns matrix
  */
 export function translatePosMatrix(
-    transform: Transform,
+    transform: { angle: number; zoom: number },
     tile: Tile,
     matrix: mat4,
     translate: [number, number],
@@ -190,7 +193,7 @@ export function translatePosMatrix(
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
 export function translatePosition(
-    transform: Transform,
+    transform: { angle: number; zoom: number },
     tile: Tile,
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',

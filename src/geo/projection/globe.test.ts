@@ -1,8 +1,9 @@
 import {mat4} from 'gl-matrix';
 import {GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
-import {Transform} from '../transform';
 import {expectToBeCloseToArray} from './mercator.test';
+import type {TransformLike} from './projection';
+import {LngLat} from '../lng_lat';
 
 describe('GlobeProjection', () => {
     describe('getProjectionData', () => {
@@ -103,21 +104,20 @@ function createMockTransform(object: {
     };
     pitchDegrees?: number;
     angleDegrees?: number;
-}): Transform {
+}): TransformLike {
     const pitchDegrees = object.pitchDegrees ? object.pitchDegrees : 0;
     return {
-        center: {
-            lat: object.center ? (object.center.latDegrees / 180.0 * Math.PI) : 0,
-            lng: object.center ? (object.center.lngDegrees / 180.0 * Math.PI) : 0,
-        },
+        center: new LngLat(
+            object.center ? (object.center.lngDegrees / 180.0 * Math.PI) : 0,
+            object.center ? (object.center.latDegrees / 180.0 * Math.PI) : 0),
         worldSize: 10.5 * 512,
-        _fov: Math.PI / 4.0,
+        fov: 45.0,
         width: 640,
         height: 480,
         cameraToCenterDistance: 759,
-        _pitch: pitchDegrees / 180.0 * Math.PI, // in radians
         pitch: pitchDegrees, // in degrees
         angle: object.angleDegrees ? (object.angleDegrees / 180.0 * Math.PI) : 0,
         zoom: 0,
-    } as Transform;
+        invProjMatrix: null,
+    };
 }
