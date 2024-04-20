@@ -811,7 +811,6 @@ function shapeIcon(
  */
 function applyTextFit(shapedIcon) {
     // Assume shapedIcon.image is set or this wouldn't be called.
-    var _a, _b;
     // Size of the icon after it was adjusted using stretchX and Y
     let iconLeft = shapedIcon.left;
     let iconTop = shapedIcon.top;
@@ -820,8 +819,8 @@ function applyTextFit(shapedIcon) {
     // Size of the origional content area
     const contentWidth = shapedIcon.image.content[2] - shapedIcon.image.content[0];
     const contentHeight = shapedIcon.image.content[3] - shapedIcon.image.content[1];
-    const textFitWidth = (_a = shapedIcon.image.textFitWidth) !== null && _a !== void 0 ? _a : TextFit.stretchOrShrink;
-    const textFitHeight = (_b = shapedIcon.image.textFitHeight) !== null && _b !== void 0 ? _b : TextFit.stretchOrShrink;
+    const textFitWidth = shapedIcon.image.textFitWidth ?? TextFit.stretchOrShrink;
+    const textFitHeight = shapedIcon.image.textFitHeight ?? TextFit.stretchOrShrink;
     const contentAspectRatio = contentWidth / contentHeight;
     // Scale to the proportional axis first note that height takes precidence if
     // both axes are set to proportional.
@@ -832,21 +831,19 @@ function applyTextFit(shapedIcon) {
             iconLeft *= newIconWidth / iconWidth;
             iconWidth = newIconWidth;
         }
-    }
-    else if (textFitWidth === TextFit.proportional) {
+    } else if (textFitWidth === TextFit.proportional) {
         if (textFitHeight === TextFit.stretchOnly && contentAspectRatio !== 0 && iconWidth / iconHeight > contentAspectRatio) {
             // Push the height of the icon back out to match the content aspect ratio
             const newIconHeight = iconWidth / contentAspectRatio;
             iconTop *= newIconHeight / iconHeight;
             iconHeight = newIconHeight;
         }
-    }
-    else {
+    } else {
         // If neither textFitHeight nor textFitWidth are proportional then
         // there is no effect since the content rectangle should be precisely
         // matched to the content
     }
-    return { x1: iconLeft, y1: iconTop, x2: iconLeft + iconWidth, y2: iconTop + iconHeight };
+    return {x1: iconLeft, y1: iconTop, x2: iconLeft + iconWidth, y2: iconTop + iconHeight};
 }
 
 function fitIconToText(
