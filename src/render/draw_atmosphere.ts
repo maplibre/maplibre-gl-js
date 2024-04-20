@@ -97,6 +97,8 @@ export function drawAtmosphere(painter: Painter) {
     const projectionData = projection.getProjectionData(null, null);
 
     const options = painter.style.map.atmosphereOptions;
+
+    // Use current time if none is provided as option
     let sunDateAndTime = new Date();
     if (options.sunDateAndTime) {
         sunDateAndTime = new Date(options.sunDateAndTime);
@@ -104,8 +106,9 @@ export function drawAtmosphere(painter: Painter) {
 
     const sunPos = computeSunPos(sunDateAndTime, painter.style.map.projection);
 
-    const fullAtmoZoom = options.fullAtmoZoom;
-    const noAtmoZoom = options.noAtmoZoom;
+    // Compute atmosphere coefficient to fade out it as we are closer to the Earth
+    const fullAtmoZoom = options.fullAtmoZoom; // Atmosphere is fully visible bellow this zoom level
+    const noAtmoZoom = options.noAtmoZoom; // Atmosphere is fully hidden above this zoom level
     const coefficient = painter.transform.zoom < fullAtmoZoom ? 0 : (painter.transform.zoom > noAtmoZoom ? 1 : (painter.transform.zoom - fullAtmoZoom) / (noAtmoZoom - fullAtmoZoom));
 
     const uniformValues = atmosphereUniformValues(sunPos, coefficient);
