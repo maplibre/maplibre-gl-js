@@ -209,7 +209,7 @@ export class GlobeProjection implements Projection {
         this._invProjMatrix = invProjMatrix;
 
         // Construct a completely separate matrix for globe view
-        const globeMatrix = new Float64Array(16) as any;
+        const globeMatrix = mat4.identity(new Float64Array(16) as any);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -transform.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -transform.pitch * Math.PI / 180);
         mat4.rotateZ(globeMatrix, globeMatrix, -transform.angle);
@@ -229,9 +229,6 @@ export class GlobeProjection implements Projection {
         mat4.scale(this._globeMatrix, globeMatrix, [this._globeRadiusPixels, this._globeRadiusPixels, this._globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         mat4.mul(globeMatrix, this._projMatrix, this._globeMatrix);
         this._globeProjMatrix = globeMatrix;
-
-        const invGlobeMatrix = mat4.create();
-        mat4.invert(invGlobeMatrix, this._globeMatrix);
 
         const invGlobeProj = mat4.create();
         mat4.invert(invGlobeProj, this._globeProjMatrix);
