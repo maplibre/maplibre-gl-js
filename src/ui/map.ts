@@ -327,7 +327,14 @@ export type MapOptions = {
      * @defaultValue 'mercator'
      */
     projection?: ProjectionName;
+    /**
+     * If true, use a realistic atmosphere when projection used a globe.
+     * @defaultValue 'false'
+     */
     atmosphere?: boolean;
+    /**
+     * A {@link AtmosphereOption} options object to use _only_ when atmosphere option is true.
+     */
     atmosphereOptions?: AtmosphereOption;
 };
 
@@ -335,9 +342,21 @@ export type AddImageOptions = {
 
 }
 
+/**
+ * Options for {@link Map#atmosphereOptions} parameter
+ */
 export type AtmosphereOption = {
+    /**
+     * Display the atmosphere when the zoom level is below the `fullAtmoZoom`.
+     */
     fullAtmoZoom: number;
+    /**
+     * Hide the atmosphere when the zoom level is above the `noAtmoZoom`.
+     */
     noAtmoZoom: number;
+    /**
+     * If set, define the date and time to set the Sun position.
+     */
     sunDateAndTime?: string;
 }
 
