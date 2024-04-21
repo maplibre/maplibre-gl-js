@@ -257,9 +257,6 @@ export class Painter {
             'u_projection_clipping_plane': [0, 0, 0, 0],
             'u_projection_transition': 0.0,
             'u_projection_fallback_matrix': matrix,
-            'u_globe_position': vec3.fromValues(0, 0, 0),
-            'u_globe_radius': 0.0,
-            'u_inv_proj_matrix': mat4.create(),
         };
 
         // Note: we force a simple mercator projection for the shader, since we want to draw a fullscreen quad.

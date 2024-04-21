@@ -137,6 +137,18 @@ export class GlobeProjection implements Projection {
         return granularitySettingsGlobe;
     }
 
+    get globePosition(): vec3 {
+        return this._globePosition;
+    }
+
+    get globeRadius(): number {
+        return this._globeRadiusPixels;
+    }
+
+    get invProjMatrix(): mat4 {
+        return this._invProjMatrix;
+    }
+
     /**
      * Returns whether globe view is allowed.
      * When allowed, globe fill function as normal, displaying a 3D planet,
@@ -262,9 +274,6 @@ export class GlobeProjection implements Projection {
 
         data['u_projection_clipping_plane'] = this._cachedClippingPlane as [number, number, number, number];
         data['u_projection_transition'] = this._globeness;
-        data['u_globe_position'] = this._globePosition;
-        data['u_globe_radius'] = this._globeRadiusPixels;
-        data['u_inv_proj_matrix'] = this._invProjMatrix;
 
         return data;
     }

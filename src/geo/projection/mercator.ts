@@ -64,6 +64,18 @@ export class MercatorProjection implements Projection {
         return SubdivisionGranularitySetting.noSubdivision;
     }
 
+    get globePosition(): vec3 {
+        return vec3.fromValues(0.0, 0.0, 0.0);
+    }
+
+    get globeRadius(): number {
+        return 1.0;
+    }
+
+    get invProjMatrix(): mat4 {
+        return mat4.create();
+    }
+
     public isRenderingDirty(): boolean {
         // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
         return false;
@@ -109,9 +121,6 @@ export class MercatorProjection implements Projection {
             'u_projection_clipping_plane': [0, 0, 0, 0],
             'u_projection_transition': 0.0,
             'u_projection_fallback_matrix': mainMatrix,
-            'u_globe_position': [0, 0, 0],
-            'u_globe_radius': 0,
-            'u_inv_proj_matrix': mat4.create(),
         };
 
         return data;

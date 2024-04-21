@@ -104,14 +104,17 @@ export function drawAtmosphere(painter: Painter) {
         sunDateAndTime = new Date(options.sunDateAndTime);
     }
 
-    const sunPos = computeSunPos(sunDateAndTime, painter.style.map.projection);
+    const sunPos = computeSunPos(sunDateAndTime, projection);
 
     // Compute atmosphere coefficient to fade out it as we are closer to the Earth
     const fullAtmoZoom = options.fullAtmoZoom; // Atmosphere is fully visible bellow this zoom level
     const noAtmoZoom = options.noAtmoZoom; // Atmosphere is fully hidden above this zoom level
     const coefficient = painter.transform.zoom < fullAtmoZoom ? 0 : (painter.transform.zoom > noAtmoZoom ? 1 : (painter.transform.zoom - fullAtmoZoom) / (noAtmoZoom - fullAtmoZoom));
+    const globePosition = projection.globePosition;
+    const globeRadius = projection.globeRadius;
+    const invProjMatrix = projection.invProjMatrix;
 
-    const uniformValues = atmosphereUniformValues(sunPos, coefficient);
+    const uniformValues = atmosphereUniformValues(sunPos, coefficient, globePosition, globeRadius, invProjMatrix);
     const mesh = painter.atmosphereMesh;
 
     program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, projectionData, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);

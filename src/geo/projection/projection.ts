@@ -92,6 +92,21 @@ export interface Projection {
     get vertexShaderPreludeCode(): string;
 
     /**
+     * Globe position in camera frame.
+     */
+    get globePosition(): vec3;
+
+    /**
+     * Globe radius in camera frame.
+     */
+    get globeRadius(): number;
+
+    /**
+     * Inverse projection matrix from camera to clip plane.
+     */
+    get invProjMatrix(): mat4;
+
+    /**
      * @internal
      * An object describing how much subdivision should be applied to rendered geometry.
      * The subdivision settings should be a constant for a given projection.
