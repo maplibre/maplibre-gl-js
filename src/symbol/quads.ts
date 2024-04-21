@@ -71,7 +71,7 @@ export function getIconQuads(
         x2: shapedIcon.right,
         y2: shapedIcon.bottom
     };
-    
+
     const stretchX = image.stretchX || [[0, imageWidth]];
     const stretchY = image.stretchY || [[0, imageHeight]];
 
