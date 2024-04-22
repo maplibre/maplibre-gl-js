@@ -1,2 +1,0 @@
-This an adaptation of stretch-nine-part-content but with "1" as the text and textFitWidth=stretchOnly and textFitHeight=proportional.
-Because of this, the aspect ratio of the content won't get more narrow than the starting content aspect ratio.

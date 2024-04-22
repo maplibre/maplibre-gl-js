@@ -803,13 +803,20 @@ function shapeIcon(
     return {image, top: y1, bottom: y2, left: x1, right: x2};
 }
 
+export interface Box {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+}
+
 /**
  * Called after a PositionedIcon has already been run through fitIconToText,
  * but needs further adjustment to apply textFitWidth and textFitHeight.
  * @param shapedIcon - The icon that will be adjusted.
  * @returns Extents of the shapedIcon with text fit adjustments if necessary.
  */
-function applyTextFit(shapedIcon) {
+function applyTextFit(shapedIcon: PositionedIcon): Box {
     // Assume shapedIcon.image is set or this wouldn't be called.
     // Size of the icon after it was adjusted using stretchX and Y
     let iconLeft = shapedIcon.left;

@@ -34,7 +34,7 @@ export type StyleImageData = {
 /**
  * Enumeration of possible values for StyleImageMetadata.textFitWidth and textFitHeight.
  */
-export enum TextFit {
+export const enum TextFit {
     /**
      * The image will be resized on the specified axis to tightly fit the content rectangle to target text.
      * This is the same as not being defined.
