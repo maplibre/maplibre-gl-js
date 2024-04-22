@@ -102,8 +102,10 @@ void main() {
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
     vec4 projected_pos;
-    if(u_pitch_with_map || u_is_along_line) {
-        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + (!u_is_along_line ? u_translation : vec2(0.0)), ele, 1.0);
+    if (u_is_along_line) {
+        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, ele, 1.0);
+    } else if (u_pitch_with_map) {
+        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
     } else {
         projected_pos = u_label_plane_matrix * projectTileWithElevation(a_projected_pos.xy + u_translation, ele);
     }
