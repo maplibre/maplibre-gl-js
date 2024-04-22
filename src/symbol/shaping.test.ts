@@ -6,7 +6,7 @@ describe('shaping', () => {
 
     describe('applyTextFit', () => {
 
-        // This set of tests against applyTextFit starts with a 100x20 image with a 5,5,95,15 content box 
+        // This set of tests against applyTextFit starts with a 100x20 image with a 5,5,95,15 content box
         // that has been scaled to 4x4... resulting in a 14x14 image.
         const left = 0;
         const top = 0;
