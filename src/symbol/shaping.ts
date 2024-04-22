@@ -834,14 +834,14 @@ function applyTextFit(shapedIcon: PositionedIcon): Box {
     if (textFitHeight === TextFit.proportional) {
         if ((textFitWidth === TextFit.stretchOnly && iconWidth / iconHeight < contentAspectRatio) || textFitWidth === TextFit.proportional) {
             // Push the width of the icon back out to match the content aspect ratio
-            const newIconWidth = iconHeight * contentAspectRatio;
+            const newIconWidth = Math.ceil(iconHeight * contentAspectRatio);
             iconLeft *= newIconWidth / iconWidth;
             iconWidth = newIconWidth;
         }
     } else if (textFitWidth === TextFit.proportional) {
         if (textFitHeight === TextFit.stretchOnly && contentAspectRatio !== 0 && iconWidth / iconHeight > contentAspectRatio) {
             // Push the height of the icon back out to match the content aspect ratio
-            const newIconHeight = iconWidth / contentAspectRatio;
+            const newIconHeight = Math.ceil(iconWidth / contentAspectRatio);
             iconTop *= newIconHeight / iconHeight;
             iconHeight = newIconHeight;
         }
