@@ -195,21 +195,22 @@ function updateVariableAnchorsForBucket(
             symbolProjection.hideGlyphs(symbol.numGlyphs, dynamicTextLayoutVertexArray);
         } else  {
             const tileAnchor = new Point(symbol.anchorX, symbol.anchorY);
+            const projectionArgs = {
+                getElevation,
+                width: transform.width,
+                height: transform.height,
+                labelPlaneMatrix,
+                lineVertexArray: null,
+                pitchWithMap,
+                projection,
+                projectionCache: null,
+                tileAnchorPoint: tileAnchor,
+                translation,
+                unwrappedTileID
+            };
             const projectedAnchor = pitchWithMap ?
                 symbolProjection.project(tileAnchor, posMatrix, getElevation) :
-                symbolProjection.projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, {
-                    getElevation,
-                    width: transform.width,
-                    height: transform.height,
-                    labelPlaneMatrix,
-                    lineVertexArray: null,
-                    pitchWithMap,
-                    projection,
-                    projectionCache: null,
-                    tileAnchorPoint: tileAnchor,
-                    translation,
-                    unwrappedTileID
-                });
+                symbolProjection.projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionArgs);
             const perspectiveRatio = symbolProjection.getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
             let renderTextSize = evaluateSizeForFeature(bucket.textSizeData, size, symbol) * perspectiveRatio / ONE_EM;
             if (pitchWithMap) {
@@ -225,11 +226,22 @@ function updateVariableAnchorsForBucket(
             // Usual case is that we take the projected anchor and add the pixel-based shift
             // calculated above. In the (somewhat weird) case of pitch-aligned text, we add an equivalent
             // tile-unit based shift to the anchor before projecting to the label plane.
-            const shiftedAnchor = pitchWithMap ?
-                symbolProjection.project(tileAnchor.add(shift), labelPlaneMatrix, getElevation).point :
-                projectedAnchor.point.add(rotateWithMap ?
-                    shift.rotate(-transform.angle) :
-                    shift);
+            let shiftedAnchor;
+
+            if (pitchWithMap) {
+                shiftedAnchor = symbolProjection.project(tileAnchor.add(shift), labelPlaneMatrix, getElevation).point;
+            } else {
+                if (rotateWithMap) {
+                    // Compute the angle with which to rotate the anchor, so that it is aligned with
+                    // the map's actual east-west axis. Very similar to what is done in the shader.
+                    const projectedAnchorRight = symbolProjection.projectTileCoordinatesToViewport(tileAnchor.x + 1, tileAnchor.y, projectionArgs);
+                    const east = projectedAnchorRight.point.sub(projectedAnchor.point);
+                    const angle = Math.atan(east.y / east.x);
+                    shiftedAnchor = projectedAnchor.point.add(shift.rotate(angle));
+                } else {
+                    shiftedAnchor = projectedAnchor.point.add(shift);
+                }
+            }
 
             const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === WritingMode.vertical) ? Math.PI / 2 : 0;
             for (let g = 0; g < symbol.numGlyphs; g++) {
