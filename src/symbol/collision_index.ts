@@ -26,7 +26,13 @@ import {Projection} from '../geo/projection/projection';
 // the viewport for collision detection so that the bulk of the changes
 // occur offscreen. Making this constant greater increases label
 // stability, but it's expensive.
-const viewportPadding = 100;
+export const viewportPadding = 100;
+
+export type PlacedBox = {
+    box: Array<number>;
+    occluded: boolean;
+    offscreen: boolean;
+};
 
 export type FeatureKey = {
     bucketInstanceId: number;
@@ -91,10 +97,7 @@ export class CollisionIndex {
         translation: [number, number],
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
         getElevation?: (x: number, y: number) => number
-    ): {
-            box: Array<number>;
-            offscreen: boolean;
-        } {
+    ): PlacedBox {
         const x = collisionBox.anchorPointX + translation[0];
         const y = collisionBox.anchorPointY + translation[1];
         const projectedPoint = this.projectAndGetPerspectiveRatio(
@@ -115,13 +118,15 @@ export class CollisionIndex {
             projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff ||
             projectionOccluded) {
             return {
-                box: [],
+                box: [tlX, tlY, brX, brY],
+                occluded: true,
                 offscreen: false
             };
         }
 
         return {
             box: [tlX, tlY, brX, brY],
+            occluded: false,
             offscreen: this.isOffscreen(tlX, tlY, brX, brY)
         };
     }
