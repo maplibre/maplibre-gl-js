@@ -512,22 +512,22 @@ export class CollisionIndex {
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
         let vecEast = new Point(1, 0);
         let vecSouth = new Point(0, 1);
-        if (rotateWithMap) {
-            const x = collisionBox.anchorPointX + translation[0];
-            const y = collisionBox.anchorPointY + translation[1];
 
+        const translatedAnchor = new Point(collisionBox.anchorPointX + translation[0], collisionBox.anchorPointY + translation[1]);
+
+        if (rotateWithMap && !pitchWithMap) {
             const projectedEast = this.projectAndGetPerspectiveRatio(
                 posMatrix,
-                x + 1,
-                y,
+                translatedAnchor.x + 1,
+                translatedAnchor.y,
                 unwrappedTileID,
                 getElevation
             ).point;
 
             const projectedSouth = this.projectAndGetPerspectiveRatio(
                 posMatrix,
-                x,
-                y + 1,
+                translatedAnchor.x,
+                translatedAnchor.y + 1,
                 unwrappedTileID,
                 getElevation
             ).point;
@@ -536,74 +536,69 @@ export class CollisionIndex {
             vecSouth = projectedSouth.sub(projectedPoint.point).unit();
         }
 
-        const screenSpaceX1 = collisionBox.x1 * tileToViewport;
-        const screenSpaceX2 = collisionBox.x2 * tileToViewport;
-        const screenSpaceY1 = collisionBox.y1 * tileToViewport;
-        const screenSpaceY2 = collisionBox.y2 * tileToViewport;
+        // Configuration for screen space offsets
+        let basePoint = projectedPoint.point;
+        let distanceMultiplier = tileToViewport;
 
-        const point00 = projectedPoint.point.add(vecEast.mult(screenSpaceX1)).add(vecSouth.mult(screenSpaceY1));
-        const point10 = projectedPoint.point.add(vecEast.mult(screenSpaceX2)).add(vecSouth.mult(screenSpaceY1));
-        const point11 = projectedPoint.point.add(vecEast.mult(screenSpaceX2)).add(vecSouth.mult(screenSpaceY2));
-        const point01 = projectedPoint.point.add(vecEast.mult(screenSpaceX1)).add(vecSouth.mult(screenSpaceY2));
-
-        // Construct actual bounding box from them
-        let tlX = Infinity;
-        let tlY = Infinity;
-        let brX = -Infinity;
-        let brY = -Infinity;
-
-        for (const p of [point00, point10, point11, point01]) {
-            tlX = Math.min(tlX, p.x);
-            tlY = Math.min(tlY, p.y);
-            brX = Math.max(brX, p.x);
-            brY = Math.max(brY, p.y);
+        if (pitchWithMap) {
+            // Configuration for tile space (map-pitch-aligned) offsets
+            basePoint = translatedAnchor;
+            distanceMultiplier = 1;
         }
 
-        return [tlX, tlY, brX, brY];
+        const offsetXmin = collisionBox.x1 * distanceMultiplier;
+        const offsetXmax = collisionBox.x2 * distanceMultiplier;
+        const offsetXhalf = (offsetXmin + offsetXmax) / 2;
+        const offsetYmin = collisionBox.y1 * distanceMultiplier;
+        const offsetYmax = collisionBox.y2 * distanceMultiplier;
+        const offsetYhalf = (offsetYmin + offsetYmax) / 2;
 
-        // // Construct points along the perimeter of the box in in-tile coordinates...
-        // const tileMinX = collisionBox.x1 + collisionBox.anchorPointX;
-        // const tileMinY = collisionBox.y1 + collisionBox.anchorPointY;
-        // const tileMaxX = collisionBox.x2 + collisionBox.anchorPointX;
-        // const tileMaxY = collisionBox.y2 + collisionBox.anchorPointY;
-        // const tileHalfX = (tileMinX + tileMaxX) / 2;
-        // const tileHalfY = (tileMinY + tileMaxY) / 2;
+        // 0--1--2
+        // |     |
+        // 7     3
+        // |     |
+        // 6--5--4
+        const points = [
+            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYmin)),
+            basePoint.add(vecEast.mult(offsetXhalf)).add(vecSouth.mult(offsetYmin)),
+            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYmin)),
+            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYhalf)),
+            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYmax)),
+            basePoint.add(vecEast.mult(offsetXhalf)).add(vecSouth.mult(offsetYmax)),
+            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYmax)),
+            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYhalf)),
+        ];
 
-        // // 0--1--2
-        // // |     |
-        // // 7     3
-        // // |     |
-        // // 6--5--4
-        // const perimeter = [
-        //     [tileMinX, tileMinY],
-        //     [tileHalfX, tileMinY],
-        //     [tileMaxX, tileMinY],
-        //     [tileMaxX, tileHalfY],
-        //     [tileMaxX, tileMaxY],
-        //     [tileHalfX, tileMaxY],
-        //     [tileMinX, tileMaxY],
-        //     [tileMinX, tileHalfY],
-        // ];
+        if (pitchWithMap) {
+            for (let i = 0; i < points.length; i++) {
+                const oldPoint = points[i];
+                const newPoint = this.projectAndGetPerspectiveRatio(
+                    posMatrix,
+                    oldPoint.x,
+                    oldPoint.y,
+                    unwrappedTileID,
+                    getElevation
+                ).point;
+                points[i] = newPoint;
+            }
+        }
 
-        // // Construct actual bounding box from them
-        // let tlX = Infinity;
-        // let tlY = Infinity;
-        // let brX = -Infinity;
-        // let brY = -Infinity;
-
-        // for (const p of perimeter) {
-        //     const projected = this.projectAndGetPerspectiveRatio(
-        //         posMatrix,
-        //         p[0],
-        //         p[1],
-        //         unwrappedTileID,
-        //         getElevation);
-        //     tlX = Math.min(tlX, projected.point.x);
-        //     tlY = Math.min(tlY, projected.point.y);
-        //     brX = Math.max(brX, projected.point.x);
-        //     brY = Math.max(brY, projected.point.y);
-        // }
-
-        // return [tlX, tlY, brX, brY];
+        return getAABB(points);
     }
+}
+
+function getAABB(points: Array<Point>): [number, number, number, number] {
+    let tlX = Infinity;
+    let tlY = Infinity;
+    let brX = -Infinity;
+    let brY = -Infinity;
+
+    for (const p of points) {
+        tlX = Math.min(tlX, p.x);
+        tlY = Math.min(tlY, p.y);
+        brX = Math.max(brX, p.x);
+        brY = Math.max(brY, p.y);
+    }
+
+    return [tlX, tlY, brX, brY];
 }
