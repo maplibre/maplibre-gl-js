@@ -30,7 +30,7 @@ export const viewportPadding = 100;
 
 export type PlacedBox = {
     box: Array<number>;
-    occluded: boolean;
+    placeable: boolean;
     offscreen: boolean;
 };
 
@@ -119,14 +119,14 @@ export class CollisionIndex {
             projectionOccluded) {
             return {
                 box: [tlX, tlY, brX, brY],
-                occluded: true,
+                placeable: false,
                 offscreen: false
             };
         }
 
         return {
             box: [tlX, tlY, brX, brY],
-            occluded: false,
+            placeable: true,
             offscreen: this.isOffscreen(tlX, tlY, brX, brY)
         };
     }

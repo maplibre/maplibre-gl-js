@@ -399,10 +399,10 @@ export class Placement {
                     iconBox, shift.x, shift.y,
                     rotateWithMap, pitchWithMap, this.transform.angle),
                 textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, translation, collisionGroup.predicate, getElevation);
-            if (placedIconBoxes.occluded) return;
+            if (!placedIconBoxes.placeable) return;
         }
 
-        if (!placedGlyphBoxes.occluded) {
+        if (placedGlyphBoxes.placeable) {
             let prevAnchor;
             // If this label was placed in the previous placement, record the anchor position
             // to allow us to animate the transition
@@ -500,8 +500,8 @@ export class Placement {
             let offscreen = true;
             let shift = null;
 
-            let placed: PlacedBox = {box: null, occluded: true, offscreen: null};
-            let placedVerticalText = {box: null, occluded: true, offscreen: null};
+            let placed: PlacedBox = {box: null, placeable: false, offscreen: null};
+            let placedVerticalText = {box: null, placeable: false, offscreen: null};
 
             let placedGlyphBoxes: PlacedBox = null;
             let placedGlyphCircles = null;
@@ -544,7 +544,7 @@ export class Placement {
                             } else {
                                 placed = placeHorizontalFn();
                             }
-                            if (placed && !placed.occluded) break;
+                            if (placed && placed.placeable) break;
                         }
                     } else {
                         placed = placeHorizontalFn();
@@ -567,7 +567,7 @@ export class Placement {
                             collisionGroup.predicate,
                             getElevation
                         );
-                        if (placedFeature && !placedFeature.occluded) {
+                        if (placedFeature && placedFeature.placeable) {
                             this.markUsedOrientation(bucket, orientation, symbolInstance);
                             this.placedOrientations[symbolInstance.crossTileID] = orientation;
                         }
@@ -587,7 +587,7 @@ export class Placement {
                     };
 
                     placeTextForPlacementModes(placeHorizontal, placeVertical);
-                    updatePreviousOrientationIfNotPlaced(placed && !placed.occluded);
+                    updatePreviousOrientationIfNotPlaced(placed && placed.placeable);
 
                 } else {
                     // If this symbol was in the last placement, prefer placement using same anchor, if it's still available
@@ -599,7 +599,7 @@ export class Placement {
                         const textBoxScale = symbolInstance.textBoxScale;
                         const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
 
-                        let placedBox: PlacedBox = {box: [], occluded: true, offscreen: false};
+                        let placedBox: PlacedBox = {box: [], placeable: false, offscreen: false};
                         let placementPasses = (textOverlapMode === 'never') ? 1 : 2;
                         let overlapMode: OverlapMode = 'never';
 
@@ -622,7 +622,7 @@ export class Placement {
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
-                                    if (placedBox && !placedBox.occluded) {
+                                    if (placedBox && placedBox.placeable) {
                                         placeText = true;
                                         shift = result.shift;
                                         return placedBox;
@@ -646,7 +646,7 @@ export class Placement {
 
                     const placeVertical = () => {
                         const verticalTextBox = collisionArrays.verticalTextBox;
-                        const wasPlaced = placed && !placed.occluded;
+                        const wasPlaced = placed && placed.placeable;
                         if (bucket.allowVerticalPlacement && !wasPlaced && symbolInstance.numVerticalGlyphVertices > 0 && verticalTextBox) {
                             return placeBoxForVariableAnchors(verticalTextBox, collisionArrays.verticalIconBox, WritingMode.vertical);
                         }
@@ -656,11 +656,11 @@ export class Placement {
                     placeTextForPlacementModes(placeHorizontal, placeVertical);
 
                     if (placed) {
-                        placeText = !placed.occluded;
+                        placeText = placed.placeable;
                         offscreen = placed.offscreen;
                     }
 
-                    const prevOrientation = updatePreviousOrientationIfNotPlaced(placed && !placed.occluded);
+                    const prevOrientation = updatePreviousOrientationIfNotPlaced(placed && placed.placeable);
 
                     // If we didn't get placed, we still need to copy our position from the last placement for
                     // fade animations
@@ -676,7 +676,7 @@ export class Placement {
             }
 
             placedGlyphBoxes = placed;
-            placeText = placedGlyphBoxes && !placedGlyphBoxes.occluded;
+            placeText = placedGlyphBoxes && placedGlyphBoxes.placeable;
 
             offscreen = placedGlyphBoxes && placedGlyphBoxes.offscreen;
 
@@ -733,12 +733,12 @@ export class Placement {
                         iconOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, translation, collisionGroup.predicate, getElevation);
                 };
 
-                if (placedVerticalText && !placedVerticalText.occluded && collisionArrays.verticalIconBox) {
+                if (placedVerticalText && placedVerticalText.placeable && collisionArrays.verticalIconBox) {
                     placedIconBoxes = placeIconFeature(collisionArrays.verticalIconBox);
-                    placeIcon = !placedIconBoxes.occluded;
+                    placeIcon = placedIconBoxes.placeable;
                 } else {
                     placedIconBoxes = placeIconFeature(collisionArrays.iconBox);
-                    placeIcon = !placedIconBoxes.occluded;
+                    placeIcon = placedIconBoxes.placeable;
                 }
                 offscreen = offscreen && placedIconBoxes.offscreen;
             }
@@ -756,11 +756,11 @@ export class Placement {
                 placeIcon = placeIcon && placeText;
             }
 
-            const hasTextBox = placeText && !placedGlyphBoxes.occluded;
-            const hasIconBox = placeIcon && !placedIconBoxes.occluded;
+            const hasTextBox = placeText && placedGlyphBoxes.placeable;
+            const hasIconBox = placeIcon && placedIconBoxes.placeable;
 
             if (hasTextBox) {
-                if (placedVerticalText && !placedVerticalText.occluded && verticalTextFeatureIndex) {
+                if (placedVerticalText && placedVerticalText.placeable && verticalTextFeatureIndex) {
                     this.collisionIndex.insertCollisionBox(
                         placedGlyphBoxes.box,
                         textOverlapMode,
