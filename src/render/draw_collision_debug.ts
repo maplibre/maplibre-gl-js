@@ -73,10 +73,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            collisionUniformValues(
-                projection.translatePosition(painter.transform, tile, translate, translateAnchor),
-                painter.transform,
-                tile),
+            collisionUniformValues(painter.transform),
             painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
             projectionData,
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
