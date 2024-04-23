@@ -28,6 +28,7 @@ uniform vec2 u_texsize;
 uniform vec2 u_texsize_icon;
 uniform bool u_is_along_line;
 uniform vec2 u_translation;
+uniform float u_pitched_scale;
 
 out vec4 v_data0;
 out vec4 v_data1;
@@ -66,7 +67,9 @@ void main() {
         size = u_size;
     }
 
-    vec4 projectedPoint = projectTileWithElevation(a_pos + u_translation, ele);
+    vec2 translated_a_pos = a_pos + u_translation;
+    vec4 projectedPoint = projectTileWithElevation(translated_a_pos, ele);
+
     highp float camera_to_anchor_distance = projectedPoint.w;
     // If the label is pitched with the map, layout is done in pitched space,
     // which makes labels in the distance smaller relative to viewport space.
@@ -89,7 +92,7 @@ void main() {
     highp float symbol_rotation = 0.0;
     if (u_rotate_symbol) {
         // See comments in symbol_sdf.vertex
-        vec4 offsetProjectedPoint = projectTileWithElevation(a_pos + u_translation + vec2(1, 0), ele);
+        vec4 offsetProjectedPoint = projectTileWithElevation(translated_a_pos + vec2(1, 0), ele);
 
         vec2 a = projectedPoint.xy / projectedPoint.w;
         vec2 b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
@@ -112,7 +115,15 @@ void main() {
 
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
 
-    vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale), z, 1.0);
+    float projectionScaling = 1.0;
+#ifdef GLOBE
+    if(u_pitch_with_map && !u_is_along_line) {
+        float anchor_pos_tile_y = (u_coord_matrix * vec4(projected_pos.xy / projected_pos.w, z, 1.0)).y;
+        projectionScaling = mix(projectionScaling, 1.0 / circumferenceRatioAtTileY(anchor_pos_tile_y) * u_pitched_scale, u_projection_transition);
+    }
+#endif
+
+    vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale) * projectionScaling, z, 1.0);
     if(u_pitch_with_map) {
         finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
     }

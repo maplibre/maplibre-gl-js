@@ -333,6 +333,8 @@ function drawLayerSymbols(
 
     const tileRenderState: Array<SymbolTileRenderState> = [];
 
+    const pitchedTextRescaling = projection.getCircleRadiusCorrection(tr.center);
+
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
         const bucket = tile.getBucket(layer) as SymbolBucket;
@@ -408,16 +410,16 @@ function drawLayerSymbols(
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true);
+                    uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true, pitchedTextRescaling);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon);
+                    uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon, pitchedTextRescaling);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
                 size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
-                uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize);
+                uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, pitchedTextRescaling);
         }
 
         const state = {
