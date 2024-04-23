@@ -107,7 +107,8 @@ export class CollisionIndex {
             x,
             y,
             unwrappedTileID,
-            getElevation);
+            getElevation
+        );
 
         const [tlX, tlY, brX, brY] = this._projectCollisionBox(
             collisionBox,
@@ -509,35 +510,41 @@ export class CollisionIndex {
     ): [number, number, number, number] {
 
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
-        const tlX = collisionBox.x1 * tileToViewport + projectedPoint.point.x;
-        const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
-        const brX = collisionBox.x2 * tileToViewport + projectedPoint.point.x;
-        const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
-        return [tlX, tlY, brX, brY];
-        /*
-        // Construct points along the perimeter of the box in in-tile coordinates...
-        const tileMinX = collisionBox.x1 + collisionBox.anchorPointX;
-        const tileMinY = collisionBox.y1 + collisionBox.anchorPointY;
-        const tileMaxX = collisionBox.x2 + collisionBox.anchorPointX;
-        const tileMaxY = collisionBox.y2 + collisionBox.anchorPointY;
-        const tileHalfX = (tileMinX + tileMaxX) / 2;
-        const tileHalfY = (tileMinY + tileMaxY) / 2;
+        let vecEast = new Point(1, 0);
+        let vecSouth = new Point(0, 1);
+        if (rotateWithMap) {
+            const x = collisionBox.anchorPointX + translation[0];
+            const y = collisionBox.anchorPointY + translation[1];
 
-        // 0--1--2
-        // |     |
-        // 7     3
-        // |     |
-        // 6--5--4
-        const perimeter = [
-            [tileMinX, tileMinY],
-            [tileHalfX, tileMinY],
-            [tileMaxX, tileMinY],
-            [tileMaxX, tileHalfY],
-            [tileMaxX, tileMaxY],
-            [tileHalfX, tileMaxY],
-            [tileMinX, tileMaxY],
-            [tileMinX, tileHalfY],
-        ];
+            const projectedEast = this.projectAndGetPerspectiveRatio(
+                posMatrix,
+                x + 1,
+                y,
+                unwrappedTileID,
+                getElevation
+            ).point;
+
+            const projectedSouth = this.projectAndGetPerspectiveRatio(
+                posMatrix,
+                x,
+                y + 1,
+                unwrappedTileID,
+                getElevation
+            ).point;
+
+            vecEast = projectedEast.sub(projectedPoint.point).unit();
+            vecSouth = projectedSouth.sub(projectedPoint.point).unit();
+        }
+
+        const screenSpaceX1 = collisionBox.x1 * tileToViewport;
+        const screenSpaceX2 = collisionBox.x2 * tileToViewport;
+        const screenSpaceY1 = collisionBox.y1 * tileToViewport;
+        const screenSpaceY2 = collisionBox.y2 * tileToViewport;
+
+        const point00 = projectedPoint.point.add(vecEast.mult(screenSpaceX1)).add(vecSouth.mult(screenSpaceY1));
+        const point10 = projectedPoint.point.add(vecEast.mult(screenSpaceX2)).add(vecSouth.mult(screenSpaceY1));
+        const point11 = projectedPoint.point.add(vecEast.mult(screenSpaceX2)).add(vecSouth.mult(screenSpaceY2));
+        const point01 = projectedPoint.point.add(vecEast.mult(screenSpaceX1)).add(vecSouth.mult(screenSpaceY2));
 
         // Construct actual bounding box from them
         let tlX = Infinity;
@@ -545,20 +552,58 @@ export class CollisionIndex {
         let brX = -Infinity;
         let brY = -Infinity;
 
-        for (const p of perimeter) {
-            const projected = this.projectAndGetPerspectiveRatio(
-                posMatrix,
-                p[0],
-                p[1],
-                unwrappedTileID,
-                getElevation);
-            tlX = Math.min(tlX, projected.point.x);
-            tlY = Math.min(tlY, projected.point.y);
-            brX = Math.max(brX, projected.point.x);
-            brY = Math.max(brY, projected.point.y);
+        for (const p of [point00, point10, point11, point01]) {
+            tlX = Math.min(tlX, p.x);
+            tlY = Math.min(tlY, p.y);
+            brX = Math.max(brX, p.x);
+            brY = Math.max(brY, p.y);
         }
 
         return [tlX, tlY, brX, brY];
-        */
+
+        // // Construct points along the perimeter of the box in in-tile coordinates...
+        // const tileMinX = collisionBox.x1 + collisionBox.anchorPointX;
+        // const tileMinY = collisionBox.y1 + collisionBox.anchorPointY;
+        // const tileMaxX = collisionBox.x2 + collisionBox.anchorPointX;
+        // const tileMaxY = collisionBox.y2 + collisionBox.anchorPointY;
+        // const tileHalfX = (tileMinX + tileMaxX) / 2;
+        // const tileHalfY = (tileMinY + tileMaxY) / 2;
+
+        // // 0--1--2
+        // // |     |
+        // // 7     3
+        // // |     |
+        // // 6--5--4
+        // const perimeter = [
+        //     [tileMinX, tileMinY],
+        //     [tileHalfX, tileMinY],
+        //     [tileMaxX, tileMinY],
+        //     [tileMaxX, tileHalfY],
+        //     [tileMaxX, tileMaxY],
+        //     [tileHalfX, tileMaxY],
+        //     [tileMinX, tileMaxY],
+        //     [tileMinX, tileHalfY],
+        // ];
+
+        // // Construct actual bounding box from them
+        // let tlX = Infinity;
+        // let tlY = Infinity;
+        // let brX = -Infinity;
+        // let brY = -Infinity;
+
+        // for (const p of perimeter) {
+        //     const projected = this.projectAndGetPerspectiveRatio(
+        //         posMatrix,
+        //         p[0],
+        //         p[1],
+        //         unwrappedTileID,
+        //         getElevation);
+        //     tlX = Math.min(tlX, projected.point.x);
+        //     tlY = Math.min(tlY, projected.point.y);
+        //     brX = Math.max(brX, projected.point.x);
+        //     brY = Math.max(brY, projected.point.y);
+        // }
+
+        // return [tlX, tlY, brX, brY];
     }
 }
