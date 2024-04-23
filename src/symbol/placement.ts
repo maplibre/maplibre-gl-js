@@ -1,4 +1,4 @@
-import {CollisionIndex, viewportPadding} from './collision_index';
+import {CollisionIndex} from './collision_index';
 import type {FeatureKey, PlacedBox} from './collision_index';
 import {EXTENT} from '../data/extent';
 import * as symbolSize from './symbol_size';
@@ -272,6 +272,11 @@ export class Placement {
         this.placedOrientations = {};
     }
 
+    private _getTerrainElevationFunc(tileID: OverscaledTileID) {
+        const terrain = this.terrain;
+        return terrain ? (x: number, y: number) => terrain.getElevation(tileID, x, y) : null;
+    }
+
     getBucketParts(results: Array<BucketPart>, styleLayer: StyleLayer, tile: Tile, sortAcrossTiles: boolean) {
         const symbolBucket = (tile.getBucket(styleLayer) as SymbolBucket);
         const bucketFeatureIndex = tile.latestFeatureIndex;
@@ -484,7 +489,7 @@ export class Placement {
         }
 
         const tileID = this.retainedQueryData[bucket.bucketInstanceId].tileID;
-        const getElevation = this.terrain ? (x: number, y: number) => this.terrain.getElevation(tileID, x, y) : null;
+        const getElevation = this._getTerrainElevationFunc(tileID);
 
         const placeSymbol = (symbolInstance: SymbolInstance, collisionArrays: CollisionArrays, symbolIndex: number) => {
             if (seenCrossTileIDs[symbolInstance.crossTileID]) return;
@@ -1013,12 +1018,12 @@ export class Placement {
         for (const tile of tiles) {
             const symbolBucket = tile.getBucket(styleLayer) as SymbolBucket;
             if (symbolBucket && tile.latestFeatureIndex && styleLayer.id === symbolBucket.layerIds[0]) {
-                this.updateBucketOpacities(symbolBucket, seenCrossTileIDs, tile.collisionBoxArray);
+                this.updateBucketOpacities(symbolBucket, tile.tileID, seenCrossTileIDs, tile.collisionBoxArray);
             }
         }
     }
 
-    updateBucketOpacities(bucket: SymbolBucket, seenCrossTileIDs: {
+    updateBucketOpacities(bucket: SymbolBucket, tileID: OverscaledTileID, seenCrossTileIDs: {
         [k in string | number]: boolean;
     }, collisionBoxArray?: CollisionBoxArray | null) {
         if (bucket.hasTextData()) {
@@ -1062,6 +1067,7 @@ export class Placement {
         };
 
         const boxArrays = this.collisionBoxArrays.get(bucket.bucketInstanceId);
+        const getElevation = this._getTerrainElevationFunc(tileID);
 
         for (let s = 0; s < bucket.symbolInstances.length; s++) {
             const symbolInstance = bucket.symbolInstances.get(s);
@@ -1185,24 +1191,40 @@ export class Placement {
                             }
                         }
 
-                        if (collisionArrays.textBox) {
-                            updateCollisionVertices(bucket.textCollisionBox.collisionVertexArray, opacityState.text.placed, !used || horizontalHidden, realBoxes.text, shift.x, shift.y);
-                        }
-                        if (collisionArrays.verticalTextBox) {
-                            updateCollisionVertices(bucket.textCollisionBox.collisionVertexArray, opacityState.text.placed, !used || verticalHidden, realBoxes.text, shift.x, shift.y);
+                        if (collisionArrays.textBox || collisionArrays.verticalTextBox) {
+                            let anchorTileX, anchorTileY;
+                            let hidden;
+                            if (collisionArrays.textBox) {
+                                anchorTileX = collisionArrays.textBox.anchorPointX;
+                                anchorTileY = collisionArrays.textBox.anchorPointY;
+                                hidden = horizontalHidden;
+                            }
+                            if (collisionArrays.verticalTextBox) {
+                                anchorTileX = collisionArrays.verticalTextBox.anchorPointX;
+                                anchorTileY = collisionArrays.verticalTextBox.anchorPointY;
+                                hidden = verticalHidden;
+                            }
+                            const projected = this.collisionIndex.projectAndGetPerspectiveRatio(tileID.posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
+                            updateCollisionVertices(bucket.textCollisionBox.collisionVertexArray, projected.point, opacityState.text.placed, !used || hidden, realBoxes.text, shift.x, shift.y);
                         }
                     }
 
-                    const verticalIconUsed = Boolean(!verticalHidden && collisionArrays.verticalIconBox);
-
-                    if (collisionArrays.iconBox) {
-                        updateCollisionVertices(bucket.iconCollisionBox.collisionVertexArray, opacityState.icon.placed, verticalIconUsed, realBoxes.icon,
-                            hasIconTextFit ? shift.x : 0,
-                            hasIconTextFit ? shift.y : 0);
-                    }
-
-                    if (collisionArrays.verticalIconBox) {
-                        updateCollisionVertices(bucket.iconCollisionBox.collisionVertexArray, opacityState.icon.placed, !verticalIconUsed, realBoxes.icon,
+                    if (collisionArrays.iconBox || collisionArrays.verticalIconBox) {
+                        const verticalIconUsed = Boolean(!verticalHidden && collisionArrays.verticalIconBox);
+                        let anchorTileX, anchorTileY;
+                        let hidden;
+                        if (collisionArrays.iconBox) {
+                            anchorTileX = collisionArrays.iconBox.anchorPointX;
+                            anchorTileY = collisionArrays.iconBox.anchorPointY;
+                            hidden = verticalIconUsed;
+                        }
+                        if (collisionArrays.verticalIconBox) {
+                            anchorTileX = collisionArrays.verticalIconBox.anchorPointX;
+                            anchorTileY = collisionArrays.verticalIconBox.anchorPointY;
+                            hidden = !verticalIconUsed;
+                        }
+                        const projected = this.collisionIndex.projectAndGetPerspectiveRatio(tileID.posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
+                        updateCollisionVertices(bucket.iconCollisionBox.collisionVertexArray, projected.point, opacityState.icon.placed, hidden, realBoxes.icon,
                             hasIconTextFit ? shift.x : 0,
                             hasIconTextFit ? shift.y : 0);
                     }
@@ -1279,15 +1301,17 @@ export class Placement {
     }
 }
 
-function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, placed: boolean, notUsed: boolean | number, realBox: Array<number>, shiftX?: number, shiftY?: number) {
+function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, projectedAnchor: Point, placed: boolean, notUsed: boolean | number, realBox: Array<number>, shiftX?: number, shiftY?: number) {
     if (!realBox || realBox.length === 0) {
         realBox = [0, 0, 0, 0];
     }
 
-    const tlX = realBox[0] - viewportPadding;
-    const tlY = realBox[1] - viewportPadding;
-    const brX = realBox[2] - viewportPadding;
-    const brY = realBox[3] - viewportPadding;
+    // The bounding box that we send to the shader will be placed relative to the projected anchor point.
+    // The anchor will be projected in the shader in the exact same way we have projected it here.
+    const tlX = realBox[0] - projectedAnchor.x;
+    const tlY = realBox[1] - projectedAnchor.y;
+    const brX = realBox[2] - projectedAnchor.x;
+    const brY = realBox[3] - projectedAnchor.y;
 
     collisionVertexArray.emplaceBack(placed ? 1 : 0, notUsed ? 1 : 0, shiftX || 0, shiftY || 0, tlX, tlY);
     collisionVertexArray.emplaceBack(placed ? 1 : 0, notUsed ? 1 : 0, shiftX || 0, shiftY || 0, brX, tlY);

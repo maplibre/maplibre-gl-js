@@ -21,8 +21,8 @@ void main() {
         0.0, // Prevents oversized near-field boxes in pitched/overzoomed tiles
         4.0);
 
-    gl_Position = projectTileWithElevation(a_pos + u_translation, get_elevation(a_pos));
-    gl_Position.xy = ((a_box_real + 0.5) * u_pixel_extrude_scale * 2.0 - 1.0) * vec2(1.0, -1.0) * gl_Position.w;
+    gl_Position = projectTileWithElevation(a_anchor_pos, get_elevation(a_anchor_pos));
+    gl_Position.xy += ((a_box_real + 0.5) * u_pixel_extrude_scale * 2.0) * vec2(1.0, -1.0) * gl_Position.w;
 
     v_placed = a_placed.x;
     v_notUsed = a_placed.y;

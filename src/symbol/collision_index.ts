@@ -26,7 +26,7 @@ import {Projection} from '../geo/projection/projection';
 // the viewport for collision detection so that the bulk of the changes
 // occur offscreen. Making this constant greater increases label
 // stability, but it's expensive.
-export const viewportPadding = 100;
+const viewportPadding = 100;
 
 export type PlacedBox = {
     box: Array<number>;
