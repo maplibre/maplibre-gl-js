@@ -1068,6 +1068,7 @@ export class Placement {
 
         const boxArrays = this.collisionBoxArrays.get(bucket.bucketInstanceId);
         const getElevation = this._getTerrainElevationFunc(tileID);
+        const posMatrix = this.transform.calculatePosMatrix(tileID.toUnwrapped(), false);
 
         for (let s = 0; s < bucket.symbolInstances.length; s++) {
             const symbolInstance = bucket.symbolInstances.get(s);
@@ -1204,7 +1205,7 @@ export class Placement {
                                 anchorTileY = collisionArrays.verticalTextBox.anchorPointY;
                                 hidden = verticalHidden;
                             }
-                            const projected = this.collisionIndex.projectAndGetPerspectiveRatio(tileID.posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
+                            const projected = this.collisionIndex.projectAndGetPerspectiveRatio(posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
                             updateCollisionVertices(bucket.textCollisionBox.collisionVertexArray, projected.point, opacityState.text.placed, !used || hidden, realBoxes.text, shift.x, shift.y);
                         }
                     }
@@ -1223,7 +1224,7 @@ export class Placement {
                             anchorTileY = collisionArrays.verticalIconBox.anchorPointY;
                             hidden = !verticalIconUsed;
                         }
-                        const projected = this.collisionIndex.projectAndGetPerspectiveRatio(tileID.posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
+                        const projected = this.collisionIndex.projectAndGetPerspectiveRatio(posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
                         updateCollisionVertices(bucket.iconCollisionBox.collisionVertexArray, projected.point, opacityState.icon.placed, hidden, realBoxes.icon,
                             hasIconTextFit ? shift.x : 0,
                             hasIconTextFit ? shift.y : 0);
