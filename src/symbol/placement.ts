@@ -396,14 +396,14 @@ export class Placement {
             shiftVariableCollisionBox(
                 textBox, shift.x, shift.y,
                 rotateWithMap, pitchWithMap, this.transform.angle),
-            textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, translation, collisionGroup.predicate, getElevation);
+            textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, pitchWithMap, rotateWithMap, translation, collisionGroup.predicate, getElevation);
 
         if (iconBox) {
             const placedIconBoxes = this.collisionIndex.placeCollisionBox(
                 shiftVariableCollisionBox(
                     iconBox, shift.x, shift.y,
                     rotateWithMap, pitchWithMap, this.transform.angle),
-                textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, translation, collisionGroup.predicate, getElevation);
+                textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, pitchWithMap, rotateWithMap, translation, collisionGroup.predicate, getElevation);
             if (!placedIconBoxes.placeable) return;
         }
 
@@ -568,6 +568,8 @@ export class Placement {
                             textPixelRatio,
                             posMatrix,
                             unwrappedTileID,
+                            pitchWithMap,
+                            rotateWithMap,
                             translation,
                             collisionGroup.predicate,
                             getElevation
@@ -734,8 +736,18 @@ export class Placement {
                             iconBox, shift.x, shift.y,
                             rotateWithMap, pitchWithMap, this.transform.angle) :
                         iconBox;
-                    return this.collisionIndex.placeCollisionBox(shiftedIconBox,
-                        iconOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, translation, collisionGroup.predicate, getElevation);
+                    return this.collisionIndex.placeCollisionBox(
+                        shiftedIconBox,
+                        iconOverlapMode,
+                        textPixelRatio,
+                        posMatrix,
+                        unwrappedTileID,
+                        pitchWithMap,
+                        rotateWithMap,
+                        translation,
+                        collisionGroup.predicate,
+                        getElevation
+                    );
                 };
 
                 if (placedVerticalText && placedVerticalText.placeable && collisionArrays.verticalIconBox) {

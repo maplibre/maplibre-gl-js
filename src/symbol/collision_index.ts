@@ -94,6 +94,8 @@ export class CollisionIndex {
         textPixelRatio: number,
         posMatrix: mat4,
         unwrappedTileID: UnwrappedTileID,
+        pitchWithMap: boolean,
+        rotateWithMap: boolean,
         translation: [number, number],
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
         getElevation?: (x: number, y: number) => number
@@ -106,11 +108,18 @@ export class CollisionIndex {
             y,
             unwrappedTileID,
             getElevation);
-        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
-        const tlX = collisionBox.x1 * tileToViewport + projectedPoint.point.x;
-        const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
-        const brX = collisionBox.x2 * tileToViewport + projectedPoint.point.x;
-        const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
+
+        const [tlX, tlY, brX, brY] = this._projectCollisionBox(
+            collisionBox,
+            textPixelRatio,
+            posMatrix,
+            unwrappedTileID,
+            pitchWithMap,
+            rotateWithMap,
+            translation,
+            projectedPoint
+        );
+
         const projectionOccluded = this.mapProjection.useSpecialProjectionForSymbols ? this.mapProjection.isOccluded(x, y, unwrappedTileID) : false;
 
         if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
@@ -482,5 +491,74 @@ export class CollisionIndex {
         const m = mat4.identity([] as any);
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
+    }
+
+    /**
+     * Applies all layout+paint properties of the given box in order to find as good approximation of its screen-space bounding box as possible.
+     */
+    private _projectCollisionBox(
+        collisionBox: SingleCollisionBox,
+        textPixelRatio: number,
+        posMatrix: mat4,
+        unwrappedTileID: UnwrappedTileID,
+        pitchWithMap: boolean,
+        rotateWithMap: boolean,
+        translation: [number, number],
+        projectedPoint: {point: Point; perspectiveRatio: number},
+        getElevation?: (x: number, y: number) => number,
+    ): [number, number, number, number] {
+
+        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
+        const tlX = collisionBox.x1 * tileToViewport + projectedPoint.point.x;
+        const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
+        const brX = collisionBox.x2 * tileToViewport + projectedPoint.point.x;
+        const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
+        return [tlX, tlY, brX, brY];
+        /*
+        // Construct points along the perimeter of the box in in-tile coordinates...
+        const tileMinX = collisionBox.x1 + collisionBox.anchorPointX;
+        const tileMinY = collisionBox.y1 + collisionBox.anchorPointY;
+        const tileMaxX = collisionBox.x2 + collisionBox.anchorPointX;
+        const tileMaxY = collisionBox.y2 + collisionBox.anchorPointY;
+        const tileHalfX = (tileMinX + tileMaxX) / 2;
+        const tileHalfY = (tileMinY + tileMaxY) / 2;
+
+        // 0--1--2
+        // |     |
+        // 7     3
+        // |     |
+        // 6--5--4
+        const perimeter = [
+            [tileMinX, tileMinY],
+            [tileHalfX, tileMinY],
+            [tileMaxX, tileMinY],
+            [tileMaxX, tileHalfY],
+            [tileMaxX, tileMaxY],
+            [tileHalfX, tileMaxY],
+            [tileMinX, tileMaxY],
+            [tileMinX, tileHalfY],
+        ];
+
+        // Construct actual bounding box from them
+        let tlX = Infinity;
+        let tlY = Infinity;
+        let brX = -Infinity;
+        let brY = -Infinity;
+
+        for (const p of perimeter) {
+            const projected = this.projectAndGetPerspectiveRatio(
+                posMatrix,
+                p[0],
+                p[1],
+                unwrappedTileID,
+                getElevation);
+            tlX = Math.min(tlX, projected.point.x);
+            tlY = Math.min(tlY, projected.point.y);
+            brX = Math.max(brX, projected.point.x);
+            brY = Math.max(brY, projected.point.y);
+        }
+
+        return [tlX, tlY, brX, brY];
+        */
     }
 }
