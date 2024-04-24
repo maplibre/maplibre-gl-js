@@ -351,12 +351,23 @@ export class GlobeProjection implements Projection {
     }
 
     /**
-     * Given a 2D point in the mercator base tile, returns its 3D coordinates on the surface of a unit sphere.
+     * Returns mercator coordinates in range 0..1 for given coordinates inside a tile and the tile's canonical ID.
      */
-    private _projectToSphere(mercatorX: number, mercatorY: number): vec3 {
+    private _tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, tileID: UnwrappedTileID): [number, number] {
+        const scale = 1.0 / (1 << tileID.canonical.z);
+        return [
+            inTileX / EXTENT * scale + tileID.canonical.x * scale,
+            inTileY / EXTENT * scale + tileID.canonical.y * scale
+        ];
+    }
+
+    /**
+     * For given mercator coordinates in range 0..1, returns the angular coordinates on the sphere's surface, in radians.
+     */
+    private _mercatorCoordinatesToAngularCoordinates(mercatorX: number, mercatorY: number): [number, number] {
         const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
         const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
-        return this._angularCoordinatesToVector(sphericalX, sphericalY);
+        return [sphericalX, sphericalY];
     }
 
     private _angularCoordinatesToVector(lngRadians: number, latRadians: number): vec3 {
@@ -387,16 +398,15 @@ export class GlobeProjection implements Projection {
         }
     }
 
-    private _projectToSphereTile(inTileX: number, inTileY: number, unwrappedTileID: UnwrappedTileID): vec3 {
-        const scale = 1.0 / (1 << unwrappedTileID.canonical.z);
-        return this._projectToSphere(
-            inTileX / EXTENT * scale + unwrappedTileID.canonical.x * scale,
-            inTileY / EXTENT * scale + unwrappedTileID.canonical.y * scale
-        );
+    private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: UnwrappedTileID): vec3 {
+        const mercator = this._tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
+        const angular = this._mercatorCoordinatesToAngularCoordinates(mercator[0], mercator[1]);
+        const sphere = this._angularCoordinatesToVector(angular[0], angular[1]);
+        return sphere;
     }
 
     public isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
-        const spherePos = this._projectToSphereTile(x, y, unwrappedTileID);
+        const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
 
         const plane = this._cachedClippingPlane;
         // dot(position on sphere, occlusion plane equation)
@@ -443,6 +453,15 @@ export class GlobeProjection implements Projection {
 
     public getCircleRadiusCorrection(transformCenter: LngLat): number {
         return Math.cos(transformCenter.lat * Math.PI / 180);
+    }
+
+    public getPitchedTextCorrection(transformCenter: LngLat, textAnchor: Point, tileID: UnwrappedTileID): number {
+        if (!this.useGlobeRendering) {
+            return 1.0;
+        }
+        const mercator = this._tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID);
+        const angular = this._mercatorCoordinatesToAngularCoordinates(mercator[0], mercator[1]);
+        return this.getCircleRadiusCorrection(transformCenter) / Math.cos(angular[1]);
     }
 
     private _updateAnimation(currentZoom: number) {
@@ -575,7 +594,7 @@ export class GlobeProjection implements Projection {
     }
 
     public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number) {
-        const spherePos = this._projectToSphereTile(x, y, unwrappedTileID);
+        const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
         const elevation = getElevation ? getElevation(x, y) : 0.0;
         const vectorMultiplier = 1.0 + elevation / earthRadius;
         const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];

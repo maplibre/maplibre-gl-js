@@ -1,6 +1,6 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import type {Projection, ProjectionGPUContext, TransformLike} from './projection';
-import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
+import type {UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import type {Tile} from '../../source/tile';
 import type {ProjectionData} from '../../render/program/projection_program';
@@ -133,11 +133,15 @@ export class MercatorProjection implements Projection {
         return 1.0;
     }
 
+    public getPitchedTextCorrection(_transformCenter: any, _textAnchor: any, _tileID: any): number {
+        return 1.0;
+    }
+
     public translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
-    public getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
+    public getMeshFromTileID(context: Context, _tileID: any, _hasBorder: any): Mesh {
         if (this._cachedMesh) {
             return this._cachedMesh;
         }

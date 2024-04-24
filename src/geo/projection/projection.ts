@@ -157,10 +157,20 @@ export interface Projection {
 
     /**
      * @internal
-     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the transform's zoom level and latitude.
-     * Circle and kernel radius is multiplied by this value.
+     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
+     * Circle radius and heatmap kernel radius is multiplied by this value.
      */
     getCircleRadiusCorrection(transformCenter: LngLat): number;
+
+    /**
+     * @internal
+     * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
+     * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
+     * @param transformCenter - The map's longitude and latitude.
+     * @param textAnchor - Text anchor position inside the tile.
+     * @param tileID - The tile coordinates.
+     */
+    getPitchedTextCorrection(transformCenter: LngLat, textAnchor: Point, tileID: UnwrappedTileID): number;
 
     /**
      * @internal
@@ -170,12 +180,12 @@ export interface Projection {
 
     /**
      * @internal
-     * Returns a subdivided mesh for a given canonical tile ID, covering 0..EXTENT range.
+     * Returns a subdivided mesh for a given tile ID, covering 0..EXTENT range.
      * @param context - WebGL context.
-     * @param canonical - The tile coordinates for which to return a mesh. Meshes for tiles that border the top/bottom mercator edge might include extra geometry for the north/south pole.
+     * @param tileID - The tile coordinates for which to return a mesh. Meshes for tiles that border the top/bottom mercator edge might include extra geometry for the north/south pole.
      * @param hasBorder - When true, the mesh will also include a small border beyond the 0..EXTENT range.
      */
-    getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh;
+    getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean): Mesh;
 
     /**
      * @internal
