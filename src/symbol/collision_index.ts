@@ -98,7 +98,8 @@ export class CollisionIndex {
         rotateWithMap: boolean,
         translation: [number, number],
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
-        getElevation?: (x: number, y: number) => number
+        getElevation?: (x: number, y: number) => number,
+        shift?: Point
     ): PlacedBox {
         const x = collisionBox.anchorPointX + translation[0];
         const y = collisionBox.anchorPointY + translation[1];
@@ -118,7 +119,9 @@ export class CollisionIndex {
             pitchWithMap,
             rotateWithMap,
             translation,
-            projectedPoint
+            projectedPoint,
+            getElevation,
+            shift
         );
 
         const projectionOccluded = this.mapProjection.useSpecialProjectionForSymbols ? this.mapProjection.isOccluded(x, y, unwrappedTileID) : false;
@@ -507,6 +510,7 @@ export class CollisionIndex {
         translation: [number, number],
         projectedPoint: {point: Point; perspectiveRatio: number},
         getElevation?: (x: number, y: number) => number,
+        shift?: Point
     ): [number, number, number, number] {
 
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
@@ -552,6 +556,11 @@ export class CollisionIndex {
             basePoint = translatedAnchor;
             const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
             distanceMultiplier = Math.pow(2, -zoomFraction);
+        }
+
+        if (shift) {
+            // Variable anchors are in use
+            basePoint = basePoint.add(vecEast.mult(shift.x * distanceMultiplier)).add(vecSouth.mult(shift.y * distanceMultiplier));
         }
 
         const offsetXmin = collisionBox.x1 * distanceMultiplier;

@@ -154,26 +154,6 @@ function calculateVariableLayoutShift(
     );
 }
 
-function shiftVariableCollisionBox(collisionBox: SingleCollisionBox,
-    shiftX: number, shiftY: number,
-    rotateWithMap: boolean, pitchWithMap: boolean,
-    angle: number) {
-    const {x1, x2, y1, y2, anchorPointX, anchorPointY} = collisionBox;
-    const rotatedOffset = new Point(shiftX, shiftY);
-    if (rotateWithMap) {
-        rotatedOffset._rotate(pitchWithMap ? angle : -angle);
-    }
-    return {
-        x1: x1 + rotatedOffset.x,
-        y1: y1 + rotatedOffset.y,
-        x2: x2 + rotatedOffset.x,
-        y2: y2 + rotatedOffset.y,
-        // symbol anchor point stays the same regardless of text-anchor
-        anchorPointX,
-        anchorPointY
-    };
-}
-
 export type VariableOffset = {
     textOffset: [number, number];
     width: number;
@@ -393,17 +373,33 @@ export class Placement {
         const shift = calculateVariableLayoutShift(anchor, width, height, textOffset, textBoxScale);
 
         const placedGlyphBoxes = this.collisionIndex.placeCollisionBox(
-            shiftVariableCollisionBox(
-                textBox, shift.x, shift.y,
-                rotateWithMap, pitchWithMap, this.transform.angle),
-            textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, pitchWithMap, rotateWithMap, translation, collisionGroup.predicate, getElevation);
+            textBox,
+            textOverlapMode,
+            textPixelRatio,
+            posMatrix,
+            unwrappedTileID,
+            pitchWithMap,
+            rotateWithMap,
+            translation,
+            collisionGroup.predicate,
+            getElevation,
+            shift
+        );
 
         if (iconBox) {
             const placedIconBoxes = this.collisionIndex.placeCollisionBox(
-                shiftVariableCollisionBox(
-                    iconBox, shift.x, shift.y,
-                    rotateWithMap, pitchWithMap, this.transform.angle),
-                textOverlapMode, textPixelRatio, posMatrix, unwrappedTileID, pitchWithMap, rotateWithMap, translation, collisionGroup.predicate, getElevation);
+                iconBox,
+                textOverlapMode,
+                textPixelRatio,
+                posMatrix,
+                unwrappedTileID,
+                pitchWithMap,
+                rotateWithMap,
+                translation,
+                collisionGroup.predicate,
+                getElevation,
+                shift
+            );
             if (!placedIconBoxes.placeable) return;
         }
 
@@ -731,13 +727,8 @@ export class Placement {
 
             if (collisionArrays.iconBox) {
                 const placeIconFeature = iconBox => {
-                    const shiftedIconBox = hasIconTextFit && shift ?
-                        shiftVariableCollisionBox(
-                            iconBox, shift.x, shift.y,
-                            rotateWithMap, pitchWithMap, this.transform.angle) :
-                        iconBox;
                     return this.collisionIndex.placeCollisionBox(
-                        shiftedIconBox,
+                        iconBox,
                         iconOverlapMode,
                         textPixelRatio,
                         posMatrix,
@@ -746,7 +737,8 @@ export class Placement {
                         rotateWithMap,
                         translation,
                         collisionGroup.predicate,
-                        getElevation
+                        getElevation,
+                        (hasIconTextFit && shift) ? shift : undefined,
                     );
                 };
 
