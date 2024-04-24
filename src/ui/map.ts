@@ -2248,9 +2248,9 @@ export class Map extends Camera {
      * @example
      * Load an image from an external URL.
      * ```ts
-     * const response = await map.loadImage('http://placekitten.com/50/50');
-     * // Add the loaded image to the style's sprite with the ID 'kitten'.
-     * map.addImage('kitten', response.data);
+     * const response = await map.loadImage('https://picsum.photos/50/50');
+     * // Add the loaded image to the style's sprite with the ID 'photo'.
+     * map.addImage('photo', response.data);
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
      */
