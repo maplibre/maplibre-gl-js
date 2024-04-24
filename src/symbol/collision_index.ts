@@ -510,12 +510,15 @@ export class CollisionIndex {
     ): [number, number, number, number] {
 
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
+
+        // These vectors are valid both for screen space viewport-rotation-aligned texts and for pitch-align: map texts that are map-rotation-aligned.
         let vecEast = new Point(1, 0);
         let vecSouth = new Point(0, 1);
 
         const translatedAnchor = new Point(collisionBox.anchorPointX + translation[0], collisionBox.anchorPointY + translation[1]);
 
         if (rotateWithMap && !pitchWithMap) {
+            // Handles screen space texts that are always aligned east-west.
             const projectedEast = this.projectAndGetPerspectiveRatio(
                 posMatrix,
                 translatedAnchor.x + 1,
@@ -523,17 +526,21 @@ export class CollisionIndex {
                 unwrappedTileID,
                 getElevation
             ).point;
+            const toEast = projectedEast.sub(projectedPoint.point).unit();
+            const angle = Math.atan(toEast.y / toEast.x) + (toEast.x < 0 ? Math.PI : 0);
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            vecEast = new Point(cos, sin);
+            vecSouth = new Point(-sin, cos);
+        }
 
-            const projectedSouth = this.projectAndGetPerspectiveRatio(
-                posMatrix,
-                translatedAnchor.x,
-                translatedAnchor.y + 1,
-                unwrappedTileID,
-                getElevation
-            ).point;
-
-            vecEast = projectedEast.sub(projectedPoint.point).unit();
-            vecSouth = projectedSouth.sub(projectedPoint.point).unit();
+        if (!rotateWithMap && pitchWithMap) {
+            // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
+            const angle = -this.transform.angle;
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            vecEast = new Point(cos, sin);
+            vecSouth = new Point(-sin, cos);
         }
 
         // Configuration for screen space offsets
@@ -543,7 +550,8 @@ export class CollisionIndex {
         if (pitchWithMap) {
             // Configuration for tile space (map-pitch-aligned) offsets
             basePoint = translatedAnchor;
-            distanceMultiplier = 1;
+            const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
+            distanceMultiplier = Math.pow(2, -zoomFraction);
         }
 
         const offsetXmin = collisionBox.x1 * distanceMultiplier;
