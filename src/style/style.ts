@@ -471,6 +471,7 @@ export class Style extends Evented {
     }
 
     /**
+     * @hidden
      * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
      * @param ids - an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
      * @returns generated result
@@ -494,6 +495,7 @@ export class Style extends Evented {
     }
 
     /**
+     * @hidden
      * Lazy initialization of this._serializedLayers dictionary and return it
      * @returns this._serializedLayers dictionary
      */
@@ -551,7 +553,7 @@ export class Style extends Evented {
         }
 
         const changed = this._changed;
-        if (this._changed) {
+        if (changed) {
             const updatedIds = Object.keys(this._updatedLayers);
             const removedIds = Object.keys(this._removedLayers);
 
@@ -584,12 +586,17 @@ export class Style extends Evented {
 
         const sourcesUsedBefore = {};
 
-        for (const sourceId in this.sourceCaches) {
-            const sourceCache = this.sourceCaches[sourceId];
-            sourcesUsedBefore[sourceId] = sourceCache.used;
+        // save 'used' status to sourcesUsedBefore object and reset all sourceCaches 'used' field to false
+        for (const sourceCacheId in this.sourceCaches) {
+            const sourceCache = this.sourceCaches[sourceCacheId];
+
+            // sourceCache.used could be undefined, and sourcesUsedBefore[sourceCacheId] is also 'undefined'
+            sourcesUsedBefore[sourceCacheId] = sourceCache.used;
             sourceCache.used = false;
         }
 
+        // loop all layers and find layers that are not hidden at parameters.zoom
+        // and set used to true in sourceCaches dictionary for the sources of these layers
         for (const layerId of this._order) {
             const layer = this._layers[layerId];
 
@@ -599,10 +606,20 @@ export class Style extends Evented {
             }
         }
 
-        for (const sourceId in sourcesUsedBefore) {
-            const sourceCache = this.sourceCaches[sourceId];
-            if (sourcesUsedBefore[sourceId] !== sourceCache.used) {
-                sourceCache.fire(new Event('data', {sourceDataType: 'visibility', dataType: 'source', sourceId}));
+        // cross check sourcesUsedBefore against updated this.sourceCaches dictionary
+        // if "used" field is different fire visibility event
+        for (const sourcesUsedBeforeId in sourcesUsedBefore) {
+            const sourceCache = this.sourceCaches[sourcesUsedBeforeId];
+
+            // (undefine !== false) will evaluate to true and fire an useless visibility event
+            // need force "falsy" values to boolean to avoid the case above
+            if (!!sourcesUsedBefore[sourcesUsedBeforeId] !== !!sourceCache.used) {
+                sourceCache.fire(new Event('data',
+                    {
+                        sourceDataType: 'visibility',
+                        dataType: 'source',
+                        sourceId: sourcesUsedBeforeId
+                    }));
             }
         }
 
@@ -612,7 +629,6 @@ export class Style extends Evented {
         if (changed) {
             this.fire(new Event('data', {dataType: 'style'}));
         }
-
     }
 
     /*
@@ -815,7 +831,6 @@ export class Style extends Evented {
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
         const shouldValidate = builtIns.indexOf(source.type) >= 0;
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
-
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
         sourceCache.style = this;
@@ -1163,6 +1178,8 @@ export class Style extends Evented {
 
         this._changed = true;
         this._updatedPaintProps[layerId] = true;
+        // reset serialization field, to be populated only when needed
+        this._serializedLayers = null;
     }
 
     getPaintProperty(layer: string, name: string) {

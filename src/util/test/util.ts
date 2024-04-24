@@ -3,6 +3,7 @@ import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
 import {IActor} from '../actor';
 import type {Evented} from '../evented';
+import {SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -159,4 +160,26 @@ export function waitForMetadataEvent(source: Evented): Promise<void> {
             }
         });
     });
+}
+
+export function createStyleSource() {
+    return {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: []
+        }
+    } as SourceSpecification;
+}
+
+export function createStyle() {
+    return {
+        version: 8,
+        center: [-73.9749, 40.7736],
+        zoom: 12.5,
+        bearing: 29,
+        pitch: 50,
+        sources: {},
+        layers: []
+    } as StyleSpecification;
 }

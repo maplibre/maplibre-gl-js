@@ -1,8 +1,10 @@
-import simulate from '../../test/unit/lib/simulate_interaction';
-import {StyleLayer} from '../style/style_layer';
-import {createMap, beforeMapTest} from '../util/test/util';
-import {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import {MapLayerEventType, MapLibreEvent} from './events';
+import simulate from '../../../test/unit/lib/simulate_interaction';
+import {StyleLayer} from '../../style/style_layer';
+import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
+import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
+import {MapLayerEventType, MapLibreEvent} from '../events';
+import {Map, MapOptions} from '../map';
+import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;
@@ -702,5 +704,62 @@ describe('map events', () => {
         expect(click).toBe(false);
 
         map.remove();
+    });
+
+    test('emits load event after a style is set', done => {
+        const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
+
+        const fail = () => done('test failed');
+        const pass = () => done();
+
+        map.on('load', fail);
+
+        setTimeout(() => {
+            map.off('load', fail);
+            map.on('load', pass);
+            map.setStyle(createStyle());
+        }, 1);
+    });
+
+    test('no idle event during move', async () => {
+        const style = createStyle();
+        const map = createMap({style, fadeDuration: 0});
+        await map.once('idle');
+        map.zoomTo(0.5, {duration: 100});
+        expect(map.isMoving()).toBeTruthy();
+        await map.once('idle');
+        expect(map.isMoving()).toBeFalsy();
+    });
+
+    test('fires sourcedataabort event on dataabort event', async () => {
+        const map = createMap();
+        const sourcePromise = map.once('sourcedataabort');
+        map.fire(new EventedEvent('dataabort'));
+        await sourcePromise;
+    });
+
+    describe('error event', () => {
+        test('logs errors to console when it has NO listeners', () => {
+            // to avoid seeing error in the console in Jest
+            let stub = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const map = createMap();
+            stub.mockReset();
+            stub = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const error = new Error('test');
+            map.fire(new ErrorEvent(error));
+            expect(stub).toHaveBeenCalledTimes(1);
+            expect(stub.mock.calls[0][0]).toBe(error);
+        });
+
+        test('calls listeners', done => {
+            const map = createMap();
+            const error = new Error('test');
+            map.on('error', (event) => {
+                expect(event.error).toBe(error);
+                done();
+            });
+            map.fire(new ErrorEvent(error));
+        });
+
     });
 });
