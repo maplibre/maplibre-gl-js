@@ -181,7 +181,7 @@ function getShiftedAnchor(projectedAnchorPoint: Point, projectionArgs: symbolPro
             // the map's actual east-west axis. Very similar to what is done in the shader.
             const projectedAnchorRight = symbolProjection.projectTileCoordinatesToViewport(projectionArgs.tileAnchorPoint.x + 1, projectionArgs.tileAnchorPoint.y, projectionArgs);
             const east = projectedAnchorRight.point.sub(projectedAnchorPoint);
-            const angle = Math.atan(east.y / east.x);
+            const angle = Math.atan(east.y / east.x) + (east.x < 0 ? Math.PI : 0);
             return projectedAnchorPoint.add(shift.rotate(angle));
         } else {
             return projectedAnchorPoint.add(shift);
