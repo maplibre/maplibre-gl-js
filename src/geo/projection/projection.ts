@@ -176,7 +176,7 @@ export interface Projection {
      * @internal
      * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
      */
-    translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+    translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
 
     /**
      * @internal
@@ -194,7 +194,7 @@ export interface Projection {
      * @param dir - The light direction.
      * @returns A new vector with the transformed light direction.
      */
-    transformLightDirection(transform: TransformLike, dir: vec3): vec3;
+    transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3;
 
     //
     // Projection and unprojection of points, LatLng coordinates, tile coordinates, etc.
