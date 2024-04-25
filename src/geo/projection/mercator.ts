@@ -1,5 +1,5 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import type {Projection, ProjectionGPUContext} from './projection';
+import type {Projection, ProjectionGPUContext, TransformLike} from './projection';
 import type {UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import type {Tile} from '../../source/tile';
@@ -13,10 +13,10 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {Terrain} from '../../render/terrain';
+import type {Terrain} from '../../render/terrain';
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate} from '../mercator_coordinate';
-import {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
+import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';

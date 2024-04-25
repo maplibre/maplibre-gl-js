@@ -19,8 +19,8 @@ import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {LngLat, earthRadius} from '../lng_lat';
-import {Terrain} from '../../render/terrain';
-import {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
+import type {Terrain} from '../../render/terrain';
+import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.
@@ -458,13 +458,13 @@ export class GlobeProjection implements Projection {
         return Math.cos(transform.center.lat * Math.PI / 180);
     }
 
-    public getPitchedTextCorrection(transformCenter: LngLat, textAnchor: Point, tileID: UnwrappedTileID): number {
+    public getPitchedTextCorrection(transform: { center: LngLat }, textAnchor: Point, tileID: UnwrappedTileID): number {
         if (!this.useGlobeRendering) {
             return 1.0;
         }
         const mercator = this._tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID);
         const angular = this._mercatorCoordinatesToAngularCoordinates(mercator[0], mercator[1]);
-        return this.getCircleRadiusCorrection(transformCenter) / Math.cos(angular[1]);
+        return this.getCircleRadiusCorrection(transform) / Math.cos(angular[1]);
     }
 
     private _updateAnimation(currentZoom: number) {

@@ -247,7 +247,7 @@ function updateVariableAnchorsForBucket(
             const {width, height, anchor, textOffset, textBoxScale} = variableOffset;
             const shift = calculateVariableRenderShift(anchor, width, height, textOffset, textBoxScale, renderTextSize);
 
-            const pitchedTextCorrection = projection.getPitchedTextCorrection(transform.center, tileAnchor.add(new Point(translation[0], translation[1])), unwrappedTileID);
+            const pitchedTextCorrection = projection.getPitchedTextCorrection(transform, tileAnchor.add(new Point(translation[0], translation[1])), unwrappedTileID);
             const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionArgs, rotateWithMap, shift, transform.angle, pitchedTextCorrection);
 
             const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === WritingMode.vertical) ? Math.PI / 2 : 0;
@@ -332,7 +332,7 @@ function drawLayerSymbols(
 
     const tileRenderState: Array<SymbolTileRenderState> = [];
 
-    const pitchedTextRescaling = projection.getCircleRadiusCorrection(tr.center);
+    const pitchedTextRescaling = projection.getCircleRadiusCorrection(tr);
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);

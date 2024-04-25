@@ -8,9 +8,9 @@ import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import Point from '@mapbox/point-geometry';
-import {Terrain} from '../../render/terrain';
-import {LngLat} from '../lng_lat';
-import {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
+import type {Terrain} from '../../render/terrain';
+import type {LngLat} from '../lng_lat';
+import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 export type ProjectionGPUContext = {
     context: Context;
@@ -153,14 +153,14 @@ export interface Projection {
     /**
      * @internal
      */
-    getPixelScale(transformCenter: LngLat): number;
+    getPixelScale(transform: { center: LngLat }): number;
 
     /**
      * @internal
      * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
      * Circle radius and heatmap kernel radius is multiplied by this value.
      */
-    getCircleRadiusCorrection(transformCenter: LngLat): number;
+    getCircleRadiusCorrection(transform: { center: LngLat }): number;
 
     /**
      * @internal
@@ -170,7 +170,7 @@ export interface Projection {
      * @param textAnchor - Text anchor position inside the tile.
      * @param tileID - The tile coordinates.
      */
-    getPitchedTextCorrection(transformCenter: LngLat, textAnchor: Point, tileID: UnwrappedTileID): number;
+    getPitchedTextCorrection(transform: { center: LngLat }, textAnchor: Point, tileID: UnwrappedTileID): number;
 
     /**
      * @internal

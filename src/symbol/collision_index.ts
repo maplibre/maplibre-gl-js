@@ -556,7 +556,7 @@ export class CollisionIndex {
             basePoint = translatedAnchor;
             const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
             distanceMultiplier = Math.pow(2, -zoomFraction);
-            distanceMultiplier *= this.mapProjection.getPitchedTextCorrection(this.transform.center, translatedAnchor, unwrappedTileID);
+            distanceMultiplier *= this.mapProjection.getPitchedTextCorrection(this.transform, translatedAnchor, unwrappedTileID);
         }
 
         if (shift) {
