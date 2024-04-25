@@ -20,6 +20,7 @@ uniform bool u_is_text;
 uniform bool u_pitch_with_map;
 uniform vec2 u_texsize;
 uniform bool u_is_along_line;
+uniform bool u_is_variable_anchor;
 uniform vec2 u_translation;
 uniform float u_pitched_scale;
 
@@ -86,8 +87,8 @@ void main() {
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
     vec4 projected_pos;
-    if (u_is_along_line) {
-        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, ele, 1.0);
+    if (u_is_along_line || u_is_variable_anchor) {
+        projected_pos = vec4(a_projected_pos.xy, ele, 1.0);
     } else if (u_pitch_with_map) {
         projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
     } else {

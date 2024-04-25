@@ -163,18 +163,18 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     }
 }
 
-function getShiftedAnchor(projectedAnchorPoint: Point, projectionArgs: symbolProjection.ProjectionArgs, rotateWithMap, shift: Point, transformAngle: number) {
+function getShiftedAnchor(projectedAnchorPoint: Point, projectionArgs: symbolProjection.ProjectionArgs, rotateWithMap, shift: Point, transformAngle: number, pitchedTextShiftCorrection: number) {
     // Usual case is that we take the projected anchor and add the pixel-based shift
     // calculated earlier. In the (somewhat weird) case of pitch-aligned text, we add an equivalent
     // tile-unit based shift to the anchor before projecting to the label plane.
+    const translatedAnchor = projectionArgs.tileAnchorPoint.add(new Point(projectionArgs.translation[0], projectionArgs.translation[1]));
     if (projectionArgs.pitchWithMap) {
-        if (rotateWithMap) {
-            const tileAnchorShifted = projectionArgs.tileAnchorPoint.add(new Point(projectionArgs.translation[0], projectionArgs.translation[1])).add(shift);
-            return symbolProjection.project(tileAnchorShifted, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation).point;
-        } else {
-            const tileAnchorShifted = projectionArgs.tileAnchorPoint.add(new Point(projectionArgs.translation[0], projectionArgs.translation[1])).add(shift.rotate(-transformAngle));
-            return symbolProjection.project(tileAnchorShifted, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation).point;
+        let adjustedShift = shift.mult(pitchedTextShiftCorrection);
+        if (!rotateWithMap) {
+            adjustedShift = adjustedShift.rotate(-transformAngle);
         }
+        const tileAnchorShifted = translatedAnchor.add(adjustedShift);
+        return symbolProjection.project(tileAnchorShifted, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation).point;
     } else {
         if (rotateWithMap) {
             // Compute the angle with which to rotate the anchor, so that it is aligned with
@@ -245,11 +245,10 @@ function updateVariableAnchorsForBucket(
             }
 
             const {width, height, anchor, textOffset, textBoxScale} = variableOffset;
+            const shift = calculateVariableRenderShift(anchor, width, height, textOffset, textBoxScale, renderTextSize);
 
-            const shift = calculateVariableRenderShift(
-                anchor, width, height, textOffset, textBoxScale, renderTextSize);
-
-            const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionArgs, rotateWithMap, shift, transform.angle);
+            const pitchedTextCorrection = projection.getPitchedTextCorrection(transform.center, tileAnchor.add(new Point(translation[0], translation[1])), unwrappedTileID);
+            const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionArgs, rotateWithMap, shift, transform.angle, pitchedTextCorrection);
 
             const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === WritingMode.vertical) ? Math.PI / 2 : 0;
             for (let g = 0; g < symbol.numGlyphs; g++) {
@@ -399,7 +398,8 @@ function drawLayerSymbols(
         }
 
         const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
-        const noLabelPlane = (alongLine || (isText && hasVariablePlacement) || updateTextFitIcon);
+        const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
+        const noLabelPlane = (alongLine || shaderVariableAnchor);
         const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : labelPlaneMatrix;
         const uglCoordMatrix = glCoordMatrixForShader; // formerly also incorporated translate and translate-anchor
 
@@ -409,16 +409,16 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
+                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
                     uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true, pitchedTextRescaling);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
+                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
                     uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon, pitchedTextRescaling);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, noLabelPlane, painter, matrix,
+                size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
                 uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, pitchedTextRescaling);
         }
 

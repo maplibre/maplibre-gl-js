@@ -21,6 +21,7 @@ uniform mat4 u_coord_matrix;
 uniform bool u_is_text;
 uniform bool u_pitch_with_map;
 uniform bool u_is_along_line;
+uniform bool u_is_variable_anchor;
 uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
 uniform highp float u_aspect_ratio;
@@ -107,8 +108,9 @@ void main() {
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
     vec4 projected_pos;
-    if (u_is_along_line) {
-        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, ele, 1.0);
+    if (u_is_along_line || u_is_variable_anchor) {  
+        // Label plane matrix is identity in this case
+        projected_pos = vec4(a_projected_pos.xy, ele, 1.0);
     } else if (u_pitch_with_map) {
         projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
     } else {
@@ -120,6 +122,7 @@ void main() {
     float projectionScaling = 1.0;
 #ifdef GLOBE
     if(u_pitch_with_map && !u_is_along_line) {
+        // Lines would behave in very weird ways if this adjustment was used for them.
         float anchor_pos_tile_y = (u_coord_matrix * vec4(projected_pos.xy / projected_pos.w, z, 1.0)).y;
         projectionScaling = mix(projectionScaling, 1.0 / circumferenceRatioAtTileY(anchor_pos_tile_y) * u_pitched_scale, u_projection_transition);
     }
