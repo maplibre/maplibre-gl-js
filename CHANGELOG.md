@@ -1,4 +1,5 @@
 ## main
+- Update Popup methods `addClass` & `removeClass` to return instance of Popup ([#3975](https://github.com/maplibre/maplibre-gl-js/pull/3975))
 
 ### ✨ Features and improvements
 - _...Add new stuff here..._
