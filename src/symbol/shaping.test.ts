@@ -74,4 +74,26 @@ describe('applyTextFit', () => {
         const result: Box = applyTextFit(shapedIcon);
         expect(result).toEqual({x1: 0, y1: 0, x2: 126, y2: 14});
     });
+
+    test('applyTextFit: proportional, stretchOnly', async () => {
+        // Since the rectangle is wider than tall, when it matches based on width (because that is proportional),
+        // then the height will stretch to match the content so we also get a 14x14 image.
+        const styleImage: StyleImage = {
+            pixelRatio: 1,
+            version: 1,
+            sdf: false,
+            content,
+            textFitWidth: TextFit.proportional,
+            textFitHeight: TextFit.stretchOnly,
+            data: undefined!};
+        const shapedIcon: PositionedIcon = {
+            left,
+            top,
+            right,
+            bottom,
+            image: new ImagePosition(rectangle, styleImage),
+        };
+        const result: Box = applyTextFit(shapedIcon);
+        expect(result).toEqual({x1: 0, y1: 0, x2: 14, y2: 14});
+    });
 });
