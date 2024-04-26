@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
 
 import type {Anchor} from './anchor';
-import type {PositionedIcon, Shaping} from './shaping';
+import type {Box, PositionedIcon, Shaping} from './shaping';
 import {SHAPING_DEFAULT_OFFSET, applyTextFit} from './shaping';
 import {IMAGE_PADDING} from '../render/image_atlas';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
@@ -65,7 +65,7 @@ export function getIconQuads(
     const imageWidth = image.paddedRect.w - 2 * border;
     const imageHeight = image.paddedRect.h - 2 * border;
 
-    let icon = {
+    let icon: Box = {
         x1: shapedIcon.left,
         y1: shapedIcon.top,
         x2: shapedIcon.right,
