@@ -154,7 +154,9 @@ export class ScrollZoomHandler implements Handler {
         if (this._map.cooperativeGestures.isEnabled() && !e[this._map.cooperativeGestures._bypassKey]) {
             return;
         }
+
         let value = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
+
         const now = browser.now(),
             timeDelta = now - (this._lastWheelEventTime || 0);
 
@@ -170,11 +172,13 @@ export class ScrollZoomHandler implements Handler {
 
         } else if (timeDelta > 400) {
             // This is likely a new scroll action.
-            this._type = null;
-            this._lastValue = value;
+            if (!this._map.shouldSnapToIntegerZoom('scrollZoom')) {
+                this._type = null;
+                this._lastValue = value;
 
-            // Start a timeout in case this was a singular event, and dely it by up to 40ms.
-            this._timeout = setTimeout(this._onTimeout, 40, e);
+                // Start a timeout in case this was a singular event, and dely it by up to 40ms.
+                this._timeout = setTimeout(this._onTimeout, 40, e);
+            }
 
         } else if (!this._type) {
             // This is a repeating event, but we don't know the type of event just yet.
@@ -192,6 +196,25 @@ export class ScrollZoomHandler implements Handler {
 
         // Slow down zoom if shift key is held for more precise zooming
         if (e.shiftKey && value) value = value / 4;
+
+        if (this._map.shouldSnapToIntegerZoom('scrollZoom') && this._type === 'wheel') {
+            // Skip inertial zoom for wheel scroll.
+            const pos = DOM.mousePos(this._map.getCanvas(), e);
+            e.preventDefault();
+            let zoomTarget = value > 100 ? this._map.getZoom() - 2 :
+                value > 0 ? this._map.getZoom() - 1 :
+                    value > -100 ? this._map.getZoom() + 1 :
+                        value < -100 ? this._map.getZoom() + 2 : 0;
+
+            zoomTarget = Math.round(zoomTarget);
+
+            this._map.easeTo({
+                duration: 200,
+                zoom: zoomTarget,
+                around: this._tr.unproject(pos)
+            }, {originalEvent: e});
+            return;
+        }
 
         // Only fire the callback if we actually know what type of scrolling device the user uses.
         if (this._type) {
@@ -283,6 +306,7 @@ export class ScrollZoomHandler implements Handler {
 
         const targetZoom = typeof this._targetZoom === 'number' ?
             this._targetZoom : tr.zoom;
+
         const startZoom = this._startZoom;
         const easing = this._easing;
 
@@ -312,8 +336,20 @@ export class ScrollZoomHandler implements Handler {
             this._finishTimeout = setTimeout(() => {
                 this._zooming = false;
                 this._triggerRenderFrame();
+
                 delete this._targetZoom;
                 delete this._finishTimeout;
+
+                if (this._map.shouldSnapToIntegerZoom('scrollZoom') && this._type === 'trackpad') {
+                    // For trackpad scroll, we have to snap zoom at the end of the inertia animation.
+                    const zoomTarget = Math.round(this._map.getZoom());
+                    this._map.easeTo({
+                        duration: 200,
+                        zoom: zoomTarget,
+                        around: this._tr.unproject(this._aroundPoint)
+                    });
+                }
+
             }, 200);
         }
 

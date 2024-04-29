@@ -37,7 +37,7 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {AddLayerObject, FeatureIdentifier, StyleOptions, StyleSetterOptions} from '../style/style';
 import type {MapDataEvent} from './events';
 import type {StyleImage, StyleImageInterface, StyleImageMetadata} from '../style/style_image';
-import type {PointLike} from './camera';
+import type {PointLike, SnapToIntegerZoomOptions} from './camera';
 import type {ScrollZoomHandler} from './handler/scroll_zoom';
 import type {BoxZoomHandler} from './handler/box_zoom';
 import type {AroundCenterOptions, TwoFingersTouchPitchHandler} from './handler/two_fingers_touch';
@@ -60,6 +60,8 @@ import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 
 const version = packageJSON.version;
+
+export type SnapToIntegerZoomType = keyof SnapToIntegerZoomOptions;
 
 /**
  * The {@link Map} options object.
@@ -146,6 +148,13 @@ export type MapOptions = {
      * @defaultValue 22
      */
     maxZoom?: number | null;
+
+    /**
+     * Zooming options related to restricting to integer levels.
+     * Useful for raster tiles.
+     */
+    snapToIntegerZoomOptions?: SnapToIntegerZoomOptions | null;
+
     /**
      * The minimum pitch of the map (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * @defaultValue 0
@@ -350,6 +359,7 @@ const defaultOptions = {
 
     minZoom: defaultMinZoom,
     maxZoom: defaultMaxZoom,
+    snapToIntegerZoomOptions: {},
 
     minPitch: defaultMinPitch,
     maxPitch: defaultMaxPitch,
@@ -473,6 +483,7 @@ export class Map extends Camera {
     _overridePixelRatio: number | null;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
+    _snapToIntegerZoomOptions: SnapToIntegerZoomOptions;
 
     /**
      * @internal
@@ -580,6 +591,7 @@ export class Map extends Camera {
         this._overridePixelRatio = options.pixelRatio;
         this._maxCanvasSize = options.maxCanvasSize;
         this.transformCameraUpdate = options.transformCameraUpdate;
+        this._snapToIntegerZoomOptions = options.snapToIntegerZoomOptions;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -1018,6 +1030,39 @@ export class Map extends Camera {
      * ```
      */
     getMaxZoom(): number { return this.transform.maxZoom; }
+
+    /**
+     * Sets or clears the zoom options of snapping to integer levels.
+     *
+     * @param options - The maximum zoom level to set.
+     * If `null` or `undefined` is provided, the function makes zooming to integer levels disabled.
+     * @returns `this`
+     * @example
+     * ```ts
+     * map.setSnapToIntegerZoom({boxZoom: true});
+     * ```
+     */
+    setSnapToIntegerZoom(options: SnapToIntegerZoomOptions | null): Map {
+        if (options === null || options === undefined) {
+            this._snapToIntegerZoomOptions = {boxZoom: false, clickZoom: false, scrollZoom: false, tapZoom: false};
+        } else {
+            this._snapToIntegerZoomOptions = options;
+        }
+        return this;
+    }
+
+    /**
+     * Returns whether should snap to integer zoom levels for a SnapToIntegerZoomType.
+     *
+     * @returns Whether should snap to integer zoom levels.
+     * @example
+     * ```ts
+     * let shouldSnapToIntegerZoom = map.shouldSnapToIntegerZoom("boxZoom");
+     * ```
+     */
+    shouldSnapToIntegerZoom(type: SnapToIntegerZoomType): boolean {
+        return this._snapToIntegerZoomOptions[type] || false;
+    }
 
     /**
      * Sets or clears the map's minimum pitch.
