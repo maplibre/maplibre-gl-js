@@ -82,7 +82,7 @@
     "address": "^2.0.2",
     "benchmark": "^2.1.4",
     "canvas": "^2.11.2",
-    "cssnano": "^7.0.0",
+    "cssnano": "^7.0.1",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
     "devtools-protocol": "^0.0.1292262",
