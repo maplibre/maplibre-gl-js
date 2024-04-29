@@ -2,6 +2,8 @@
 - Update Popup methods `addClass` & `removeClass` to return instance of Popup ([#3975](https://github.com/maplibre/maplibre-gl-js/pull/3975))
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+- New map option to decide whether to cancel previous pending tiles while zooming in ([#4051](https://github.com/maplibre/maplibre-gl-js/pull/4051))
 - Sprites include optional textFitHeight and textFitWidth values ([#4019](https://github.com/maplibre/maplibre-gl-js/pull/4019))
 
 ### 🐞 Bug fixes

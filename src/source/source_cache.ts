@@ -287,8 +287,8 @@ export class SourceCache extends Evented {
     }
 
     /**
-    * For raster terrain source, backfill DEM to eliminate visible tile boundaries
-    */
+     * For raster terrain source, backfill DEM to eliminate visible tile boundaries
+     */
     _backfillDEM(tile: Tile) {
         const renderables = this.getRenderableIds();
         for (let i = 0; i < renderables.length; i++) {
@@ -734,7 +734,7 @@ export class SourceCache extends Evented {
                 }
                 if (tile) {
                     const hasData = tile.hasData();
-                    if (parentWasRequested || hasData) {
+                    if (hasData || !this.map?.cancelPendingTileRequestsWhileZooming || parentWasRequested) {
                         retain[parentId.key] = parentId;
                     }
                     // Save the current values, since they're the parent of the next iteration
