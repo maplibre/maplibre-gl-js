@@ -63,6 +63,7 @@ export class SourceCache extends Evented {
     tileSize: number;
     _state: SourceFeatureState;
     _loadedParentTiles: {[_: string]: Tile};
+    _loadedSiblingTiles: {[_: string]: Tile};
     _didEmitContent: boolean;
     _updated: boolean;
 
@@ -419,6 +420,14 @@ export class SourceCache extends Evented {
         }
     }
 
+    /**
+     * Find a loaded parent of the given tile (up to minCoveringZoom)
+     */
+    findLoadedSibling(tileID: OverscaledTileID): Tile {
+        // return this._loadedSiblingTiles[tileID.key] || null;
+        return this._getLoadedTile(tileID);
+    }
+
     _getLoadedTile(tileID: OverscaledTileID): Tile {
         const tile = this._tiles[tileID.key];
         if (tile && tile.hasData()) {
@@ -564,7 +573,7 @@ export class SourceCache extends Evented {
         const retain = this._updateRetainedTiles(idealTileIDs, zoom);
 
         if (isRasterType(this._source.type)) {
-            const parentsForFading: {[_: string]: OverscaledTileID} = {};
+            const tilesForFading: {[_: string]: OverscaledTileID} = {};
             const fadingTiles = {};
             const ids = Object.keys(retain);
             const now = browser.now();
@@ -582,9 +591,11 @@ export class SourceCache extends Evented {
 
                 // if the tile is loaded but still fading in, find parents to cross-fade with it
                 const parentTile = this.findLoadedParent(tileID, minCoveringZoom);
-                if (parentTile) {
-                    this._addTile(parentTile.tileID);
-                    parentsForFading[parentTile.tileID.key] = parentTile.tileID;
+                const siblingTile = this.findLoadedSibling(tileID);
+                const fadeTileRef = parentTile || siblingTile || null;
+                if (fadeTileRef) {
+                    this._addTile(fadeTileRef.tileID);
+                    tilesForFading[fadeTileRef.tileID.key] = fadeTileRef.tileID;
                 }
 
                 fadingTiles[id] = tileID;
@@ -593,11 +604,11 @@ export class SourceCache extends Evented {
             // for tiles that are still fading in, also find children to cross-fade with
             this._retainLoadedChildren(fadingTiles, zoom, maxCoveringZoom, retain);
 
-            for (const id in parentsForFading) {
+            for (const id in tilesForFading) {
                 if (!retain[id]) {
                     // If a tile is only needed for fading, mark it as covered so that it isn't rendered on it's own.
                     this._coveredTiles[id] = true;
-                    retain[id] = parentsForFading[id];
+                    retain[id] = tilesForFading[id];
                 }
             }
 
@@ -657,8 +668,9 @@ export class SourceCache extends Evented {
             }
         }
 
-        // Construct a cache of loaded parents
+        // Construct caches of loaded parents & siblings
         this._updateLoadedParentTileCache();
+        this._updateLoadedSiblingTileCache();
     }
 
     releaseSymbolFadeTiles() {
@@ -787,6 +799,21 @@ export class SourceCache extends Evented {
             for (const key of path) {
                 this._loadedParentTiles[key] = parentTile;
             }
+        }
+    }
+
+    _updateLoadedSiblingTileCache() {
+        this._loadedSiblingTiles = {};
+
+        for (const tileKey in this._tiles) {
+            let currentId = this._tiles[tileKey].tileID;
+
+            // Sibling already loaded
+            if (this._loadedSiblingTiles[currentId.key]) {
+                continue;
+            }
+            const siblingTile: Tile = this._getLoadedTile(currentId);
+            this._loadedSiblingTiles[currentId.key] = siblingTile;
         }
     }
 
