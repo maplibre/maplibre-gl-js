@@ -318,6 +318,13 @@ export type MapOptions = {
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
      */
     maxCanvasSize?: [number, number];
+    /**
+     * Determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
+     * * If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
+     * * If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
+     * @defaultValue true
+     */
+    cancelPendingTileRequestsWhileZooming?: boolean;
 };
 
 export type AddImageOptions = {
@@ -387,7 +394,8 @@ const defaultOptions = {
     crossSourceCollisions: true,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
-    maxCanvasSize: [4096, 4096]
+    maxCanvasSize: [4096, 4096],
+    cancelPendingTileRequestsWhileZooming: true
 } as CompleteMapOptions;
 
 /**
@@ -535,6 +543,14 @@ export class Map extends Camera {
      */
     cooperativeGestures: CooperativeGesturesHandler;
 
+    /**
+     * The map's property which determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
+     * * If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
+     * * If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
+     * @defaultValue true
+     */
+    cancelPendingTileRequestsWhileZooming: boolean;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -580,6 +596,7 @@ export class Map extends Camera {
         this._overridePixelRatio = options.pixelRatio;
         this._maxCanvasSize = options.maxCanvasSize;
         this.transformCameraUpdate = options.transformCameraUpdate;
+        this.cancelPendingTileRequestsWhileZooming = options.cancelPendingTileRequestsWhileZooming;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -2926,8 +2943,8 @@ export class Map extends Camera {
         }, {once: true});
 
         const gl =
-        this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
-        this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
+            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
