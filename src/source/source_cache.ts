@@ -424,7 +424,7 @@ export class SourceCache extends Evented {
      * Find a loaded parent of the given tile (up to minCoveringZoom)
      */
     findLoadedSibling(tileID: OverscaledTileID): Tile {
-        // return this._loadedSiblingTiles[tileID.key] || null;
+        // If a tile with this ID already exists, return it
         return this._getLoadedTile(tileID);
     }
 
@@ -633,14 +633,17 @@ export class SourceCache extends Evented {
                         delete missingTileIDs[key];
                     }
                 }
-                // search for parent for each missing tile
+                // search for parent or sibling for each missing tile
                 for (const key in missingTileIDs) {
-                    const parent = this.findLoadedParent(missingTileIDs[key], this._source.minzoom);
-                    if (parent) {
-                        idealRasterTileIDs[parent.tileID.key] = retain[parent.tileID.key] = parent.tileID;
+                    const tileID = missingTileIDs[key];
+                    const parentTile = this.findLoadedParent(tileID, this._source.minzoom);
+                    const siblingTile = this.findLoadedSibling(tileID);
+                    const fadeTileRef = parentTile || siblingTile || null;
+                    if (fadeTileRef) {
+                        idealRasterTileIDs[fadeTileRef.tileID.key] = retain[fadeTileRef.tileID.key] = fadeTileRef.tileID;
                         // remove idealTiles which would be rendered twice
                         for (const key in idealRasterTileIDs) {
-                            if (idealRasterTileIDs[key].isChildOf(parent.tileID)) delete idealRasterTileIDs[key];
+                            if (idealRasterTileIDs[key].isChildOf(fadeTileRef.tileID)) delete idealRasterTileIDs[key];
                         }
                     }
                 }
