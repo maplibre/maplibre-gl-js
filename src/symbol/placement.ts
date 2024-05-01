@@ -1,4 +1,4 @@
-import {CollisionIndex} from './collision_index';
+import {CollisionIndex, viewportPadding} from './collision_index';
 import type {FeatureKey, PlacedBox} from './collision_index';
 import {EXTENT} from '../data/extent';
 import * as symbolSize from './symbol_size';
@@ -166,7 +166,8 @@ export type VariableOffset = {
 type TileLayerParameters = {
     bucket: SymbolBucket;
     layout: PossiblyEvaluated<SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated>;
-    translation: [number, number];
+    translationText: [number, number];
+    translationIcon: [number, number];
     unwrappedTileID: UnwrappedTileID;
     posMatrix: mat4;
     textLabelPlaneMatrix: mat4;
@@ -279,11 +280,17 @@ export class Placement {
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
-        const translation = this.collisionIndex.mapProjection.translatePosition(
+        const translationText = this.collisionIndex.mapProjection.translatePosition(
             this.transform,
             tile,
             paint.get('text-translate'),
             paint.get('text-translate-anchor'),);
+
+        const translationIcon = this.collisionIndex.mapProjection.translatePosition(
+            this.transform,
+            tile,
+            paint.get('icon-translate'),
+            paint.get('icon-translate-anchor'),);
 
         const textLabelPlaneMatrix = projection.getLabelPlaneMatrix(posMatrix,
             pitchWithMap,
@@ -317,7 +324,8 @@ export class Placement {
         const parameters: TileLayerParameters = {
             bucket: symbolBucket,
             layout,
-            translation,
+            translationText,
+            translationIcon,
             posMatrix,
             unwrappedTileID,
             textLabelPlaneMatrix,
@@ -360,7 +368,8 @@ export class Placement {
         symbolInstance: SymbolInstance,
         bucket: SymbolBucket,
         orientation: number,
-        translation: [number, number],
+        translationText: [number, number],
+        translationIcon: [number, number],
         iconBox?: SingleCollisionBox | null,
         getElevation?: (x: number, y: number) => number
     ): {
@@ -380,7 +389,7 @@ export class Placement {
             unwrappedTileID,
             pitchWithMap,
             rotateWithMap,
-            translation,
+            translationText,
             collisionGroup.predicate,
             getElevation,
             shift
@@ -395,7 +404,7 @@ export class Placement {
                 unwrappedTileID,
                 pitchWithMap,
                 rotateWithMap,
-                translation,
+                translationIcon,
                 collisionGroup.predicate,
                 getElevation,
                 shift
@@ -440,7 +449,8 @@ export class Placement {
         const {
             bucket,
             layout,
-            translation,
+            translationText,
+            translationIcon,
             posMatrix,
             unwrappedTileID,
             textLabelPlaneMatrix,
@@ -566,7 +576,7 @@ export class Placement {
                             unwrappedTileID,
                             pitchWithMap,
                             rotateWithMap,
-                            translation,
+                            translationText,
                             collisionGroup.predicate,
                             getElevation
                         );
@@ -621,7 +631,7 @@ export class Placement {
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
                                     textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix, unwrappedTileID,
-                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translation, variableIconBox, getElevation);
+                                    collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
 
                                 if (result) {
                                     placedBox = result.placedGlyphBoxes;
@@ -705,7 +715,7 @@ export class Placement {
                     collisionGroup.predicate,
                     circlePixelDiameter,
                     textPixelPadding,
-                    translation,
+                    translationText,
                     getElevation
                 );
 
@@ -735,7 +745,7 @@ export class Placement {
                         unwrappedTileID,
                         pitchWithMap,
                         rotateWithMap,
-                        translation,
+                        translationIcon,
                         collisionGroup.predicate,
                         getElevation,
                         (hasIconTextFit && shift) ? shift : undefined,
