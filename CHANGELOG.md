@@ -4,6 +4,12 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
+- Fixed symbol collision debug view (`showCollisionBoxes`) not showing the actual bounding boxes used for collision. Displayed boxes now match actual collision boxes exactly.
+- Fixed symbol collisions using inaccurate and sometimes entirely wrong collision boxes when the map is pitched or rotated.
+- Fixed symbol collision boxes not being accurate for variable-anchor symbols.
+- Fixed icon collision boxes using `text-translate` property for translation instead of the correct `icon-translate`.
+- Fixed `text-translate` and `icon-translate` behaving weirdly and inconsistently with other `-translate` properties. ([#3456](https://github.com/maplibre/maplibre-gl-js/issues/3456))
 - _...Add new stuff here..._
 
 ## 4.1.3
