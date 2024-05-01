@@ -61,6 +61,19 @@
       }
     },
     {
+      "id": "circle2",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-radius": 5,
+        "circle-color": "red",
+        "circle-translate": [
+          10,
+          -20
+        ]
+      }
+    },
+    {
       "id": "text",
       "type": "symbol",
       "source": "geojson",
