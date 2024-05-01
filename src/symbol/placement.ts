@@ -1311,12 +1311,17 @@ function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, pro
         realBox = [0, 0, 0, 0];
     }
 
+    const tlX = realBox[0] - viewportPadding;
+    const tlY = realBox[1] - viewportPadding;
+    const brX = realBox[2] - viewportPadding;
+    const brY = realBox[3] - viewportPadding;
+
     // The bounding box that we send to the shader will be placed relative to the projected anchor point.
     // The anchor will be projected in the shader in the exact same way we have projected it here.
-    const tlX = realBox[0] - projectedAnchor.x;
-    const tlY = realBox[1] - projectedAnchor.y;
-    const brX = realBox[2] - projectedAnchor.x;
-    const brY = realBox[3] - projectedAnchor.y;
+    // const tlX = realBox[0] - projectedAnchor.x;
+    // const tlY = realBox[1] - projectedAnchor.y;
+    // const brX = realBox[2] - projectedAnchor.x;
+    // const brY = realBox[3] - projectedAnchor.y;
 
     collisionVertexArray.emplaceBack(placed ? 1 : 0, notUsed ? 1 : 0, shiftX || 0, shiftY || 0, tlX, tlY);
     collisionVertexArray.emplaceBack(placed ? 1 : 0, notUsed ? 1 : 0, shiftX || 0, shiftY || 0, brX, tlY);
