@@ -8,9 +8,7 @@ import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import Point from '@mapbox/point-geometry';
-import type {Terrain} from '../../render/terrain';
 import type {LngLat} from '../lng_lat';
-import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 export type ProjectionGPUContext = {
     context: Context;

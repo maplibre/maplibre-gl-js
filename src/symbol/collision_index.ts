@@ -111,7 +111,7 @@ export class CollisionIndex {
             getElevation
         );
 
-        const [tlX, tlY, brX, brY] = this._projectCollisionBox(
+        const projectedBox = this._projectCollisionBox(
             collisionBox,
             textPixelRatio,
             posMatrix,
@@ -124,7 +124,9 @@ export class CollisionIndex {
             shift
         );
 
-        const projectionOccluded = this.mapProjection.useSpecialProjectionForSymbols ? this.mapProjection.isOccluded(x, y, unwrappedTileID) : false;
+        const [tlX, tlY, brX, brY] = projectedBox.box;
+
+        const projectionOccluded = this.mapProjection.useSpecialProjectionForSymbols ? (pitchWithMap ? projectedBox.allPointsOccluded : this.mapProjection.isOccluded(x, y, unwrappedTileID)) : false;
 
         if (projectionOccluded || projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff || !this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
@@ -461,7 +463,8 @@ export class CollisionIndex {
             // See perspective ratio comment in symbol_sdf.vertex
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
-            perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera)
+            perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera),
+            isOccluded: (projected.isOccluded !== undefined) ? projected.isOccluded : false
         };
     }
 
@@ -509,7 +512,10 @@ export class CollisionIndex {
         projectedPoint: {point: Point; perspectiveRatio: number},
         getElevation?: (x: number, y: number) => number,
         shift?: Point
-    ): [number, number, number, number] {
+    ): {
+            box: [number, number, number, number];
+            allPointsOccluded: boolean;
+        } {
 
         const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
 
@@ -585,6 +591,9 @@ export class CollisionIndex {
             basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYhalf)),
         ];
 
+        // Is any point of the collision shape visible on the globe (on beyond horizon)?
+        let anyPointVisible = false;
+
         if (pitchWithMap) {
             for (let i = 0; i < points.length; i++) {
                 const oldPoint = points[i];
@@ -594,12 +603,20 @@ export class CollisionIndex {
                     oldPoint.y,
                     unwrappedTileID,
                     getElevation
-                ).point;
-                points[i] = newPoint;
+                );
+                points[i] = newPoint.point;
+                if (!newPoint.isOccluded) {
+                    anyPointVisible = true;
+                }
             }
+        } else {
+            anyPointVisible = true;
         }
 
-        return getAABB(points);
+        return {
+            box: getAABB(points),
+            allPointsOccluded: !anyPointVisible
+        };
     }
 }
 
