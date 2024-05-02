@@ -8,7 +8,7 @@ import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import type {Tile} from '../../source/tile';
 import {browser} from '../../util/browser';
-import {easeCubicInOut, lerp} from '../../util/util';
+import {easeCubicInOut, lerp, mod} from '../../util/util';
 import {mercatorYfromLat} from '../mercator_coordinate';
 import {NORTH_POLE_Y, SOUTH_POLE_Y} from '../../render/subdivision';
 import {SubdivisionGranularityExpression, SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
@@ -368,7 +368,7 @@ export class GlobeProjection implements Projection {
      * For given mercator coordinates in range 0..1, returns the angular coordinates on the sphere's surface, in radians.
      */
     private _mercatorCoordinatesToAngularCoordinates(mercatorX: number, mercatorY: number): [number, number] {
-        const sphericalX = mercatorX * Math.PI * 2.0 + Math.PI;
+        const sphericalX = mod(mercatorX * Math.PI * 2.0 + Math.PI, Math.PI * 2);
         const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
         return [sphericalX, sphericalY];
     }

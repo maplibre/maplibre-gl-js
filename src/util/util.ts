@@ -5,6 +5,14 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * Modulo function, as opposed to javascript's `%`, which is a remainder.
+ * This functions will return positive values, even if the first operand is negative.
+ */
+export function mod(n, m) {
+    return ((n % m) + m) % m;
+}
+
+/**
  * Takes a value in "old range", linearly maps that range to "new range", and returns the value in that new range.
  * Additionally, if the value is outside "old range", it is clamped inside it.
  * Also works if one of the ranges is flipped (its `min` being larger than `max`).

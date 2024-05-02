@@ -86,26 +86,41 @@ describe('GlobeProjection', () => {
         test('mercator coordinate to sphere point', () => {
             const precisionDigits = 10;
             const globe = new GlobeProjection();
-            let projected = (globe as any)._projectToSphere(0.5, 0.5);
+
+            let projectedAngles;
+            let projected;
+
+            projectedAngles = globe['_mercatorCoordinatesToAngularCoordinates'](0.5, 0.5);
+            expectToBeCloseToArray(projectedAngles, [0, 0], precisionDigits);
+            projected = globe['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [0, 0, 1], precisionDigits);
-            projected = (globe as any)._projectToSphere(0, 0.5);
+
+            projectedAngles = globe['_mercatorCoordinatesToAngularCoordinates'](0, 0.5);
+            expectToBeCloseToArray(projectedAngles, [Math.PI, 0], precisionDigits);
+            projected = globe['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [0, 0, -1], precisionDigits);
-            projected = (globe as any)._projectToSphere(0.75, 0.5);
+
+            projectedAngles = globe['_mercatorCoordinatesToAngularCoordinates'](0.75, 0.5);
+            expectToBeCloseToArray(projectedAngles, [Math.PI / 2.0, 0], precisionDigits);
+            projected = globe['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [1, 0, 0], precisionDigits);
-            projected = (globe as any)._projectToSphere(0.5, 0);
+
+            projectedAngles = globe['_mercatorCoordinatesToAngularCoordinates'](0.5, 0);
+            expectToBeCloseToArray(projectedAngles, [0, 1.4844222297453324], precisionDigits); // ~0.47pi
+            projected = globe['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [0, 0.99627207622075, 0.08626673833405434], precisionDigits);
         });
 
         test('sphere point to coordinate', () => {
             const precisionDigits = 10;
             const globe = new GlobeProjection();
-            let unprojected = (globe as any)._sphereSurfacePointToCoordinates([0, 0, 1]) as LngLat;
+            let unprojected = globe['_sphereSurfacePointToCoordinates']([0, 0, 1]) as LngLat;
             expect(unprojected.lng).toBeCloseTo(0, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(0, precisionDigits);
-            unprojected = (globe as any)._sphereSurfacePointToCoordinates([0, 1, 0]) as LngLat;
+            unprojected = globe['_sphereSurfacePointToCoordinates']([0, 1, 0]) as LngLat;
             expect(unprojected.lng).toBeCloseTo(0, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(90, precisionDigits);
-            unprojected = (globe as any)._sphereSurfacePointToCoordinates([1, 0, 0]) as LngLat;
+            unprojected = globe['_sphereSurfacePointToCoordinates']([1, 0, 0]) as LngLat;
             expect(unprojected.lng).toBeCloseTo(90, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(0, precisionDigits);
         });
