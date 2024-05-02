@@ -5,6 +5,24 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * Modulo function, as opposed to javascript's `%`, which is a remainder.
+ * This functions will return positive values, even if the first operand is negative.
+ */
+export function mod(n, m) {
+    return ((n % m) + m) % m;
+}
+
+/**
+ * Takes a value in "old range", linearly maps that range to "new range", and returns the value in that new range.
+ * Additionally, if the value is outside "old range", it is clamped inside it.
+ * Also works if one of the ranges is flipped (its `min` being larger than `max`).
+ */
+export function remapSaturate(value: number, oldRangeMin: number, oldRangeMax: number, newRangeMin: number, newRangeMax: number): number {
+    const inOldRange = clamp((value - oldRangeMin) / (oldRangeMax - oldRangeMin), 0.0, 1.0);
+    return lerp(newRangeMin, newRangeMax, inOldRange);
+}
+
+/**
  * Linearly interpolate between two values, similar to `mix` function from GLSL. No clamping is done.
  * @param a - The first value to interpolate. This value is returned when mix=0.
  * @param b - The second value to interpolate. This value is returned when mix=1.

@@ -4,7 +4,7 @@ import {PathInterpolator} from './path_interpolator';
 
 import * as intersectionTests from '../util/intersection_tests';
 import {GridIndex} from './grid_index';
-import {mat4, vec4} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
 import * as projection from '../symbol/projection';
@@ -16,6 +16,9 @@ import type {
     SymbolLineVertexArray
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
+import {UnwrappedTileID} from '../source/tile_id';
+import {ProjectionArgs} from '../symbol/projection';
+import {Projection} from '../geo/projection/projection';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -23,7 +26,13 @@ import type {OverlapMode} from '../style/style_layer/overlap_mode';
 // the viewport for collision detection so that the bulk of the changes
 // occur offscreen. Making this constant greater increases label
 // stability, but it's expensive.
-const viewportPadding = 100;
+export const viewportPadding = 100;
+
+export type PlacedBox = {
+    box: Array<number>;
+    placeable: boolean;
+    offscreen: boolean;
+};
 
 export type FeatureKey = {
     bucketInstanceId: number;
@@ -47,11 +56,12 @@ export class CollisionIndex {
     grid: GridIndex<FeatureKey>;
     ignoredGrid: GridIndex<FeatureKey>;
     transform: Transform;
-    pitchfactor: number;
+    pitchFactor: number;
     screenRightBoundary: number;
     screenBottomBoundary: number;
     gridRightBoundary: number;
     gridBottomBoundary: number;
+    mapProjection: Projection;
 
     // With perspectiveRatio the fontsize is calculated for tilted maps (near = bigger, far = smaller).
     // The cutoff defines a threshold to no longer render labels near the horizon.
@@ -59,14 +69,16 @@ export class CollisionIndex {
 
     constructor(
         transform: Transform,
+        projection: Projection,
         grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
         ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
+        this.mapProjection = projection;
 
         this.grid = grid;
         this.ignoredGrid = ignoredGrid;
-        this.pitchfactor = Math.cos(transform._pitch) * transform.cameraToCenterDistance;
+        this.pitchFactor = Math.cos(transform._pitch) * transform.cameraToCenterDistance;
 
         this.screenRightBoundary = transform.width + viewportPadding;
         this.screenBottomBoundary = transform.height + viewportPadding;
@@ -81,30 +93,51 @@ export class CollisionIndex {
         overlapMode: OverlapMode,
         textPixelRatio: number,
         posMatrix: mat4,
+        unwrappedTileID: UnwrappedTileID,
+        pitchWithMap: boolean,
+        rotateWithMap: boolean,
+        translation: [number, number],
         collisionGroupPredicate?: (key: FeatureKey) => boolean,
-        getElevation?: (x: number, y: number) => number
-    ): {
-            box: Array<number>;
-            offscreen: boolean;
-        } {
-        const projectedPoint = this.projectAndGetPerspectiveRatio(posMatrix, collisionBox.anchorPointX, collisionBox.anchorPointY, getElevation);
-        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
-        const tlX = collisionBox.x1 * tileToViewport + projectedPoint.point.x;
-        const tlY = collisionBox.y1 * tileToViewport + projectedPoint.point.y;
-        const brX = collisionBox.x2 * tileToViewport + projectedPoint.point.x;
-        const brY = collisionBox.y2 * tileToViewport + projectedPoint.point.y;
+        getElevation?: (x: number, y: number) => number,
+        shift?: Point
+    ): PlacedBox {
+        const x = collisionBox.anchorPointX + translation[0];
+        const y = collisionBox.anchorPointY + translation[1];
+        const projectedPoint = this.projectAndGetPerspectiveRatio(
+            posMatrix,
+            x,
+            y,
+            unwrappedTileID,
+            getElevation
+        );
 
-        if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
-            (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate)) ||
-            projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff) {
+        const [tlX, tlY, brX, brY] = this._projectCollisionBox(
+            collisionBox,
+            textPixelRatio,
+            posMatrix,
+            unwrappedTileID,
+            pitchWithMap,
+            rotateWithMap,
+            translation,
+            projectedPoint,
+            getElevation,
+            shift
+        );
+
+        const projectionOccluded = this.mapProjection.useSpecialProjectionForSymbols ? this.mapProjection.isOccluded(x, y, unwrappedTileID) : false;
+
+        if (projectionOccluded || projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff || !this.isInsideGrid(tlX, tlY, brX, brY) ||
+            (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
             return {
-                box: [],
+                box: [tlX, tlY, brX, brY],
+                placeable: false,
                 offscreen: false
             };
         }
 
         return {
             box: [tlX, tlY, brX, brY],
+            placeable: true,
             offscreen: this.isOffscreen(tlX, tlY, brX, brY)
         };
     }
@@ -116,6 +149,7 @@ export class CollisionIndex {
         glyphOffsetArray: GlyphOffsetArray,
         fontSize: number,
         posMatrix: mat4,
+        unwrappedTileID: UnwrappedTileID,
         labelPlaneMatrix: mat4,
         labelToScreenMatrix: mat4,
         showCollisionCircles: boolean,
@@ -123,6 +157,7 @@ export class CollisionIndex {
         collisionGroupPredicate: (key: FeatureKey) => boolean,
         circlePixelDiameter: number,
         textPixelPadding: number,
+        translation: [number, number],
         getElevation: (x: number, y: number) => number
     ): {
             circles: Array<number>;
@@ -132,16 +167,27 @@ export class CollisionIndex {
         const placedCollisionCircles = [];
 
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
-        const screenAnchorPoint = projection.project(tileUnitAnchorPoint, posMatrix, getElevation);
-        const perspectiveRatio = projection.getPerspectiveRatio(this.transform.cameraToCenterDistance, screenAnchorPoint.signedDistanceFromCamera);
+        const perspectiveRatio = this.getPerspectiveRatio(posMatrix, tileUnitAnchorPoint.x, tileUnitAnchorPoint.y, unwrappedTileID, getElevation);
         const labelPlaneFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
         const labelPlaneFontScale = labelPlaneFontSize / ONE_EM;
 
-        const labelPlaneAnchorPoint = projection.project(tileUnitAnchorPoint, labelPlaneMatrix, getElevation).point;
-
-        const projectionCache = {projections: {}, offsets: {}};
+        const projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
         const lineOffsetY = symbol.lineOffsetY * labelPlaneFontScale;
+
+        const projectionArgs: ProjectionArgs = {
+            getElevation,
+            labelPlaneMatrix,
+            lineVertexArray,
+            pitchWithMap,
+            projectionCache,
+            projection: this.mapProjection,
+            tileAnchorPoint: tileUnitAnchorPoint,
+            unwrappedTileID,
+            width: this.transform.width,
+            height: this.transform.height,
+            translation
+        };
 
         const firstAndLastGlyph = projection.placeFirstAndLastGlyph(
             labelPlaneFontScale,
@@ -149,14 +195,9 @@ export class CollisionIndex {
             lineOffsetX,
             lineOffsetY,
             /*flip*/ false,
-            labelPlaneAnchorPoint,
-            tileUnitAnchorPoint,
             symbol,
-            lineVertexArray,
-            labelPlaneMatrix,
-            projectionCache,
             false,
-            getElevation);
+            projectionArgs);
 
         let collisionDetected = false;
         let inGrid = false;
@@ -172,7 +213,7 @@ export class CollisionIndex {
             const first = firstAndLastGlyph.first;
             const last = firstAndLastGlyph.last;
 
-            let projectedPath = [];
+            let projectedPath: Array<Point> = [];
             for (let i = first.path.length - 1; i >= 1; i--) {
                 projectedPath.push(first.path[i]);
             }
@@ -185,9 +226,8 @@ export class CollisionIndex {
 
             // The path might need to be converted into screen space if a pitched map is used as the label space
             if (labelToScreenMatrix) {
-                const screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix, getElevation));
-
-                // Do not try to place collision circles if even of the points is behind the camera.
+                const screenSpacePath = this.projectPathToScreenSpace(projectedPath, projectionArgs, labelToScreenMatrix);
+                // Do not try to place collision circles if even one of the points is behind the camera.
                 // This is a plausible scenario with big camera pitch angles
                 if (screenSpacePath.some(point => point.signedDistanceFromCamera <= 0)) {
                     projectedPath = [];
@@ -277,6 +317,54 @@ export class CollisionIndex {
         };
     }
 
+    projectPathToScreenSpace(projectedPath: Array<Point>, projectionArgs: ProjectionArgs, labelToScreenMatrix: mat4) {
+        let screenSpacePath: Array<{
+            point: Point;
+            signedDistanceFromCamera: number;
+            isOccluded?: boolean;
+        }>;
+        if (projectionArgs.projection.useSpecialProjectionForSymbols) {
+            // Globe (or other special projection) is enabled in this branch.
+            const inverseLabelPlaneMatrix = mat4.create();
+            mat4.invert(inverseLabelPlaneMatrix, projectionArgs.labelPlaneMatrix);
+            screenSpacePath = projectedPath.map(p => {
+                const backProjected = projection.project(p, inverseLabelPlaneMatrix, projectionArgs.getElevation);
+                const projected = this.mapProjection.projectTileCoordinates(
+                    backProjected.point.x,
+                    backProjected.point.y,
+                    projectionArgs.unwrappedTileID,
+                    projectionArgs.getElevation
+                );
+                projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionArgs.width;
+                projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionArgs.height;
+                return projected;
+            });
+            // We don't want to generate screenspace collision circles for parts of the line that
+            // are occluded by the planet itself. Find the longest segment of the path that is
+            // not occluded, and remove everything else.
+            let longestUnoccludedStart = 0;
+            let longestUnoccludedLength = 0;
+            let currentUnoccludedStart = 0;
+            let currentUnoccludedLength = 0;
+            for (let i = 0; i < screenSpacePath.length; i++) {
+                if (screenSpacePath[i].isOccluded) {
+                    currentUnoccludedStart = i + 1;
+                    currentUnoccludedLength = 0;
+                } else {
+                    currentUnoccludedLength++;
+                    if (currentUnoccludedLength > longestUnoccludedLength) {
+                        longestUnoccludedLength = currentUnoccludedLength;
+                        longestUnoccludedStart = currentUnoccludedStart;
+                    }
+                }
+            }
+            screenSpacePath = screenSpacePath.slice(longestUnoccludedStart, longestUnoccludedStart + longestUnoccludedLength);
+        } else {
+            screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix, projectionArgs.getElevation));
+        }
+        return screenSpacePath;
+    }
+
     /**
      * Because the geometries in the CollisionIndex are an approximation of the shape of
      * symbols on the map, we use the CollisionIndex to look up the symbol part of
@@ -358,26 +446,34 @@ export class CollisionIndex {
         }
     }
 
-    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, getElevation?: (x: number, y: number) => number) {
-        let p;
-        if (getElevation) { // slow because of handle z-index
-            p = [x, y, getElevation(x, y), 1] as vec4;
-            vec4.transformMat4(p, p, posMatrix);
-        } else { // fast because of ignore z-index
-            p = [x, y, 0, 1] as vec4;
-            projection.xyTransformMat4(p, p, posMatrix);
+    projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
+        let projected;
+        if (this.mapProjection.useSpecialProjectionForSymbols) {
+            projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+        } else {
+            projected = projection.project(new Point(x, y), posMatrix, getElevation);
         }
-        const a = new Point(
-            (((p[0] / p[3] + 1) / 2) * this.transform.width) + viewportPadding,
-            (((-p[1] / p[3] + 1) / 2) * this.transform.height) + viewportPadding
-        );
         return {
-            point: a,
+            point: new Point(
+                (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
+                (((-projected.point.y + 1) / 2) * this.transform.height) + viewportPadding
+            ),
             // See perspective ratio comment in symbol_sdf.vertex
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
-            perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / p[3])
+            perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera)
         };
+    }
+
+    getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number {
+        // We don't care about the actual projected point, just its W component.
+        let projected;
+        if (this.mapProjection.useSpecialProjectionForSymbols) {
+            projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+        } else {
+            projected = projection.project(new Point(x, y), posMatrix, getElevation);
+        }
+        return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
     isOffscreen(x1: number, y1: number, x2: number, y2: number) {
@@ -398,4 +494,127 @@ export class CollisionIndex {
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
     }
+
+    /**
+     * Applies all layout+paint properties of the given box in order to find as good approximation of its screen-space bounding box as possible.
+     */
+    private _projectCollisionBox(
+        collisionBox: SingleCollisionBox,
+        textPixelRatio: number,
+        posMatrix: mat4,
+        unwrappedTileID: UnwrappedTileID,
+        pitchWithMap: boolean,
+        rotateWithMap: boolean,
+        translation: [number, number],
+        projectedPoint: {point: Point; perspectiveRatio: number},
+        getElevation?: (x: number, y: number) => number,
+        shift?: Point
+    ): [number, number, number, number] {
+
+        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
+
+        // These vectors are valid both for screen space viewport-rotation-aligned texts and for pitch-align: map texts that are map-rotation-aligned.
+        let vecEast = new Point(1, 0);
+        let vecSouth = new Point(0, 1);
+
+        const translatedAnchor = new Point(collisionBox.anchorPointX + translation[0], collisionBox.anchorPointY + translation[1]);
+
+        if (rotateWithMap && !pitchWithMap) {
+            // Handles screen space texts that are always aligned east-west.
+            const projectedEast = this.projectAndGetPerspectiveRatio(
+                posMatrix,
+                translatedAnchor.x + 1,
+                translatedAnchor.y,
+                unwrappedTileID,
+                getElevation
+            ).point;
+            const toEast = projectedEast.sub(projectedPoint.point).unit();
+            const angle = Math.atan(toEast.y / toEast.x) + (toEast.x < 0 ? Math.PI : 0);
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            vecEast = new Point(cos, sin);
+            vecSouth = new Point(-sin, cos);
+        }
+
+        if (!rotateWithMap && pitchWithMap) {
+            // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
+            const angle = -this.transform.angle;
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            vecEast = new Point(cos, sin);
+            vecSouth = new Point(-sin, cos);
+        }
+
+        // Configuration for screen space offsets
+        let basePoint = projectedPoint.point;
+        let distanceMultiplier = tileToViewport;
+
+        if (pitchWithMap) {
+            // Configuration for tile space (map-pitch-aligned) offsets
+            basePoint = translatedAnchor;
+            const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
+            distanceMultiplier = Math.pow(2, -zoomFraction);
+            distanceMultiplier *= this.mapProjection.getPitchedTextCorrection(this.transform, translatedAnchor, unwrappedTileID);
+        }
+
+        if (shift) {
+            // Variable anchors are in use
+            basePoint = basePoint.add(vecEast.mult(shift.x * distanceMultiplier)).add(vecSouth.mult(shift.y * distanceMultiplier));
+        }
+
+        const offsetXmin = collisionBox.x1 * distanceMultiplier;
+        const offsetXmax = collisionBox.x2 * distanceMultiplier;
+        const offsetXhalf = (offsetXmin + offsetXmax) / 2;
+        const offsetYmin = collisionBox.y1 * distanceMultiplier;
+        const offsetYmax = collisionBox.y2 * distanceMultiplier;
+        const offsetYhalf = (offsetYmin + offsetYmax) / 2;
+
+        // 0--1--2
+        // |     |
+        // 7     3
+        // |     |
+        // 6--5--4
+        const points = [
+            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYmin)),
+            basePoint.add(vecEast.mult(offsetXhalf)).add(vecSouth.mult(offsetYmin)),
+            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYmin)),
+            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYhalf)),
+            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYmax)),
+            basePoint.add(vecEast.mult(offsetXhalf)).add(vecSouth.mult(offsetYmax)),
+            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYmax)),
+            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYhalf)),
+        ];
+
+        if (pitchWithMap) {
+            for (let i = 0; i < points.length; i++) {
+                const oldPoint = points[i];
+                const newPoint = this.projectAndGetPerspectiveRatio(
+                    posMatrix,
+                    oldPoint.x,
+                    oldPoint.y,
+                    unwrappedTileID,
+                    getElevation
+                ).point;
+                points[i] = newPoint;
+            }
+        }
+
+        return getAABB(points);
+    }
+}
+
+function getAABB(points: Array<Point>): [number, number, number, number] {
+    let tlX = Infinity;
+    let tlY = Infinity;
+    let brX = -Infinity;
+    let brY = -Infinity;
+
+    for (const p of points) {
+        tlX = Math.min(tlX, p.x);
+        tlY = Math.min(tlY, p.y);
+        brX = Math.max(brX, p.x);
+        brY = Math.max(brY, p.y);
+    }
+
+    return [tlX, tlY, brX, brY];
 }

@@ -33,6 +33,8 @@ import murmur3 from 'murmurhash-js';
 import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
 import {VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
 import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
+import {subdivideVertexLine} from '../render/subdivision';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
 // `icon-size` at up to three:
@@ -77,6 +79,7 @@ export function performSymbolLayout(args: {
     imagePositions: {[_: string]: ImagePosition};
     showCollisionBoxes: boolean;
     canonical: CanonicalTileID;
+    subdivisionGranularity: SubdivisionGranularitySetting;
 }) {
     args.bucket.createArrays();
 
@@ -251,7 +254,7 @@ export function performSymbolLayout(args: {
         const shapedText = getDefaultHorizontalShaping(shapedTextOrientations.horizontal) || shapedTextOrientations.vertical;
         args.bucket.iconsInText = shapedText ? shapedText.iconsInText : false;
         if (shapedText || shapedIcon) {
-            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical);
+            addFeature(args.bucket, feature, shapedTextOrientations, shapedIcon, args.imageMap, sizes, layoutTextSize, layoutIconSize, textOffset, isSDFIcon, args.canonical, args.subdivisionGranularity);
         }
     }
 
@@ -290,7 +293,9 @@ function addFeature(bucket: SymbolBucket,
     layoutTextSize: number,
     layoutIconSize: number,
     textOffset: [number, number],
-    isSDFIcon: boolean, canonical: CanonicalTileID) {
+    isSDFIcon: boolean,
+    canonical: CanonicalTileID,
+    subdivisionGranularity: SubdivisionGranularitySetting) {
     // To reduce the number of labels that jump around when zooming we need
     // to use a text-size value that is the same for all zoom levels.
     // bucket calculates text-size at a high zoom level so that all tiles can
@@ -330,6 +335,8 @@ function addFeature(bucket: SymbolBucket,
         }
     }
 
+    const granularity = (canonical) ? subdivisionGranularity.line.getGranularityForZoomLevel(canonical.z) : 1;
+
     const addSymbolAtAnchor = (line, anchor) => {
         if (anchor.x < 0 || anchor.x >= EXTENT || anchor.y < 0 || anchor.y >= EXTENT) {
             // Symbol layers are drawn across tile boundaries, We filter out symbols
@@ -337,7 +344,6 @@ function addFeature(bucket: SymbolBucket,
             // to prevent double-drawing symbols.
             return;
         }
-
         addSymbol(bucket, anchor, line, shapedTextOrientations, shapedIcon, imageMap, verticallyShapedIcon, bucket.layers[0],
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
             textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
@@ -347,8 +353,9 @@ function addFeature(bucket: SymbolBucket,
 
     if (symbolPlacement === 'line') {
         for (const line of clipLine(feature.geometry, 0, 0, EXTENT, EXTENT)) {
+            const subdividedLine = subdivideVertexLine(line, granularity);
             const anchors = getAnchors(
-                line,
+                subdividedLine,
                 symbolMinDistance,
                 textMaxAngle,
                 shapedTextOrientations.vertical || defaultHorizontalShaping,
@@ -361,7 +368,7 @@ function addFeature(bucket: SymbolBucket,
             for (const anchor of anchors) {
                 const shapedText = defaultHorizontalShaping;
                 if (!shapedText || !anchorIsTooClose(bucket, shapedText.text, textRepeatDistance, anchor)) {
-                    addSymbolAtAnchor(line, anchor);
+                    addSymbolAtAnchor(subdividedLine, anchor);
                 }
             }
         }
@@ -370,15 +377,16 @@ function addFeature(bucket: SymbolBucket,
         // "lines" with only one point are ignored as in clipLines
         for (const line of feature.geometry) {
             if (line.length > 1) {
+                const subdividedLine = subdivideVertexLine(line, granularity);
                 const anchor = getCenterAnchor(
-                    line,
+                    subdividedLine,
                     textMaxAngle,
                     shapedTextOrientations.vertical || defaultHorizontalShaping,
                     shapedIcon,
                     glyphSize,
                     textMaxBoxScale);
                 if (anchor) {
-                    addSymbolAtAnchor(line, anchor);
+                    addSymbolAtAnchor(subdividedLine, anchor);
                 }
             }
         }
@@ -386,12 +394,14 @@ function addFeature(bucket: SymbolBucket,
         for (const polygon of classifyRings(feature.geometry, 0)) {
             // 16 here represents 2 pixels
             const poi = findPoleOfInaccessibility(polygon, 16);
-            addSymbolAtAnchor(polygon[0], new Anchor(poi.x, poi.y, 0));
+            const subdividedLine = subdivideVertexLine(polygon[0], granularity, true);
+            addSymbolAtAnchor(subdividedLine, new Anchor(poi.x, poi.y, 0));
         }
     } else if (feature.type === 'LineString') {
         // https://github.com/mapbox/mapbox-gl-js/issues/3808
         for (const line of feature.geometry) {
-            addSymbolAtAnchor(line, new Anchor(line[0].x, line[0].y, 0));
+            const subdividedLine = subdivideVertexLine(line, granularity);
+            addSymbolAtAnchor(subdividedLine, new Anchor(subdividedLine[0].x, subdividedLine[0].y, 0));
         }
     } else if (feature.type === 'Point') {
         for (const points of feature.geometry) {
@@ -521,6 +531,7 @@ function addSymbol(bucket: SymbolBucket,
     isSDFIcon: boolean,
     canonical: CanonicalTileID,
     layoutTextSize: number) {
+
     const lineArray = bucket.addToLineVertexArray(anchor, line);
 
     let textCollisionFeature, iconCollisionFeature, verticalTextCollisionFeature, verticalIconCollisionFeature;

@@ -15,6 +15,7 @@ import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import type {FillBucket} from '../data/bucket/fill_bucket';
 import type {OverscaledTileID} from '../source/tile_id';
 import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
+import {StencilMode} from '../gl/stencil_mode';
 
 export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
     const color = layer.paint.get('fill-color');
@@ -122,8 +123,30 @@ function drawFillTiles(
                 fillOutlineUniformValues(drawingBufferSize, translateForUniforms);
         }
 
+        // Stencil is not really needed for anything unless we are drawing transparent things.
+        //
+        // For translucent layers, we must draw any pixel of a given layer at most once,
+        // otherwise we might get artifacts from the transparent geometry being drawn twice over itself,
+        // which can happen due to tiles having a slight overlapping border into neighboring tiles.
+        // Hence we use stencil tile masks for any translucent pass, including for fill.
+        //
+        // Globe rendering relies on these tile borders to hide tile seams, since under globe projection
+        // tiles are not squares, but slightly curved squares. At high zoom levels, the tile stencil mask
+        // is approximated by a square, but if the tile contains fine geometry, it might still get projected
+        // into a curved shape, causing a mismatch with the stencil mask, which is very visible
+        // if the tile border is small.
+        //
+        // The simples workaround for this is to just disable stencil masking for opaque fill layers,
+        // since the fine geometry will always line up perfectly with the geometry in its neighboring tiles,
+        // even if the border is small. Disabling stencil ensures the neighboring geometry isn't clipped.
+        //
+        // This doesn't seem to be an issue for transparent fill layers (or they don't get used enough to be noticeable),
+        // which is a good thing, since there is no easy solution for this problem for transparency, other than
+        // greatly increasing subdivision granularity for both fill layers and stencil masks, at least at tile edges.
+        const stencil = (painter.renderPass === 'translucent') ? painter.stencilModeForClipping(coord) : StencilMode.disabled;
+
         program.draw(painter.context, drawMode, depthMode,
-            painter.stencilModeForClipping(coord), colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
+            stencil, colorMode, CullFaceMode.disabled, uniformValues, terrainData, projectionData,
             layer.id, bucket.layoutVertexBuffer, indexBuffer, segments,
             layer.paint, painter.transform.zoom, programConfiguration);
     }

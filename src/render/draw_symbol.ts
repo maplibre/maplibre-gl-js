@@ -26,7 +26,7 @@ import type {SourceCache} from '../source/source_cache';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 
 import type {Texture, TextureFilter} from '../render/texture';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 import type {UniformValues} from './uniform_binding';
 import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
 import type {CrossTileID, VariableOffset} from '../symbol/placement';
@@ -37,6 +37,8 @@ import type {Transform} from '../geo/transform';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
+import {ProjectionData} from './program/projection_program';
+import {Projection} from '../geo/projection/projection';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -46,6 +48,7 @@ type SymbolTileRenderState = {
         program: Program<any>;
         buffers: SymbolBuffers;
         uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>;
+        projectionData: ProjectionData;
         atlasTexture: Texture;
         atlasTextureIcon: Texture | null;
         atlasInterpolation: TextureFilter;
@@ -73,6 +76,8 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
         updateVariableAnchors(coords, painter, layer, sourceCache,
             layer.layout.get('text-rotation-alignment'),
             layer.layout.get('text-pitch-alignment'),
+            layer.paint.get('text-translate'),
+            layer.paint.get('text-translate-anchor'),
             variableOffsets
         );
     }
@@ -128,8 +133,11 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     layer:SymbolStyleLayer, sourceCache: SourceCache,
     rotationAlignment: SymbolLayerSpecification['layout']['text-rotation-alignment'],
     pitchAlignment: SymbolLayerSpecification['layout']['text-pitch-alignment'],
+    translate: [number, number],
+    translateAnchor: 'map' | 'viewport',
     variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
-    const tr = painter.transform;
+    const transform = painter.transform;
+    const projection = painter.style.map.projection;
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
 
@@ -139,17 +147,44 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
         if (!bucket || !bucket.text || !bucket.text.segments.get().length) continue;
 
         const sizeData = bucket.textSizeData;
-        const size = evaluateSizeForZoom(sizeData, tr.zoom);
+        const size = evaluateSizeForZoom(sizeData, transform.zoom);
 
         const pixelToTileScale = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, pixelToTileScale);
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' && bucket.hasIconData();
 
         if (size) {
-            const tileScale = Math.pow(2, tr.zoom - tile.tileID.overscaledZ);
+            const tileScale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
+            const translation = projection.translatePosition(transform, tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
-                tr, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, getElevation);
+                transform, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
+        }
+    }
+}
+
+function getShiftedAnchor(projectedAnchorPoint: Point, projectionArgs: symbolProjection.ProjectionArgs, rotateWithMap, shift: Point, transformAngle: number, pitchedTextShiftCorrection: number) {
+    // Usual case is that we take the projected anchor and add the pixel-based shift
+    // calculated earlier. In the (somewhat weird) case of pitch-aligned text, we add an equivalent
+    // tile-unit based shift to the anchor before projecting to the label plane.
+    const translatedAnchor = projectionArgs.tileAnchorPoint.add(new Point(projectionArgs.translation[0], projectionArgs.translation[1]));
+    if (projectionArgs.pitchWithMap) {
+        let adjustedShift = shift.mult(pitchedTextShiftCorrection);
+        if (!rotateWithMap) {
+            adjustedShift = adjustedShift.rotate(-transformAngle);
+        }
+        const tileAnchorShifted = translatedAnchor.add(adjustedShift);
+        return symbolProjection.project(tileAnchorShifted, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation).point;
+    } else {
+        if (rotateWithMap) {
+            // Compute the angle with which to rotate the anchor, so that it is aligned with
+            // the map's actual east-west axis. Very similar to what is done in the shader.
+            const projectedAnchorRight = symbolProjection.projectTileCoordinatesToViewport(projectionArgs.tileAnchorPoint.x + 1, projectionArgs.tileAnchorPoint.y, projectionArgs);
+            const east = projectedAnchorRight.point.sub(projectedAnchorPoint);
+            const angle = Math.atan(east.y / east.x) + (east.x < 0 ? Math.PI : 0);
+            return projectedAnchorPoint.add(shift.rotate(angle));
+        } else {
+            return projectedAnchorPoint.add(shift);
         }
     }
 }
@@ -165,6 +200,9 @@ function updateVariableAnchorsForBucket(
     tileScale: number,
     size: EvaluatedZoomSize,
     updateTextFitIcon: boolean,
+    projection: Projection,
+    translation: [number, number],
+    unwrappedTileID: UnwrappedTileID,
     getElevation: (x: number, y: number) => number) {
     const placedSymbols = bucket.text.placedSymbolArray;
     const dynamicTextLayoutVertexArray = bucket.text.dynamicLayoutVertexArray;
@@ -183,7 +221,22 @@ function updateVariableAnchorsForBucket(
             symbolProjection.hideGlyphs(symbol.numGlyphs, dynamicTextLayoutVertexArray);
         } else  {
             const tileAnchor = new Point(symbol.anchorX, symbol.anchorY);
-            const projectedAnchor = symbolProjection.project(tileAnchor, pitchWithMap ? posMatrix : labelPlaneMatrix, getElevation);
+            const projectionArgs = {
+                getElevation,
+                width: transform.width,
+                height: transform.height,
+                labelPlaneMatrix,
+                lineVertexArray: null,
+                pitchWithMap,
+                projection,
+                projectionCache: null,
+                tileAnchorPoint: tileAnchor,
+                translation,
+                unwrappedTileID
+            };
+            const projectedAnchor = pitchWithMap ?
+                symbolProjection.project(tileAnchor, posMatrix, getElevation) :
+                symbolProjection.projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionArgs);
             const perspectiveRatio = symbolProjection.getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
             let renderTextSize = evaluateSizeForFeature(bucket.textSizeData, size, symbol) * perspectiveRatio / ONE_EM;
             if (pitchWithMap) {
@@ -192,18 +245,10 @@ function updateVariableAnchorsForBucket(
             }
 
             const {width, height, anchor, textOffset, textBoxScale} = variableOffset;
+            const shift = calculateVariableRenderShift(anchor, width, height, textOffset, textBoxScale, renderTextSize);
 
-            const shift = calculateVariableRenderShift(
-                anchor, width, height, textOffset, textBoxScale, renderTextSize);
-
-            // Usual case is that we take the projected anchor and add the pixel-based shift
-            // calculated above. In the (somewhat weird) case of pitch-aligned text, we add an equivalent
-            // tile-unit based shift to the anchor before projecting to the label plane.
-            const shiftedAnchor = pitchWithMap ?
-                symbolProjection.project(tileAnchor.add(shift), labelPlaneMatrix, getElevation).point :
-                projectedAnchor.point.add(rotateWithMap ?
-                    shift.rotate(-transform.angle) :
-                    shift);
+            const pitchedTextCorrection = projection.getPitchedTextCorrection(transform, tileAnchor.add(new Point(translation[0], translation[1])), unwrappedTileID);
+            const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionArgs, rotateWithMap, shift, transform.angle, pitchedTextCorrection);
 
             const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === WritingMode.vertical) ? Math.PI / 2 : 0;
             for (let g = 0; g < symbol.numGlyphs; g++) {
@@ -266,6 +311,7 @@ function drawLayerSymbols(
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
+    const projection = painter.style.map.projection;
 
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
@@ -275,6 +321,8 @@ function drawLayerSymbols(
     // Unpitched point labels need to have their rotation applied after projection
     const rotateInShader = rotateWithMap && !pitchWithMap && !alongLine;
 
+    const isViewportLine = !pitchWithMap && alongLine;
+
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
 
@@ -283,6 +331,8 @@ function drawLayerSymbols(
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
     const tileRenderState: Array<SymbolTileRenderState> = [];
+
+    const pitchedTextRescaling = projection.getCircleRadiusCorrection(tr);
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
@@ -328,8 +378,13 @@ function drawLayerSymbols(
         }
 
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
-        const glCoordMatrix = symbolProjection.getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+        const baseMatrix = isViewportLine ? coord.posMatrix : identityMat4;
+        const labelPlaneMatrix = symbolProjection.getLabelPlaneMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+        const glCoordMatrixForShader = symbolProjection.getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+        const glCoordMatrixForSymbolPlacement = symbolProjection.getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+
+        const translation = projection.translatePosition(painter.transform, tile, translate, translateAnchor);
+        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
@@ -339,12 +394,14 @@ function drawLayerSymbols(
         if (alongLine) {
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
-            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrix, pitchWithMap, keepUpright, rotateToLine, getElevation);
+            symbolProjection.updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, glCoordMatrixForSymbolPlacement, pitchWithMap, keepUpright, rotateToLine, projection, coord.toUnwrapped(), tr.width, tr.height, translation, getElevation);
         }
 
-        const matrix = painter.translatePosMatrix(coord.posMatrix, tile, translate, translateAnchor),
-            uLabelPlaneMatrix = (alongLine || (isText && hasVariablePlacement) || updateTextFitIcon) ? identityMat4 : labelPlaneMatrix,
-            uglCoordMatrix = painter.translatePosMatrix(glCoordMatrix, tile, translate, translateAnchor, true);
+        const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
+        const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
+        const noLabelPlane = (alongLine || shaderVariableAnchor);
+        const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : labelPlaneMatrix;
+        const uglCoordMatrix = glCoordMatrixForShader; // formerly also incorporated translate and translate-anchor
 
         const hasHalo = isSDF && layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(1) !== 0;
 
@@ -352,23 +409,24 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, isText, texSize, true);
+                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
+                    uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true, pitchedTextRescaling);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, texSize, texSizeIcon);
+                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
+                    uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon, pitchedTextRescaling);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, painter, matrix,
-                uLabelPlaneMatrix, uglCoordMatrix, isText, texSize);
+                size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
+                uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, pitchedTextRescaling);
         }
 
         const state = {
             program,
             buffers,
             uniformValues,
+            projectionData,
             atlasTexture,
             atlasTextureIcon,
             atlasInterpolation,
@@ -418,11 +476,11 @@ function drawLayerSymbols(
             const uniformValues = state.uniformValues;
             if (state.hasHalo) {
                 uniformValues['u_is_halo'] = 1;
-                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, segmentState.terrainData);
+                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, state.projectionData, segmentState.terrainData);
             }
             uniformValues['u_is_halo'] = 0;
         }
-        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, segmentState.terrainData);
+        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, state.projectionData, segmentState.terrainData);
     }
 }
 
@@ -436,11 +494,12 @@ function drawSymbolElements(
     stencilMode: StencilMode,
     colorMode: Readonly<ColorMode>,
     uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>,
+    projectionData: ProjectionData,
     terrainData: TerrainData) {
     const context = painter.context;
     const gl = context.gl;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        uniformValues, terrainData, null, layer.id, buffers.layoutVertexBuffer,
+        uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
