@@ -19,6 +19,8 @@ import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection, translatePosition} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {LngLat, earthRadius} from '../lng_lat';
+import type {Terrain} from '../../render/terrain';
+import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.

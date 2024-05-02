@@ -13,6 +13,10 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import type {Terrain} from '../../render/terrain';
+import {LngLat} from '../lng_lat';
+import {MercatorCoordinate} from '../mercator_coordinate';
+import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
