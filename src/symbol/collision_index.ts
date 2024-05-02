@@ -126,10 +126,8 @@ export class CollisionIndex {
 
         const projectionOccluded = this.mapProjection.useSpecialProjectionForSymbols ? this.mapProjection.isOccluded(x, y, unwrappedTileID) : false;
 
-        if (!this.isInsideGrid(tlX, tlY, brX, brY) ||
-            (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate)) ||
-            projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff ||
-            projectionOccluded) {
+        if (projectionOccluded || projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff || !this.isInsideGrid(tlX, tlY, brX, brY) ||
+            (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
             return {
                 box: [tlX, tlY, brX, brY],
                 placeable: false,
