@@ -3,9 +3,7 @@ import {GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
 import {expectToBeCloseToArray} from './mercator.test';
 import type {TransformLike} from './projection';
-import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import type {Transform} from '../transform';
 
 describe('GlobeProjection', () => {
     describe('getProjectionData', () => {
@@ -110,6 +108,7 @@ describe('GlobeProjection', () => {
             projected = globe['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [0, 0.99627207622075, 0.08626673833405434], precisionDigits);
         });
+    });
 });
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
