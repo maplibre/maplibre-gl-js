@@ -650,6 +650,25 @@ export class Placement {
                             }
                         }
 
+                        if (placedBox.box.length === 0) {
+                            // No box was successfully placed
+                            // Generate bounds for a fake centered box, so that we can at least display something for collision debug.
+                            const placedFakeGlyphBox = this.collisionIndex.placeCollisionBox(
+                                textBox,
+                                'always', // Skips expensive collision check with already placed boxes
+                                textPixelRatio,
+                                posMatrix,
+                                unwrappedTileID,
+                                pitchWithMap,
+                                rotateWithMap,
+                                translationText,
+                                collisionGroup.predicate,
+                                getElevation,
+                                new Point(0, 0)
+                            );
+                            placedBox.box = placedFakeGlyphBox.box;
+                        }
+
                         return placedBox;
                     };
 
