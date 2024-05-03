@@ -809,7 +809,7 @@ export class SourceCache extends Evented {
         this._loadedSiblingTiles = {};
 
         for (const tileKey in this._tiles) {
-            let currentId = this._tiles[tileKey].tileID;
+            const currentId = this._tiles[tileKey].tileID;
 
             // Sibling already loaded
             if (this._loadedSiblingTiles[currentId.key]) {

@@ -40,7 +40,6 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
 
         tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
-
         const parentTile = sourceCache.findLoadedParent(coord, 0);
         const siblingTile = sourceCache.findLoadedSibling(coord);
         // Prefer parent tile if present
