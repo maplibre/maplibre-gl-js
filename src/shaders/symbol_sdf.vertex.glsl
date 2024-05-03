@@ -34,6 +34,10 @@ uniform float u_pitched_scale;
 out vec2 v_data0;
 out vec3 v_data1;
 
+vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
+    return u_matrix * vec4(posInTile, elevation, 1.0);
+}
+
 #pragma mapbox: define highp vec4 fill_color
 #pragma mapbox: define highp vec4 halo_color
 #pragma mapbox: define lowp float opacity
@@ -120,13 +124,6 @@ void main() {
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
 
     float projectionScaling = 1.0;
-#ifdef GLOBE
-    if(u_pitch_with_map && !u_is_along_line) {
-        // Lines would behave in very weird ways if this adjustment was used for them.
-        float anchor_pos_tile_y = (u_coord_matrix * vec4(projected_pos.xy / projected_pos.w, z, 1.0)).y;
-        projectionScaling = mix(projectionScaling, 1.0 / circumferenceRatioAtTileY(anchor_pos_tile_y) * u_pitched_scale, u_projection_transition);
-    }
-#endif
 
     vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale + a_pxoffset) * projectionScaling, z, 1.0);
     if(u_pitch_with_map) {

@@ -27,7 +27,6 @@ let quadTriangles: QuadTriangleArray;
 export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, translate: [number, number], translateAnchor: 'map' | 'viewport', isText: boolean) {
     const context = painter.context;
     const gl = context.gl;
-    const projection = painter.style.map.projection;
     const program = painter.useProgram('collisionBox');
     const tileBatches: Array<TileBatch> = [];
     let circleCount = 0;
@@ -68,14 +67,13 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         if (!buffers) {
             continue;
         }
-        const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
+
         program.draw(context, gl.LINES,
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
-            collisionUniformValues(painter.transform),
+            collisionUniformValues(painter.transform, coord.posMatrix),
             painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
-            projectionData,
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
@@ -134,7 +132,6 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             CullFaceMode.disabled,
             uniforms,
             painter.style.map.terrain && painter.style.map.terrain.getTerrainData(batch.coord),
-            null,
             layer.id,
             vertexBuffer,
             indexBuffer,

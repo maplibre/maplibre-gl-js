@@ -37,8 +37,7 @@ import type {Transform} from '../geo/transform';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
-import {ProjectionData} from './program/projection_program';
-import {Projection} from '../geo/projection/projection';
+import {createProjection, Projection} from '../geo/projection/projection';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -48,7 +47,6 @@ type SymbolTileRenderState = {
         program: Program<any>;
         buffers: SymbolBuffers;
         uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>;
-        projectionData: ProjectionData;
         atlasTexture: Texture;
         atlasTextureIcon: Texture | null;
         atlasInterpolation: TextureFilter;
@@ -137,7 +135,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     translateAnchor: 'map' | 'viewport',
     variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
     const transform = painter.transform;
-    const projection = painter.style.map.projection;
+    const projection = createProjection();
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
 
@@ -158,7 +156,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const translation = projection.translatePosition(transform, tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
-                transform, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
+                transform, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, projection, translation, coord.toUnwrapped(), getElevation);
         }
     }
 }
@@ -311,7 +309,7 @@ function drawLayerSymbols(
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
-    const projection = painter.style.map.projection;
+    const projection = createProjection();
 
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
@@ -384,7 +382,6 @@ function drawLayerSymbols(
         const glCoordMatrixForSymbolPlacement = symbolProjection.getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = projection.translatePosition(painter.transform, tile, translate, translateAnchor);
-        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
@@ -426,7 +423,6 @@ function drawLayerSymbols(
             program,
             buffers,
             uniformValues,
-            projectionData,
             atlasTexture,
             atlasTextureIcon,
             atlasInterpolation,
@@ -476,11 +472,11 @@ function drawLayerSymbols(
             const uniformValues = state.uniformValues;
             if (state.hasHalo) {
                 uniformValues['u_is_halo'] = 1;
-                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, state.projectionData, segmentState.terrainData);
+                drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, uniformValues, segmentState.terrainData);
             }
             uniformValues['u_is_halo'] = 0;
         }
-        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, state.projectionData, segmentState.terrainData);
+        drawSymbolElements(state.buffers, segmentState.segments, layer, painter, state.program, depthMode, stencilMode, colorMode, state.uniformValues, segmentState.terrainData);
     }
 }
 
@@ -494,12 +490,11 @@ function drawSymbolElements(
     stencilMode: StencilMode,
     colorMode: Readonly<ColorMode>,
     uniformValues: UniformValues<SymbolSDFUniformsType | SymbolIconUniformsType>,
-    projectionData: ProjectionData,
     terrainData: TerrainData) {
     const context = painter.context;
     const gl = context.gl;
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
-        uniformValues, terrainData, projectionData, layer.id, buffers.layoutVertexBuffer,
+        uniformValues, terrainData, layer.id, buffers.layoutVertexBuffer,
         buffers.indexBuffer, segments, layer.paint,
         painter.transform.zoom, buffers.programConfigurations.get(layer.id),
         buffers.dynamicLayoutVertexBuffer, buffers.opacityVertexBuffer);
