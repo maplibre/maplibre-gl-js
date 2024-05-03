@@ -19,6 +19,7 @@ import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
 import {ProjectionArgs} from '../symbol/projection';
 import {Projection} from '../geo/projection/projection';
+import {getAABB} from '../util/util';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -326,7 +327,6 @@ export class CollisionIndex {
             isOccluded?: boolean;
         }>;
         if (projectionArgs.projection.useSpecialProjectionForSymbols) {
-            // Globe (or other special projection) is enabled in this branch.
             const inverseLabelPlaneMatrix = mat4.create();
             mat4.invert(inverseLabelPlaneMatrix, projectionArgs.labelPlaneMatrix);
             screenSpacePath = projectedPath.map(p => {
@@ -618,20 +618,4 @@ export class CollisionIndex {
             allPointsOccluded: !anyPointVisible
         };
     }
-}
-
-function getAABB(points: Array<Point>): [number, number, number, number] {
-    let tlX = Infinity;
-    let tlY = Infinity;
-    let brX = -Infinity;
-    let brY = -Infinity;
-
-    for (const p of points) {
-        tlX = Math.min(tlX, p.x);
-        tlY = Math.min(tlY, p.y);
-        brX = Math.max(brX, p.x);
-        brY = Math.max(brY, p.y);
-    }
-
-    return [tlX, tlY, brX, brY];
 }

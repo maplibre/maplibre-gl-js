@@ -612,7 +612,7 @@ export class Placement {
                         const textBoxScale = symbolInstance.textBoxScale;
                         const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
 
-                        let placedBox: PlacedBox = {box: [], placeable: false, offscreen: false};
+                        let placedBox: PlacedBox = null;
                         let placementPasses = (textOverlapMode === 'never') ? 1 : 2;
                         let overlapMode: OverlapMode = 'never';
 
@@ -650,7 +650,7 @@ export class Placement {
                             }
                         }
 
-                        if (placedBox.box.length === 0) {
+                        if (showCollisionBoxes && !placedBox) {
                             // No box was successfully placed
                             // Generate bounds for a fake centered box, so that we can at least display something for collision debug.
                             const placedFakeGlyphBox = this.collisionIndex.placeCollisionBox(
@@ -666,7 +666,11 @@ export class Placement {
                                 getElevation,
                                 new Point(0, 0)
                             );
-                            placedBox.box = placedFakeGlyphBox.box;
+                            placedBox = {
+                                box: placedFakeGlyphBox.box,
+                                offscreen: false,
+                                placeable: false
+                            };
                         }
 
                         return placedBox;
