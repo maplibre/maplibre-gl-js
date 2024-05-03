@@ -1,0 +1,182 @@
+{
+    "version": 8,
+    "metadata": {
+      "test": {
+        "width": 360,
+        "height": 180,
+        "description": "This draws the matrix of all possible combinations of textFitWidth (columns) and textFitHeight (rows) where they proceed from the top-left in the order stretchOrShrink, stretchOnly, and proportional.  This version shows the effect of a short string with a narrower aspect ratio than the source image."
+      }
+    },
+    "sources": {
+      "geojson": {
+        "type": "geojson",
+        "data": "local://geojson/grid.json"
+      }
+    },
+    "sprite": "local://sprites/textFit",
+    "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+    "layers": [
+      {
+        "id": "wh-stretchOrShrink-stretchOrShrink",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "top-left"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-stretchOrShrink-stretchOrShrink",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      },
+      {
+        "id": "wh-stretchOnly-stretchOrShrink",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "top-middle"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-stretchOnly-stretchOrShrink",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      },
+      {
+        "id": "wh-proportional-stretchOrShrink",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "top-right"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-proportional-stretchOrShrink",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      },
+      {
+        "id": "wh-stretchOrShrink-stretchOnly",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "middle-left"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-stretchOrShrink-stretchOnly",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      },
+      {
+        "id": "wh-stretchOnly-stretchOnly",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "middle-middle"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-stretchOnly-stretchOnly",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      },
+      {
+        "id": "wh-proportional-stretchOnly",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "middle-right"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-proportional-stretchOnly",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      },
+      {
+        "id": "wh-stretchOrShrink-proportional",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "bottom-left"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-stretchOrShrink-proportional",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      },
+      {
+        "id": "wh-stretchOnly-proportional",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "bottom-middle"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-stretchOnly-proportional",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      },
+      {
+        "id": "wh-proportional-proportional",
+        "type": "symbol",
+        "source": "geojson",
+        "filter": ["==", "cell", "bottom-right"],
+        "layout": {
+          "text-field": "1",
+          "text-size": 20,
+          "text-anchor": "center",
+          "text-font": [ "Open Sans Semibold", "Arial Unicode MS Bold" ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+          "icon-image": "textFit-wh-proportional-proportional",
+          "icon-text-fit": "both",
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true
+        }
+      }
+    ]
+  }

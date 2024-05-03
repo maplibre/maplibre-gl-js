@@ -34,6 +34,9 @@ export type Offset = number | PointLike | {
     [_ in PositionAnchor]: PointLike;
 };
 
+/**
+ * The {@link Popup} options object
+ */
 export type PopupOptions = {
     /**
      * If `true`, a close button will appear in the top right corner of the popup.
@@ -167,6 +170,9 @@ export class Popup extends Evented {
     _pos: Point;
     _flatPos: Point;
 
+    /**
+     * @param options - the options
+     */
     constructor(options?: PopupOptions) {
         super();
         this.options = extend(Object.create(defaultOptions), options);
@@ -482,6 +488,7 @@ export class Popup extends Evented {
         if (this._container) {
             this._container.classList.add(className);
         }
+        return this;
     }
 
     /**
@@ -499,6 +506,7 @@ export class Popup extends Evented {
         if (this._container) {
             this._container.classList.remove(className);
         }
+        return this;
     }
 
     /**

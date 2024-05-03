@@ -318,6 +318,13 @@ export type MapOptions = {
      * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
      */
     maxCanvasSize?: [number, number];
+    /**
+     * Determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
+     * * If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
+     * * If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
+     * @defaultValue true
+     */
+    cancelPendingTileRequestsWhileZooming?: boolean;
 };
 
 export type AddImageOptions = {
@@ -387,7 +394,8 @@ const defaultOptions = {
     crossSourceCollisions: true,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
-    maxCanvasSize: [4096, 4096]
+    maxCanvasSize: [4096, 4096],
+    cancelPendingTileRequestsWhileZooming: true
 } as CompleteMapOptions;
 
 /**
@@ -535,6 +543,14 @@ export class Map extends Camera {
      */
     cooperativeGestures: CooperativeGesturesHandler;
 
+    /**
+     * The map's property which determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
+     * * If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
+     * * If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
+     * @defaultValue true
+     */
+    cancelPendingTileRequestsWhileZooming: boolean;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
@@ -580,6 +596,7 @@ export class Map extends Camera {
         this._overridePixelRatio = options.pixelRatio;
         this._maxCanvasSize = options.maxCanvasSize;
         this.transformCameraUpdate = options.transformCameraUpdate;
+        this.cancelPendingTileRequestsWhileZooming = options.cancelPendingTileRequestsWhileZooming;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
@@ -2088,14 +2105,16 @@ export class Map extends Camera {
             sdf = false,
             stretchX,
             stretchY,
-            content
+            content,
+            textFitWidth,
+            textFitHeight
         } = options;
         this._lazyInitEmptyStyle();
         const version = 0;
 
         if (image instanceof HTMLImageElement || isImageBitmap(image)) {
             const {width, height, data} = browser.getImageData(image);
-            this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, sdf, version});
+            this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version});
         } else if (image.width === undefined || image.height === undefined) {
             return this.fire(new ErrorEvent(new Error(
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
@@ -2110,6 +2129,8 @@ export class Map extends Camera {
                 stretchX,
                 stretchY,
                 content,
+                textFitWidth,
+                textFitHeight,
                 sdf,
                 version,
                 userImage
@@ -2248,9 +2269,9 @@ export class Map extends Camera {
      * @example
      * Load an image from an external URL.
      * ```ts
-     * const response = await map.loadImage('http://placekitten.com/50/50');
-     * // Add the loaded image to the style's sprite with the ID 'kitten'.
-     * map.addImage('kitten', response.data);
+     * const response = await map.loadImage('https://picsum.photos/50/50');
+     * // Add the loaded image to the style's sprite with the ID 'photo'.
+     * map.addImage('photo', response.data);
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
      */
@@ -2922,8 +2943,8 @@ export class Map extends Camera {
         }, {once: true});
 
         const gl =
-        this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
-        this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
+            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
