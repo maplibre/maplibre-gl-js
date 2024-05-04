@@ -11,7 +11,7 @@ import {
     allowsLetterSpacing
 } from '../util/script_detection';
 import {findPoleOfInaccessibility} from '../util/find_pole_of_inaccessibility';
-import {classifyRings} from '../util/classify_rings';
+import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../data/extent';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
 import {EvaluationParameters} from '../style/evaluation_parameters';
