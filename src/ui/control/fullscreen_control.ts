@@ -31,7 +31,7 @@ type FullscreenControlOptions = {
  * ```
  * @see [View a fullscreen map](https://maplibre.org/maplibre-gl-js/docs/examples/fullscreen/)
  *
- * ### Events
+ * ## Events
  *
  * **Event** `fullscreenstart` of type {@link Event} will be fired when fullscreen mode has started.
  *

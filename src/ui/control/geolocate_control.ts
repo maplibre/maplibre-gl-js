@@ -88,7 +88,7 @@ let noTimeout = false;
  * ```
  * @see [Locate the user](https://maplibre.org/maplibre-gl-js/docs/examples/locate-user/)
  *
- * ### Events
+ * ## Events
  *
  * **Event** `trackuserlocationend` of type {@link Event} will be fired when the `GeolocateControl` changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when `trackUserLocation` is `true`. In the background state, the dot on the map will update with location updates but the camera will not.
  *
