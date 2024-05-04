@@ -1173,7 +1173,7 @@ export class Map extends Camera {
      * @returns The {@link LngLat} corresponding to `point`.
      * @example
      * ```ts
-     * map.on('click', function(e) {
+     * map.on('click', (e) => {
      *   // When the map is clicked, get the geographic coordinate.
      *   let coordinate = map.unproject(e.point);
      * });
@@ -1341,7 +1341,7 @@ export class Map extends Camera {
      * ```ts
      * // Set an event listener that will fire
      * // when the map has finished loading
-     * map.on('load', function() {
+     * map.on('load', () => {
      *   // Once the map has finished loading,
      *   // add a new layer
      *   map.addLayer({
@@ -2031,7 +2031,7 @@ export class Map extends Camera {
      * Returns the source with the specified ID in the map's style.
      *
      * This method is often used to update a source using the instance members for the relevant
-     * source type as defined in [Sources](#sources).
+     * source type as defined in classes that derive from {@link Source}.
      * For example, setting the `data` for a GeoJSON source or updating the `url` and `coordinates`
      * of an image source.
      *
@@ -2072,22 +2072,17 @@ export class Map extends Camera {
      * ```ts
      * // If the style's sprite does not already contain an image with ID 'cat',
      * // add the image 'cat-icon.png' to the style's sprite with the ID 'cat'.
-     * map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/400px-Cat_silhouette.svg.png', function(error, image) {
-     *    if (error) throw error;
-     *    if (!map.hasImage('cat')) map.addImage('cat', image);
-     * });
+     * const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/400px-Cat_silhouette.svg.png');
+     * if (!map.hasImage('cat')) map.addImage('cat', image.data);
      *
      * // Add a stretchable image that can be used with `icon-text-fit`
      * // In this example, the image is 600px wide by 400px high.
-     * map.loadImage('https://upload.wikimedia.org/wikipedia/commons/8/89/Black_and_White_Boxed_%28bordered%29.png', function(error, image) {
-     *    if (error) throw error;
-     *    if (!map.hasImage('border-image')) {
-     *      map.addImage('border-image', image, {
-     *          content: [16, 16, 300, 384], // place text over left half of image, avoiding the 16px border
-     *          stretchX: [[16, 584]], // stretch everything horizontally except the 16px border
-     *          stretchY: [[16, 384]], // stretch everything vertically except the 16px border
-     *      });
-     *    }
+     * const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/8/89/Black_and_White_Boxed_%28bordered%29.png');
+     * if (map.hasImage('border-image')) return;
+     * map.addImage('border-image', image.data, {
+     *     content: [16, 16, 300, 384], // place text over left half of image, avoiding the 16px border
+     *     stretchX: [[16, 584]], // stretch everything horizontally except the 16px border
+     *     stretchY: [[16, 384]], // stretch everything vertically except the 16px border
      * });
      * ```
      * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
@@ -2733,7 +2728,7 @@ export class Map extends Camera {
      * ```ts
      * // When the mouse moves over the `my-layer` layer, update
      * // the feature state for the feature under the mouse
-     * map.on('mousemove', 'my-layer', function(e) {
+     * map.on('mousemove', 'my-layer', (e) => {
      *   if (e.features.length > 0) {
      *     map.setFeatureState({
      *       source: 'my-source',
@@ -2776,7 +2771,7 @@ export class Map extends Camera {
      * reset the entire state object for the
      * feature under the mouse
      * ```ts
-     * map.on('mouseleave', 'my-layer', function(e) {
+     * map.on('mouseleave', 'my-layer', (e) => {
      *   map.removeFeatureState({
      *     source: 'my-source',
      *     sourceLayer: 'my-source-layer',
@@ -2790,7 +2785,7 @@ export class Map extends Camera {
      * reset only the `hover` key-value pair in the
      * state for the feature under the mouse
      * ```ts
-     * map.on('mouseleave', 'my-layer', function(e) {
+     * map.on('mouseleave', 'my-layer', (e) => {
      *   map.removeFeatureState({
      *     source: 'my-source',
      *     sourceLayer: 'my-source-layer',
@@ -2819,7 +2814,7 @@ export class Map extends Camera {
      * When the mouse moves over the `my-layer` layer,
      * get the feature state for the feature under the mouse
      * ```ts
-     * map.on('mousemove', 'my-layer', function(e) {
+     * map.on('mousemove', 'my-layer', (e) => {
      *   if (e.features.length > 0) {
      *     map.getFeatureState({
      *       source: 'my-source',

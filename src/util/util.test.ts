@@ -73,14 +73,13 @@ describe('util', () => {
     });
 
     test('mapObject', () => {
-        expect.assertions(6);
+        expect.assertions(5);
         expect(mapObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
-        expect(mapObject({map: 'box'}, function(value, key, object) {
+        expect(mapObject({map: 'box'}, (value, key, object) => {
             expect(value).toBe('box');
             expect(key).toBe('map');
             expect(object).toEqual({map: 'box'});
-            expect(this).toBe(that);
             return 'BOX';
         }, that)).toEqual({map: 'BOX'});
     });

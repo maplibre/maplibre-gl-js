@@ -112,11 +112,11 @@ type MarkerOptions = {
  *
  * ### Events
  *
- * @event `dragstart` Fired when dragging starts, `marker` object that is being dragged
+ * **Event** `dragstart` of type {@link Event} will be fired when dragging starts.
  *
- * @event `drag` Fired while dragging. `marker` object that is being dragged
+ * **Event** `drag` of type {@link Event} will be fired while dragging.
  *
- * @event `dragend` Fired when the marker is finished being dragged, `marker` object that was dragged
+ * **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
  */
 export class Marker extends Evented {
     _map: Map;

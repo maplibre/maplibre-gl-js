@@ -293,7 +293,7 @@ export class GeoJSONSource extends Evented implements Source {
      *   let pointCount = features[0].properties.point_count;
      *   let clusterSource = map.getSource('clusters');
      *
-     *   const features = await clusterSource.getClusterLeaves(clusterId, pointCount) 0, function(error, features) {
+     *   const features = await clusterSource.getClusterLeaves(clusterId, pointCount);
      *   // Print cluster leaves in the console
      *   console.log('Cluster leaves:', features);
      * });

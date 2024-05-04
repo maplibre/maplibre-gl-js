@@ -33,9 +33,9 @@ type FullscreenControlOptions = {
  *
  * ### Events
  *
- * @event `fullscreenstart` - Fired when fullscreen mode has started
+ * **Event** `fullscreenstart` of type {@link Event} will be fired when fullscreen mode has started.
  *
- * @event `fullscreenend` - Fired when fullscreen mode has ended
+ * **Event** `fullscreenend` of type {@link Event} will be fired when fullscreen mode has ended.
  */
 export class FullscreenControl extends Evented implements IControl {
     _map: Map;

@@ -112,7 +112,7 @@ const focusQuerySelector = [
  * let popup = new Popup();
  * // Set an event listener that will fire
  * // any time the popup is opened
- * popup.on('open', function(){
+ * popup.on('open', () => {
  *   console.log('popup was opened');
  * });
  * ```
@@ -123,7 +123,7 @@ const focusQuerySelector = [
  * let popup = new Popup();
  * // Set an event listener that will fire
  * // any time the popup is closed
- * popup.on('close', function(){
+ * popup.on('close', () => {
  *   console.log('popup was closed');
  * });
  * ```
@@ -154,9 +154,9 @@ const focusQuerySelector = [
  *
  * ### Events
  *
- * @event `open` Fired when the popup is opened manually or programmatically. `popup` object that was opened
+ * **Event** `open` of type {@link Event} will be fired when the popup is opened manually or programmatically.
  *
- * @event `close` Fired when the popup is closed manually or programmatically. `popup` object that was closed
+ * **Event** `close` of type {@link Event} will be fired when the popup is closed manually or programmatically.
  */
 export class Popup extends Evented {
     _map: Map;
