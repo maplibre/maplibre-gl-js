@@ -140,7 +140,6 @@ export class RasterTileSource extends Evented implements Source {
      * Sets the source `tiles` property and re-renders the map.
      *
      * @param tiles - An array of one or more tile source URLs, as in the raster tiles spec (See the [Style Specification](https://maplibre.org/maplibre-style-spec/)
-     * @returns `this`
      */
     setTiles(tiles: Array<string>): this {
         this.setSourceProperty(() => {
@@ -154,7 +153,6 @@ export class RasterTileSource extends Evented implements Source {
      * Sets the source `url` property and re-renders the map.
      *
      * @param url - A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
-     * @returns `this`
      */
     setUrl(url: string): this {
         this.setSourceProperty(() => {

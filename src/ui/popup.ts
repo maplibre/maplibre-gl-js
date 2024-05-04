@@ -182,7 +182,6 @@ export class Popup extends Evented {
      * Adds the popup to a map.
      *
      * @param map - The MapLibre GL JS map to add the popup to.
-     * @returns `this`
      * @example
      * ```ts
      * new Popup()
@@ -242,7 +241,6 @@ export class Popup extends Evented {
      * let popup = new Popup().addTo(map);
      * popup.remove();
      * ```
-     * @returns `this`
      */
     remove = (): this => {
         if (this._content) {
@@ -287,7 +285,6 @@ export class Popup extends Evented {
      * Sets the geographical location of the popup's anchor, and moves the popup to it. Replaces trackPointer() behavior.
      *
      * @param lnglat - The geographical location to set as the popup's anchor.
-     * @returns `this`
      */
     setLngLat(lnglat: LngLatLike): this {
         this._lngLat = LngLat.convert(lnglat);
@@ -320,7 +317,6 @@ export class Popup extends Evented {
      *   .trackPointer()
      *   .addTo(map);
      * ```
-     * @returns `this`
      */
     trackPointer(): this {
         this._trackPointer = true;
@@ -367,7 +363,6 @@ export class Popup extends Evented {
      * if the popup content is user-provided.
      *
      * @param text - Textual content for the popup.
-     * @returns `this`
      * @example
      * ```ts
      * let popup = new Popup()
@@ -388,7 +383,6 @@ export class Popup extends Evented {
      * the content is an untrusted text string.
      *
      * @param html - A string representing HTML content for the popup.
-     * @returns `this`
      * @example
      * ```ts
      * let popup = new Popup()
@@ -429,7 +423,6 @@ export class Popup extends Evented {
      * Available values can be found here: https://developer.mozilla.org/en-US/docs/Web/CSS/max-width
      *
      * @param maxWidth - A string representing the value for the maximum width.
-     * @returns `this`
      */
     setMaxWidth(maxWidth: string): this {
         this.options.maxWidth = maxWidth;
@@ -441,7 +434,6 @@ export class Popup extends Evented {
      * Sets the popup's content to the element provided as a DOM node.
      *
      * @param htmlNode - A DOM node to be used as content for the popup.
-     * @returns `this`
      * @example
      * Create an element with the popup content
      * ```ts
@@ -513,7 +505,6 @@ export class Popup extends Evented {
      * Sets the popup's offset.
      *
      * @param offset - Sets the popup's offset.
-     * @returns `this`
      */
     setOffset (offset?: Offset): this {
         this.options.offset = offset;
