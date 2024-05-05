@@ -75,7 +75,7 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, mat
  *     }
  * }
  *
- * map.on('load', function() {
+ * map.on('load', () => {
  *     map.addLayer(new NullIslandLayer());
  * });
  * ```
