@@ -15,8 +15,6 @@
 - Sprites include optional textFitHeight and textFitWidth values ([#4019](https://github.com/maplibre/maplibre-gl-js/pull/4019))
 - Add support for `distance` expression ([#4076](https://github.com/maplibre/maplibre-gl-js/pull/4076))
 
-### 🐞 Bug fixes
-
 ## 4.1.3
 
 ### ✨ Features and improvements
