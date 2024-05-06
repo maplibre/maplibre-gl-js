@@ -7,6 +7,7 @@ import type {PluginState} from '../source/rtl_text_plugin_status';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {OverscaledTileID} from '../source/tile_id';
 import type {GetResourceResponse, RequestParameters} from './ajax';
+import {GeoJSON} from 'geojson';
 
 /**
  * The parameters needed in order to get information about the cluster
@@ -89,6 +90,7 @@ export const enum MessageType {
     getClusterChildren = 'GCC',
     getClusterLeaves = 'GCL',
     loadData = 'LD',
+    getData = 'GD',
     loadTile = 'LT',
     reloadTile = 'RT',
     getGlyphs = 'GG',
@@ -117,6 +119,7 @@ export type RequestResponseMessageMap = {
     [MessageType.getClusterChildren]: [ClusterIDAndSource, Array<GeoJSON.Feature>];
     [MessageType.getClusterLeaves]: [GetClusterLeavesParams, Array<GeoJSON.Feature>];
     [MessageType.loadData]: [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
+    [MessageType.getData]: [LoadGeoJSONParameters, GeoJSON];
     [MessageType.loadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.reloadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.getGlyphs]: [GetGlyphsParamerters, GetGlyphsResponse];

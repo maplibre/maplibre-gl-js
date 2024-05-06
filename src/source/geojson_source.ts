@@ -14,6 +14,7 @@ import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre
 import type {GeoJSONSourceDiff} from './geojson_source_diff';
 import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
 import {MessageType} from '../util/actor_messages';
+import {GeoJSON} from 'geojson';
 
 /**
  * Options object for GeoJSONSource.
@@ -230,6 +231,21 @@ export class GeoJSONSource extends Evented implements Source {
         this._updateWorkerData(diff);
 
         return this;
+    }
+
+    /**
+     * Allows to get the source's actual GeoJSON data.
+     *
+     * @returns a promise which resolves to the source's actual GeoJSON data
+     */
+    async getData(): Promise<GeoJSON> {
+        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+
+        try {
+            return await this.actor.sendAsync({type: MessageType.getData, data: options});
+        } catch (err) {
+            this.fire(new ErrorEvent(err));
+        }
     }
 
     /**

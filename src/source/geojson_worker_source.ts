@@ -18,6 +18,7 @@ import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
+import {GeoJSON} from 'geojson';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -59,6 +60,11 @@ type GeoJSONIndex = ReturnType<typeof geojsonvt> | Supercluster;
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
  */
 export class GeoJSONWorkerSource extends VectorTileWorkerSource {
+    /**
+     * This `_data` property holds the source's actual GeoJSON. It's updated each time the data is updated in the
+     * `loadData` method.
+     */
+    _data: GeoJSON;
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
@@ -133,6 +139,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
             this.loaded = {};
 
+            // Save the actual GeoJSON data on the instance to make it possible to retrieve it with `getData`.
+            this._data = data;
+
             const result = {} as GeoJSONWorkerSourceLoadDataResult;
             if (perf) {
                 const resourceTimingData = perf.finish();
@@ -151,6 +160,15 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             }
             throw err;
         }
+    }
+
+    /**
+     * Allows to get the source's actual GeoJSON.
+     *
+     * @returns a promise which is resolved with the source's actual GeoJSON
+     */
+    async getData(): Promise<GeoJSON> {
+        return this._data;
     }
 
     /**
