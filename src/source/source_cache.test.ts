@@ -1,4 +1,5 @@
 import {SourceCache} from './source_cache';
+import {Map} from '../ui/map';
 import {Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
@@ -1184,8 +1185,40 @@ describe('SourceCache#_updateRetainedTiles', () => {
 
     });
 
-    test('Only retain loaded parent tile when zooming in', () => {
+    test('Retain, then cancel loading tiles when zooming in', () => {
         const sourceCache = createSourceCache();
+        // Disabling pending tile canceling (thus retaining) in Map mock:
+        const map = {cancelPendingTileRequestsWhileZooming: false} as Map;
+        sourceCache.onAdd(map);
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+
+        let idealTiles = [new OverscaledTileID(9, 0, 9, 0, 0), new OverscaledTileID(9, 0, 9, 1, 0)];
+        sourceCache._updateRetainedTiles(idealTiles, 9);
+        idealTiles = [new OverscaledTileID(10, 0, 10, 0, 0), new OverscaledTileID(10, 0, 10, 1, 0)];
+        let retained = sourceCache._updateRetainedTiles(idealTiles, 10);
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(9, 0, 9, 0, 0).key,    // retained
+            new OverscaledTileID(10, 0, 10, 0, 0).key,
+            new OverscaledTileID(10, 0, 10, 1, 0).key
+        ]);
+
+        // Canceling pending tiles now via runtime map property:
+        map.cancelPendingTileRequestsWhileZooming = true;
+        retained = sourceCache._updateRetainedTiles(idealTiles, 10);
+        // Parent loading tiles from z=9 not retained:
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(10, 0, 10, 0, 0).key,
+            new OverscaledTileID(10, 0, 10, 1, 0).key
+        ]);
+    });
+
+    test('Cancel, then retain, then cancel loading tiles when zooming in', () => {
+        const sourceCache = createSourceCache();
+        // Applying tile canceling default behavior in Map mock:
+        const map = {cancelPendingTileRequestsWhileZooming: true} as Map;
+        sourceCache.onAdd(map);
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loading';
         };
@@ -1203,6 +1236,19 @@ describe('SourceCache#_updateRetainedTiles', () => {
         expect(Object.keys(retained).sort()).toEqual(
             idealTiles.map((tile) => tile.key).sort()
         );
+
+        // Stopping tile canceling via runtime map property:
+        map.cancelPendingTileRequestsWhileZooming = false;
+        retained = sourceCache._updateRetainedTiles(idealTiles, 10);
+
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(9, 0, 9, 0, 0).key,    // retained
+            new OverscaledTileID(10, 0, 10, 0, 0).key,
+            new OverscaledTileID(10, 0, 10, 1, 0).key
+        ]);
+
+        // Resuming tile canceling via runtime map property:
+        map.cancelPendingTileRequestsWhileZooming = true;
 
         const loadedTiles = idealTiles;
         loadedTiles.forEach(t => {
@@ -1612,7 +1658,7 @@ describe('source cache loaded', () => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType !== 'idle') {
                 expect(sourceCache.loaded()).toBeFalsy();
-            // 'idle' emission when source bounds are outside of viewport bounds
+                // 'idle' emission when source bounds are outside of viewport bounds
             } else {
                 expect(sourceCache.loaded()).toBeTruthy();
                 done();

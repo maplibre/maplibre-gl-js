@@ -24,7 +24,7 @@ describe('loadGeometry', () => {
 
         // Use a custom console.warn to count warnings
         const warn = console.warn;
-        console.warn = function(warning) {
+        console.warn = (warning) => {
             if (warning.match(/Geometry exceeds allowed extent, reduce your vector tile buffer size/)) {
                 numWarnings++;
             }

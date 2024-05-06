@@ -54,7 +54,7 @@ Check out the features through [examples](https://maplibre.org/maplibre-gl-js/do
 
 Want an example? Have a look at the official [MapLibre GL JS Documentation](https://maplibre.org/maplibre-gl-js/docs/examples/).
 
-Use MapLibre GL JS bindings for React (https://visgl.github.io/react-map-gl/docs/get-started#using-with-a-compatible-fork) and Angular (https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
+Use MapLibre GL JS bindings for [React](https://visgl.github.io/react-map-gl/docs/get-started) and [Angular](https://github.com/maplibre/ngx-maplibre-gl). Find more at [awesome-maplibre](https://github.com/maplibre/awesome-maplibre).
 
 <br />
 
@@ -105,6 +105,8 @@ Silver:
 <a href="https://www.radar.com/"><img src="https://maplibre.org/img/radar-logo.svg" alt="Logo Radar" width="25%"/></a>
 
 <a href="https://www.microsoft.com/"><img src="https://maplibre.org/img/msft-logo.svg" alt="Logo MSFT" width="25%"/></a>
+
+<a href="https://www.mappedin.com/"><img src="https://maplibre.org/img/mappedin-logo.svg" alt="Logo mappedin" width="25%"/></a>
 
 Backers and Supporters:
 

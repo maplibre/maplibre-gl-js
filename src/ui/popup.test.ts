@@ -533,11 +533,13 @@ describe('popup', () => {
         expect(popupContainer.classList.contains('some')).toBeTruthy();
         expect(popupContainer.classList.contains('classes')).toBeTruthy();
 
-        popup.addClassName('addedClass');
+        const addClassNameMethodPopupInstance = popup.addClassName('addedClass');
         expect(popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(addClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
-        popup.removeClassName('addedClass');
+        const removeClassNameMethodPopupInstance = popup.removeClassName('addedClass');
         expect(!popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(removeClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         popup.toggleClassName('toggle');
         expect(popupContainer.classList.contains('toggle')).toBeTruthy();
