@@ -1897,7 +1897,7 @@ describe('SourceCache#findLoadedSibling', () => {
 
 describe('SourceCache#reload', () => {
     test('before loaded', () => {
-        const sourceCache = createSourceCache({ noLoad: true });
+        const sourceCache = createSourceCache({noLoad: true});
         sourceCache.onAdd(undefined);
 
         expect(() => {
