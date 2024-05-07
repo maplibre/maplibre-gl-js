@@ -164,7 +164,7 @@ describe('marker', () => {
             .addTo(map)
             .setPopup(new Popup());
 
-        await sleep(500);
+        await sleep(100);
         marker.togglePopup();
 
         expect(marker.getPopup().isOpen()).toBeTruthy();
@@ -193,7 +193,7 @@ describe('marker', () => {
             .addTo(map)
             .setPopup(new Popup());
 
-        await sleep(500);
+        await sleep(100);
 
         // popup not initially open
         expect(marker.getPopup().isOpen()).toBeFalsy();
@@ -213,7 +213,7 @@ describe('marker', () => {
             .addTo(map)
             .setPopup(new Popup());
 
-        await sleep(500);
+        await sleep(100);
 
         // popup not initially open
         expect(marker.getPopup().isOpen()).toBeFalsy();
@@ -306,7 +306,7 @@ describe('marker', () => {
             .setPopup(new Popup().setText('Test'))
             .addTo(map);
 
-        await sleep(500);
+        await sleep(100);
 
         // open the popup
         marker.togglePopup();
@@ -377,7 +377,7 @@ describe('marker', () => {
             .setPopup(new Popup().setText('Test'))
             .addTo(map);
 
-        await sleep(500);
+        await sleep(100);
 
         marker._pos = new Point(2999, 242);
         marker._lngLat = map.unproject(marker._pos);
@@ -397,7 +397,7 @@ describe('marker', () => {
             .togglePopup()
             .togglePopup();
 
-        await sleep(500);
+        await sleep(100);
         marker._pos = new Point(2999, 242);
         marker._lngLat = map.unproject(marker._pos);
         marker.togglePopup();
@@ -897,7 +897,7 @@ describe('marker', () => {
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map);
-        await sleep(500);
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('1');
         map.remove();
     });
@@ -907,7 +907,7 @@ describe('marker', () => {
         const marker = new Marker({opacity: '0.7'})
             .setLngLat([0, 0])
             .addTo(map);
-        await sleep(500);
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('.7');
         map.remove();
     });
@@ -946,21 +946,21 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
-        await sleep(500);
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
-        await sleep(500);
+        await sleep(100);
         map.fire('moveend');
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
-        await sleep(500);
+        await sleep(100);
         map.fire('terrain');
         expect(marker.getElement().style.opacity).toMatch('1');
 
@@ -978,7 +978,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95
         } as any as Terrain;
-        await sleep(500);
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -996,7 +996,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
         } as any as Terrain;
-        await sleep(500);
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('.7');
@@ -1014,7 +1014,7 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .92
         } as any as Terrain;
-        await sleep(500);
+        await sleep(100);
         map.fire('terrain');
 
         expect(marker.getElement().style.opacity).toMatch('0.3');
@@ -1047,7 +1047,7 @@ describe('marker', () => {
             .addTo(map)
             .setPopup(new Popup());
 
-        await sleep(500);
+        await sleep(100);
         marker.togglePopup();
 
         expect(marker._popup.isOpen()).toBeTruthy();
@@ -1060,7 +1060,7 @@ describe('marker', () => {
         } as any as Terrain;
         map.fire('terrain');
 
-        await sleep(500);
+        await sleep(100);
 
         expect(marker._popup?.isOpen()).toBeFalsy();
         map.remove();
@@ -1081,7 +1081,7 @@ describe('marker', () => {
         } as any as Terrain;
         map.fire('terrain');
 
-        await sleep(500);
+        await sleep(100);
 
         marker.togglePopup();
 

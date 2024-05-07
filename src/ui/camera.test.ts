@@ -1219,10 +1219,10 @@ describe('#flyTo', () => {
             .on('move', (d) => { moved = d.data; })
             .on('rotate', (d) => { rotated = d.data; })
             .on('pitch', (d) => { pitched = d.data; })
-            .on('moveend', function(d) {
-                expect(this._zooming).toBeFalsy();
-                expect(this._panning).toBeFalsy();
-                expect(this._rotating).toBeFalsy();
+            .on('moveend', (d) => {
+                expect(camera._zooming).toBeFalsy();
+                expect(camera._panning).toBeFalsy();
+                expect(camera._rotating).toBeFalsy();
 
                 expect(movestarted).toBe('ok');
                 expect(moved).toBe('ok');
@@ -1287,10 +1287,10 @@ describe('#flyTo', () => {
             .on('pitchstart', (d) => { pitchstarted = d.data; })
             .on('pitch', (d) => { pitched = d.data; })
             .on('pitchend', (d) => { pitchended = d.data; })
-            .on('moveend', function(d) {
-                expect(this._zooming).toBeFalsy();
-                expect(this._panning).toBeFalsy();
-                expect(this._rotating).toBeFalsy();
+            .on('moveend', (d) => {
+                expect(camera._zooming).toBeFalsy();
+                expect(camera._panning).toBeFalsy();
+                expect(camera._rotating).toBeFalsy();
 
                 expect(movestarted).toBe('ok');
                 expect(moved).toBe('ok');

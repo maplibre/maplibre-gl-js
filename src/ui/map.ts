@@ -714,7 +714,6 @@ export class Map extends Camera {
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
      * Valid values are `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. Defaults to `'top-right'`.
-     * @returns `this`
      * @example
      * Add zoom and rotation controls to the map.
      * ```ts
@@ -752,7 +751,6 @@ export class Map extends Camera {
      * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
      * @param control - The {@link IControl} to remove.
-     * @returns `this`
      * @example
      * ```ts
      * // Define a new navigation control.
@@ -813,7 +811,6 @@ export class Map extends Camera {
      * @param eventData - Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
-     * @returns `this`
      * @example
      * Resize the map when the map container is shown after being initially hidden with CSS.
      * ```ts
@@ -933,7 +930,6 @@ export class Map extends Camera {
      * remaining within the bounds.
      *
      * @param bounds - The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
-     * @returns `this`
      * @example
      * Define bounds that conform to the `LngLatBoundsLike` object as set the max bounds.
      * ```ts
@@ -963,7 +959,6 @@ export class Map extends Camera {
      *
      * @param minZoom - The minimum zoom level to set (-2 - 24).
      * If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
-     * @returns `this`
      * @example
      * ```ts
      * map.setMinZoom(12.25);
@@ -1004,7 +999,6 @@ export class Map extends Camera {
      *
      * @param maxZoom - The maximum zoom level to set.
      * If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
-     * @returns `this`
      * @example
      * ```ts
      * map.setMaxZoom(18.75);
@@ -1045,7 +1039,6 @@ export class Map extends Camera {
      *
      * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
-     * @returns `this`
      */
     setMinPitch(minPitch?: number | null): Map {
 
@@ -1082,7 +1075,6 @@ export class Map extends Camera {
      *
      * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
-     * @returns `this`
      */
     setMaxPitch(maxPitch?: number | null): Map {
 
@@ -1137,7 +1129,6 @@ export class Map extends Camera {
      * map and the other on the left edge of the map) at every zoom level.
      *
      * `undefined` is treated as `true`, `null` is treated as `false`.
-     * @returns `this`
      * @example
      * ```ts
      * map.setRenderWorldCopies(true);
@@ -1173,7 +1164,7 @@ export class Map extends Camera {
      * @returns The {@link LngLat} corresponding to `point`.
      * @example
      * ```ts
-     * map.on('click', function(e) {
+     * map.on('click', (e) => {
      *   // When the map is clicked, get the geographic coordinate.
      *   let coordinate = map.unproject(e.point);
      * });
@@ -1336,12 +1327,11 @@ export class Map extends Camera {
      * an array of the matching features. If `layer` is not supplied, the event will not have a `features` property.
      * Please note that many event types are not compatible with the optional `layer` parameter.
      * @param listener - The function to be called when the event is fired.
-     * @returns `this`
      * @example
      * ```ts
      * // Set an event listener that will fire
      * // when the map has finished loading
-     * map.on('load', function() {
+     * map.on('load', () => {
      *   // Once the map has finished loading,
      *   // add a new layer
      *   map.addLayer({
@@ -1387,7 +1377,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
-     * @returns `this`
      */
     on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     /**
@@ -1395,7 +1384,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
-     * @returns `this`
      */
     on(type: keyof MapEventType | string, listener: Listener): this;
     on(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
@@ -1442,7 +1430,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
-     * @returns `this`
      */
     once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
     /**
@@ -1450,7 +1437,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
-     * @returns `this`
      */
     once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
     once(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
@@ -1475,7 +1461,6 @@ export class Map extends Camera {
      * @param type - The event type previously used to install the listener.
      * @param layer - The layer ID or listener previously used to install the listener.
      * @param listener - The function previously installed as a listener.
-     * @returns `this`
      */
     off<T extends keyof MapLayerEventType>(
         type: T,
@@ -1487,7 +1472,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The function previously installed as a listener.
-     * @returns `this`
      */
     off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     /**
@@ -1495,7 +1479,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The function previously installed as a listener.
-     * @returns `this`
      */
     off(type: keyof MapEventType | string, listener: Listener): this;
     off(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
@@ -1670,7 +1653,6 @@ export class Map extends Camera {
      * @param style - A JSON object conforming to the schema described in the
      * [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
      * @param options - The options object.
-     * @returns `this`
      *
      * @example
      * ```ts
@@ -1726,8 +1708,6 @@ export class Map extends Camera {
      *
      * @param transformRequest - A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
      * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
-     *
-     * @returns `this`
      *
      * @example
      * ```ts
@@ -1861,7 +1841,6 @@ export class Map extends Camera {
      * @param source - The source object, conforming to the
      * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/sources) or
      * {@link CanvasSourceSpecification}.
-     * @returns `this`
      * @example
      * ```ts
      * map.addSource('my-data', {
@@ -1922,7 +1901,6 @@ export class Map extends Camera {
      * Triggers the `terrain` event.
      *
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setTerrain({ source: 'terrain' });
@@ -2016,7 +1994,6 @@ export class Map extends Camera {
      * Removes a source from the map's style.
      *
      * @param id - The ID of the source to remove.
-     * @returns `this`
      * @example
      * ```ts
      * map.removeSource('bathymetry-data');
@@ -2031,7 +2008,7 @@ export class Map extends Camera {
      * Returns the source with the specified ID in the map's style.
      *
      * This method is often used to update a source using the instance members for the relevant
-     * source type as defined in [Sources](#sources).
+     * source type as defined in classes that derive from {@link Source}.
      * For example, setting the `data` for a GeoJSON source or updating the `url` and `coordinates`
      * of an image source.
      *
@@ -2067,27 +2044,21 @@ export class Map extends Camera {
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * // If the style's sprite does not already contain an image with ID 'cat',
      * // add the image 'cat-icon.png' to the style's sprite with the ID 'cat'.
-     * map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/400px-Cat_silhouette.svg.png', function(error, image) {
-     *    if (error) throw error;
-     *    if (!map.hasImage('cat')) map.addImage('cat', image);
-     * });
+     * const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/400px-Cat_silhouette.svg.png');
+     * if (!map.hasImage('cat')) map.addImage('cat', image.data);
      *
      * // Add a stretchable image that can be used with `icon-text-fit`
      * // In this example, the image is 600px wide by 400px high.
-     * map.loadImage('https://upload.wikimedia.org/wikipedia/commons/8/89/Black_and_White_Boxed_%28bordered%29.png', function(error, image) {
-     *    if (error) throw error;
-     *    if (!map.hasImage('border-image')) {
-     *      map.addImage('border-image', image, {
-     *          content: [16, 16, 300, 384], // place text over left half of image, avoiding the 16px border
-     *          stretchX: [[16, 584]], // stretch everything horizontally except the 16px border
-     *          stretchY: [[16, 384]], // stretch everything vertically except the 16px border
-     *      });
-     *    }
+     * const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/8/89/Black_and_White_Boxed_%28bordered%29.png');
+     * if (map.hasImage('border-image')) return;
+     * map.addImage('border-image', image.data, {
+     *     content: [16, 16, 300, 384], // place text over left half of image, avoiding the 16px border
+     *     stretchX: [[16, 584]], // stretch everything horizontally except the 16px border
+     *     stretchY: [[16, 384]], // stretch everything vertically except the 16px border
      * });
      * ```
      * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
@@ -2156,7 +2127,6 @@ export class Map extends Camera {
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
-     * @returns `this`
      * @example
      * ```ts
      * // If an image with the ID 'cat' already exists in the style's sprite,
@@ -2312,8 +2282,6 @@ export class Map extends Camera {
      * If this argument is not specified, the layer will be appended to the end of the layers array
      * and appear visually above all other layers.
      *
-     * @returns `this`
-     *
      * @example
      * Add a circle layer with a vector source
      * ```ts
@@ -2387,7 +2355,6 @@ export class Map extends Camera {
      *
      * @param id - The ID of the layer to move.
      * @param beforeId - The ID of an existing layer to insert the new layer before. When viewing the map, the `id` layer will appear beneath the `beforeId` layer. If `beforeId` is omitted, the layer will be appended to the end of the layers array and appear above all other layers on the map.
-     * @returns `this`
      *
      * @example
      * Move a layer with ID 'polygon' before the layer with ID 'country-label'. The `polygon` layer will appear beneath the `country-label` layer on the map.
@@ -2406,7 +2373,6 @@ export class Map extends Camera {
      * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
      * @param id - The ID of the layer to remove
-     * @returns `this`
      *
      * @example
      * If a layer with ID 'state-data' exists, remove it.
@@ -2465,7 +2431,6 @@ export class Map extends Camera {
      * @param layerId - The ID of the layer to which the zoom extent will be applied.
      * @param minzoom - The minimum zoom to set (0-24).
      * @param maxzoom - The maximum zoom to set (0-24).
-     * @returns `this`
      *
      * @example
      * ```ts
@@ -2492,7 +2457,6 @@ export class Map extends Camera {
      * @param filter - The filter, conforming to the MapLibre Style Specification's
      * [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
      * @param options - Options object.
-     * @returns `this`
      *
      * @example
      * Display only features with the 'name' property 'USA'
@@ -2535,7 +2499,6 @@ export class Map extends Camera {
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * Pass `null` to unset the existing value.
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
@@ -2566,7 +2529,6 @@ export class Map extends Camera {
      * @param name - The name of the layout property to set.
      * @param value - The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * @param options - The options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
@@ -2593,7 +2555,6 @@ export class Map extends Camera {
      *
      * @param glyphsUrl - Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
@@ -2620,7 +2581,6 @@ export class Map extends Camera {
      * @param id - The ID of the sprite to add. Must not conflict with existing sprites.
      * @param url - The URL to load the sprite from
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.addSprite('sprite-two', 'http://example.com/sprite-two');
@@ -2640,7 +2600,6 @@ export class Map extends Camera {
      * Removes the sprite from the map's style. Fires the `style` event.
      *
      * @param id - The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
-     * @returns `this`
      * @example
      * ```ts
      * map.removeSprite('sprite-two');
@@ -2667,7 +2626,6 @@ export class Map extends Camera {
      *
      * @param spriteUrl - Sprite URL to set.
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setSprite('YOUR_SPRITE_URL');
@@ -2688,7 +2646,6 @@ export class Map extends Camera {
      *
      * @param light - Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/light).
      * @param options - Options object.
-     * @returns `this`
      *
      * @example
      * ```ts
@@ -2727,13 +2684,12 @@ export class Map extends Camera {
      * @param feature - Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param state - A set of key-value pairs. The values should be valid JSON types.
-     * @returns `this`
      *
      * @example
      * ```ts
      * // When the mouse moves over the `my-layer` layer, update
      * // the feature state for the feature under the mouse
-     * map.on('mousemove', 'my-layer', function(e) {
+     * map.on('mousemove', 'my-layer', (e) => {
      *   if (e.features.length > 0) {
      *     map.setFeatureState({
      *       source: 'my-source',
@@ -2762,7 +2718,6 @@ export class Map extends Camera {
      * @param target - Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
      * Feature objects returned from {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param key - (optional) The key in the feature state to reset.
-     * @returns `this`
      * @example
      * Reset the entire state object for all features in the `my-source` source
      * ```ts
@@ -2776,7 +2731,7 @@ export class Map extends Camera {
      * reset the entire state object for the
      * feature under the mouse
      * ```ts
-     * map.on('mouseleave', 'my-layer', function(e) {
+     * map.on('mouseleave', 'my-layer', (e) => {
      *   map.removeFeatureState({
      *     source: 'my-source',
      *     sourceLayer: 'my-source-layer',
@@ -2790,7 +2745,7 @@ export class Map extends Camera {
      * reset only the `hover` key-value pair in the
      * state for the feature under the mouse
      * ```ts
-     * map.on('mouseleave', 'my-layer', function(e) {
+     * map.on('mouseleave', 'my-layer', (e) => {
      *   map.removeFeatureState({
      *     source: 'my-source',
      *     sourceLayer: 'my-source-layer',
@@ -2819,7 +2774,7 @@ export class Map extends Camera {
      * When the mouse moves over the `my-layer` layer,
      * get the feature state for the feature under the mouse
      * ```ts
-     * map.on('mousemove', 'my-layer', function(e) {
+     * map.on('mousemove', 'my-layer', (e) => {
      *   if (e.features.length > 0) {
      *     map.getFeatureState({
      *       source: 'my-source',
@@ -3005,7 +2960,6 @@ export class Map extends Camera {
      *
      * @param updateStyle - mark the map's style for reprocessing as
      * well as its sources
-     * @returns `this`
      */
     _update(updateStyle?: boolean) {
         if (!this.style || !this.style._loaded) return this;
@@ -3043,8 +2997,6 @@ export class Map extends Camera {
      * - A transition is in progress
      *
      * @param paintStartTimeStamp - The time when the animation frame began executing.
-     *
-     * @returns `this`
      */
     _render(paintStartTimeStamp: number) {
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
@@ -3159,7 +3111,6 @@ export class Map extends Camera {
 
     /**
      * Force a synchronous redraw of the map.
-     * @returns `this`
      * @example
      * ```ts
      * map.redraw();

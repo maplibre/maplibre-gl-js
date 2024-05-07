@@ -24,7 +24,7 @@ const assignEvents = (handler: DragHandler<DragPanResult, MouseEvent>) => {
     handler.mousedown = handler.dragStart;
     handler.mousemoveWindow = handler.dragMove;
     handler.mouseup = handler.dragEnd;
-    handler.contextmenu = function(e: MouseEvent) {
+    handler.contextmenu = (e: MouseEvent) => {
         e.preventDefault();
     };
 };
