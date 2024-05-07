@@ -1,5 +1,6 @@
 ## main
 - Update Popup methods `addClass` & `removeClass` to return instance of Popup ([#3975](https://github.com/maplibre/maplibre-gl-js/pull/3975))
+- Allow cross-fading between raster tile source updates at the same zoom level ([#4072](https://github.com/maplibre/maplibre-gl-js/pull/4072))
 
 ### ✨ Features and improvements
 - _...Add new stuff here..._
@@ -22,7 +23,6 @@
 - Fix ScaleControl options should be optional. ([#4002](https://github.com/maplibre/maplibre-gl-js/pull/4002))
 - Fix race condition in `SourceCache` that makes unit tests unstable. Eliminate a redundant 'visibility' event fired from Style class. ([#3992](https://github.com/maplibre/maplibre-gl-js/issues/3992))
 - Fix paint property not being updated by setPaintProperty ([#2651](https://github.com/maplibre/maplibre-gl-js/issues/2651))
-- Allow cross-fading between raster tile source updates at the same zoom level ([#4072](https://github.com/maplibre/maplibre-gl-js/pull/4072))
 
 ## 4.1.2
 
