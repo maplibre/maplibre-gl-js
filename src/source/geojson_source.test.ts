@@ -403,6 +403,28 @@ describe('GeoJSONSource#update', () => {
     });
 });
 
+describe('GeoJSONSource#getData', () => {
+    const mapStub = {
+        _requestManager: {
+            transformRequest: (url) => { return {url}; }
+        }
+    } as any;
+    test('sends a message with a correct type to the worker and forwards the data provided returned byit', async () => {
+        const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
+            sendAsync(message) {
+                expect(message.type).toBe(MessageType.getData);
+                return Promise.resolve({});
+            }
+        }), undefined);
+        source.map = mapStub;
+
+        // This is a bit dumb test, as communication with the worker is mocked, and thus the worker always returns an
+        // empty object instead of returning the result of an actual computation.
+        await expect(source.getData()).resolves.toStrictEqual({});
+    });
+
+});
+
 describe('GeoJSONSource#serialize', () => {
     const mapStub = {
         _requestManager: {
