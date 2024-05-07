@@ -18,7 +18,6 @@ import type {LoadVectorTileResult} from './vector_tile_worker_source';
 import type {RequestParameters} from '../util/ajax';
 import {isUpdateableGeoJSON, type GeoJSONSourceDiff, applySourceDiff, toUpdateable, GeoJSONFeatureId} from './geojson_source_diff';
 import type {ClusterIDAndSource, GeoJSONWorkerSourceLoadDataResult, RemoveSourceParams} from '../util/actor_messages';
-import {GeoJSON} from 'geojson';
 
 /**
  * The geojson worker options that can be passed to the worker
@@ -65,12 +64,12 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * data may even need to be loaded via a URL). This promise, when resolved, indicates that the actual data in the
      * `_data` field is ready to be consumed.
      */
-    _pendingData: Promise<GeoJSON>;
+    _pendingData: Promise<GeoJSON.GeoJSON>;
     /**
      * This `_data` property holds the source's actual GeoJSON. It's updated each time the data is updated in the
      * `loadData` method.
      */
-    _data: GeoJSON;
+    _data: GeoJSON.GeoJSON;
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
@@ -175,7 +174,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      *
      * @returns a promise which is resolved with the source's actual GeoJSON
      */
-    async getData(): Promise<GeoJSON> {
+    async getData(): Promise<GeoJSON.GeoJSON> {
         // Await for the data loading to finish, and then return the actual data.
         await this._pendingData;
         return this._data;
