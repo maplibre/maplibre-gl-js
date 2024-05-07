@@ -61,9 +61,9 @@ type GeoJSONIndex = ReturnType<typeof geojsonvt> | Supercluster;
  */
 export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
-     * The actual GeoJSON takes some time to load (especially when its `data` property is a link to load the data from).
-     * This promise, when resolved, indicates the end of the loading process, thus making sure the `_data` field is
-     * properly instantiated.
+     * The actual GeoJSON takes some time to load (as there may be a need to parse a diff, or to apply filters, or the
+     * data may even need to be loaded via a URL). This promise, when resolved, indicates that the actual data in the
+     * `_data` field is ready to be consumed.
      */
     _pendingData: Promise<GeoJSON>;
     /**
@@ -123,7 +123,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         this._pendingRequest = new AbortController();
         try {
-            let data = await (this._pendingData = this.loadGeoJSON(params, this._pendingRequest));
+            this._pendingData = this.loadGeoJSON(params, this._pendingRequest);
+            let data = await this._pendingData;
+
             delete this._pendingRequest;
             if (typeof data !== 'object') {
                 throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
@@ -174,6 +176,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @returns a promise which is resolved with the source's actual GeoJSON
      */
     async getData(): Promise<GeoJSON> {
+        // Await for the data loading to finish, and then return the actual data.
         await this._pendingData;
         return this._data;
     }
