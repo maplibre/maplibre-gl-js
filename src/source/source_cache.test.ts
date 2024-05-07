@@ -1815,7 +1815,7 @@ describe('SourceCache#findLoadedSibling', () => {
             hasData() { return true; }
         } as any as Tile;
 
-        sourceCache._tiles[tile.tileID.key] = tile;
+        sourceCache.getTiles()[tile.tileID.key] = tile;
 
         expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 1, 0))).toBeNull();
         expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 0, 0))).toEqual(tile);
@@ -1830,11 +1830,11 @@ describe('SourceCache#findLoadedSibling', () => {
         sourceCache.updateCacheSize(tr);
 
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
-        sourceCache._cache.add(tile.tileID, tile);
+        sourceCache.getCache().add(tile.tileID, tile);
 
         expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 1, 0))).toBeNull();
         expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 0, 0))).toBe(tile);
-        expect(sourceCache._cache.order).toHaveLength(1);
+        expect(sourceCache.getCache().order).toHaveLength(1);
     });
 
     test('Search cache for loaded sibling tiles', () => {
@@ -1850,7 +1850,7 @@ describe('SourceCache#findLoadedSibling', () => {
                 tileID: id,
                 hasData() { return true; }
             } as any as Tile;
-            sourceCache._tiles[id.key] = tile;
+            sourceCache.getTiles()[id.key] = tile;
         };
 
         const tiles = [
@@ -1888,16 +1888,16 @@ describe('SourceCache#findLoadedSibling', () => {
             new OverscaledTileID(3, 0, 3, 2, 1)
         ];
 
-        expect(notLoadedTiles[0].key in sourceCache._loadedSiblingTiles).toBe(false);
-        expect(notLoadedTiles[1].key in sourceCache._loadedSiblingTiles).toBe(false);
-        expect(notLoadedTiles[2].key in sourceCache._loadedSiblingTiles).toBe(false);
-        expect(notLoadedTiles[3].key in sourceCache._loadedSiblingTiles).toBe(false);
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[0])).toBe(false);
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[1])).toBe(false);
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[2])).toBe(false);
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[3])).toBe(false);
     });
 });
 
 describe('SourceCache#reload', () => {
     test('before loaded', () => {
-        const sourceCache = createSourceCache({noLoad: true});
+        const sourceCache = createSourceCache({ noLoad: true });
         sourceCache.onAdd(undefined);
 
         expect(() => {
