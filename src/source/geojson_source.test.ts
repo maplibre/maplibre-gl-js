@@ -409,7 +409,7 @@ describe('GeoJSONSource#getData', () => {
             transformRequest: (url) => { return {url}; }
         }
     } as any;
-    test('sends a message with a correct type to the worker and forwards the data provided returned byit', async () => {
+    test('sends a message with a correct type to the worker and forwards the data provided returned by it', async () => {
         const source = new GeoJSONSource('id', {data: hawkHill} as GeoJSONSourceOptions, wrapDispatcher({
             sendAsync(message) {
                 expect(message.type).toBe(MessageType.getData);
