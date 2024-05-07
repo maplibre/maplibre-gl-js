@@ -39,13 +39,7 @@
                         }
                     };
                     // Update the drone symbol's location on the map
-                    const source = map.getSource('drone');
-                    source.setData(json);
-
-                    // Log the source's updated GeoJSON to the console
-                    source.getData().then((data) => {
-                        console.log(data);
-                    });
+                    map.getSource('drone').setData(json);
 
                     // Fly the map to the drone's current location
                     map.flyTo({
