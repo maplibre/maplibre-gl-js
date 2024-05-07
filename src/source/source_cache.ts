@@ -800,6 +800,14 @@ export class SourceCache extends Evented {
         }
     }
 
+    /**
+     * Update the cache of loaded sibling tiles
+     *
+     * Sibling tiles are tiles that share the same zoom level and
+     * x/y position but have different wrap values
+     * Maintaining sibling tile cache allows fading from old to new tiles
+     * of the same position and zoom level
+     */
     _updateLoadedSiblingTileCache() {
         this._loadedSiblingTiles = {};
 
