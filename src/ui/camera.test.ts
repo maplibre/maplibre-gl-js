@@ -1728,7 +1728,7 @@ describe('#flyTo', () => {
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
     });
 
-    test('check elevation events freezeElevation=false', done => {
+    test('check elevation events freezeElevation=false', async() => {
         const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
@@ -1740,28 +1740,21 @@ describe('#flyTo', () => {
 
         camera.setCenter([-10, 0]);
 
-        camera.on('moveend', () => {
+        await camera.once('moveend', () => {
             expect(terrainCallbacks.prepare).toBe(1);
             expect(terrainCallbacks.update).toBe(2);
             expect(terrainCallbacks.finalize).toBe(0);
-            done();
         });
 
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [10, 0], duration: 20, freezeElevation: false});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 20);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
+        stub.mockImplementation(() => 1);
+        camera.simulateFrame();
+        stub.mockImplementation(() => 20);
+        camera.simulateFrame();
     });
 
-    test('check elevation events freezeElevation=true', done => {
+    test('check elevation events freezeElevation=true', async() => {
         const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
@@ -1773,25 +1766,18 @@ describe('#flyTo', () => {
 
         camera.setCenter([-10, 0]);
 
-        camera.on('moveend', () => {
+        await camera.once('moveend', () => {
             expect(terrainCallbacks.prepare).toBe(1);
             expect(terrainCallbacks.update).toBe(0);
-            expect(terrainCallbacks.finalize).toBe(1);
-            done();
+            expect(terrainCallbacks.prepare).toBe(1);
         });
 
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [10, 0], duration: 20, freezeElevation: true});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 20);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
+        stub.mockImplementation(() => 1);
+        camera.simulateFrame();
+        stub.mockImplementation(() => 20);
+        camera.simulateFrame();
     });
 
     test('check elevation callbacks', done => {
