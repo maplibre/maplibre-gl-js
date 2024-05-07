@@ -61,10 +61,15 @@ type GeoJSONIndex = ReturnType<typeof geojsonvt> | Supercluster;
 export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     /**
      * The actual GeoJSON takes some time to load (as there may be a need to parse a diff, or to apply filters, or the
-     * data may even need to be loaded via a URL). This promise resolves with the ready-to-be-consumed GeoJSON data
-     * after all the necessary modifications applied.
+     * data may even need to be loaded via a URL). This promise, when resolved, indicates that the actual data in the
+     * `_data` field is ready to be consumed.
      */
     _pendingData: Promise<GeoJSON.GeoJSON>;
+    /**
+     * This `_data` property holds the source's actual GeoJSON. It's updated each time the data is updated in the
+     * `loadData` method.
+     */
+    _data: GeoJSON.GeoJSON;
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
@@ -118,12 +123,31 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         this._pendingRequest = new AbortController();
         try {
             this._pendingData = this.loadGeoJSON(params, this._pendingRequest);
+            let data = await this._pendingData;
+
+            delete this._pendingRequest;
+            if (typeof data !== 'object') {
+                throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
+            }
+            rewind(data, true);
+
+            if (params.filter) {
+                const compiled = createExpression(params.filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
+                if (compiled.result === 'error')
+                    throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
+
+                const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
+                data = {type: 'FeatureCollection', features};
+            }
 
             this._geoJSONIndex = params.cluster ?
-                new Supercluster(getSuperclusterOptions(params)).load((await this._pendingData as any).features) :
-                geojsonvt(await this._pendingData, params.geojsonVtOptions);
+                new Supercluster(getSuperclusterOptions(params)).load((data as any).features) :
+                geojsonvt(data, params.geojsonVtOptions);
 
             this.loaded = {};
+
+            // Save the actual GeoJSON data on the instance to make it possible to retrieve it with `getData`.
+            this._data = data;
 
             const result = {} as GeoJSONWorkerSourceLoadDataResult;
             if (perf) {
@@ -151,7 +175,9 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * @returns a promise which is resolved with the source's actual GeoJSON
      */
     async getData(): Promise<GeoJSON.GeoJSON> {
-        return this._pendingData;
+        // Await for the data loading to finish, and then return the actual data.
+        await this._pendingData;
+        return this._data;
     }
 
     /**
@@ -207,25 +233,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
             throw new Error(`Cannot update existing geojson data in ${params.source}`);
         }
         applySourceDiff(this._dataUpdateable, params.dataDiff, promoteId);
-
-        let data  = {type: 'FeatureCollection' as const, features: Array.from(this._dataUpdateable.values())};
-
-        delete this._pendingRequest;
-        if (typeof data !== 'object') {
-            throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
-        }
-        rewind(data, true);
-
-        if (params.filter) {
-            const compiled = createExpression(params.filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
-            if (compiled.result === 'error')
-                throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
-
-            const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
-            data = {type: 'FeatureCollection', features};
-        }
-
-        return data;
+        return {type: 'FeatureCollection', features: Array.from(this._dataUpdateable.values())};
     }
 
     async removeSource(_params: RemoveSourceParams): Promise<void> {
