@@ -240,12 +240,7 @@ export class GeoJSONSource extends Evented implements Source {
      */
     async getData(): Promise<GeoJSON> {
         const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
-
-        try {
-            return await this.actor.sendAsync({type: MessageType.getData, data: options});
-        } catch (err) {
-            this.fire(new ErrorEvent(err));
-        }
+        return await this.actor.sendAsync({type: MessageType.getData, data: options});
     }
 
     /**
