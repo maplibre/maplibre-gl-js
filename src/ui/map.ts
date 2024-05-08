@@ -1,7 +1,7 @@
 import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
-import packageJSON from '../../package.json' assert {type: 'json'};
+import packageJSON from '../../package.json' with {type: 'json'};
 import {GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
 import {RequestManager, ResourceType} from '../util/request_manager';
