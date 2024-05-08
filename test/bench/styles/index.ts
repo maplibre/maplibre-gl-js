@@ -1,5 +1,5 @@
 import locationsWithTileID from '../lib/locations_with_tile_id';
-import styleBenchmarkLocations from '../data/style-benchmark-locations.json' assert {type: 'json'};
+import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
 import StyleLayerCreate from '../benchmarks/style_layer_create';
 import Validate from '../benchmarks/style_validate';
 import Layout from '../benchmarks/layout';
