@@ -46,7 +46,7 @@ export type TerrainMesh = {
     segments: SegmentVector;
 }
 
- /**
+/**
  * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
  *
