@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import puppeteer from 'puppeteer';
-import packageJson from '../package.json' assert { type: 'json' };
+import packageJson from '../package.json' with { type: 'json' };
 
 const exampleName = process.argv[2];
 const examplePath = path.resolve('test', 'examples');

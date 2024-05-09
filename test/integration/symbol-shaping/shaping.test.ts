@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import {WritingMode, shapeIcon, shapeText, fitIconToText, PositionedIcon, Shaping} from '../../../src/symbol/shaping';
 import {ResolvedImage, Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
-import expectedJson from './tests/text-shaping-linebreak.json' assert {type: 'json'};
+import expectedJson from './tests/text-shaping-linebreak.json' with {type: 'json'};
 import {ImagePosition} from '../../../src/render/image_atlas';
 import {StyleImage} from '../../../src/style/style_image';
 
