@@ -1728,7 +1728,7 @@ describe('#flyTo', () => {
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
     });
 
-    test('check elevation events freezeElevation=false', async() => {
+    test('check elevation events freezeElevation=false', async () => {
         const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
