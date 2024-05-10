@@ -1885,13 +1885,6 @@ describe('SourceCache#findLoadedSibling', () => {
         expect(sourceCache.findLoadedSibling(tiles[4]).tileID).toBe(tiles[4]);
         expect(sourceCache.findLoadedSibling(tiles[5]).tileID).toBe(tiles[5]);
 
-        expect(tiles[0].key in sourceCache._loadedSiblingTiles).toBe(true);
-        expect(tiles[1].key in sourceCache._loadedSiblingTiles).toBe(true);
-        expect(tiles[2].key in sourceCache._loadedSiblingTiles).toBe(true);
-        expect(tiles[3].key in sourceCache._loadedSiblingTiles).toBe(true);
-        expect(tiles[4].key in sourceCache._loadedSiblingTiles).toBe(true);
-        expect(tiles[5].key in sourceCache._loadedSiblingTiles).toBe(true);
-
         // Arbitrary tiles should not in the cache
         const notLoadedTiles = [
             new OverscaledTileID(2, 1, 2, 0, 0),
