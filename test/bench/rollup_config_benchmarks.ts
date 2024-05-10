@@ -15,23 +15,24 @@ import {RollupOptions} from 'rollup';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
-if (process.env.MAPLIBRE_STYLES) {
-    async function loadStyle(styleURL): Promise<string> {
-        if (styleURL.match(/^(?!.*http).*\.json$/)) {
-            try {
-                const data = await fs.promises.readFile(styleURL, 'utf8');
-                return JSON.parse(data);
-            } catch (error) {
-                console.error(`Error loading style ${styleURL}: ${error}`);
-                return styleURL;
-            }
-        } else {
+const loadStyle = async (styleURL: string): Promise<string> => {
+    if (styleURL.match(/^(?!.*http).*\.json$/)) {
+        try {
+            const data = await fs.promises.readFile(styleURL, 'utf8');
+            return JSON.parse(data);
+        } catch (error) {
+            console.error(`Error loading style ${styleURL}: ${error}`);
             return styleURL;
         }
+    } else {
+        return styleURL;
     }
+};
+
+if (process.env.MAPLIBRE_STYLES) {
     const styleUrls = process.env.MAPLIBRE_STYLES.split(',');
-    Promise.all(styleUrls.map(loadStyle)).then((styles) => {
-        styles = styles;
+    Promise.all(styleUrls.map(loadStyle)).then((_styles) => {
+        styles = _styles;
     });
 }
 
