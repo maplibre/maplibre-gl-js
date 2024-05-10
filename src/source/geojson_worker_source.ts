@@ -59,6 +59,12 @@ type GeoJSONIndex = ReturnType<typeof geojsonvt> | Supercluster;
  * For a full example, see [mapbox-gl-topojson](https://github.com/developmentseed/mapbox-gl-topojson).
  */
 export class GeoJSONWorkerSource extends VectorTileWorkerSource {
+    /**
+     * The actual GeoJSON takes some time to load (as there may be a need to parse a diff, or to apply filters, or the
+     * data may even need to be loaded via a URL). This promise resolves with a ready-to-be-consumed GeoJSON which is
+     * ready to be returned by the `getData` method.
+     */
+    _pendingData: Promise<GeoJSON.GeoJSON>;
     _pendingRequest: AbortController;
     _geoJSONIndex: GeoJSONIndex;
     _dataUpdateable = new Map<GeoJSONFeatureId, GeoJSON.Feature>();
@@ -96,7 +102,7 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
      * preparatory method must be called before {@link GeoJSONWorkerSource#loadTile}
      * can correctly serve up tiles.
      *
-     * Defers to {@link GeoJSONWorkerSource#loadGeoJSON} for the fetching/parsing,
+     * Defers to {@link GeoJSONWorkerSource#loadAndProcessGeoJSON} for the pre-processing.
      *
      * When a `loadData` request comes in while a previous one is being processed,
      * the previous one is aborted.
@@ -111,25 +117,11 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
 
         this._pendingRequest = new AbortController();
         try {
-            let data = await this.loadGeoJSON(params, this._pendingRequest);
-            delete this._pendingRequest;
-            if (typeof data !== 'object') {
-                throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
-            }
-            rewind(data, true);
-
-            if (params.filter) {
-                const compiled = createExpression(params.filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
-                if (compiled.result === 'error')
-                    throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
-
-                const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
-                data = {type: 'FeatureCollection', features};
-            }
+            this._pendingData = this.loadAndProcessGeoJSON(params, this._pendingRequest);
 
             this._geoJSONIndex = params.cluster ?
-                new Supercluster(getSuperclusterOptions(params)).load((data as any).features) :
-                geojsonvt(data, params.geojsonVtOptions);
+                new Supercluster(getSuperclusterOptions(params)).load((await this._pendingData as any).features) :
+                geojsonvt(await this._pendingData, params.geojsonVtOptions);
 
             this.loaded = {};
 
@@ -154,6 +146,15 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
     }
 
     /**
+     * Allows to get the source's actual GeoJSON.
+     *
+     * @returns a promise which is resolved with the source's actual GeoJSON
+     */
+    async getData(): Promise<GeoJSON.GeoJSON> {
+        return this._pendingData;
+    }
+
+    /**
     * Implements {@link WorkerSource#reloadTile}.
     *
     * If the tile is loaded, uses the implementation in VectorTileWorkerSource.
@@ -171,6 +172,36 @@ export class GeoJSONWorkerSource extends VectorTileWorkerSource {
         } else {
             return this.loadTile(params);
         }
+    }
+
+    /**
+     * Fetch, parse and process GeoJSON according to the given params.
+     *
+     * Defers to {@link GeoJSONWorkerSource#loadGeoJSON} for the fetching and parsing.
+     *
+     * @param params - the parameters
+     * @param abortController - the abort controller that allows aborting this operation
+     * @returns a promise that is resolved with the processes GeoJSON
+     */
+    async loadAndProcessGeoJSON(params: LoadGeoJSONParameters, abortController: AbortController): Promise<GeoJSON.GeoJSON> {
+        let data = await this.loadGeoJSON(params, abortController);
+
+        delete this._pendingRequest;
+        if (typeof data !== 'object') {
+            throw new Error(`Input data given to '${params.source}' is not a valid GeoJSON object.`);
+        }
+        rewind(data, true);
+
+        if (params.filter) {
+            const compiled = createExpression(params.filter, {type: 'boolean', 'property-type': 'data-driven', overridable: false, transition: false} as any);
+            if (compiled.result === 'error')
+                throw new Error(compiled.value.map(err => `${err.key}: ${err.message}`).join(', '));
+
+            const features = (data as any).features.filter(feature => compiled.value.evaluate({zoom: 0}, feature));
+            data = {type: 'FeatureCollection', features};
+        }
+
+        return data;
     }
 
     /**

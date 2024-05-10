@@ -305,3 +305,95 @@ describe('loadData', () => {
         }} as LoadGeoJSONParameters)).resolves.toBeDefined();
     });
 });
+
+describe('getData', () => {
+    let server: FakeServer;
+    beforeEach(() => {
+        global.fetch = null;
+        server = fakeServer.create();
+    });
+    afterEach(() => {
+        server.restore();
+    });
+
+    const layers = [
+        {
+            id: 'layer1',
+            source: 'source1',
+            type: 'symbol',
+        },
+        {
+            id: 'layer2',
+            source: 'source2',
+            type: 'symbol',
+        }
+    ] as LayerSpecification[];
+
+    const geoJson = {
+        'type': 'Feature',
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [0, 0]
+        }
+    } as GeoJSON.GeoJSON;
+
+    const updateableGeoJson = {
+        type: 'Feature',
+        id: 'point',
+        geometry: {
+            type: 'Point',
+            coordinates: [0, 0],
+        },
+        properties: {},
+    } as GeoJSON.GeoJSON;
+
+    const layerIndex = new StyleLayerIndex(layers);
+
+    test('getData returns correct geojson when the source was loaded with geojson', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        await worker.loadData({source: 'source1', data: JSON.stringify(geoJson)} as LoadGeoJSONParameters);
+        await expect(worker.getData()).resolves.toStrictEqual(geoJson);
+    });
+
+    test('getData after a geojson network call returns actual loaded geojson', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        server.respondWith(request => {
+            request.respond(200, {'Content-Type': 'application/json'}, JSON.stringify(updateableGeoJson));
+        });
+
+        const load1Promise = worker.loadData({source: 'source1', request: {url: ''}} as LoadGeoJSONParameters);
+        server.respond();
+
+        await load1Promise;
+        await expect(worker.getData()).resolves.toStrictEqual(updateableGeoJson);
+    });
+
+    test('getData after diff updates returns updated geojson', async () => {
+        const worker = new GeoJSONWorkerSource(actor, layerIndex, []);
+
+        await worker.loadData({source: 'source1', data: JSON.stringify(updateableGeoJson)} as LoadGeoJSONParameters);
+        await expect(worker.loadData({source: 'source1', dataDiff: {
+            add: [{
+                type: 'Feature',
+                id: 'update_point',
+                geometry: {type: 'Point', coordinates: [0, 0]},
+                properties: {}
+            }]
+        }} as LoadGeoJSONParameters)).resolves.toBeDefined();
+
+        await expect(worker.getData()).resolves.toStrictEqual({
+            type: 'FeatureCollection',
+            features: [
+                {...updateableGeoJson},
+                {
+                    type: 'Feature',
+                    id: 'update_point',
+                    geometry: {type: 'Point', coordinates: [0, 0]},
+                    properties: {}
+                }
+            ]
+        });
+    });
+});
