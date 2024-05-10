@@ -12,6 +12,7 @@ import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
+import {TileCache} from './tile_cache';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -79,8 +80,19 @@ function createSourceCache(options?, used?) {
         maxzoom: 14,
         type: 'mock-source-type'
     }, options), {} as Dispatcher);
-    sc.used = typeof used === 'boolean' ? used : true;
-    return sc;
+    const scWithTestLogic = extend(sc, {
+        used: typeof used === 'boolean' ? used : true,
+        getCache(): TileCache {
+            return this._cache;
+        },
+        getTiles(): { [_: string]: Tile } {
+            return this._tiles;
+        },
+        updateLoadedSiblingTileCache(): void {
+            this._updateLoadedSiblingTileCache();
+        }
+    });
+    return scWithTestLogic;
 }
 
 afterEach(() => {
@@ -1863,7 +1875,7 @@ describe('SourceCache#findLoadedSibling', () => {
         ];
 
         tiles.forEach(t => mockTile(t));
-        sourceCache._updateLoadedSiblingTileCache();
+        sourceCache.updateLoadedSiblingTileCache();
 
         // Loaded tiles should be in the cache
         expect(sourceCache.findLoadedSibling(tiles[0]).tileID).toBe(tiles[0]);
