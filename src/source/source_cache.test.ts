@@ -1893,10 +1893,10 @@ describe('SourceCache#findLoadedSibling', () => {
             new OverscaledTileID(3, 0, 3, 2, 1)
         ];
 
-        expect(sourceCache.findLoadedSibling(notLoadedTiles[0])).toBe(null);
-        expect(sourceCache.findLoadedSibling(notLoadedTiles[1])).toBe(null);
-        expect(sourceCache.findLoadedSibling(notLoadedTiles[2])).toBe(null);
-        expect(sourceCache.findLoadedSibling(notLoadedTiles[3])).toBe(null);
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[0])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[1])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[2])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[3])).toBeNull();
     });
 });
 
