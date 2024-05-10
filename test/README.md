@@ -15,7 +15,7 @@ npm test
 
 Note that for Linux you'll need to prefix test commands with `xvfb-run -a` for example `xvfb-run -a npm run test`.
 Note that some tests rely on the built project and will not pass until you have run `npm run build-dist`.
-There are also some render tests that rely on the dev-build of the project, and they will not pass until you have run `npm run build-dev`.
+The render tests rely on the dev-build of the project, and they will not pass until you have run `npm run build-dev`. Don't forget to run it after changing your code as well.
 
 To run specific tests:
 
