@@ -494,9 +494,14 @@ export class SourceCache extends Evented {
         }
     }
 
-    _handleFadingTiles(
+    _updateCoveredAndRetainedTiles(
         retain: { [_: string]: OverscaledTileID },
-        minCoveringZoom: number, maxCoveringZoom: number, zoom: number, idealTileIDs: OverscaledTileID[], terrain?: Terrain) {
+        minCoveringZoom: number,
+        maxCoveringZoom: number,
+        zoom: number,
+        idealTileIDs: OverscaledTileID[],
+        terrain?: Terrain
+    ) {
         const tilesForFading: { [_: string]: OverscaledTileID } = {};
         const fadingTiles = {};
         const ids = Object.keys(retain);
@@ -652,7 +657,7 @@ export class SourceCache extends Evented {
         const retain = this._updateRetainedTiles(idealTileIDs, zoom);
 
         if (isRasterType(this._source.type)) {
-            this._handleFadingTiles(retain, minCoveringZoom, maxCoveringZoom, zoom, idealTileIDs, terrain);
+            this._updateCoveredAndRetainedTiles(retain, minCoveringZoom, maxCoveringZoom, zoom, idealTileIDs, terrain);
         }
 
         for (const retainedId in retain) {
