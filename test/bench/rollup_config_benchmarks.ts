@@ -17,8 +17,7 @@ let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own
 
 if (process.env.MAPLIBRE_STYLES) {
     styles = process.env.MAPLIBRE_STYLES
-        .split(',')
-        .map(style => style.match(/\.json$/) ? require(style) : style);
+        .split(',');
 }
 
 const gitDesc = execSync('git describe --all --always --dirty').toString().trim();
