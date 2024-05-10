@@ -15,25 +15,19 @@ import {RollupOptions} from 'rollup';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
-const loadStyle = async (styleURL: string): Promise<string> => {
+const loadStyle = (styleURL: string): string => {
     if (styleURL.match(/^(?!.*http).*\.json$/)) {
-        try {
-            const data = await fs.promises.readFile(styleURL, 'utf8');
-            return JSON.parse(data);
-        } catch (error) {
-            console.error(`Error loading style ${styleURL}: ${error}`);
-            return styleURL;
-        }
+        const data = fs.readFileSync(styleURL, 'utf8');
+        return JSON.parse(data);
     } else {
         return styleURL;
     }
 };
 
 if (process.env.MAPLIBRE_STYLES) {
-    const styleUrls = process.env.MAPLIBRE_STYLES.split(',');
-    Promise.all(styleUrls.map(loadStyle)).then((_styles) => {
-        styles = _styles;
-    });
+    styles = process.env.MAPLIBRE_STYLES
+        .split(',')
+        .map(loadStyle);
 }
 
 const gitDesc = execSync('git describe --all --always --dirty').toString().trim();
