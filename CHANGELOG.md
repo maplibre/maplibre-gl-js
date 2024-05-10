@@ -5,6 +5,7 @@
 
 ### 🐞 Bug fixes
 - Fix normalizeSpriteURL before transformRequest throwing an Error with relative URLs ([#3897](https://github.com/maplibre/maplibre-gl-js/issues/3897))
+- Fix return type of map.cameraForBounds ([#3760](https://github.com/maplibre/maplibre-gl-js/issues/3760))
 - _...Add new stuff here..._
 
 ## 4.2.0
