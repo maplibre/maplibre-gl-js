@@ -150,14 +150,6 @@ export class SourceCache extends Evented {
         return this._source;
     }
 
-    getCache(): TileCache {
-        return this._cache;
-    }
-
-    getTiles(): { [_: string]: Tile } {
-        return this._tiles;
-    }
-
     pause() {
         this._paused = true;
     }
