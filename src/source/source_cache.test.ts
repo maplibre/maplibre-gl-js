@@ -82,6 +82,9 @@ function createSourceCache(options?, used?) {
     }, options), {} as Dispatcher);
     const scWithTestLogic = extend(sc, {
         used: typeof used === 'boolean' ? used : true,
+        addTile(tileID: OverscaledTileID): Tile {
+            return this._addTile(tileID);
+        },
         getCache(): TileCache {
             return this._cache;
         },
@@ -1897,6 +1900,25 @@ describe('SourceCache#findLoadedSibling', () => {
         expect(sourceCache.findLoadedSibling(notLoadedTiles[1])).toBeNull();
         expect(sourceCache.findLoadedSibling(notLoadedTiles[2])).toBeNull();
         expect(sourceCache.findLoadedSibling(notLoadedTiles[3])).toBeNull();
+    });
+
+    test('Detect & skip previously loaded tile', () => {
+        const sourceCache = createSourceCache({});
+        sourceCache.onAdd(undefined);
+
+        expect(Object.keys(sourceCache.getTiles())).toHaveLength(0);
+
+        const moreTiles = [
+            new OverscaledTileID(1, 0, 1, 0, 0),
+            new OverscaledTileID(1, 0, 1, 0, 0), // Same as 1st tile
+            new OverscaledTileID(1, 0, 1, 1, 0),
+            new OverscaledTileID(2, 0, 2, 0, 0),
+        ];
+        moreTiles.forEach(OTileID => sourceCache.addTile(OTileID));
+        sourceCache.updateLoadedSiblingTileCache();
+
+        // Should have 3 total: the 1st of 2 dupes + the remaining 2
+        expect(Object.keys(sourceCache.getTiles())).toHaveLength(3);
     });
 });
 
