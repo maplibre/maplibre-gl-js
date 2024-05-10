@@ -1,10 +1,10 @@
 ## main
 - Update Popup methods `addClass` & `removeClass` to return instance of Popup ([#3975](https://github.com/maplibre/maplibre-gl-js/pull/3975))
-- Allow cross-fading between raster tile source updates at the same zoom level ([#4072](https://github.com/maplibre/maplibre-gl-js/pull/4072))
 
 ### ✨ Features and improvements
 - _...Add new stuff here..._
 - Add `getData` method for GeoJSON Sources to provide the possibility to obtain all the source's features ([#4082](https://github.com/maplibre/maplibre-gl-js/pull/4082))
+- Allow cross-fading between raster tile source updates at the same zoom level ([#4072](https://github.com/maplibre/maplibre-gl-js/pull/4072))
 
 ### 🐞 Bug fixes
 - Fix normalizeSpriteURL before transformRequest throwing an Error with relative URLs ([#3897](https://github.com/maplibre/maplibre-gl-js/issues/3897))
