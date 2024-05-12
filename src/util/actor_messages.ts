@@ -89,6 +89,7 @@ export const enum MessageType {
     getClusterChildren = 'GCC',
     getClusterLeaves = 'GCL',
     loadData = 'LD',
+    getData = 'GD',
     loadTile = 'LT',
     reloadTile = 'RT',
     getGlyphs = 'GG',
@@ -117,6 +118,7 @@ export type RequestResponseMessageMap = {
     [MessageType.getClusterChildren]: [ClusterIDAndSource, Array<GeoJSON.Feature>];
     [MessageType.getClusterLeaves]: [GetClusterLeavesParams, Array<GeoJSON.Feature>];
     [MessageType.loadData]: [LoadGeoJSONParameters, GeoJSONWorkerSourceLoadDataResult];
+    [MessageType.getData]: [LoadGeoJSONParameters, GeoJSON.GeoJSON];
     [MessageType.loadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.reloadTile]: [WorkerTileParameters, WorkerTileResult];
     [MessageType.getGlyphs]: [GetGlyphsParamerters, GetGlyphsResponse];

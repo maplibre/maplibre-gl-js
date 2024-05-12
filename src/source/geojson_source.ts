@@ -233,6 +233,16 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
+     * Allows to get the source's actual GeoJSON data.
+     *
+     * @returns a promise which resolves to the source's actual GeoJSON data
+     */
+    async getData(): Promise<GeoJSON.GeoJSON> {
+        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+        return this.actor.sendAsync({type: MessageType.getData, data: options});
+    }
+
+    /**
      * To disable/enable clustering on the source options
      * @param options - The options to set
      * @example
