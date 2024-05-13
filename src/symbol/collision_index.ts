@@ -580,16 +580,27 @@ export class CollisionIndex {
         // 7     3
         // |     |
         // 6--5--4
-        const points = [
-            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYmin)),
-            basePoint.add(vecEast.mult(offsetXhalf)).add(vecSouth.mult(offsetYmin)),
-            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYmin)),
-            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYhalf)),
-            basePoint.add(vecEast.mult(offsetXmax)).add(vecSouth.mult(offsetYmax)),
-            basePoint.add(vecEast.mult(offsetXhalf)).add(vecSouth.mult(offsetYmax)),
-            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYmax)),
-            basePoint.add(vecEast.mult(offsetXmin)).add(vecSouth.mult(offsetYhalf)),
+        const offsetsArray = [
+            offsetXmin, offsetYmin,
+            offsetXhalf, offsetYmin,
+            offsetXmax, offsetYmin,
+            offsetXmax, offsetYhalf,
+            offsetXmax, offsetYmax,
+            offsetXhalf, offsetYmax,
+            offsetXmin, offsetYmax,
+            offsetXmin, offsetYhalf
         ];
+
+        let points: Array<Point> = [];
+
+        for (let i = 0; i < offsetsArray.length; i += 2) {
+            const offsetX = offsetsArray[i];
+            const offsetY = offsetsArray[i + 1];
+            points.push(new Point(
+                basePoint.x + vecEast.x * offsetX + vecSouth.x * offsetY,
+                basePoint.y + vecEast.y * offsetX + vecSouth.y * offsetY
+            ));
+        }
 
         // Is any point of the collision shape visible on the globe (on beyond horizon)?
         let anyPointVisible = false;
