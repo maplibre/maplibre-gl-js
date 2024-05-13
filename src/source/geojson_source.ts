@@ -204,7 +204,6 @@ export class GeoJSONSource extends Evented implements Source {
      * Sets the GeoJSON data and re-renders the map.
      *
      * @param data - A GeoJSON data object or a URL to one. The latter is preferable in the case of large GeoJSON files.
-     * @returns `this`
      */
     setData(data: GeoJSON.GeoJSON | string): this {
         this._data = data;
@@ -226,7 +225,6 @@ export class GeoJSONSource extends Evented implements Source {
      * Updates are applied on a best-effort basis, updating an ID that does not exist will not result in an error.
      *
      * @param diff - The changes that need to be applied.
-     * @returns `this`
      */
     updateData(diff: GeoJSONSourceDiff): this {
         this._updateWorkerData(diff);
@@ -235,9 +233,18 @@ export class GeoJSONSource extends Evented implements Source {
     }
 
     /**
+     * Allows to get the source's actual GeoJSON data.
+     *
+     * @returns a promise which resolves to the source's actual GeoJSON data
+     */
+    async getData(): Promise<GeoJSON.GeoJSON> {
+        const options: LoadGeoJSONParameters = extend({type: this.type}, this.workerOptions);
+        return this.actor.sendAsync({type: MessageType.getData, data: options});
+    }
+
+    /**
      * To disable/enable clustering on the source options
      * @param options - The options to set
-     * @returns `this`
      * @example
      * ```ts
      * map.getSource('some id').setClusterOptions({cluster: false});
@@ -293,7 +300,7 @@ export class GeoJSONSource extends Evented implements Source {
      *   let pointCount = features[0].properties.point_count;
      *   let clusterSource = map.getSource('clusters');
      *
-     *   const features = await clusterSource.getClusterLeaves(clusterId, pointCount) 0, function(error, features) {
+     *   const features = await clusterSource.getClusterLeaves(clusterId, pointCount);
      *   // Print cluster leaves in the console
      *   console.log('Cluster leaves:', features);
      * });

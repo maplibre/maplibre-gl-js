@@ -10,11 +10,12 @@ import {Terrain} from '../render/terrain';
 /**
  * @internal
  * This class is a helper for the Terrain-class, it:
- *   - loads raster-dem tiles
- *   - manages all renderToTexture tiles.
- *   - caches previous rendered tiles.
- *   - finds all necessary renderToTexture tiles for a OverscaledTileID area
- *   - finds the corresponding raster-dem tile for OverscaledTileID
+ *
+ * - loads raster-dem tiles
+ * - manages all renderToTexture tiles.
+ * - caches previous rendered tiles.
+ * - finds all necessary renderToTexture tiles for a OverscaledTileID area
+ * - finds the corresponding raster-dem tile for OverscaledTileID
  */
 export class TerrainSourceCache extends Evented {
     /**

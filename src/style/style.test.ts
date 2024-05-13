@@ -616,7 +616,7 @@ describe('Style#update', () => {
             style.addLayer({id: 'third', source: 'source', type: 'fill', 'source-layer': 'source-layer'});
             style.removeLayer('second');
 
-            style.dispatcher.broadcast = function(key, value) {
+            style.dispatcher.broadcast = (key, value) => {
                 expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['first', 'third']);
                 expect(value['removedIds']).toEqual(['second']);
@@ -1319,7 +1319,7 @@ describe('Style#addLayer', () => {
 
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
-                style.sourceCaches['mapLibre'].reload = function() { done(); };
+                style.sourceCaches['mapLibre'].reload = () => { done(); };
                 style.addLayer(layer);
                 style.update({} as EvaluationParameters);
             }
@@ -1353,8 +1353,8 @@ describe('Style#addLayer', () => {
 
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
-                style.sourceCaches['mapLibre'].reload = function() { done(); };
-                style.sourceCaches['mapLibre'].clearTiles =  function() { done('test failed'); };
+                style.sourceCaches['mapLibre'].reload = () => { done(); };
+                style.sourceCaches['mapLibre'].clearTiles =  () => { done('test failed'); };
                 style.removeLayer('my-layer');
                 style.addLayer(layer);
                 style.update({} as EvaluationParameters);
@@ -1389,8 +1389,8 @@ describe('Style#addLayer', () => {
         }as LayerSpecification;
         style.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'content') {
-                style.sourceCaches['mapLibre'].reload =  function() { done('test failed'); };
-                style.sourceCaches['mapLibre'].clearTiles = function() { done(); };
+                style.sourceCaches['mapLibre'].reload =  () => { done('test failed'); };
+                style.sourceCaches['mapLibre'].clearTiles = () => { done(); };
                 style.removeLayer('my-layer');
                 style.addLayer(layer);
                 style.update({} as EvaluationParameters);
@@ -1945,7 +1945,7 @@ describe('Style#setFilter', () => {
         const style = createStyle();
 
         style.on('style.load', () => {
-            style.dispatcher.broadcast = function(key, value) {
+            style.dispatcher.broadcast = (key, value) => {
                 expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toEqual(['==', 'id', 1]);
@@ -1981,7 +1981,7 @@ describe('Style#setFilter', () => {
             style.setFilter('symbol', filter);
             style.update({} as EvaluationParameters); // flush pending operations
 
-            style.dispatcher.broadcast = function(key, value) {
+            style.dispatcher.broadcast = (key, value) => {
                 expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toEqual(['==', 'id', 2]);
@@ -2033,7 +2033,7 @@ describe('Style#setFilter', () => {
         const style = createStyle();
 
         style.on('style.load', () => {
-            style.dispatcher.broadcast = function(key, value) {
+            style.dispatcher.broadcast = (key, value) => {
                 expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'][0].id).toBe('symbol');
                 expect(value['layers'][0].filter).toBe('notafilter');
@@ -2074,7 +2074,7 @@ describe('Style#setLayerZoomRange', () => {
         const style = createStyle();
 
         style.on('style.load', () => {
-            style.dispatcher.broadcast = function(key, value) {
+            style.dispatcher.broadcast = (key, value) => {
                 expect(key).toBe(MessageType.updateLayers);
                 expect(value['layers'].map((layer) => { return layer.id; })).toEqual(['symbol']);
                 done();
@@ -2322,7 +2322,7 @@ describe('Style#queryRenderedFeatures', () => {
     });
 
     test('does not query sources not implicated by `layers` parameter', () => {
-        style.sourceCaches.mapLibre.queryRenderedFeatures = function() { expect(true).toBe(false); };
+        style.sourceCaches.mapLibre.queryRenderedFeatures = () => { expect(true).toBe(false); };
         style.queryRenderedFeatures([{x: 0, y: 0}], {layers: ['land--other']}, transform);
     });
 

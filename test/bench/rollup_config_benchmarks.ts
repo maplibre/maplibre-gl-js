@@ -15,10 +15,19 @@ import {RollupOptions} from 'rollup';
 
 let styles = ['https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL'];
 
+const loadStyle = (styleURL: string): string => {
+    if (styleURL.match(/^(?!.*http).*\.json$/)) {
+        const data = fs.readFileSync(styleURL, 'utf8');
+        return JSON.parse(data);
+    } else {
+        return styleURL;
+    }
+};
+
 if (process.env.MAPLIBRE_STYLES) {
     styles = process.env.MAPLIBRE_STYLES
         .split(',')
-        .map(style => style.match(/\.json$/) ? require(style) : style);
+        .map(loadStyle);
 }
 
 const gitDesc = execSync('git describe --all --always --dirty').toString().trim();
