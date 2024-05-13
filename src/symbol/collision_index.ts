@@ -542,9 +542,7 @@ export class CollisionIndex {
             const cos = Math.cos(angle);
             vecEast = new Point(cos, sin);
             vecSouth = new Point(-sin, cos);
-        }
-
-        if (!rotateWithMap && pitchWithMap) {
+        } else if (!rotateWithMap && pitchWithMap) {
             // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
             const angle = -this.transform.angle;
             const sin = Math.sin(angle);
