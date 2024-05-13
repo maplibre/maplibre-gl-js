@@ -409,7 +409,7 @@ function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, symbol
  * @param projectionContext - Projection context, used only for terrain's `getElevation`.
  */
 function projectTruncatedLineSegmentToLabelPlane(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4, projectionContext: SymbolProjectionContext) {
-    return projectTruncatedLineSegment(previousTilePoint, currentTilePoint, previousProjectedPoint, minimumLength, projectionMatrix, projectionContext);
+    return _projectTruncatedLineSegment(previousTilePoint, currentTilePoint, previousProjectedPoint, minimumLength, projectionMatrix, projectionContext);
 }
 
 /**
@@ -423,7 +423,7 @@ function projectTruncatedLineSegmentToLabelPlane(previousTilePoint: Point, curre
  * @param projectionContext - Projection context, used for terrain's `getElevation`, and either the `labelPlaneMatrix` or the map's special projection (mostly for globe).
  */
 function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionContext: SymbolProjectionContext) {
-    return projectTruncatedLineSegment(previousTilePoint, currentTilePoint, previousProjectedPoint, minimumLength, undefined, projectionContext);
+    return _projectTruncatedLineSegment(previousTilePoint, currentTilePoint, previousProjectedPoint, minimumLength, undefined, projectionContext);
 }
 
 /**
@@ -435,7 +435,7 @@ function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, current
  * Otherwise, either projects to label plane using the `labelPlaneMatrix`
  * or projects to viewport using the special map projection (mostly for globe) by calling {@link projectTileCoordinatesToViewport}.
  */
-function projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4 | undefined, projectionContext: SymbolProjectionContext) {
+function _projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4 | undefined, projectionContext: SymbolProjectionContext) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
     // If it did, that would mean our label extended all the way out from within the viewport to a (very distant)
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
