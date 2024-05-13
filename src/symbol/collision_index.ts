@@ -17,7 +17,7 @@ import type {
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
-import {ProjectionArgs} from '../symbol/projection';
+import {SymbolProjectionContext} from '../symbol/projection';
 import {Projection} from '../geo/projection/projection';
 import {getAABB} from '../util/util';
 
@@ -178,7 +178,7 @@ export class CollisionIndex {
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
         const lineOffsetY = symbol.lineOffsetY * labelPlaneFontScale;
 
-        const projectionArgs: ProjectionArgs = {
+        const projectionContext: SymbolProjectionContext = {
             getElevation,
             labelPlaneMatrix,
             lineVertexArray,
@@ -200,7 +200,7 @@ export class CollisionIndex {
             /*flip*/ false,
             symbol,
             false,
-            projectionArgs);
+            projectionContext);
 
         let collisionDetected = false;
         let inGrid = false;
@@ -229,7 +229,7 @@ export class CollisionIndex {
 
             // The path might need to be converted into screen space if a pitched map is used as the label space
             if (labelToScreenMatrix) {
-                const screenSpacePath = this.projectPathToScreenSpace(projectedPath, projectionArgs, labelToScreenMatrix);
+                const screenSpacePath = this.projectPathToScreenSpace(projectedPath, projectionContext, labelToScreenMatrix);
                 // Do not try to place collision circles if even one of the points is behind the camera.
                 // This is a plausible scenario with big camera pitch angles
                 if (screenSpacePath.some(point => point.signedDistanceFromCamera <= 0)) {
@@ -320,25 +320,25 @@ export class CollisionIndex {
         };
     }
 
-    projectPathToScreenSpace(projectedPath: Array<Point>, projectionArgs: ProjectionArgs, labelToScreenMatrix: mat4) {
+    projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext, labelToScreenMatrix: mat4) {
         let screenSpacePath: Array<{
             point: Point;
             signedDistanceFromCamera: number;
             isOccluded?: boolean;
         }>;
-        if (projectionArgs.projection.useSpecialProjectionForSymbols) {
+        if (projectionContext.projection.useSpecialProjectionForSymbols) {
             const inverseLabelPlaneMatrix = mat4.create();
-            mat4.invert(inverseLabelPlaneMatrix, projectionArgs.labelPlaneMatrix);
+            mat4.invert(inverseLabelPlaneMatrix, projectionContext.labelPlaneMatrix);
             screenSpacePath = projectedPath.map(p => {
-                const backProjected = projection.project(p, inverseLabelPlaneMatrix, projectionArgs.getElevation);
+                const backProjected = projection.project(p, inverseLabelPlaneMatrix, projectionContext.getElevation);
                 const projected = this.mapProjection.projectTileCoordinates(
                     backProjected.point.x,
                     backProjected.point.y,
-                    projectionArgs.unwrappedTileID,
-                    projectionArgs.getElevation
+                    projectionContext.unwrappedTileID,
+                    projectionContext.getElevation
                 );
-                projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionArgs.width;
-                projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionArgs.height;
+                projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionContext.width;
+                projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionContext.height;
                 return projected;
             });
             // We don't want to generate screenspace collision circles for parts of the line that
@@ -362,7 +362,7 @@ export class CollisionIndex {
             }
             screenSpacePath = screenSpacePath.slice(longestUnoccludedStart, longestUnoccludedStart + longestUnoccludedLength);
         } else {
-            screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix, projectionArgs.getElevation));
+            screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix, projectionContext.getElevation));
         }
         return screenSpacePath;
     }
