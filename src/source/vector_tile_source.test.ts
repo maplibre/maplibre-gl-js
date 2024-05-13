@@ -5,7 +5,7 @@ import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {RequestManager} from '../util/request_manager';
-import fixturesSource from '../../test/unit/assets/source.json' assert {type: 'json'};
+import fixturesSource from '../../test/unit/assets/source.json' with {type: 'json'};
 import {getMockDispatcher, getWrapDispatcher, sleep, waitForMetadataEvent} from '../util/test/util';
 import {Map} from '../ui/map';
 import {WorkerTileParameters} from './worker_source';

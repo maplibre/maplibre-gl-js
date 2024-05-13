@@ -23,7 +23,11 @@
     },
     "name": "MapLibre GL JS",
     "githubPages": false,
-    "hideInPageTOC": true,
     "hideBreadcrumbs": true,
-    "allReflectionsHaveOwnDocument": true
+    "hidePageHeader": true,
+    "expandParameters": true,
+    "parametersFormat": "table",
+    "textContentMappings": {
+        "title.memberPage": "{name}"
+    }
   }

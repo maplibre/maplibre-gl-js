@@ -56,7 +56,7 @@ export function easeCubicInOut(t: number): number {
  */
 export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: number) => number {
     const bezier = new UnitBezier(p1x, p1y, p2x, p2y);
-    return function(t: number) {
+    return (t: number) => {
         return bezier.solve(t);
     };
 }
@@ -317,47 +317,6 @@ export function findLineIntersection(a1: Point, a2: Point, b1: Point, b2: Point)
 
     // Find intersection by projecting out from origin of first segment
     return new Point(a1.x + (aInterpolation * aDeltaX), a1.y + (aInterpolation * aDeltaY));
-}
-
-/**
- * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
- * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
- * ordering.
- *
- * @param ring - Exterior or interior ring
- */
-export function calculateSignedArea(ring: Array<Point>): number {
-    let sum = 0;
-    for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
-        p1 = ring[i];
-        p2 = ring[j];
-        sum += (p2.x - p1.x) * (p1.y + p2.y);
-    }
-    return sum;
-}
-
-/**
- * Detects closed polygons, first + last point are equal
- *
- * @param points - array of points
- * @returns `true` if the points are a closed polygon
- */
-export function isClosedPolygon(points: Array<Point>): boolean {
-    // If it is 2 points that are the same then it is a point
-    // If it is 3 points with start and end the same then it is a line
-    if (points.length < 4)
-        return false;
-
-    const p1 = points[0];
-    const p2 = points[points.length - 1];
-
-    if (Math.abs(p1.x - p2.x) > 0 ||
-        Math.abs(p1.y - p2.y) > 0) {
-        return false;
-    }
-
-    // polygon simplification can produce polygons with zero area and more than 3 points
-    return Math.abs(calculateSignedArea(points)) > 0.01;
 }
 
 /**

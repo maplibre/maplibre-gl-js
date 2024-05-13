@@ -148,8 +148,6 @@ export class VideoSource extends ImageSource {
 
     /**
      * Sets the video's coordinates and re-renders the map.
-     *
-     * @returns `this`
      */
     prepare(): this {
         if (Object.keys(this.tiles).length === 0 || this.video.readyState < 2) {

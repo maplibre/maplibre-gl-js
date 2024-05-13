@@ -38,7 +38,7 @@ function performQueryOnFixture(fixture)  {
 
         const operationHandlers = {
             wait(map, params, done) {
-                const wait = function() {
+                const wait = () => {
                     if (map.loaded()) {
                         done();
                     } else {
@@ -48,7 +48,7 @@ function performQueryOnFixture(fixture)  {
                 wait();
             },
             idle(map, params, done) {
-                const idle = function() {
+                const idle = () => {
                     if (!map.isMoving()) {
                         done();
                     } else {
