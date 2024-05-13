@@ -1106,8 +1106,6 @@ export class Placement {
         };
 
         const boxArrays = this.collisionBoxArrays.get(bucket.bucketInstanceId);
-        const getElevation = this._getTerrainElevationFunc(tileID);
-        const posMatrix = this.transform.calculatePosMatrix(tileID.toUnwrapped(), false);
 
         for (let s = 0; s < bucket.symbolInstances.length; s++) {
             const symbolInstance = bucket.symbolInstances.get(s);
@@ -1232,39 +1230,27 @@ export class Placement {
                         }
 
                         if (collisionArrays.textBox || collisionArrays.verticalTextBox) {
-                            let anchorTileX, anchorTileY;
-                            let hidden;
+                            let hidden: boolean;
                             if (collisionArrays.textBox) {
-                                anchorTileX = collisionArrays.textBox.anchorPointX;
-                                anchorTileY = collisionArrays.textBox.anchorPointY;
                                 hidden = horizontalHidden;
                             }
                             if (collisionArrays.verticalTextBox) {
-                                anchorTileX = collisionArrays.verticalTextBox.anchorPointX;
-                                anchorTileY = collisionArrays.verticalTextBox.anchorPointY;
                                 hidden = verticalHidden;
                             }
-                            const projected = this.collisionIndex.projectAndGetPerspectiveRatio(posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
-                            updateCollisionVertices(bucket.textCollisionBox.collisionVertexArray, projected.point, opacityState.text.placed, !used || hidden, realBoxes.text, shift.x, shift.y);
+                            updateCollisionVertices(bucket.textCollisionBox.collisionVertexArray, opacityState.text.placed, !used || hidden, realBoxes.text, shift.x, shift.y);
                         }
                     }
 
                     if (collisionArrays.iconBox || collisionArrays.verticalIconBox) {
                         const verticalIconUsed = Boolean(!verticalHidden && collisionArrays.verticalIconBox);
-                        let anchorTileX, anchorTileY;
-                        let hidden;
+                        let hidden: boolean;
                         if (collisionArrays.iconBox) {
-                            anchorTileX = collisionArrays.iconBox.anchorPointX;
-                            anchorTileY = collisionArrays.iconBox.anchorPointY;
                             hidden = verticalIconUsed;
                         }
                         if (collisionArrays.verticalIconBox) {
-                            anchorTileX = collisionArrays.verticalIconBox.anchorPointX;
-                            anchorTileY = collisionArrays.verticalIconBox.anchorPointY;
                             hidden = !verticalIconUsed;
                         }
-                        const projected = this.collisionIndex.projectAndGetPerspectiveRatio(posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
-                        updateCollisionVertices(bucket.iconCollisionBox.collisionVertexArray, projected.point, opacityState.icon.placed, hidden, realBoxes.icon,
+                        updateCollisionVertices(bucket.iconCollisionBox.collisionVertexArray, opacityState.icon.placed, hidden, realBoxes.icon,
                             hasIconTextFit ? shift.x : 0,
                             hasIconTextFit ? shift.y : 0);
                     }
@@ -1341,7 +1327,7 @@ export class Placement {
     }
 }
 
-function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, projectedAnchor: Point, placed: boolean, notUsed: boolean | number, realBox: Array<number>, shiftX?: number, shiftY?: number) {
+function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, placed: boolean, notUsed: boolean | number, realBox: Array<number>, shiftX?: number, shiftY?: number) {
     if (!realBox || realBox.length === 0) {
         realBox = [0, 0, 0, 0];
     }
