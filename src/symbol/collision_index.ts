@@ -29,6 +29,12 @@ import {getAABB} from '../util/util';
 // stability, but it's expensive.
 export const viewportPadding = 100;
 
+export type PlacedCircles = {
+    circles: Array<number>;
+    offscreen: boolean;
+    collisionDetected: boolean;
+};
+
 export type PlacedBox = {
     box: Array<number>;
     placeable: boolean;
@@ -162,11 +168,7 @@ export class CollisionIndex {
         textPixelPadding: number,
         translation: [number, number],
         getElevation: (x: number, y: number) => number
-    ): {
-            circles: Array<number>;
-            offscreen: boolean;
-            collisionDetected: boolean;
-        } {
+    ): PlacedCircles {
         const placedCollisionCircles = [];
 
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
