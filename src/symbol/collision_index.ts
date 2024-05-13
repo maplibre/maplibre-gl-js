@@ -606,21 +606,19 @@ export class CollisionIndex {
         let anyPointVisible = false;
 
         if (pitchWithMap) {
-            for (let i = 0; i < points.length; i++) {
-                const oldPoint = points[i];
-                const newPoint = this.projectAndGetPerspectiveRatio(
-                    posMatrix,
-                    oldPoint.x,
-                    oldPoint.y,
-                    unwrappedTileID,
-                    getElevation
-                );
-                points[i] = newPoint.point;
-                if (!newPoint.isOccluded) {
+            const projected = points.map(p => this.projectAndGetPerspectiveRatio(posMatrix, p.x, p.y, unwrappedTileID, getElevation));
+
+            // Is at least one of the projected points NOT behind the horizon?
+            for (let i = 0; i < projected.length; i++) {
+                const p = projected[i];
+                if (!p.isOccluded) {
                     anyPointVisible = true;
                 }
             }
+
+            points = projected.map(p => p.point);
         } else {
+            // Labels that are not pitchWithMap cannot ever hide behind the horizon.
             anyPointVisible = true;
         }
 
