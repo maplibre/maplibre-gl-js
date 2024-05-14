@@ -19,7 +19,7 @@ import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
 import {SymbolProjectionContext} from '../symbol/projection';
 import {Projection} from '../geo/projection/projection';
-import {getAABB} from '../util/util';
+import {clamp, getAABB} from '../util/util';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -423,7 +423,8 @@ export class CollisionIndex {
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
             perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera),
-            isOccluded: (projected.isOccluded !== undefined) ? projected.isOccluded : false
+            isOccluded: (projected.isOccluded !== undefined) ? projected.isOccluded : false,
+            signedDistanceFromCamera: projected.signedDistanceFromCamera
         };
     }
 
@@ -468,7 +469,7 @@ export class CollisionIndex {
         pitchWithMap: boolean,
         rotateWithMap: boolean,
         translation: [number, number],
-        projectedPoint: {point: Point; perspectiveRatio: number},
+        projectedPoint: {point: Point; perspectiveRatio: number; signedDistanceFromCamera: number},
         getElevation?: (x: number, y: number) => number,
         shift?: Point
     ): {
@@ -518,6 +519,18 @@ export class CollisionIndex {
             const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
             distanceMultiplier = Math.pow(2, -zoomFraction);
             distanceMultiplier *= this.mapProjection.getPitchedTextCorrection(this.transform, translatedAnchor, unwrappedTileID);
+
+            // This next correction can't be applied when variable anchors are in use.
+            if (!shift) {
+                // Shader applies a perspective size correction, we need to apply the same correction.
+                // For non-pitchWithMap texts, this is handled above by multiplying `textPixelRatio` with `projectedPoint.perspectiveRatio`,
+                // which is equivalent to the non-pitchWithMap branch of the GLSL code.
+                // Here, we compute and apply the pitchWithMap branch.
+                // See the computation of `perspective_ratio` in the symbol vertex shaders for the GLSL code.
+                const distanceRatio = projectedPoint.signedDistanceFromCamera / this.transform.cameraToCenterDistance;
+                const perspectiveRatio = clamp(0.5 + 0.5 * distanceRatio, 0.0, 4.0); // Same clamp as what is used in the shader.
+                distanceMultiplier *= perspectiveRatio;
+            }
         }
 
         if (shift) {
@@ -570,6 +583,7 @@ export class CollisionIndex {
                 const p = projected[i];
                 if (!p.isOccluded) {
                     anyPointVisible = true;
+                    break;
                 }
             }
 
