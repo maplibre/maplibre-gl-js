@@ -230,7 +230,7 @@ const symbolSDFUniformValues = (
     return extend(symbolIconUniformValues(functionType, size,
         rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, matrix, labelPlaneMatrix,
         glCoordMatrix, translation, isText, texSize, pitchedScale), {
-        'u_gamma_scale': (pitchWithMap ? Math.cos(transform._pitch) * transform.cameraToCenterDistance : 1),
+        'u_gamma_scale': (pitchWithMap ? Math.cos(transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_is_halo': +isHalo
     });

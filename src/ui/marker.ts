@@ -550,7 +550,7 @@ export class Marker extends Evented {
             return;
         }
         // If the base is obscured, use the offset to check if the marker's center is obscured.
-        const metersToCenter = -this._offset.y / map.transform._pixelPerMeter;
+        const metersToCenter = -this._offset.y / map.transform.pixelsPerMeter;
         const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
         const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
         const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);

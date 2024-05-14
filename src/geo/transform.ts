@@ -56,23 +56,23 @@ export class Transform {
     /**
      * Vertical field of view in radians.
      */
-    _fov: number;
+    private _fov: number;
 
-    _pitch: number;
-    _zoom: number;
-    _unmodified: boolean;
-    _renderWorldCopies: boolean;
-    _minZoom: number;
-    _maxZoom: number;
-    _minPitch: number;
-    _maxPitch: number;
-    _center: LngLat;
-    _elevation: number;
-    _pixelPerMeter: number;
-    _edgeInsets: EdgeInsets;
-    _constraining: boolean;
-    _posMatrixCache: {[_: string]: mat4};
-    _alignedPosMatrixCache: {[_: string]: mat4};
+    private _pitch: number;
+    private _zoom: number;
+    private _unmodified: boolean;
+    private _renderWorldCopies: boolean;
+    private _minZoom: number;
+    private _maxZoom: number;
+    private _minPitch: number;
+    private _maxPitch: number;
+    private _center: LngLat;
+    private _elevation: number;
+    private _pixelPerMeter: number;
+    private _edgeInsets: EdgeInsets;
+    private _constraining: boolean;
+    private _posMatrixCache: {[_: string]: mat4};
+    private _alignedPosMatrixCache: {[_: string]: mat4};
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this.tileSize = 512; // constant
@@ -260,6 +260,11 @@ export class Transform {
     get centerPoint(): Point {
         return this._edgeInsets.getCenter(this.width, this.height);
     }
+
+    /**
+     * @internal
+     */
+    get pixelsPerMeter(): number { return this._pixelPerMeter; }
 
     /**
      * Returns if the padding params match
@@ -835,7 +840,7 @@ export class Transform {
         return result;
     }
 
-    _constrain(): void {
+    private _constrain(): void {
         if (!this.center || !this.width || !this.height || this._constraining) return;
         this._constraining = true;
         const unmodified = this._unmodified;
@@ -846,7 +851,7 @@ export class Transform {
         this._constraining = false;
     }
 
-    _calcMatrices(): void {
+    private _calcMatrices(): void {
         if (!this.height) return;
 
         const halfFov = this._fov / 2;

@@ -379,7 +379,7 @@ describe('transform', () => {
         expect(unwrappedCoords).toHaveLength(4);
 
         //getVisibleUnwrappedCoordinates should honor _renderWorldCopies
-        transform._renderWorldCopies = false;
+        transform['_renderWorldCopies'] = false;
         unwrappedCoords = transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0));
         expect(unwrappedCoords).toHaveLength(1);
     });
@@ -423,8 +423,8 @@ describe('transform', () => {
         terrain.getElevationForLngLatZoom = () => 400;
         transform.recalculateZoom(terrain as any);
         expect(transform.elevation).toBe(400);
-        expect(transform._center.lng).toBeCloseTo(10, 10);
-        expect(transform._center.lat).toBeCloseTo(50, 10);
+        expect(transform.center.lng).toBeCloseTo(10, 10);
+        expect(transform.center.lat).toBeCloseTo(50, 10);
         expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
         expect(transform.zoom).toBeCloseTo(14.1845318986, 10);
 

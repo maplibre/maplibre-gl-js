@@ -194,7 +194,7 @@ export class MercatorProjection implements Projection {
             loc.x - (a.x - b.x),
             loc.y - (a.y - b.y));
         let center = transform.coordinateLocation(newCenter);
-        if (transform._renderWorldCopies) {
+        if (transform.renderWorldCopies) {
             center = center.wrap();
         }
         return center;
