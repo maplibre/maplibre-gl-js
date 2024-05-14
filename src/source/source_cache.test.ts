@@ -12,6 +12,7 @@ import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
+import {TileCache} from './tile_cache';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -79,8 +80,22 @@ function createSourceCache(options?, used?) {
         maxzoom: 14,
         type: 'mock-source-type'
     }, options), {} as Dispatcher);
-    sc.used = typeof used === 'boolean' ? used : true;
-    return sc;
+    const scWithTestLogic = extend(sc, {
+        used: typeof used === 'boolean' ? used : true,
+        addTile(tileID: OverscaledTileID): Tile {
+            return this._addTile(tileID);
+        },
+        getCache(): TileCache {
+            return this._cache;
+        },
+        getTiles(): { [_: string]: Tile } {
+            return this._tiles;
+        },
+        updateLoadedSiblingTileCache(): void {
+            this._updateLoadedSiblingTileCache();
+        }
+    });
+    return scWithTestLogic;
 }
 
 afterEach(() => {
@@ -1795,6 +1810,94 @@ describe('SourceCache#findLoadedParent', () => {
 
     });
 
+});
+
+describe('SourceCache#findLoadedSibling', () => {
+
+    test('adds from previously used tiles (sourceCache._tiles)', () => {
+        const sourceCache = createSourceCache({});
+        sourceCache.onAdd(undefined);
+        const tr = new Transform();
+        tr.width = 512;
+        tr.height = 512;
+        sourceCache.updateCacheSize(tr);
+
+        const tile = {
+            tileID: new OverscaledTileID(1, 0, 1, 0, 0),
+            hasData() { return true; }
+        } as any as Tile;
+
+        sourceCache.getTiles()[tile.tileID.key] = tile;
+
+        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 1, 0))).toBeNull();
+        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 0, 0))).toEqual(tile);
+    });
+
+    test('retains siblings', () => {
+        const sourceCache = createSourceCache({});
+        sourceCache.onAdd(undefined);
+        const tr = new Transform();
+        tr.width = 512;
+        tr.height = 512;
+        sourceCache.updateCacheSize(tr);
+
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        sourceCache.getCache().add(tile.tileID, tile);
+
+        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 1, 0))).toBeNull();
+        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 0, 0))).toBe(tile);
+        expect(sourceCache.getCache().order).toHaveLength(1);
+    });
+
+    test('Search cache for loaded sibling tiles', () => {
+        const sourceCache = createSourceCache({});
+        sourceCache.onAdd(undefined);
+        const tr = new Transform();
+        tr.width = 512;
+        tr.height = 512;
+        sourceCache.updateCacheSize(tr);
+
+        const mockTile = id => {
+            const tile = {
+                tileID: id,
+                hasData() { return true; }
+            } as any as Tile;
+            sourceCache.getTiles()[id.key] = tile;
+        };
+
+        const tiles = [
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            new OverscaledTileID(1, 0, 1, 1, 0),
+            new OverscaledTileID(2, 0, 2, 0, 0),
+            new OverscaledTileID(2, 0, 2, 1, 0),
+            new OverscaledTileID(2, 0, 2, 2, 0),
+            new OverscaledTileID(2, 0, 2, 1, 2)
+        ];
+
+        tiles.forEach(t => mockTile(t));
+        sourceCache.updateLoadedSiblingTileCache();
+
+        // Loaded tiles should be in the cache
+        expect(sourceCache.findLoadedSibling(tiles[0]).tileID).toBe(tiles[0]);
+        expect(sourceCache.findLoadedSibling(tiles[1]).tileID).toBe(tiles[1]);
+        expect(sourceCache.findLoadedSibling(tiles[2]).tileID).toBe(tiles[2]);
+        expect(sourceCache.findLoadedSibling(tiles[3]).tileID).toBe(tiles[3]);
+        expect(sourceCache.findLoadedSibling(tiles[4]).tileID).toBe(tiles[4]);
+        expect(sourceCache.findLoadedSibling(tiles[5]).tileID).toBe(tiles[5]);
+
+        // Arbitrary tiles should not in the cache
+        const notLoadedTiles = [
+            new OverscaledTileID(2, 1, 2, 0, 0),
+            new OverscaledTileID(2, 0, 2, 3, 0),
+            new OverscaledTileID(2, 0, 2, 3, 3),
+            new OverscaledTileID(3, 0, 3, 2, 1)
+        ];
+
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[0])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[1])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[2])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[3])).toBeNull();
+    });
 });
 
 describe('SourceCache#reload', () => {
