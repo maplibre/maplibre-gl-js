@@ -516,7 +516,7 @@ export class CollisionIndex {
         if (pitchWithMap) {
             // Configuration for tile space (map-pitch-aligned) offsets
             basePoint = translatedAnchor;
-            const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
+            const zoomFraction = this.transform.zoom - unwrappedTileID.canonical.z;
             distanceMultiplier = Math.pow(2, -zoomFraction);
             distanceMultiplier *= this.mapProjection.getPitchedTextCorrection(this.transform, translatedAnchor, unwrappedTileID);
 
