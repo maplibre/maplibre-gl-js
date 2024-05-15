@@ -1,8 +1,15 @@
 ## main
 
 ### ✨ Features and improvements
-
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 4.3.0
+
+### ✨ Features and improvements
+
 - Add `getData` method for GeoJSON Sources to provide the possibility to obtain all the source's features ([#4082](https://github.com/maplibre/maplibre-gl-js/pull/4082))
 - Allow cross-fading between raster tile source updates at the same zoom level ([#4072](https://github.com/maplibre/maplibre-gl-js/pull/4072))
 
@@ -16,7 +23,6 @@
 - Fix symbol collision boxes not being accurate for variable-anchor symbols.
 - Fix icon collision boxes using `text-translate` property for translation instead of the correct `icon-translate`.
 - Fix `text-translate` and `icon-translate` behaving weirdly and inconsistently with other `-translate` properties ([#3456](https://github.com/maplibre/maplibre-gl-js/issues/3456))
-- _...Add new stuff here..._
 
 ## 4.2.0
 
