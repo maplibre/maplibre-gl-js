@@ -4,7 +4,7 @@ import {clamp} from '../util/util';
 
 /**
  * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.
- * This shifts the apprent center or the vanishing point of the map. This is useful for adding floating UI elements
+ * This shifts the apparent center or the vanishing point of the map. This is useful for adding floating UI elements
  * on top of the map and having the vanishing point shift as UI elements resize.
  *
  * @group Geography and Geometry

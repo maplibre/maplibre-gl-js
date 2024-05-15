@@ -113,8 +113,8 @@ describe('#setStyle', () => {
 
     test('style transform overrides unmodified map transform', done => {
         const map = new Map({container: window.document.createElement('div')} as any as MapOptions);
-        map.transform.lngRange = [-120, 140];
-        map.transform.latRange = [-60, 80];
+        map.transform['_lngRange'] = [-120, 140];
+        map.transform['_latRange'] = [-60, 80];
         map.transform.resize(600, 400);
         expect(map.transform.zoom).toBe(0.6983039737971014);
         expect(map.transform.unmodified).toBeTruthy();

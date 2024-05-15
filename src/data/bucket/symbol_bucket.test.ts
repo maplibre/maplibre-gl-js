@@ -28,8 +28,8 @@ const feature = vt.layers.place_label.feature(10);
 /*eslint new-cap: 0*/
 const collisionBoxArray = new CollisionBoxArray();
 const transform = new Transform();
-transform.width = 100;
-transform.height = 100;
+transform['_width'] = 100;
+transform['_height'] = 100;
 transform.cameraToCenterDistance = 100;
 
 const stacks = {'Test': glyphs} as any as {

@@ -100,8 +100,8 @@ describe('transform', () => {
         transform.zoom = 10;
         transform.resize(500, 500);
 
-        transform.lngRange = [-5, 5];
-        transform.latRange = [-5, 5];
+        transform['_lngRange'] = [-5, 5];
+        transform['_latRange'] = [-5, 5];
 
         transform.zoom = 0;
         expect(transform.zoom).toBe(5.1357092861044045);
@@ -126,8 +126,8 @@ describe('transform', () => {
         ];
 
         for (const lngRange of lngRanges) {
-            transform.lngRange = lngRange;
-            transform.latRange = [-5, 5];
+            transform['_lngRange'] = lngRange;
+            transform['_latRange'] = [-5, 5];
 
             transform.zoom = 0;
             expect(transform.zoom).toBe(5.1357092861044045);
