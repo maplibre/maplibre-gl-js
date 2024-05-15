@@ -551,22 +551,20 @@ export class CollisionIndex {
         // 7     3
         // |     |
         // 6--5--4
-        const offsetsArray = [
-            offsetXmin, offsetYmin,
-            offsetXhalf, offsetYmin,
-            offsetXmax, offsetYmin,
-            offsetXmax, offsetYhalf,
-            offsetXmax, offsetYmax,
-            offsetXhalf, offsetYmax,
-            offsetXmin, offsetYmax,
-            offsetXmin, offsetYhalf
+        const offsetsArray: Array<{offsetX: number; offsetY: number}> = [
+            {offsetX: offsetXmin,  offsetY: offsetYmin},
+            {offsetX: offsetXhalf, offsetY: offsetYmin},
+            {offsetX: offsetXmax,  offsetY: offsetYmin},
+            {offsetX: offsetXmax,  offsetY: offsetYhalf},
+            {offsetX: offsetXmax,  offsetY: offsetYmax},
+            {offsetX: offsetXhalf, offsetY: offsetYmax},
+            {offsetX: offsetXmin,  offsetY: offsetYmax},
+            {offsetX: offsetXmin,  offsetY: offsetYhalf}
         ];
 
         let points: Array<Point> = [];
 
-        for (let i = 0; i < offsetsArray.length; i += 2) {
-            const offsetX = offsetsArray[i];
-            const offsetY = offsetsArray[i + 1];
+        for (const {offsetX, offsetY} of offsetsArray) {
             points.push(new Point(
                 basePoint.x + vecEast.x * offsetX + vecSouth.x * offsetY,
                 basePoint.y + vecEast.y * offsetX + vecSouth.y * offsetY
@@ -580,13 +578,7 @@ export class CollisionIndex {
             const projected = points.map(p => this.projectAndGetPerspectiveRatio(posMatrix, p.x, p.y, unwrappedTileID, getElevation));
 
             // Is at least one of the projected points NOT behind the horizon?
-            for (let i = 0; i < projected.length; i++) {
-                const p = projected[i];
-                if (!p.isOccluded) {
-                    anyPointVisible = true;
-                    break;
-                }
-            }
+            anyPointVisible = projected.some(p => !p.isOccluded);
 
             points = projected.map(p => p.point);
         } else {
