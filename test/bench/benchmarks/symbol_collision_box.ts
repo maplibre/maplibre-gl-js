@@ -83,9 +83,12 @@ export default class SymbolCollisionsBox extends Benchmark {
 
     async bench() {
         const ci = new CollisionIndex(this._transform, this._projection);
+        ci.grid.hitTest = (_x1, _y1, _x2, _y2, _overlapMode, _predicate?) => {
+            return true;
+        };
 
         for (const s of this._symbols) {
-            const placementResult = ci.placeCollisionBox(
+            ci.placeCollisionBox(
                 s.collisionBox,
                 s.overlapMode,
                 s.textPixelRatio,
@@ -98,17 +101,6 @@ export default class SymbolCollisionsBox extends Benchmark {
                 null,
                 s.shift
             );
-
-            if (placementResult.placeable) {
-                ci.insertCollisionBox(
-                    placementResult.box,
-                    s.overlapMode,
-                    false,
-                    0,
-                    0,
-                    0
-                );
-            }
         }
     }
 }
