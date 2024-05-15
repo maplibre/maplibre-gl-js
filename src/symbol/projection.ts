@@ -33,9 +33,21 @@ export {
     transformToOffsetNormal,
 };
 
+/**
+ * The result of projecting a point to the screen, with some additional information about the projection.
+ */
 export type PointProjection = {
+    /**
+     * The projected point.
+     */
     point: Point;
+    /**
+     * The original W component of the projection.
+     */
     signedDistanceFromCamera: number;
+    /**
+     * For complex projections (such as globe), true if the point is occluded by the projection, such as by being on the backfacing side of the globe.
+     */
     isOccluded: boolean;
 };
 
