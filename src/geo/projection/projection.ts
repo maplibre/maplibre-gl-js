@@ -186,4 +186,10 @@ export interface Projection {
      * @returns A new vector with the transformed light direction.
      */
     transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3;
+
+    // HM TODO: this needs to be fixed.
+    getPitchedTextCorrection(_transform: any, _anchor: any, _tile: any): number;
+
+    // HM TODO: fix this!
+    projectTileCoordinates(_x, _y, _t, _ele);
 }

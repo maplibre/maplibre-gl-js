@@ -81,7 +81,6 @@ export class LngLatBounds {
      * Set the northeast corner of the bounding box
      *
      * @param ne - a {@link LngLatLike} object describing the northeast corner of the bounding box.
-     * @returns `this`
      */
     setNorthEast(ne: LngLatLike): this {
         this._ne = ne instanceof LngLat ? new LngLat(ne.lng, ne.lat) : LngLat.convert(ne);
@@ -92,7 +91,6 @@ export class LngLatBounds {
      * Set the southwest corner of the bounding box
      *
      * @param sw - a {@link LngLatLike} object describing the southwest corner of the bounding box.
-     * @returns `this`
      */
     setSouthWest(sw: LngLatLike): this {
         this._sw = sw instanceof LngLat ? new LngLat(sw.lng, sw.lat) : LngLat.convert(sw);
@@ -103,7 +101,6 @@ export class LngLatBounds {
      * Extend the bounds to include a given LngLatLike or LngLatBoundsLike.
      *
      * @param obj - object to extend to
-     * @returns `this`
      */
     extend(obj: LngLatLike | LngLatBoundsLike): this {
         const sw = this._sw,

@@ -16,8 +16,9 @@ import {RGBAImage} from '../../util/image';
 import {ImagePosition} from '../../render/image_atlas';
 import {IndexedFeature, PopulateParameters} from '../bucket';
 import {StyleImage} from '../../style/style_image';
-import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' assert {type: 'json'};
+import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 import {StyleGlyph} from '../../style/style_glyph';
+import {MercatorProjection} from '../../geo/projection/mercator';
 
 // Load a point feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
@@ -64,7 +65,8 @@ describe('SymbolBucket', () => {
         const bucketA = bucketSetup() as any as SymbolBucket;
         const bucketB = bucketSetup() as any as SymbolBucket;
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-        const placement = new Placement(transform, undefined as any, 0, true);
+        // HM TODO: this need to be fixed!!
+        const placement = new Placement(transform, new MercatorProjection(), undefined as any, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 

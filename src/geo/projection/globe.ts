@@ -548,4 +548,15 @@ export class GlobeProjection implements Projection {
 
         return mesh;
     }
+
+    // HM TODO: fix this!
+    getPitchedTextCorrection(_transform: any, _anchor: any, _tile: any): number {
+        return 1.0;
+    }
+
+    // HM TODO: fix this!
+    projectTileCoordinates(_x, _y, _t, _ele) {
+        // This function should only be used when useSpecialProjectionForSymbols is set to true.
+        throw new Error('Not implemented.');
+    }
 }

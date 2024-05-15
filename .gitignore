@@ -36,3 +36,4 @@ npm-debug.log
 *.iml
 /.vs/
 .*.swp
+junit.xml

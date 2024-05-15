@@ -7,7 +7,7 @@ import {TriangleIndexArray} from '../index_array_type';
 import {EXTENT} from '../extent';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
-import {classifyRings} from '../../util/classify_rings';
+import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
 import {register} from '../../util/web_worker_transfer';
 import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
