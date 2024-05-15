@@ -1,6 +1,6 @@
-import type Point from '@mapbox/point-geometry';
 import type {Tile} from '../../source/tile';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
+import type {PointProjection} from '../../symbol/projection';
 
 /**
  * A greatly reduced version of the `Projection` interface from the globe branch,
@@ -10,11 +10,7 @@ import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 export type Projection = {
     useSpecialProjectionForSymbols: boolean;
     isOccluded(_x, _y, _t): boolean;
-    projectTileCoordinates(_x, _y, _t, _ele): {
-        point: Point;
-        signedDistanceFromCamera: number;
-        isOccluded: boolean;
-    };
+    projectTileCoordinates(_x, _y, _t, _ele): PointProjection;
     getPitchedTextCorrection(_transform, _anchor, _tile): number;
     translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
     getCircleRadiusCorrection(tr: any): number;

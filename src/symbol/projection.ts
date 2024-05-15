@@ -33,6 +33,12 @@ export {
     transformToOffsetNormal,
 };
 
+export type PointProjection = {
+    point: Point;
+    signedDistanceFromCamera: number;
+    isOccluded: boolean;
+};
+
 /*
  * # Overview of coordinate spaces
  *
@@ -441,12 +447,9 @@ function _projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
     // plane of the camera.
     const unitVertexToBeProjected = previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit());
-    let projectedUnitVertex;
-    if (projectionMatrix !== undefined) {
-        projectedUnitVertex = project(unitVertexToBeProjected, projectionMatrix, projectionContext.getElevation).point;
-    } else {
-        projectedUnitVertex = projectTileCoordinatesToViewport(unitVertexToBeProjected.x, unitVertexToBeProjected.y, projectionContext).point;
-    }
+    const projectedUnitVertex = projectionMatrix !== undefined ?
+        project(unitVertexToBeProjected, projectionMatrix, projectionContext.getElevation).point :
+        projectTileCoordinatesToViewport(unitVertexToBeProjected.x, unitVertexToBeProjected.y, projectionContext).point;
     const projectedUnitSegment = previousProjectedPoint.sub(projectedUnitVertex);
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
 }
@@ -576,11 +579,7 @@ function projectLineVertexToViewport(index: number, projectionContext: SymbolPro
     return projectTruncatedLineSegmentToViewport(previousTilePoint, currentVertex, syntheticVertexArgs.previousVertex, minimumLength, projectionContext);
 }
 
-function projectTileCoordinatesToViewport(x: number, y: number, projectionContext: SymbolProjectionContext): {
-    point: Point;
-    signedDistanceFromCamera: number;
-    isOccluded: boolean;
-} {
+function projectTileCoordinatesToViewport(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
     const translatedX = x + projectionContext.translation[0];
     const translatedY = y + projectionContext.translation[1];
     let projection;
