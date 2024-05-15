@@ -24,6 +24,21 @@ We want to be able to swap projections on the fly without resetting the transfor
 => the *data* of the transform must be a separate object
     - which data should survive projection change?
 
+How to split stuff?
+
+Abstract class TransformBase
+    - has all the common data + getters/setters
+    - each projection creates its own implementation
+    - globe can inherit mercator
+    - this mostly keeps the current transform's API
+        - matrices API will have to be projection-specific
+    - transform implementations will effectively replace the projection class / will do the same thing, more or less
+
+Slim transform
+    - Transform as it is now is reduced to only hold the data
+    - all projecting and matrices are moved to Projection class
+    - likely many code changes
+
 */
 
 export class TransformDataBase {
