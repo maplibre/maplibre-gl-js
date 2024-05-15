@@ -23,6 +23,9 @@ We want to be able to swap projections on the fly without resetting the transfor
 
 => the *data* of the transform must be a separate object
     - which data should survive projection change?
+- all the other fields are seldom used outside transform.ts anyway
+- transform must be cloneable (because of symbol placement and other async processes)
+- globe transform must be able to create an instance of mercator transform and use it
 
 How to split stuff?
 
@@ -38,6 +41,9 @@ Slim transform
     - Transform as it is now is reduced to only hold the data
     - all projecting and matrices are moved to Projection class
     - likely many code changes
+
+Facade transform
+    - each function call internally calls the projection's implementation
 
 */
 
