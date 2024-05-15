@@ -36,7 +36,7 @@ function splitmix32(a) {
     };
 }
 
-export default class SymbolCollisionsBox extends Benchmark {
+export default class SymbolCollisionBox extends Benchmark {
     private _transform: Transform;
     private _projection: Projection;
     private _symbols: Array<TestSymbol>;
