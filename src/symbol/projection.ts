@@ -137,7 +137,7 @@ function getGlCoordMatrix(posMatrix: mat4,
     }
 }
 
-function project(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number) {
+function project(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
     let pos;
     if (getElevation) { // slow because of handle z-index
         pos = [point.x, point.y, getElevation(point.x, point.y), 1] as vec4;
@@ -149,7 +149,8 @@ function project(point: Point, matrix: mat4, getElevation?: (x: number, y: numbe
     const w = pos[3];
     return {
         point: new Point(pos[0] / w, pos[1] / w),
-        signedDistanceFromCamera: w
+        signedDistanceFromCamera: w,
+        isOccluded: false
     };
 }
 

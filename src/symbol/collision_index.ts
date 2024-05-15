@@ -408,12 +408,9 @@ export class CollisionIndex {
     }
 
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
-        let projected;
-        if (this.mapProjection.useSpecialProjectionForSymbols) {
-            projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
-        } else {
-            projected = projection.project(new Point(x, y), posMatrix, getElevation);
-        }
+        const projected = this.mapProjection.useSpecialProjectionForSymbols ?
+            this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
+            projection.project(new Point(x, y), posMatrix, getElevation);
         return {
             point: new Point(
                 (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
@@ -423,19 +420,16 @@ export class CollisionIndex {
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
             perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera),
-            isOccluded: (projected.isOccluded !== undefined) ? projected.isOccluded : false,
+            isOccluded: projected.isOccluded,
             signedDistanceFromCamera: projected.signedDistanceFromCamera
         };
     }
 
     getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number {
         // We don't care about the actual projected point, just its W component.
-        let projected;
-        if (this.mapProjection.useSpecialProjectionForSymbols) {
-            projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
-        } else {
-            projected = projection.project(new Point(x, y), posMatrix, getElevation);
-        }
+        const projected = this.mapProjection.useSpecialProjectionForSymbols ?
+            this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
+            projection.project(new Point(x, y), posMatrix, getElevation);
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
