@@ -289,7 +289,8 @@ function addFeature(bucket: SymbolBucket,
     layoutTextSize: number,
     layoutIconSize: number,
     textOffset: [number, number],
-    isSDFIcon: boolean, canonical: CanonicalTileID) {
+    isSDFIcon: boolean,
+    canonical: CanonicalTileID) {
     // To reduce the number of labels that jump around when zooming we need
     // to use a text-size value that is the same for all zoom levels.
     // bucket calculates text-size at a high zoom level so that all tiles can
@@ -336,7 +337,6 @@ function addFeature(bucket: SymbolBucket,
             // to prevent double-drawing symbols.
             return;
         }
-
         addSymbol(bucket, anchor, line, shapedTextOrientations, shapedIcon, imageMap, verticallyShapedIcon, bucket.layers[0],
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
             textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
@@ -520,6 +520,7 @@ function addSymbol(bucket: SymbolBucket,
     isSDFIcon: boolean,
     canonical: CanonicalTileID,
     layoutTextSize: number) {
+
     const lineArray = bucket.addToLineVertexArray(anchor, line);
 
     let textCollisionFeature, iconCollisionFeature, verticalTextCollisionFeature, verticalIconCollisionFeature;

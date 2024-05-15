@@ -1,5 +1,3 @@
-const float PI = 3.141592653589793;
-
 in vec4 a_pos_offset;
 in vec4 a_data;
 in vec4 a_pixeloffset;
@@ -22,15 +20,23 @@ uniform mat4 u_label_plane_matrix;
 uniform mat4 u_coord_matrix;
 uniform bool u_is_text;
 uniform bool u_pitch_with_map;
+uniform bool u_is_along_line;
+uniform bool u_is_variable_anchor;
 uniform highp float u_pitch;
 uniform bool u_rotate_symbol;
 uniform highp float u_aspect_ratio;
 uniform highp float u_camera_to_center_distance;
 uniform float u_fade_change;
 uniform vec2 u_texsize;
+uniform vec2 u_translation;
+uniform float u_pitched_scale;
 
 out vec2 v_data0;
 out vec3 v_data1;
+
+vec4 projectTileWithElevation(vec2 posInTile, float elevation) {
+    return u_matrix * vec4(posInTile, elevation, 1.0);
+}
 
 #pragma mapbox: define highp vec4 fill_color
 #pragma mapbox: define highp vec4 halo_color
@@ -66,7 +72,9 @@ void main() {
         size = u_size;
     }
 
-    vec4 projectedPoint = u_matrix * vec4(a_pos, ele, 1);
+    vec2 translated_a_pos = a_pos + u_translation;
+    vec4 projectedPoint = projectTileWithElevation(translated_a_pos, ele);
+
     highp float camera_to_anchor_distance = projectedPoint.w;
     // If the label is pitched with the map, layout is done in pitched space,
     // which makes labels in the distance smaller relative to viewport space.
@@ -91,7 +99,7 @@ void main() {
         // Point labels with 'rotation-alignment: map' are horizontal with respect to tile units
         // To figure out that angle in projected space, we draw a short horizontal line in tile
         // space, project it, and measure its angle in projected space.
-        vec4 offsetProjectedPoint = u_matrix * vec4(a_pos + vec2(1, 0), ele, 1);
+        vec4 offsetProjectedPoint = projectTileWithElevation(translated_a_pos + vec2(1, 0), ele);
 
         vec2 a = projectedPoint.xy / projectedPoint.w;
         vec2 b = offsetProjectedPoint.xy / offsetProjectedPoint.w;
@@ -103,10 +111,26 @@ void main() {
     highp float angle_cos = cos(segment_angle + symbol_rotation);
     mat2 rotation_matrix = mat2(angle_cos, -1.0 * angle_sin, angle_sin, angle_cos);
 
-    vec4 projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy, ele, 1.0);
+    vec4 projected_pos;
+    if (u_is_along_line || u_is_variable_anchor) {  
+        // Label plane matrix is identity in this case
+        projected_pos = vec4(a_projected_pos.xy, ele, 1.0);
+    } else if (u_pitch_with_map) {
+        projected_pos = u_label_plane_matrix * vec4(a_projected_pos.xy + u_translation, ele, 1.0);
+    } else {
+        projected_pos = u_label_plane_matrix * projectTileWithElevation(a_projected_pos.xy + u_translation, ele);
+    }
+
     float z = float(u_pitch_with_map) * projected_pos.z / projected_pos.w;
-    gl_Position = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale + a_pxoffset), z, 1.0);
-    float gamma_scale = gl_Position.w;
+
+    float projectionScaling = 1.0;
+
+    vec4 finalPos = u_coord_matrix * vec4(projected_pos.xy / projected_pos.w + rotation_matrix * (a_offset / 32.0 * fontScale + a_pxoffset) * projectionScaling, z, 1.0);
+    if(u_pitch_with_map) {
+        finalPos = projectTileWithElevation(finalPos.xy, finalPos.z);
+    }
+    float gamma_scale = finalPos.w;
+    gl_Position = finalPos;
 
     vec2 fade_opacity = unpack_opacity(a_fade_opacity);
     float visibility = calculate_visibility(projectedPoint);
