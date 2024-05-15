@@ -1010,9 +1010,29 @@ describe('#easeTo', () => {
             }
         });
 
-        camera.easeTo({zoom: 20, bearing: 90, pitch: 60, duration: 500}, {done: true});
+        camera.easeTo({zoom: 20, bearing: 90, pitch: 60, duration: 500});
         camera.once('move', () => {
-            camera.jumpTo({pitch: 40});
+            camera.jumpTo({pitch: 40}, {done: true});
+        });
+
+        camera.simulateFrame();
+        camera.simulateFrame();
+    });
+
+    test('easeTo on("move") during easeTo with zoom, pitch, etc', (done) => {
+        const camera = createCamera();
+
+        camera.on('moveend', (e: Event & {done?: true}) => {
+            if ('done' in e) {
+                setTimeout(() => {
+                    done();
+                }, 50);
+            }
+        });
+
+        camera.easeTo({zoom: 10, bearing: 90, pitch: 60, duration: 500});
+        camera.once('move', () => {
+            camera.easeTo({zoom: 15}, {done: true});
         });
 
         camera.simulateFrame();
@@ -1030,9 +1050,29 @@ describe('#easeTo', () => {
             }
         });
 
-        camera.easeTo({zoom: 20, duration: 500}, {done: true});
+        camera.easeTo({zoom: 20, duration: 500});
         camera.once('zoom', () => {
-            camera.jumpTo({pitch: 40});
+            camera.jumpTo({pitch: 40}, {done: true});
+        });
+
+        camera.simulateFrame();
+        camera.simulateFrame();
+    });
+
+    test('easeTo on("zoom") during easeTo with zoom, pitch, etc', (done) => {
+        const camera = createCamera();
+
+        camera.on('moveend', (e: Event & {done?: true}) => {
+            if ('done' in e) {
+                setTimeout(() => {
+                    done();
+                }, 50);
+            }
+        });
+
+        camera.easeTo({zoom: 10, bearing: 90, pitch: 60, duration: 500});
+        camera.once('zoom', () => {
+            camera.easeTo({zoom: 15}, {done: true});
         });
 
         camera.simulateFrame();
@@ -1059,6 +1099,26 @@ describe('#easeTo', () => {
         camera.simulateFrame();
     });
 
+    test('easeTo on("pitch") during easeTo with zoom, pitch, etc', (done) => {
+        const camera = createCamera();
+
+        camera.on('moveend', (e: Event & {done?: true}) => {
+            if ('done' in e) {
+                setTimeout(() => {
+                    done();
+                }, 50);
+            }
+        });
+
+        camera.easeTo({zoom: 10, bearing: 90, pitch: 60, duration: 500});
+        camera.once('pitch', () => {
+            camera.easeTo({zoom: 15}, {done: true});
+        });
+
+        camera.simulateFrame();
+        camera.simulateFrame();
+    });
+
     test('jumpTo on("rotate") during easeTo', (done) => {
         const camera = createCamera();
 
@@ -1073,6 +1133,26 @@ describe('#easeTo', () => {
         camera.easeTo({bearing: 90, duration: 500}, {done: true});
         camera.once('rotate', () => {
             camera.jumpTo({pitch: 40});
+        });
+
+        camera.simulateFrame();
+        camera.simulateFrame();
+    });
+
+    test('easeTo on("rotate") during easeTo with zoom, pitch, etc', (done) => {
+        const camera = createCamera();
+
+        camera.on('moveend', (e: Event & {done?: true}) => {
+            if ('done' in e) {
+                setTimeout(() => {
+                    done();
+                }, 50);
+            }
+        });
+
+        camera.easeTo({zoom: 10, bearing: 90, pitch: 60, duration: 500});
+        camera.once('rotate', () => {
+            camera.easeTo({zoom: 15}, {done: true});
         });
 
         camera.simulateFrame();
