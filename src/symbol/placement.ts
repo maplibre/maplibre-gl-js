@@ -1,5 +1,5 @@
 import {CollisionIndex, viewportPadding} from './collision_index';
-import type {FeatureKey, PlacedBox} from './collision_index';
+import type {FeatureKey, PlacedBox, PlacedCircles} from './collision_index';
 import {EXTENT} from '../data/extent';
 import * as symbolSize from './symbol_size';
 import * as projection from './projection';
@@ -515,7 +515,7 @@ export class Placement {
             let placedVerticalText = {box: null, placeable: false, offscreen: null};
 
             let placedGlyphBoxes: PlacedBox = null;
-            let placedGlyphCircles = null;
+            let placedGlyphCircles: PlacedCircles = null;
             let placedIconBoxes: PlacedBox = null;
             let textFeatureIndex = 0;
             let verticalTextFeatureIndex = 0;
@@ -612,7 +612,7 @@ export class Placement {
                         const textBoxScale = symbolInstance.textBoxScale;
                         const variableIconBox = hasIconTextFit && (iconOverlapMode === 'never') ? collisionIconBox : null;
 
-                        let placedBox: PlacedBox = {box: [], placeable: false, offscreen: false};
+                        let placedBox: PlacedBox = null;
                         let placementPasses = (textOverlapMode === 'never') ? 1 : 2;
                         let overlapMode: OverlapMode = 'never';
 
@@ -650,7 +650,7 @@ export class Placement {
                             }
                         }
 
-                        if (placedBox.box.length === 0) {
+                        if (showCollisionBoxes && !placedBox) {
                             // No box was successfully placed
                             // Generate bounds for a fake centered box, so that we can at least display something for collision debug.
                             const placedFakeGlyphBox = this.collisionIndex.placeCollisionBox(
@@ -666,7 +666,11 @@ export class Placement {
                                 getElevation,
                                 new Point(0, 0)
                             );
-                            placedBox.box = placedFakeGlyphBox.box;
+                            placedBox = {
+                                box: placedFakeGlyphBox.box,
+                                offscreen: false,
+                                placeable: false
+                            };
                         }
 
                         return placedBox;
@@ -839,62 +843,7 @@ export class Placement {
             }
 
             if (showCollisionBoxes) {
-                const id = bucket.bucketInstanceId;
-
-                if (collisionArrays.textBox || collisionArrays.iconBox) {
-                    // Store the actually used collision box for debug draw
-                    let boxArray: Map<number, {
-                        text: number[];
-                        icon: number[];
-                    }>;
-
-                    if (this.collisionBoxArrays.has(id)) {
-                        boxArray = this.collisionBoxArrays.get(id);
-                    } else {
-                        boxArray = new Map<number, {
-                            text: number[];
-                            icon: number[];
-                        }>();
-                        this.collisionBoxArrays.set(id, boxArray);
-                    }
-                    let realCollisionBox: {
-                        text: number[];
-                        icon: number[];
-                    };
-
-                    if (boxArray.has(symbolIndex)) {
-                        realCollisionBox = boxArray.get(symbolIndex);
-                    } else {
-                        realCollisionBox = {
-                            text: null,
-                            icon: null
-                        };
-                        boxArray.set(symbolIndex, realCollisionBox);
-                    }
-
-                    if (collisionArrays.textBox) {
-                        realCollisionBox.text = placedGlyphBoxes.box;
-                    }
-                    if (collisionArrays.iconBox) {
-                        realCollisionBox.icon = placedIconBoxes.box;
-                    }
-                }
-
-                if (placedGlyphCircles) {
-                    let circleArray = this.collisionCircleArrays[id];
-
-                    // Group collision circles together by bucket. Circles can't be pushed forward for rendering yet as the symbol placement
-                    // for a bucket is not guaranteed to be complete before the commit-function has been called
-                    if (circleArray === undefined)
-                        circleArray = this.collisionCircleArrays[id] = new CollisionCircleArray();
-
-                    for (let i = 0; i < placedGlyphCircles.circles.length; i += 4) {
-                        circleArray.circles.push(placedGlyphCircles.circles[i + 0]);              // x
-                        circleArray.circles.push(placedGlyphCircles.circles[i + 1]);              // y
-                        circleArray.circles.push(placedGlyphCircles.circles[i + 2]);              // radius
-                        circleArray.circles.push(placedGlyphCircles.collisionDetected ? 1 : 0);   // collisionDetected-flag
-                    }
-                }
+                this.storeCollisionData(bucket.bucketInstanceId, symbolIndex, collisionArrays, placedGlyphBoxes, placedIconBoxes, placedGlyphCircles);
             }
 
             if (symbolInstance.crossTileID === 0) throw new Error('symbolInstance.crossTileID can\'t be 0');
@@ -926,6 +875,63 @@ export class Placement {
         }
 
         bucket.justReloaded = false;
+    }
+
+    storeCollisionData(bucketInstanceId: number, symbolIndex: number, collisionArrays: CollisionArrays, placedGlyphBoxes: PlacedBox, placedIconBoxes: PlacedBox, placedGlyphCircles: PlacedCircles): void {
+        if (collisionArrays.textBox || collisionArrays.iconBox) {
+            // Store the actually used collision box for debug draw
+            let boxArray: Map<number, {
+                text: number[];
+                icon: number[];
+            }>;
+
+            if (this.collisionBoxArrays.has(bucketInstanceId)) {
+                boxArray = this.collisionBoxArrays.get(bucketInstanceId);
+            } else {
+                boxArray = new Map<number, {
+                    text: number[];
+                    icon: number[];
+                }>();
+                this.collisionBoxArrays.set(bucketInstanceId, boxArray);
+            }
+            let realCollisionBox: {
+                text: number[];
+                icon: number[];
+            };
+
+            if (boxArray.has(symbolIndex)) {
+                realCollisionBox = boxArray.get(symbolIndex);
+            } else {
+                realCollisionBox = {
+                    text: null,
+                    icon: null
+                };
+                boxArray.set(symbolIndex, realCollisionBox);
+            }
+
+            if (collisionArrays.textBox) {
+                realCollisionBox.text = placedGlyphBoxes.box;
+            }
+            if (collisionArrays.iconBox) {
+                realCollisionBox.icon = placedIconBoxes.box;
+            }
+        }
+
+        if (placedGlyphCircles) {
+            let circleArray = this.collisionCircleArrays[bucketInstanceId];
+
+            // Group collision circles together by bucket. Circles can't be pushed forward for rendering yet as the symbol placement
+            // for a bucket is not guaranteed to be complete before the commit-function has been called
+            if (circleArray === undefined)
+                circleArray = this.collisionCircleArrays[bucketInstanceId] = new CollisionCircleArray();
+
+            for (let i = 0; i < placedGlyphCircles.circles.length; i += 4) {
+                circleArray.circles.push(placedGlyphCircles.circles[i + 0]);              // x
+                circleArray.circles.push(placedGlyphCircles.circles[i + 1]);              // y
+                circleArray.circles.push(placedGlyphCircles.circles[i + 2]);              // radius
+                circleArray.circles.push(placedGlyphCircles.collisionDetected ? 1 : 0);   // collisionDetected-flag
+            }
+        }
     }
 
     markUsedJustification(bucket: SymbolBucket, placedAnchor: TextAnchor, symbolInstance: SymbolInstance, orientation: number) {
@@ -1226,39 +1232,31 @@ export class Placement {
                         }
 
                         if (collisionArrays.textBox || collisionArrays.verticalTextBox) {
-                            let anchorTileX, anchorTileY;
+                            let hidden: boolean;
                             let hidden;
                             if (collisionArrays.textBox) {
-                                anchorTileX = collisionArrays.textBox.anchorPointX;
+                                hidden = horizontalHidden;
                                 anchorTileY = collisionArrays.textBox.anchorPointY;
                                 hidden = horizontalHidden;
                             }
                             if (collisionArrays.verticalTextBox) {
-                                anchorTileX = collisionArrays.verticalTextBox.anchorPointX;
-                                anchorTileY = collisionArrays.verticalTextBox.anchorPointY;
                                 hidden = verticalHidden;
                             }
-                            const projected = this.collisionIndex.projectAndGetPerspectiveRatio(posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
-                            updateCollisionVertices(bucket.textCollisionBox.collisionVertexArray, projected.point, opacityState.text.placed, !used || hidden, realBoxes.text, shift.x, shift.y);
+                            updateCollisionVertices(bucket.textCollisionBox.collisionVertexArray, opacityState.text.placed, !used || hidden, realBoxes.text, shift.x, shift.y);
                         }
                     }
 
                     if (collisionArrays.iconBox || collisionArrays.verticalIconBox) {
                         const verticalIconUsed = Boolean(!verticalHidden && collisionArrays.verticalIconBox);
-                        let anchorTileX, anchorTileY;
+                        let hidden: boolean;
                         let hidden;
                         if (collisionArrays.iconBox) {
-                            anchorTileX = collisionArrays.iconBox.anchorPointX;
-                            anchorTileY = collisionArrays.iconBox.anchorPointY;
                             hidden = verticalIconUsed;
                         }
                         if (collisionArrays.verticalIconBox) {
-                            anchorTileX = collisionArrays.verticalIconBox.anchorPointX;
-                            anchorTileY = collisionArrays.verticalIconBox.anchorPointY;
                             hidden = !verticalIconUsed;
                         }
-                        const projected = this.collisionIndex.projectAndGetPerspectiveRatio(posMatrix, anchorTileX, anchorTileY, tileID, getElevation);
-                        updateCollisionVertices(bucket.iconCollisionBox.collisionVertexArray, projected.point, opacityState.icon.placed, hidden, realBoxes.icon,
+                        updateCollisionVertices(bucket.iconCollisionBox.collisionVertexArray, opacityState.icon.placed, hidden, realBoxes.icon,
                             hasIconTextFit ? shift.x : 0,
                             hasIconTextFit ? shift.y : 0);
                     }
@@ -1335,7 +1333,7 @@ export class Placement {
     }
 }
 
-function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, projectedAnchor: Point, placed: boolean, notUsed: boolean | number, realBox: Array<number>, shiftX?: number, shiftY?: number) {
+function updateCollisionVertices(collisionVertexArray: CollisionVertexArray, placed: boolean, notUsed: boolean | number, realBox: Array<number>, shiftX?: number, shiftY?: number) {
     if (!realBox || realBox.length === 0) {
         realBox = [0, 0, 0, 0];
     }

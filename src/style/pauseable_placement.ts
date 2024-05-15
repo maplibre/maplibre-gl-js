@@ -81,6 +81,7 @@ export class PauseablePlacement {
         prevPlacement?: Placement
     ) {
         this.placement = new Placement(transform, projection, terrain, fadeDuration, crossSourceCollisions, prevPlacement);
+        this.placement = new Placement(transform, new MercatorProjection(), terrain, fadeDuration, crossSourceCollisions, prevPlacement);
         this._currentPlacementIndex = order.length - 1;
         this._forceFullPlacement = forceFullPlacement;
         this._showCollisionBoxes = showCollisionBoxes;

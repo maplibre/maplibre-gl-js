@@ -113,6 +113,10 @@ export default class Worker {
             return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).loadData(params);
         });
 
+        this.actor.registerMessageHandler(MessageType.getData, (mapId: string, params: LoadGeoJSONParameters) => {
+            return (this._getWorkerSource(mapId, params.type, params.source) as GeoJSONWorkerSource).getData();
+        });
+
         this.actor.registerMessageHandler(MessageType.loadTile, (mapId: string, params: WorkerTileParameters) => {
             return this._getWorkerSource(mapId, params.type, params.source).loadTile(params);
         });

@@ -20,7 +20,6 @@ export class Hash {
      * Map element to listen for coordinate changes
      *
      * @param map - The map object
-     * @returns `this`
      */
     addTo(map: Map) {
         this._map = map;
@@ -31,8 +30,6 @@ export class Hash {
 
     /**
      * Removes hash
-     *
-     * @returns `this`
      */
     remove() {
         removeEventListener('hashchange', this._onHashChange, false);

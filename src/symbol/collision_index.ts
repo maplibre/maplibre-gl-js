@@ -17,8 +17,9 @@ import type {
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
-import {ProjectionArgs} from '../symbol/projection';
+import {SymbolProjectionContext} from '../symbol/projection';
 import {Projection} from '../geo/projection/projection';
+import {clamp, getAABB} from '../util/util';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around
@@ -27,6 +28,12 @@ import {Projection} from '../geo/projection/projection';
 // occur offscreen. Making this constant greater increases label
 // stability, but it's expensive.
 export const viewportPadding = 100;
+
+export type PlacedCircles = {
+    circles: Array<number>;
+    offscreen: boolean;
+    collisionDetected: boolean;
+};
 
 export type PlacedBox = {
     box: Array<number>;
@@ -161,11 +168,7 @@ export class CollisionIndex {
         textPixelPadding: number,
         translation: [number, number],
         getElevation: (x: number, y: number) => number
-    ): {
-            circles: Array<number>;
-            offscreen: boolean;
-            collisionDetected: boolean;
-        } {
+    ): PlacedCircles {
         const placedCollisionCircles = [];
 
         const tileUnitAnchorPoint = new Point(symbol.anchorX, symbol.anchorY);
@@ -177,7 +180,7 @@ export class CollisionIndex {
         const lineOffsetX = symbol.lineOffsetX * labelPlaneFontScale;
         const lineOffsetY = symbol.lineOffsetY * labelPlaneFontScale;
 
-        const projectionArgs: ProjectionArgs = {
+        const projectionContext: SymbolProjectionContext = {
             getElevation,
             labelPlaneMatrix,
             lineVertexArray,
@@ -199,7 +202,7 @@ export class CollisionIndex {
             /*flip*/ false,
             symbol,
             false,
-            projectionArgs);
+            projectionContext);
 
         let collisionDetected = false;
         let inGrid = false;
@@ -228,7 +231,7 @@ export class CollisionIndex {
 
             // The path might need to be converted into screen space if a pitched map is used as the label space
             if (labelToScreenMatrix) {
-                const screenSpacePath = this.projectPathToScreenSpace(projectedPath, projectionArgs, labelToScreenMatrix);
+                const screenSpacePath = this.projectPathToScreenSpace(projectedPath, projectionContext, labelToScreenMatrix);
                 // Do not try to place collision circles if even one of the points is behind the camera.
                 // This is a plausible scenario with big camera pitch angles
                 if (screenSpacePath.some(point => point.signedDistanceFromCamera <= 0)) {
@@ -449,12 +452,9 @@ export class CollisionIndex {
     }
 
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
-        let projected;
-        if (this.mapProjection.useSpecialProjectionForSymbols) {
-            projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
-        } else {
-            projected = projection.project(new Point(x, y), posMatrix, getElevation);
-        }
+        const projected = this.mapProjection.useSpecialProjectionForSymbols ?
+            this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
+            projection.project(new Point(x, y), posMatrix, getElevation);
         return {
             point: new Point(
                 (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
@@ -464,18 +464,19 @@ export class CollisionIndex {
             // We're doing collision detection in viewport space so we need
             // to scale down boxes in the distance
             perspectiveRatio: 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera),
-            isOccluded: (projected.isOccluded !== undefined) ? projected.isOccluded : false
+            isOccluded: projected.isOccluded,
+            signedDistanceFromCamera: projected.signedDistanceFromCamera
         };
     }
 
     getPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number {
         // We don't care about the actual projected point, just its W component.
-        let projected;
-        if (this.mapProjection.useSpecialProjectionForSymbols) {
-            projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
-        } else {
-            projected = projection.project(new Point(x, y), posMatrix, getElevation);
-        }
+        const projected = this.mapProjection.useSpecialProjectionForSymbols ?
+            this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
+            projection.project(new Point(x, y), posMatrix, getElevation);
+        return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
+    }
+
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
@@ -496,6 +497,140 @@ export class CollisionIndex {
         const m = mat4.identity([] as any);
         mat4.translate(m, m, [-viewportPadding, -viewportPadding, 0.0]);
         return m;
+    }
+
+    /**
+     * Applies all layout+paint properties of the given box in order to find as good approximation of its screen-space bounding box as possible.
+     */
+    private _projectCollisionBox(
+        collisionBox: SingleCollisionBox,
+        textPixelRatio: number,
+        posMatrix: mat4,
+        unwrappedTileID: UnwrappedTileID,
+        pitchWithMap: boolean,
+        rotateWithMap: boolean,
+        translation: [number, number],
+        projectedPoint: {point: Point; perspectiveRatio: number; signedDistanceFromCamera: number},
+        getElevation?: (x: number, y: number) => number,
+        shift?: Point
+    ): {
+            box: [number, number, number, number];
+            allPointsOccluded: boolean;
+        } {
+
+        const tileToViewport = textPixelRatio * projectedPoint.perspectiveRatio;
+
+        // These vectors are valid both for screen space viewport-rotation-aligned texts and for pitch-align: map texts that are map-rotation-aligned.
+        let vecEast = new Point(1, 0);
+        let vecSouth = new Point(0, 1);
+
+        const translatedAnchor = new Point(collisionBox.anchorPointX + translation[0], collisionBox.anchorPointY + translation[1]);
+
+        if (rotateWithMap && !pitchWithMap) {
+            // Handles screen space texts that are always aligned east-west.
+            const projectedEast = this.projectAndGetPerspectiveRatio(
+                posMatrix,
+                translatedAnchor.x + 1,
+                translatedAnchor.y,
+                unwrappedTileID,
+                getElevation
+            ).point;
+            const toEast = projectedEast.sub(projectedPoint.point).unit();
+            const angle = Math.atan(toEast.y / toEast.x) + (toEast.x < 0 ? Math.PI : 0);
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            vecEast = new Point(cos, sin);
+            vecSouth = new Point(-sin, cos);
+        } else if (!rotateWithMap && pitchWithMap) {
+            // Handles pitch-align: map texts that are always aligned with the viewport's X axis.
+            const angle = -this.transform.angle;
+            const sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            vecEast = new Point(cos, sin);
+            vecSouth = new Point(-sin, cos);
+        }
+
+        // Configuration for screen space offsets
+        let basePoint = projectedPoint.point;
+        let distanceMultiplier = tileToViewport;
+
+        if (pitchWithMap) {
+            // Configuration for tile space (map-pitch-aligned) offsets
+            basePoint = translatedAnchor;
+
+            const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
+            distanceMultiplier = Math.pow(2, -zoomFraction);
+            distanceMultiplier *= this.mapProjection.getPitchedTextCorrection(this.transform, translatedAnchor, unwrappedTileID);
+
+            // This next correction can't be applied when variable anchors are in use.
+            if (!shift) {
+                // Shader applies a perspective size correction, we need to apply the same correction.
+                // For non-pitchWithMap texts, this is handled above by multiplying `textPixelRatio` with `projectedPoint.perspectiveRatio`,
+                // which is equivalent to the non-pitchWithMap branch of the GLSL code.
+                // Here, we compute and apply the pitchWithMap branch.
+                // See the computation of `perspective_ratio` in the symbol vertex shaders for the GLSL code.
+                const distanceRatio = projectedPoint.signedDistanceFromCamera / this.transform.cameraToCenterDistance;
+                const perspectiveRatio = clamp(0.5 + 0.5 * distanceRatio, 0.0, 4.0); // Same clamp as what is used in the shader.
+                distanceMultiplier *= perspectiveRatio;
+            }
+        }
+
+        if (shift) {
+            // Variable anchors are in use
+            basePoint = basePoint.add(vecEast.mult(shift.x * distanceMultiplier)).add(vecSouth.mult(shift.y * distanceMultiplier));
+        }
+
+        const offsetXmin = collisionBox.x1 * distanceMultiplier;
+        const offsetXmax = collisionBox.x2 * distanceMultiplier;
+        const offsetXhalf = (offsetXmin + offsetXmax) / 2;
+        const offsetYmin = collisionBox.y1 * distanceMultiplier;
+        const offsetYmax = collisionBox.y2 * distanceMultiplier;
+        const offsetYhalf = (offsetYmin + offsetYmax) / 2;
+
+        // 0--1--2
+        // |     |
+        // 7     3
+        // |     |
+        // 6--5--4
+        const offsetsArray: Array<{offsetX: number; offsetY: number}> = [
+            {offsetX: offsetXmin,  offsetY: offsetYmin},
+            {offsetX: offsetXhalf, offsetY: offsetYmin},
+            {offsetX: offsetXmax,  offsetY: offsetYmin},
+            {offsetX: offsetXmax,  offsetY: offsetYhalf},
+            {offsetX: offsetXmax,  offsetY: offsetYmax},
+            {offsetX: offsetXhalf, offsetY: offsetYmax},
+            {offsetX: offsetXmin,  offsetY: offsetYmax},
+            {offsetX: offsetXmin,  offsetY: offsetYhalf}
+        ];
+
+        let points: Array<Point> = [];
+
+        for (const {offsetX, offsetY} of offsetsArray) {
+            points.push(new Point(
+                basePoint.x + vecEast.x * offsetX + vecSouth.x * offsetY,
+                basePoint.y + vecEast.y * offsetX + vecSouth.y * offsetY
+            ));
+        }
+
+        // Is any point of the collision shape visible on the globe (on beyond horizon)?
+        let anyPointVisible = false;
+
+        if (pitchWithMap) {
+            const projected = points.map(p => this.projectAndGetPerspectiveRatio(posMatrix, p.x, p.y, unwrappedTileID, getElevation));
+
+            // Is at least one of the projected points NOT behind the horizon?
+            anyPointVisible = projected.some(p => !p.isOccluded);
+
+            points = projected.map(p => p.point);
+        } else {
+            // Labels that are not pitchWithMap cannot ever hide behind the horizon.
+            anyPointVisible = true;
+        }
+
+        return {
+            box: getAABB(points),
+            allPointsOccluded: !anyPointVisible
+        };
     }
 
     /**

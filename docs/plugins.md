@@ -195,6 +195,10 @@ Provides a [Svelte](https://svelte.dev) integration.
 A preconfigured template repository to easily start developing a maplibre application in svelte/sveltekit.
 <br/><small>[View on GitHub](https://github.com/watergis/sveltekit-maplibre-boilerplate)</small>
 
+#### maps-withastro
+Bring Leaflet & MapLibre maps directly into [Astro](http://astro.build).
+<br/><small>[View on GitHub](https://github.com/roblabs/maps-withastro)</small>
+
 ## Utility Libraries
 
 #### turf

@@ -20,6 +20,19 @@
     "sdf": false,
     "content": [10, 10, 30, 30]
   },
+  "nine-part-textfit-wh-stretchOnly-proportional": {
+    "x": 0,
+    "y": 0,
+    "width": 40,
+    "height": 40,
+    "pixelRatio": 2,
+    "stretchX": [[10, 30]],
+    "stretchY": [[10, 30]],
+    "sdf": false,
+    "content": [10, 10, 30, 30],
+    "textFitWidth": "stretchOnly",
+    "textFitHeight": "proportional"
+  },
   "fifteen-part": {
     "x": 50,
     "y": 0,
