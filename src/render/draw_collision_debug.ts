@@ -38,7 +38,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         const tile = sourceCache.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
-        const posMatrix = coord.posMatrix;
+        const posMatrix = coord.posMatrix; // This intentionally ignores "*-translate" and "*-translate-anchor" properties - collision boxes already incorporate them implicitly.
         const buffers = isText ? bucket.textCollisionBox : bucket.iconCollisionBox;
         // Get collision circle data of this bucket
         const circleArray: Array<number> = bucket.collisionCircleArray;
@@ -54,7 +54,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             tileBatches.push({
                 circleArray,
                 circleOffset,
-                transform: coord.posMatrix, // Ignore translation
+                transform: posMatrix,
                 invTransform,
                 coord
             });
