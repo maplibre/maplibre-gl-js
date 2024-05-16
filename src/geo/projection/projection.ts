@@ -9,6 +9,7 @@ import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import Point from '@mapbox/point-geometry';
 import type {LngLat} from '../lng_lat';
+import {PointProjection} from '../../symbol/projection';
 
 export type ProjectionGPUContext = {
     context: Context;
@@ -157,7 +158,7 @@ export interface Projection {
      * @internal
      * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
      * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
-     * @param transformCenter - The map's longitude and latitude.
+     * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
      * @param textAnchor - Text anchor position inside the tile.
      * @param tileID - The tile coordinates.
      */
@@ -190,9 +191,5 @@ export interface Projection {
      * @internal
      * Projects a point in tile coordinates. Used in symbol rendering.
      */
-    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): {
-        point: Point;
-        signedDistanceFromCamera: number;
-        isOccluded: boolean;
-    };
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
 }
