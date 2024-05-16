@@ -169,17 +169,6 @@ export class MercatorProjection implements Projection {
         // This function should only be used when useSpecialProjectionForSymbols is set to true.
         throw new Error('Not implemented.');
     }
-
-    // HM TODO: fix this!
-    getPitchedTextCorrection(_transform: any, _anchor: any, _tile: any) {
-        return 1;
-    }
-
-    // HM TODO: fix this!
-    projectTileCoordinates(_x, _y, _t, _ele) {
-        // This function should only be used when useSpecialProjectionForSymbols is set to true.
-        throw new Error('Not implemented.');
-    }
 }
 
 /**

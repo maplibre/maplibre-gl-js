@@ -105,10 +105,8 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
     }
 
     if (sourceCache.map.showCollisionBoxes) {
-        drawCollisionDebug(painter, sourceCache, layer, coords, layer.paint.get('text-translate'),
-            layer.paint.get('text-translate-anchor'), true);
-        drawCollisionDebug(painter, sourceCache, layer, coords, layer.paint.get('icon-translate'),
-            layer.paint.get('icon-translate-anchor'), false);
+        drawCollisionDebug(painter, sourceCache, layer, coords, true);
+        drawCollisionDebug(painter, sourceCache, layer, coords, false);
     }
 }
 
@@ -163,23 +161,23 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     }
 }
 
-function getShiftedAnchor(projectedAnchorPoint: Point, projectionArgs: symbolProjection.ProjectionArgs, rotateWithMap, shift: Point, transformAngle: number, pitchedTextShiftCorrection: number) {
+function getShiftedAnchor(projectedAnchorPoint: Point, projectionContext: symbolProjection.SymbolProjectionContext, rotateWithMap, shift: Point, transformAngle: number, pitchedTextShiftCorrection: number) {
     // Usual case is that we take the projected anchor and add the pixel-based shift
     // calculated earlier. In the (somewhat weird) case of pitch-aligned text, we add an equivalent
     // tile-unit based shift to the anchor before projecting to the label plane.
-    const translatedAnchor = projectionArgs.tileAnchorPoint.add(new Point(projectionArgs.translation[0], projectionArgs.translation[1]));
-    if (projectionArgs.pitchWithMap) {
+    const translatedAnchor = projectionContext.tileAnchorPoint.add(new Point(projectionContext.translation[0], projectionContext.translation[1]));
+    if (projectionContext.pitchWithMap) {
         let adjustedShift = shift.mult(pitchedTextShiftCorrection);
         if (!rotateWithMap) {
             adjustedShift = adjustedShift.rotate(-transformAngle);
         }
         const tileAnchorShifted = translatedAnchor.add(adjustedShift);
-        return symbolProjection.project(tileAnchorShifted, projectionArgs.labelPlaneMatrix, projectionArgs.getElevation).point;
+        return symbolProjection.project(tileAnchorShifted, projectionContext.labelPlaneMatrix, projectionContext.getElevation).point;
     } else {
         if (rotateWithMap) {
             // Compute the angle with which to rotate the anchor, so that it is aligned with
             // the map's actual east-west axis. Very similar to what is done in the shader.
-            const projectedAnchorRight = symbolProjection.projectTileCoordinatesToViewport(projectionArgs.tileAnchorPoint.x + 1, projectionArgs.tileAnchorPoint.y, projectionArgs);
+            const projectedAnchorRight = symbolProjection.projectTileCoordinatesToViewport(projectionContext.tileAnchorPoint.x + 1, projectionContext.tileAnchorPoint.y, projectionContext);
             const east = projectedAnchorRight.point.sub(projectedAnchorPoint);
             const angle = Math.atan(east.y / east.x) + (east.x < 0 ? Math.PI : 0);
             return projectedAnchorPoint.add(shift.rotate(angle));

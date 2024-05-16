@@ -67,7 +67,6 @@ describe('SymbolBucket', () => {
         const bucketB = bucketSetup() as any as SymbolBucket;
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
         const placement = new Placement(transform, new MercatorProjection(), undefined as any, 0, true);
-        const placement = new Placement(transform, new MercatorProjection(), undefined as any, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 

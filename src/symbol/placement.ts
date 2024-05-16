@@ -1106,8 +1106,6 @@ export class Placement {
         };
 
         const boxArrays = this.collisionBoxArrays.get(bucket.bucketInstanceId);
-        const getElevation = this._getTerrainElevationFunc(tileID);
-        const posMatrix = this.transform.calculatePosMatrix(tileID.toUnwrapped(), false);
 
         for (let s = 0; s < bucket.symbolInstances.length; s++) {
             const symbolInstance = bucket.symbolInstances.get(s);
@@ -1233,10 +1231,7 @@ export class Placement {
 
                         if (collisionArrays.textBox || collisionArrays.verticalTextBox) {
                             let hidden: boolean;
-                            let hidden;
                             if (collisionArrays.textBox) {
-                                hidden = horizontalHidden;
-                                anchorTileY = collisionArrays.textBox.anchorPointY;
                                 hidden = horizontalHidden;
                             }
                             if (collisionArrays.verticalTextBox) {
@@ -1249,7 +1244,6 @@ export class Placement {
                     if (collisionArrays.iconBox || collisionArrays.verticalIconBox) {
                         const verticalIconUsed = Boolean(!verticalHidden && collisionArrays.verticalIconBox);
                         let hidden: boolean;
-                        let hidden;
                         if (collisionArrays.iconBox) {
                             hidden = verticalIconUsed;
                         }
