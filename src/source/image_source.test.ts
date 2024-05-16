@@ -9,6 +9,7 @@ import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Texture} from '../render/texture';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 function createSource(options) {
     options = extend({
@@ -26,7 +27,7 @@ class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this._requestManager = {
             transformRequest: (url) => {
                 return {url};

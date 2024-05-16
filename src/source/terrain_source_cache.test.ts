@@ -10,8 +10,9 @@ import {RasterDEMTileSource} from './raster_dem_tile_source';
 import {OverscaledTileID} from './tile_id';
 import {Tile} from './tile';
 import {DEMData} from '../data/dem_data';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
-const transform = new Transform();
+const transform = new MercatorTransform();
 
 class StubMap extends Evented {
     transform: Transform;

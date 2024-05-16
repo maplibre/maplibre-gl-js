@@ -6,6 +6,7 @@ import {extend} from '../util/util';
 import type {Dispatcher} from '../util/dispatcher';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 function createSource(options?) {
     const c = options && options.canvas || window.document.createElement('canvas');
@@ -31,7 +32,7 @@ class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this.style = {};
         this.painter = {
             context: {

@@ -7,6 +7,7 @@ import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {Transform} from '../geo/transform';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class StubMap extends Evented {
     transform: Transform;
@@ -15,7 +16,7 @@ class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this.style = {};
         this.painter = {
             context: {

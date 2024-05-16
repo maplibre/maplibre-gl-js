@@ -16,6 +16,7 @@ import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
 import {UnwrappedTileID} from '../source/tile_id';
 import {Projection} from '../geo/projection/projection';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 export {
     updateLineLabels,
@@ -112,7 +113,7 @@ function getLabelPlaneMatrix(posMatrix: mat4,
             mat4.rotateZ(m, m, transform.angle);
         }
     } else {
-        mat4.multiply(m, transform.labelPlaneMatrix, posMatrix);
+        mat4.multiply(m, (transform as MercatorTransform).labelPlaneMatrix, posMatrix); // JP: TODO: remove this hack
     }
     return m;
 }
@@ -133,7 +134,7 @@ function getGlCoordMatrix(posMatrix: mat4,
         }
         return m;
     } else {
-        return transform.glCoordMatrix;
+        return (transform as MercatorTransform).glCoordMatrix; // JP: TODO: remove this hack
     }
 }
 

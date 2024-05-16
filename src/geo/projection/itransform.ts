@@ -8,6 +8,8 @@ import type {EdgeInsets, PaddingOptions} from '../edge_insets';
 import {Terrain} from '../../render/terrain';
 import type {mat2, mat4} from 'gl-matrix';
 
+// JP: TODO: remove this file!
+
 /*
 Transform setup:
 

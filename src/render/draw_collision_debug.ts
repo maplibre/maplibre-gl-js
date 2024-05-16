@@ -13,6 +13,7 @@ import {SegmentVector} from '../data/segment';
 import {mat4} from 'gl-matrix';
 import {VertexBuffer} from '../gl/vertex_buffer';
 import {IndexBuffer} from '../gl/index_buffer';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 type TileBatch = {
     circleArray: Array<number>;
@@ -48,7 +49,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             // required for transforming points from previous screen space to the current one
             const invTransform = mat4.create();
 
-            mat4.mul(invTransform, bucket.placementInvProjMatrix, painter.transform.glCoordMatrix);
+            mat4.mul(invTransform, bucket.placementInvProjMatrix, (painter.transform as MercatorTransform).glCoordMatrix); // JP: TODO: remove this hack
             mat4.mul(invTransform, invTransform, bucket.placementViewportMatrix);
 
             tileBatches.push({

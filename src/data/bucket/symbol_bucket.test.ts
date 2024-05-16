@@ -6,7 +6,6 @@ import {SymbolBucket} from './symbol_bucket';
 import {CollisionBoxArray} from '../../data/array_types.g';
 import {performSymbolLayout} from '../../symbol/symbol_layout';
 import {Placement} from '../../symbol/placement';
-import {Transform} from '../../geo/transform';
 import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
 import {Tile} from '../../source/tile';
 import {CrossTileSymbolIndex} from '../../symbol/cross_tile_symbol_index';
@@ -20,6 +19,7 @@ import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type:
 import {StyleGlyph} from '../../style/style_glyph';
 import {MercatorProjection} from '../../geo/projection/mercator';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {MercatorTransform} from '../../geo/projection/mercator_transform';
 
 // Load a point feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
@@ -27,10 +27,10 @@ const feature = vt.layers.place_label.feature(10);
 
 /*eslint new-cap: 0*/
 const collisionBoxArray = new CollisionBoxArray();
-const transform = new Transform();
+const transform = new MercatorTransform();
 transform['_width'] = 100;
 transform['_height'] = 100;
-transform.cameraToCenterDistance = 100;
+transform['_cameraToCenterDistance'] = 100;
 
 const stacks = {'Test': glyphs} as any as {
     [_: string]: {

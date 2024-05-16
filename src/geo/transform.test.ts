@@ -1,13 +1,14 @@
 import Point from '@mapbox/point-geometry';
-import {MAX_VALID_LATITUDE, Transform} from './transform';
+import {MAX_VALID_LATITUDE} from './transform';
 import {LngLat} from './lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
 import type {Terrain} from '../render/terrain';
+import {MercatorTransform} from './projection/mercator_transform';
 
 describe('transform', () => {
     test('creates a transform', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(500, 500);
         expect(transform.unmodified).toBe(true);
         expect(transform.tileSize).toBe(512);
@@ -42,14 +43,14 @@ describe('transform', () => {
 
     test('does not throw on bad center', () => {
         expect(() => {
-            const transform = new Transform(0, 22, 0, 60, true);
+            const transform = new MercatorTransform(0, 22, 0, 60, true);
             transform.resize(500, 500);
             transform.center = new LngLat(50, -90);
         }).not.toThrow();
     });
 
     test('setLocationAt', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(500, 500);
         transform.zoom = 4;
         expect(transform.center).toEqual({lng: 0, lat: 0});
@@ -58,7 +59,7 @@ describe('transform', () => {
     });
 
     test('setLocationAt tilted', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(500, 500);
         transform.zoom = 4;
         transform.pitch = 50;
@@ -68,26 +69,26 @@ describe('transform', () => {
     });
 
     test('has a default zoom', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(500, 500);
         expect(transform.tileZoom).toBe(0);
         expect(transform.tileZoom).toBe(transform.zoom);
     });
 
     test('set zoom inits tileZoom with zoom value', () => {
-        const transform = new Transform(0, 22, 0, 60);
+        const transform = new MercatorTransform(0, 22, 0, 60);
         transform.zoom = 5;
         expect(transform.tileZoom).toBe(5);
     });
 
     test('set zoom clamps tileZoom to non negative value ', () => {
-        const transform = new Transform(-2, 22, 0, 60);
+        const transform = new MercatorTransform(-2, 22, 0, 60);
         transform.zoom = -2;
         expect(transform.tileZoom).toBe(0);
     });
 
     test('set fov', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.fov = 10;
         expect(transform.fov).toBe(10);
         transform.fov = 10;
@@ -95,7 +96,7 @@ describe('transform', () => {
     });
 
     test('lngRange & latRange constrain zoom and center', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.center = new LngLat(0, 0);
         transform.zoom = 10;
         transform.resize(500, 500);
@@ -115,7 +116,7 @@ describe('transform', () => {
     });
 
     test('lngRange can constrain zoom and center across meridian', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.center = new LngLat(180, 0);
         transform.zoom = 10;
         transform.resize(500, 500);
@@ -154,7 +155,7 @@ describe('transform', () => {
             tileSize: 512
         };
 
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(200, 200);
 
         test('generell', () => {
@@ -298,7 +299,7 @@ describe('transform', () => {
             roundZoom: false,
         };
 
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
 
         transform.zoom = 0;
         expect(transform.coveringZoomLevel(options)).toBe(0);
@@ -350,14 +351,14 @@ describe('transform', () => {
     });
 
     test('clamps latitude', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
 
         expect(transform.project(new LngLat(0, -90))).toEqual(transform.project(new LngLat(0, -MAX_VALID_LATITUDE)));
         expect(transform.project(new LngLat(0, 90))).toEqual(transform.project(new LngLat(0, MAX_VALID_LATITUDE)));
     });
 
     test('clamps pitch', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
 
         transform.pitch = 45;
         expect(transform.pitch).toBe(45);
@@ -370,7 +371,7 @@ describe('transform', () => {
     });
 
     test('visibleUnwrappedCoordinates', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(200, 200);
         transform.zoom = 0;
         transform.center = new LngLat(-170.01, 0.01);
@@ -385,7 +386,7 @@ describe('transform', () => {
     });
 
     test('maintains high float precision when calculating matrices', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(200.25, 200.25);
         transform.zoom = 20.25;
         transform.pitch = 67.25;
@@ -397,7 +398,7 @@ describe('transform', () => {
     });
 
     test('recalculateZoom', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.elevation = 200;
         transform.center = new LngLat(10.0, 50.0);
         transform.zoom = 14;
@@ -437,7 +438,7 @@ describe('transform', () => {
     });
 
     test('pointCoordinate with terrain when returning null should fall back to 2D', () => {
-        const transform = new Transform(0, 22, 0, 60, true);
+        const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(500, 500);
         const terrain = {
             pointCoordinate: () => null
@@ -448,7 +449,7 @@ describe('transform', () => {
     });
 
     test('horizon', () => {
-        const transform = new Transform(0, 22, 0, 85, true);
+        const transform = new MercatorTransform(0, 22, 0, 85, true);
         transform.resize(500, 500);
         transform.pitch = 75;
         const horizon = transform.getHorizon();
@@ -457,7 +458,7 @@ describe('transform', () => {
     });
 
     test('getBounds with horizon', () => {
-        const transform = new Transform(0, 22, 0, 85, true);
+        const transform = new MercatorTransform(0, 22, 0, 85, true);
         transform.resize(500, 500);
 
         transform.pitch = 60;
@@ -470,7 +471,7 @@ describe('transform', () => {
     });
 
     test('lngLatToCameraDepth', () => {
-        const transform = new Transform(0, 22, 0, 85, true);
+        const transform = new MercatorTransform(0, 22, 0, 85, true);
         transform.resize(500, 500);
         transform.center = new LngLat(10.0, 50.0);
 

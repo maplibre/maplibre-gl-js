@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {Transform} from '../geo/transform';
 import {smartWrap} from './smart_wrap';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
-const transform = new Transform();
+const transform = new MercatorTransform();
 transform['_width'] = 100;
 transform['_height'] = 100;
 transform.getHorizon = () => 0; // map center

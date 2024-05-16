@@ -24,6 +24,7 @@ import {Terrain} from '../render/terrain';
 import {warnOnce} from '../util/util';
 import {TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 import {Projection} from '../geo/projection/projection';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class OpacityState {
     opacity: number;
@@ -308,7 +309,7 @@ export class Placement {
                 this.transform,
                 pixelsToTiles);
 
-            labelToScreenMatrix = mat4.multiply([] as any, this.transform.labelPlaneMatrix, glMatrix);
+            labelToScreenMatrix = mat4.multiply([] as any, (this.transform as MercatorTransform).labelPlaneMatrix, glMatrix); // JP: TODO: remove this hack
         }
 
         // As long as this placement lives, we have to hold onto this bucket's

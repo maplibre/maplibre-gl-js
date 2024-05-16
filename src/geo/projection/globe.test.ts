@@ -5,7 +5,7 @@ import {expectToBeCloseToArray} from './mercator.test';
 import type {TransformLike} from './projection';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import type {Transform} from '../transform';
+import {MercatorTransform} from './mercator_transform';
 
 describe('GlobeProjection', () => {
     describe('getProjectionData', () => {
@@ -131,7 +131,7 @@ describe('GlobeProjection', () => {
         test('unproject screen center', () => {
             const precisionDigits = 2;
             const globe = new GlobeProjection();
-            const transform = createMockTransform({}) as any as Transform;
+            const transform = createMockTransform({}) as any as MercatorTransform; // JP: TODO: remove this hack
             globe.updateProjection(transform);
             let unprojected = globe.unprojectScreenPoint(screenCenter, transform);
             expect(unprojected.lng).toBeCloseTo(transform.center.lng, precisionDigits);
@@ -158,7 +158,7 @@ describe('GlobeProjection', () => {
             const transform = createMockTransform({
                 pitch: 60,
                 bearing: -90,
-            }) as any as Transform;
+            }) as any as MercatorTransform; // JP: TODO: remove this hack
             globe.updateProjection(transform);
             const unprojected = globe.unprojectScreenPoint(screenTopEdgeCenter, transform);
             expect(unprojected.lng).toBeLessThan(-38.0);

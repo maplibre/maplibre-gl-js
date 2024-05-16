@@ -9,6 +9,7 @@ import {CanonicalTileID, UnwrappedTileID} from '../../../src/source/tile_id';
 import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
 import {MercatorProjection} from '../../../src/geo/projection/mercator';
+import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
 
 type TestSymbol = {
     collisionBox: SingleCollisionBox;
@@ -43,7 +44,7 @@ export default class SymbolCollisionBox extends Benchmark {
     private _symbols: Array<TestSymbol>;
 
     async setup(): Promise<void> {
-        this._transform = new Transform(0, 22, 0, 60, true);
+        this._transform = new MercatorTransform(0, 22, 0, 60, true);
         this._transform.resize(1024, 1024);
         // HM TODO: fix this!
         this._projection = new MercatorProjection();

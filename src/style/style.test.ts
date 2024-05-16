@@ -17,6 +17,7 @@ import {GeoJSONSource} from '../source/geojson_source';
 import {sleep} from '../util/test/util';
 import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {MessageType} from '../util/actor_messages';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({
@@ -54,7 +55,7 @@ class StubMap extends Evented {
 
     constructor() {
         super();
-        this.transform = new Transform();
+        this.transform = new MercatorTransform();
         this._requestManager = new RequestManager();
     }
 
@@ -1691,7 +1692,7 @@ describe('Style#setPaintProperty', () => {
             ]
         }));
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr.resize(512, 512);
 
         style.once('style.load', () => {
@@ -2157,7 +2158,7 @@ describe('Style#queryRenderedFeatures', () => {
 
     beforeEach((callback) => {
         style = new Style(getStubMap());
-        transform = new Transform();
+        transform = new MercatorTransform();
         transform.resize(512, 512);
         function queryMapLibreFeatures(layers, serializedLayers, getFeatureState, queryGeom, cameraQueryGeom, scale, params) {
             const features = {
@@ -2390,7 +2391,7 @@ describe('Style#query*Features', () => {
     let transform;
 
     beforeEach((callback) => {
-        transform = new Transform();
+        transform = new MercatorTransform();
         transform.resize(100, 100);
         style = new Style(getStubMap());
         style.loadJSON({

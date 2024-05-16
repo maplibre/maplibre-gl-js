@@ -3,7 +3,6 @@ import {Map} from '../ui/map';
 import {Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
-import {Transform} from '../geo/transform';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {Event, ErrorEvent, Evented} from '../util/evented';
@@ -13,6 +12,7 @@ import {Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
 import {TileCache} from './tile_cache';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -154,7 +154,7 @@ describe('SourceCache#addTile', () => {
         };
         sourceCache.on('dataloading', () => { add++; });
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -175,7 +175,7 @@ describe('SourceCache#addTile', () => {
             tile.state = 'loaded';
         };
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -205,7 +205,7 @@ describe('SourceCache#addTile', () => {
             sourceCache._setTileReloadTimer(tileID.key, tile);
         };
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -297,7 +297,7 @@ describe('SourceCache#removeTile', () => {
         };
         sourceCache._source.unloadTile = jest.fn();
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -436,7 +436,7 @@ describe('SourceCache / Source lifecycle', () => {
     });
 
     test('loaded() true after tile error', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 0;
         const sourceCache = createSourceCache();
@@ -483,7 +483,7 @@ describe('SourceCache / Source lifecycle', () => {
     });
 
     test('reloads tiles after a data event where source is updated', () => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 0;
 
@@ -507,7 +507,7 @@ describe('SourceCache / Source lifecycle', () => {
     });
 
     test('does not reload errored tiles', () => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 1;
 
@@ -536,7 +536,7 @@ describe('SourceCache / Source lifecycle', () => {
 
 describe('SourceCache#update', () => {
     test('loads no tiles if used is false', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(512, 512);
         transform.zoom = 0;
 
@@ -552,7 +552,7 @@ describe('SourceCache#update', () => {
     });
 
     test('loads covering tiles', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 0;
 
@@ -568,7 +568,7 @@ describe('SourceCache#update', () => {
     });
 
     test('respects Source#hasTile method if it is present', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 1;
 
@@ -589,7 +589,7 @@ describe('SourceCache#update', () => {
     });
 
     test('removes unused tiles', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 0;
 
@@ -620,7 +620,7 @@ describe('SourceCache#update', () => {
     });
 
     test('retains parent tiles for pending children', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         (transform as any)._test = 'retains';
         transform.resize(511, 511);
         transform.zoom = 0;
@@ -652,7 +652,7 @@ describe('SourceCache#update', () => {
     });
 
     test('retains parent tiles for pending children (wrapped)', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 0;
         transform.center = new LngLat(360, 0);
@@ -684,7 +684,7 @@ describe('SourceCache#update', () => {
     });
 
     test('retains covered child tiles while parent tile is fading in', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 2;
 
@@ -718,7 +718,7 @@ describe('SourceCache#update', () => {
     });
 
     test('retains a parent tile for fading even if a tile is partially covered by children', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 0;
 
@@ -749,7 +749,7 @@ describe('SourceCache#update', () => {
     });
 
     test('retain children for fading fadeEndTime is 0 (added but registerFadeDuration() is not called yet)', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 1;
 
@@ -777,7 +777,7 @@ describe('SourceCache#update', () => {
     });
 
     test('retains children when tile.fadeEndTime is in the future', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 1;
 
@@ -821,7 +821,7 @@ describe('SourceCache#update', () => {
     });
 
     test('retains overscaled loaded children', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 16;
 
@@ -860,7 +860,7 @@ describe('SourceCache#update', () => {
 
     test('reassigns tiles for large jumps in longitude', done => {
 
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 0;
 
@@ -1372,7 +1372,7 @@ describe('SourceCache#clearTiles', () => {
 
 describe('SourceCache#tilesIn', () => {
     test('graceful response before source loaded', () => {
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr.resize(512, 512);
         const sourceCache = createSourceCache({noLoad: true});
         sourceCache.transform = tr;
@@ -1391,7 +1391,7 @@ describe('SourceCache#tilesIn', () => {
     }
 
     test('regular tiles', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(512, 512);
         transform.zoom = 1;
         transform.center = new LngLat(0, 1);
@@ -1449,7 +1449,7 @@ describe('SourceCache#tilesIn', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                const transform = new Transform();
+                const transform = new MercatorTransform();
                 transform.resize(1024, 1024);
                 transform.zoom = 2.0;
                 transform.center = new LngLat(0, 1);
@@ -1498,7 +1498,7 @@ describe('SourceCache#tilesIn', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                const transform = new Transform();
+                const transform = new MercatorTransform();
                 transform.resize(512, 512);
                 transform.zoom = 2.0;
                 sourceCache.update(transform);
@@ -1519,7 +1519,7 @@ describe('source cache loaded', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                const tr = new Transform();
+                const tr = new MercatorTransform();
                 tr.resize(512, 512);
                 sourceCache.update(tr);
 
@@ -1542,7 +1542,7 @@ describe('source cache loaded', () => {
 
         sourceCache.on('data', (e) => {
             if (e.sourceDataType === 'metadata') {
-                const tr = new Transform();
+                const tr = new MercatorTransform();
                 tr.resize(512, 512);
                 sourceCache.update(tr);
 
@@ -1620,7 +1620,7 @@ describe('source cache loaded', () => {
             return !this.tileBounds || this.tileBounds.contains(tileID.canonical);
         };
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr.zoom = 10;
         tr.resize(512, 512);
         const expectedTilesLoaded = 4;
@@ -1678,7 +1678,7 @@ describe('source cache loaded', () => {
         });
 
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr.zoom = 10;
         tr.resize(512, 512);
         sourceCache.update(tr);
@@ -1695,7 +1695,7 @@ describe('souce cache get ids', () => {
         ];
 
         const sourceCache = createSourceCache({});
-        sourceCache.transform = new Transform();
+        sourceCache.transform = new MercatorTransform();
         for (let i = 0; i < ids.length; i++) {
             sourceCache._tiles[ids[i].key] = {tileID: ids[i]} as any as Tile;
         }
@@ -1714,7 +1714,7 @@ describe('SourceCache#findLoadedParent', () => {
     test('adds from previously used tiles (sourceCache._tiles)', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -1733,7 +1733,7 @@ describe('SourceCache#findLoadedParent', () => {
     test('retains parents', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -1750,7 +1750,7 @@ describe('SourceCache#findLoadedParent', () => {
     test('Search cache for loaded parent tiles', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -1817,7 +1817,7 @@ describe('SourceCache#findLoadedSibling', () => {
     test('adds from previously used tiles (sourceCache._tiles)', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -1836,7 +1836,7 @@ describe('SourceCache#findLoadedSibling', () => {
     test('retains siblings', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -1852,7 +1852,7 @@ describe('SourceCache#findLoadedSibling', () => {
     test('Search cache for loaded sibling tiles', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -1937,7 +1937,7 @@ describe('SourceCache sets max cache size correctly', () => {
             tileSize: 256
         });
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -1951,7 +1951,7 @@ describe('SourceCache sets max cache size correctly', () => {
             tileSize: 512
         });
 
-        const tr = new Transform();
+        const tr = new MercatorTransform();
         tr['_width'] = 512;
         tr['_height'] = 512;
         sourceCache.updateCacheSize(tr);
@@ -1986,7 +1986,7 @@ describe('SourceCache#onRemove', () => {
 
 describe('SourceCache#usedForTerrain', () => {
     test('loads covering tiles with usedForTerrain with source zoom 0-14', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 10;
 
@@ -2007,7 +2007,7 @@ describe('SourceCache#usedForTerrain', () => {
     });
 
     test('loads covering tiles with usedForTerrain with source zoom 8-14', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 10;
 
@@ -2027,7 +2027,7 @@ describe('SourceCache#usedForTerrain', () => {
     });
 
     test('loads covering tiles with usedForTerrain with source zoom 0-4', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 10;
 
@@ -2047,7 +2047,7 @@ describe('SourceCache#usedForTerrain', () => {
     });
 
     test('loads covering tiles with usedForTerrain with source zoom 4-4', done => {
-        const transform = new Transform();
+        const transform = new MercatorTransform();
         transform.resize(511, 511);
         transform.zoom = 10;
 

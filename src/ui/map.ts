@@ -8,7 +8,6 @@ import {RequestManager, ResourceType} from '../util/request_manager';
 import {Style, StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {Painter} from '../render/painter';
-import {Transform} from '../geo/transform';
 import {Hash} from './hash';
 import {HandlerManager} from './handler_manager';
 import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} from './camera';
@@ -60,6 +59,7 @@ import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {Projection} from '../geo/projection/projection';
 import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 const version = packageJSON.version;
 
@@ -583,7 +583,7 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new Transform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
+        const transform = new MercatorTransform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
         super(transform, {bearingSnap: options.bearingSnap});
 
         this._interactive = options.interactive;
@@ -3071,7 +3071,7 @@ export class Map extends Camera {
         }
 
         // This projection update should happen *before* placement update
-        this.projection.updateProjection(this.painter.transform);
+        this.projection.updateProjection(this.painter.transform as MercatorTransform); // JP: TODO: remove this hack
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
