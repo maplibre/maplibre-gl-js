@@ -623,7 +623,7 @@ export abstract class Camera extends Evented {
      * });
      * ```
      */
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing {
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
         bounds = LngLatBounds.convert(bounds);
         const bearing = options && options.bearing || 0;
         return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
@@ -650,7 +650,7 @@ export abstract class Camera extends Evented {
      * });
      * ```
      */
-    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing {
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
         const defaultPadding = {
             top: 0,
             bottom: 0,

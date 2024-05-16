@@ -156,7 +156,7 @@ describe('drawSymbol', () => {
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
-        expect(spy.mock.calls[0][9]).toBeFalsy(); // rotateToLine === false
+        expect(spy.mock.calls[0][8]).toBeFalsy(); // rotateToLine === false
     });
 
     test('transparent tile optimization should prevent program.draw from being called', () => {

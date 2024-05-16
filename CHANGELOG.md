@@ -6,8 +6,24 @@
 ### 🐞 Bug fixes
 
 - Fix drift in zoom that may happen during flyTo and easeTo due to freezeElevation logic. ([#3878](https://github.com/maplibre/maplibre-gl-js/issues/3878))
+
+## 4.3.0
+
+### ✨ Features and improvements
+
+- Add `getData` method for GeoJSON Sources to provide the possibility to obtain all the source's features ([#4082](https://github.com/maplibre/maplibre-gl-js/pull/4082))
+- Allow cross-fading between raster tile source updates at the same zoom level ([#4072](https://github.com/maplibre/maplibre-gl-js/pull/4072))
+
+### 🐞 Bug fixes
+
 - Fix normalizeSpriteURL before transformRequest throwing an Error with relative URLs ([#3897](https://github.com/maplibre/maplibre-gl-js/issues/3897))
-- _...Add new stuff here..._
+- Fix return type of map.cameraForBounds ([#3760](https://github.com/maplibre/maplibre-gl-js/issues/3760))
+- Fix to run benchmark with MAPLIBRE_STYLES environment variable ([#2122](https://github.com/maplibre/maplibre-gl-js/issues/2122))
+- Fix symbol collisions using inaccurate and sometimes entirely wrong collision boxes when the map is pitched or rotated ([#210](https://github.com/maplibre/maplibre-gl-js/issues/210))
+- Fix `text-translate` and `icon-translate` behaving weirdly and inconsistently with other `-translate` properties ([#3456](https://github.com/maplibre/maplibre-gl-js/issues/3456))
+- Fix symbol collision debug view (`showCollisionBoxes`) not showing the actual bounding boxes used for collision and click areas. The displayed boxes now match actual collision boxes exactly ([#4071](https://github.com/maplibre/maplibre-gl-js/pull/4071))
+- Fix symbol collision boxes not being accurate for variable-anchor symbols ([#4071](https://github.com/maplibre/maplibre-gl-js/pull/4071))
+- Fix icon collision boxes using `text-translate` property for translation instead of the correct `icon-translate` ([#4071](https://github.com/maplibre/maplibre-gl-js/pull/4071))
 
 ## 4.2.0
 

@@ -40,8 +40,11 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
 
         tile.registerFadeDuration(layer.paint.get('raster-fade-duration'));
 
-        const parentTile = sourceCache.findLoadedParent(coord, 0),
-            fade = getFadeValues(tile, parentTile, sourceCache, layer, painter.transform, painter.style.map.terrain);
+        const parentTile = sourceCache.findLoadedParent(coord, 0);
+        const siblingTile = sourceCache.findLoadedSibling(coord);
+        // Prefer parent tile if present
+        const fadeTileReference = parentTile || siblingTile || null;
+        const fade = getFadeValues(tile, fadeTileReference, sourceCache, layer, painter.transform, painter.style.map.terrain);
 
         let parentScaleBy, parentTL;
 
