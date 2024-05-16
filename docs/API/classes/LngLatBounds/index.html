@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.22">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.23">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.732c4fb1.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.6543a935.min.css">
       
         
         <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
@@ -7930,7 +7930,7 @@ This flexible type is documented as <a href="../../type-aliases/LngLatBoundsLike
 <tr>
 <td style="text-align: left;"><code>sw</code>?</td>
 <td style="text-align: left;">[<code>number</code>, <code>number</code>, <code>number</code>, <code>number</code>] | <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a> | [<a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>, <a href="../../type-aliases/LngLatLike/"><code>LngLatLike</code></a>]</td>
-<td style="text-align: left;">The southwest corner of the bounding box.<br />OR array of 4 numbers in the order of  west, south, east, north<br />OR array of 2 LngLatLike: [sw,ne]</td>
+<td style="text-align: left;">The southwest corner of the bounding box. OR array of 4 numbers in the order of  west, south, east, north OR array of 2 LngLatLike: [sw,ne]</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>ne</code>?</td>
@@ -7953,7 +7953,7 @@ OR
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">let</span><span class="w"> </span><span class="nx">llb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">LngLatBounds</span><span class="p">([</span><span class="nx">sw</span><span class="p">,</span><span class="w"> </span><span class="nx">ne</span><span class="p">]);</span>
 </span></code></pre></div></p>
 <h4 id="source">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L65">src/geo/lng_lat_bounds.ts:65</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L65">src/geo/lng_lat_bounds.ts:65</a></p>
 <h2 id="methods">Methods</h2>
 <h3 id="contains">contains()</h3>
 <blockquote>
@@ -7991,7 +7991,7 @@ OR
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">llb</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">ll</span><span class="p">));</span><span class="w"> </span><span class="c1">// = true</span>
 </span></code></pre></div>
 <h4 id="source_1">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L277">src/geo/lng_lat_bounds.ts:277</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L277">src/geo/lng_lat_bounds.ts:277</a></p>
 <hr />
 <h3 id="extend">extend()</h3>
 <blockquote>
@@ -8018,7 +8018,7 @@ OR
 <h4 id="returns_2">Returns</h4>
 <p><code>this</code></p>
 <h4 id="source_2">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L105">src/geo/lng_lat_bounds.ts:105</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L105">src/geo/lng_lat_bounds.ts:105</a></p>
 <hr />
 <h3 id="getcenter">getCenter()</h3>
 <blockquote>
@@ -8033,7 +8033,7 @@ OR
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nx">llb</span><span class="p">.</span><span class="nx">getCenter</span><span class="p">();</span><span class="w"> </span><span class="c1">// = LngLat {lng: -73.96365, lat: 40.78315}</span>
 </span></code></pre></div>
 <h4 id="source_3">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L161">src/geo/lng_lat_bounds.ts:161</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L161">src/geo/lng_lat_bounds.ts:161</a></p>
 <hr />
 <h3 id="geteast">getEast()</h3>
 <blockquote>
@@ -8044,7 +8044,7 @@ OR
 <p><code>number</code></p>
 <p>The east edge of the bounding box.</p>
 <h4 id="source_4">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L212">src/geo/lng_lat_bounds.ts:212</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L212">src/geo/lng_lat_bounds.ts:212</a></p>
 <hr />
 <h3 id="getnorth">getNorth()</h3>
 <blockquote>
@@ -8055,7 +8055,7 @@ OR
 <p><code>number</code></p>
 <p>The north edge of the bounding box.</p>
 <h4 id="source_5">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L219">src/geo/lng_lat_bounds.ts:219</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L219">src/geo/lng_lat_bounds.ts:219</a></p>
 <hr />
 <h3 id="getnortheast">getNorthEast()</h3>
 <blockquote>
@@ -8066,7 +8066,7 @@ OR
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
 <p>The northeast corner of the bounding box.</p>
 <h4 id="source_6">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L177">src/geo/lng_lat_bounds.ts:177</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L177">src/geo/lng_lat_bounds.ts:177</a></p>
 <hr />
 <h3 id="getnorthwest">getNorthWest()</h3>
 <blockquote>
@@ -8077,7 +8077,7 @@ OR
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
 <p>The northwest corner of the bounding box.</p>
 <h4 id="source_7">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L184">src/geo/lng_lat_bounds.ts:184</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L184">src/geo/lng_lat_bounds.ts:184</a></p>
 <hr />
 <h3 id="getsouth">getSouth()</h3>
 <blockquote>
@@ -8088,7 +8088,7 @@ OR
 <p><code>number</code></p>
 <p>The south edge of the bounding box.</p>
 <h4 id="source_8">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L205">src/geo/lng_lat_bounds.ts:205</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L205">src/geo/lng_lat_bounds.ts:205</a></p>
 <hr />
 <h3 id="getsoutheast">getSouthEast()</h3>
 <blockquote>
@@ -8099,7 +8099,7 @@ OR
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
 <p>The southeast corner of the bounding box.</p>
 <h4 id="source_9">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L191">src/geo/lng_lat_bounds.ts:191</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L191">src/geo/lng_lat_bounds.ts:191</a></p>
 <hr />
 <h3 id="getsouthwest">getSouthWest()</h3>
 <blockquote>
@@ -8110,7 +8110,7 @@ OR
 <p><a href="../LngLat/"><code>LngLat</code></a></p>
 <p>The southwest corner of the bounding box.</p>
 <h4 id="source_10">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L170">src/geo/lng_lat_bounds.ts:170</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L170">src/geo/lng_lat_bounds.ts:170</a></p>
 <hr />
 <h3 id="getwest">getWest()</h3>
 <blockquote>
@@ -8121,7 +8121,7 @@ OR
 <p><code>number</code></p>
 <p>The west edge of the bounding box.</p>
 <h4 id="source_11">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L198">src/geo/lng_lat_bounds.ts:198</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L198">src/geo/lng_lat_bounds.ts:198</a></p>
 <hr />
 <h3 id="isempty">isEmpty()</h3>
 <blockquote>
@@ -8132,7 +8132,7 @@ OR
 <p><code>boolean</code></p>
 <p>True if bounds have been defined, otherwise false.</p>
 <h4 id="source_12">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L256">src/geo/lng_lat_bounds.ts:256</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L256">src/geo/lng_lat_bounds.ts:256</a></p>
 <hr />
 <h3 id="setnortheast">setNorthEast()</h3>
 <blockquote>
@@ -8159,7 +8159,7 @@ OR
 <h4 id="returns_13">Returns</h4>
 <p><code>this</code></p>
 <h4 id="source_13">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L85">src/geo/lng_lat_bounds.ts:85</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L85">src/geo/lng_lat_bounds.ts:85</a></p>
 <hr />
 <h3 id="setsouthwest">setSouthWest()</h3>
 <blockquote>
@@ -8186,7 +8186,7 @@ OR
 <h4 id="returns_14">Returns</h4>
 <p><code>this</code></p>
 <h4 id="source_14">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L95">src/geo/lng_lat_bounds.ts:95</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L95">src/geo/lng_lat_bounds.ts:95</a></p>
 <hr />
 <h3 id="toarray">toArray()</h3>
 <blockquote>
@@ -8202,7 +8202,7 @@ southwest and northeast coordinates of the bounding represented as arrays of num
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nx">llb</span><span class="p">.</span><span class="nx">toArray</span><span class="p">();</span><span class="w"> </span><span class="c1">// = [[-73.9876, 40.7661], [-73.9397, 40.8002]]</span>
 </span></code></pre></div>
 <h4 id="source_15">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L232">src/geo/lng_lat_bounds.ts:232</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L232">src/geo/lng_lat_bounds.ts:232</a></p>
 <hr />
 <h3 id="tostring">toString()</h3>
 <blockquote>
@@ -8218,7 +8218,7 @@ southwest and northeast coordinates of the bounding represented as arrays of num
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nx">llb</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span><span class="w"> </span><span class="c1">// = &quot;LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 40.8002))&quot;</span>
 </span></code></pre></div>
 <h4 id="source_16">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L247">src/geo/lng_lat_bounds.ts:247</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L247">src/geo/lng_lat_bounds.ts:247</a></p>
 <hr />
 <h3 id="convert">convert()</h3>
 <blockquote>
@@ -8252,7 +8252,7 @@ southwest and northeast coordinates of the bounding represented as arrays of num
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">llb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">LngLatBounds</span><span class="p">.</span><span class="nx">convert</span><span class="p">(</span><span class="nx">arr</span><span class="p">);</span><span class="w"> </span><span class="c1">// = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}</span>
 </span></code></pre></div>
 <h4 id="source_17">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L304">src/geo/lng_lat_bounds.ts:304</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L304">src/geo/lng_lat_bounds.ts:304</a></p>
 <hr />
 <h3 id="fromlnglat">fromLngLat()</h3>
 <blockquote>
@@ -8292,7 +8292,7 @@ southwest and northeast coordinates of the bounding represented as arrays of num
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nx">LngLatBounds</span><span class="p">.</span><span class="nx">fromLngLat</span><span class="p">(</span><span class="mf">100</span><span class="p">).</span><span class="nx">toArray</span><span class="p">();</span><span class="w"> </span><span class="c1">// = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]</span>
 </span></code></pre></div>
 <h4 id="source_18">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/aaeaf5899e6ec8450e056227ad4a3d7a661a3abc/src/geo/lng_lat_bounds.ts#L322">src/geo/lng_lat_bounds.ts:322</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/geo/lng_lat_bounds.ts#L322">src/geo/lng_lat_bounds.ts:322</a></p>
 
 
 
@@ -8412,7 +8412,7 @@ southwest and northeast coordinates of the bounding represented as arrays of num
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.5cfa9459.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.ebd0bdb7.min.js"></script>
       
     
   </body>
