@@ -1,14 +1,12 @@
 import {browser} from '../util/browser';
-
 import {Placement} from '../symbol/placement';
-
 import type {Transform} from '../geo/transform';
 import type {StyleLayer} from './style_layer';
 import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
 import type {Tile} from '../source/tile';
 import type {BucketPart} from '../symbol/placement';
-import {Terrain} from '../render/terrain';
-import {Projection} from '../geo/projection/projection';
+import type {Terrain} from '../render/terrain';
+import type {Projection} from '../geo/projection/projection';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;
