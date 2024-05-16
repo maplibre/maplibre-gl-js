@@ -24,7 +24,7 @@ type TileBatch = {
 
 let quadTriangles: QuadTriangleArray;
 
-export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, translate: [number, number], translateAnchor: 'map' | 'viewport', isText: boolean) {
+export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
     const context = painter.context;
     const gl = context.gl;
     const projection = painter.style.map.projection;
@@ -38,7 +38,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         const tile = sourceCache.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
-        const posMatrix = coord.posMatrix;
+        const posMatrix = coord.posMatrix; // This intentionally ignores "*-translate" and "*-translate-anchor" properties - collision boxes already incorporate them implicitly.
         const buffers = isText ? bucket.textCollisionBox : bucket.iconCollisionBox;
         // Get collision circle data of this bucket
         const circleArray: Array<number> = bucket.collisionCircleArray;
@@ -47,7 +47,6 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             // This might vary between buckets as the symbol placement is a continuous process. This matrix is
             // required for transforming points from previous screen space to the current one
             const invTransform = mat4.create();
-            const transform = posMatrix; // Ignore translation
 
             mat4.mul(invTransform, bucket.placementInvProjMatrix, painter.transform.glCoordMatrix);
             mat4.mul(invTransform, invTransform, bucket.placementViewportMatrix);
@@ -55,7 +54,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             tileBatches.push({
                 circleArray,
                 circleOffset,
-                transform,
+                transform: posMatrix,
                 invTransform,
                 coord
             });
@@ -68,14 +67,14 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         if (!buffers) {
             continue;
         }
-        const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
+
         program.draw(context, gl.LINES,
             DepthMode.disabled, StencilMode.disabled,
             painter.colorModeForRenderPass(),
             CullFaceMode.disabled,
             collisionUniformValues(painter.transform),
             painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
-            projectionData,
+            projection.getProjectionData(coord.canonical, posMatrix),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);

@@ -21,6 +21,7 @@ import CustomLayer from '../benchmarks/customlayer';
 import MapIdle from '../benchmarks/map_idle';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
+import SymbolCollisionBox from '../benchmarks/symbol_collision_box';
 import Subdivide from '../benchmarks/subdivide';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
@@ -74,6 +75,7 @@ register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
 register('CustomLayer', new CustomLayer());
 register('MapIdle', new MapIdle());
+register('SymbolCollisionBox', new SymbolCollisionBox());
 register('Subdivide', new Subdivide());
 
 Promise.resolve().then(() => {

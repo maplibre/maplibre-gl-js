@@ -33,6 +33,26 @@ export function lerp(a: number, b: number, mix: number): number {
 }
 
 /**
+ * For a given collection of 2D points, returns their axis-aligned bounding box,
+ * in the format [minX, minY, maxX, maxY].
+ */
+export function getAABB(points: Array<Point>): [number, number, number, number] {
+    let tlX = Infinity;
+    let tlY = Infinity;
+    let brX = -Infinity;
+    let brY = -Infinity;
+
+    for (const p of points) {
+        tlX = Math.min(tlX, p.x);
+        tlY = Math.min(tlY, p.y);
+        brX = Math.max(brX, p.x);
+        brY = Math.max(brY, p.y);
+    }
+
+    return [tlX, tlY, brX, brY];
+}
+
+/**
  * Given a value `t` that varies between 0 and 1, return
  * an interpolation function that eases between 0 and 1 in a pleasing
  * cubic in-out fashion.

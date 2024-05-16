@@ -1,4 +1,4 @@
-import {ProjectionArgs, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, project, projectVertexToViewport, transformToOffsetNormal} from './projection';
+import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, project, projectVertexToViewport, transformToOffsetNormal} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -20,7 +20,7 @@ describe('Vertex to viewport projection', () => {
     lineVertexArray.emplaceBack(10, 0, 10);
 
     test('projecting with null matrix', () => {
-        const projectionArgs: ProjectionArgs = {
+        const projectionContext: SymbolProjectionContext = {
             projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
             lineVertexArray,
             labelPlaneMatrix: mat4.create(),
@@ -42,9 +42,9 @@ describe('Vertex to viewport projection', () => {
             absOffsetX: 0
         };
 
-        const first = projectVertexToViewport(0, projectionArgs, syntheticVertexArgs);
-        const second = projectVertexToViewport(1, projectionArgs, syntheticVertexArgs);
-        const third = projectVertexToViewport(2, projectionArgs, syntheticVertexArgs);
+        const first = projectVertexToViewport(0, projectionContext, syntheticVertexArgs);
+        const second = projectVertexToViewport(1, projectionContext, syntheticVertexArgs);
+        const third = projectVertexToViewport(2, projectionContext, syntheticVertexArgs);
         expect(first.x).toBeCloseTo(-10);
         expect(second.x).toBeCloseTo(0);
         expect(third.x).toBeCloseTo(10);
@@ -63,7 +63,7 @@ describe('Find offset line intersections', () => {
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
 
-    const projectionArgs: ProjectionArgs = {
+    const projectionContext: SymbolProjectionContext = {
         projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
         lineVertexArray,
         labelPlaneMatrix: mat4.create(),
@@ -92,7 +92,7 @@ describe('Find offset line intersections', () => {
           ________| |
           __________|  <- origin
         */
-        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
+        projectionContext.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
         const lineOffsetY = 1;
 
         const prevToCurrent = new Point(10, 0);
@@ -107,7 +107,7 @@ describe('Find offset line intersections', () => {
             3,
             new Point(-10, 1),
             lineOffsetY,
-            projectionArgs,
+            projectionContext,
             syntheticVertexArgs
         );
         expect(intersectionPoint.y).toBeCloseTo(1);
@@ -122,7 +122,7 @@ describe('Find offset line intersections', () => {
           __________| |
           ____________|
         */
-        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
+        projectionContext.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
         const lineOffsetY = -1;
 
         const prevToCurrent = new Point(10, 0);
@@ -137,7 +137,7 @@ describe('Find offset line intersections', () => {
             3,
             new Point(-10, -1),
             lineOffsetY,
-            projectionArgs,
+            projectionContext,
             syntheticVertexArgs
         );
         expect(intersectionPoint.y).toBeCloseTo(-1);
@@ -149,7 +149,7 @@ describe('Find offset line intersections', () => {
           ______._____
           ______|_____
         */
-        projectionArgs.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
+        projectionContext.projectionCache = {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false};
         const lineOffsetY = 1;
 
         const prevToCurrent = new Point(10, 0);
@@ -161,7 +161,7 @@ describe('Find offset line intersections', () => {
             5,
             new Point(-10, 1),
             lineOffsetY,
-            projectionArgs,
+            projectionContext,
             syntheticVertexArgs
         );
         expect(intersectionPoint.x).toBeCloseTo(0);
