@@ -3,7 +3,7 @@ This folder holds common build scripts accessed via the various `npm run` comman
 Codegen is executed when calling `npm install` in order to generate all artifacts needed for the build to pass
 ## Bundeling all the code
 
-The bundeling process can be split into several steps:
+The bundling process can be split into several steps:
 
 `npm run build-css`
 This command will compile the css code and create the css file.
@@ -27,7 +27,7 @@ Rollup is generating 3 files throughout the process of bundling:
 
 `worker.ts` a file containing all the code the will run in the worker threads.
 
-These 3 files are then referenced and used by the `bundle_prelude.js` file. It allows loading the web wroker code automatically in web workers without any extra effort from someone who would like to use the library, i.e. it simply works.
+These 3 files are then referenced and used by the `bundle_prelude.js` file. It allows loading the web worker code automatically in web workers without any extra effort from someone who would like to use the library, i.e. it simply works.
 
 <hr>
 
