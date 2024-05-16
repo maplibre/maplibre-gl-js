@@ -5,7 +5,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- Fix drift in zoom that may happen during flyTo and easeTo due to freezeElevation logic. ([#3878](https://github.com/maplibre/maplibre-gl-js/issues/3878))
 
 ## 4.3.0
 
