@@ -322,52 +322,17 @@ export class CollisionIndex {
         };
     }
 
-    projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext, labelToScreenMatrix: mat4) {
-        let screenSpacePath: Array<{
-            point: Point;
-            signedDistanceFromCamera: number;
-            isOccluded?: boolean;
-        }>;
+    projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext, labelToScreenMatrix: mat4): Array<projection.PointProjection> {
         if (projectionContext.projection.useSpecialProjectionForSymbols) {
             // Globe (or other special projection) is enabled in this branch.
-            const inverseLabelPlaneMatrix = mat4.create();
-            mat4.invert(inverseLabelPlaneMatrix, projectionContext.labelPlaneMatrix);
-            screenSpacePath = projectedPath.map(p => {
-                const backProjected = projection.project(p, inverseLabelPlaneMatrix, projectionContext.getElevation);
-                const projected = this.mapProjection.projectTileCoordinates(
-                    backProjected.point.x,
-                    backProjected.point.y,
-                    projectionContext.unwrappedTileID,
-                    projectionContext.getElevation
-                );
-                projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionContext.width;
-                projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionContext.height;
-                return projected;
-            });
+            const screenSpacePath = projection.projectPathSpecialProjection(projectedPath, projectionContext);
             // We don't want to generate screenspace collision circles for parts of the line that
             // are occluded by the planet itself. Find the longest segment of the path that is
             // not occluded, and remove everything else.
-            let longestUnoccludedStart = 0;
-            let longestUnoccludedLength = 0;
-            let currentUnoccludedStart = 0;
-            let currentUnoccludedLength = 0;
-            for (let i = 0; i < screenSpacePath.length; i++) {
-                if (screenSpacePath[i].isOccluded) {
-                    currentUnoccludedStart = i + 1;
-                    currentUnoccludedLength = 0;
-                } else {
-                    currentUnoccludedLength++;
-                    if (currentUnoccludedLength > longestUnoccludedLength) {
-                        longestUnoccludedLength = currentUnoccludedLength;
-                        longestUnoccludedStart = currentUnoccludedStart;
-                    }
-                }
-            }
-            screenSpacePath = screenSpacePath.slice(longestUnoccludedStart, longestUnoccludedStart + longestUnoccludedLength);
+            return projection.pathSlicedToLongestUnoccluded(screenSpacePath);
         } else {
-            screenSpacePath = projectedPath.map(p => projection.project(p, labelToScreenMatrix, projectionContext.getElevation));
+            return projectedPath.map(p => projection.project(p, labelToScreenMatrix, projectionContext.getElevation));
         }
-        return screenSpacePath;
     }
 
     /**
