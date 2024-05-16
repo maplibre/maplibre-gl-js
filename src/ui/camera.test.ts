@@ -1737,14 +1737,8 @@ describe('#flyTo', () => {
         camera._prepareElevation = () => { terrainCallbacks.prepare++; };
         camera._updateElevation = () => { terrainCallbacks.update++; };
         camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
-
         camera.setCenter([-10, 0]);
-
-        await camera.once('moveend', () => {
-            expect(terrainCallbacks.prepare).toBe(1);
-            expect(terrainCallbacks.update).toBe(2);
-            expect(terrainCallbacks.finalize).toBe(0);
-        });
+        const moveEnded = camera.once('moveend');
 
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [10, 0], duration: 20, freezeElevation: false});
@@ -1752,6 +1746,10 @@ describe('#flyTo', () => {
         camera.simulateFrame();
         stub.mockImplementation(() => 20);
         camera.simulateFrame();
+        await moveEnded;
+        expect(terrainCallbacks.prepare).toBe(1);
+        expect(terrainCallbacks.update).toBe(2);
+        expect(terrainCallbacks.finalize).toBe(0);
     });
 
     test('check elevation events freezeElevation=true', async() => {
@@ -1763,14 +1761,8 @@ describe('#flyTo', () => {
         camera._prepareElevation = () => { terrainCallbacks.prepare++; };
         camera._updateElevation = () => { terrainCallbacks.update++; };
         camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
-
         camera.setCenter([-10, 0]);
-
-        await camera.once('moveend', () => {
-            expect(terrainCallbacks.prepare).toBe(1);
-            expect(terrainCallbacks.update).toBe(0);
-            expect(terrainCallbacks.prepare).toBe(1);
-        });
+        const moveEnded = camera.once('moveend');
 
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [10, 0], duration: 20, freezeElevation: true});
@@ -1778,6 +1770,10 @@ describe('#flyTo', () => {
         camera.simulateFrame();
         stub.mockImplementation(() => 20);
         camera.simulateFrame();
+        await moveEnded;
+        expect(terrainCallbacks.prepare).toBe(1);
+        expect(terrainCallbacks.update).toBe(0);
+        expect(terrainCallbacks.finalize).toBe(1);
     });
 
     test('check elevation callbacks', done => {
