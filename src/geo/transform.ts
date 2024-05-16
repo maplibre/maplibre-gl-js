@@ -16,8 +16,13 @@ export const MAX_VALID_LATITUDE = 85.051129;
  * A single transform. TODO.
  */
 export abstract class Transform {
+    // This base class stores all data about a transform that is common across all projections.
+    // This data is what actually defines the map's position, angles, etc.
+    // This data should be transferable to a transform implementation for a different projection,
+    // hence the implementation of `Transform.apply`, which works on any Transform and accepts any Transform.
+
     private _tileSize: number; // constant
-    protected _tileZoom: number; // integer zoom level for tiles?
+    protected _tileZoom: number; // integer zoom level for tiles
     protected _lngRange: [number, number];
     protected _latRange: [number, number];
     protected _scale: number;
@@ -31,23 +36,8 @@ export abstract class Transform {
     private _rotationMatrix: mat2;
     private _pixelsToGLUnits: [number, number];
 
-    /**
-     * Distance from camera origin to view plane, in pixels.
-     * Calculated using vertical fov and viewport height.
-     * Center is considered to be in the middle of the viewport.
-     */
-    public abstract get cameraToCenterDistance(): number;
-
-    // mercatorMatrix: mat4;
-    // projMatrix: mat4;
-    // invProjMatrix: mat4;
-    // alignedProjMatrix: mat4;
-    // pixelMatrix: mat4;
-    // pixelMatrix3D: mat4;
-    // pixelMatrixInverse: mat4;
-    // glCoordMatrix: mat4;
-    // labelPlaneMatrix: mat4;
     private _minElevationForCurrentTile: number;
+    private _constraining: boolean;
 
     /**
      * Vertical field of view in radians.
@@ -66,9 +56,6 @@ export abstract class Transform {
     protected _elevation: number;
     protected _pixelPerMeter: number;
     protected _edgeInsets: EdgeInsets;
-    // private _constraining: boolean;
-    // private _posMatrixCache: {[_: string]: mat4};
-    // private _alignedPosMatrixCache: {[_: string]: mat4};
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._tileSize = 512; // constant
@@ -113,6 +100,13 @@ export abstract class Transform {
         this._edgeInsets = that._edgeInsets.clone();
         this._calcMatrices();
     }
+
+    /**
+     * Distance from camera origin to view plane, in pixels.
+     * Calculated using vertical fov and viewport height.
+     * Center is considered to be in the middle of the viewport.
+     */
+    public abstract get cameraToCenterDistance(): number;
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     set minElevationForCurrentTile(ele: number) {
@@ -514,10 +508,6 @@ export abstract class Transform {
      */
     abstract getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
 
-    protected abstract _constrain(): void;
-
-    protected abstract _calcMatrices(): void;
-
     abstract maxPitchScaleFactor(): number;
 
     /**
@@ -578,4 +568,24 @@ export abstract class Transform {
      * @returns depth value in clip space (between 0 and 1)
      */
     abstract lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
+
+    /**
+     * Snaps the transform's center, zoom, etc. into the valid range.
+     */
+    protected _constrain(): void {
+        if (!this.center || !this._width || !this._height || this._constraining) return;
+        this._constraining = true;
+        const unmodified = this._unmodified;
+        const {center, zoom} = this.getConstrained(this.center, this.zoom);
+        this.center = center;
+        this.zoom = zoom;
+        this._unmodified = unmodified;
+        this._constraining = false;
+    }
+
+    /**
+     * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
+     * This function should update the transform's internal data, such as matrices.
+     */
+    protected abstract _calcMatrices(): void;
 }

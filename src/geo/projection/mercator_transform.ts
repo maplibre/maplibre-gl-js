@@ -23,7 +23,6 @@ export class MercatorTransform extends Transform {
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
 
-    private _constraining: boolean;
     private _posMatrixCache: {[_: string]: mat4};
     private _alignedPosMatrixCache: {[_: string]: mat4};
 
@@ -513,17 +512,6 @@ export class MercatorTransform extends Transform {
         }
 
         return result;
-    }
-
-    override _constrain(): void {
-        if (!this.center || !this._width || !this._height || this._constraining) return;
-        this._constraining = true;
-        const unmodified = this._unmodified;
-        const {center, zoom} = this.getConstrained(this.center, this.zoom);
-        this.center = center;
-        this.zoom = zoom;
-        this._unmodified = unmodified;
-        this._constraining = false;
     }
 
     override _calcMatrices(): void {
