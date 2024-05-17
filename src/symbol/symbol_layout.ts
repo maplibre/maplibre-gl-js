@@ -158,7 +158,7 @@ export function performSymbolLayout(args: {
             const symbolPlacement = layout.get('symbol-placement');
             const maxWidth = symbolPlacement === 'point' ?
                 layout.get('text-max-width').evaluate(feature, {}, args.canonical) * ONE_EM :
-                0;
+                Infinity;
 
             const addVerticalShapingForPointLabelIfNeeded = () => {
                 if (args.bucket.allowVerticalPlacement && allowsVerticalWritingMode(unformattedText)) {
