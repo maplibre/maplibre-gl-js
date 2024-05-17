@@ -257,7 +257,6 @@ function shapeText(
     translate: [number, number],
     writingMode: WritingMode.horizontal | WritingMode.vertical,
     allowVerticalPlacement: boolean,
-    symbolPlacement: string,
     layoutTextSize: number,
     layoutTextSizeThisZoom: number
 ): Shaping | false {
@@ -275,7 +274,7 @@ function shapeText(
         lines = [];
         const untaggedLines =
             processBidirectionalText(logicalInput.toString(),
-                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
+                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
         for (const line of untaggedLines) {
             const taggedLine = new TaggedString();
             taggedLine.text = line;
@@ -292,7 +291,7 @@ function shapeText(
         const processedLines =
             processStyledBidirectionalText(logicalInput.text,
                 logicalInput.sectionIndex,
-                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
+                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
         for (const line of processedLines) {
             const taggedLine = new TaggedString();
             taggedLine.text = line[0];
@@ -301,7 +300,7 @@ function shapeText(
             lines.push(taggedLine);
         }
     } else {
-        lines = breakLines(logicalInput, determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
+        lines = breakLines(logicalInput, determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
     }
 
     const positionedLines = [];
@@ -503,12 +502,8 @@ function determineLineBreaks(
         };
     },
     imagePositions: {[_: string]: ImagePosition},
-    symbolPlacement: string,
     layoutTextSize: number
 ): Array<number> {
-    if (symbolPlacement !== 'point')
-        return [];
-
     if (!logicalInput)
         return [];
 
