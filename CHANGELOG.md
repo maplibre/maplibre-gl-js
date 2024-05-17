@@ -8,6 +8,12 @@
 - Fix an issue with `moveend` zoom being different than the actual current zoom ([#4132](https://github.com/maplibre/maplibre-gl-js/pull/4132))
 - _...Add new stuff here..._
 
+## 4.3.1
+
+### 🐞 Bug fixes
+
+- Fix drift in zoom that may happen during flyTo and easeTo due to freezeElevation logic. ([#3878](https://github.com/maplibre/maplibre-gl-js/issues/3878))
+
 ## 4.3.0
 
 ### ✨ Features and improvements
