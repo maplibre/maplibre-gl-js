@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add `showButton` option to `GeoLocateControl`. ([#3103](https://github.com/maplibre/maplibre-gl-js/issues/3103))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
