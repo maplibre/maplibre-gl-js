@@ -38,6 +38,11 @@ type GeolocateControlOptions = {
      * @defaultValue true
      */
     showUserLocation?: boolean;
+    /**
+     * If `false` the Geolocate button will not be shown on the map.
+     * @defaultValue true
+     */
+    showButton?: boolean;
 };
 
 const defaultOptions: GeolocateControlOptions = {
@@ -51,7 +56,8 @@ const defaultOptions: GeolocateControlOptions = {
     },
     trackUserLocation: false,
     showAccuracyCircle: true,
-    showUserLocation: true
+    showUserLocation: true,
+    showButton: true
 };
 
 let numberOfWatches = 0;
@@ -487,6 +493,11 @@ export class GeolocateControl extends Evented implements IControl {
         this._geolocateButton = DOM.create('button', 'maplibregl-ctrl-geolocate', this._container);
         DOM.create('span', 'maplibregl-ctrl-icon', this._geolocateButton).setAttribute('aria-hidden', 'true');
         this._geolocateButton.type = 'button';
+
+        // if showButton is false, don't add the button to the map
+        if (!this.options.showButton) {
+            this._geolocateButton.style.display = 'none';
+        }
 
         if (supported === false) {
             warnOnce('Geolocation support is not available so the GeolocateControl will be disabled.');

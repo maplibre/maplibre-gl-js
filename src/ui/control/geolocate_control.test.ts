@@ -499,4 +499,13 @@ describe('GeolocateControl with no options', () => {
         await zoomendPromise;
         expect(geolocate._circleElement.style.width).toBeTruthy();
     });
+
+    test('don\'t show button if showButton = false', async () => {
+        const geolocate = new GeolocateControl({
+            showButton: false
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        expect(geolocate._geolocateButton.style.display).toBe('none');
+    });
 });
