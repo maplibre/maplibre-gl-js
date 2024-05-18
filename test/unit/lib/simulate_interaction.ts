@@ -14,6 +14,12 @@ function drag(target: HTMLElement | Window, mousedownOptions, mouseUpOptions) {
     target.dispatchEvent(new MouseEvent('click', mouseUpOptions));
 }
 
+function dragWithMove(target: HTMLElement | Window, start: {x: number; y: number}, end: {x: number; y: number}) {
+    target.dispatchEvent(new MouseEvent('mousedown', {bubbles: true, clientX: start.x, clientY: start.y}));
+    document.dispatchEvent(new MouseEvent('mousemove', {bubbles: true, buttons: 1, clientX: end.x, clientY: end.y}));
+    target.dispatchEvent(new MouseEvent('mouseup', {bubbles: true, clientX: end.x, clientY: end.y}));
+}
+
 function dblclick(target: HTMLElement | Window) {
     const options = {bubbles: true};
     target.dispatchEvent(new MouseEvent('mousedown', options));
@@ -64,6 +70,7 @@ function focusBlueFunctionFactory(event: string) {
 const events = {
     click,
     drag,
+    dragWithMove,
     dblclick,
     keydown: keyFunctionFactory('keydown'),
     keyup: keyFunctionFactory('keyup'),

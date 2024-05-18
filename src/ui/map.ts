@@ -432,7 +432,6 @@ const defaultOptions = {
 export class Map extends Camera {
     style: Style;
     painter: Painter;
-    handlers: HandlerManager;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;

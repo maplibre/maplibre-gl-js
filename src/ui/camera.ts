@@ -13,6 +13,7 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
+import type {HandlerManager} from './handler_manager';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *
@@ -242,6 +243,7 @@ export type CameraUpdateTransformFunction =  (next: {
 export abstract class Camera extends Evented {
     transform: Transform;
     terrain: Terrain;
+    handlers: HandlerManager;
 
     _moving: boolean;
     _zooming: boolean;
@@ -1400,8 +1402,7 @@ export abstract class Camera extends Evented {
             onEaseEnd.call(this, easeId);
         }
         if (!allowGestures) {
-            const handlers = (this as any).handlers;
-            if (handlers) handlers.stop(false);
+            this.handlers?.stop(false);
         }
         return this;
     }
