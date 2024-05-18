@@ -5,7 +5,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
-- _...Add new stuff here..._
+- allow breaking lines in labels before a left parenthesis
 
 ## 4.3.1
 

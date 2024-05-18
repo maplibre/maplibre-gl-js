@@ -343,7 +343,6 @@ const breakable: {
     [0x0a]: true, // newline
     [0x20]: true, // space
     [0x26]: true, // ampersand
-    [0x28]: true, // left parenthesis
     [0x29]: true, // right parenthesis
     [0x2b]: true, // plus sign
     [0x2d]: true, // hyphen-minus
@@ -357,6 +356,13 @@ const breakable: {
     // Many other characters may be reasonable breakpoints
     // Consider "neutral orientation" characters at scriptDetection.charHasNeutralVerticalOrientation
     // See https://github.com/mapbox/mapbox-gl-js/issues/3658
+};
+
+// Allow breaks depending on the following character
+const breakableBefore: {
+    [_: number]: boolean;
+} = {
+    [0x28]: true, // left parenthesis
 };
 
 function getGlyphAdvance(
@@ -528,7 +534,7 @@ function determineLineBreaks(
         // surrounding spaces.
         if ((i < logicalInput.length() - 1)) {
             const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
-            if (breakable[codePoint] || ideographicBreak || section.imageName) {
+            if (breakable[codePoint] || ideographicBreak || section.imageName || breakableBefore[logicalInput.getCharCode(i + 1)]) {
 
                 potentialLineBreaks.push(
                     evaluateBreak(
