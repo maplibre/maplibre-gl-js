@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 - Remove `json-stringify-pretty-compact` from dev-dependencies ([#967](https://github.com/maplibre/maplibre-gl-js/issues/967))
+- Add events to `GeolocationControl` to allow a more granular interaction ([#3847](https://github.com/maplibre/maplibre-gl-js/pull/3847))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
