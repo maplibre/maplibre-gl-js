@@ -11,14 +11,14 @@ function translateY(y) {
     return `translate(0,${y + 0.5})`;
 }
 function number(scale) {
-    return function(d) {
+    return (d) => {
         return +scale(d);
     };
 }
 function center(scale) {
     let offset = Math.max(0, scale.bandwidth() - 1) / 2; // Adjust for 0.5px offset.
     if (scale.round()) offset = Math.round(offset);
-    return function(d) {
+    return (d) => {
         return +scale(d) + offset;
     };
 }

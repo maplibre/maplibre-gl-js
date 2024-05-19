@@ -1,4 +1,4 @@
-import packageJson from '../../package.json' assert {type: 'json'};
+import packageJson from '../../package.json' with {type: 'json'};
 import {globSync, glob} from 'glob';
 import path, {dirname} from 'path';
 import fs from 'node:fs/promises';

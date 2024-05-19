@@ -40,14 +40,13 @@
 
             const map = new maplibregl.Map({
                 container: 'map',
-                center: [11.53, 47.668],
-                zoom: 15,
+                center: [11.5257, 47.668],
+                zoom: 16.27,
                 pitch: 60,
-                bearing: -45,
+                bearing: -28.5,
                 antialias: true,
                 style: {
                     version: 8,
-                    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
                     layers: [
                         {
                             id: 'baseColor', // Hides edges of terrain tiles, which have 'walls' going down to 0.
@@ -107,13 +106,10 @@
                 return model;
             }
 
-            const model1 = await loadModel();
-            const model2 = model1.clone();
-
             // Known locations. We'll infer the elevation of those locations once terrain is loaded.
-            const sceneOrigin = new maplibregl.LngLat(11.53, 47.67);
-            const model1Location = new maplibregl.LngLat(11.531, 47.67);
-            const model2Location = new maplibregl.LngLat(11.5245, 47.6675);
+            const sceneOrigin = new maplibregl.LngLat(11.5255, 47.6677);
+            const model1Location = new maplibregl.LngLat(11.527, 47.6678);
+            const model2Location = new maplibregl.LngLat(11.5249, 47.6676);
 
             // Configuration of the custom layer for a 3D model, implementing `CustomLayerInterface`.
             const customLayer = {
@@ -141,7 +137,7 @@
                     this.scene.add(light);
 
                     // Axes helper to show how threejs scene is oriented.
-                    const axesHelper = new THREE.AxesHelper(100);
+                    const axesHelper = new THREE.AxesHelper(60);
                     this.scene.add(axesHelper);
 
                     // Getting model elevations (in meters) relative to scene origin from maplibre's terrain.
@@ -203,7 +199,10 @@
                 }
             };
 
-            await map.once('load');
+            const results = await Promise.all([map.once('load'), loadModel()]);
+            const model1 = results[1];
+            const model2 = model1.clone();
+
             map.addLayer(customLayer);
         }
 

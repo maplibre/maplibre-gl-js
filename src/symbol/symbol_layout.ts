@@ -11,7 +11,6 @@ import {
     allowsLetterSpacing
 } from '../util/script_detection';
 import {findPoleOfInaccessibility} from '../util/find_pole_of_inaccessibility';
-import {classifyRings} from '../util/classify_rings';
 import {EXTENT} from '../data/extent';
 import {SymbolBucket} from '../data/bucket/symbol_bucket';
 import {EvaluationParameters} from '../style/evaluation_parameters';
@@ -31,7 +30,7 @@ import type {PossiblyEvaluatedPropertyValue} from '../style/properties';
 import Point from '@mapbox/point-geometry';
 import murmur3 from 'murmurhash-js';
 import {getIconPadding, SymbolPadding} from '../style/style_layer/symbol_style_layer';
-import {VariableAnchorOffsetCollection} from '@maplibre/maplibre-gl-style-spec';
+import {VariableAnchorOffsetCollection, classifyRings} from '@maplibre/maplibre-gl-style-spec';
 import {getTextVariableAnchorOffset, evaluateVariableOffset, INVALID_TEXT_OFFSET, TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 
 // The symbol layout process needs `text-size` evaluated at up to five different zoom levels, and
@@ -290,7 +289,8 @@ function addFeature(bucket: SymbolBucket,
     layoutTextSize: number,
     layoutIconSize: number,
     textOffset: [number, number],
-    isSDFIcon: boolean, canonical: CanonicalTileID) {
+    isSDFIcon: boolean,
+    canonical: CanonicalTileID) {
     // To reduce the number of labels that jump around when zooming we need
     // to use a text-size value that is the same for all zoom levels.
     // bucket calculates text-size at a high zoom level so that all tiles can
@@ -337,7 +337,6 @@ function addFeature(bucket: SymbolBucket,
             // to prevent double-drawing symbols.
             return;
         }
-
         addSymbol(bucket, anchor, line, shapedTextOrientations, shapedIcon, imageMap, verticallyShapedIcon, bucket.layers[0],
             bucket.collisionBoxArray, feature.index, feature.sourceLayerIndex, bucket.index,
             textBoxScale, [textPadding, textPadding, textPadding, textPadding], textAlongLine, textOffset,
@@ -521,6 +520,7 @@ function addSymbol(bucket: SymbolBucket,
     isSDFIcon: boolean,
     canonical: CanonicalTileID,
     layoutTextSize: number) {
+
     const lineArray = bucket.addToLineVertexArray(anchor, line);
 
     let textCollisionFeature, iconCollisionFeature, verticalTextCollisionFeature, verticalIconCollisionFeature;

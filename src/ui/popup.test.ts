@@ -132,6 +132,18 @@ describe('popup', () => {
         expect(onClose).toHaveBeenCalled();
     });
 
+    test('Popup does not fire close event when removed if it is not on the map', () => {
+        const onClose = jest.fn();
+
+        new Popup()
+            .setText('Test')
+            .setLngLat([0, 0])
+            .on('close', onClose)
+            .remove();
+
+        expect(onClose).not.toHaveBeenCalled();
+    });
+
     test('Popup fires open event when added', () => {
         const map = createMap();
         const onOpen = jest.fn();
@@ -521,11 +533,13 @@ describe('popup', () => {
         expect(popupContainer.classList.contains('some')).toBeTruthy();
         expect(popupContainer.classList.contains('classes')).toBeTruthy();
 
-        popup.addClassName('addedClass');
+        const addClassNameMethodPopupInstance = popup.addClassName('addedClass');
         expect(popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(addClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
-        popup.removeClassName('addedClass');
+        const removeClassNameMethodPopupInstance = popup.removeClassName('addedClass');
         expect(!popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(removeClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         popup.toggleClassName('toggle');
         expect(popupContainer.classList.contains('toggle')).toBeTruthy();
