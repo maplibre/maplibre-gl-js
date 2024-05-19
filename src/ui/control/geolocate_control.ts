@@ -103,6 +103,9 @@ let noTimeout = false;
  * **Event** `outofmaxbounds` of type {@link Event} will be fired on each Geolocation API position update which returned as success but user position is out of map `maxBounds`.
  * `data` - The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
  *
+ * ### State Diagram
+ * ![GeolocateControl state diagram](https://cloud.githubusercontent.com/assets/117278/21092389/3140861e-c0a0-11e6-8298-3bcb5850cda2.png)
+ *
  * @example
  * ```ts
  * // Initialize the geolocate control.
