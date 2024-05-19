@@ -21,7 +21,7 @@ import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 
-const isMoving = p => p.zoom || p.drag || p.pitch || p.rotate;
+const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
 class RenderFrameEvent extends Event {
     type: 'renderFrame';
@@ -519,11 +519,6 @@ export class HandlerManager {
                 this._terrainMovement = true;
                 this._map._elevationFreeze = true;
                 tr.setLocationAtPoint(loc, around);
-                this._map.once('moveend', () => {
-                    this._map._elevationFreeze = false;
-                    this._terrainMovement = false;
-                    tr.recalculateZoom(map.terrain);
-                });
             } else if (combinedEventsInProgress.drag && this._terrainMovement) {
                 // drag map
                 tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
@@ -590,7 +585,13 @@ export class HandlerManager {
         }
 
         const stillMoving = isMoving(this._eventsInProgress);
-        if (allowEndAnimation && (wasMoving || nowMoving) && !stillMoving) {
+        const finishedMoving = (wasMoving || nowMoving) && !stillMoving;
+        if (finishedMoving && this._terrainMovement) {
+            this._map._elevationFreeze = false;
+            this._terrainMovement = false;
+            this._map.transform.recalculateZoom(this._map.terrain);
+        }
+        if (allowEndAnimation && finishedMoving) {
             this._updatingCamera = true;
             const inertialEase = this._inertia._onMoveEnd(this._map.dragPan._inertiaOptions);
 

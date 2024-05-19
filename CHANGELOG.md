@@ -1,12 +1,18 @@
 ## main
 
 ### ✨ Features and improvements
-- Remove `json-stringify-pretty-compact` from dev-dependencies ([#967](https://github.com/maplibre/maplibre-gl-js/issues/967))
 - Add `showButton` option to `GeoLocateControl`. ([#3103](https://github.com/maplibre/maplibre-gl-js/issues/3103))
+- Add events to `GeolocateControl` to allow a more granular interaction ([#3847](https://github.com/maplibre/maplibre-gl-js/pull/3847))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
+
+## 4.3.2
+
+### 🐞 Bug fixes
+
+- Fix an issue with `moveend` zoom being different than the actual current zoom ([#4132](https://github.com/maplibre/maplibre-gl-js/pull/4132))
 
 ## 4.3.1
 
