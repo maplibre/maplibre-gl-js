@@ -540,7 +540,7 @@ export class GeolocateControl extends Evented implements IControl {
 
         // if showButton is false, don't add the button to the map
         if (!this.options.showButton) {
-            this._geolocateButton.style.display = 'none';
+            this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-hidden');
         }
 
         if (supported === false) {

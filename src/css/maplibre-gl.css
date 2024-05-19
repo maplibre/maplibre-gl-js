@@ -354,6 +354,10 @@
     animation: maplibregl-spin 2s infinite linear;
 }
 
+.maplibregl-ctrl button.maplibregl-ctrl-geolocate.maplibregl-ctrl-geolocate-hidden {
+    display: none;
+}
+
 @media (-ms-high-contrast: active) {
     .maplibregl-ctrl button.maplibregl-ctrl-geolocate .maplibregl-ctrl-icon {
         background-image: svg-inline(ctrl-geolocate-white);
