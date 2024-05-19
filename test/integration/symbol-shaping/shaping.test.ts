@@ -87,6 +87,15 @@ describe('shaping', () => {
     if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-zero-width-space.json'), JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedZeroWidthSpaceBreak);
 
+    // break before left parenthesis without whitespace
+    // input: oooooooo(aaaaaaaaa)
+    // output: oooooooo\n(aaaaaaaaa)
+    const expectedBreakBeforeBracket = require('./tests/text-shaping-break-before-bracket.json');
+
+    shaped = shapeText(Formatted.fromString('oooooooo(aaaaaaaaa)'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
+    if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-break-before-bracket.json'), JSON.stringify(shaped, null, 2));
+    expect(shaped).toEqual(expectedBreakBeforeBracket);
+
     // Null shaping.
     shaped = shapeText(Formatted.fromString(''), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, 'point', layoutTextSize, layoutTextSizeThisZoom);
     expect(false).toBe(shaped);
