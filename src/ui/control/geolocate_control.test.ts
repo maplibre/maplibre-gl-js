@@ -590,6 +590,6 @@ describe('GeolocateControl with no options', () => {
         });
         map.addControl(geolocate);
         await sleep(0);
-        expect(geolocate._geolocateButton.style.display).toBe('none');
+        expect(geolocate._geolocateButton.classList.contains('maplibregl-ctrl-geolocate-hidden')).toBeTruthy();
     });
 });
