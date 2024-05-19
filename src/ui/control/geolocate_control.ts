@@ -578,9 +578,6 @@ export class GeolocateControl extends Evented implements IControl {
                     this._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
 
-                    /**
-                     * @deprecated Use 'userlocationlostfocus' event instead.
-                     */
                     this.fire(new Event('trackuserlocationend'));
                     this.fire(new Event('userlocationlostfocus'));
                 }
@@ -644,9 +641,6 @@ export class GeolocateControl extends Evented implements IControl {
                     // set camera to last known location
                     if (this._lastKnownPosition) this._updateCamera(this._lastKnownPosition);
 
-                    /**
-                     * @deprecated Use 'userlocationfocus' event instead.
-                     */
                     this.fire(new Event('trackuserlocationstart'));
                     this.fire(new Event('userlocationfocus'));
                     break;
