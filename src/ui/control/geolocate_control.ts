@@ -75,6 +75,10 @@ let noTimeout = false;
  * * disabled - occurs if Geolocation is not available, disabled or denied.
  *
  * These interaction states can't be controlled programmatically, rather they are set based on user interactions.
+ *
+ * ### State Diagram
+ * ![GeolocateControl state diagram](https://cloud.githubusercontent.com/assets/117278/21092389/3140861e-c0a0-11e6-8298-3bcb5850cda2.png)
+ *
  * @group Markers and Controls
  *
  * @example
