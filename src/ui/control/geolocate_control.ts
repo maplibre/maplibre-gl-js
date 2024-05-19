@@ -94,6 +94,10 @@ let noTimeout = false;
  *
  * ## Events
  *
+ * ** Event** `trackuserlocationend` (use `userlocationlostfocus` and `userlocationfocus` instead) of type {@link Event} will be fired when the `GeolocateControl` changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when `trackUserLocation` is `true`. In the background state, the dot on the map will update with location updates but the camera will not.
+ *
+ * ** Event** `trackuserlocationstart` (use `userlocationlostfocus` and `userlocationfocus` instead) of type {@link Event} will be fired when the `GeolocateControl` changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a `geolocate` event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no `geolocate` event will follow unless the users's location changes).
+ *
  * **Event** `userlocationlostfocus` - of type {@link Event} will be fired when the `GeolocateControl` changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when `trackUserLocation` is `true`. In the background state, the dot on the map will update with location updates but the camera will not.
  *
  * **Event** `userlocationfocus` - of type {@link Event} will be fired when the `GeolocateControl` changes to the active lock state, which happens upon the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state.
@@ -106,10 +110,6 @@ let noTimeout = false;
  *
  * **Event** `outofmaxbounds` of type {@link Event} will be fired on each Geolocation API position update which returned as success but user position is out of map `maxBounds`.
  * `data` - The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
- *
- * ** Event** `trackuserlocationend` (use `userlocationlostfocus` and `userlocationfocus` instead) of type {@link Event} will be fired when the `GeolocateControl` changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when `trackUserLocation` is `true`. In the background state, the dot on the map will update with location updates but the camera will not.
- *
- * ** Event** `trackuserlocationstart` (use `userlocationlostfocus` and `userlocationfocus` instead) of type {@link Event} will be fired when the `GeolocateControl` changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a `geolocate` event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no `geolocate` event will follow unless the users's location changes).
  *
  * ## State Diagram
  * ![GeolocateControl state diagram](https://github.com/maplibre/maplibre-gl-js/assets/3269297/78e720e5-d781-4da8-9803-a7a0e6aaaa9f)
