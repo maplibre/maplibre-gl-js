@@ -1115,6 +1115,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#state-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      State Diagram
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#extends" class="md-nav__link">
     <span class="md-ellipsis">
       Extends
@@ -7658,6 +7667,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#state-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      State Diagram
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#extends" class="md-nav__link">
     <span class="md-ellipsis">
       Extends
@@ -7924,6 +7942,8 @@ as disabled.</p>
 <code>data</code> - The returned <a href="https://developer.mozilla.org/en-US/docs/Web/API/PositionError">PositionError</a> object from the callback in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition">Geolocation.getCurrentPosition()</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition">Geolocation.watchPosition()</a>.</p>
 <p><strong>Event</strong> <code>outofmaxbounds</code> of type <a href="../Event/">Event</a> will be fired on each Geolocation API position update which returned as success but user position is out of map <code>maxBounds</code>.
 <code>data</code> - The returned <a href="https://developer.mozilla.org/en-US/docs/Web/API/Position">Position</a> object from the callback in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition">Geolocation.getCurrentPosition()</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition">Geolocation.watchPosition()</a>.</p>
+<h2 id="state-diagram">State Diagram</h2>
+<p><img alt="GeolocateControl state diagram" src="https://github.com/maplibre/maplibre-gl-js/assets/3269297/78e720e5-d781-4da8-9803-a7a0e6aaaa9f" /></p>
 <h2 id="extends">Extends</h2>
 <ul>
 <li><a href="../Evented/"><code>Evented</code></a></li>
@@ -7959,7 +7979,7 @@ as disabled.</p>
 <p><code>boolean</code></p>
 <p><code>true</code> if position is outside the map's <code>maxBounds</code>, otherwise returns <code>false</code>.</p>
 <h4 id="source">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/ui/control/geolocate_control.ts#L270">src/ui/control/geolocate_control.ts:270</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L273">src/ui/control/geolocate_control.ts:273</a></p>
 <hr />
 <h3 id="_onsuccess">_onSuccess()</h3>
 <blockquote>
@@ -7986,7 +8006,7 @@ as disabled.</p>
 <h4 id="returns_1">Returns</h4>
 <p><code>void</code></p>
 <h4 id="source_1">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/ui/control/geolocate_control.ts#L315">src/ui/control/geolocate_control.ts:315</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L318">src/ui/control/geolocate_control.ts:318</a></p>
 <hr />
 <h3 id="_updatecamera">_updateCamera()</h3>
 <blockquote>
@@ -8013,7 +8033,7 @@ as disabled.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>void</code></p>
 <h4 id="source_2">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/ui/control/geolocate_control.ts#L382">src/ui/control/geolocate_control.ts:382</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L385">src/ui/control/geolocate_control.ts:385</a></p>
 <hr />
 <h3 id="_updatemarker">_updateMarker()</h3>
 <blockquote>
@@ -8040,7 +8060,7 @@ as disabled.</p>
 <h4 id="returns_3">Returns</h4>
 <p><code>void</code></p>
 <h4 id="source_3">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/ui/control/geolocate_control.ts#L399">src/ui/control/geolocate_control.ts:399</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L402">src/ui/control/geolocate_control.ts:402</a></p>
 <hr />
 <h3 id="listens">listens()</h3>
 <blockquote>
@@ -8070,7 +8090,7 @@ as disabled.</p>
 <h4 id="inherited-from">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#listens"><code>listens</code></a></p>
 <h4 id="source_4">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/util/evented.ts#L161">src/util/evented.ts:161</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L161">src/util/evented.ts:161</a></p>
 <hr />
 <h3 id="off">off()</h3>
 <blockquote>
@@ -8104,7 +8124,7 @@ as disabled.</p>
 <h4 id="inherited-from_1">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#off"><code>off</code></a></p>
 <h4 id="source_5">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/util/evented.ts#L86">src/util/evented.ts:86</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L86">src/util/evented.ts:86</a></p>
 <hr />
 <h3 id="on">on()</h3>
 <blockquote>
@@ -8138,7 +8158,7 @@ as disabled.</p>
 <h4 id="inherited-from_2">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#on"><code>on</code></a></p>
 <h4 id="source_6">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
 <hr />
 <h3 id="onadd">onAdd()</h3>
 <blockquote>
@@ -8173,7 +8193,7 @@ as necessary.</p>
 <h4 id="implementation-of">Implementation of</h4>
 <p><a href="../../interfaces/IControl/"><code>IControl</code></a>.<a href="../../interfaces/IControl/#onadd"><code>onAdd</code></a></p>
 <h4 id="source_7">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/ui/control/geolocate_control.ts#L234">src/ui/control/geolocate_control.ts:234</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L237">src/ui/control/geolocate_control.ts:237</a></p>
 <hr />
 <h3 id="onremove">onRemove()</h3>
 <blockquote>
@@ -8187,7 +8207,7 @@ internally.</p>
 <h4 id="implementation-of_1">Implementation of</h4>
 <p><a href="../../interfaces/IControl/"><code>IControl</code></a>.<a href="../../interfaces/IControl/#onremove"><code>onRemove</code></a></p>
 <h4 id="source_8">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/ui/control/geolocate_control.ts#L242">src/ui/control/geolocate_control.ts:242</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L245">src/ui/control/geolocate_control.ts:245</a></p>
 <hr />
 <h3 id="once">once()</h3>
 <blockquote>
@@ -8223,7 +8243,7 @@ internally.</p>
 <h4 id="inherited-from_3">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#once"><code>once</code></a></p>
 <h4 id="source_9">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/util/evented.ts#L102">src/util/evented.ts:102</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L102">src/util/evented.ts:102</a></p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
@@ -8254,7 +8274,7 @@ internally.</p>
 <h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#seteventedparent"><code>setEventedParent</code></a></p>
 <h4 id="source_10">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/util/evented.ts#L172">src/util/evented.ts:172</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L172">src/util/evented.ts:172</a></p>
 <hr />
 <h3 id="trigger">trigger()</h3>
 <blockquote>
@@ -8279,7 +8299,7 @@ internally.</p>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="p">});</span>
 </span></code></pre></div>
 <h4 id="source_11">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0b4688b5c34bfa4dab4e956d0e67d2703bd1ec95/src/ui/control/geolocate_control.ts#L562">src/ui/control/geolocate_control.ts:562</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L565">src/ui/control/geolocate_control.ts:565</a></p>
 
 
 
