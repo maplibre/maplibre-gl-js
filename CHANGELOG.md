@@ -1,13 +1,19 @@
 ## main
 
 ### ✨ Features and improvements
-- Remove `json-stringify-pretty-compact` from dev-dependencies ([#967](https://github.com/maplibre/maplibre-gl-js/issues/967))
 - _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 4.3.2
+
+### ✨ Features and improvements
+- Remove `json-stringify-pretty-compact` from dev-dependencies ([#967](https://github.com/maplibre/maplibre-gl-js/issues/967))
 
 ### 🐞 Bug fixes
 
 - Fix an issue with `moveend` zoom being different than the actual current zoom ([#4132](https://github.com/maplibre/maplibre-gl-js/pull/4132))
-- _...Add new stuff here..._
 
 ## 4.3.1
 
