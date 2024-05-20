@@ -136,6 +136,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
     const transform = painter.transform;
     const projection = painter.style.map.projection;
+    const terrain = painter.style.map.terrain;
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
 
@@ -153,7 +154,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
 
         if (size) {
             const tileScale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
-            const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
+            const getElevation = terrain ? (x: number, y: number) => terrain.getElevation(coord, x, y) : null;
             const translation = projection.translatePosition(transform, tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
                 transform, labelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
@@ -219,7 +220,7 @@ function updateVariableAnchorsForBucket(
             symbolProjection.hideGlyphs(symbol.numGlyphs, dynamicTextLayoutVertexArray);
         } else  {
             const tileAnchor = new Point(symbol.anchorX, symbol.anchorY);
-            const projectionArgs = {
+            const projectionContext = {
                 getElevation,
                 width: transform.width,
                 height: transform.height,
@@ -234,7 +235,7 @@ function updateVariableAnchorsForBucket(
             };
             const projectedAnchor = pitchWithMap ?
                 symbolProjection.project(tileAnchor, posMatrix, getElevation) :
-                symbolProjection.projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionArgs);
+                symbolProjection.projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionContext);
             const perspectiveRatio = symbolProjection.getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
             let renderTextSize = evaluateSizeForFeature(bucket.textSizeData, size, symbol) * perspectiveRatio / ONE_EM;
             if (pitchWithMap) {
@@ -246,7 +247,7 @@ function updateVariableAnchorsForBucket(
             const shift = calculateVariableRenderShift(anchor, width, height, textOffset, textBoxScale, renderTextSize);
 
             const pitchedTextCorrection = projection.getPitchedTextCorrection(transform, tileAnchor.add(new Point(translation[0], translation[1])), unwrappedTileID);
-            const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionArgs, rotateWithMap, shift, transform.angle, pitchedTextCorrection);
+            const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionContext, rotateWithMap, shift, transform.angle, pitchedTextCorrection);
 
             const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === WritingMode.vertical) ? Math.PI / 2 : 0;
             for (let g = 0; g < symbol.numGlyphs; g++) {

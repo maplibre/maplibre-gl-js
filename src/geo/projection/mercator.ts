@@ -1,6 +1,6 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import type {Projection, ProjectionGPUContext, TransformLike} from './projection';
-import type {UnwrappedTileID} from '../../source/tile_id';
+import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import type {Tile} from '../../source/tile';
 import type {ProjectionData} from '../../render/program/projection_program';
@@ -125,15 +125,15 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
-    public getPixelScale(_: any): number {
+    public getPixelScale(_transform: { center: LngLat }): number {
         return 1.0;
     }
 
-    public getCircleRadiusCorrection(_: any): number {
+    public getCircleRadiusCorrection(_transform: { center: LngLat }): number {
         return 1.0;
     }
 
-    public getPitchedTextCorrection(_transformCenter: any, _textAnchor: any, _tileID: any): number {
+    public getPitchedTextCorrection(_transform: { center: LngLat }, _textAnchor: Point, _tileID: UnwrappedTileID): number {
         return 1.0;
     }
 
@@ -141,7 +141,7 @@ export class MercatorProjection implements Projection {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
-    public getMeshFromTileID(context: Context, _tileID: any, _hasBorder: any): Mesh {
+    public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean): Mesh {
         if (this._cachedMesh) {
             return this._cachedMesh;
         }
@@ -165,7 +165,7 @@ export class MercatorProjection implements Projection {
         return this._cachedMesh;
     }
 
-    public transformLightDirection(_: any, dir: vec3): vec3 {
+    public transformLightDirection(_transform: { center: LngLat }, dir: vec3): vec3 {
         return vec3.clone(dir);
     }
 
