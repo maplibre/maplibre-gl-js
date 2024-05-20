@@ -14,6 +14,7 @@ import {Transform} from '../geo/transform';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
+import {MercatorProjection} from '../geo/projection/mercator';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -45,7 +46,7 @@ describe('drawSymbol', () => {
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
         painterMock.style = {
-            map: {}
+            map: createMockMap()
         } as any as Style;
 
         const layerSpec = {
@@ -150,7 +151,7 @@ describe('drawSymbol', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
         painterMock.style = {
-            map: {}
+            map: createMockMap()
         } as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
@@ -172,7 +173,7 @@ describe('drawSymbol', () => {
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
         painterMock.style = {
-            map: {}
+            map: createMockMap()
         } as any as Style;
 
         const layerSpec = {
@@ -221,3 +222,9 @@ describe('drawSymbol', () => {
     });
 
 });
+
+function createMockMap() {
+    return {
+        projection: new MercatorProjection()
+    };
+}

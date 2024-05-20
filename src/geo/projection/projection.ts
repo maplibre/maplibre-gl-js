@@ -9,6 +9,7 @@ import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import type Point from '@mapbox/point-geometry';
 import type {LngLat} from '../lng_lat';
+import type {PointProjection} from '../../symbol/projection';
 
 export type ProjectionGPUContext = {
     context: Context;
@@ -143,25 +144,25 @@ export interface Projection {
 
     /**
      * @internal
-     * Projects a point in tile coordinates. Used in symbol rendering.
-     */
-    project(x: number, y: number, unwrappedTileID: UnwrappedTileID): {
-        point: Point;
-        signedDistanceFromCamera: number;
-        isOccluded: boolean;
-    };
-
-    /**
-     * @internal
      */
     getPixelScale(transform: { center: LngLat }): number;
 
     /**
      * @internal
-     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the transform's zoom level and latitude.
-     * Circle and kernel radius is multiplied by this value.
+     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
+     * Circle radius and heatmap kernel radius is multiplied by this value.
      */
     getCircleRadiusCorrection(transform: { center: LngLat }): number;
+
+    /**
+     * @internal
+     * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
+     * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
+     * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
+     * @param textAnchor - Text anchor position inside the tile.
+     * @param tileID - The tile coordinates.
+     */
+    getPitchedTextCorrection(transform: { center: LngLat }, textAnchor: Point, tileID: UnwrappedTileID): number;
 
     /**
      * @internal
@@ -171,12 +172,12 @@ export interface Projection {
 
     /**
      * @internal
-     * Returns a subdivided mesh for a given canonical tile ID, covering 0..EXTENT range.
+     * Returns a subdivided mesh for a given tile ID, covering 0..EXTENT range.
      * @param context - WebGL context.
-     * @param canonical - The tile coordinates for which to return a mesh. Meshes for tiles that border the top/bottom mercator edge might include extra geometry for the north/south pole.
+     * @param tileID - The tile coordinates for which to return a mesh. Meshes for tiles that border the top/bottom mercator edge might include extra geometry for the north/south pole.
      * @param hasBorder - When true, the mesh will also include a small border beyond the 0..EXTENT range.
      */
-    getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh;
+    getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean): Mesh;
 
     /**
      * @internal
@@ -186,10 +187,9 @@ export interface Projection {
      * @returns A new vector with the transformed light direction.
      */
     transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3;
-
-    // HM TODO: this needs to be fixed.
-    getPitchedTextCorrection(_transform: any, _anchor: any, _tile: any): number;
-
-    // HM TODO: fix this!
-    projectTileCoordinates(_x, _y, _t, _ele);
+    /**
+     * @internal
+     * Projects a point in tile coordinates. Used in symbol rendering.
+     */
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
 }

@@ -592,6 +592,10 @@ function projectLineVertexToViewport(index: number, projectionContext: SymbolPro
     return projectTruncatedLineSegmentToViewport(previousTilePoint, currentVertex, syntheticVertexArgs.previousVertex, minimumLength, projectionContext);
 }
 
+/**
+ * Projects the given point in tile coordinates to the screen.
+ * The resulting projection coordinates are in pixels.
+ */
 function projectTileCoordinatesToViewport(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
     const translatedX = x + projectionContext.translation[0];
     const translatedY = y + projectionContext.translation[1];
@@ -830,4 +834,52 @@ function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
     out[1] = m[1] * x + m[5] * y + m[13];
     out[3] = m[3] * x + m[7] * y + m[15];
     return out;
+}
+
+/**
+ * Takes a path of points that was previously projected using the `labelPlaneMatrix`
+ * and projects it using the map projection's (mercator/globe...) `projectTileCoordinates` function.
+ * Returns a new array of the projected points.
+ * Does not modify the input array.
+ */
+export function projectPathSpecialProjection(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext): Array<PointProjection> {
+    const inverseLabelPlaneMatrix = mat4.create();
+    mat4.invert(inverseLabelPlaneMatrix, projectionContext.labelPlaneMatrix);
+    return projectedPath.map(p => {
+        const backProjected = project(p, inverseLabelPlaneMatrix, projectionContext.getElevation);
+        const projected = projectionContext.projection.projectTileCoordinates(
+            backProjected.point.x,
+            backProjected.point.y,
+            projectionContext.unwrappedTileID,
+            projectionContext.getElevation
+        );
+        projected.point.x = (projected.point.x * 0.5 + 0.5) * projectionContext.width;
+        projected.point.y = (-projected.point.y * 0.5 + 0.5) * projectionContext.height;
+        return projected;
+    });
+}
+
+/**
+ * Takes a path of points projected to screenspace, finds the longest continuous unoccluded segment of that path
+ * and returns it.
+ * Does not modify the input array.
+ */
+export function pathSlicedToLongestUnoccluded(path: Array<PointProjection>): Array<PointProjection> {
+    let longestUnoccludedStart = 0;
+    let longestUnoccludedLength = 0;
+    let currentUnoccludedStart = 0;
+    let currentUnoccludedLength = 0;
+    for (let i = 0; i < path.length; i++) {
+        if (path[i].isOccluded) {
+            currentUnoccludedStart = i + 1;
+            currentUnoccludedLength = 0;
+        } else {
+            currentUnoccludedLength++;
+            if (currentUnoccludedLength > longestUnoccludedLength) {
+                longestUnoccludedLength = currentUnoccludedLength;
+                longestUnoccludedStart = currentUnoccludedStart;
+            }
+        }
+    }
+    return path.slice(longestUnoccludedStart, longestUnoccludedStart + longestUnoccludedLength);
 }

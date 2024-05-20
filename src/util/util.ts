@@ -5,6 +5,14 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * Modulo function, as opposed to javascript's `%`, which is a remainder.
+ * This functions will return positive values, even if the first operand is negative.
+ */
+export function mod(n, m) {
+    return ((n % m) + m) % m;
+}
+
+/**
  * Linearly interpolate between two values, similar to `mix` function from GLSL. No clamping is done.
  * @param a - The first value to interpolate. This value is returned when mix=0.
  * @param b - The second value to interpolate. This value is returned when mix=1.

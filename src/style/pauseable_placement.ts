@@ -1,14 +1,12 @@
 import {browser} from '../util/browser';
-
 import {Placement} from '../symbol/placement';
-
 import type {Transform} from '../geo/transform';
 import type {StyleLayer} from './style_layer';
 import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
 import type {Tile} from '../source/tile';
 import type {BucketPart} from '../symbol/placement';
-import {Terrain} from '../render/terrain';
-import {MercatorProjection} from '../geo/projection/mercator';
+import type {Terrain} from '../render/terrain';
+import type {Projection} from '../geo/projection/projection';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;
@@ -71,6 +69,7 @@ export class PauseablePlacement {
 
     constructor(
         transform: Transform,
+        projection: Projection,
         terrain: Terrain,
         order: Array<string>,
         forceFullPlacement: boolean,
@@ -79,8 +78,7 @@ export class PauseablePlacement {
         crossSourceCollisions: boolean,
         prevPlacement?: Placement
     ) {
-        // HM TODO: this needs to be fixed
-        this.placement = new Placement(transform, new MercatorProjection(), terrain, fadeDuration, crossSourceCollisions, prevPlacement);
+        this.placement = new Placement(transform, projection, terrain, fadeDuration, crossSourceCollisions, prevPlacement);
         this._currentPlacementIndex = order.length - 1;
         this._forceFullPlacement = forceFullPlacement;
         this._showCollisionBoxes = showCollisionBoxes;

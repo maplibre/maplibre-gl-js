@@ -12,7 +12,6 @@ describe('CollisionIndex', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.resize(200, 200);
 
-        // HM TODO: fix this!
         const ci = new CollisionIndex(transform, new MercatorProjection());
         expect(ci.projectAndGetPerspectiveRatio(posMatrix, x, y, null).point.x).toBeCloseTo(10000212.3456, 10);
     });

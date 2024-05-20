@@ -1373,9 +1373,7 @@ describe('SourceCache#clearTiles', () => {
 describe('SourceCache#tilesIn', () => {
     test('graceful response before source loaded', () => {
         const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
-        tr._calcMatrices();
+        tr.resize(512, 512);
         const sourceCache = createSourceCache({noLoad: true});
         sourceCache.transform = tr;
         sourceCache.onAdd(undefined);
@@ -1414,7 +1412,6 @@ describe('SourceCache#tilesIn', () => {
                     new OverscaledTileID(1, 0, 1, 0, 0).key
                 ]);
 
-                transform._calcMatrices();
                 const tiles = sourceCache.tilesIn([
                     new Point(0, 0),
                     new Point(512, 256)
