@@ -23,6 +23,9 @@ out vec2 v_width2;
 out float v_linesofar;
 out float v_gamma_scale;
 out float v_width;
+#ifdef GLOBE
+out float v_depth;
+#endif
 
 #pragma mapbox: define lowp float blur
 #pragma mapbox: define lowp float opacity
@@ -89,6 +92,9 @@ void main() {
     vec4 projected_no_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation);
     vec4 projected_with_extrude = projectTile(pos + offset2 / u_ratio * adjustedThickness + u_translation + dist / u_ratio * adjustedThickness);
     gl_Position = projected_with_extrude;
+    #ifdef GLOBE
+    v_depth = gl_Position.z / gl_Position.w;
+    #endif
 
     // calculate how much the perspective view squishes or stretches the extrude
     #ifdef TERRAIN3D
