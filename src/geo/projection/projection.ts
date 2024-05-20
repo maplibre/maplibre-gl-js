@@ -7,9 +7,9 @@ import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import Point from '@mapbox/point-geometry';
+import type Point from '@mapbox/point-geometry';
 import type {LngLat} from '../lng_lat';
-import {PointProjection} from '../../symbol/projection';
+import type {PointProjection} from '../../symbol/projection';
 
 export type ProjectionGPUContext = {
     context: Context;
