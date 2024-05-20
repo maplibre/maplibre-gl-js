@@ -9,6 +9,9 @@ in vec2 a_pos;
 out vec2 v_pos_a;
 out vec2 v_pos_b;
 out vec2 v_pos;
+#ifdef GLOBE
+out float v_depth;
+#endif
 
 #pragma mapbox: define lowp float opacity
 #pragma mapbox: define lowp vec4 pattern_from
@@ -41,4 +44,7 @@ void main() {
     v_pos_b = get_pattern_pos(u_pixel_coord_upper, u_pixel_coord_lower, toScale * display_size_b, tileRatio, a_pos);
 
     v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;
+    #ifdef GLOBE
+    v_depth = gl_Position.z / gl_Position.w;
+    #endif
 }
