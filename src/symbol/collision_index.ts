@@ -15,8 +15,7 @@ import type {
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
-import {SymbolProjectionContext, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, project, projectPathSpecialProjection} from '../symbol/projection';
-import type {PointProjection} from '../symbol/projection';
+import {type PointProjection, SymbolProjectionContext, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, project, projectPathSpecialProjection} from '../symbol/projection';
 import {Projection} from '../geo/projection/projection';
 import {clamp, getAABB} from '../util/util';
 
