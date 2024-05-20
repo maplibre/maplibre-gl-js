@@ -534,7 +534,7 @@ function determineLineBreaks(
         // surrounding spaces.
         if ((i < logicalInput.length() - 1)) {
             const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
-            if (breakable[codePoint] || ideographicBreak || section.imageName || breakableBefore[logicalInput.getCharCode(i + 1)]) {
+            if (breakable[codePoint] || ideographicBreak || section.imageName || (i !== logicalInput.length() - 2 && breakableBefore[logicalInput.getCharCode(i + 1)])) {
 
                 potentialLineBreaks.push(
                     evaluateBreak(
