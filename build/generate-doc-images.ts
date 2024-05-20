@@ -26,7 +26,7 @@ async function createImage(exampleName) {
     try {
         await page.waitForFunction('map.loaded()');
         // Wait for 5 seconds on 3d model examples, since this takes longer to load.
-        const waitTime = exampleName.includes('3d-model') ? 5000 : 1500;
+        const waitTime = (exampleName.includes('3d-model') || exampleName.includes('globe')) ? 5000 : 1500;
         console.log(`waiting for ${waitTime} ms`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
     } catch (err) {
