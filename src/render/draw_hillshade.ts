@@ -75,7 +75,7 @@ function renderHillshade(
         const posMatrix = terrainData ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align);
         const projectionData = painter.style.map.projection.getProjectionData(coord.canonical, posMatrix);
 
-        program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.disabled,
+        program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 }
