@@ -61,7 +61,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
 
         const useMeshWithBorders = false;
         const mesh = projection.getMeshFromTileID(context, tileID.canonical, useMeshWithBorders);
-        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.disabled,
+        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id,
             mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
