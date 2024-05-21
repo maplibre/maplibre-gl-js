@@ -10,7 +10,6 @@ void main() {
     float extent = 8192.0; // 8192.0 is the hardcoded vector-tiles coordinates resolution
     float ele_delta = a_pos3d.z == 1.0 ? u_ele_delta : 0.0;
     v_texture_pos = a_pos3d.xy / extent;
-    v_texture_pos.y = 1.0 - v_texture_pos.y;
     gl_Position = u_matrix * vec4(a_pos3d.xy, get_elevation(a_pos3d.xy) - ele_delta, 1.0);
     v_depth = gl_Position.z / gl_Position.w;
 }
