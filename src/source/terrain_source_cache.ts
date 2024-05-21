@@ -97,7 +97,7 @@ export class TerrainSourceCache extends Evented {
             this._renderableTilesKeys.push(tileID.key);
             if (!this._tiles[tileID.key]) {
                 tileID.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(tileID.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                mat4.ortho(tileID.posMatrix, 0, EXTENT, EXTENT, 0, 0, 1);
                 this._tiles[tileID.key] = new Tile(tileID, this.tileSize);
                 this._lastTilesetChange = browser.now();
             }
@@ -149,7 +149,7 @@ export class TerrainSourceCache extends Evented {
             if (_tileID.canonical.equals(tileID.canonical)) {
                 const coord = tileID.clone();
                 coord.posMatrix = new Float64Array(16) as any;
-                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                mat4.ortho(coord.posMatrix, 0, EXTENT, EXTENT, 0, 0, 1);
                 coords[key] = coord;
             } else if (_tileID.canonical.isChildOf(tileID.canonical)) {
                 const coord = tileID.clone();
@@ -158,7 +158,7 @@ export class TerrainSourceCache extends Evented {
                 const dx = _tileID.canonical.x - (_tileID.canonical.x >> dz << dz);
                 const dy = _tileID.canonical.y - (_tileID.canonical.y >> dz << dz);
                 const size = EXTENT >> dz;
-                mat4.ortho(coord.posMatrix, 0, size, 0, size, 0, 1);
+                mat4.ortho(coord.posMatrix, 0, size, size, 0, 0, 1); // Note: we are using `size` instead of `EXTENT` here
                 mat4.translate(coord.posMatrix, coord.posMatrix, [-dx * size, -dy * size, 0]);
                 coords[key] = coord;
             } else if (tileID.canonical.isChildOf(_tileID.canonical)) {
@@ -168,7 +168,7 @@ export class TerrainSourceCache extends Evented {
                 const dx = tileID.canonical.x - (tileID.canonical.x >> dz << dz);
                 const dy = tileID.canonical.y - (tileID.canonical.y >> dz << dz);
                 const size = EXTENT >> dz;
-                mat4.ortho(coord.posMatrix, 0, EXTENT, 0, EXTENT, 0, 1);
+                mat4.ortho(coord.posMatrix, 0, EXTENT, EXTENT, 0, 0, 1);
                 mat4.translate(coord.posMatrix, coord.posMatrix, [dx * size, dy * size, 0]);
                 mat4.scale(coord.posMatrix, coord.posMatrix, [1 / (2 ** dz), 1 / (2 ** dz), 0]);
                 coords[key] = coord;
