@@ -110,10 +110,6 @@ export class GlobeProjection implements Projection {
         return this.useGlobeRendering;
     }
 
-    get useSpecialProjectionForSymbols(): boolean {
-        return this.useGlobeRendering;
-    }
-
     get shaderVariantName(): string {
         return this.useGlobeRendering ? 'globe' : this._mercator.shaderVariantName;
     }

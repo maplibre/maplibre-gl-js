@@ -24,6 +24,7 @@ describe('Vertex to viewport projection', () => {
             projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
             lineVertexArray,
             labelPlaneMatrix: mat4.create(),
+            pitchedLabelPlaneMatrix: mat4.create(),
             getElevation: (_x, _y) => 0,
             // Only relevant in "behind the camera" case, can't happen with null projection matrix
             tileAnchorPoint: new Point(0, 0),
@@ -67,6 +68,7 @@ describe('Find offset line intersections', () => {
         projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
         lineVertexArray,
         labelPlaneMatrix: mat4.create(),
+        pitchedLabelPlaneMatrix: mat4.create(),
         getElevation: (_x, _y) => 0,
         tileAnchorPoint: new Point(0, 0),
         pitchWithMap: true,

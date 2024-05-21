@@ -3,7 +3,6 @@ import {Projection} from '../../../src/geo/projection/projection';
 import {Transform} from '../../../src/geo/transform';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
-import {mat4} from 'gl-matrix';
 import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
 import {CanonicalTileID, UnwrappedTileID} from '../../../src/source/tile_id';
 import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
@@ -15,7 +14,6 @@ type TestSymbol = {
     collisionBox: SingleCollisionBox;
     overlapMode: OverlapMode;
     textPixelRatio: number;
-    posMatrix: mat4;
     unwrappedTileID: UnwrappedTileID;
     pitchWithMap: boolean;
     rotateWithMap: boolean;
@@ -49,7 +47,6 @@ export default class SymbolCollisionBox extends Benchmark {
         // HM TODO: fix this!
         this._projection = new MercatorProjection();
         const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0));
-        const posMatrix = this._transform.calculatePosMatrix(unwrappedTileID);
 
         const rng = splitmix32(0xdeadbeef);
         const rndRange = (min, max) => {
@@ -71,7 +68,6 @@ export default class SymbolCollisionBox extends Benchmark {
                 },
                 overlapMode: 'never',
                 textPixelRatio: 1,
-                posMatrix,
                 unwrappedTileID,
                 pitchWithMap: rng() > 0.5,
                 rotateWithMap: rng() > 0.5,
@@ -95,7 +91,6 @@ export default class SymbolCollisionBox extends Benchmark {
                 s.collisionBox,
                 s.overlapMode,
                 s.textPixelRatio,
-                s.posMatrix,
                 s.unwrappedTileID,
                 s.pitchWithMap,
                 s.rotateWithMap,

@@ -207,5 +207,6 @@ function createMockTransform(object: {
         angle: -(object?.bearing || 0) / 180.0 * Math.PI,
         zoom: 0,
         invProjMatrix: null,
+        calculatePosMatrix: null
     };
 }

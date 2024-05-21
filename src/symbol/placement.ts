@@ -24,7 +24,6 @@ import {Terrain} from '../render/terrain';
 import {warnOnce} from '../util/util';
 import {TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
 import {Projection} from '../geo/projection/projection';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class OpacityState {
     opacity: number;
@@ -172,7 +171,7 @@ type TileLayerParameters = {
     unwrappedTileID: UnwrappedTileID;
     posMatrix: mat4;
     textLabelPlaneMatrix: mat4;
-    labelToScreenMatrix: mat4;
+    pitchedLabelPlaneMatrix: mat4;
     scale: number;
     textPixelRatio: number;
     holdingForFade: boolean;
@@ -299,18 +298,7 @@ export class Placement {
             this.transform,
             pixelsToTiles);
 
-        let labelToScreenMatrix = null;
-
-        if (pitchWithMap) {
-            const glMatrix = projection.getGlCoordMatrix(
-                posMatrix,
-                pitchWithMap,
-                rotateWithMap,
-                this.transform,
-                pixelsToTiles);
-
-            labelToScreenMatrix = mat4.multiply([] as any, (this.transform as MercatorTransform).labelPlaneMatrix, glMatrix); // JP: TODO: remove this hack
-        }
+        const pitchedLabelPlaneMatrix = projection.getPitchedLabelPlaneMatrix(rotateWithMap, this.transform, pixelsToTiles);
 
         // As long as this placement lives, we have to hold onto this bucket's
         // matching FeatureIndex/data for querying purposes
@@ -330,7 +318,7 @@ export class Placement {
             posMatrix,
             unwrappedTileID,
             textLabelPlaneMatrix,
-            labelToScreenMatrix,
+            pitchedLabelPlaneMatrix,
             scale,
             textPixelRatio,
             holdingForFade: tile.holdingForFade(),
@@ -386,7 +374,6 @@ export class Placement {
             textBox,
             textOverlapMode,
             textPixelRatio,
-            posMatrix,
             unwrappedTileID,
             pitchWithMap,
             rotateWithMap,
@@ -401,7 +388,6 @@ export class Placement {
                 iconBox,
                 textOverlapMode,
                 textPixelRatio,
-                posMatrix,
                 unwrappedTileID,
                 pitchWithMap,
                 rotateWithMap,
@@ -455,7 +441,7 @@ export class Placement {
             posMatrix,
             unwrappedTileID,
             textLabelPlaneMatrix,
-            labelToScreenMatrix,
+            pitchedLabelPlaneMatrix,
             textPixelRatio,
             holdingForFade,
             collisionBoxArray,
@@ -573,7 +559,6 @@ export class Placement {
                             collisionTextBox,
                             textOverlapMode,
                             textPixelRatio,
-                            posMatrix,
                             unwrappedTileID,
                             pitchWithMap,
                             rotateWithMap,
@@ -658,7 +643,6 @@ export class Placement {
                                 textBox,
                                 'always', // Skips expensive collision check with already placed boxes
                                 textPixelRatio,
-                                posMatrix,
                                 unwrappedTileID,
                                 pitchWithMap,
                                 rotateWithMap,
@@ -730,10 +714,9 @@ export class Placement {
                     bucket.lineVertexArray,
                     bucket.glyphOffsetArray,
                     fontSize,
-                    posMatrix,
                     unwrappedTileID,
                     textLabelPlaneMatrix,
-                    labelToScreenMatrix,
+                    pitchedLabelPlaneMatrix,
                     showCollisionBoxes,
                     pitchWithMap,
                     collisionGroup.predicate,
@@ -765,7 +748,6 @@ export class Placement {
                         iconBox,
                         iconOverlapMode,
                         textPixelRatio,
-                        posMatrix,
                         unwrappedTileID,
                         pitchWithMap,
                         rotateWithMap,

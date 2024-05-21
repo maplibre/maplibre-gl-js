@@ -30,6 +30,7 @@ export type TransformLike = {
     height: number;
     cameraToCenterDistance: number;
     invProjMatrix: mat4;
+    calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned?: boolean): mat4;
 }
 
 /**
@@ -41,13 +42,6 @@ export interface Projection {
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
      */
     get name(): string;
-
-    /**
-     * @internal
-     * True if symbols should use the `project` method of the current ProjectionBase class
-     * instead of the default (and fast) mercator projection path.
-     */
-    get useSpecialProjectionForSymbols(): boolean;
 
     /**
      * @internal

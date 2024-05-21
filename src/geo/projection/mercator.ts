@@ -17,6 +17,7 @@ import type {Terrain} from '../../render/terrain';
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
+import {xyTransformMat4} from '../../symbol/projection';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -24,13 +25,10 @@ export const MercatorShaderVariantKey = 'mercator';
 export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
     private _cameraPosition: vec3 = [0, 0, 0];
+    private _cachedTransform: TransformLike; // JP: TODO: remove this hack!
 
     get name(): string {
         return 'mercator';
-    }
-
-    get useSpecialProjectionForSymbols(): boolean {
-        return false;
     }
 
     get cameraPosition(): vec3 {
@@ -84,7 +82,7 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public updateProjection(t: { invProjMatrix: mat4 }): void {
+    public updateProjection(t: TransformLike): void {
         const cameraPos: vec4 = [0, 0, -1, 1];
         vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
         this._cameraPosition = [
@@ -92,6 +90,7 @@ export class MercatorProjection implements Projection {
             cameraPos[1] / cameraPos[3],
             cameraPos[2] / cameraPos[3]
         ];
+        this._cachedTransform = t;
     }
 
     public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData {
@@ -169,13 +168,26 @@ export class MercatorProjection implements Projection {
         return vec3.clone(dir);
     }
 
-    public projectTileCoordinates(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID, _getElevation: (x: number, y: number) => number): {
+    public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): {
         point: Point;
         signedDistanceFromCamera: number;
         isOccluded: boolean;
     } {
-        // This function should only be used when useSpecialProjectionForSymbols is set to true.
-        throw new Error('Not implemented.');
+        const matrix = this._cachedTransform.calculatePosMatrix(unwrappedTileID);
+        let pos;
+        if (getElevation) { // slow because of handle z-index
+            pos = [x, y, getElevation(x, y), 1] as vec4;
+            vec4.transformMat4(pos, pos, matrix);
+        } else { // fast because of ignore z-index
+            pos = [x, y, 0, 1] as vec4;
+            xyTransformMat4(pos, pos, matrix);
+        }
+        const w = pos[3];
+        return {
+            point: new Point(pos[0] / w, pos[1] / w),
+            signedDistanceFromCamera: w,
+            isOccluded: false
+        };
     }
 
     public projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point {

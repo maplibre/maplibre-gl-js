@@ -118,6 +118,18 @@ function getLabelPlaneMatrix(posMatrix: mat4,
     return m;
 }
 
+export function getPitchedLabelPlaneMatrix(
+    rotateWithMap: boolean,
+    transform: Transform,
+    pixelsToTileUnits: number) {
+    const m = mat4.create();
+    mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
+    if (!rotateWithMap) {
+        mat4.rotateZ(m, m, transform.angle);
+    }
+    return m;
+}
+
 /*
  * Returns a matrix for converting from the correct label coordinate space to clip space.
  */
@@ -178,6 +190,7 @@ function updateLineLabels(bucket: SymbolBucket,
     painter: Painter,
     isText: boolean,
     labelPlaneMatrix: mat4,
+    pitchedLabelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     pitchWithMap: boolean,
     keepUpright: boolean,
@@ -239,6 +252,7 @@ function updateLineLabels(bucket: SymbolBucket,
         const projectionContext: SymbolProjectionContext = {
             getElevation,
             labelPlaneMatrix,
+            pitchedLabelPlaneMatrix,
             lineVertexArray,
             pitchWithMap,
             projectionCache,
@@ -517,6 +531,10 @@ export type SymbolProjectionContext = {
      */
     labelPlaneMatrix: mat4;
     /**
+     * Matrix for transforming from pixels (symbol shaping) to potentially rotated tile units (pitched map label plane).
+     */
+    pitchedLabelPlaneMatrix: mat4;
+    /**
      * Function to get elevation at a point
      * @param x - the x coordinate
      * @param y - the y coordinate
@@ -601,7 +619,7 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionContex
     const translatedX = x + projectionContext.translation[0];
     const translatedY = y + projectionContext.translation[1];
     let projection;
-    if (!projectionContext.pitchWithMap && projectionContext.projection.useSpecialProjectionForSymbols) {
+    if (!projectionContext.pitchWithMap) {
         projection = projectionContext.projection.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, projectionContext.getElevation);
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
@@ -845,7 +863,7 @@ function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
  */
 export function projectPathSpecialProjection(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext): Array<PointProjection> {
     const inverseLabelPlaneMatrix = mat4.create();
-    mat4.invert(inverseLabelPlaneMatrix, projectionContext.labelPlaneMatrix);
+    mat4.invert(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
         const backProjected = project(p, inverseLabelPlaneMatrix, projectionContext.getElevation);
         const projected = projectionContext.projection.projectTileCoordinates(
