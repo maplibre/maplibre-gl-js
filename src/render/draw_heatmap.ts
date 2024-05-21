@@ -57,7 +57,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
 
             const radiusCorrectionFactor = projection.getCircleRadiusCorrection(transform);
 
-            program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.disabled,
+            program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW,
                 heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),
                 null, projectionData,
                 layer.id, bucket.layoutVertexBuffer, bucket.indexBuffer,

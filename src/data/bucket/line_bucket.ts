@@ -569,7 +569,7 @@ export class LineBucket implements Bucket {
 
         const e = segment.vertexLength++;
         if (this.e1 >= 0 && this.e2 >= 0) {
-            this.indexArray.emplaceBack(this.e1, this.e2, e);
+            this.indexArray.emplaceBack(this.e1, e, this.e2);
             segment.primitiveLength++;
         }
         if (up) {

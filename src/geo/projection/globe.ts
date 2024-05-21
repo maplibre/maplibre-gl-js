@@ -474,11 +474,11 @@ export class GlobeProjection implements Projection {
         return `${granularity.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
     }
 
-    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean): Mesh {
+    public getMeshFromTileID(context: Context, canonical: CanonicalTileID, hasBorder: boolean, allowPoles: boolean): Mesh {
         // Stencil granularity must match fill granularity
         const granularity = granularitySettingsGlobe.fill.getGranularityForZoomLevel(canonical.z);
-        const north = (canonical.y === 0);
-        const south = (canonical.y === (1 << canonical.z) - 1);
+        const north = (canonical.y === 0) && allowPoles;
+        const south = (canonical.y === (1 << canonical.z) - 1) && allowPoles;
         return this._getMesh(context, granularity, hasBorder, north, south);
     }
 
