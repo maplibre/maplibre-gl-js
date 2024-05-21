@@ -15,7 +15,7 @@ import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} 
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {AttributionControl, AttributionControlOptions, defaultAtributionControlOptions} from './control/attribution_control';
+import {AttributionControl, AttributionControlOptions, defaultAttributionControlOptions} from './control/attribution_control';
 import {LogoControl} from './control/logo_control';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
@@ -287,7 +287,7 @@ export type MapOptions = {
      */
     fitBoundsOptions?: FitBoundsOptions;
     /**
-     *  Defines a CSS
+     * Defines a CSS
      * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
      * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
@@ -386,7 +386,7 @@ const defaultOptions = {
     pitchWithRotate: true,
 
     hash: false,
-    attributionControl: defaultAtributionControlOptions,
+    attributionControl: defaultAttributionControlOptions,
     maplibreLogo: false,
 
     failIfMajorPerformanceCaveat: false,
