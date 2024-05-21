@@ -20,7 +20,7 @@ export type AttributionControlOptions = {
     customAttribution?: string | Array<string>;
 };
 
-export const defaultAtributionControlOptions: AttributionControlOptions = {
+export const defaultAttributionControlOptions: AttributionControlOptions = {
     compact: true,
     customAttribution: '<a href="https://maplibre.org/" target="_blank">MapLibre</a>'
 };
@@ -51,7 +51,7 @@ export class AttributionControl implements IControl {
     /**
      * @param options - the attribution options
      */
-    constructor(options: AttributionControlOptions = defaultAtributionControlOptions) {
+    constructor(options: AttributionControlOptions = defaultAttributionControlOptions) {
         this.options = options;
     }
 

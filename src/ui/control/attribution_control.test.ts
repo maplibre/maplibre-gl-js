@@ -1,4 +1,4 @@
-import {AttributionControl, defaultAtributionControlOptions} from './attribution_control';
+import {AttributionControl, defaultAttributionControlOptions} from './attribution_control';
 import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
@@ -166,7 +166,7 @@ describe('AttributionControl', () => {
 
         await sleep(100);
 
-        expect(attribution._innerContainer.innerHTML).toBe(`Hello World | Another Source | GeoJSON Source | ${defaultAtributionControlOptions.customAttribution}`);
+        expect(attribution._innerContainer.innerHTML).toBe(`Hello World | Another Source | GeoJSON Source | ${defaultAttributionControlOptions.customAttribution}`);
         expect(spy.mock.calls.filter((call) => call[0].dataType === 'source' && call[0].sourceDataType === 'visibility')).toHaveLength(7);
 
     });
@@ -272,7 +272,7 @@ describe('AttributionControl', () => {
                    mapDataEvent.sourceId === '1';
         })).toHaveLength(1);
 
-        expect(attribution._innerContainer.innerHTML).toBe(`Used | ${defaultAtributionControlOptions.customAttribution}`);
+        expect(attribution._innerContainer.innerHTML).toBe(`Used | ${defaultAttributionControlOptions.customAttribution}`);
     });
 
     test('does not show attributions for sources that are used for terrain when they are not in use', async () => {
@@ -304,7 +304,7 @@ describe('AttributionControl', () => {
                    mapDataEvent.sourceDataType === 'visibility';
         })).toHaveLength(0);
 
-        expect(attribution._innerContainer.innerHTML).toBe(defaultAtributionControlOptions.customAttribution);
+        expect(attribution._innerContainer.innerHTML).toBe(defaultAttributionControlOptions.customAttribution);
     });
 
     test('shows attributions for sources that are used for terrain', async () => {
@@ -336,7 +336,7 @@ describe('AttributionControl', () => {
                    mapDataEvent.sourceDataType === 'visibility';
         })).toHaveLength(0);
 
-        expect(attribution._innerContainer.innerHTML).toBe(`Terrain | ${defaultAtributionControlOptions.customAttribution}`);
+        expect(attribution._innerContainer.innerHTML).toBe(`Terrain | ${defaultAttributionControlOptions.customAttribution}`);
     });
 
     test('toggles attributions for sources whose visibility changes when zooming', async () => {
