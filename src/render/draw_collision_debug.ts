@@ -49,7 +49,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             // required for transforming points from previous screen space to the current one
             const invTransform = mat4.create();
 
-            mat4.mul(invTransform, bucket.placementInvProjMatrix, (painter.transform as MercatorTransform).glCoordMatrix); // JP: TODO: remove this hack
+            mat4.mul(invTransform, bucket.placementInvProjMatrix, (painter.transform as MercatorTransform).pixelsToClipSpaceMatrix); // JP: TODO: remove this hack
             mat4.mul(invTransform, invTransform, bucket.placementViewportMatrix);
 
             tileBatches.push({

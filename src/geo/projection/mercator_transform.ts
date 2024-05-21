@@ -20,8 +20,8 @@ export class MercatorTransform extends Transform {
     pixelMatrix: mat4;
     pixelMatrix3D: mat4;
     pixelMatrixInverse: mat4;
-    glCoordMatrix: mat4;
-    labelPlaneMatrix: mat4;
+    pixelsToClipSpaceMatrix: mat4;
+    clipSpaceToPixelsMatrix: mat4;
 
     private _posMatrixCache: {[_: string]: mat4};
     private _alignedPosMatrixCache: {[_: string]: mat4};
@@ -526,13 +526,13 @@ export class MercatorTransform extends Transform {
         let m = mat4.identity(new Float64Array(16) as any);
         mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
         mat4.translate(m, m, [1, -1, 0]);
-        this.labelPlaneMatrix = m;
+        this.clipSpaceToPixelsMatrix = m;
 
         m = mat4.identity(new Float64Array(16) as any);
         mat4.scale(m, m, [1, -1, 1]);
         mat4.translate(m, m, [-1, -1, 0]);
         mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
-        this.glCoordMatrix = m;
+        this.pixelsToClipSpaceMatrix = m;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const cameraToSeaLevelDistance = this._cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
@@ -591,7 +591,7 @@ export class MercatorTransform extends Transform {
         mat4.scale(m, m, [1, 1, this._pixelPerMeter]);
 
         // matrix for conversion from world space to screen coordinates in 2D
-        this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
+        this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
 
         // matrix for conversion from world space to clip space (-1 .. 1)
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
@@ -599,7 +599,7 @@ export class MercatorTransform extends Transform {
         this.invProjMatrix = mat4.invert([] as any, m);
 
         // matrix for conversion from world space to screen coordinates in 3D
-        this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
+        this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional

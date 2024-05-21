@@ -170,7 +170,6 @@ type TileLayerParameters = {
     translationIcon: [number, number];
     unwrappedTileID: UnwrappedTileID;
     posMatrix: mat4;
-    textLabelPlaneMatrix: mat4;
     pitchedLabelPlaneMatrix: mat4;
     scale: number;
     textPixelRatio: number;
@@ -276,7 +275,6 @@ export class Placement {
 
         const posMatrix = this.transform.calculatePosMatrix(unwrappedTileID);
 
-        const pitchWithMap = layout.get('text-pitch-alignment') === 'map';
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
@@ -291,12 +289,6 @@ export class Placement {
             tile,
             paint.get('icon-translate'),
             paint.get('icon-translate-anchor'),);
-
-        const textLabelPlaneMatrix = projection.getLabelPlaneMatrix(posMatrix,
-            pitchWithMap,
-            rotateWithMap,
-            this.transform,
-            pixelsToTiles);
 
         const pitchedLabelPlaneMatrix = projection.getPitchedLabelPlaneMatrix(rotateWithMap, this.transform, pixelsToTiles);
 
@@ -317,7 +309,6 @@ export class Placement {
             translationIcon,
             posMatrix,
             unwrappedTileID,
-            textLabelPlaneMatrix,
             pitchedLabelPlaneMatrix,
             scale,
             textPixelRatio,
@@ -440,7 +431,6 @@ export class Placement {
             translationIcon,
             posMatrix,
             unwrappedTileID,
-            textLabelPlaneMatrix,
             pitchedLabelPlaneMatrix,
             textPixelRatio,
             holdingForFade,
@@ -715,7 +705,6 @@ export class Placement {
                     bucket.glyphOffsetArray,
                     fontSize,
                     unwrappedTileID,
-                    textLabelPlaneMatrix,
                     pitchedLabelPlaneMatrix,
                     showCollisionBoxes,
                     pitchWithMap,

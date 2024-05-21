@@ -153,7 +153,6 @@ export class CollisionIndex {
         glyphOffsetArray: GlyphOffsetArray,
         fontSize: number,
         unwrappedTileID: UnwrappedTileID,
-        labelPlaneMatrix: mat4,
         pitchedLabelPlaneMatrix: mat4,
         showCollisionCircles: boolean,
         pitchWithMap: boolean,
@@ -176,7 +175,6 @@ export class CollisionIndex {
 
         const projectionContext: SymbolProjectionContext = {
             getElevation,
-            labelPlaneMatrix,
             pitchedLabelPlaneMatrix,
             lineVertexArray,
             pitchWithMap,

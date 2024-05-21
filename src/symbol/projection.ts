@@ -21,7 +21,6 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 export {
     updateLineLabels,
     hideGlyphs,
-    getLabelPlaneMatrix,
     getGlCoordMatrix,
     project,
     getPerspectiveRatio,
@@ -98,26 +97,6 @@ export type PointProjection = {
  * Steps 3 and 4 are done in the shaders for all labels.
  */
 
-/*
- * Returns a matrix for converting from tile units to the correct label coordinate space.
- */
-function getLabelPlaneMatrix(posMatrix: mat4,
-    pitchWithMap: boolean,
-    rotateWithMap: boolean,
-    transform: Transform,
-    pixelsToTileUnits: number) {
-    const m = mat4.create();
-    if (pitchWithMap) {
-        mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
-        if (!rotateWithMap) {
-            mat4.rotateZ(m, m, transform.angle);
-        }
-    } else {
-        mat4.multiply(m, (transform as MercatorTransform).labelPlaneMatrix, posMatrix); // JP: TODO: remove this hack
-    }
-    return m;
-}
-
 export function getPitchedLabelPlaneMatrix(
     rotateWithMap: boolean,
     transform: Transform,
@@ -146,7 +125,7 @@ function getGlCoordMatrix(posMatrix: mat4,
         }
         return m;
     } else {
-        return (transform as MercatorTransform).glCoordMatrix; // JP: TODO: remove this hack
+        return (transform as MercatorTransform).pixelsToClipSpaceMatrix; // JP: TODO: remove this hack
     }
 }
 
@@ -189,7 +168,6 @@ function updateLineLabels(bucket: SymbolBucket,
     posMatrix: mat4,
     painter: Painter,
     isText: boolean,
-    labelPlaneMatrix: mat4,
     pitchedLabelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
     pitchWithMap: boolean,
@@ -251,7 +229,6 @@ function updateLineLabels(bucket: SymbolBucket,
 
         const projectionContext: SymbolProjectionContext = {
             getElevation,
-            labelPlaneMatrix,
             pitchedLabelPlaneMatrix,
             lineVertexArray,
             pitchWithMap,
@@ -454,7 +431,7 @@ function projectTruncatedLineSegmentToLabelPlane(previousTilePoint: Point, curre
  * @param currentTilePoint - Line end point, in tile coordinates.
  * @param previousProjectedPoint - Projection of `previousTilePoint` into *viewport*.
  * @param minimumLength - Distance in the projected space along the line for the returned point.
- * @param projectionContext - Projection context, used for terrain's `getElevation`, and either the `labelPlaneMatrix` or the map's special projection (mostly for globe).
+ * @param projectionContext - Projection context, used to get terrain's `getElevation`, and to project the points to screen pixels.
  */
 function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionContext: SymbolProjectionContext) {
     return _projectTruncatedLineSegment(previousTilePoint, currentTilePoint, previousProjectedPoint, minimumLength, undefined, projectionContext);
@@ -465,9 +442,8 @@ function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, current
  * depending on the target space.
  *
  * Projects a "virtual" vertex along a line segment.
- * If `projectionMatrix` is not undefined, does a simple projection using this matrix.
- * Otherwise, either projects to label plane using the `labelPlaneMatrix`
- * or projects to viewport using the special map projection (mostly for globe) by calling {@link projectTileCoordinatesToViewport}.
+ * If `projectionMatrix` is defined, does a simple projection using this matrix.
+ * Otherwise, either projects the points to screen pixels using {@link projectTileCoordinatesToViewport}.
  */
 function _projectTruncatedLineSegment(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionMatrix: mat4 | undefined, projectionContext: SymbolProjectionContext) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
@@ -526,10 +502,6 @@ export type SymbolProjectionContext = {
      * The array of tile-unit vertices transferred from worker
      */
     lineVertexArray: SymbolLineVertexArray;
-    /**
-     * Label plane projection matrix
-     */
-    labelPlaneMatrix: mat4;
     /**
      * Matrix for transforming from pixels (symbol shaping) to potentially rotated tile units (pitched map label plane).
      */
@@ -619,13 +591,13 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionContex
     const translatedX = x + projectionContext.translation[0];
     const translatedY = y + projectionContext.translation[1];
     let projection;
-    if (!projectionContext.pitchWithMap) {
+    if (projectionContext.pitchWithMap) {
+        projection = project(new Point(translatedX, translatedY), projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation);
+        projection.isOccluded = false;
+    } else {
         projection = projectionContext.projection.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, projectionContext.getElevation);
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
-    } else {
-        projection = project(new Point(translatedX, translatedY), projectionContext.labelPlaneMatrix, projectionContext.getElevation);
-        projection.isOccluded = false;
     }
     return projection;
 }
@@ -856,7 +828,7 @@ function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
 }
 
 /**
- * Takes a path of points that was previously projected using the `labelPlaneMatrix`
+ * Takes a path of points that was previously projected using the `pitchedLabelPlaneMatrix`
  * and projects it using the map projection's (mercator/globe...) `projectTileCoordinates` function.
  * Returns a new array of the projected points.
  * Does not modify the input array.

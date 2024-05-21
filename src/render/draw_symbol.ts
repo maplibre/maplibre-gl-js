@@ -38,7 +38,8 @@ import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
 import {ProjectionData} from './program/projection_program';
 import {Projection} from '../geo/projection/projection';
-import {getGlCoordMatrix, getLabelPlaneMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, project, projectTileCoordinatesToViewport, SymbolProjectionContext, updateLineLabels} from '../symbol/projection';
+import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, project, projectTileCoordinatesToViewport, SymbolProjectionContext, updateLineLabels} from '../symbol/projection';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -149,7 +150,6 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
         const size = evaluateSizeForZoom(sizeData, transform.zoom);
 
         const pixelToTileScale = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const labelPlaneMatrix = getLabelPlaneMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, pixelToTileScale);
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, pixelToTileScale);
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' && bucket.hasIconData();
 
@@ -158,7 +158,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
             const getElevation = terrain ? (x: number, y: number) => terrain.getElevation(coord, x, y) : null;
             const translation = projection.translatePosition(transform, tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
-                transform, labelPlaneMatrix, pitchedLabelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
+                transform, pitchedLabelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
         }
     }
 }
@@ -174,7 +174,7 @@ function getShiftedAnchor(projectedAnchorPoint: Point, projectionContext: Symbol
             adjustedShift = adjustedShift.rotate(-transformAngle);
         }
         const tileAnchorShifted = translatedAnchor.add(adjustedShift);
-        return project(tileAnchorShifted, projectionContext.labelPlaneMatrix, projectionContext.getElevation).point;
+        return project(tileAnchorShifted, projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation).point;
     } else {
         if (rotateWithMap) {
             // Compute the angle with which to rotate the anchor, so that it is aligned with
@@ -195,7 +195,6 @@ function updateVariableAnchorsForBucket(
     pitchWithMap: boolean,
     variableOffsets: {[_ in CrossTileID]: VariableOffset},
     transform: Transform,
-    labelPlaneMatrix: mat4,
     pitchedLabelPlaneMatrix: mat4,
     posMatrix: mat4,
     tileScale: number,
@@ -226,7 +225,6 @@ function updateVariableAnchorsForBucket(
                 getElevation,
                 width: transform.width,
                 height: transform.height,
-                labelPlaneMatrix,
                 pitchedLabelPlaneMatrix,
                 lineVertexArray: null,
                 pitchWithMap,
@@ -319,7 +317,7 @@ function drawLayerSymbols(
     const pitchWithMap = pitchAlignment === 'map';
     const alongLine = rotationAlignment !== 'viewport' && layer.layout.get('symbol-placement') !== 'point';
     // Line label rotation happens in `updateLineLabels`
-    // Pitched point labels are automatically rotated by the labelPlaneMatrix projection
+    // Pitched point labels are automatically rotated by the pitchedLabelPlaneMatrix projection
     // Unpitched point labels need to have their rotation applied after projection
     const rotateInShader = rotateWithMap && !pitchWithMap && !alongLine;
 
@@ -381,8 +379,8 @@ function drawLayerSymbols(
 
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const baseMatrix = isViewportLine ? coord.posMatrix : identityMat4;
-        const labelPlaneMatrix = getLabelPlaneMatrix(identityMat4, pitchWithMap, rotateWithMap, painter.transform, s);
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
+        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : (painter.transform as MercatorTransform).clipSpaceToPixelsMatrix;
         const glCoordMatrixForShader = getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
         const glCoordMatrixForSymbolPlacement = getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
@@ -397,13 +395,13 @@ function drawLayerSymbols(
         if (alongLine) {
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
-            updateLineLabels(bucket, coord.posMatrix, painter, isText, labelPlaneMatrix, pitchedLabelPlaneMatrix, glCoordMatrixForSymbolPlacement, pitchWithMap, keepUpright, rotateToLine, projection, coord.toUnwrapped(), tr.width, tr.height, translation, getElevation);
+            updateLineLabels(bucket, coord.posMatrix, painter, isText, pitchedLabelPlaneMatrix, glCoordMatrixForSymbolPlacement, pitchWithMap, keepUpright, rotateToLine, projection, coord.toUnwrapped(), tr.width, tr.height, translation, getElevation);
         }
 
         const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
         const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
         const noLabelPlane = (alongLine || shaderVariableAnchor);
-        const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : labelPlaneMatrix;
+        const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : combinedLabelPlaneMatrix;
         const uglCoordMatrix = glCoordMatrixForShader; // formerly also incorporated translate and translate-anchor
 
         const hasHalo = isSDF && layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(1) !== 0;
