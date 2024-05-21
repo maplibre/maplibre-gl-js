@@ -65,7 +65,7 @@ function renderHillshade(
         if (!fbo) {
             continue;
         }
-        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder);
+        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, true);
 
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 

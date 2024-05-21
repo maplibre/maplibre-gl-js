@@ -42,17 +42,17 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
 
     // Stencil mask and two-pass is not used for ImageSource sources regardless of projection.
     if (source instanceof ImageSource) {
-        // Image source - not stencil is used
-        drawTiles(painter, sourceCache, layer, tileIDs, null, false, source.tileCoords);
+        // Image source - no stencil is used
+        drawTiles(painter, sourceCache, layer, tileIDs, null, false, false, source.tileCoords, source.flippedWindingOrder);
     } else if (useSubdivision) {
         // Two-pass rendering
         const [stencilBorderless, stencilBorders, coords] = painter.stencilConfigForOverlapTwoPass(tileIDs);
-        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, cornerCoords); // draw without borders
-        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, cornerCoords); // draw with borders
+        drawTiles(painter, sourceCache, layer, coords, stencilBorderless, false, true, cornerCoords); // draw without borders
+        drawTiles(painter, sourceCache, layer, coords, stencilBorders, true, true, cornerCoords); // draw with borders
     } else {
         // Simple rendering
         const [stencil, coords] = painter.stencilConfigForOverlap(tileIDs);
-        drawTiles(painter, sourceCache, layer, coords, stencil, false, cornerCoords);
+        drawTiles(painter, sourceCache, layer, coords, stencil, false, true, cornerCoords);
     }
 }
 
@@ -63,7 +63,9 @@ function drawTiles(
     coords: Array<OverscaledTileID>,
     stencilModes: {[_: number]: Readonly<StencilMode>} | null,
     useBorder: boolean,
-    corners: Array<Point>) {
+    allowPoles: boolean,
+    corners: Array<Point>,
+    flipCullfaceMode: boolean = false) {
     const minTileZ = coords[coords.length - 1].overscaledZ;
 
     const context = painter.context;
@@ -116,11 +118,11 @@ function drawTiles(
         const projectionData = projection.getProjectionData(coord.canonical, posMatrix);
         const uniformValues = rasterUniformValues(parentTL || [0, 0], parentScaleBy || 1, fade, layer, corners);
 
-        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder);
+        const mesh = projection.getMeshFromTileID(context, coord.canonical, useBorder, allowPoles);
 
         const stencilMode = stencilModes ? stencilModes[coord.overscaledZ] : StencilMode.disabled;
 
-        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, CullFaceMode.backCCW,
+        program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode, flipCullfaceMode ? CullFaceMode.frontCCW : CullFaceMode.backCCW,
             uniformValues, terrainData, projectionData, layer.id, mesh.vertexBuffer,
             mesh.indexBuffer, mesh.segments);
     }
