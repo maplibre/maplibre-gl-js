@@ -738,6 +738,24 @@ describe('map events', () => {
         await sourcePromise;
     });
 
+    test('getZoom on moveend is the same as after the map end moving, with terrain on', () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        map.terrain = {
+            pointCoordinate: () => null,
+            getElevationForLngLatZoom: () => 1000,
+        } as any;
+        let actualZoom: number;
+        map.on('moveend', () => {
+            // this can't use a promise due to race condition
+            actualZoom = map.getZoom();
+        });
+        const canvas = map.getCanvas();
+        simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
+        map._renderTaskQueue.run();
+
+        expect(actualZoom).toBe(map.getZoom());
+    });
+
     describe('error event', () => {
         test('logs errors to console when it has NO listeners', () => {
             // to avoid seeing error in the console in Jest
