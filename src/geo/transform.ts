@@ -269,6 +269,13 @@ export abstract class Transform {
      */
     get pixelsPerMeter(): number { return this._pixelPerMeter; }
 
+    get unmodified(): boolean { return this._unmodified; }
+
+    /**
+     * The transform's center in world coordinates (Mercator coordinates scaled by 512)
+     */
+    abstract get point(): Point;
+
     /**
      * Returns if the padding params match
      *
@@ -348,8 +355,6 @@ export abstract class Transform {
         this._calcMatrices();
     }
 
-    get unmodified(): boolean { return this._unmodified; }
-
     zoomScale(zoom: number) { return Math.pow(2, zoom); }
     scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
@@ -366,11 +371,6 @@ export abstract class Transform {
      * @returns LngLat
      */
     abstract unproject(point: Point): LngLat;
-
-    /**
-     * The transform's center in world coordinates (Mercator coordinates scaled by 512)
-     */
-    abstract get point(): Point;
 
     /**
      * get the camera position in LngLat and altitudes in meter
