@@ -170,6 +170,7 @@ export class GlobeProjection implements Projection {
     }
 
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
+        this._mercator.updateGPUdependent(renderContext);
         if (!this._errorMeasurement) {
             this._errorMeasurement = new ProjectionErrorMeasurement(renderContext);
         }
@@ -198,6 +199,8 @@ export class GlobeProjection implements Projection {
     }
 
     public updateProjection(transform: TransformLike): void {
+        this._mercator.updateProjection(transform);
+
         if (this._oldTransformState) {
             if (this.useGlobeControls) {
                 transform.zoom += this._getZoomAdjustment(this._oldTransformState.lat, transform.center.lat);
@@ -593,6 +596,10 @@ export class GlobeProjection implements Projection {
     }
 
     public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number) {
+        if (!this.useGlobeRendering) {
+            return this._mercator.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+        }
+
         const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
         const elevation = getElevation ? getElevation(x, y) : 0.0;
         const vectorMultiplier = 1.0 + elevation / earthRadius;
