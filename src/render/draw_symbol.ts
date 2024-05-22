@@ -377,10 +377,10 @@ function drawLayerSymbols(
             texSize = tile.imageAtlasTexture.size;
         }
 
+        // See the comment at the beginning of src/symbol/projection.ts for an overview of the symbol projection process
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const baseMatrix = isViewportLine ? coord.posMatrix : identityMat4;
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
-        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : (painter.transform as MercatorTransform).clipSpaceToPixelsMatrix;
         const glCoordMatrixForShader = getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
         const glCoordMatrixForSymbolPlacement = getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
@@ -400,9 +400,12 @@ function drawLayerSymbols(
 
         const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
         const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
+
+        // If the label plane matrix is used, it transforms either map-pitch-aligned pixels, or to screenspace pixels
+        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : (painter.transform as MercatorTransform).clipSpaceToPixelsMatrix;
+        // Label plane matrix is unused in the shader if variable anchors are used or the text is placed along a line
         const noLabelPlane = (alongLine || shaderVariableAnchor);
         const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : combinedLabelPlaneMatrix;
-        const uglCoordMatrix = glCoordMatrixForShader; // formerly also incorporated translate and translate-anchor
 
         const hasHalo = isSDF && layer.paint.get(isText ? 'text-halo-width' : 'icon-halo-width').constantOr(1) !== 0;
 
@@ -411,16 +414,16 @@ function drawLayerSymbols(
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, true, pitchedTextRescaling);
+                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, true, pitchedTextRescaling);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
                     size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
-                    uLabelPlaneMatrix, uglCoordMatrix, translation, texSize, texSizeIcon, pitchedTextRescaling);
+                    uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
                 size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
-                uLabelPlaneMatrix, uglCoordMatrix, translation, isText, texSize, pitchedTextRescaling);
+                uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling);
         }
 
         const state = {
