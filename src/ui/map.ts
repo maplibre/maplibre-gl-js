@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, Complete} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -58,7 +58,6 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {Complete} from '../types/util';
 
 const version = packageJSON.version;
 
