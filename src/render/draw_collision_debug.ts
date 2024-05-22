@@ -10,16 +10,12 @@ import {collisionUniformValues, collisionCircleUniformValues} from './program/co
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g';
 import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
 import {SegmentVector} from '../data/segment';
-import {mat4} from 'gl-matrix';
 import {VertexBuffer} from '../gl/vertex_buffer';
 import {IndexBuffer} from '../gl/index_buffer';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 type TileBatch = {
     circleArray: Array<number>;
     circleOffset: number;
-    transform: mat4;
-    invTransform: mat4;
     coord: OverscaledTileID;
 };
 
@@ -44,19 +40,9 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         // Get collision circle data of this bucket
         const circleArray: Array<number> = bucket.collisionCircleArray;
         if (circleArray.length > 0) {
-            // We need to know the projection matrix that was used for projecting collision circles to the screen.
-            // This might vary between buckets as the symbol placement is a continuous process. This matrix is
-            // required for transforming points from previous screen space to the current one
-            const invTransform = mat4.create();
-
-            mat4.mul(invTransform, bucket.placementInvProjMatrix, (painter.transform as MercatorTransform).pixelsToClipSpaceMatrix); // JP: TODO: remove this hack
-            mat4.mul(invTransform, invTransform, bucket.placementViewportMatrix);
-
             tileBatches.push({
                 circleArray,
                 circleOffset,
-                transform: posMatrix,
-                invTransform,
                 coord
             });
 
@@ -119,11 +105,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
 
     // Render batches
     for (const batch of tileBatches) {
-        const uniforms = collisionCircleUniformValues(
-            batch.transform,
-            batch.invTransform,
-            painter.transform
-        );
+        const uniforms = collisionCircleUniformValues(painter.transform);
 
         circleProgram.draw(
             context,

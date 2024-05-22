@@ -68,19 +68,6 @@ class JointPlacement {
     }
 }
 
-class CollisionCircleArray {
-    // Stores collision circles and placement matrices of a bucket for debug rendering.
-    invProjMatrix: mat4;
-    viewportMatrix: mat4;
-    circles: Array<number>;
-
-    constructor() {
-        this.invProjMatrix = mat4.create();
-        this.viewportMatrix = mat4.create();
-        this.circles = [];
-    }
-}
-
 export class RetainedQueryData {
     bucketInstanceId: number;
     featureIndex: FeatureIndex;
@@ -169,7 +156,6 @@ type TileLayerParameters = {
     translationText: [number, number];
     translationIcon: [number, number];
     unwrappedTileID: UnwrappedTileID;
-    posMatrix: mat4;
     pitchedLabelPlaneMatrix: mat4;
     scale: number;
     textPixelRatio: number;
@@ -219,7 +205,7 @@ export class Placement {
     prevPlacement: Placement;
     zoomAtLastRecencyCheck: number;
     collisionCircleArrays: {
-        [k in any]: CollisionCircleArray;
+        [k in any]: Array<number>;
     };
     collisionBoxArrays: Map<number, Map<number, {
         text: number[];
@@ -273,8 +259,6 @@ export class Placement {
 
         const unwrappedTileID = tile.tileID.toUnwrapped();
 
-        const posMatrix = this.transform.calculatePosMatrix(unwrappedTileID);
-
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
@@ -307,7 +291,6 @@ export class Placement {
             layout,
             translationText,
             translationIcon,
-            posMatrix,
             unwrappedTileID,
             pitchedLabelPlaneMatrix,
             scale,
@@ -341,7 +324,6 @@ export class Placement {
         rotateWithMap: boolean,
         pitchWithMap: boolean,
         textPixelRatio: number,
-        posMatrix: mat4,
         unwrappedTileID,
         collisionGroup: CollisionGroup,
         textOverlapMode: OverlapMode,
@@ -429,7 +411,6 @@ export class Placement {
             layout,
             translationText,
             translationIcon,
-            posMatrix,
             unwrappedTileID,
             pitchedLabelPlaneMatrix,
             textPixelRatio,
@@ -606,7 +587,7 @@ export class Placement {
 
                                 const result = this.attemptAnchorPlacement(
                                     textAnchorOffset, collisionTextBox, width, height,
-                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, posMatrix, unwrappedTileID,
+                                    textBoxScale, rotateWithMap, pitchWithMap, textPixelRatio, unwrappedTileID,
                                     collisionGroup, overlapMode, symbolInstance, bucket, orientation, translationText, translationIcon, variableIconBox, getElevation);
 
                                 if (result) {
@@ -838,14 +819,6 @@ export class Placement {
             }
         }
 
-        if (showCollisionBoxes && bucket.bucketInstanceId in this.collisionCircleArrays) {
-            const circleArray = this.collisionCircleArrays[bucket.bucketInstanceId];
-
-            // Store viewport and inverse projection matrices per bucket
-            mat4.invert(circleArray.invProjMatrix, posMatrix);
-            circleArray.viewportMatrix = this.collisionIndex.getViewportMatrix();
-        }
-
         bucket.justReloaded = false;
     }
 
@@ -895,13 +868,13 @@ export class Placement {
             // Group collision circles together by bucket. Circles can't be pushed forward for rendering yet as the symbol placement
             // for a bucket is not guaranteed to be complete before the commit-function has been called
             if (circleArray === undefined)
-                circleArray = this.collisionCircleArrays[bucketInstanceId] = new CollisionCircleArray();
+                circleArray = this.collisionCircleArrays[bucketInstanceId] = [];
 
             for (let i = 0; i < placedGlyphCircles.circles.length; i += 4) {
-                circleArray.circles.push(placedGlyphCircles.circles[i + 0]);              // x
-                circleArray.circles.push(placedGlyphCircles.circles[i + 1]);              // y
-                circleArray.circles.push(placedGlyphCircles.circles[i + 2]);              // radius
-                circleArray.circles.push(placedGlyphCircles.collisionDetected ? 1 : 0);   // collisionDetected-flag
+                circleArray.push(placedGlyphCircles.circles[i + 0] - viewportPadding); // x
+                circleArray.push(placedGlyphCircles.circles[i + 1] - viewportPadding); // y
+                circleArray.push(placedGlyphCircles.circles[i + 2]);                   // radius
+                circleArray.push(placedGlyphCircles.collisionDetected ? 1 : 0);        // collisionDetected-flag
             }
         }
     }
@@ -1253,12 +1226,7 @@ export class Placement {
 
         // Push generated collision circles to the bucket for debug rendering
         if (bucket.bucketInstanceId in this.collisionCircleArrays) {
-            const instance = this.collisionCircleArrays[bucket.bucketInstanceId];
-
-            bucket.placementInvProjMatrix = instance.invProjMatrix;
-            bucket.placementViewportMatrix = instance.viewportMatrix;
-            bucket.collisionCircleArray = instance.circles;
-
+            bucket.collisionCircleArray = this.collisionCircleArrays[bucket.bucketInstanceId];
             delete this.collisionCircleArrays[bucket.bucketInstanceId];
         }
     }
