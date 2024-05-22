@@ -41,7 +41,7 @@ export interface Projection {
      * @internal
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
      */
-    get name(): string;
+    get projectionName(): string;
 
     /**
      * @internal

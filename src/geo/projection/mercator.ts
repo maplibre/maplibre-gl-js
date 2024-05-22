@@ -27,7 +27,7 @@ export class MercatorProjection implements Projection {
     private _cameraPosition: vec3 = [0, 0, 0];
     private _cachedTransform: TransformLike; // JP: TODO: remove this hack!
 
-    get name(): string {
+    get projectionName(): string {
         return 'mercator';
     }
 

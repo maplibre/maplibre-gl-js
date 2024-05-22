@@ -82,7 +82,7 @@ export class GlobeProjection implements Projection {
 
     private _oldTransformState: {zoom: number; lat: number} = undefined;
 
-    get name(): string {
+    get projectionName(): string {
         return 'globe';
     }
 
