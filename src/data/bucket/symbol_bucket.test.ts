@@ -17,7 +17,6 @@ import {IndexedFeature, PopulateParameters} from '../bucket';
 import {StyleImage} from '../../style/style_image';
 import glyphs from '../../../test/unit/assets/fontstack-glyphs.json' with {type: 'json'};
 import {StyleGlyph} from '../../style/style_glyph';
-import {MercatorProjection} from '../../geo/projection/mercator';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
 
@@ -66,7 +65,7 @@ describe('SymbolBucket', () => {
         const bucketA = bucketSetup() as any as SymbolBucket;
         const bucketB = bucketSetup() as any as SymbolBucket;
         const options = {iconDependencies: {}, glyphDependencies: {}} as PopulateParameters;
-        const placement = new Placement(transform, new MercatorProjection(), undefined as any, 0, true);
+        const placement = new Placement(transform, undefined as any, 0, true);
         const tileID = new OverscaledTileID(0, 0, 0, 0, 0);
         const crossTileSymbolIndex = new CrossTileSymbolIndex();
 

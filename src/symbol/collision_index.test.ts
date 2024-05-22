@@ -1,5 +1,4 @@
 import {CollisionIndex} from './collision_index';
-import {MercatorProjection} from '../geo/projection/mercator';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 describe('CollisionIndex', () => {
@@ -9,7 +8,7 @@ describe('CollisionIndex', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(200, 200);
 
-        const ci = new CollisionIndex(transform, new MercatorProjection());
+        const ci = new CollisionIndex(transform);
         expect(ci.projectAndGetPerspectiveRatio(x, y, null).point.x).toBeCloseTo(10000212.3456, 10);
     });
 

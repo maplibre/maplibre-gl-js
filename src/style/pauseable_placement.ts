@@ -6,7 +6,6 @@ import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
 import type {Tile} from '../source/tile';
 import type {BucketPart} from '../symbol/placement';
 import type {Terrain} from '../render/terrain';
-import type {Projection} from '../geo/projection/projection';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;
@@ -69,7 +68,6 @@ export class PauseablePlacement {
 
     constructor(
         transform: Transform,
-        projection: Projection,
         terrain: Terrain,
         order: Array<string>,
         forceFullPlacement: boolean,
@@ -78,7 +76,7 @@ export class PauseablePlacement {
         crossSourceCollisions: boolean,
         prevPlacement?: Placement
     ) {
-        this.placement = new Placement(transform, projection, terrain, fadeDuration, crossSourceCollisions, prevPlacement);
+        this.placement = new Placement(transform, terrain, fadeDuration, crossSourceCollisions, prevPlacement);
         this._currentPlacementIndex = order.length - 1;
         this._forceFullPlacement = forceFullPlacement;
         this._showCollisionBoxes = showCollisionBoxes;

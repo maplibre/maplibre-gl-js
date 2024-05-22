@@ -136,7 +136,6 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     translateAnchor: 'map' | 'viewport',
     variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
     const transform = painter.transform;
-    const projection = painter.style.map.projection;
     const terrain = painter.style.map.terrain;
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
@@ -158,7 +157,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
             const getElevation = terrain ? (x: number, y: number) => terrain.getElevation(coord, x, y) : null;
             const translation = transform.translatePosition(tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
-                transform, pitchedLabelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
+                transform, pitchedLabelPlaneMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
         }
     }
 }
@@ -196,7 +195,6 @@ function updateVariableAnchorsForBucket(
     variableOffsets: {[_ in CrossTileID]: VariableOffset},
     transform: Transform,
     pitchedLabelPlaneMatrix: mat4,
-    posMatrix: mat4,
     tileScale: number,
     size: EvaluatedZoomSize,
     updateTextFitIcon: boolean,
@@ -228,15 +226,13 @@ function updateVariableAnchorsForBucket(
                 pitchedLabelPlaneMatrix,
                 lineVertexArray: null,
                 pitchWithMap,
-                projection,
+                transform,
                 projectionCache: null,
                 tileAnchorPoint: tileAnchor,
                 translation,
                 unwrappedTileID
             };
-            const projectedAnchor = pitchWithMap ?
-                project(tileAnchor, posMatrix, getElevation) :
-                projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionContext);
+            const projectedAnchor = projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionContext);
             const perspectiveRatio = getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
             let renderTextSize = evaluateSizeForFeature(bucket.textSizeData, size, symbol) * perspectiveRatio / ONE_EM;
             if (pitchWithMap) {
@@ -381,7 +377,6 @@ function drawLayerSymbols(
         const baseMatrix = isViewportLine ? coord.terrainRttPosMatrix : identityMat4;
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
         const glCoordMatrixForShader = getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
-        const glCoordMatrixForSymbolPlacement = getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = transform.translatePosition(tile, translate, translateAnchor);
         const projectionData = transform.getProjectionData(coord, coord.terrainRttPosMatrix);
@@ -394,7 +389,7 @@ function drawLayerSymbols(
         if (alongLine) {
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
-            updateLineLabels(bucket, coord.posMatrix, painter, isText, pitchedLabelPlaneMatrix, glCoordMatrixForSymbolPlacement, pitchWithMap, keepUpright, rotateToLine, projection, coord.toUnwrapped(), tr.width, tr.height, translation, getElevation);
+            updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
         }
 
         const matrix = coord.terrainRttPosMatrix; // formerly also incorporated translate and translate-anchor

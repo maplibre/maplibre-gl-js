@@ -3071,7 +3071,7 @@ export class Map extends Camera {
         }
 
         // This projection update should happen *before* placement update
-        this.projection.updateProjection(this.painter.transform as MercatorTransform); // JP: TODO: remove this hack
+        //this.projection.updateProjection(this.painter.transform as MercatorTransform); // JP: TODO: remove this hack
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 

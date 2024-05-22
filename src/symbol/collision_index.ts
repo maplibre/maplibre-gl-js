@@ -16,7 +16,6 @@ import type {
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
 import {type PointProjection, SymbolProjectionContext, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, projectPathSpecialProjection} from '../symbol/projection';
-import {Projection} from '../geo/projection/projection';
 import {clamp, getAABB} from '../util/util';
 
 // When a symbol crosses the edge that causes it to be included in
@@ -66,7 +65,6 @@ export class CollisionIndex {
     screenBottomBoundary: number;
     gridRightBoundary: number;
     gridBottomBoundary: number;
-    mapProjection: Projection;
 
     // With perspectiveRatio the fontsize is calculated for tilted maps (near = bigger, far = smaller).
     // The cutoff defines a threshold to no longer render labels near the horizon.
@@ -74,12 +72,10 @@ export class CollisionIndex {
 
     constructor(
         transform: Transform,
-        projection: Projection,
         grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
         ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {
         this.transform = transform;
-        this.mapProjection = projection;
 
         this.grid = grid;
         this.ignoredGrid = ignoredGrid;
@@ -128,7 +124,7 @@ export class CollisionIndex {
 
         const [tlX, tlY, brX, brY] = projectedBox.box;
 
-        const projectionOccluded = (pitchWithMap ? projectedBox.allPointsOccluded : this.mapProjection.isOccluded(x, y, unwrappedTileID));
+        const projectionOccluded = (pitchWithMap ? projectedBox.allPointsOccluded : this.transform.isOccluded(x, y, unwrappedTileID));
 
         if (projectionOccluded || projectedPoint.perspectiveRatio < this.perspectiveRatioCutoff || !this.isInsideGrid(tlX, tlY, brX, brY) ||
             (overlapMode !== 'always' && this.grid.hitTest(tlX, tlY, brX, brY, overlapMode, collisionGroupPredicate))) {
@@ -179,7 +175,7 @@ export class CollisionIndex {
             lineVertexArray,
             pitchWithMap,
             projectionCache,
-            projection: this.mapProjection,
+            transform: this.transform,
             tileAnchorPoint: tileUnitAnchorPoint,
             unwrappedTileID,
             width: this.transform.width,
@@ -405,7 +401,7 @@ export class CollisionIndex {
     }
 
     projectAndGetPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
-        const projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+        const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         return {
             point: new Point(
                 (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
@@ -422,7 +418,7 @@ export class CollisionIndex {
 
     getPerspectiveRatio(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number): number {
         // We don't care about the actual projected point, just its W component.
-        const projected = this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+        const projected = this.transform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 
@@ -504,7 +500,7 @@ export class CollisionIndex {
 
             const zoomFraction = this.transform.zoom - Math.floor(this.transform.zoom);
             distanceMultiplier = Math.pow(2, -zoomFraction);
-            distanceMultiplier *= this.mapProjection.getPitchedTextCorrection(this.transform, translatedAnchor, unwrappedTileID);
+            distanceMultiplier *= this.transform.getPitchedTextCorrection(translatedAnchor, unwrappedTileID);
 
             // This next correction can't be applied when variable anchors are in use.
             if (!shift) {

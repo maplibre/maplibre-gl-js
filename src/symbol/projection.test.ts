@@ -3,6 +3,7 @@ import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetInters
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import {SymbolLineVertexArray} from '../data/array_types.g';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 describe('Projection', () => {
     test('matrix float precision', () => {
@@ -18,6 +19,7 @@ describe('Vertex to viewport projection', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
+    const transform = new MercatorTransform();
 
     test('projecting with null matrix', () => {
         const projectionContext: SymbolProjectionContext = {
@@ -28,8 +30,8 @@ describe('Vertex to viewport projection', () => {
             // Only relevant in "behind the camera" case, can't happen with null projection matrix
             tileAnchorPoint: new Point(0, 0),
             pitchWithMap: true,
-            projection: null,
             unwrappedTileID: null,
+            transform,
             width: 1,
             height: 1,
             translation: [0, 0]
@@ -62,6 +64,7 @@ describe('Find offset line intersections', () => {
     lineVertexArray.emplaceBack(-10, 0, -10);
     lineVertexArray.emplaceBack(0, 0, 0);
     lineVertexArray.emplaceBack(10, 0, 10);
+    const transform = new MercatorTransform();
 
     const projectionContext: SymbolProjectionContext = {
         projectionCache: {projections: {}, offsets: {}, cachedAnchorPoint: undefined, anyProjectionOccluded: false},
@@ -69,8 +72,8 @@ describe('Find offset line intersections', () => {
         pitchedLabelPlaneMatrix: mat4.create(),
         getElevation: (_x, _y) => 0,
         tileAnchorPoint: new Point(0, 0),
+        transform,
         pitchWithMap: true,
-        projection: null,
         unwrappedTileID: null,
         width: 1,
         height: 1,

@@ -1,5 +1,4 @@
 import Point from '@mapbox/point-geometry';
-import {Projection} from '../../../src/geo/projection/projection';
 import {Transform} from '../../../src/geo/transform';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
@@ -7,7 +6,6 @@ import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
 import {CanonicalTileID, UnwrappedTileID} from '../../../src/source/tile_id';
 import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
-import {MercatorProjection} from '../../../src/geo/projection/mercator';
 import {MercatorTransform} from '../../../src/geo/projection/mercator_transform';
 
 type TestSymbol = {
@@ -38,14 +36,11 @@ function splitmix32(a) {
 
 export default class SymbolCollisionBox extends Benchmark {
     private _transform: Transform;
-    private _projection: Projection;
     private _symbols: Array<TestSymbol>;
 
     async setup(): Promise<void> {
         this._transform = new MercatorTransform(0, 22, 0, 60, true);
         this._transform.resize(1024, 1024);
-        // HM TODO: fix this!
-        this._projection = new MercatorProjection();
         const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0));
 
         const rng = splitmix32(0xdeadbeef);
@@ -81,7 +76,7 @@ export default class SymbolCollisionBox extends Benchmark {
     }
 
     async bench() {
-        const ci = new CollisionIndex(this._transform, this._projection);
+        const ci = new CollisionIndex(this._transform);
         ci.grid.hitTest = (_x1, _y1, _x2, _y2, _overlapMode, _predicate?) => {
             return true;
         };

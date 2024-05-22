@@ -23,7 +23,6 @@ import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
 import {Terrain} from '../render/terrain';
 import {warnOnce} from '../util/util';
 import {TextAnchor, TextAnchorEnum} from '../style/style_layer/variable_text_anchor';
-import {Projection} from '../geo/projection/projection';
 
 class OpacityState {
     opacity: number;
@@ -212,10 +211,10 @@ export class Placement {
         icon: number[];
     }>>;
 
-    constructor(transform: Transform, projection: Projection, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+    constructor(transform: Transform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
         this.terrain = terrain;
-        this.collisionIndex = new CollisionIndex(this.transform, projection);
+        this.collisionIndex = new CollisionIndex(this.transform);
         this.placements = {};
         this.opacities = {};
         this.variableOffsets = {};
@@ -262,14 +261,12 @@ export class Placement {
         const rotateWithMap = layout.get('text-rotation-alignment') === 'map';
         const pixelsToTiles = pixelsToTileUnits(tile, 1, this.transform.zoom);
 
-        const translationText = this.collisionIndex.mapProjection.translatePosition(
-            this.transform,
+        const translationText = this.collisionIndex.transform.translatePosition(
             tile,
             paint.get('text-translate'),
             paint.get('text-translate-anchor'),);
 
-        const translationIcon = this.collisionIndex.mapProjection.translatePosition(
-            this.transform,
+        const translationIcon = this.collisionIndex.transform.translatePosition(
             tile,
             paint.get('icon-translate'),
             paint.get('icon-translate-anchor'),);
