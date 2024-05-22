@@ -224,7 +224,7 @@ function updateLineLabels(bucket: SymbolBucket,
             translation
         };
 
-        const anchorPos = projectTileCoordinatesToViewport(symbol.anchorX, symbol.anchorY, projectionContext);
+        const anchorPos = projectTileCoordinatesToClipSpace(symbol.anchorX, symbol.anchorY, projectionContext);
 
         // Don't bother calculating the correct point for invisible labels.
         if (!isVisible(anchorPos.point, clippingBuffer)) {
@@ -354,8 +354,8 @@ function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, symbol
         if (!firstAndLastGlyph) {
             return {notEnoughRoom: true};
         }
-        const firstPoint = projectTileCoordinatesToViewport(firstAndLastGlyph.first.point.x, firstAndLastGlyph.first.point.y, projectionContext).point;
-        const lastPoint = projectTileCoordinatesToViewport(firstAndLastGlyph.last.point.x, firstAndLastGlyph.last.point.y, projectionContext).point;
+        const firstPoint = projectTileCoordinatesToClipSpace(firstAndLastGlyph.first.point.x, firstAndLastGlyph.first.point.y, projectionContext).point;
+        const lastPoint = projectTileCoordinatesToClipSpace(firstAndLastGlyph.last.point.x, firstAndLastGlyph.last.point.y, projectionContext).point;
 
         if (keepUpright && !flip) {
             const orientationChange = requiresOrientationChange(symbol.writingMode, firstPoint, lastPoint, aspectRatio);
@@ -375,10 +375,10 @@ function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, symbol
         // Only a single glyph to place
         // So, determine whether to flip based on projected angle of the line segment it's on
         if (keepUpright && !flip) {
-            const a = projectTileCoordinatesToViewport(projectionContext.tileAnchorPoint.x, projectionContext.tileAnchorPoint.y, projectionContext).point;
+            const a = projectTileCoordinatesToClipSpace(projectionContext.tileAnchorPoint.x, projectionContext.tileAnchorPoint.y, projectionContext).point;
             const tileVertexIndex = (symbol.lineStartIndex + symbol.segment + 1);
             const tileSegmentEnd = new Point(projectionContext.lineVertexArray.getx(tileVertexIndex), projectionContext.lineVertexArray.gety(tileVertexIndex));
-            const projectedVertex = projectTileCoordinatesToViewport(tileSegmentEnd.x, tileSegmentEnd.y, projectionContext);
+            const projectedVertex = projectTileCoordinatesToClipSpace(tileSegmentEnd.x, tileSegmentEnd.y, projectionContext);
             // We know the anchor will be in the viewport, but the end of the line segment may be
             // behind the plane of the camera, in which case we can use a point at any arbitrary (closer)
             // point on the segment.
@@ -421,7 +421,7 @@ function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, current
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
     // plane of the camera.
     const unitVertexToBeProjected = previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit());
-    const projectedUnitVertex = projectTileCoordinatesToViewport(unitVertexToBeProjected.x, unitVertexToBeProjected.y, projectionContext).point;
+    const projectedUnitVertex = projectTileCoordinatesToClipSpace(unitVertexToBeProjected.x, unitVertexToBeProjected.y, projectionContext).point;
     const projectedUnitSegment = previousProjectedPoint.sub(projectedUnitVertex);
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
 }
@@ -567,6 +567,14 @@ function projectTileCoordinatesToViewport(x: number, y: number, projectionContex
         projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
     }
+    return projection;
+}
+
+/**
+ * Projects the given point in tile coordinates to the GL clip space (-1..1).
+ */
+function projectTileCoordinatesToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
+    const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, projectionContext.getElevation);
     return projection;
 }
 
