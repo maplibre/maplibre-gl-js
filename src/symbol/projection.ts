@@ -27,8 +27,8 @@ export {
     placeFirstAndLastGlyph,
     placeGlyphAlongLine,
     xyTransformMat4,
-    projectLineVertexToViewport as projectVertexToViewport,
-    projectTileCoordinatesToViewport,
+    projectLineVertexToLabelPlane as projectVertexToViewport,
+    projectTileCoordinatesToLabelPlane as projectTileCoordinatesToViewport,
     findOffsetIntersectionPoint,
     transformToOffsetNormal,
 };
@@ -521,7 +521,7 @@ export type ProjectionSyntheticVertexArgs = {
  * @param projectionContext - necessary data to project a vertex
  * @returns the vertex projected to the label plane
  */
-function projectLineVertexToViewport(index: number, projectionContext: SymbolProjectionContext, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
+function projectLineVertexToLabelPlane(index: number, projectionContext: SymbolProjectionContext, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
     const cache = projectionContext.projectionCache;
 
     if (cache.projections[index]) {
@@ -531,7 +531,7 @@ function projectLineVertexToViewport(index: number, projectionContext: SymbolPro
         projectionContext.lineVertexArray.getx(index),
         projectionContext.lineVertexArray.gety(index));
 
-    const projection = projectTileCoordinatesToViewport(currentVertex.x, currentVertex.y, projectionContext);
+    const projection = projectTileCoordinatesToLabelPlane(currentVertex.x, currentVertex.y, projectionContext);
 
     if (projection.signedDistanceFromCamera > 0) {
         cache.projections[index] = projection.point;
@@ -552,10 +552,11 @@ function projectLineVertexToViewport(index: number, projectionContext: SymbolPro
 }
 
 /**
- * Projects the given point in tile coordinates to the screen.
- * The resulting projection coordinates are in pixels.
+ * Projects the given point in tile coordinates to the correct label plane.
+ * If pitchWithMap is true, the (rotated) map plane in pixels is used,
+ * otherwise screen pixels are used.
  */
-function projectTileCoordinatesToViewport(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
+function projectTileCoordinatesToLabelPlane(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
     const translatedX = x + projectionContext.translation[0];
     const translatedY = y + projectionContext.translation[1];
     let projection;
@@ -625,7 +626,7 @@ function findOffsetIntersectionPoint(
         return offsetCurrentVertex;
     }
     // Offset the vertices for the next segment
-    const nextVertex = projectLineVertexToViewport(index + syntheticVertexArgs.direction, projectionContext, syntheticVertexArgs);
+    const nextVertex = projectLineVertexToLabelPlane(index + syntheticVertexArgs.direction, projectionContext, syntheticVertexArgs);
     const currentToNextOffsetNormal = transformToOffsetNormal(nextVertex.sub(currentVertex), lineOffsetY, syntheticVertexArgs.direction);
     const offsetNextSegmentBegin = currentVertex.add(currentToNextOffsetNormal);
     const offsetNextSegmentEnd = nextVertex.add(currentToNextOffsetNormal);
@@ -697,7 +698,7 @@ function placeGlyphAlongLine(
     if (projectionContext.projectionCache.cachedAnchorPoint) {
         anchorPoint = projectionContext.projectionCache.cachedAnchorPoint;
     } else {
-        anchorPoint = projectTileCoordinatesToViewport(projectionContext.tileAnchorPoint.x, projectionContext.tileAnchorPoint.y, projectionContext).point;
+        anchorPoint = projectTileCoordinatesToLabelPlane(projectionContext.tileAnchorPoint.x, projectionContext.tileAnchorPoint.y, projectionContext).point;
         projectionContext.projectionCache.cachedAnchorPoint = anchorPoint;
     }
 
@@ -735,7 +736,7 @@ function placeGlyphAlongLine(
         };
 
         // find next vertex in viewport space
-        currentVertex = projectLineVertexToViewport(currentIndex, projectionContext, syntheticVertexArgs);
+        currentVertex = projectLineVertexToLabelPlane(currentIndex, projectionContext, syntheticVertexArgs);
         if (lineOffsetY === 0) {
             // Store vertices for collision detection and update current segment geometry
             pathVertices.push(previousVertex);
@@ -747,7 +748,7 @@ function placeGlyphAlongLine(
             if (prevToCurrent.mag() === 0) {
                 // We are starting with our anchor point directly on the vertex, so look one vertex ahead
                 // to calculate a normal
-                const nextVertex = projectLineVertexToViewport(currentIndex + direction, projectionContext, syntheticVertexArgs);
+                const nextVertex = projectLineVertexToLabelPlane(currentIndex + direction, projectionContext, syntheticVertexArgs);
                 prevToCurrentOffsetNormal = transformToOffsetNormal(nextVertex.sub(currentVertex), lineOffsetY, direction);
             } else {
                 prevToCurrentOffsetNormal = transformToOffsetNormal(prevToCurrent, lineOffsetY, direction);
