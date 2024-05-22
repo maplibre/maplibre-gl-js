@@ -1,8 +1,7 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import type {Projection, ProjectionGPUContext, TransformLike} from './projection';
-import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
+import type {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
-import type {Tile} from '../../source/tile';
 import type {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {EXTENT} from '../../data/extent';
@@ -18,6 +17,7 @@ import {LngLat} from '../lng_lat';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 import {xyTransformMat4} from '../../symbol/projection';
+import {MercatorTransform} from './mercator_transform';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -33,11 +33,6 @@ export class MercatorProjection implements Projection {
 
     get cameraPosition(): vec3 {
         return vec3.clone(this._cameraPosition); // Return a copy - don't let outside code mutate our precomputed camera position.
-    }
-
-    get drawWrappedTiles(): boolean {
-        // Mercator always needs to draw wrapped/duplicated tiles.
-        return true;
     }
 
     get useSubdivision(): boolean {
@@ -136,7 +131,7 @@ export class MercatorProjection implements Projection {
         return 1.0;
     }
 
-    public translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public translatePosition(transform: TransformLike, tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
@@ -211,6 +206,10 @@ export class MercatorProjection implements Projection {
         }
         return center;
     }
+
+    public createSpecializedTransformInstance(): Transform {
+        return new MercatorTransform();
+    }
 }
 
 /**
@@ -220,7 +219,7 @@ export class MercatorProjection implements Projection {
  */
 export function translatePosMatrix(
     transform: { angle: number; zoom: number },
-    tile: Tile,
+    tile: { tileID: OverscaledTileID; tileSize: number },
     matrix: mat4,
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
@@ -240,7 +239,7 @@ export function translatePosMatrix(
  */
 export function translatePosition(
     transform: { angle: number; zoom: number },
-    tile: Tile,
+    tile: { tileID: OverscaledTileID; tileSize: number },
     translate: [number, number],
     translateAnchor: 'map' | 'viewport',
     inViewportPixelUnitsUnits: boolean = false

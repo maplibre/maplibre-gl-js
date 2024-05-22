@@ -21,6 +21,7 @@ import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 import {LngLat, earthRadius} from '../lng_lat';
 import type {Terrain} from '../../render/terrain';
 import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
+import {GlobeTransform} from './globe_transform';
 
 /**
  * The size of border region for stencil masks, in internal tile coordinates.
@@ -96,14 +97,6 @@ export class GlobeProjection implements Projection {
 
     get cameraPosition(): vec3 {
         return vec3.clone(this._cameraPosition); // Return a copy - don't let outside code mutate our precomputed camera position.
-    }
-
-    /**
-     * This property is true when wrapped tiles need to be rendered.
-     * This is false when globe rendering is used and no transition is happening.
-     */
-    get drawWrappedTiles(): boolean {
-        return this._globeness < 1.0;
     }
 
     get useSubdivision(): boolean {
@@ -753,5 +746,9 @@ export class GlobeProjection implements Projection {
         } else {
             return this._mercator.getCenterForLocationAtPoint(lnglat, point, transform);
         }
+    }
+
+    public createSpecializedTransformInstance(): Transform {
+        return new GlobeTransform();
     }
 }

@@ -1,16 +1,11 @@
-import type {mat4, vec3} from 'gl-matrix';
-import type {Tile} from '../../source/tile';
+import type {mat4} from 'gl-matrix';
 import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
-import type {ProjectionData} from '../../render/program/projection_program';
 import type {PreparedShader} from '../../shaders/shaders';
 import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import Point from '@mapbox/point-geometry';
-import type {Terrain} from '../../render/terrain';
 import type {LngLat} from '../lng_lat';
-import type {PointProjection} from '../../symbol/projection';
 import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 export type ProjectionGPUContext = {
@@ -42,18 +37,6 @@ export interface Projection {
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
      */
     get projectionName(): string;
-
-    /**
-     * @internal
-     * Returns the camera's position transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
-     */
-    get cameraPosition(): vec3;
-
-    /**
-     * @internal
-     * True if this projection requires wrapped copies of the world to be drawn.
-     */
-    get drawWrappedTiles(): boolean;
 
     /**
      * @internal
@@ -124,57 +107,6 @@ export interface Projection {
 
     /**
      * @internal
-     * Updates the projection for current transform, such as recomputing internal matrices.
-     * May change the value of `isRenderingDirty`.
-     */
-    updateProjection(transform: TransformLike): void;
-
-    /**
-     * @internal
-     * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
-     */
-    getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData;
-
-    /**
-     * @internal
-     * Returns whether the supplied location is occluded in this projection.
-     * For example during globe rendering a location on the backfacing side of the globe is occluded.
-     * @param x - Tile space coordinate in range 0..EXTENT.
-     * @param y - Tile space coordinate in range 0..EXTENT.
-     * @param unwrappedTileID - TileID of the tile the supplied coordinates belong to.
-     */
-    isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
-
-    /**
-     * @internal
-     */
-    getPixelScale(transform: { center: LngLat }): number;
-
-    /**
-     * @internal
-     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
-     * Circle radius and heatmap kernel radius is multiplied by this value.
-     */
-    getCircleRadiusCorrection(transform: { center: LngLat }): number;
-
-    /**
-     * @internal
-     * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
-     * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
-     * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
-     * @param textAnchor - Text anchor position inside the tile.
-     * @param tileID - The tile coordinates.
-     */
-    getPitchedTextCorrection(transform: { center: LngLat }, textAnchor: Point, tileID: UnwrappedTileID): number;
-
-    /**
-     * @internal
-     * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
-     */
-    translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
-
-    /**
-     * @internal
      * Returns a subdivided mesh for a given tile ID, covering 0..EXTENT range.
      * @param context - WebGL context.
      * @param tileID - The tile coordinates for which to return a mesh. Meshes for tiles that border the top/bottom mercator edge might include extra geometry for the north/south pole.
@@ -185,41 +117,7 @@ export interface Projection {
 
     /**
      * @internal
-     * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
-     * @param transform - Current map transform.
-     * @param dir - The light direction.
-     * @returns A new vector with the transformed light direction.
+     * Returns a new instance of a class derived from the {@link Transform} base class. Returns a specialized class for this projection type.
      */
-    transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3;
-
-    //
-    // Projection and unprojection of points, LatLng coordinates, tile coordinates, etc.
-    //
-
-    /**
-     * @internal
-     * Projects a point in tile coordinates. Used in symbol rendering.
-     */
-    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
-
-    /**
-     * @internal
-     * Given geographical coordinates, returns their location on screen in pixels.
-     * @param loc - The geographical location to project.
-     * @param transform - The map's transform.
-     * @param terrain - Optional terrain.
-     */
-    projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point;
-
-    /**
-     * @internal
-     * Returns a {@link LngLat} representing geographical coordinates that correspond
-     * to the specified pixel coordinates.
-     * @param p - Screen point in pixels to unproject.
-     * @param transform - The map's transform.
-     * @param terrain - Optional terrain.
-     */
-    unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat;
-
-    getCenterForLocationAtPoint(lnglat: LngLat, point: Point, transform: Transform): LngLat;
+    createSpecializedTransformInstance(): Transform;
 }

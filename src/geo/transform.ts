@@ -3,11 +3,13 @@ import {LngLatBounds} from './lng_lat_bounds';
 import {MercatorCoordinate} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
-import {mat4, mat2} from 'gl-matrix';
+import {mat4, mat2, vec3} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
+import {ProjectionData} from '../render/program/projection_program';
+import {PointProjection} from '../symbol/projection';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 
@@ -270,6 +272,12 @@ export abstract class Transform {
     get pixelsPerMeter(): number { return this._pixelPerMeter; }
 
     get unmodified(): boolean { return this._unmodified; }
+
+    /**
+     * @internal
+     * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
+     */
+    abstract get cameraPosition(): vec3;
 
     /**
      * The transform's center in world coordinates (Mercator coordinates scaled by 512)
@@ -588,4 +596,88 @@ export abstract class Transform {
      * This function should update the transform's internal data, such as matrices.
      */
     protected abstract _calcMatrices(): void;
+
+    /**
+     * @internal
+     * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
+     */
+    abstract getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData;
+
+    /**
+     * @internal
+     * Returns whether the supplied location is occluded in this projection.
+     * For example during globe rendering a location on the backfacing side of the globe is occluded.
+     * @param x - Tile space coordinate in range 0..EXTENT.
+     * @param y - Tile space coordinate in range 0..EXTENT.
+     * @param unwrappedTileID - TileID of the tile the supplied coordinates belong to.
+     */
+    abstract isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
+
+    /**
+     * @internal
+     */
+    abstract getPixelScale(transform: { center: LngLat }): number;
+
+    /**
+     * @internal
+     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
+     * Circle radius and heatmap kernel radius is multiplied by this value.
+     */
+    abstract getCircleRadiusCorrection(transform: { center: LngLat }): number;
+
+    /**
+     * @internal
+     * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
+     * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
+     * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
+     * @param textAnchor - Text anchor position inside the tile.
+     * @param tileID - The tile coordinates.
+     */
+    abstract getPitchedTextCorrection(transform: { center: LngLat }, textAnchor: Point, tileID: UnwrappedTileID): number;
+
+    /**
+     * @internal
+     * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
+     */
+    abstract translatePosition(transform: { angle: number; zoom: number }, tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+
+    /**
+     * @internal
+     * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
+     * @param transform - Current map transform.
+     * @param dir - The light direction.
+     * @returns A new vector with the transformed light direction.
+     */
+    abstract transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3;
+
+    //
+    // Projection and unprojection of points, LatLng coordinates, tile coordinates, etc.
+    //
+
+    /**
+     * @internal
+     * Projects a point in tile coordinates. Used in symbol rendering.
+     */
+    abstract projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
+
+    /**
+     * @internal
+     * Given geographical coordinates, returns their location on screen in pixels.
+     * @param loc - The geographical location to project.
+     * @param transform - The map's transform.
+     * @param terrain - Optional terrain.
+     */
+    abstract projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point;
+
+    /**
+     * @internal
+     * Returns a {@link LngLat} representing geographical coordinates that correspond
+     * to the specified pixel coordinates.
+     * @param p - Screen point in pixels to unproject.
+     * @param transform - The map's transform.
+     * @param terrain - Optional terrain.
+     */
+    abstract unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat;
+
+    abstract getCenterForLocationAtPoint(lnglat: LngLat, point: Point, transform: Transform): LngLat;
 }
