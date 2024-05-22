@@ -23,8 +23,8 @@ let quadTriangles: QuadTriangleArray;
 
 export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
     const context = painter.context;
+    const transform = painter.transform;
     const gl = context.gl;
-    const projection = painter.style.map.projection;
     const program = painter.useProgram('collisionBox');
     const tileBatches: Array<TileBatch> = [];
     let circleCount = 0;
@@ -35,7 +35,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         const tile = sourceCache.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
         if (!bucket) continue;
-        const posMatrix = coord.posMatrix; // This intentionally ignores "*-translate" and "*-translate-anchor" properties - collision boxes already incorporate them implicitly.
+        const posMatrix = coord.terrainRttPosMatrix; // This intentionally ignores "*-translate" and "*-translate-anchor" properties - collision boxes already incorporate them implicitly.
         const buffers = isText ? bucket.textCollisionBox : bucket.iconCollisionBox;
         // Get collision circle data of this bucket
         const circleArray: Array<number> = bucket.collisionCircleArray;
@@ -61,7 +61,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             CullFaceMode.disabled,
             collisionUniformValues(painter.transform),
             painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
-            projection.getProjectionData(coord.canonical, posMatrix),
+            transform.getProjectionData(coord, posMatrix),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);

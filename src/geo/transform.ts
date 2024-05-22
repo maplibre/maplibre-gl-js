@@ -340,7 +340,7 @@ export abstract class Transform {
      * Return all coordinates that could cover this transform for a covering
      * zoom level.
      * @param options - the options
-     * @returns OverscaledTileIDs
+     * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
      */
     abstract coveringTiles(
         options: {
@@ -500,12 +500,6 @@ export abstract class Transform {
         }
     }
 
-    /**
-     * Calculate the posMatrix that, given a tile coordinate, would be used to display the tile on a map.
-     * @param unwrappedTileID - the tile ID
-     */
-    abstract calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned?: boolean): mat4;
-
     abstract customLayerMatrix(): mat4;
 
     /**
@@ -601,7 +595,7 @@ export abstract class Transform {
      * @internal
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      */
-    abstract getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData;
+    abstract getProjectionData(unwrappedTileID: UnwrappedTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData;
 
     /**
      * @internal
@@ -616,14 +610,14 @@ export abstract class Transform {
     /**
      * @internal
      */
-    abstract getPixelScale(transform: { center: LngLat }): number;
+    abstract getPixelScale(): number;
 
     /**
      * @internal
      * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
      * Circle radius and heatmap kernel radius is multiplied by this value.
      */
-    abstract getCircleRadiusCorrection(transform: { center: LngLat }): number;
+    abstract getCircleRadiusCorrection(): number;
 
     /**
      * @internal
@@ -633,13 +627,13 @@ export abstract class Transform {
      * @param textAnchor - Text anchor position inside the tile.
      * @param tileID - The tile coordinates.
      */
-    abstract getPitchedTextCorrection(transform: { center: LngLat }, textAnchor: Point, tileID: UnwrappedTileID): number;
+    abstract getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number;
 
     /**
      * @internal
      * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
      */
-    abstract translatePosition(transform: { angle: number; zoom: number }, tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+    abstract translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
 
     /**
      * @internal
@@ -648,7 +642,7 @@ export abstract class Transform {
      * @param dir - The light direction.
      * @returns A new vector with the transformed light direction.
      */
-    abstract transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3;
+    abstract transformLightDirection(dir: vec3): vec3;
 
     //
     // Projection and unprojection of points, LatLng coordinates, tile coordinates, etc.
@@ -667,7 +661,7 @@ export abstract class Transform {
      * @param transform - The map's transform.
      * @param terrain - Optional terrain.
      */
-    abstract projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point;
+    abstract projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point;
 
     /**
      * @internal
@@ -677,7 +671,7 @@ export abstract class Transform {
      * @param transform - The map's transform.
      * @param terrain - Optional terrain.
      */
-    abstract unprojectScreenPoint(p: Point, transform: Transform, terrain?: Terrain): LngLat;
+    abstract unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat;
 
-    abstract getCenterForLocationAtPoint(lnglat: LngLat, point: Point, transform: Transform): LngLat;
+    abstract getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat;
 }

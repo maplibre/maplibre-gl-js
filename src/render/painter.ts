@@ -45,10 +45,10 @@ import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
 import {Mesh} from './mesh';
-import {translatePosMatrix as mercatorTranslatePosMatrix, MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 import {Tile} from '../source/tile';
 import {ProjectionData} from './program/projection_program';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {MercatorTransform, translatePosMatrix as mercatorTranslatePosMatrix} from '../geo/projection/mercator_transform';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -287,6 +287,7 @@ export class Painter {
         const context = this.context;
         const gl = context.gl;
         const projection = this.style.map.projection;
+        const transform = this.transform;
 
         const program = this.useProgram('clippingMask');
 
@@ -297,7 +298,7 @@ export class Painter {
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true);
 
-            const projectionData = projection.getProjectionData(tileID.canonical, tileID.posMatrix);
+            const projectionData = transform.getProjectionData(tileID, tileID.terrainRttPosMatrix);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.

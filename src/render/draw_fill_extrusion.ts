@@ -62,7 +62,8 @@ function drawExtrusionTiles(
     const opacity = layer.paint.get('fill-extrusion-opacity');
     const constantPattern = patternProperty.constantOr(null);
     const projection = painter.style.map.projection;
-    const globeCameraPosition = projection.cameraPosition;
+    const transform = painter.transform;
+    const globeCameraPosition = transform.cameraPosition;
 
     for (const coord of coords) {
         const tile = source.getTile(coord);
@@ -79,11 +80,10 @@ function drawExtrusionTiles(
             programConfiguration.updatePaintBuffers(crossfade);
         }
 
-        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
+        const projectionData = transform.getProjectionData(coord, coord.terrainRttPosMatrix);
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const translate = projection.translatePosition(
-            painter.transform,
+        const translate = transform.translatePosition(
             tile,
             layer.paint.get('fill-extrusion-translate'),
             layer.paint.get('fill-extrusion-translate-anchor')

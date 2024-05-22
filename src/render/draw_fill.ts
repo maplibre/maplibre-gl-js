@@ -72,7 +72,7 @@ function drawFillTiles(
     const crossfade = layer.getCrossfadeParameters();
     let drawMode, programName, uniformValues, indexBuffer, segments;
 
-    const projection = painter.style.map.projection;
+    const transform = painter.transform;
 
     const propertyFillTranslate = layer.paint.get('fill-translate');
     const propertyFillTranslateAnchor = layer.paint.get('fill-translate-anchor');
@@ -106,9 +106,9 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
+        const projectionData = transform.getProjectionData(coord, coord.terrainRttPosMatrix);
 
-        const translateForUniforms = projection.translatePosition(painter.transform, tile, propertyFillTranslate, propertyFillTranslateAnchor);
+        const translateForUniforms = transform.translatePosition(tile, propertyFillTranslate, propertyFillTranslateAnchor);
 
         if (!isOutline) {
             indexBuffer = bucket.indexBuffer;

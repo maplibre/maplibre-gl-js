@@ -1,10 +1,13 @@
 import Point from '@mapbox/point-geometry';
 import {MAX_VALID_LATITUDE} from './transform';
 import {LngLat} from './lng_lat';
-import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
+import {OverscaledTileID, CanonicalTileID, UnwrappedTileID} from '../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
 import type {Terrain} from '../render/terrain';
 import {MercatorTransform} from './projection/mercator_transform';
+import {mat4} from 'gl-matrix';
+import {ProjectionData} from '../render/program/projection_program';
+import {EXTENT} from '../data/extent';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -478,6 +481,41 @@ describe('transform', () => {
         expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9997324396231673);
         transform.pitch = 60;
         expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9865782165762236);
+    });
 
+    describe('getProjectionData', () => {
+        const mercator = new MercatorTransform();
+
+        test('fallback matrix is set', () => {
+            const mat = mat4.create();
+            mat[0] = 1234;
+            const projectionData = mercator.getProjectionData(new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0)), mat);
+            expect(projectionData.u_projection_fallback_matrix).toEqual(mat);
+        });
+        test('mercator tile extents are set', () => {
+            const mat = mat4.create();
+            let projectionData: ProjectionData;
+
+            projectionData = mercator.getProjectionData(new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0)), mat);
+            expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
+
+            projectionData = mercator.getProjectionData(new UnwrappedTileID(0, new CanonicalTileID(1, 0, 0)), mat);
+            expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+
+            projectionData = mercator.getProjectionData(new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), mat);
+            expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        });
+        test('mercator tile extents are set for negative zoom', () => {
+            const mat = mat4.create();
+            const projectionData = mercator.getProjectionData(new UnwrappedTileID(0, new CanonicalTileID(-2, 0, 0)), mat);
+            expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 1 / EXTENT, 1 / EXTENT]); // same as for zoom=0, as it gets clamped
+        });
     });
 });
+
+export function expectToBeCloseToArray(actual: Array<number>, expected: Array<number>, precision?: number) {
+    expect(actual).toHaveLength(expected.length);
+    for (let i = 0; i < expected.length; i++) {
+        expect(actual[i]).toBeCloseTo(expected[i], precision);
+    }
+}

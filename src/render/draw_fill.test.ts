@@ -14,7 +14,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {drawFill} from './draw_fill';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {ProgramConfiguration, ProgramConfigurationSet} from '../data/program_configuration';
-import {translatePosition} from '../geo/projection/mercator';
+import {translatePosition} from '../geo/projection/mercator_transform';
 
 jest.mock('./painter');
 jest.mock('./program');
@@ -109,7 +109,7 @@ describe('drawFill', () => {
 
     function constructMockTile(layer: FillStyleLayer): Tile {
         const tileId = new OverscaledTileID(1, 0, 1, 0, 0);
-        tileId.posMatrix = mat4.create();
+        tileId.terrainRttPosMatrix = mat4.create();
 
         const tile = new Tile(tileId, 256);
         tile.tileID = tileId;

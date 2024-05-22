@@ -69,7 +69,7 @@ function drawDebugTile(painter: Painter, sourceCache: SourceCache, coord: Oversc
     const context = painter.context;
     const gl = context.gl;
 
-    const posMatrix = coord.posMatrix;
+    const posMatrix = coord.terrainRttPosMatrix;
     const program = painter.useProgram('debug');
 
     const depthMode = DepthMode.disabled;

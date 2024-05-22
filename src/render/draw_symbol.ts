@@ -156,7 +156,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
         if (size) {
             const tileScale = Math.pow(2, transform.zoom - tile.tileID.overscaledZ);
             const getElevation = terrain ? (x: number, y: number) => terrain.getElevation(coord, x, y) : null;
-            const translation = projection.translatePosition(transform, tile, translate, translateAnchor);
+            const translation = transform.translatePosition(tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
                 transform, pitchedLabelPlaneMatrix, coord.posMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
         }
@@ -247,7 +247,7 @@ function updateVariableAnchorsForBucket(
             const {width, height, anchor, textOffset, textBoxScale} = variableOffset;
             const shift = calculateVariableRenderShift(anchor, width, height, textOffset, textBoxScale, renderTextSize);
 
-            const pitchedTextCorrection = projection.getPitchedTextCorrection(transform, tileAnchor.add(new Point(translation[0], translation[1])), unwrappedTileID);
+            const pitchedTextCorrection = transform.getPitchedTextCorrection(tileAnchor.add(new Point(translation[0], translation[1])), unwrappedTileID);
             const shiftedAnchor = getShiftedAnchor(projectedAnchor.point, projectionContext, rotateWithMap, shift, transform.angle, pitchedTextCorrection);
 
             const angle = (bucket.allowVerticalPlacement && symbol.placedOrientation === WritingMode.vertical) ? Math.PI / 2 : 0;
@@ -310,8 +310,7 @@ function drawLayerSymbols(
 
     const context = painter.context;
     const gl = context.gl;
-    const tr = painter.transform;
-    const projection = painter.style.map.projection;
+    const transform = painter.transform;
 
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
@@ -332,7 +331,7 @@ function drawLayerSymbols(
 
     const tileRenderState: Array<SymbolTileRenderState> = [];
 
-    const pitchedTextRescaling = projection.getCircleRadiusCorrection(tr);
+    const pitchedTextRescaling = transform.getCircleRadiusCorrection();
 
     for (const coord of coords) {
         const tile = sourceCache.getTile(coord);
@@ -346,10 +345,10 @@ function drawLayerSymbols(
         const isSDF = isText || bucket.sdfIcons;
 
         const sizeData = isText ? bucket.textSizeData : bucket.iconSizeData;
-        const transformed = pitchWithMap || tr.pitch !== 0;
+        const transformed = pitchWithMap || transform.pitch !== 0;
 
         const program = painter.useProgram(getSymbolProgramName(isSDF, isText, bucket), programConfiguration);
-        const size = evaluateSizeForZoom(sizeData, tr.zoom);
+        const size = evaluateSizeForZoom(sizeData, transform.zoom);
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
 
         let texSize: [number, number];
@@ -379,13 +378,13 @@ function drawLayerSymbols(
 
         // See the comment at the beginning of src/symbol/projection.ts for an overview of the symbol projection process
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const baseMatrix = isViewportLine ? coord.posMatrix : identityMat4;
+        const baseMatrix = isViewportLine ? coord.terrainRttPosMatrix : identityMat4;
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
         const glCoordMatrixForShader = getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
         const glCoordMatrixForSymbolPlacement = getGlCoordMatrix(coord.posMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
-        const translation = projection.translatePosition(painter.transform, tile, translate, translateAnchor);
-        const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
+        const translation = transform.translatePosition(tile, translate, translateAnchor);
+        const projectionData = transform.getProjectionData(coord, coord.terrainRttPosMatrix);
 
         const hasVariableAnchors = hasVariablePlacement && bucket.hasTextData();
         const updateTextFitIcon = layer.layout.get('icon-text-fit') !== 'none' &&
@@ -398,7 +397,7 @@ function drawLayerSymbols(
             updateLineLabels(bucket, coord.posMatrix, painter, isText, pitchedLabelPlaneMatrix, glCoordMatrixForSymbolPlacement, pitchWithMap, keepUpright, rotateToLine, projection, coord.toUnwrapped(), tr.width, tr.height, translation, getElevation);
         }
 
-        const matrix = coord.posMatrix; // formerly also incorporated translate and translate-anchor
+        const matrix = coord.terrainRttPosMatrix; // formerly also incorporated translate and translate-anchor
         const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
 
         // If the label plane matrix is used, it transforms either map-pitch-aligned pixels, or to screenspace pixels

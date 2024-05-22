@@ -9,9 +9,13 @@ import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent';
 import {MAX_VALID_LATITUDE, Transform} from '../transform';
+import {ProjectionData} from '../../render/program/projection_program';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
+import {xyTransformMat4} from '../../symbol/projection';
 
 export class MercatorTransform extends Transform {
     private _cameraToCenterDistance: number;
+    private _cameraPosition: vec3;
 
     mercatorMatrix: mat4;
     projMatrix: mat4;
@@ -39,6 +43,7 @@ export class MercatorTransform extends Transform {
     }
 
     public override get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
+    public override get cameraPosition(): vec3 { return this._cameraPosition; }
 
     /**
      * Return any "wrapped" copies of a given tile coordinate that are visible
@@ -393,7 +398,7 @@ export class MercatorTransform extends Transform {
      * Calculate the posMatrix that, given a tile coordinate, would be used to display the tile on a map.
      * @param unwrappedTileID - the tile ID
      */
-    override calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 {
+    public calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 { // JP: TODO: this should not be in transform.ts!
         const posMatrixKey = unwrappedTileID.key;
         const cache = aligned ? this._alignedPosMatrixCache : this._posMatrixCache;
         if (cache[posMatrixKey]) {
@@ -598,6 +603,14 @@ export class MercatorTransform extends Transform {
         this.projMatrix = m;
         this.invProjMatrix = mat4.invert([] as any, m);
 
+        const cameraPos: vec4 = [0, 0, -1, 1];
+        vec4.transformMat4(cameraPos, cameraPos, this.invProjMatrix);
+        this._cameraPosition = [
+            cameraPos[0] / cameraPos[3],
+            cameraPos[1] / cameraPos[3],
+            cameraPos[2] / cameraPos[3]
+        ];
+
         // matrix for conversion from world space to screen coordinates in 3D
         this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
 
@@ -665,4 +678,151 @@ export class MercatorTransform extends Transform {
         vec4.transformMat4(p, p, this.projMatrix);
         return (p[2] / p[3]);
     }
+
+    override getProjectionData(unwrappedTileID: UnwrappedTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
+        let tileOffsetSize: [number, number, number, number];
+
+        if (unwrappedTileID) {
+            const scale = (unwrappedTileID.canonical.z >= 0) ? (1 << unwrappedTileID.canonical.z) : Math.pow(2.0, unwrappedTileID.canonical.z);
+            tileOffsetSize = [
+                unwrappedTileID.canonical.x / scale,
+                unwrappedTileID.canonical.y / scale,
+                1.0 / scale / EXTENT,
+                1.0 / scale / EXTENT
+            ];
+        } else {
+            tileOffsetSize = [0, 0, 1, 1];
+        }
+        const mainMatrix = tilePosMatrix ? tilePosMatrix : (unwrappedTileID ? this.calculatePosMatrix(unwrappedTileID, aligned) : mat4.create());
+
+        const data: ProjectionData = {
+            'u_projection_matrix': mainMatrix, // Might be set to a custom matrix by different projections
+            'u_projection_tile_mercator_coords': tileOffsetSize,
+            'u_projection_clipping_plane': [0, 0, 0, 0],
+            'u_projection_transition': 0.0,
+            'u_projection_fallback_matrix': mainMatrix,
+        };
+
+        return data;
+    }
+
+    override isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
+        return false;
+    }
+
+    override getPixelScale(): number {
+        return 1.0;
+    }
+
+    override getCircleRadiusCorrection(): number {
+        return 1.0;
+    }
+
+    override getPitchedTextCorrection(_textAnchor: Point, _tileID: UnwrappedTileID): number {
+        return 1.0;
+    }
+
+    override translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+        return translatePosition(this, tile, translate, translateAnchor);
+    }
+
+    override transformLightDirection(dir: vec3): vec3 {
+        return vec3.clone(dir);
+    }
+
+    override projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): {
+        point: Point;
+        signedDistanceFromCamera: number;
+        isOccluded: boolean;
+    } {
+        const matrix = this.calculatePosMatrix(unwrappedTileID);
+        let pos;
+        if (getElevation) { // slow because of handle z-index
+            pos = [x, y, getElevation(x, y), 1] as vec4;
+            vec4.transformMat4(pos, pos, matrix);
+        } else { // fast because of ignore z-index
+            pos = [x, y, 0, 1] as vec4;
+            xyTransformMat4(pos, pos, matrix);
+        }
+        const w = pos[3];
+        return {
+            point: new Point(pos[0] / w, pos[1] / w),
+            signedDistanceFromCamera: w,
+            isOccluded: false
+        };
+    }
+
+    override projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
+        return this.locationPoint(LngLat.convert(lnglat), terrain);
+    }
+
+    override unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat {
+        return this.pointLocation(Point.convert(p), terrain);
+    }
+
+    override getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat {
+        const a = this.pointCoordinate(point);
+        const b = this.pointCoordinate(this.centerPoint);
+        const loc = this.locationCoordinate(lnglat);
+        const newCenter = new MercatorCoordinate(
+            loc.x - (a.x - b.x),
+            loc.y - (a.y - b.y));
+        let center = this.coordinateLocation(newCenter);
+        if (this.renderWorldCopies) {
+            center = center.wrap();
+        }
+        return center;
+    }
+}
+
+/**
+ * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
+ * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+ * @returns matrix
+ */
+export function translatePosMatrix(
+    transform: { angle: number; zoom: number },
+    tile: { tileID: OverscaledTileID; tileSize: number },
+    matrix: mat4,
+    translate: [number, number],
+    translateAnchor: 'map' | 'viewport',
+    inViewportPixelUnitsUnits: boolean = false
+): mat4 {
+    if (!translate[0] && !translate[1]) return matrix;
+
+    const translation = translatePosition(transform, tile, translate, translateAnchor, inViewportPixelUnitsUnits);
+    const translatedMatrix = new Float32Array(16);
+    mat4.translate(translatedMatrix, matrix, [translation[0], translation[1], 0]);
+    return translatedMatrix;
+}
+
+/**
+ * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
+ * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
+ */
+export function translatePosition(
+    transform: { angle: number; zoom: number },
+    tile: { tileID: OverscaledTileID; tileSize: number },
+    translate: [number, number],
+    translateAnchor: 'map' | 'viewport',
+    inViewportPixelUnitsUnits: boolean = false
+): [number, number] {
+    if (!translate[0] && !translate[1]) return [0, 0];
+
+    const angle = inViewportPixelUnitsUnits ?
+        (translateAnchor === 'map' ? transform.angle : 0) :
+        (translateAnchor === 'viewport' ? -transform.angle : 0);
+
+    if (angle) {
+        const sinA = Math.sin(angle);
+        const cosA = Math.cos(angle);
+        translate = [
+            translate[0] * cosA - translate[1] * sinA,
+            translate[0] * sinA + translate[1] * cosA
+        ];
+    }
+
+    return [
+        inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], transform.zoom),
+        inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
 }
