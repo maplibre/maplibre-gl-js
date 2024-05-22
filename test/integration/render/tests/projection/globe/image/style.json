@@ -1,0 +1,57 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "This test ensures that images that are placed into the root tile do not stretch all the way to the poles.",
+      "width": 64,
+      "height": 256,
+      "projection": "globe"
+    }
+  },
+  "zoom": 0.5,
+  "center": [
+    0,
+    45
+  ],
+  "sources": {
+    "image": {
+      "type": "image",
+      "coordinates": [
+        [
+          -270,
+          -80
+        ],
+        [
+          90,
+          -80
+        ],
+        [
+          90,
+          80
+        ],
+        [
+          -270,
+          80
+        ]
+      ],
+      "url": "local://image/0.png"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "green"
+      }
+    },
+    {
+      "id": "image",
+      "type": "raster",
+      "source": "image",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    }
+  ]
+}

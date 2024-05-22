@@ -295,7 +295,7 @@ export class Painter {
             const stencilRef = tileStencilRefs[tileID.key];
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
-            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders);
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true);
 
             const projectionData = projection.getProjectionData(tileID.canonical, tileID.posMatrix);
 

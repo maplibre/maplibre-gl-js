@@ -140,7 +140,7 @@ export class MercatorProjection implements Projection {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
-    public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean): Mesh {
+    public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean): Mesh {
         if (this._cachedMesh) {
             return this._cachedMesh;
         }

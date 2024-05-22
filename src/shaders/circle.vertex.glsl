@@ -79,7 +79,7 @@ void main(void) {
             // doing glFragDepth and clipping in the wrong order by doing clipping manually in the shader.
             // For screenspace (not u_pitch_with_map) circles, it is enough to detect whether the anchor
             // point should be clipped here in the vertex shader, and clip it by moving in beyond the
-            // renderable range in X and Y.
+            // renderable range -1..1 in X and Y (moving it to 10000 is more than enough).
             gl_Position.xy = vec2(10000.0);
         }
 
