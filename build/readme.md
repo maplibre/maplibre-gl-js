@@ -1,6 +1,8 @@
 # Build Scripts
+
 This folder holds common build scripts accessed via the various `npm run` commands.
 Codegen is executed when calling `npm install` in order to generate all artifacts needed for the build to pass
+
 ## Bundeling all the code
 
 The bundling process can be split into several steps:
