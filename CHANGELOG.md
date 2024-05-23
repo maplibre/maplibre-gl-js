@@ -3,6 +3,7 @@
 ### ✨ Features and improvements
 
 - Add events to `GeolocateControl` to allow a more granular interaction ([#3847](https://github.com/maplibre/maplibre-gl-js/pull/3847))
+- Make `MapOptions.style` optional to be consistent with `Map.setStyle(null)` ([#4151](https://github.com/maplibre/maplibre-gl-js/pull/4151))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
