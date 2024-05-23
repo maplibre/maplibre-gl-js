@@ -26,7 +26,7 @@ import {
 } from '../util/actor_messages';
 
 /**
- * The Worker class responsidble for background thread related execution
+ * The Worker class responsible for background thread related execution
  */
 export default class Worker {
     self: WorkerGlobalScopeInterface & ActorTarget;

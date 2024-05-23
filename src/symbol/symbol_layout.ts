@@ -589,7 +589,7 @@ function addSymbol(bucket: SymbolBucket,
             anchor,
             lineArray.lineStartIndex,
             lineArray.lineLength,
-            // The icon itself does not have an associated symbol since the text isnt placed yet
+            // The icon itself does not have an associated symbol since the text isn't placed yet
             -1, canonical);
 
         placedIconSymbolIndex = bucket.icon.placedSymbolArray.length - 1;
@@ -608,7 +608,7 @@ function addSymbol(bucket: SymbolBucket,
                 anchor,
                 lineArray.lineStartIndex,
                 lineArray.lineLength,
-                // The icon itself does not have an associated symbol since the text isnt placed yet
+                // The icon itself does not have an associated symbol since the text isn't placed yet
                 -1, canonical);
 
             verticalPlacedIconSymbolIndex = bucket.icon.placedSymbolArray.length - 1;

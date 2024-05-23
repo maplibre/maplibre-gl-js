@@ -129,7 +129,7 @@ describe('Actor', () => {
         actor.remove();
     });
 
-    test('send a messege that is rejected', async () => {
+    test('send a message that is rejected', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 
@@ -138,7 +138,7 @@ describe('Actor', () => {
         await expect(async () => actor.sendAsync({type: MessageType.abortTile, data: {} as any})).rejects.toThrow(ABORT_ERROR);
     });
 
-    test('send a messege that must be queued, it should still arrive', async () => {
+    test('send a message that must be queued, it should still arrive', async () => {
         const worker = workerFactory() as any as WorkerGlobalScopeInterface & ActorTarget;
         const actor = new Actor(worker, '1');
 

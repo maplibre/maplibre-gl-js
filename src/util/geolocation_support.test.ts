@@ -35,7 +35,7 @@ describe('checkGeolocationSupport', () => {
     test('it should check permissions and geolocation for iOS 16 promise rejection', async () => {
         (window.navigator as any).geolocation = undefined;
         (window.navigator as any).permissions = {
-            query: () => Promise.reject(new Error('pemissions error'))
+            query: () => Promise.reject(new Error('perissions error'))
         };
         const returnValue = await checkGeolocationSupport(true);
         expect(returnValue).toBeFalsy();

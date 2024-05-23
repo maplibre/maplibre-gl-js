@@ -2661,7 +2661,7 @@ August 16, 2018
 
 - Add support for `line-color` property functions [#2938](https://github.com/mapbox/mapbox-gl-js/pull/2938)
 - Add `Scale` control [#2940](https://github.com/mapbox/mapbox-gl-js/pull/2940) [#3042](https://github.com/mapbox/mapbox-gl-js/pull/3042)
-- Improve polygon label placement by rendering labels at the pole of inaccessability [#3038](https://github.com/mapbox/mapbox-gl-js/pull/3038)
+- Improve polygon label placement by rendering labels at the pole of inaccessibility [#3038](https://github.com/mapbox/mapbox-gl-js/pull/3038)
 - Add `Popup` `offset` option [#1962](https://github.com/mapbox/mapbox-gl-js/issues/1962)
 - Add `Marker#bindPopup` method [#3056](https://github.com/mapbox/mapbox-gl-js/pull/3056)
 
