@@ -1688,7 +1688,7 @@ describe('source cache loaded', () => {
     });
 });
 
-describe('souce cache get ids', () => {
+describe('source cache get ids', () => {
     test('SourceCache#getIds (ascending order by zoom level)', done => {
         const ids = [
             new OverscaledTileID(0, 0, 0, 0, 0),

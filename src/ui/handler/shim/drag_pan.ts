@@ -11,7 +11,7 @@ export type DragPanOptions = {
      */
     linearity?: number;
     /**
-     * easing function applled to `map.panTo` when applying the drag.
+     * easing function applied to `map.panTo` when applying the drag.
      * @param t - the easing function
      * @defaultValue bezier(0, 0, 0.3, 1)
      */
