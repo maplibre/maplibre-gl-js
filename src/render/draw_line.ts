@@ -67,9 +67,7 @@ export function drawLine(painter: Painter, sourceCache: SourceCache, layer: Line
             if (posTo && posFrom) programConfiguration.setConstantPatternPositions(posTo, posFrom);
         }
 
-        const rttCoord = terrainData ? coord : null;
-        const posMatrix = rttCoord ? rttCoord.terrainRttPosMatrix : tile.tileID.terrainRttPosMatrix;
-        const projectionData = transform.getProjectionData(coord, posMatrix);
+        const projectionData = transform.getProjectionData(coord);
         const pixelRatio = transform.getPixelScale();
 
         const uniformValues = image ? linePatternUniformValues(painter, tile, layer, pixelRatio, crossfade) :

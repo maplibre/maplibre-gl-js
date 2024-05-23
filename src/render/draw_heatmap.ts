@@ -52,7 +52,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
             const programConfiguration = bucket.programConfigurations.get(layer.id);
             const program = painter.useProgram('heatmap', programConfiguration);
 
-            const projectionData = transform.getProjectionData(coord, coord.terrainRttPosMatrix);
+            const projectionData = transform.getProjectionData(coord);
 
             const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 

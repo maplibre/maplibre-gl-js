@@ -298,7 +298,7 @@ export class Painter {
 
             const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true);
 
-            const projectionData = transform.getProjectionData(tileID, tileID.terrainRttPosMatrix);
+            const projectionData = transform.getProjectionData(tileID);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.

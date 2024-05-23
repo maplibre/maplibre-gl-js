@@ -679,21 +679,31 @@ export class MercatorTransform extends Transform {
         return (p[2] / p[3]);
     }
 
-    override getProjectionData(unwrappedTileID: UnwrappedTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
+    override getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
         let tileOffsetSize: [number, number, number, number];
 
-        if (unwrappedTileID) {
-            const scale = (unwrappedTileID.canonical.z >= 0) ? (1 << unwrappedTileID.canonical.z) : Math.pow(2.0, unwrappedTileID.canonical.z);
+        if (overscaledTileID) {
+            const scale = (overscaledTileID.canonical.z >= 0) ? (1 << overscaledTileID.canonical.z) : Math.pow(2.0, overscaledTileID.canonical.z);
             tileOffsetSize = [
-                unwrappedTileID.canonical.x / scale,
-                unwrappedTileID.canonical.y / scale,
+                overscaledTileID.canonical.x / scale,
+                overscaledTileID.canonical.y / scale,
                 1.0 / scale / EXTENT,
                 1.0 / scale / EXTENT
             ];
         } else {
             tileOffsetSize = [0, 0, 1, 1];
         }
-        const mainMatrix = tilePosMatrix ? tilePosMatrix : (unwrappedTileID ? this.calculatePosMatrix(unwrappedTileID, aligned) : mat4.create());
+
+        let mainMatrix: mat4;
+        if (tilePosMatrix) {
+            mainMatrix = tilePosMatrix;
+        } else if (overscaledTileID.terrainRttPosMatrix) {
+            mainMatrix = overscaledTileID.terrainRttPosMatrix;
+        } else if (overscaledTileID) {
+            mainMatrix = this.calculatePosMatrix(overscaledTileID, aligned);
+        } else {
+            mainMatrix = mat4.create();
+        }
 
         const data: ProjectionData = {
             'u_projection_matrix': mainMatrix, // Might be set to a custom matrix by different projections
@@ -772,6 +782,14 @@ export class MercatorTransform extends Transform {
             center = center.wrap();
         }
         return center;
+    }
+
+    override precacheTiles(coords: Array<OverscaledTileID>): void {
+        for (const coord of coords) {
+            // Return value is thrown away, but this function will still
+            // place the pos matrix into the transform's internal cache.
+            this.calculatePosMatrix(coord.toUnwrapped());
+        }
     }
 }
 

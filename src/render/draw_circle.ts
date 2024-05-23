@@ -79,8 +79,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
         const terrainData = painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord);
         const uniformValues = circleUniformValues(painter, tile, layer, translateForUniforms, radiusCorrectionFactor);
 
-        const matrix = coord.terrainRttPosMatrix;
-        const projectionData = transform.getProjectionData(coord, matrix);
+        const projectionData = transform.getProjectionData(coord);
 
         const state: TileRenderState = {
             programConfiguration,

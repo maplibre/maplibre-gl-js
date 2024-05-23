@@ -595,7 +595,7 @@ export abstract class Transform {
      * @internal
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      */
-    abstract getProjectionData(unwrappedTileID: UnwrappedTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData;
+    abstract getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData;
 
     /**
      * @internal
@@ -674,4 +674,12 @@ export abstract class Transform {
     abstract unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat;
 
     abstract getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat;
+
+    /**
+     * Called before rendering to allow the transform implementation
+     * to precompute data needed to render the given tiles.
+     * Used in mercator transform to precompute tile matrices (posMatrix).
+     * @param coords - Array of tile IDs that will be rendered.
+     */
+    abstract precacheTiles(coords: Array<OverscaledTileID>): void;
 }

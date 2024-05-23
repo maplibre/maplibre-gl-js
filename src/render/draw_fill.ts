@@ -106,7 +106,7 @@ function drawFillTiles(
 
         updatePatternPositionsInProgram(programConfiguration, fillPropertyName, constantPattern, tile, layer);
 
-        const projectionData = transform.getProjectionData(coord, coord.terrainRttPosMatrix);
+        const projectionData = transform.getProjectionData(coord);
 
         const translateForUniforms = transform.translatePosition(tile, propertyFillTranslate, propertyFillTranslateAnchor);
 

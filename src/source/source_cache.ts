@@ -22,7 +22,6 @@ import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import {Terrain} from '../render/terrain';
 import {config} from '../util/config';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 /**
  * @internal
@@ -1012,10 +1011,7 @@ export class SourceCache extends Evented {
 
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
         const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
-        // JP: TODO: preheat transform's posMatrix cache here?
-        for (const coord of coords) {
-            coord.terrainRttPosMatrix = (this.transform as MercatorTransform).calculatePosMatrix(coord.toUnwrapped());
-        }
+        this.transform.precacheTiles(coords);
         return coords;
     }
 

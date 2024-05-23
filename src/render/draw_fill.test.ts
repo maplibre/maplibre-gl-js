@@ -36,6 +36,7 @@ describe('drawFill', () => {
 
         const sourceCacheMock = new SourceCache(null as any, null as any, null as any);
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(mockTile);
+        //sourceCacheMock.getTile = (_: any) => mockTile;
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
 
         drawFill(painterMock, sourceCacheMock, layer, [mockTile.tileID]);
