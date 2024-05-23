@@ -3071,7 +3071,7 @@ export class Map extends Camera {
         }
 
         // This projection update should happen *before* placement update
-        //this.projection.updateProjection(this.painter.transform as MercatorTransform); // JP: TODO: remove this hack
+        this.transform.updateProjection();
 
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
@@ -3110,7 +3110,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projection.isRenderingDirty();
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.transform.isRenderingDirty();
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

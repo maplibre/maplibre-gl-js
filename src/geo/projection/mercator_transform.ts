@@ -680,6 +680,10 @@ export class MercatorTransform extends Transform {
         return (p[2] / p[3]);
     }
 
+    override isRenderingDirty(): boolean {
+        return false;
+    }
+
     override getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
         let tileOffsetSize: [number, number, number, number];
 
@@ -731,6 +735,10 @@ export class MercatorTransform extends Transform {
 
     override getPitchedTextCorrection(_textAnchor: Point, _tileID: UnwrappedTileID): number {
         return 1.0;
+    }
+
+    override updateProjection(): void {
+        // Do nothing.
     }
 
     override translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {

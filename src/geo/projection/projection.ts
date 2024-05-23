@@ -88,13 +88,6 @@ export interface Projection {
 
     /**
      * @internal
-     * True when an animation handled by the projection is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    isRenderingDirty(): boolean;
-
-    /**
-     * @internal
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;

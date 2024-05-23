@@ -1,51 +1,34 @@
 import {mat4} from 'gl-matrix';
 import {GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
-import {expectToBeCloseToArray} from './mercator.test';
-import type {TransformLike} from './projection';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
-import {MercatorTransform} from './mercator_transform';
+import {expectToBeCloseToArray} from '../mercator_transform.test';
+import {GlobeTransform} from './globe_transform';
+import {OverscaledTileID} from '../../source/tile_id';
 
-describe('GlobeProjection', () => {
+describe('GlobeTransform', () => {
     describe('getProjectionData', () => {
-        const globe = new GlobeProjection();
+        const globeTransform = new GlobeTransform();
 
         test('fallback matrix is set', () => {
             const mat = mat4.create();
             mat[0] = 1234;
-            const projectionData = globe.getProjectionData({
-                x: 0,
-                y: 0,
-                z: 0
-            }, mat);
+            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
             expect(projectionData.u_projection_fallback_matrix).toEqual(mat);
         });
         test('mercator tile extents are set', () => {
-            const mat = mat4.create();
-            const projectionData = globe.getProjectionData({
-                x: 1,
-                y: 0,
-                z: 1
-            }, mat);
+            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
             expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
     });
 
     describe('clipping plane', () => {
-        const globe = new GlobeProjection();
+        const globeTransform = new GlobeTransform();
 
         describe('general plane properties', () => {
-            const mat = mat4.create();
-            const transform = createMockTransform({
-                pitch: 0,
-            });
-            globe.updateProjection(transform);
-            const projectionData = globe.getProjectionData({
-                x: 0,
-                y: 0,
-                z: 0
-            }, mat);
+            globeTransform.updateProjection();
+            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
 
             test('plane vector length', () => {
                 const len = Math.sqrt(
@@ -57,7 +40,7 @@ describe('GlobeProjection', () => {
             });
 
             test('camera is in positive halfspace', () => {
-                expect(planeDistance(globe.cameraPosition as [number, number, number], projectionData.u_projection_clipping_plane)).toBeGreaterThan(0);
+                expect(planeDistance(globeTransform.cameraPosition as [number, number, number], projectionData.u_projection_clipping_plane)).toBeGreaterThan(0);
             });
 
             test('coordinates 0E,0N are in positive halfspace', () => {
@@ -130,37 +113,34 @@ describe('GlobeProjection', () => {
 
         test('unproject screen center', () => {
             const precisionDigits = 2;
-            const globe = new GlobeProjection();
-            const transform = createMockTransform({}) as any as MercatorTransform; // JP: TODO: remove this hack
-            globe.updateProjection(transform);
-            let unprojected = globe.unprojectScreenPoint(screenCenter, transform);
-            expect(unprojected.lng).toBeCloseTo(transform.center.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(transform.center.lat, precisionDigits);
+            const globeTransform = new GlobeTransform();
+            globeTransform.updateProjection();
+            let unprojected = globeTransform.unprojectScreenPoint(screenCenter);
+            expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
-            transform.center.lng = 90.0;
-            globe.updateProjection(transform);
-            unprojected = globe.unprojectScreenPoint(screenCenter, transform);
-            expect(unprojected.lng).toBeCloseTo(transform.center.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(transform.center.lat, precisionDigits);
+            globeTransform.center.lng = 90.0;
+            globeTransform.updateProjection();
+            unprojected = globeTransform.unprojectScreenPoint(screenCenter);
+            expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
-            transform.center.lng = 0.0;
-            transform.center.lat = 60.0;
-            globe.updateProjection(transform);
-            unprojected = globe.unprojectScreenPoint(screenCenter, transform);
-            expect(unprojected.lng).toBeCloseTo(transform.center.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(transform.center.lat, precisionDigits);
+            globeTransform.center.lng = 0.0;
+            globeTransform.center.lat = 60.0;
+            globeTransform.updateProjection();
+            unprojected = globeTransform.unprojectScreenPoint(screenCenter);
+            expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
         });
 
         test('unproject outside of sphere', () => {
             const precisionDigits = 2;
-            const globe = new GlobeProjection();
+            const globeTransform = new GlobeTransform();
             // Try unprojection a point somewhere above the western horizon
-            const transform = createMockTransform({
-                pitch: 60,
-                bearing: -90,
-            }) as any as MercatorTransform; // JP: TODO: remove this hack
-            globe.updateProjection(transform);
-            const unprojected = globe.unprojectScreenPoint(screenTopEdgeCenter, transform);
+            globeTransform.pitch = 60;
+            globeTransform.bearing = -90;
+            globeTransform.updateProjection();
+            const unprojected = globeTransform.unprojectScreenPoint(screenTopEdgeCenter);
             expect(unprojected.lng).toBeLessThan(-38.0);
             expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
         });
@@ -181,32 +161,4 @@ function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: A
 
 function planeDistance(point: Array<number>, plane: Array<number>) {
     return point[0] * plane[0] + point[1] * plane[1] + point[2] * plane[2] + plane[3];
-}
-
-function createMockTransform(object: {
-    center?: {
-        latDegrees: number;
-        lngDegrees: number;
-    };
-    pitch?: number;
-    angleDegrees?: number;
-    width?: number;
-    height?: number;
-    bearing?: number;
-}): TransformLike {
-    return {
-        center: new LngLat(
-            object.center ? (object.center.lngDegrees / 180.0 * Math.PI) : 0,
-            object.center ? (object.center.latDegrees / 180.0 * Math.PI) : 0),
-        worldSize: 10.5 * 512,
-        fov: 45.0,
-        width: object?.width || 640,
-        height: object?.height || 480,
-        cameraToCenterDistance: 759,
-        pitch: object?.pitch || 0, // in degrees
-        angle: -(object?.bearing || 0) / 180.0 * Math.PI,
-        zoom: 0,
-        invProjMatrix: null,
-        calculatePosMatrix: null
-    };
 }

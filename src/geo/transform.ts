@@ -593,6 +593,13 @@ export abstract class Transform {
 
     /**
      * @internal
+     * True when an animation handled by the projection is in progress,
+     * requiring MapLibre to keep rendering new frames.
+     */
+    abstract isRenderingDirty(): boolean;
+
+    /**
+     * @internal
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      */
     abstract getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData;
@@ -634,6 +641,12 @@ export abstract class Transform {
      * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
      */
     abstract translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+
+    /**
+     * Signals to the transform that a new frame is starting.
+     * The transform might update some of its internal variables and animations based on this.
+     */
+    abstract updateProjection(): void;
 
     /**
      * @internal
