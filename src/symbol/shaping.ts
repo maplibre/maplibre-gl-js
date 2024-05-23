@@ -824,7 +824,7 @@ function applyTextFit(shapedIcon: PositionedIcon): Box {
     const textFitWidth = shapedIcon.image.textFitWidth ?? TextFit.stretchOrShrink;
     const textFitHeight = shapedIcon.image.textFitHeight ?? TextFit.stretchOrShrink;
     const contentAspectRatio = contentWidth / contentHeight;
-    // Scale to the proportional axis first note that height takes precidence if
+    // Scale to the proportional axis first note that height takes precedence if
     // both axes are set to proportional.
     if (textFitHeight === TextFit.proportional) {
         if ((textFitWidth === TextFit.stretchOnly && iconWidth / iconHeight < contentAspectRatio) || textFitWidth === TextFit.proportional) {
