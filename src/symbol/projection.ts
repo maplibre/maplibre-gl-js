@@ -376,18 +376,21 @@ function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, pitche
         // Only a single glyph to place
         // So, determine whether to flip based on projected angle of the line segment it's on
         if (keepUpright && !flip) {
-            const a = projectTileCoordinatesToScreenPixels(projectionContext.tileAnchorPoint.x, projectionContext.tileAnchorPoint.y, projectionContext).point;
+            const a = projectTileCoordinatesToLabelPlane(projectionContext.tileAnchorPoint.x, projectionContext.tileAnchorPoint.y, projectionContext).point;
             const tileVertexIndex = (symbol.lineStartIndex + symbol.segment + 1);
             const tileSegmentEnd = new Point(projectionContext.lineVertexArray.getx(tileVertexIndex), projectionContext.lineVertexArray.gety(tileVertexIndex));
-            const projectedVertex = projectTileCoordinatesToScreenPixels(tileSegmentEnd.x, tileSegmentEnd.y, projectionContext);
+            const projectedVertex = projectTileCoordinatesToLabelPlane(tileSegmentEnd.x, tileSegmentEnd.y, projectionContext);
             // We know the anchor will be in the viewport, but the end of the line segment may be
             // behind the plane of the camera, in which case we can use a point at any arbitrary (closer)
             // point on the segment.
             const b = (projectedVertex.signedDistanceFromCamera > 0) ?
                 projectedVertex.point :
-                projectTruncatedLineSegmentToViewport(projectionContext.tileAnchorPoint, tileSegmentEnd, a, 1, projectionContext);
+                projectTruncatedLineSegmentToLabelPlane(projectionContext.tileAnchorPoint, tileSegmentEnd, a, 1, projectionContext);
 
-            const orientationChange = requiresOrientationChange(symbol.writingMode, a, b, aspectRatio);
+            const clipSpaceA = projectFromLabelPlaneToClipSpace(a.x, a.y, projectionContext, pitchedLabelPlaneMatrixInverse);
+            const clipSpaceB = projectFromLabelPlaneToClipSpace(b.x, b.y, projectionContext, pitchedLabelPlaneMatrixInverse);
+
+            const orientationChange = requiresOrientationChange(symbol.writingMode, clipSpaceA, clipSpaceB, aspectRatio);
             if (orientationChange) {
                 return orientationChange;
             }
@@ -407,16 +410,16 @@ function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, pitche
 }
 
 /**
- * Takes a line and direction from `previousTilePoint` to `currentTilePoint`, projects it to viewport,
+ * Takes a line and direction from `previousTilePoint` to `currentTilePoint`, projects it to the correct label plane,
  * and returns a projected point along this projected line that is `minimumLength` distance away from `previousProjectedPoint`.
  * Projects a "virtual" vertex along a line segment.
  * @param previousTilePoint - Line start point, in tile coordinates.
  * @param currentTilePoint - Line end point, in tile coordinates.
- * @param previousProjectedPoint - Projection of `previousTilePoint` into *viewport*.
+ * @param previousProjectedPoint - Projection of `previousTilePoint` into label plane
  * @param minimumLength - Distance in the projected space along the line for the returned point.
  * @param projectionContext - Projection context, used to get terrain's `getElevation`, and to project the points to screen pixels.
  */
-function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionContext: SymbolProjectionContext) {
+function projectTruncatedLineSegmentToLabelPlane(previousTilePoint: Point, currentTilePoint: Point, previousProjectedPoint: Point, minimumLength: number, projectionContext: SymbolProjectionContext) {
     // We are assuming "previousTilePoint" won't project to a point within one unit of the camera plane
     // If it did, that would mean our label extended all the way out from within the viewport to a (very distant)
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
@@ -549,7 +552,7 @@ export function projectLineVertexToLabelPlane(index: number, projectionContext: 
 
     // Don't cache because the new vertex might not be far enough out for future glyphs on the same segment
     const minimumLength = syntheticVertexArgs.absOffsetX - syntheticVertexArgs.distanceFromAnchor + 1;
-    return projectTruncatedLineSegmentToViewport(previousTilePoint, currentVertex, syntheticVertexArgs.previousVertex, minimumLength, projectionContext);
+    return projectTruncatedLineSegmentToLabelPlane(previousTilePoint, currentVertex, syntheticVertexArgs.previousVertex, minimumLength, projectionContext);
 }
 
 /**
@@ -590,16 +593,6 @@ function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContex
  */
 export function projectTileCoordinatesToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
     const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, projectionContext.getElevation);
-    return projection;
-}
-
-/**
- * Projects the given point in tile coordinates to the screen space pixels.
- */
-function projectTileCoordinatesToScreenPixels(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
-    const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, projectionContext.getElevation);
-    projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
-    projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
     return projection;
 }
 
