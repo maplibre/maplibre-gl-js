@@ -269,6 +269,9 @@ export class GeolocateControl extends Evented implements IControl {
     _accuracy: number;
     _setup: boolean; // set to true once the control has been setup
 
+    /**
+     * @param options - the control's options
+     */
     constructor(options: GeolocateControlOptions) {
         super();
         this.options = extend({}, defaultOptions, options);
