@@ -158,7 +158,7 @@ export function performSymbolLayout(args: {
             const symbolPlacement = layout.get('symbol-placement');
             const maxWidth = symbolPlacement === 'point' ?
                 layout.get('text-max-width').evaluate(feature, {}, args.canonical) * ONE_EM :
-                0;
+                Infinity;
 
             const addVerticalShapingForPointLabelIfNeeded = () => {
                 if (args.bucket.allowVerticalPlacement && allowsVerticalWritingMode(unformattedText)) {
@@ -166,7 +166,7 @@ export function performSymbolLayout(args: {
                     // writing mode, thus, default left justification is used. If Latin
                     // scripts would need to be supported, this should take into account other justifications.
                     shapedTextOrientations.vertical = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor,
-                        'left', spacingIfAllowed, textOffset, WritingMode.vertical, true, symbolPlacement, layoutTextSize, layoutTextSizeThisZoom);
+                        'left', spacingIfAllowed, textOffset, WritingMode.vertical, true, layoutTextSize, layoutTextSizeThisZoom);
                 }
             };
 
@@ -193,7 +193,7 @@ export function performSymbolLayout(args: {
                         // If using text-variable-anchor for the layer, we use a center anchor for all shapings and apply
                         // the offsets for the anchor in the placement step.
                         const shaping = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, 'center',
-                            justification, spacingIfAllowed, textOffset, WritingMode.horizontal, false, symbolPlacement, layoutTextSize, layoutTextSizeThisZoom);
+                            justification, spacingIfAllowed, textOffset, WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
                         if (shaping) {
                             shapedTextOrientations.horizontal[justification] = shaping;
                             singleLine = shaping.positionedLines.length === 1;
@@ -209,7 +209,7 @@ export function performSymbolLayout(args: {
 
                 // Horizontal point or line label.
                 const shaping = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor, textJustify, spacingIfAllowed,
-                    textOffset, WritingMode.horizontal, false, symbolPlacement, layoutTextSize, layoutTextSizeThisZoom);
+                    textOffset, WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
                 if (shaping) shapedTextOrientations.horizontal[textJustify] = shaping;
 
                 // Vertical point label (if allowVerticalPlacement is enabled).
@@ -218,7 +218,7 @@ export function performSymbolLayout(args: {
                 // Verticalized line label.
                 if (allowsVerticalWritingMode(unformattedText) && textAlongLine && keepUpright) {
                     shapedTextOrientations.vertical = shapeText(text, args.glyphMap, args.glyphPositions, args.imagePositions, fontstack, maxWidth, lineHeight, textAnchor, textJustify,
-                        spacingIfAllowed, textOffset, WritingMode.vertical, false, symbolPlacement, layoutTextSize, layoutTextSizeThisZoom);
+                        spacingIfAllowed, textOffset, WritingMode.vertical, false, layoutTextSize, layoutTextSizeThisZoom);
                 }
             }
         }
