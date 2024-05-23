@@ -299,8 +299,9 @@ export type MapOptions = {
      * The map's MapLibre style. This must be a JSON object conforming to
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
+     * When the style is not specified, calling {@link Map#setStyle} is required to render the map.
      */
-    style: StyleSpecification | string;
+    style?: StyleSpecification | string;
     /**
      * If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
      * @defaultValue true
