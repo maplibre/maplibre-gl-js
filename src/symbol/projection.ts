@@ -420,7 +420,7 @@ function projectTruncatedLineSegmentToViewport(previousTilePoint: Point, current
     // point near the plane of the camera. We wouldn't be able to render the label anyway once it crossed the
     // plane of the camera.
     const unitVertexToBeProjected = previousTilePoint.add(previousTilePoint.sub(currentTilePoint)._unit());
-    const projectedUnitVertex = projectTileCoordinatesToClipSpace(unitVertexToBeProjected.x, unitVertexToBeProjected.y, projectionContext).point;
+    const projectedUnitVertex = projectTileCoordinatesToLabelPlane(unitVertexToBeProjected.x, unitVertexToBeProjected.y, projectionContext).point;
     const projectedUnitSegment = previousProjectedPoint.sub(projectedUnitVertex);
     return previousProjectedPoint.add(projectedUnitSegment._mult(minimumLength / projectedUnitSegment.mag()));
 }
@@ -520,7 +520,7 @@ export type ProjectionSyntheticVertexArgs = {
  * @param projectionContext - necessary data to project a vertex
  * @returns the vertex projected to the label plane
  */
-export  function projectLineVertexToLabelPlane(index: number, projectionContext: SymbolProjectionContext, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
+export function projectLineVertexToLabelPlane(index: number, projectionContext: SymbolProjectionContext, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
     const cache = projectionContext.projectionCache;
 
     if (cache.projections[index]) {
