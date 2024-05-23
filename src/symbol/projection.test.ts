@@ -1,4 +1,4 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, project, projectVertexToViewport, transformToOffsetNormal} from './projection';
+import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, project, transformToOffsetNormal, projectLineVertexToLabelPlane} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -44,9 +44,9 @@ describe('Vertex to viewport projection', () => {
             absOffsetX: 0
         };
 
-        const first = projectVertexToViewport(0, projectionContext, syntheticVertexArgs);
-        const second = projectVertexToViewport(1, projectionContext, syntheticVertexArgs);
-        const third = projectVertexToViewport(2, projectionContext, syntheticVertexArgs);
+        const first = projectLineVertexToLabelPlane(0, projectionContext, syntheticVertexArgs);
+        const second = projectLineVertexToLabelPlane(1, projectionContext, syntheticVertexArgs);
+        const third = projectLineVertexToLabelPlane(2, projectionContext, syntheticVertexArgs);
         expect(first.x).toBeCloseTo(-10);
         expect(second.x).toBeCloseTo(0);
         expect(third.x).toBeCloseTo(10);

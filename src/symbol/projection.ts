@@ -18,6 +18,7 @@ import {UnwrappedTileID} from '../source/tile_id';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {StructArray} from '../util/struct_array';
 
+// JP: TODO: unify how stuff gets exported here
 export {
     updateLineLabels,
     hideGlyphs,
@@ -27,8 +28,6 @@ export {
     placeFirstAndLastGlyph,
     placeGlyphAlongLine,
     xyTransformMat4,
-    projectLineVertexToLabelPlane as projectVertexToViewport,
-    projectTileCoordinatesToLabelPlane as projectTileCoordinatesToViewport,
     findOffsetIntersectionPoint,
     transformToOffsetNormal,
 };
@@ -375,10 +374,10 @@ function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, symbol
         // Only a single glyph to place
         // So, determine whether to flip based on projected angle of the line segment it's on
         if (keepUpright && !flip) {
-            const a = projectTileCoordinatesToClipSpace(projectionContext.tileAnchorPoint.x, projectionContext.tileAnchorPoint.y, projectionContext).point;
+            const a = projectTileCoordinatesToScreenPixels(projectionContext.tileAnchorPoint.x, projectionContext.tileAnchorPoint.y, projectionContext).point;
             const tileVertexIndex = (symbol.lineStartIndex + symbol.segment + 1);
             const tileSegmentEnd = new Point(projectionContext.lineVertexArray.getx(tileVertexIndex), projectionContext.lineVertexArray.gety(tileVertexIndex));
-            const projectedVertex = projectTileCoordinatesToClipSpace(tileSegmentEnd.x, tileSegmentEnd.y, projectionContext);
+            const projectedVertex = projectTileCoordinatesToScreenPixels(tileSegmentEnd.x, tileSegmentEnd.y, projectionContext);
             // We know the anchor will be in the viewport, but the end of the line segment may be
             // behind the plane of the camera, in which case we can use a point at any arbitrary (closer)
             // point on the segment.
@@ -521,7 +520,7 @@ export type ProjectionSyntheticVertexArgs = {
  * @param projectionContext - necessary data to project a vertex
  * @returns the vertex projected to the label plane
  */
-function projectLineVertexToLabelPlane(index: number, projectionContext: SymbolProjectionContext, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
+export  function projectLineVertexToLabelPlane(index: number, projectionContext: SymbolProjectionContext, syntheticVertexArgs: ProjectionSyntheticVertexArgs): Point {
     const cache = projectionContext.projectionCache;
 
     if (cache.projections[index]) {
@@ -556,7 +555,7 @@ function projectLineVertexToLabelPlane(index: number, projectionContext: SymbolP
  * If pitchWithMap is true, the (rotated) map plane in pixels is used,
  * otherwise screen pixels are used.
  */
-function projectTileCoordinatesToLabelPlane(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
+export function projectTileCoordinatesToLabelPlane(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
     const translatedX = x + projectionContext.translation[0];
     const translatedY = y + projectionContext.translation[1];
     let projection;
@@ -574,8 +573,18 @@ function projectTileCoordinatesToLabelPlane(x: number, y: number, projectionCont
 /**
  * Projects the given point in tile coordinates to the GL clip space (-1..1).
  */
-function projectTileCoordinatesToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
+export function projectTileCoordinatesToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
     const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, projectionContext.getElevation);
+    return projection;
+}
+
+/**
+ * Projects the given point in tile coordinates to the screen space pixels.
+ */
+function projectTileCoordinatesToScreenPixels(x: number, y: number, projectionContext: SymbolProjectionContext): PointProjection {
+    const projection = projectionContext.transform.projectTileCoordinates(x, y, projectionContext.unwrappedTileID, projectionContext.getElevation);
+    projection.point.x = (projection.point.x * 0.5 + 0.5) * projectionContext.width;
+    projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
     return projection;
 }
 

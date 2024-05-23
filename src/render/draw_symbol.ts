@@ -37,8 +37,7 @@ import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
 import {ProjectionData} from './program/projection_program';
-import {Projection} from '../geo/projection/projection';
-import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, project, projectTileCoordinatesToViewport, SymbolProjectionContext, updateLineLabels} from '../symbol/projection';
+import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, project, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, SymbolProjectionContext, updateLineLabels} from '../symbol/projection';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 type SymbolTileRenderState = {
@@ -157,7 +156,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
             const getElevation = terrain ? (x: number, y: number) => terrain.getElevation(coord, x, y) : null;
             const translation = transform.translatePosition(tile, translate, translateAnchor);
             updateVariableAnchorsForBucket(bucket, rotateWithMap, pitchWithMap, variableOffsets,
-                transform, pitchedLabelPlaneMatrix, tileScale, size, updateTextFitIcon, painter.style.map.projection, translation, coord.toUnwrapped(), getElevation);
+                transform, pitchedLabelPlaneMatrix, tileScale, size, updateTextFitIcon, translation, coord.toUnwrapped(), getElevation);
         }
     }
 }
@@ -178,7 +177,8 @@ function getShiftedAnchor(projectedAnchorPoint: Point, projectionContext: Symbol
         if (rotateWithMap) {
             // Compute the angle with which to rotate the anchor, so that it is aligned with
             // the map's actual east-west axis. Very similar to what is done in the shader.
-            const projectedAnchorRight = projectTileCoordinatesToViewport(projectionContext.tileAnchorPoint.x + 1, projectionContext.tileAnchorPoint.y, projectionContext);
+            // Note that the label plane must be screen pixels here.
+            const projectedAnchorRight = projectTileCoordinatesToLabelPlane(projectionContext.tileAnchorPoint.x + 1, projectionContext.tileAnchorPoint.y, projectionContext);
             const east = projectedAnchorRight.point.sub(projectedAnchorPoint);
             const angle = Math.atan(east.y / east.x) + (east.x < 0 ? Math.PI : 0);
             return projectedAnchorPoint.add(shift.rotate(angle));
@@ -198,7 +198,6 @@ function updateVariableAnchorsForBucket(
     tileScale: number,
     size: EvaluatedZoomSize,
     updateTextFitIcon: boolean,
-    projection: Projection,
     translation: [number, number],
     unwrappedTileID: UnwrappedTileID,
     getElevation: (x: number, y: number) => number) {
@@ -232,7 +231,9 @@ function updateVariableAnchorsForBucket(
                 translation,
                 unwrappedTileID
             };
-            const projectedAnchor = projectTileCoordinatesToViewport(tileAnchor.x, tileAnchor.y, projectionContext);
+            const projectedAnchor = pitchWithMap ?
+                projectTileCoordinatesToClipSpace(tileAnchor.x, tileAnchor.y, projectionContext) :
+                projectTileCoordinatesToLabelPlane(tileAnchor.x, tileAnchor.y, projectionContext);
             const perspectiveRatio = getPerspectiveRatio(transform.cameraToCenterDistance, projectedAnchor.signedDistanceFromCamera);
             let renderTextSize = evaluateSizeForFeature(bucket.textSizeData, size, symbol) * perspectiveRatio / ONE_EM;
             if (pitchWithMap) {
@@ -374,7 +375,7 @@ function drawLayerSymbols(
 
         // See the comment at the beginning of src/symbol/projection.ts for an overview of the symbol projection process
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const baseMatrix = isViewportLine ? coord.terrainRttPosMatrix : identityMat4;
+        const baseMatrix = isViewportLine ? coord.terrainRttPosMatrix : identityMat4; // JP: TODO: try to get rid of posMatrix usages here
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
         const glCoordMatrixForShader = getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
