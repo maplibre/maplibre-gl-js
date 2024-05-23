@@ -7,7 +7,7 @@
 
 ### 🐞 Bug fixes
 
-- Fix ignoring embedded line breaks when `symbol-placement` is `line` or `line-center` ([#4124](https://github.com/maplibre/maplibre-gl-js/pull/4124))
+- ⚠️ Fix ignoring embedded line breaks when `symbol-placement` is `line` or `line-center` ([#4124](https://github.com/maplibre/maplibre-gl-js/pull/4124))
 - _...Add new stuff here..._
 
 ## 4.3.2
