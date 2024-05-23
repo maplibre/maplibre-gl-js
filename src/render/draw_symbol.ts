@@ -70,8 +70,8 @@ export function drawSymbols(painter: Painter, sourceCache: SourceCache, layer: S
     const colorMode = painter.colorModeForRenderPass();
     const hasVariablePlacement = layer._unevaluatedLayout.hasValue('text-variable-anchor') || layer._unevaluatedLayout.hasValue('text-variable-anchor-offset');
 
-    //Compute variable-offsets before painting since icons and text data positioning
-    //depend on each other in this case.
+    // Compute variable-offsets before painting since icons and text data positioning
+    // depend on each other in this case.
     if (hasVariablePlacement) {
         updateVariableAnchors(coords, painter, layer, sourceCache,
             layer.layout.get('text-rotation-alignment'),
@@ -377,6 +377,8 @@ function drawLayerSymbols(
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
         const baseMatrix = isViewportLine ? coord.terrainRttPosMatrix : identityMat4; // JP: TODO: try to get rid of posMatrix usages here
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
+        const pitchedLabelPlaneMatrixInverse = mat4.create();
+        mat4.invert(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
         const glCoordMatrixForShader = getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = transform.translatePosition(tile, translate, translateAnchor);
@@ -390,7 +392,7 @@ function drawLayerSymbols(
         if (alongLine) {
             const getElevation = painter.style.map.terrain ? (x: number, y: number) => painter.style.map.terrain.getElevation(coord, x, y) : null;
             const rotateToLine = layer.layout.get('text-rotation-alignment') === 'map';
-            updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
+            updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchedLabelPlaneMatrixInverse, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
         }
 
         const matrix = coord.terrainRttPosMatrix; // formerly also incorporated translate and translate-anchor

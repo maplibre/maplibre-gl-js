@@ -167,6 +167,7 @@ function updateLineLabels(bucket: SymbolBucket,
     painter: Painter,
     isText: boolean,
     pitchedLabelPlaneMatrix: mat4,
+    pitchedLabelPlaneMatrixInverse: mat4,
     pitchWithMap: boolean,
     keepUpright: boolean,
     rotateToLine: boolean,
@@ -237,14 +238,14 @@ function updateLineLabels(bucket: SymbolBucket,
         const fontSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
         const pitchScaledFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
 
-        const placeUnflipped: any = placeGlyphsAlongLine(projectionContext, symbol, pitchScaledFontSize, false /*unflipped*/, keepUpright,
+        const placeUnflipped: any = placeGlyphsAlongLine(projectionContext, pitchedLabelPlaneMatrixInverse, symbol, pitchScaledFontSize, false /*unflipped*/, keepUpright,
             bucket.glyphOffsetArray, dynamicLayoutVertexArray, aspectRatio, rotateToLine);
 
         useVertical = placeUnflipped.useVertical;
 
         if (placeUnflipped.notEnoughRoom || useVertical ||
             (placeUnflipped.needsFlipping &&
-             (placeGlyphsAlongLine(projectionContext, symbol, pitchScaledFontSize, true /*flipped*/, keepUpright,
+             (placeGlyphsAlongLine(projectionContext, pitchedLabelPlaneMatrixInverse, symbol, pitchScaledFontSize, true /*flipped*/, keepUpright,
                  bucket.glyphOffsetArray, dynamicLayoutVertexArray, aspectRatio, rotateToLine) as any).notEnoughRoom)) {
             hideGlyphs(symbol.numGlyphs, dynamicLayoutVertexArray);
         }
@@ -336,7 +337,7 @@ function requiresOrientationChange(writingMode, firstPoint, lastPoint, aspectRat
 * Finally, add resulting glyph position calculations to dynamicLayoutVertexArray for
 * upload to the GPU
 */
-function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, symbol, fontSize: number, flip: boolean, keepUpright: boolean, glyphOffsetArray: GlyphOffsetArray, dynamicLayoutVertexArray: StructArray, aspectRatio: number, rotateToLine: boolean) {
+function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, pitchedLabelPlaneMatrixInverse: mat4, symbol, fontSize: number, flip: boolean, keepUpright: boolean, glyphOffsetArray: GlyphOffsetArray, dynamicLayoutVertexArray: StructArray, aspectRatio: number, rotateToLine: boolean) {
     const fontScale = fontSize / 24;
     const lineOffsetX = symbol.lineOffsetX * fontScale;
     const lineOffsetY = symbol.lineOffsetY * fontScale;
@@ -349,12 +350,13 @@ function placeGlyphsAlongLine(projectionContext: SymbolProjectionContext, symbol
 
         // Place the first and the last glyph in the label first, so we can figure out
         // the overall orientation of the label and determine whether it needs to be flipped in keepUpright mode
+        // Note: these glyphs are placed onto the label plane
         const firstAndLastGlyph = placeFirstAndLastGlyph(fontScale, glyphOffsetArray, lineOffsetX, lineOffsetY, flip, symbol, rotateToLine, projectionContext);
         if (!firstAndLastGlyph) {
             return {notEnoughRoom: true};
         }
-        const firstPoint = projectTileCoordinatesToClipSpace(firstAndLastGlyph.first.point.x, firstAndLastGlyph.first.point.y, projectionContext).point;
-        const lastPoint = projectTileCoordinatesToClipSpace(firstAndLastGlyph.last.point.x, firstAndLastGlyph.last.point.y, projectionContext).point;
+        const firstPoint = projectFromLabelPlaneToClipSpace(firstAndLastGlyph.first.point.x, firstAndLastGlyph.first.point.y, projectionContext, pitchedLabelPlaneMatrixInverse);
+        const lastPoint = projectFromLabelPlaneToClipSpace(firstAndLastGlyph.last.point.x, firstAndLastGlyph.last.point.y, projectionContext, pitchedLabelPlaneMatrixInverse);
 
         if (keepUpright && !flip) {
             const orientationChange = requiresOrientationChange(symbol.writingMode, firstPoint, lastPoint, aspectRatio);
@@ -568,6 +570,19 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
         projection.point.y = (-projection.point.y * 0.5 + 0.5) * projectionContext.height;
     }
     return projection;
+}
+
+function projectFromLabelPlaneToClipSpace(x: number, y: number, projectionContext: SymbolProjectionContext, pitchedLabelPlaneMatrixInverse: mat4): {x: number; y: number} {
+    if (projectionContext.pitchWithMap) {
+        const pos = [x, y, 0, 1] as vec4;
+        vec4.transformMat4(pos, pos, pitchedLabelPlaneMatrixInverse);
+        return projectionContext.transform.projectTileCoordinates(pos[0] / pos[3], pos[1] / pos[3], projectionContext.unwrappedTileID, projectionContext.getElevation).point;
+    } else {
+        return {
+            x: (x / projectionContext.width) * 2.0 - 1.0,
+            y: (y / projectionContext.height) * 2.0 - 1.0
+        };
+    }
 }
 
 /**
