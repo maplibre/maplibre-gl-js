@@ -83,24 +83,28 @@ describe('drawFill', () => {
             }
         } as any;
         painterMock.renderPass = 'translucent';
-        painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
+        painterMock.transform = {
+            pitch: 0,
+            labelPlaneMatrix: mat4.create(),
+            zoom: 0,
+            angle: 0,
+            getProjectionData(_canonical, fallback) {
+                return {
+                    'u_projection_matrix': fallback,
+                    'u_projection_tile_mercator_coords': [0, 0, 1, 1],
+                    'u_projection_clipping_plane': [0, 0, 0, 0],
+                    'u_projection_transition': 0.0,
+                    'u_projection_fallback_matrix': fallback,
+                };
+            },
+            translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+                return translatePosition({angle: 0, zoom: 0}, tile, translate, translateAnchor);
+            }
+        } as any as Transform;
         painterMock.options = {} as any;
         painterMock.style = {
             map: {
-                projection: {
-                    getProjectionData(_canonical, fallback) {
-                        return {
-                            'u_projection_matrix': fallback,
-                            'u_projection_tile_mercator_coords': [0, 0, 1, 1],
-                            'u_projection_clipping_plane': [0, 0, 0, 0],
-                            'u_projection_transition': 0.0,
-                            'u_projection_fallback_matrix': fallback,
-                        };
-                    },
-                    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
-                        return translatePosition(transform, tile, translate, translateAnchor);
-                    }
-                }
+                projection: {}
             }
         } as any as Style;
 
