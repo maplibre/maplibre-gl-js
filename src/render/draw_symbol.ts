@@ -317,8 +317,6 @@ function drawLayerSymbols(
     // Unpitched point labels need to have their rotation applied after projection
     const rotateInShader = rotateWithMap && !pitchWithMap && !alongLine;
 
-    const isViewportLine = !pitchWithMap && alongLine;
-
     const hasSortKey = !layer.layout.get('symbol-sort-key').isConstant();
     let sortFeaturesByKey = false;
 
@@ -375,11 +373,10 @@ function drawLayerSymbols(
 
         // See the comment at the beginning of src/symbol/projection.ts for an overview of the symbol projection process
         const s = pixelsToTileUnits(tile, 1, painter.transform.zoom);
-        const baseMatrix = isViewportLine ? coord.terrainRttPosMatrix : identityMat4; // JP: TODO: try to get rid of posMatrix usages here
         const pitchedLabelPlaneMatrix = getPitchedLabelPlaneMatrix(rotateWithMap, painter.transform, s);
         const pitchedLabelPlaneMatrixInverse = mat4.create();
         mat4.invert(pitchedLabelPlaneMatrixInverse, pitchedLabelPlaneMatrix);
-        const glCoordMatrixForShader = getGlCoordMatrix(baseMatrix, pitchWithMap, rotateWithMap, painter.transform, s);
+        const glCoordMatrixForShader = getGlCoordMatrix(pitchWithMap, rotateWithMap, painter.transform, s);
 
         const translation = transform.translatePosition(tile, translate, translateAnchor);
         const projectionData = transform.getProjectionData(coord);
@@ -395,7 +392,6 @@ function drawLayerSymbols(
             updateLineLabels(bucket, painter, isText, pitchedLabelPlaneMatrix, pitchedLabelPlaneMatrixInverse, pitchWithMap, keepUpright, rotateToLine, coord.toUnwrapped(), transform.width, transform.height, translation, getElevation);
         }
 
-        const matrix = coord.terrainRttPosMatrix; // formerly also incorporated translate and translate-anchor
         const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
 
         // If the label plane matrix is used, it transforms either map-pitch-aligned pixels, or to screenspace pixels
@@ -410,16 +406,16 @@ function drawLayerSymbols(
         if (isSDF) {
             if (!bucket.iconsInText) {
                 uniformValues = symbolSDFUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
+                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, true, pitchedTextRescaling);
             } else {
                 uniformValues = symbolTextAndIconUniformValues(sizeData.kind,
-                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
+                    size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                     uLabelPlaneMatrix, glCoordMatrixForShader, translation, texSize, texSizeIcon, pitchedTextRescaling);
             }
         } else {
             uniformValues = symbolIconUniformValues(sizeData.kind,
-                size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter, matrix,
+                size, rotateInShader, pitchWithMap, alongLine, shaderVariableAnchor, painter,
                 uLabelPlaneMatrix, glCoordMatrixForShader, translation, isText, texSize, pitchedTextRescaling);
         }
 

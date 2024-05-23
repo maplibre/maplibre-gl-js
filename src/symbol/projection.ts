@@ -109,15 +109,16 @@ export function getPitchedLabelPlaneMatrix(
 }
 
 /*
- * Returns a matrix for converting from the correct label coordinate space to clip space.
+ * Returns a matrix for either converting from pitched label space to tile space,
+ * or for converting from screenspace pixels to clip space.
  */
-function getGlCoordMatrix(posMatrix: mat4,
+function getGlCoordMatrix(
     pitchWithMap: boolean,
     rotateWithMap: boolean,
     transform: Transform,
     pixelsToTileUnits: number) {
     if (pitchWithMap) {
-        const m = mat4.clone(posMatrix);
+        const m = mat4.create();
         mat4.scale(m, m, [pixelsToTileUnits, pixelsToTileUnits, 1]);
         if (!rotateWithMap) {
             mat4.rotateZ(m, m, -transform.angle);

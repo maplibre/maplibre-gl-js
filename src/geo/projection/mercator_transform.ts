@@ -701,7 +701,7 @@ export class MercatorTransform extends Transform {
         } else if (overscaledTileID.terrainRttPosMatrix) {
             mainMatrix = overscaledTileID.terrainRttPosMatrix;
         } else if (overscaledTileID) {
-            mainMatrix = this.calculatePosMatrix(overscaledTileID, aligned);
+            mainMatrix = this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned);
         } else {
             mainMatrix = mat4.create();
         }
