@@ -44,7 +44,7 @@ This is not intended to be a strict process but rather a guideline that will bui
 By creating a code space you should be able to start working immediately after the post create script finishes running.
 This script basically installes everything written here in the linux part.
 
-### OSX
+### macOS
 
 Install the Xcode Command Line Tools Package
 ```bash
@@ -72,8 +72,9 @@ cd maplibre-gl-js &&
 npm install
 ```
 
-**Apple silicon**
-If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to node_modules/canvas and node_modules/gl and run:
+#### Apple silicon
+
+If you have one of the newer arm64 machines, you might find that canvas.node or webgl.node can't be found for your architecture. In that case go to `node_modules/canvas` and `node_modules/gl` and run:
 
 ```
 npm install --build-from-source
@@ -92,7 +93,7 @@ Try
 - Run `arch -arm64 brew install pkg-config cairo pango libpng jpeg giflib librsvg`
 - delete `node_modules` folder and re-run `npm install`
 
-### Linux (and by extension Github codespaces)
+### Linux (and by extension GitHub codespaces)
 
 Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
 ```bash
