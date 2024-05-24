@@ -186,8 +186,7 @@
     "gl-stats": "node --no-warnings --loader ts-node/esm test/bench/gl-stats.ts",
     "prepare": "npm run codegen",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.dist.json",
-    "tsnode": "node --experimental-loader=ts-node/esm --no-warnings",
-    "spellcheck": "npx cspell \"**/*.*s\" --no-progress"
+    "tsnode": "node --experimental-loader=ts-node/esm --no-warnings"
   },
   "files": [
     "build/",
