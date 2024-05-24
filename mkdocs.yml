@@ -1,6 +1,9 @@
 site_name: MapLibre GL JS
 site_url: https://www.maplibre.org/maplibre-gl-js/docs/
 repo_url: https://github.com/maplibre/maplibre-gl-js/
+site_description: >-
+  MapLibre GL JS is a TypeScript library that uses WebGL to render
+  interactive maps from vector tiles in a browser.
 extra_css:
   - assets/extra.css
 theme:
