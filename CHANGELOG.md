@@ -6,7 +6,7 @@
 - Make `MapOptions.style` optional to be consistent with `Map.setStyle(null)` ([#4151](https://github.com/maplibre/maplibre-gl-js/pull/4151))
 - Use Autoprefixer to handle vendor prefixes in CSS ([#4165](https://github.com/maplibre/maplibre-gl-js/pull/4165))
 - Make `aria-label` configurable for Map, Marker and Popup [#4147](https://github.com/mapbox/mapbox-gl-js/pull/4147) [@thom4parisot](https://github.com/thom4parisot)
-- Map `<canvas>` is focusable only when interactive [#4147](https://github.com/mapbox/mapbox-gl-js/pull/4147) [@thom4parisot](https://github.com/thom4parisot)
+- Map `<canvas>` is focusable only when interactive [#4147](https://github.com/maplibre/maplibre-gl-js/pull/4147)
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
