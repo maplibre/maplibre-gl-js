@@ -5,12 +5,15 @@
 - Add events to `GeolocateControl` to allow a more granular interaction ([#3847](https://github.com/maplibre/maplibre-gl-js/pull/3847))
 - Make `MapOptions.style` optional to be consistent with `Map.setStyle(null)` ([#4151](https://github.com/maplibre/maplibre-gl-js/pull/4151))
 - Use Autoprefixer to handle vendor prefixes in CSS ([#4165](https://github.com/maplibre/maplibre-gl-js/pull/4165))
+- Make `aria-label` configurable for Map, Marker and Popup [#4147](https://github.com/maplibre/maplibre-gl-js/pull/4147)
+- Map `<canvas>` is focusable only when interactive [#4147](https://github.com/maplibre/maplibre-gl-js/pull/4147)
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
 - ⚠️ Fix ignoring embedded line breaks when `symbol-placement` is `line` or `line-center` ([#4124](https://github.com/maplibre/maplibre-gl-js/pull/4124))
 - _...Add new stuff here..._
+
 
 ## 4.3.2
 
