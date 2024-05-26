@@ -2,9 +2,19 @@ import fs from 'fs';
 import path from 'path';
 import {WritingMode, shapeText, Shaping} from '../../../src/symbol/shaping';
 import {ResolvedImage, Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
-import expectedJson from './tests/text-shaping-linebreak.json' with {type: 'json'};
 import {ImagePosition} from '../../../src/render/image_atlas';
-import {StyleImage} from '../../../src/style/style_image';
+import type {StyleImage} from '../../../src/style/style_image';
+import type {StyleGlyph} from '../../../src/style/style_glyph';
+
+import glyphsJson from '../assets/glyphs/fontstack-glyphs.json' with {type: 'json'};
+import expectedJson from './tests/text-shaping-linebreak.json' with {type: 'json'};
+import expectedImagesHorizontal from './tests/text-shaping-images-horizontal.json' with {type: 'json'};
+import expectedNewLine from './tests/text-shaping-newline.json' with {type: 'json'};
+import expectedNewLinesInMiddle from './tests/text-shaping-newlines-in-middle.json' with {type: 'json'};
+
+// Prefer zero width spaces when breaking lines. Zero width spaces are used by MapLibre data sources as a hint that
+// a position is ideal for breaking.
+import expectedZeroWidthSpaceBreak from './tests/text-shaping-zero-width-space.json' with {type: 'json'};
 
 let UPDATE = false;
 if (typeof process !== 'undefined' && process.env !== undefined) {
@@ -17,7 +27,7 @@ describe('shaping', () => {
     const layoutTextSizeThisZoom = 16;
     const fontStack = 'Test';
     const glyphs = {
-        'Test': require('../assets/glyphs/fontstack-glyphs.json')
+        'Test': glyphsJson as any as StyleGlyph
     };
     const glyphPositions = glyphs;
 
@@ -35,11 +45,7 @@ describe('shaping', () => {
         return new FormattedSection(name, null, scale, null, null);
     };
 
-    let shaped;
-
-    JSON.parse('{}');
-
-    shaped = shapeText(Formatted.fromString(`hi${String.fromCharCode(0)}`), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
+    let shaped = shapeText(Formatted.fromString(`hi${String.fromCharCode(0)}`), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
     if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-null.json'), JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(
         require('./tests/text-shaping-null.json')
@@ -64,24 +70,16 @@ describe('shaping', () => {
     if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-linebreak.json'), JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedJson);
 
-    const expectedNewLine = require('./tests/text-shaping-newline.json');
-
     shaped = shapeText(Formatted.fromString('abcde\nabcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
     if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-newline.json'), JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedNewLine);
 
-    shaped = shapeText(Formatted.fromString('abcde\r\nabcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
+    shaped = shapeText(Formatted.fromString('abcde\r\nabcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom) as Shaping;
     expect(shaped.positionedLines).toEqual(expectedNewLine.positionedLines);
-
-    const expectedNewLinesInMiddle = require('./tests/text-shaping-newlines-in-middle.json');
 
     shaped = shapeText(Formatted.fromString('abcde\n\nabcde'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
     if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-newlines-in-middle.json'), JSON.stringify(shaped, null, 2));
     expect(shaped).toEqual(expectedNewLinesInMiddle);
-
-    // Prefer zero width spaces when breaking lines. Zero width spaces are used by MapLibre data sources as a hint that
-    // a position is ideal for breaking.
-    const expectedZeroWidthSpaceBreak = require('./tests/text-shaping-zero-width-space.json');
 
     shaped = shapeText(Formatted.fromString('三三\u200b三三\u200b三三\u200b三三三三三三\u200b三三'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
     if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-zero-width-space.json'), JSON.stringify(shaped, null, 2));
@@ -95,7 +93,7 @@ describe('shaping', () => {
     expect(false).toBe(shaped);
 
     // https://github.com/mapbox/mapbox-gl-js/issues/3254
-    shaped = shapeText(Formatted.fromString('   foo bar\n'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
+    shaped = shapeText(Formatted.fromString('   foo bar\n'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom) as Shaping;
     const shaped2 = shapeText(Formatted.fromString('foo bar'), glyphs, glyphPositions, images, fontStack, 15 * oneEm, oneEm, 'center', 'center', 0 * oneEm, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom) as Shaping;
     expect(shaped.positionedLines).toEqual(shaped2.positionedLines);
 
@@ -107,7 +105,6 @@ describe('shaping', () => {
     });
 
     test('images in horizontal layout', () => {
-        const expectedImagesHorizontal = require('./tests/text-shaping-images-horizontal.json');
         const horizontalFormatted = new Formatted([
             sectionForText('Foo'),
             sectionForImage('square'),
