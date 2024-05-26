@@ -1,4 +1,4 @@
-import {PositionedIcon, applyTextFit, Box, shapeIcon, fitIconToText} from './shaping';
+import {type PositionedIcon, type Box,  type Shaping, applyTextFit, shapeIcon, fitIconToText} from './shaping';
 import {ImagePosition} from '../render/image_atlas';
 import {StyleImage, TextFit} from '../style/style_image';
 
