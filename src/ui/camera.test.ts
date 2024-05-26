@@ -436,7 +436,7 @@ describe('#panBy', () => {
         camera.panBy([100, 0], {duration: 0}, eventData);
     });
 
-    test('supresses movestart if noMoveStart option is true', done => {
+    test('suppresses movestart if noMoveStart option is true', done => {
         const camera = createCamera();
         let started;
 
@@ -498,7 +498,7 @@ describe('#panTo', () => {
         camera.panTo([100, 0], {duration: 0}, eventData);
     });
 
-    test('supresses movestart if noMoveStart option is true', done => {
+    test('suppresses movestart if noMoveStart option is true', done => {
         const camera = createCamera();
         let started;
 

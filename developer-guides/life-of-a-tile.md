@@ -106,7 +106,7 @@ sequenceDiagram
     source->>source: loadVectorData()<br/>decode response
   end
   source-->>source_cache: Tile
-  source_cache-->>source_cache: _backfillDEM()<br/>copy 1px buffer<br/>from neigboring tiles
+  source_cache-->>source_cache: _backfillDEM()<br/>copy 1px buffer<br/>from neighboring tiles
   source->>source: fire('data', {<br/>dataType: 'source'<br>})
   source->>source_cache:<br>
   source_cache->map:<br>

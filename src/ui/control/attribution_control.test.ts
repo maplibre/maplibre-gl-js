@@ -1,4 +1,4 @@
-import {AttributionControl, defaultAtributionControlOptions} from './attribution_control';
+import {AttributionControl, defaultAttributionControlOptions} from './attribution_control';
 import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
@@ -13,7 +13,7 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'mapblibre',
+            owner: 'maplibre',
             id: 'demotiles',
         },
         hash: true
@@ -166,7 +166,7 @@ describe('AttributionControl', () => {
 
         await sleep(100);
 
-        expect(attribution._innerContainer.innerHTML).toBe(`Hello World | Another Source | GeoJSON Source | ${defaultAtributionControlOptions.customAttribution}`);
+        expect(attribution._innerContainer.innerHTML).toBe(`Hello World | Another Source | GeoJSON Source | ${defaultAttributionControlOptions.customAttribution}`);
         expect(spy.mock.calls.filter((call) => call[0].dataType === 'source' && call[0].sourceDataType === 'visibility')).toHaveLength(7);
 
     });
@@ -187,7 +187,7 @@ describe('AttributionControl', () => {
         expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(1);
     });
 
-    test('is not hidden if adding a source with attributtion', async () => {
+    test('is not hidden if adding a source with attribution', async () => {
         const attribution = new AttributionControl({});
         map.addControl(attribution);
         await map.once('load');
@@ -256,7 +256,7 @@ describe('AttributionControl', () => {
         await map.once('load');
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
         map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Not used'});
-        map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Vibility none'});
+        map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Visibility none'});
         map.addLayer({id: 'layer1', type: 'fill', source: '1'});
         map.addLayer({id: 'layer3', type: 'fill', source: '3', layout: {visibility: 'none'}});
 
@@ -272,7 +272,7 @@ describe('AttributionControl', () => {
                    mapDataEvent.sourceId === '1';
         })).toHaveLength(1);
 
-        expect(attribution._innerContainer.innerHTML).toBe(`Used | ${defaultAtributionControlOptions.customAttribution}`);
+        expect(attribution._innerContainer.innerHTML).toBe(`Used | ${defaultAttributionControlOptions.customAttribution}`);
     });
 
     test('does not show attributions for sources that are used for terrain when they are not in use', async () => {
@@ -304,7 +304,7 @@ describe('AttributionControl', () => {
                    mapDataEvent.sourceDataType === 'visibility';
         })).toHaveLength(0);
 
-        expect(attribution._innerContainer.innerHTML).toBe(defaultAtributionControlOptions.customAttribution);
+        expect(attribution._innerContainer.innerHTML).toBe(defaultAttributionControlOptions.customAttribution);
     });
 
     test('shows attributions for sources that are used for terrain', async () => {
@@ -336,7 +336,7 @@ describe('AttributionControl', () => {
                    mapDataEvent.sourceDataType === 'visibility';
         })).toHaveLength(0);
 
-        expect(attribution._innerContainer.innerHTML).toBe(`Terrain | ${defaultAtributionControlOptions.customAttribution}`);
+        expect(attribution._innerContainer.innerHTML).toBe(`Terrain | ${defaultAttributionControlOptions.customAttribution}`);
     });
 
     test('toggles attributions for sources whose visibility changes when zooming', async () => {

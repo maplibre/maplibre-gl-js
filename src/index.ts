@@ -143,7 +143,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  *
  * It can be useful for the following examples:
  * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
- * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which sould come with `addSourceType` usually.
+ * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which should come with `addSourceType` usually.
  * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
  * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
  * @returns

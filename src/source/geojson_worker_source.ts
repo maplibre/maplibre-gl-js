@@ -34,7 +34,7 @@ export type GeoJSONWorkerOptions = {
 }
 
 /**
- * Parameters needed to load a geojson to the wokrer
+ * Parameters needed to load a geojson to the worker
  */
 export type LoadGeoJSONParameters = GeoJSONWorkerOptions & {
     type: 'geojson';

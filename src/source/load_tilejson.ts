@@ -1,10 +1,9 @@
-import {pick, extend} from '../util/util';
+import {pick, extend, TileJSON} from '../util/util';
 import {getJSON} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 
 import type {RequestManager} from '../util/request_manager';
-import type {TileJSON} from '../types/tilejson';
 import type {RasterDEMSourceSpecification, RasterSourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LoadTileJsonResponse = {

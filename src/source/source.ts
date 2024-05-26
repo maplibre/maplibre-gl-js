@@ -63,7 +63,7 @@ export interface Source {
     reparseOverscaled?: boolean;
     vectorLayerIds?: Array<string>;
     /**
-     * True if the source has transiotion, false otherwise.
+     * True if the source has transition, false otherwise.
      */
     hasTransition(): boolean;
     /**

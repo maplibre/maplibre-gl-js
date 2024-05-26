@@ -75,6 +75,10 @@ let noTimeout = false;
  * * disabled - occurs if Geolocation is not available, disabled or denied.
  *
  * These interaction states can't be controlled programmatically, rather they are set based on user interactions.
+ *
+ * ## State Diagram
+ * ![GeolocateControl state diagram](https://github.com/maplibre/maplibre-gl-js/assets/3269297/78e720e5-d781-4da8-9803-a7a0e6aaaa9f)
+ *
  * @group Markers and Controls
  *
  * @example
@@ -93,6 +97,10 @@ let noTimeout = false;
  * **Event** `trackuserlocationend` of type {@link Event} will be fired when the `GeolocateControl` changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when `trackUserLocation` is `true`. In the background state, the dot on the map will update with location updates but the camera will not.
  *
  * **Event** `trackuserlocationstart` of type {@link Event} will be fired when the `GeolocateControl` changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a `geolocate` event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no `geolocate` event will follow unless the users's location changes).
+ *
+ * **Event** `userlocationlostfocus` of type {@link Event} will be fired when the `GeolocateControl` changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when `trackUserLocation` is `true`. In the background state, the dot on the map will update with location updates but the camera will not.
+ *
+ * **Event** `userlocationfocus` of type {@link Event} will be fired when the `GeolocateControl` changes to the active lock state, which happens upon the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state.
  *
  * **Event** `geolocate` of type {@link Event} will be fired on each Geolocation API position update which returned as success.
  * `data` - The returned [Position](https://developer.mozilla.org/en-US/docs/Web/API/Position) object from the callback in [Geolocation.getCurrentPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition) or [Geolocation.watchPosition()](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition).
@@ -136,6 +144,42 @@ let noTimeout = false;
  * // when a trackuserlocationstart event occurs.
  * geolocate.on('trackuserlocationstart', () => {
  *   console.log('A trackuserlocationstart event has occurred.')
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Initialize the geolocate control.
+ * let geolocate = new GeolocateControl({
+ *   positionOptions: {
+ *       enableHighAccuracy: true
+ *   },
+ *   trackUserLocation: true
+ * });
+ * // Add the control to the map.
+ * map.addControl(geolocate);
+ * // Set an event listener that fires
+ * // when an userlocationlostfocus event occurs.
+ * geolocate.on('userlocationlostfocus', function() {
+ *   console.log('An userlocationlostfocus event has occurred.')
+ * });
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Initialize the geolocate control.
+ * let geolocate = new GeolocateControl({
+ *   positionOptions: {
+ *       enableHighAccuracy: true
+ *   },
+ *   trackUserLocation: true
+ * });
+ * // Add the control to the map.
+ * map.addControl(geolocate);
+ * // Set an event listener that fires
+ * // when an userlocationfocus event occurs.
+ * geolocate.on('userlocationfocus', function() {
+ *   console.log('An userlocationfocus event has occurred.')
  * });
  * ```
  *
@@ -225,6 +269,9 @@ export class GeolocateControl extends Evented implements IControl {
     _accuracy: number;
     _setup: boolean; // set to true once the control has been setup
 
+    /**
+     * @param options - the control's options
+     */
     constructor(options: GeolocateControlOptions) {
         super();
         this.options = extend({}, defaultOptions, options);
@@ -534,6 +581,7 @@ export class GeolocateControl extends Evented implements IControl {
                     this._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
 
                     this.fire(new Event('trackuserlocationend'));
+                    this.fire(new Event('userlocationlostfocus'));
                 }
             });
         }
@@ -596,6 +644,7 @@ export class GeolocateControl extends Evented implements IControl {
                     if (this._lastKnownPosition) this._updateCamera(this._lastKnownPosition);
 
                     this.fire(new Event('trackuserlocationstart'));
+                    this.fire(new Event('userlocationfocus'));
                     break;
                 default:
                     throw new Error(`Unexpected watchState ${this._watchState}`);

@@ -23,7 +23,7 @@ export function createMap(options?, callback?) {
     Object.defineProperty(container, 'clientWidth', {value: 200, configurable: true});
     Object.defineProperty(container, 'clientHeight', {value: 200, configurable: true});
 
-    if (options && options.deleteStyle) delete defaultOptions.style;
+    if (options?.deleteStyle) delete defaultOptions.style;
 
     const map = new Map(extend(defaultOptions, options));
     if (callback) map.on('load', () => {

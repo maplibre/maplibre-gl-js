@@ -82,7 +82,7 @@ describe('map events', () => {
 
     });
 
-    test('Map#on adds a listener not triggered when the specified layer does not exiist', () => {
+    test('Map#on adds a listener not triggered when the specified layer does not exist', () => {
         const map = createMap();
 
         jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
@@ -514,7 +514,7 @@ describe('map events', () => {
     });
 
     (['mouseleave', 'mouseout'] as (keyof MapLayerEventType)[]).forEach((event) => {
-        test(`Map#on ${event} does not fire if the specified layer does not exiist`, () => {
+        test(`Map#on ${event} does not fire if the specified layer does not exist`, () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
@@ -736,6 +736,24 @@ describe('map events', () => {
         const sourcePromise = map.once('sourcedataabort');
         map.fire(new EventedEvent('dataabort'));
         await sourcePromise;
+    });
+
+    test('getZoom on moveend is the same as after the map end moving, with terrain on', () => {
+        const map = createMap({interactive: true, clickTolerance: 4});
+        map.terrain = {
+            pointCoordinate: () => null,
+            getElevationForLngLatZoom: () => 1000,
+        } as any;
+        let actualZoom: number;
+        map.on('moveend', () => {
+            // this can't use a promise due to race condition
+            actualZoom = map.getZoom();
+        });
+        const canvas = map.getCanvas();
+        simulate.dragWithMove(canvas, {x: 100, y: 100}, {x: 100, y: 150});
+        map._renderTaskQueue.run();
+
+        expect(actualZoom).toBe(map.getZoom());
     });
 
     describe('error event', () => {

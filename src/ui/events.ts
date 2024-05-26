@@ -17,7 +17,7 @@ import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 export type MapLayerMouseEvent = MapMouseEvent & { features?: MapGeoJSONFeature[] };
 
 /**
- * An event from a touch device relevat to a specific layer.
+ * An event from a touch device relevant to a specific layer.
  *
  * @group Event Related
  */
