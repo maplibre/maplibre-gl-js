@@ -135,7 +135,7 @@ describe('render to texture', () => {
         expect(layersDrawn).toBe(2);
     });
 
-    test('render more symbols between of rtt layers', () => {
+    test('render more symbols between rtt layers', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
