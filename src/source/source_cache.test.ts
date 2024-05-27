@@ -1160,7 +1160,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
 
     });
 
-    test('dont\'t ascend multiple times if a tile is not found', () => {
+    test('don\'t ascend multiple times if a tile is not found', () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loading';
