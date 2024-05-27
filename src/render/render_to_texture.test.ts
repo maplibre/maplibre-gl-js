@@ -106,7 +106,24 @@ describe('render to texture', () => {
 
     test('check state', () => {
         expect(rtt._renderableTiles.map(t => t.tileID.key)).toStrictEqual(['923']);
-        expect(rtt._coordsDescendingInv).toEqual({'maine': {'923': [{'canonical': {'key': '922', 'x': 1, 'y': 2, 'z': 2}, 'key': '923', 'overscaledZ': 3, 'wrap': 0}]}});
+        expect(rtt._coordsDescendingInv).toEqual({
+            'maine': {
+                '923': [
+                    {
+                        'canonical': {
+                            'key': '922',
+                            'x': 1,
+                            'y': 2,
+                            'z': 2
+                        },
+                        'key': '923',
+                        'overscaledZ': 3,
+                        'wrap': 0,
+                        'terrainRttPosMatrix': null,
+                    }
+                ]
+            }
+        });
         expect(rtt._coordsDescendingInvStr).toStrictEqual({maine: {'923': '923'}});
     });
 
