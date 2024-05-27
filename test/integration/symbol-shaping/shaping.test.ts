@@ -100,7 +100,7 @@ describe('shaping', () => {
     });
 
     test('break before left parenthesis without whitespace', () => {
-        shaped = shapeText(Formatted.fromString('oooooooo(aaaaaaaaa)'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
+        const shaped = shapeText(Formatted.fromString('oooooooo(aaaaaaaaa)'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
         if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-break-before-bracket.json'), JSON.stringify(shaped, null, 2));
         expect(shaped).toEqual(expectedBreakBeforeBracket);
     });
