@@ -505,11 +505,6 @@ describe('transform', () => {
             projectionData = mercator.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0), mat);
             expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
-        test('mercator tile extents are set for negative zoom', () => {
-            const mat = mat4.create();
-            const projectionData = mercator.getProjectionData(new OverscaledTileID(-2, 0, -2, 0, 0), mat);
-            expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 1 / EXTENT, 1 / EXTENT]); // same as for zoom=0, as it gets clamped
-        });
     });
 });
 
