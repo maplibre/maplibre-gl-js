@@ -955,22 +955,22 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
-        await sleep(100);
         map.fire('terrain');
+        await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
-        await sleep(100);
         map.fire('moveend');
+        await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
-        await sleep(100);
         map.fire('terrain');
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('1');
 
         map.remove();

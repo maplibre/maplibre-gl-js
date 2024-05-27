@@ -176,7 +176,7 @@
     "test-build": "jest --selectProjects=build --reporters=default",
     "test-build-ci": "jest --selectProjects=build",
     "test-integration": "jest --selectProjects=integration --reporters=default",
-    "test-integration-ci": "jest --selectProjects=integration",
+    "test-integration-ci": "jest --coverage --selectProjects=integration",
     "test-render": "node --no-warnings --loader ts-node/esm test/integration/render/run_render_tests.ts",
     "test-unit": "jest --selectProjects=unit --reporters=default",
     "test-unit-ci": "jest --coverage --selectProjects unit",
