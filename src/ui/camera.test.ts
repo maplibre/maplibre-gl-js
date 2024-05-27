@@ -389,7 +389,7 @@ describe('#setPadding', () => {
         expect(currentPadding).toEqual(padding);
     });
 
-    test('doesnt change padding thats already present if new value isnt passed in', () => {
+    test('doesn\'t change padding thats already present if new value isn\'t passed in', () => {
         const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);

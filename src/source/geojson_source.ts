@@ -287,7 +287,7 @@ export class GeoJSONSource extends Evented implements Source {
      * @param clusterId - The value of the cluster's `cluster_id` property.
      * @param limit - The maximum number of features to return.
      * @param offset - The number of features to skip (e.g. for pagination).
-     * @returns a promise that is resolved when the features are retreived
+     * @returns a promise that is resolved when the features are retrieved
      * @example
      * Retrieve cluster leaves on click
      * ```ts
