@@ -120,7 +120,7 @@ describe('render to texture', () => {
         expect(layersDrawn).toBe(1);
     });
 
-    test('render symbol between of rtt layers', () => {
+    test('render symbol between rtt layers', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
