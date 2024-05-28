@@ -10,7 +10,7 @@ MapLibre welcomes contributions from community! This codebase is large and compl
 It is a good idea to discuss proposed changes before proceeding to an issue ticket or PR. The project team is active in the following forums:
 
 * For informal chat discussions, visit the project's [Slack Channel](https://osmus.slack.com/archives/C01G3D28DAB).
-* For discussions whose output and outcomes should not be ephemeral, consider starting a thread on [GitHub Discussions](https://github.com/maplibre/maplibre-gl-js/discussions). This makes it easier to find and reference the discussion in the future. 
+* For discussions whose output and outcomes should not be ephemeral, consider starting a thread on [GitHub Discussions](https://github.com/maplibre/maplibre-gl-js/discussions). This makes it easier to find and reference the discussion in the future.
 
 MapLibre software relies heavily on automated testing, and the project includes a suite of unit and integration tests. For both new features and bugfixes, contributions should update or add test cases to prevent regressions.
 
@@ -18,7 +18,7 @@ MapLibre software relies heavily on automated testing, and the project includes 
 
 For new features, it is usually a good idea to start with an issue ticket. If the feature requires changes to the style specification, an issue ticket should be created in the [style specification GitHub repository](https://github.com/maplibre/maplibre-gl-style-spec). Style specification changes are hard to change later, so there will be particularly close scrutiny on changes to the specification.
 
-If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `npm install <location-of-maplibre-source-code>` to test changes in an npm context, or `npm run build-prod` to build a .js package for this purpose. 
+If possible, it is beneficial to demonstrate proposed new features and assess the performance implications of the proposed change. You can use `npm install <location-of-maplibre-source-code>` to test changes in an npm context, or `npm run build-prod` to build a .js package for this purpose.
 
 For more complex proposed features that require deeper discussion, you should consider bringing it up in the [Technical Steering Committee](https://maplibre.org/categories/steering-committee/) meeting for a video discussion with the team about the proposed change. We find that sometimes it's easier to have a focused, face-to-face discussion for more consequential decisions.
 
@@ -95,7 +95,7 @@ Try
 
 ### Linux (and by extension GitHub codespaces)
 
-Install [git](https://git-scm.com/), [GNU Make](http://www.gnu.org/software/make/), and libglew-dev
+Install [git](https://git-scm.com/), [GNU Make](https://www.gnu.org/software/make/), and libglew-dev
 ```bash
 sudo apt-get update &&
 sudo apt-get install build-essential git libglew-dev libxi-dev default-jre default-jdk xvfb
@@ -243,17 +243,16 @@ How to add your changelog?
 
 ### Learning WebGL
 
-- [Greggman's WebGL articles](http://webglfundamentals.org/)
-- [WebGL reference card](http://www.khronos.org/files/webgl/webgl-reference-card-1_0.pdf)
+- [Greggman's WebGL articles](https://webglfundamentals.org/)
+- [WebGL reference card](https://www.khronos.org/files/webgl/webgl-reference-card-1_0.pdf)
 
 ### GL Performance
 
 - [Debugging and Optimizing WebGL applications](https://docs.google.com/presentation/d/12AGAUmElB0oOBgbEEBfhABkIMCL3CUX7kdAPLuwZ964)
-- [Graphics Pipeline Performance](http://developer.download.nvidia.com/books/HTML/gpugems/gpugems_ch28.html)
 
 ### Misc
 
 - [drawing antialiased lines](https://www.mapbox.com/blog/drawing-antialiased-lines/)
 - [drawing text with signed distance fields](https://www.mapbox.com/blog/text-signed-distance-fields/)
 - [label placement](https://www.mapbox.com/blog/placing-labels/)
-- [distance fields](http://bytewrangler.blogspot.com/2011/10/signed-distance-fields.html)
+- [distance fields](https://bytewrangler.blogspot.com/2011/10/signed-distance-fields.html)
