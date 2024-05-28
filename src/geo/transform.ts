@@ -280,11 +280,6 @@ export abstract class Transform {
     abstract get cameraPosition(): vec3;
 
     /**
-     * The transform's center in world coordinates (Mercator coordinates scaled by 512)
-     */
-    abstract get point(): Point;
-
-    /**
      * Returns if the padding params match
      *
      * @param padding - the padding to check against

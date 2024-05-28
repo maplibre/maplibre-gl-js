@@ -221,8 +221,6 @@ export class MercatorTransform extends Transform {
         return new MercatorCoordinate(point.x / this.worldSize, point.y / this.worldSize).toLngLat();
     }
 
-    override get point(): Point { return this.project(this.center); }
-
     /**
      * get the camera position in LngLat and altitudes in meter
      * @returns An object with lngLat & altitude.
@@ -525,7 +523,8 @@ export class MercatorTransform extends Transform {
 
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
-        const x = this.point.x, y = this.point.y;
+        const point = this.project(this.center);
+        const x = point.x, y = point.y;
         this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
 
