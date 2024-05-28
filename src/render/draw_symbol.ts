@@ -38,7 +38,6 @@ import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
 import {ProjectionData} from './program/projection_program';
 import {getGlCoordMatrix, getPerspectiveRatio, getPitchedLabelPlaneMatrix, hideGlyphs, project, projectTileCoordinatesToClipSpace, projectTileCoordinatesToLabelPlane, SymbolProjectionContext, updateLineLabels} from '../symbol/projection';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;
@@ -395,7 +394,7 @@ function drawLayerSymbols(
         const shaderVariableAnchor = (isText && hasVariablePlacement) || updateTextFitIcon;
 
         // If the label plane matrix is used, it transforms either map-pitch-aligned pixels, or to screenspace pixels
-        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : (painter.transform as MercatorTransform).clipSpaceToPixelsMatrix;
+        const combinedLabelPlaneMatrix = pitchWithMap ? pitchedLabelPlaneMatrix : painter.transform.clipSpaceToPixelsMatrix;
         // Label plane matrix is unused in the shader if variable anchors are used or the text is placed along a line
         const noLabelPlane = (alongLine || shaderVariableAnchor);
         const uLabelPlaneMatrix = noLabelPlane ? identityMat4 : combinedLabelPlaneMatrix;

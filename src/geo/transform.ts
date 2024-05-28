@@ -495,7 +495,7 @@ export abstract class Transform {
      * The calculated value is the horizontal line from the camera-height to sea-level.
      * @returns Horizon above center in pixels.
      */
-    abstract getHorizon(): number;
+    abstract getHorizon(): number; // JP: TODO: replace with a more generic "is pixel on the map's surface" function
 
     /**
      * Sets or clears the map's geographical constraints.

@@ -1,7 +1,7 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {Transform} from '../transform';
 import {Tile} from '../../source/tile';
-import {MercatorTransform, getBasicProjectionData, translatePosition} from './mercator_transform';
+import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
 import {easeCubicInOut, lerp, mod} from '../../util/util';
@@ -58,9 +58,9 @@ export class GlobeTransform extends Transform {
         return clone;
     }
 
-    public apply(that: Transform): void {
+    public override apply(that: Transform): void {
         super.apply(that);
-        this._mercatorTransform.apply(that);
+        this._mercatorTransform.apply(this);
     }
 
     get cameraPosition(): vec3 {
@@ -162,8 +162,8 @@ export class GlobeTransform extends Transform {
         return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
     }
 
-    override getProjectionData(overscaledTileID: OverscaledTileID, _aligned?: boolean): ProjectionData {
-        const data = getBasicProjectionData(overscaledTileID);
+    override getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean): ProjectionData {
+        const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned);
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this._globeProjection.useGlobeRendering) {
