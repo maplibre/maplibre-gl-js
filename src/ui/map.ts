@@ -59,7 +59,6 @@ import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {Projection} from '../geo/projection/projection';
 import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 const version = packageJSON.version;
 
@@ -583,8 +582,25 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new MercatorTransform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
+        const {projection, transform} = createProjectionFromName(options.projection);
+        if (options.minZoom !== undefined) {
+            transform.minZoom = options.minZoom;
+        }
+        if (options.maxZoom !== undefined) {
+            transform.maxZoom = options.maxZoom;
+        }
+        if (options.minPitch !== undefined) {
+            transform.minPitch = options.minPitch;
+        }
+        if (options.maxPitch !== undefined) {
+            transform.maxPitch = options.maxPitch;
+        }
+        if (options.renderWorldCopies !== undefined) {
+            transform.renderWorldCopies = options.renderWorldCopies;
+        }
+
         super(transform, {bearingSnap: options.bearingSnap});
+        this.projection = projection;
 
         this._interactive = options.interactive;
         this._maxTileCacheSize = options.maxTileCacheSize;
@@ -627,8 +643,6 @@ export class Map extends Camera {
         if (options.maxBounds) {
             this.setMaxBounds(options.maxBounds);
         }
-
-        this.projection = createProjectionFromName(options.projection);
 
         this._setupContainer();
         this._setupPainter();
@@ -3322,5 +3336,5 @@ export class Map extends Camera {
      * let projection = map.getProjection();
      * ```
      */
-    getProjection(): Projection { return this.projection; }
+    getProjection(): Projection { return this.projection; } // JP: TODO: this API is stupid, we can already access map.transform directly
 }

@@ -1,7 +1,10 @@
 import {warnOnce} from '../../util/util';
-import {GlobeProjection} from './globe';
-import {MercatorProjection} from './mercator';
 import {Projection} from './projection';
+import {Transform} from '../transform';
+import {GlobeProjection} from './globe';
+import {GlobeTransform} from './globe_transform';
+import {MercatorProjection} from './mercator';
+import {MercatorTransform} from './mercator_transform';
 
 /**
  * Name of MapLibre's map projection. Can be:
@@ -11,14 +14,33 @@ import {Projection} from './projection';
  */
 export type ProjectionName = 'mercator' | 'globe';
 
-export function createProjectionFromName(name: ProjectionName): Projection {
+export function createProjectionFromName(name: ProjectionName): {
+    projection: Projection;
+    transform: Transform;
+} {
     switch (name) {
         case 'mercator':
-            return new MercatorProjection();
+        {
+            return {
+                projection: new MercatorProjection(),
+                transform: new MercatorTransform()
+            };
+        }
         case 'globe':
-            return new GlobeProjection();
+        {
+            const proj = new GlobeProjection();
+            return {
+                projection: proj,
+                transform: new GlobeTransform(proj)
+            };
+        }
         default:
+        {
             warnOnce(`Unknown projection name: ${name}. Falling back to mercator projection.`);
-            return new MercatorProjection();
+            return {
+                projection: new MercatorProjection(),
+                transform: new MercatorTransform()
+            };
+        }
     }
 }

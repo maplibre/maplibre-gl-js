@@ -8,8 +8,6 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import type {Transform} from '../transform';
-import {MercatorTransform} from './mercator_transform';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -85,9 +83,5 @@ export class MercatorProjection implements Projection {
 
         this._cachedMesh = new Mesh(tileExtentBuffer, quadTriangleIndexBuffer, tileExtentSegments);
         return this._cachedMesh;
-    }
-
-    public createSpecializedTransformInstance(): Transform {
-        return new MercatorTransform();
     }
 }

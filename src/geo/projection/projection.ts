@@ -4,7 +4,6 @@ import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -113,10 +112,4 @@ export interface Projection {
      * @param allowPoles - When true, the mesh will also include geometry to cover the north (south) pole, if the given tileID borders the mercator range's top (bottom) edge.
      */
     getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean): Mesh;
-
-    /**
-     * @internal
-     * Returns a new instance of a class derived from the {@link Transform} base class. Returns a specialized class for this projection type.
-     */
-    createSpecializedTransformInstance(): Transform;
 }

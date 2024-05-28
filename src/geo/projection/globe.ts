@@ -14,8 +14,6 @@ import type {Projection, ProjectionGPUContext} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
-import type {Transform} from '../transform';
-import {GlobeTransform} from './globe_transform';
 
 export const globeConstants = { // JP: TODO: maybe refactor this
     /**
@@ -260,9 +258,5 @@ export class GlobeProjection implements Projection {
         );
 
         return mesh;
-    }
-
-    public createSpecializedTransformInstance(): Transform {
-        return new GlobeTransform(this);
     }
 }
