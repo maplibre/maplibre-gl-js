@@ -5,12 +5,13 @@ import {MercatorTransform, getBasicProjectionData, translatePosition} from './me
 import {LngLat, earthRadius} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
 import {easeCubicInOut, lerp, mod} from '../../util/util';
-import {UnwrappedTileID, OverscaledTileID} from '../../source/tile_id';
+import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
 import {Terrain} from '../../render/terrain';
 import {GlobeProjection, globeConstants} from './globe';
 import {ProjectionData} from '../../render/program/projection_program';
+import {MercatorCoordinate} from '../mercator_coordinate';
 
 export class GlobeTransform extends Transform {
     private _cachedClippingPlane: vec4 = [1, 0, 0, 0];
@@ -417,7 +418,7 @@ export class GlobeTransform extends Transform {
         };
     }
 
-    public projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
+    public projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: keep this function?
         if (this._globeProjection.useGlobeControls) {
             const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
             vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
@@ -433,7 +434,7 @@ export class GlobeTransform extends Transform {
     }
 
     // JP: TODO: unprojectExact for waypoint placement, unproject for interaction?
-    public unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat {
+    public unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat { // JP: TODO: keep this function?
         // JP: TODO: terrain???
         if (!this._globeProjection.useGlobeControls) {
             return this._mercatorTransform.unprojectScreenPoint(p, terrain);
@@ -537,7 +538,7 @@ export class GlobeTransform extends Transform {
         }
     }
 
-    public getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat {
+    public getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat { // JP: TODO: keep this function?
         if (this._globeProjection.useGlobeControls) {
             const pointLoc = this.unprojectScreenPoint(point);
             const lngDelta = pointLoc.lng - this.center.lng;
@@ -551,5 +552,83 @@ export class GlobeTransform extends Transform {
         } else {
             return this._mercatorTransform.getCenterForLocationAtPoint(lnglat, point);
         }
+    }
+
+    //
+    // JP: TODO: Overriding member storage, remove all below and including this line. Placeholder implementations just call the underlying mercator transform.
+    //
+
+    public override get cameraToCenterDistance(): number {
+        throw new Error('Method not implemented.');
+    }
+    override getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
+        return this._mercatorTransform.getVisibleUnwrappedCoordinates(tileID);
+    }
+    override coveringTiles(options: {
+        tileSize: number; minzoom?: number;
+        maxzoom?: number; roundZoom?: boolean; reparseOverscaled?: boolean; renderWorldCopies?: boolean; terrain?: Terrain;
+    }): OverscaledTileID[] {
+        return this._mercatorTransform.coveringTiles(options); // Globe: TODO: implement for globe
+    }
+    override project(lnglat: LngLat): Point {
+        return this._mercatorTransform.project(lnglat);
+    }
+    override unproject(point: Point): LngLat {
+        return this._mercatorTransform.unproject(point);
+    }
+    override getCameraPosition(): { lngLat: LngLat; altitude: number } {
+        throw new Error('Method not implemented.');
+    }
+    override recalculateZoom(terrain: Terrain): void {
+        this._mercatorTransform.recalculateZoom(terrain);
+        this.apply(this._mercatorTransform);
+    }
+    override setLocationAtPoint(lnglat: LngLat, point: Point): void {
+        this._mercatorTransform.setLocationAtPoint(lnglat, point);
+        this.apply(this._mercatorTransform);
+    }
+    override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
+        return this._mercatorTransform.locationPoint(lnglat, terrain);
+    }
+    override pointLocation(p: Point, terrain?: Terrain): LngLat {
+        return this._mercatorTransform.pointLocation(p, terrain);
+    }
+    override locationCoordinate(lnglat: LngLat): MercatorCoordinate {
+        return this._mercatorTransform.locationCoordinate(lnglat);
+    }
+    override coordinateLocation(coord: MercatorCoordinate): LngLat {
+        return this._mercatorTransform.coordinateLocation(coord);
+    }
+    override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+        return this._mercatorTransform.pointCoordinate(p, terrain);
+    }
+    override coordinatePoint(coord: MercatorCoordinate, elevation?: number, pixelMatrix?: mat4): Point {
+        return this._mercatorTransform.coordinatePoint(coord, elevation, pixelMatrix);
+    }
+    override getHorizon(): number {
+        // JP: TODO: proper implementation?
+        return this._mercatorTransform.getHorizon();
+    }
+    override customLayerMatrix(): mat4 {
+        return this._mercatorTransform.customLayerMatrix();
+    }
+    override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
+        return this._mercatorTransform.getConstrained(lngLat, zoom);
+    }
+    override maxPitchScaleFactor(): number {
+        return this._mercatorTransform.maxPitchScaleFactor();
+    }
+    override getCameraPoint(): Point {
+        return this._mercatorTransform.getCameraPoint();
+    }
+    override lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
+        return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
+    }
+    protected override _calcMatrices(): void {
+        this._mercatorTransform.apply(this);
+        this._mercatorTransform._calcMatrices();
+    }
+    override precacheTiles(coords: OverscaledTileID[]): void {
+        this._mercatorTransform.precacheTiles(coords);
     }
 }
