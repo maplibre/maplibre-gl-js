@@ -15,7 +15,6 @@ import type {
 import {WritingMode} from '../symbol/shaping';
 import {findLineIntersection} from '../util/util';
 import {UnwrappedTileID} from '../source/tile_id';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 import {StructArray} from '../util/struct_array';
 
 // JP: TODO: unify how stuff gets exported here
@@ -46,6 +45,7 @@ export type PointProjection = {
     signedDistanceFromCamera: number;
     /**
      * For complex projections (such as globe), true if the point is occluded by the projection, such as by being on the backfacing side of the globe.
+     * If the point is simply beyond the edge of the screen, this should NOT be set to false.
      */
     isOccluded: boolean;
 };
@@ -135,7 +135,7 @@ function getGlCoordMatrix(
         }
         return m;
     } else {
-        return (transform as MercatorTransform).pixelsToClipSpaceMatrix; // JP: TODO: remove this hack
+        return transform.pixelsToClipSpaceMatrix;
     }
 }
 

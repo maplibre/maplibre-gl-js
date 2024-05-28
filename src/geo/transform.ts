@@ -41,6 +41,9 @@ export abstract class Transform {
     private _minElevationForCurrentTile: number;
     private _constraining: boolean;
 
+    private _pixelsToClipSpaceMatrix: mat4;
+    private _clipSpaceToPixelsMatrix: mat4;
+
     /**
      * Vertical field of view in radians.
      */
@@ -109,6 +112,9 @@ export abstract class Transform {
      * Center is considered to be in the middle of the viewport.
      */
     public abstract get cameraToCenterDistance(): number;
+
+    get pixelsToClipSpaceMatrix(): mat4 { return this._pixelsToClipSpaceMatrix; }
+    get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
     set minElevationForCurrentTile(ele: number) {
@@ -594,8 +600,24 @@ export abstract class Transform {
     /**
      * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
      * This function should update the transform's internal data, such as matrices.
+     * Any derived `_calcMatrices` function should also call the base function first.
      */
-    protected abstract _calcMatrices(): void;
+    protected _calcMatrices(): void {
+        if (!this._width || !this._height) {
+            return;
+        }
+
+        let m = mat4.identity(new Float64Array(16) as any);
+        mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
+        mat4.translate(m, m, [1, -1, 0]);
+        this._clipSpaceToPixelsMatrix = m;
+
+        m = mat4.identity(new Float64Array(16) as any);
+        mat4.scale(m, m, [1, -1, 1]);
+        mat4.translate(m, m, [-1, -1, 0]);
+        mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
+        this._pixelsToClipSpaceMatrix = m;
+    }
 
     /**
      * @internal

@@ -11,7 +11,7 @@ import {EXTENT} from '../../data/extent';
 import {MAX_VALID_LATITUDE, Transform} from '../transform';
 import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import {xyTransformMat4} from '../../symbol/projection';
+import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 
 export class MercatorTransform extends Transform {
     private _cameraToCenterDistance: number;
@@ -24,8 +24,6 @@ export class MercatorTransform extends Transform {
     pixelMatrix: mat4;
     pixelMatrix3D: mat4;
     pixelMatrixInverse: mat4;
-    pixelsToClipSpaceMatrix: mat4;
-    clipSpaceToPixelsMatrix: mat4;
 
     private _posMatrixCache: {[_: string]: mat4};
     private _alignedPosMatrixCache: {[_: string]: mat4};
@@ -519,6 +517,8 @@ export class MercatorTransform extends Transform {
     }
 
     override _calcMatrices(): void {
+        super._calcMatrices();
+
         if (!this._height) return;
 
         const halfFov = this._fov / 2;
@@ -527,17 +527,6 @@ export class MercatorTransform extends Transform {
         const x = point.x, y = point.y;
         this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
-
-        let m = mat4.identity(new Float64Array(16) as any);
-        mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
-        mat4.translate(m, m, [1, -1, 0]);
-        this.clipSpaceToPixelsMatrix = m;
-
-        m = mat4.identity(new Float64Array(16) as any);
-        mat4.scale(m, m, [1, -1, 1]);
-        mat4.translate(m, m, [-1, -1, 0]);
-        mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
-        this.pixelsToClipSpaceMatrix = m;
 
         // Calculate the camera to sea-level distance in pixel in respect of terrain
         const cameraToSeaLevelDistance = this._cameraToCenterDistance + this._elevation * this._pixelPerMeter / Math.cos(this._pitch);
@@ -575,6 +564,7 @@ export class MercatorTransform extends Transform {
         const nearZ = this._height / 50;
 
         // matrix for conversion from location to clip space(-1 .. 1)
+        let m: mat4;
         m = new Float64Array(16) as any;
         mat4.perspective(m, this._fov, this._width / this._height, nearZ, farZ);
 
@@ -716,11 +706,7 @@ export class MercatorTransform extends Transform {
         return vec3.clone(dir);
     }
 
-    override projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): {
-        point: Point;
-        signedDistanceFromCamera: number;
-        isOccluded: boolean;
-    } {
+    override projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
         const matrix = this.calculatePosMatrix(unwrappedTileID);
         let pos;
         if (getElevation) { // slow because of handle z-index
