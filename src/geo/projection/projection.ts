@@ -84,7 +84,7 @@ export interface Projection {
      * When true, any transforms resulting from user interactions with the map (panning, zooming, etc.)
      * will assume the underlying map is a spherical surface, as opposed to a plane.
      */
-    get useGlobeControls(): boolean;
+    get useGlobeControls(): boolean; // JP: TODO: maybe remove this?
 
     /**
      * @internal

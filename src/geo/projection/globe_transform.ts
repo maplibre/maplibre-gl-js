@@ -5,10 +5,11 @@ import {translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
 import {easeCubicInOut, lerp, mod} from '../../util/util';
-import {UnwrappedTileID} from '../../source/tile_id';
+import {UnwrappedTileID, OverscaledTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
 import {Terrain} from '../../render/terrain';
+import {GlobeProjection, globeConstants} from './globe';
 
 export class GlobeTransform extends Transform {
     private _cachedClippingPlane: vec4 = [1, 0, 0, 0];
@@ -31,6 +32,25 @@ export class GlobeTransform extends Transform {
 
     private _lastGlobeChangeTime: number = -1000.0;
     private _globeProjectionOverride = true;
+
+    private _globeProjection: GlobeProjection;
+
+    /**
+     * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
+     * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
+     */
+    private _globeness: number = 1.0;
+
+    private constructor(globeProjection: GlobeProjection) {
+        super();
+        this._globeProjection = globeProjection;
+    }
+
+    override clone(): Transform {
+        const clone = new GlobeTransform(this._globeProjection);
+        clone.apply(this);
+        return clone;
+    }
 
     get cameraPosition(): vec3 {
         return vec3.clone(this._cameraPosition); // Return a copy - don't let outside code mutate our precomputed camera position.
@@ -74,47 +94,48 @@ export class GlobeTransform extends Transform {
     }
 
     public updateProjection(): void {
-        this._mercator.updateProjection(transform);
+        //this._mercator.updateProjection(); // JP: TODO: should not need mercator transform here at all
 
         if (this._oldTransformState) {
-            if (this.useGlobeControls) {
-                transform.zoom += this._getZoomAdjustment(this._oldTransformState.lat, transform.center.lat);
+            // JP: TODO: smarter zoom controls for globe
+            if (this._globeProjection.useGlobeControls) {
+                this.zoom += this._getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
             }
-            this._oldTransformState.zoom = transform.zoom;
-            this._oldTransformState.lat = transform.center.lat;
+            this._oldTransformState.zoom = this.zoom;
+            this._oldTransformState.lat = this.center.lat;
         } else {
             this._oldTransformState = {
-                zoom: transform.zoom,
-                lat: transform.center.lat
+                zoom: this.zoom,
+                lat: this.center.lat
             };
         }
 
-        this._errorQueryLatitudeDegrees = transform.center.lat;
-        this._updateAnimation(transform.zoom);
+        this._globeProjection.errorQueryLatitudeDegrees = this.center.lat;
+        this._updateAnimation();
 
         // We want zoom levels to be consistent between globe and flat views.
         // This means that the pixel size of features at the map center point
         // should be the same for both globe and flat view.
-        const globeRadiusPixels = transform.worldSize / (2.0 * Math.PI) / Math.cos(transform.center.lat * Math.PI / 180);
+        const globeRadiusPixels = this.worldSize / (2.0 * Math.PI) / Math.cos(this.center.lat * Math.PI / 180);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = new Float64Array(16) as any;
         const globeMatrixUncorrected = new Float64Array(16) as any;
-        mat4.perspective(globeMatrix, transform.fov * Math.PI / 180, transform.width / transform.height, 0.5, transform.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
-        mat4.translate(globeMatrix, globeMatrix, [0, 0, -transform.cameraToCenterDistance]);
-        mat4.rotateX(globeMatrix, globeMatrix, -transform.pitch * Math.PI / 180);
-        mat4.rotateZ(globeMatrix, globeMatrix, -transform.angle);
+        mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, 0.5, this.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
+        mat4.rotateX(globeMatrix, globeMatrix, -this.pitch * Math.PI / 180);
+        mat4.rotateZ(globeMatrix, globeMatrix, -this.angle);
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
         // Keep a atan-correction-free matrix for transformations done on the CPU with accurate math
-        mat4.rotateX(globeMatrixUncorrected, globeMatrix, transform.center.lat * Math.PI / 180.0);
-        mat4.rotateY(globeMatrixUncorrected, globeMatrixUncorrected, -transform.center.lng * Math.PI / 180.0);
+        mat4.rotateX(globeMatrixUncorrected, globeMatrix, this.center.lat * Math.PI / 180.0);
+        mat4.rotateY(globeMatrixUncorrected, globeMatrixUncorrected, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrixNoCorrection = globeMatrix;
 
-        mat4.rotateX(globeMatrix, globeMatrix, transform.center.lat * Math.PI / 180.0 - this._errorCorrectionUsable);
-        mat4.rotateY(globeMatrix, globeMatrix, -transform.center.lng * Math.PI / 180.0);
+        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeProjection.latitudeErrorCorrectionRadians);
+        mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrix = globeMatrix;
 
@@ -128,10 +149,10 @@ export class GlobeTransform extends Transform {
             cameraPos[2] / cameraPos[3]
         ];
 
-        this._cachedClippingPlane = this._computeClippingPlane(transform, globeRadiusPixels);
+        this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
     }
 
-    private _updateAnimation(currentZoom: number) {
+    private _updateAnimation() {
         // Update globe transition animation
         const globeState = this._globeProjectionOverride;
         const currentTime = browser.now();
@@ -140,28 +161,28 @@ export class GlobeTransform extends Transform {
             this._lastGlobeStateEnabled = globeState;
         }
         // Transition parameter, where 0 is the start and 1 is end.
-        const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeTransitionTimeSeconds, 0.0), 1.0);
+        const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeConstants.globeTransitionTimeSeconds, 0.0), 1.0);
         this._globeness = globeState ? globeTransition : (1.0 - globeTransition);
 
         if (this._skipNextAnimation) {
             this._globeness = globeState ? 1.0 : 0.0;
-            this._lastGlobeChangeTime = currentTime - globeTransitionTimeSeconds * 1000.0 * 2.0;
+            this._lastGlobeChangeTime = currentTime - globeConstants.globeTransitionTimeSeconds * 1000.0 * 2.0;
             this._skipNextAnimation = false;
         }
 
         // Update globe zoom transition
-        const currentZoomState = currentZoom >= maxGlobeZoom;
+        const currentZoomState = this.zoom >= globeConstants.maxGlobeZoom;
         if (currentZoomState !== this._lastLargeZoomState) {
             this._lastLargeZoomState = currentZoomState;
             this._lastLargeZoomStateChange = currentTime;
         }
-        const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / zoomTransitionTimeSeconds, 0.0), 1.0);
+        const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / globeConstants.zoomTransitionTimeSeconds, 0.0), 1.0);
         const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
         this._globeness = Math.min(this._globeness, zoomGlobenessBound);
         this._globeness = easeCubicInOut(this._globeness); // Smooth animation
     }
 
-    override isRenderingDirty(): boolean {
+    override isRenderingDirty(): boolean { // JP: TODO: move this to projection?
         const now = browser.now();
         let dirty = false;
         // Globe transition
@@ -177,7 +198,7 @@ export class GlobeTransform extends Transform {
         const data = this._mercator.getProjectionData(overscaledTileID, tilePosMatrix);
 
         // Set 'u_projection_matrix' to actual globe transform
-        if (this.useGlobeRendering) {
+        if (this._globeProjection.useGlobeRendering) {
             data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
         }
 
@@ -187,10 +208,7 @@ export class GlobeTransform extends Transform {
         return data;
     }
 
-    private _computeClippingPlane(
-        transform: { center: LngLat; pitch: number; angle: number; cameraToCenterDistance: number },
-        globeRadiusPixels: number
-    ): vec4 {
+    private _computeClippingPlane(globeRadiusPixels: number): vec4 {
         // We want to compute a plane equation that, when applied to the unit sphere generated
         // in the vertex shader, places all visible parts of the sphere into the positive half-space
         // and all the non-visible parts in the negative half-space.
@@ -221,9 +239,9 @@ export class GlobeTransform extends Transform {
         // - "T" is any point where a tangent line from "cam" touches the globe surface
         // - elevation is assumed to be zero - globe rendering must be separate from terrain rendering anyway
 
-        const pitch = transform.pitch * Math.PI / 180.0;
+        const pitch = this.pitch * Math.PI / 180.0;
         // scale things so that the globe radius is 1
-        const distanceCameraToB = transform.cameraToCenterDistance / globeRadiusPixels;
+        const distanceCameraToB = this.cameraToCenterDistance / globeRadiusPixels;
         const radius = 1;
 
         // Distance from camera to "A" - the point at the same elevation as camera, right above center point on globe
@@ -247,9 +265,9 @@ export class GlobeTransform extends Transform {
         // Note the swizzled components
         const planeVector: vec3 = [0, vectorCtoCamX, vectorCtoCamY];
         // Apply transforms - lat, lng and angle (NOT pitch - already accounted for, as it affects the tangent plane)
-        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], transform.angle);
-        vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * transform.center.lat * Math.PI / 180.0);
-        vec3.rotateY(planeVector, planeVector, [0, 0, 0], transform.center.lng * Math.PI / 180.0);
+        vec3.rotateZ(planeVector, planeVector, [0, 0, 0], this.angle);
+        vec3.rotateX(planeVector, planeVector, [0, 0, 0], -1 * this.center.lat * Math.PI / 180.0);
+        vec3.rotateY(planeVector, planeVector, [0, 0, 0], this.center.lng * Math.PI / 180.0);
         // Scale the plane vector up
         // we don't want the actually visible parts of the sphere to end up beyond distance 1 from the plane - otherwise they would be clipped by the near plane.
         const scale = 0.25;
@@ -352,7 +370,7 @@ export class GlobeTransform extends Transform {
     public getPixelScale(): number {
         const globePixelScale = 1.0 / Math.cos(this._center.lat * Math.PI / 180);
         const flatPixelScale = 1.0;
-        if (this.useGlobeRendering) {
+        if (this._globeProjection.useGlobeRendering) {
             return lerp(flatPixelScale, globePixelScale, this._globeness);
         }
         return flatPixelScale;
@@ -363,7 +381,7 @@ export class GlobeTransform extends Transform {
     }
 
     public getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number {
-        if (!this.useGlobeRendering) {
+        if (!this._globeProjection.useGlobeRendering) {
             return 1.0;
         }
         const mercator = this._tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID);
@@ -372,7 +390,7 @@ export class GlobeTransform extends Transform {
     }
 
     public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number) {
-        if (!this.useGlobeRendering) {
+        if (!this._globeProjection.useGlobeRendering) {
             return this._mercator.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         }
 
@@ -396,7 +414,7 @@ export class GlobeTransform extends Transform {
     }
 
     public projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point {
-        if (this.useGlobeControls) {
+        if (this._globeProjection.useGlobeControls) {
             const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
             vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
             pos[0] /= pos[3];
@@ -413,7 +431,7 @@ export class GlobeTransform extends Transform {
     // JP: TODO: unprojectExact for waypoint placement, unproject for interaction?
     public unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat {
         // JP: TODO: terrain???
-        if (!this.useGlobeControls) {
+        if (!this._globeProjection.useGlobeControls) {
             return this._mercator.unprojectScreenPoint(p, transform, terrain);
         }
         const pos: vec4 = [

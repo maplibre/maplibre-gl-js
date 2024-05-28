@@ -46,10 +46,10 @@ export class GlobeProjection implements Projection {
     private _tileMeshCache: {[_: string]: Mesh} = {};
 
     /**
-     * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
-     * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
+     * Stores whether globe rendering should be used.
+     * The value is injected from GlobeTransform. // JP: TODO: this is suboptimal
      */
-    private _globeness: number = 1.0;
+    private _useGlobeRendering: boolean = true;
 
     // GPU atan() error correction
     private _errorMeasurement: ProjectionErrorMeasurement;
@@ -68,7 +68,15 @@ export class GlobeProjection implements Projection {
      * This is false when globe is disabled, or when globe is enabled, but mercator rendering is used due to zoom level (and no transition is happening).
      */
     get useGlobeRendering(): boolean {
-        return this._globeness > 0.0;
+        return this._useGlobeRendering;
+    }
+
+    /**
+     * @internal
+     * Intended for internal use, only called from GlobeTransform.
+     */
+    set useGlobeRendering(value: boolean) {
+        this._useGlobeRendering = value;
     }
 
     get useSubdivision(): boolean {
@@ -96,8 +104,27 @@ export class GlobeProjection implements Projection {
     }
 
     get useGlobeControls(): boolean {
-        return this._globeness > 0.5;
+        return this._useGlobeRendering;
     }
+
+    get errorQueryLatitudeDegrees(): number { return this._errorQueryLatitudeDegrees; }
+
+    /**
+     * @internal
+     * Intended for internal use, only called from GlobeTransform.
+     */
+    set errorQueryLatitudeDegrees(value: number) {
+        this._errorQueryLatitudeDegrees = value;
+    }
+
+    /**
+     * @internal
+     * Globe projection periodically measures the error of the GPU's
+     * projection from mercator to globe and computes how much to correct
+     * the globe's latitude alignment.
+     * This stores the correction that should be applied to the projection matrix.
+     */
+    get latitudeErrorCorrectionRadians(): number { return this._errorCorrectionUsable; }
 
     constructor() {
         this._mercator = new MercatorProjection();
