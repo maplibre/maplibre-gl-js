@@ -41,7 +41,7 @@ export class GlobeTransform extends Transform {
      */
     private _globeness: number = 1.0;
 
-    private constructor(globeProjection: GlobeProjection) {
+    public constructor(globeProjection: GlobeProjection) {
         super();
         this._globeProjection = globeProjection;
     }
@@ -184,14 +184,8 @@ export class GlobeTransform extends Transform {
 
     override isRenderingDirty(): boolean { // JP: TODO: move this to projection?
         const now = browser.now();
-        let dirty = false;
         // Globe transition
-        dirty = dirty || (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
-        // Error correction transition
-        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
-        // Error correction query in flight
-        dirty = dirty || this._errorMeasurement.awaitingQuery;
-        return dirty;
+        return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
     }
 
     override getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, useAtanCorrection: boolean = true): ProjectionData {

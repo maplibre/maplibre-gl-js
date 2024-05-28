@@ -1,11 +1,9 @@
-import type {mat4} from 'gl-matrix';
-import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../source/tile_id';
 import type {PreparedShader} from '../../shaders/shaders';
 import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import type {LngLat} from '../lng_lat';
 import type {Transform} from '../transform'; // JP: TODO: maybe remove transform references?
 
 /**
@@ -28,21 +26,6 @@ export type ProjectionGPUContext = {
     context: Context;
     useProgram: (name: string) => Program<any>;
 };
-
-// Thin type with only the relevant fields from the Transform class
-export type TransformLike = {
-    center: LngLat;
-    angle: number; // same as bearing, but negated and in radians
-    pitch: number; // in degrees
-    zoom: number;
-    worldSize: number;
-    fov: number; // in degrees
-    width: number;
-    height: number;
-    cameraToCenterDistance: number;
-    invProjMatrix: mat4;
-    calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned?: boolean): mat4;
-}
 
 /**
  * An interface the implementations of which are used internally by MapLibre to handle different projections.
@@ -107,6 +90,13 @@ export interface Projection {
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;
+
+    /**
+     * @internal
+     * True when an animation handled by the projection is in progress,
+     * requiring MapLibre to keep rendering new frames.
+     */
+    isRenderingDirty(): boolean;
 
     /**
      * @internal

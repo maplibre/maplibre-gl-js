@@ -59,10 +59,6 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public updateProjection(): void {
-        // Do nothing.
-    }
-
     public updateGPUdependent(_: ProjectionGPUContext): void {
         // Do nothing.
     }

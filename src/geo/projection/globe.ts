@@ -136,6 +136,16 @@ export class GlobeProjection implements Projection {
         }
     }
 
+    public isRenderingDirty(): boolean {
+        const now = browser.now();
+        let dirty = false;
+        // Error correction transition
+        dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
+        // Error correction query in flight
+        dirty = dirty || this._errorMeasurement.awaitingQuery;
+        return dirty;
+    }
+
     public updateGPUdependent(renderContext: ProjectionGPUContext): void {
         this._mercator.updateGPUdependent(renderContext);
         if (!this._errorMeasurement) {
@@ -253,6 +263,6 @@ export class GlobeProjection implements Projection {
     }
 
     public createSpecializedTransformInstance(): Transform {
-        return new GlobeTransform();
+        return new GlobeTransform(this);
     }
 }
