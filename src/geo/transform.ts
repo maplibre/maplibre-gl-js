@@ -118,7 +118,15 @@ export abstract class Transform {
     get tileSize(): number { return this._tileSize; }
     get tileZoom(): number { return this._tileZoom; }
     get scale(): number { return this._scale; }
+
+    /**
+     * Gets the transform's width in pixels. Use {@link resize} to set the transform's size.
+     */
     get width(): number { return this._width; }
+
+    /**
+     * Gets the transform's height in pixels. Use {@link resize} to set the transform's size.
+     */
     get height(): number { return this._height; }
     get angle(): number { return this._angle; }
 
@@ -174,6 +182,9 @@ export abstract class Transform {
         return this.centerPoint._sub(this.size._div(2));
     }
 
+    /**
+     * Gets the transfrom's width and height in pixels (viewport size).
+     */
     get size(): Point {
         return new Point(this._width, this._height);
     }

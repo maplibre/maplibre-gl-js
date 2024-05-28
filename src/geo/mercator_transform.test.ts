@@ -482,30 +482,27 @@ describe('transform', () => {
         transform.pitch = 60;
         expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9865782165762236);
     });
+});
 
-    describe('getBasicProjectionData', () => {
-        test('posMatrix is set', () => {
-            const mat = mat4.create();
-            mat[0] = 1234;
-            const projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
-            expect(projectionData.u_projection_fallback_matrix).toEqual(mat);
-        });
+describe('getBasicProjectionData', () => {
+    test('posMatrix is set', () => {
+        const mat = mat4.create();
+        mat[0] = 1234;
+        const projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
+        expect(projectionData.u_projection_fallback_matrix).toEqual(mat);
     });
 
-    describe('getProjectionData', () => {
-        const mercator = new MercatorTransform();
-        test('mercator tile extents are set', () => {
-            let projectionData: ProjectionData;
+    test('mercator tile extents are set', () => {
+        let projectionData: ProjectionData;
 
-            projectionData = mercator.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-            expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
+        projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
+        expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
 
-            projectionData = mercator.getProjectionData(new OverscaledTileID(1, 0, 1, 0, 0));
-            expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
+        projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 0, 0));
+        expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
 
-            projectionData = mercator.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
-            expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-        });
+        projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
+        expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
     });
 });
 

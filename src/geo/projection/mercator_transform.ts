@@ -705,7 +705,7 @@ export class MercatorTransform extends Transform {
     }
 
     override updateProjection(): void {
-        // Do nothing.
+        this._calcMatrices(); // JP: TODO: really call this here?
     }
 
     override translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
