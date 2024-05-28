@@ -73,7 +73,7 @@ function renderHillshade(
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-        const projectionData = transform.getProjectionData(coord, null, align);
+        const projectionData = transform.getProjectionData(coord, align);
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);

@@ -1,4 +1,3 @@
-import {mat4} from 'gl-matrix';
 import {GlobeProjection} from './globe';
 import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
@@ -12,13 +11,6 @@ describe('GlobeTransform', () => {
 
     describe('getProjectionData', () => {
         const globeTransform = new GlobeTransform(globeProjection);
-
-        test('fallback matrix is set', () => {
-            const mat = mat4.create();
-            mat[0] = 1234;
-            const projectionData = globeTransform.getProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
-            expect(projectionData.u_projection_fallback_matrix).toEqual(mat);
-        });
         test('mercator tile extents are set', () => {
             const projectionData = globeTransform.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
             expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);

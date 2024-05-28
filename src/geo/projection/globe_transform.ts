@@ -199,8 +199,8 @@ export class GlobeTransform extends Transform {
         return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
     }
 
-    override getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
-        const data = getBasicProjectionData(overscaledTileID, tilePosMatrix, aligned);
+    override getProjectionData(overscaledTileID: OverscaledTileID, _aligned?: boolean): ProjectionData {
+        const data = getBasicProjectionData(overscaledTileID);
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this._globeProjection.useGlobeRendering) {
@@ -558,17 +558,17 @@ export class GlobeTransform extends Transform {
     // JP: TODO: Overriding member storage, remove all below and including this line. Placeholder implementations just call the underlying mercator transform.
     //
 
-    public override get cameraToCenterDistance(): number {
-        throw new Error('Method not implemented.');
+    public override get cameraToCenterDistance(): number { // Globe: TODO: implement for globe
+        return this._mercatorTransform.cameraToCenterDistance;
     }
     override getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
         return this._mercatorTransform.getVisibleUnwrappedCoordinates(tileID);
     }
-    override coveringTiles(options: {
+    override coveringTiles(options: { // Globe: TODO: implement for globe
         tileSize: number; minzoom?: number;
         maxzoom?: number; roundZoom?: boolean; reparseOverscaled?: boolean; renderWorldCopies?: boolean; terrain?: Terrain;
     }): OverscaledTileID[] {
-        return this._mercatorTransform.coveringTiles(options); // Globe: TODO: implement for globe
+        return this._mercatorTransform.coveringTiles(options);
     }
     override project(lnglat: LngLat): Point {
         return this._mercatorTransform.project(lnglat);
@@ -576,8 +576,8 @@ export class GlobeTransform extends Transform {
     override unproject(point: Point): LngLat {
         return this._mercatorTransform.unproject(point);
     }
-    override getCameraPosition(): { lngLat: LngLat; altitude: number } {
-        throw new Error('Method not implemented.');
+    override getCameraPosition(): { lngLat: LngLat; altitude: number } { // Globe: TODO: implement for globe
+        return this._mercatorTransform.getCameraPosition();
     }
     override recalculateZoom(terrain: Terrain): void {
         this._mercatorTransform.recalculateZoom(terrain);
@@ -625,8 +625,10 @@ export class GlobeTransform extends Transform {
         return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
     }
     protected override _calcMatrices(): void {
-        this._mercatorTransform.apply(this);
-        this._mercatorTransform._calcMatrices();
+        if (this._mercatorTransform) {
+            this._mercatorTransform.apply(this);
+            this._mercatorTransform._calcMatrices();
+        }
     }
     override precacheTiles(coords: OverscaledTileID[]): void {
         this._mercatorTransform.precacheTiles(coords);

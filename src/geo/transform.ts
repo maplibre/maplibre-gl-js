@@ -594,10 +594,11 @@ export abstract class Transform {
     abstract isRenderingDirty(): boolean;
 
     /**
-     * @internal
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
+     * @param overscaledTileID - The ID of the current tile.
+     * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
      */
-    abstract getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData;
+    abstract getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean): ProjectionData;
 
     /**
      * @internal

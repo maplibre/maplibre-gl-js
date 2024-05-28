@@ -683,8 +683,9 @@ export class MercatorTransform extends Transform {
         return false;
     }
 
-    override getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
-        return getBasicProjectionData(overscaledTileID, tilePosMatrix, aligned);
+    override getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean): ProjectionData {
+        const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned) : null;
+        return getBasicProjectionData(overscaledTileID, matrix);
     }
 
     override isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
@@ -820,7 +821,7 @@ export function translatePosition(
         inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
 }
 
-export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
+export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4): ProjectionData {
     let tileOffsetSize: [number, number, number, number];
 
     if (overscaledTileID) {
@@ -836,12 +837,10 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     let mainMatrix: mat4;
-    if (tilePosMatrix) {
-        mainMatrix = tilePosMatrix;
-    } else if (overscaledTileID.terrainRttPosMatrix) {
+    if (overscaledTileID.terrainRttPosMatrix) {
         mainMatrix = overscaledTileID.terrainRttPosMatrix;
-    } else if (overscaledTileID) {
-        mainMatrix = this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned);
+    } else if (tilePosMatrix) {
+        mainMatrix = tilePosMatrix;
     } else {
         mainMatrix = mat4.create();
     }
