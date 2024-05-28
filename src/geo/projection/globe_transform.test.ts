@@ -8,8 +8,10 @@ import {GlobeTransform} from './globe_transform';
 import {OverscaledTileID} from '../../source/tile_id';
 
 describe('GlobeTransform', () => {
+    const globeProjection = new GlobeProjection();
+
     describe('getProjectionData', () => {
-        const globeTransform = new GlobeTransform();
+        const globeTransform = new GlobeTransform(globeProjection);
 
         test('fallback matrix is set', () => {
             const mat = mat4.create();
@@ -24,7 +26,7 @@ describe('GlobeTransform', () => {
     });
 
     describe('clipping plane', () => {
-        const globeTransform = new GlobeTransform();
+        const globeTransform = new GlobeTransform(globeProjection);
 
         describe('general plane properties', () => {
             globeTransform.updateProjection();
@@ -113,7 +115,7 @@ describe('GlobeTransform', () => {
 
         test('unproject screen center', () => {
             const precisionDigits = 2;
-            const globeTransform = new GlobeTransform();
+            const globeTransform = new GlobeTransform(globeProjection);
             globeTransform.updateProjection();
             let unprojected = globeTransform.unprojectScreenPoint(screenCenter);
             expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
@@ -135,7 +137,7 @@ describe('GlobeTransform', () => {
 
         test('unproject outside of sphere', () => {
             const precisionDigits = 2;
-            const globeTransform = new GlobeTransform();
+            const globeTransform = new GlobeTransform(globeProjection);
             // Try unprojection a point somewhere above the western horizon
             globeTransform.pitch = 60;
             globeTransform.bearing = -90;

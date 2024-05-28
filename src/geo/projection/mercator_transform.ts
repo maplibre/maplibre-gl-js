@@ -685,40 +685,7 @@ export class MercatorTransform extends Transform {
     }
 
     override getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
-        let tileOffsetSize: [number, number, number, number];
-
-        if (overscaledTileID) {
-            const scale = (overscaledTileID.canonical.z >= 0) ? (1 << overscaledTileID.canonical.z) : Math.pow(2.0, overscaledTileID.canonical.z);
-            tileOffsetSize = [
-                overscaledTileID.canonical.x / scale,
-                overscaledTileID.canonical.y / scale,
-                1.0 / scale / EXTENT,
-                1.0 / scale / EXTENT
-            ];
-        } else {
-            tileOffsetSize = [0, 0, 1, 1];
-        }
-
-        let mainMatrix: mat4;
-        if (tilePosMatrix) {
-            mainMatrix = tilePosMatrix;
-        } else if (overscaledTileID.terrainRttPosMatrix) {
-            mainMatrix = overscaledTileID.terrainRttPosMatrix;
-        } else if (overscaledTileID) {
-            mainMatrix = this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned);
-        } else {
-            mainMatrix = mat4.create();
-        }
-
-        const data: ProjectionData = {
-            'u_projection_matrix': mainMatrix, // Might be set to a custom matrix by different projections
-            'u_projection_tile_mercator_coords': tileOffsetSize,
-            'u_projection_clipping_plane': [0, 0, 0, 0],
-            'u_projection_transition': 0.0,
-            'u_projection_fallback_matrix': mainMatrix,
-        };
-
-        return data;
+        return getBasicProjectionData(overscaledTileID, tilePosMatrix, aligned);
     }
 
     override isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
@@ -852,4 +819,41 @@ export function translatePosition(
     return [
         inViewportPixelUnitsUnits ? translate[0] : pixelsToTileUnits(tile, translate[0], transform.zoom),
         inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
+}
+
+export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
+    let tileOffsetSize: [number, number, number, number];
+
+    if (overscaledTileID) {
+        const scale = (overscaledTileID.canonical.z >= 0) ? (1 << overscaledTileID.canonical.z) : Math.pow(2.0, overscaledTileID.canonical.z);
+        tileOffsetSize = [
+            overscaledTileID.canonical.x / scale,
+            overscaledTileID.canonical.y / scale,
+            1.0 / scale / EXTENT,
+            1.0 / scale / EXTENT
+        ];
+    } else {
+        tileOffsetSize = [0, 0, 1, 1];
+    }
+
+    let mainMatrix: mat4;
+    if (tilePosMatrix) {
+        mainMatrix = tilePosMatrix;
+    } else if (overscaledTileID.terrainRttPosMatrix) {
+        mainMatrix = overscaledTileID.terrainRttPosMatrix;
+    } else if (overscaledTileID) {
+        mainMatrix = this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned);
+    } else {
+        mainMatrix = mat4.create();
+    }
+
+    const data: ProjectionData = {
+        'u_projection_matrix': mainMatrix, // Might be set to a custom matrix by different projections
+        'u_projection_tile_mercator_coords': tileOffsetSize,
+        'u_projection_clipping_plane': [0, 0, 0, 0],
+        'u_projection_transition': 0.0,
+        'u_projection_fallback_matrix': mainMatrix,
+    };
+
+    return data;
 }

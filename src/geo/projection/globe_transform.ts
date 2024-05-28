@@ -1,7 +1,7 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
 import {Transform} from '../transform';
 import {Tile} from '../../source/tile';
-import {translatePosition} from './mercator_transform';
+import {MercatorTransform, getBasicProjectionData, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
 import {easeCubicInOut, lerp, mod} from '../../util/util';
@@ -10,6 +10,7 @@ import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
 import {Terrain} from '../../render/terrain';
 import {GlobeProjection, globeConstants} from './globe';
+import {ProjectionData} from '../../render/program/projection_program';
 
 export class GlobeTransform extends Transform {
     private _cachedClippingPlane: vec4 = [1, 0, 0, 0];
@@ -41,15 +42,23 @@ export class GlobeTransform extends Transform {
      */
     private _globeness: number = 1.0;
 
+    private _mercatorTransform: MercatorTransform;
+
     public constructor(globeProjection: GlobeProjection) {
         super();
         this._globeProjection = globeProjection;
+        this._mercatorTransform = new MercatorTransform();
     }
 
     override clone(): Transform {
         const clone = new GlobeTransform(this._globeProjection);
         clone.apply(this);
         return clone;
+    }
+
+    public apply(that: Transform): void {
+        super.apply(that);
+        this._mercatorTransform.apply(that);
     }
 
     get cameraPosition(): vec3 {
@@ -94,7 +103,8 @@ export class GlobeTransform extends Transform {
     }
 
     public updateProjection(): void {
-        //this._mercator.updateProjection(); // JP: TODO: should not need mercator transform here at all
+        this._mercatorTransform.apply(this);
+        this._mercatorTransform.updateProjection(); // JP: TODO: should not need mercator transform here at all
 
         if (this._oldTransformState) {
             // JP: TODO: smarter zoom controls for globe
@@ -188,12 +198,12 @@ export class GlobeTransform extends Transform {
         return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
     }
 
-    override getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, useAtanCorrection: boolean = true): ProjectionData {
-        const data = this._mercator.getProjectionData(overscaledTileID, tilePosMatrix);
+    override getProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, aligned?: boolean): ProjectionData {
+        const data = getBasicProjectionData(overscaledTileID, tilePosMatrix, aligned);
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this._globeProjection.useGlobeRendering) {
-            data['u_projection_matrix'] = useAtanCorrection ? this._globeProjMatrix : this._globeProjMatrixNoCorrection;
+            data['u_projection_matrix'] = this._globeProjMatrix;
         }
 
         data['u_projection_clipping_plane'] = this._cachedClippingPlane as [number, number, number, number];
@@ -385,7 +395,7 @@ export class GlobeTransform extends Transform {
 
     public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number) {
         if (!this._globeProjection.useGlobeRendering) {
-            return this._mercator.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
+            return this._mercatorTransform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         }
 
         const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
@@ -407,18 +417,18 @@ export class GlobeTransform extends Transform {
         };
     }
 
-    public projectScreenPoint(lnglat: LngLat, transform: Transform, terrain?: Terrain): Point {
+    public projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
         if (this._globeProjection.useGlobeControls) {
             const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
             vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
             pos[0] /= pos[3];
             pos[1] /= pos[3];
             return new Point(
-                (pos[0] * 0.5 + 0.5) * transform.width,
-                (pos[1] * 0.5 + 0.5) * transform.height
+                (pos[0] * 0.5 + 0.5) * this.width,
+                (pos[1] * 0.5 + 0.5) * this.height
             );
         } else {
-            this._mercator.projectScreenPoint(lnglat, transform, terrain);
+            this._mercatorTransform.projectScreenPoint(lnglat, terrain);
         }
     }
 
@@ -426,11 +436,11 @@ export class GlobeTransform extends Transform {
     public unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat {
         // JP: TODO: terrain???
         if (!this._globeProjection.useGlobeControls) {
-            return this._mercator.unprojectScreenPoint(p, transform, terrain);
+            return this._mercatorTransform.unprojectScreenPoint(p, terrain);
         }
         const pos: vec4 = [
-            ((p.x + 0.5) / transform.width) * 2.0 - 1.0,
-            (((p.y + 0.5) / transform.height) * 2.0 - 1.0) * -1.0,
+            ((p.x + 0.5) / this.width) * 2.0 - 1.0,
+            (((p.y + 0.5) / this.height) * 2.0 - 1.0) * -1.0,
             1.0,
             1.0
         ];
@@ -527,11 +537,11 @@ export class GlobeTransform extends Transform {
         }
     }
 
-    public getCenterForLocationAtPoint(lnglat: LngLat, point: Point, transform: Transform): LngLat {
-        if (this.useGlobeControls) {
-            const pointLoc = this.unprojectScreenPoint(point, transform);
-            const lngDelta = pointLoc.lng - transform.center.lng;
-            const latDelta = pointLoc.lat - transform.center.lat;
+    public getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat {
+        if (this._globeProjection.useGlobeControls) {
+            const pointLoc = this.unprojectScreenPoint(point);
+            const lngDelta = pointLoc.lng - this.center.lng;
+            const latDelta = pointLoc.lat - this.center.lat;
             const newCenter = new LngLat(
                 lnglat.lng - lngDelta,
                 lnglat.lat - latDelta
@@ -539,7 +549,7 @@ export class GlobeTransform extends Transform {
             newCenter.wrap();
             return newCenter;
         } else {
-            return this._mercator.getCenterForLocationAtPoint(lnglat, point, transform);
+            return this._mercatorTransform.getCenterForLocationAtPoint(lnglat, point);
         }
     }
 }
