@@ -94,6 +94,16 @@ export type PointProjection = {
  *      Since the conversion is handled on the cpu we just set `u_label_plane_matrix` to an identity matrix.
  *
  * Steps 3 and 4 are done in the shaders for all labels.
+ *
+ *
+ * # Custom projection handling
+ * Note that since MapLibre now supports more than one projection, the transformation
+ * to viewport pixel space and GL clip space now *must* go through the projection's (`transform`'s)
+ * `projectTileCoordinates` function, since it might do nontrivial transformations.
+ *
+ * Hence projecting anything to a symbol's label plane can no longer be handled by a simple matrix,
+ * since, if the symbol's label plane is viewport pixel space, `projectTileCoordinates` must be used.
+ * This is applies both here and in the symbol vertex shaders.
  */
 
 export function getPitchedLabelPlaneMatrix(

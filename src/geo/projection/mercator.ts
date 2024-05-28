@@ -72,7 +72,7 @@ export class MercatorProjection implements Projection {
             return this._cachedMesh;
         }
 
-        // Both poles/canonicalTileID and borders are ignored for mercator meshes on purpose.
+        // The parameters tileID, hasBorder and allowPoles are all ignored on purpose for mercator meshes.
 
         const tileExtentArray = new PosArray();
         tileExtentArray.emplaceBack(0, 0);

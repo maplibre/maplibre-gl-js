@@ -593,7 +593,7 @@ export abstract class Transform {
 
     /**
      * @internal
-     * True when an animation handled by the projection is in progress,
+     * True when an animation handled by the transform is in progress,
      * requiring MapLibre to keep rendering new frames.
      */
     abstract isRenderingDirty(): boolean;
