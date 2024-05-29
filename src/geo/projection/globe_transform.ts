@@ -454,25 +454,15 @@ export class GlobeTransform extends Transform {
     }): OverscaledTileID[] {
         return this._mercatorTransform.coveringTiles(options);
     }
-    override project(lnglat: LngLat): Point {
+    override project(lnglat: LngLat): Point { // JP: TODO:figure out how to get rid of this
         return this._mercatorTransform.project(lnglat);
     }
-    override unproject(point: Point): LngLat {
+    override unproject(point: Point): LngLat { // JP: TODO:figure out how to get rid of this
         return this._mercatorTransform.unproject(point);
     }
     override recalculateZoom(terrain: Terrain): void {
         this._mercatorTransform.recalculateZoom(terrain);
         this.apply(this._mercatorTransform);
-    }
-    override setLocationAtPoint(lnglat: LngLat, point: Point): void {
-        this._mercatorTransform.setLocationAtPoint(lnglat, point);
-        this.apply(this._mercatorTransform);
-    }
-    override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
-        return this._mercatorTransform.locationPoint(lnglat, terrain);
-    }
-    override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
-        return this._mercatorTransform.pointCoordinate(p, terrain);
     }
     override customLayerMatrix(): mat4 {
         return this._mercatorTransform.customLayerMatrix();
@@ -497,8 +487,51 @@ export class GlobeTransform extends Transform {
     }
 
     //
-    // End of placeholder overridden  functions
+    // End of placeholder overridden functions
     //
+
+    override setLocationAtPoint(lnglat: LngLat, point: Point): void {
+        if (this._globeProjection.useGlobeRendering) {
+            this._mercatorTransform.setLocationAtPoint(lnglat, point);
+            this.apply(this._mercatorTransform);
+        }
+
+        this._mercatorTransform.setLocationAtPoint(lnglat, point);
+        this.apply(this._mercatorTransform);
+
+        // JP: TODO: on globe this can be impossible, eg. for the corner of the screen if the globe is zoomed out
+    }
+
+    override locationPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: test that this works well even with terrain
+        if (this._globeProjection.useGlobeRendering) {
+            return this._mercatorTransform.locationPoint(lnglat, terrain);
+        }
+
+        const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
+
+        if (terrain) {
+            const elevation = terrain.getElevationForLngLatZoom(lnglat, this._tileZoom);
+            vec4.scale(pos, pos, 1.0 + elevation / earthRadius);
+            pos[3] = 1; // Do not scale the last component
+        }
+
+        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
+        pos[0] /= pos[3];
+        pos[1] /= pos[3];
+        return new Point(
+            (pos[0] * 0.5 + 0.5) * this.width,
+            (pos[1] * 0.5 + 0.5) * this.height
+        );
+    }
+
+    override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+        if (!this._globeProjection.useGlobeRendering || terrain) {
+            // Mercator has terrain handling implemented properly and since terrain
+            // simply draws tile coordinates into a special framebuffer, this works well even for globe.
+            return this._mercatorTransform.pointCoordinate(p, terrain);
+        }
+        return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
+    }
 
     override pointLocation(p: Point, terrain?: Terrain): LngLat {
         if (!this._globeProjection.useGlobeRendering || terrain) {
@@ -521,28 +554,6 @@ export class GlobeTransform extends Transform {
 
         return !!intersection;
     }
-
-    /**
-     * @internal
-     * Given geographical coordinates, returns their location on screen in pixels.
-     * @param loc - The geographical location to project.
-     * @param transform - The map's transform.
-     * @param terrain - Optional terrain.
-     */
-    // private projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: keep this function?
-    //     if (this._globeProjection.useGlobeControls) {
-    //         const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
-    //         vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
-    //         pos[0] /= pos[3];
-    //         pos[1] /= pos[3];
-    //         return new Point(
-    //             (pos[0] * 0.5 + 0.5) * this.width,
-    //             (pos[1] * 0.5 + 0.5) * this.height
-    //         );
-    //     } else {
-    //         this._mercatorTransform.projectScreenPoint(lnglat, terrain);
-    //     }
-    // }
 
     /**
      * Computes normalized direction of a ray from the camera to the given screen pixel.
