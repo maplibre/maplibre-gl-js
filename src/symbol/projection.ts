@@ -17,20 +17,6 @@ import {findLineIntersection} from '../util/util';
 import {UnwrappedTileID} from '../source/tile_id';
 import {StructArray} from '../util/struct_array';
 
-// JP: TODO: unify how stuff gets exported here
-export {
-    updateLineLabels,
-    hideGlyphs,
-    getGlCoordMatrix,
-    project,
-    getPerspectiveRatio,
-    placeFirstAndLastGlyph,
-    placeGlyphAlongLine,
-    xyTransformMat4,
-    findOffsetIntersectionPoint,
-    transformToOffsetNormal,
-};
-
 /**
  * The result of projecting a point to the screen, with some additional information about the projection.
  */
@@ -122,7 +108,7 @@ export function getPitchedLabelPlaneMatrix(
  * Returns a matrix for either converting from pitched label space to tile space,
  * or for converting from screenspace pixels to clip space.
  */
-function getGlCoordMatrix(
+export function getGlCoordMatrix(
     pitchWithMap: boolean,
     rotateWithMap: boolean,
     transform: Transform,
@@ -139,7 +125,11 @@ function getGlCoordMatrix(
     }
 }
 
-function project(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
+/**
+ * Projects a point using a specified matrix, including the perspective divide.
+ * Uses a fast path if `getElevation` is undefined.
+ */
+export function projectWithMatrix(point: Point, matrix: mat4, getElevation?: (x: number, y: number) => number): PointProjection {
     let pos;
     if (getElevation) { // slow because of handle z-index
         pos = [point.x, point.y, getElevation(point.x, point.y), 1] as vec4;
@@ -156,7 +146,7 @@ function project(point: Point, matrix: mat4, getElevation?: (x: number, y: numbe
     };
 }
 
-function getPerspectiveRatio(cameraToCenterDistance: number, signedDistanceFromCamera: number): number {
+export function getPerspectiveRatio(cameraToCenterDistance: number, signedDistanceFromCamera: number): number {
     return 0.5 + 0.5 * (cameraToCenterDistance / signedDistanceFromCamera);
 }
 
@@ -174,7 +164,7 @@ function isVisible(p: Point,
  *  Update the `dynamicLayoutVertexBuffer` for the buffer with the correct glyph positions for the current map view.
  *  This is only run on labels that are aligned with lines. Horizontal labels are handled entirely in the shader.
  */
-function updateLineLabels(bucket: SymbolBucket,
+export function updateLineLabels(bucket: SymbolBucket,
     painter: Painter,
     isText: boolean,
     pitchedLabelPlaneMatrix: mat4,
@@ -286,7 +276,7 @@ type FirstAndLastGlyphPlacement = {
  *
  * Returns null if the label can't fit on the geometry
  */
-function placeFirstAndLastGlyph(
+export function placeFirstAndLastGlyph(
     fontScale: number,
     glyphOffsetArray: GlyphOffsetArray,
     lineOffsetX: number,
@@ -576,7 +566,7 @@ export function projectTileCoordinatesToLabelPlane(x: number, y: number, project
     const translatedY = y + projectionContext.translation[1];
     let projection;
     if (projectionContext.pitchWithMap) {
-        projection = project(new Point(translatedX, translatedY), projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation);
+        projection = projectWithMatrix(new Point(translatedX, translatedY), projectionContext.pitchedLabelPlaneMatrix, projectionContext.getElevation);
         projection.isOccluded = false;
     } else {
         projection = projectionContext.transform.projectTileCoordinates(translatedX, translatedY, projectionContext.unwrappedTileID, projectionContext.getElevation);
@@ -614,7 +604,7 @@ export function projectTileCoordinatesToClipSpace(x: number, y: number, projecti
  * @param direction - direction of line traversal
  * @returns a normal vector from the segment, with magnitude equal to offset amount
  */
-function transformToOffsetNormal(segmentVector: Point, offset: number, direction: number): Point {
+export function transformToOffsetNormal(segmentVector: Point, offset: number, direction: number): Point {
     return segmentVector._unit()._perp()._mult(offset * direction);
 }
 
@@ -632,7 +622,7 @@ function transformToOffsetNormal(segmentVector: Point, offset: number, direction
  * @param projectionContext - Necessary data for tile-to-label-plane projection
  * @returns The point at which the current and next line segments intersect, once offset and extended/shrunk to their meeting point
  */
-function findOffsetIntersectionPoint(
+export function findOffsetIntersectionPoint(
     index: number,
     prevToCurrentOffsetNormal: Point,
     currentVertex: Point,
@@ -689,7 +679,7 @@ type PlacedGlyph = {
  * from the anchor point until the distance traversed in the label plane equals the glyph's
  * offsetX. Returns null if the glyph can't fit on the line geometry.
  */
-function placeGlyphAlongLine(
+export function placeGlyphAlongLine(
     offsetX: number,
     lineOffsetX: number,
     lineOffsetY: number,
@@ -812,7 +802,7 @@ const hiddenGlyphAttributes = new Float32Array([-Infinity, -Infinity, 0, -Infini
 
 // Hide them by moving them offscreen. We still need to add them to the buffer
 // because the dynamic buffer is paired with a static buffer that doesn't get updated.
-function hideGlyphs(num: number, dynamicLayoutVertexArray: SymbolDynamicLayoutArray) {
+export function hideGlyphs(num: number, dynamicLayoutVertexArray: SymbolDynamicLayoutArray) {
     for (let i = 0; i < num; i++) {
         const offset = dynamicLayoutVertexArray.length;
         dynamicLayoutVertexArray.resize(offset + 4);
@@ -824,7 +814,7 @@ function hideGlyphs(num: number, dynamicLayoutVertexArray: SymbolDynamicLayoutAr
 
 // For line label layout, we're not using z output and our w input is always 1
 // This custom matrix transformation ignores those components to make projection faster
-function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
+export function xyTransformMat4(out: vec4, a: vec4, m: mat4) {
     const x = a[0], y = a[1];
     out[0] = m[0] * x + m[4] * y + m[12];
     out[1] = m[1] * x + m[5] * y + m[13];
@@ -842,7 +832,7 @@ export function projectPathSpecialProjection(projectedPath: Array<Point>, projec
     const inverseLabelPlaneMatrix = mat4.create();
     mat4.invert(inverseLabelPlaneMatrix, projectionContext.pitchedLabelPlaneMatrix);
     return projectedPath.map(p => {
-        const backProjected = project(p, inverseLabelPlaneMatrix, projectionContext.getElevation);
+        const backProjected = projectWithMatrix(p, inverseLabelPlaneMatrix, projectionContext.getElevation);
         const projected = projectionContext.transform.projectTileCoordinates(
             backProjected.point.x,
             backProjected.point.y,

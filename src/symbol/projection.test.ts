@@ -1,4 +1,4 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, project, transformToOffsetNormal, projectLineVertexToLabelPlane} from './projection';
+import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, projectWithMatrix, transformToOffsetNormal, projectLineVertexToLabelPlane} from './projection';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
@@ -9,7 +9,7 @@ describe('Projection', () => {
     test('matrix float precision', () => {
         const point = new Point(10.000000005, 0);
         const matrix = mat4.create();
-        expect(project(point, matrix).point.x).toBeCloseTo(point.x, 10);
+        expect(projectWithMatrix(point, matrix).point.x).toBeCloseTo(point.x, 10);
     });
 });
 
