@@ -436,14 +436,7 @@ export abstract class Transform {
      * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
      * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
      */
-    getBounds(): LngLatBounds {
-        const top = Math.max(0, this._height / 2 - this.getHorizon());
-        return new LngLatBounds()
-            .extend(this.pointLocation(new Point(0, top)))
-            .extend(this.pointLocation(new Point(this._width, top)))
-            .extend(this.pointLocation(new Point(this._width, this._height)))
-            .extend(this.pointLocation(new Point(0, this._height)));
-    }
+    abstract getBounds(): LngLatBounds;
 
     /**
      * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
@@ -457,12 +450,12 @@ export abstract class Transform {
     }
 
     /**
-     * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
-     * multiplied by a static factor to simulate the earth-radius.
-     * The calculated value is the horizontal line from the camera-height to sea-level.
-     * @returns Horizon above center in pixels.
+     * Returns whether the specified screen pixel lies on the map.
+     * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled.
+     * @param p - The pixel's coordinates.
+     * @param terrain - Optional terrain.
      */
-    abstract getHorizon(): number; // JP: TODO: replace with a more generic "is pixel on the map's surface" function
+    abstract isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 
     /**
      * Sets or clears the map's geographical constraints.

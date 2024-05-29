@@ -13,6 +13,7 @@ import {GlobeProjection, globeConstants} from './globe';
 import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
+import {LngLatBounds} from '../lng_lat_bounds';
 
 export class GlobeTransform extends Transform {
     private _cachedClippingPlane: vec4 = [1, 0, 0, 0];
@@ -474,10 +475,6 @@ export class GlobeTransform extends Transform {
     override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         return this._mercatorTransform.pointCoordinate(p, terrain);
     }
-    override getHorizon(): number {
-        // JP: TODO: proper implementation?
-        return this._mercatorTransform.getHorizon();
-    }
     override customLayerMatrix(): mat4 {
         return this._mercatorTransform.customLayerMatrix();
     }
@@ -495,6 +492,12 @@ export class GlobeTransform extends Transform {
     }
     override precacheTiles(coords: OverscaledTileID[]): void {
         this._mercatorTransform.precacheTiles(coords);
+    }
+    override isPointOnMapSurface(p: Point, terrain?: Terrain): boolean { // JP: TODO: write a proper implementation of this function
+        return this._mercatorTransform.isPointOnMapSurface(p, terrain);
+    }
+    override getBounds(): LngLatBounds { // JP: TODO: write a proper implementation of this function
+        return this._mercatorTransform.getBounds();
     }
 
     //

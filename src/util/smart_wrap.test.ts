@@ -6,7 +6,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 const transform = new MercatorTransform();
 transform['_width'] = 100;
 transform['_height'] = 100;
-transform.getHorizon = () => 0; // map center
+transform.isPointOnMapSurface = (p) => p.y > transform.height / 2; // any point below map center is considered to be on the map's surface
 
 describe('smartWrap', () => {
     test('Shifts lng to -360 deg when such point is closer to the priorPos', () => {

@@ -12,6 +12,7 @@ import {MAX_VALID_LATITUDE, Transform} from '../transform';
 import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
+import {LngLatBounds} from '../lng_lat_bounds';
 
 export class MercatorTransform extends Transform {
     private _cameraToCenterDistance: number;
@@ -374,14 +375,31 @@ export class MercatorTransform extends Transform {
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
 
+    override getBounds(): LngLatBounds {
+        const top = Math.max(0, this._height / 2 - this.getHorizon());
+        return new LngLatBounds()
+            .extend(this.pointLocation(new Point(0, top)))
+            .extend(this.pointLocation(new Point(this._width, top)))
+            .extend(this.pointLocation(new Point(this._width, this._height)))
+            .extend(this.pointLocation(new Point(0, this._height)));
+    }
+
     /**
      * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
      * multiplied by a static factor to simulate the earth-radius.
      * The calculated value is the horizontal line from the camera-height to sea-level.
      * @returns Horizon above center in pixels.
      */
-    override getHorizon(): number {
+    getHorizon(): number {
         return Math.tan(Math.PI / 2 - this._pitch) * this._cameraToCenterDistance * 0.85;
+    }
+
+    override isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
+        if (terrain) {
+            const coordinate = terrain.pointCoordinate(p);
+            return coordinate != null;
+        }
+        return (p.y > this.height / 2 - this.getHorizon());
     }
 
     /**
