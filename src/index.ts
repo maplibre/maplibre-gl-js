@@ -162,7 +162,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  *         throw new Error(`Tile fetch error: ${t.statusText}`);
  *     }
  * }
- * self.addPRotocol('custom', loadFn);
+ * self.addProtocol('custom', loadFn);
  *
  * // main.js
  * importScriptInWorkers('add-protocol-worker.js');
