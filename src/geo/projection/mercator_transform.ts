@@ -736,14 +736,6 @@ export class MercatorTransform extends Transform {
         };
     }
 
-    override projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point {
-        return this.locationPoint(LngLat.convert(lnglat), terrain);
-    }
-
-    override unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat {
-        return this.pointLocation(Point.convert(p), terrain);
-    }
-
     getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat {
         const a = this.pointCoordinate(point);
         const b = this.pointCoordinate(this.centerPoint);

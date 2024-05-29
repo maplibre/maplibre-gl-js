@@ -439,7 +439,7 @@ export class GlobeTransform extends Transform {
     }
 
     //
-    // JP: TODO: Overriding member storage, remove all below and including this line. Placeholder implementations just call the underlying mercator transform.
+    // JP: TODO: Overriding function storage, remove stuff below and including this line. Placeholder implementations just call the underlying mercator transform.
     //
 
     public override get cameraToCenterDistance(): number { // Globe: TODO: implement for globe
@@ -471,9 +471,6 @@ export class GlobeTransform extends Transform {
     override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return this._mercatorTransform.locationPoint(lnglat, terrain);
     }
-    override pointLocation(p: Point, terrain?: Terrain): LngLat {
-        return this._mercatorTransform.pointLocation(p, terrain);
-    }
     override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         return this._mercatorTransform.pointCoordinate(p, terrain);
     }
@@ -495,38 +492,62 @@ export class GlobeTransform extends Transform {
     override precacheTiles(coords: OverscaledTileID[]): void {
         this._mercatorTransform.precacheTiles(coords);
     }
-    override isPointOnMapSurface(p: Point, terrain?: Terrain): boolean { // JP: TODO: write a proper implementation of this function
-        return this._mercatorTransform.isPointOnMapSurface(p, terrain);
-    }
     override getBounds(): LngLatBounds { // JP: TODO: write a proper implementation of this function
         return this._mercatorTransform.getBounds();
     }
 
     //
-    // JP: TODO: below are (un)projection functions of questionable utility
+    // End of placeholder overridden  functions
     //
 
-    public projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: keep this function?
-        if (this._globeProjection.useGlobeControls) {
-            const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
-            vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
-            pos[0] /= pos[3];
-            pos[1] /= pos[3];
-            return new Point(
-                (pos[0] * 0.5 + 0.5) * this.width,
-                (pos[1] * 0.5 + 0.5) * this.height
-            );
-        } else {
-            this._mercatorTransform.projectScreenPoint(lnglat, terrain);
+    override pointLocation(p: Point, terrain?: Terrain): LngLat {
+        if (!this._globeProjection.useGlobeRendering || terrain) {
+            // Mercator has terrain handling implemented properly and since terrain
+            // simply draws tile coordinates into a special framebuffer, this works well even for globe.
+            return this._mercatorTransform.pointLocation(p, terrain);
         }
+        return this.unprojectScreenPoint(p);
     }
 
-    // JP: TODO: unprojectExact for waypoint placement, unproject for interaction?
-    public unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat { // JP: TODO: keep this function?
-        // JP: TODO: terrain???
-        if (!this._globeProjection.useGlobeControls) {
-            return this._mercatorTransform.unprojectScreenPoint(p, terrain);
+    override isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
+        if (!this._globeProjection.useGlobeRendering) {
+            return this._mercatorTransform.isPointOnMapSurface(p, terrain);
         }
+
+        const rayOrigin = this._cameraPosition;
+        const rayDirection = this.getRayDirectionFromPixel(p);
+
+        const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
+
+        return !!intersection;
+    }
+
+    /**
+     * @internal
+     * Given geographical coordinates, returns their location on screen in pixels.
+     * @param loc - The geographical location to project.
+     * @param transform - The map's transform.
+     * @param terrain - Optional terrain.
+     */
+    // private projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: keep this function?
+    //     if (this._globeProjection.useGlobeControls) {
+    //         const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
+    //         vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
+    //         pos[0] /= pos[3];
+    //         pos[1] /= pos[3];
+    //         return new Point(
+    //             (pos[0] * 0.5 + 0.5) * this.width,
+    //             (pos[1] * 0.5 + 0.5) * this.height
+    //         );
+    //     } else {
+    //         this._mercatorTransform.projectScreenPoint(lnglat, terrain);
+    //     }
+    // }
+
+    /**
+     * Computes normalized direction of a ray from the camera to the given screen pixel.
+     */
+    private getRayDirectionFromPixel(p: Point): vec3 {
         const pos: vec4 = [
             ((p.x + 0.5) / this.width) * 2.0 - 1.0,
             (((p.y + 0.5) / this.height) * 2.0 - 1.0) * -1.0,
@@ -544,39 +565,74 @@ export class GlobeTransform extends Transform {
         ];
         const rayNormalized: vec3 = vec3.create();
         vec3.normalize(rayNormalized, ray);
+        return rayNormalized;
+    }
 
-        // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
-        // As always, we assume that the planet is centered at 0,0,0 and has radius 1.
-        // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
-        const rayOrigin = this._cameraPosition;
-        const rayDirection = rayNormalized;
-
-        const originDotOrigin = vec3.dot(rayOrigin, rayOrigin);
-        const originDotDirection = vec3.dot(rayOrigin, rayDirection);
-        const directionDotDirection = vec3.dot(rayDirection, rayDirection);
+    /**
+     * Returns the two intersection points of the ray and the planet's sphere, or null if no intersection occurs.
+     * The intersections are encoded in the direction along the ray, with `tMin` being the first intersection and `tMax` being the second.
+     * @param origin - The ray origin.
+     * @param direction - The normalized ray direction.
+     */
+    private rayPlanetIntersection(origin: vec3, direction: vec3): {
+        tMin: number;
+        tMax: number;
+    } {
+        const originDotOrigin = vec3.dot(origin, origin);
+        const originDotDirection = vec3.dot(origin, direction);
+        const directionDotDirection = vec3.dot(direction, direction);
         const planetRadiusSquared = 1.0;
 
-        // Ray-sphere intersection involves a quadratic equation ax^2 +bx + c = 0
+        // Ray-sphere intersection involves a quadratic equation ax^2 +bx + c = 0, hence the a,b,c variables below
         const a = directionDotDirection;
         const b = 2 * originDotDirection;
         const c = originDotOrigin - planetRadiusSquared;
 
         const d = b * b - 4.0 * a * c;
 
-        if (d >= 0.0) {
+        if (d >= 0) {
             const sqrtD = Math.sqrt(d);
             const t0 = (-b + sqrtD) / (2.0 * a);
             const t1 = (-b - sqrtD) / (2.0 * a);
             // Assume the ray origin is never inside the sphere
             const tMin = Math.min(t0, t1);
-            const intersection = vec3.create();
-            vec3.add(intersection, rayOrigin, [
-                rayDirection[0] * tMin,
-                rayDirection[1] * tMin,
-                rayDirection[2] * tMin
+            const tMax = Math.max(t0, t1);
+            return {
+                tMin,
+                tMax
+            };
+        } else {
+            return null;
+        }
+    }
+
+    // JP: TODO: unprojectExact for waypoint placement, unproject for interaction?
+
+    /**
+     * @internal
+     * Returns a {@link LngLat} representing geographical coordinates that correspond to the specified pixel coordinates.
+     * @param p - Screen point in pixels to unproject.
+     * @param terrain - Optional terrain.
+     */
+    private unprojectScreenPoint(p: Point): LngLat {
+        // Here we compute the intersection of the ray towards the pixel at `p` and the planet sphere.
+        // As always, we assume that the planet is centered at 0,0,0 and has radius 1.
+        // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
+        const rayOrigin = this._cameraPosition;
+        const rayDirection = this.getRayDirectionFromPixel(p);
+
+        const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
+
+        if (intersection) {
+            // Assume the ray origin is never inside the sphere - just use tMin
+            const intersectionPoint = vec3.create();
+            vec3.add(intersectionPoint, rayOrigin, [
+                rayDirection[0] * intersection.tMin,
+                rayDirection[1] * intersection.tMin,
+                rayDirection[2] * intersection.tMin
             ]);
             const sphereSurface = vec3.create();
-            vec3.normalize(sphereSurface, intersection);
+            vec3.normalize(sphereSurface, intersectionPoint);
             return this._sphereSurfacePointToCoordinates(sphereSurface);
         } else {
             // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.

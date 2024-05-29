@@ -787,7 +787,7 @@ export abstract class Camera extends Evented {
      * ```
      * @see Used by {@link BoxZoomHandler}
      */
-    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this {
+    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this { // JP: TODO: adapt this for globe
         return this._fitInternal(
             this._cameraForBoxAndBearing(
                 this.transform.pointLocation(Point.convert(p0)),

@@ -109,20 +109,20 @@ describe('GlobeTransform', () => {
             const precisionDigits = 1; // JP: TODO: suspiciously small precision needed to pass
             const globeTransform = createGlobeTransform(globeProjection);
             globeTransform.updateProjection();
-            let unprojected = globeTransform.unprojectScreenPoint(screenCenter);
+            let unprojected = globeTransform.pointLocation(screenCenter);
             expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
             globeTransform.center.lng = 90.0;
             globeTransform.updateProjection();
-            unprojected = globeTransform.unprojectScreenPoint(screenCenter);
+            unprojected = globeTransform.pointLocation(screenCenter);
             expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
             globeTransform.center.lng = 0.0;
             globeTransform.center.lat = 60.0;
             globeTransform.updateProjection();
-            unprojected = globeTransform.unprojectScreenPoint(screenCenter);
+            unprojected = globeTransform.pointLocation(screenCenter);
             expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
         });
@@ -134,7 +134,7 @@ describe('GlobeTransform', () => {
             globeTransform.pitch = 60;
             globeTransform.bearing = -90;
             globeTransform.updateProjection();
-            const unprojected = globeTransform.unprojectScreenPoint(screenTopEdgeCenter);
+            const unprojected = globeTransform.pointLocation(screenTopEdgeCenter);
             expect(unprojected.lng).toBeLessThan(-38.0);
             expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
         });

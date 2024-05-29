@@ -657,25 +657,6 @@ export abstract class Transform {
     abstract projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
 
     /**
-     * @internal
-     * Given geographical coordinates, returns their location on screen in pixels.
-     * @param loc - The geographical location to project.
-     * @param transform - The map's transform.
-     * @param terrain - Optional terrain.
-     */
-    abstract projectScreenPoint(lnglat: LngLat, terrain?: Terrain): Point;
-
-    /**
-     * @internal
-     * Returns a {@link LngLat} representing geographical coordinates that correspond
-     * to the specified pixel coordinates.
-     * @param p - Screen point in pixels to unproject.
-     * @param transform - The map's transform.
-     * @param terrain - Optional terrain.
-     */
-    abstract unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat;
-
-    /**
      * Called before rendering to allow the transform implementation
      * to precompute data needed to render the given tiles.
      * Used in mercator transform to precompute tile matrices (posMatrix).
