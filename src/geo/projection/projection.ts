@@ -10,14 +10,14 @@ import type {SubdivisionGranularitySetting} from '../../render/subdivision_granu
  * and a class that is derived from the `Transform` base class. What is the difference?
  *
  * The transform-derived class:
- * - should do all the heavy lifting for the projection - implement all the `project*` and `unproject*` functions
- * - must store the map's state - center, pitch, etc. - this is mostly handled in the `Transform` base class
+ * - should do all the heavy lifting for the projection - implement all the `project*` and `unproject*` functions, etc.
+ * - must store the map's state - center, pitch, etc. - this is handled in the `Transform` base class
  * - must be cloneable - it should not create any heavy resources
  *
  * The projection-implementing class:
  * - must provide basic information and data about the projection, which is *independent of the map's state* - name, shader functions, subdivision settings, etc.
  * - must be a "singleton" - no matter how many copies of the matching Transform class exist, the Projection should always exist as a single instance (per Map)
- * - may create heavy resources that should not exist in multiple copies (projection is never cloned) - such as the GPU inaccuracy mitigation for globe projection
+ * - may create heavy resources that should not exist in multiple copies (projection is never cloned) - for example, see the GPU inaccuracy mitigation for globe projection
  * - must be explicitly disposed of after usage using the `destroy` function - this allows the implementing class to free any allocated resources
  */
 

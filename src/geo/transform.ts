@@ -189,7 +189,7 @@ export abstract class Transform {
     }
 
     /**
-     * Gets the transfrom's width and height in pixels (viewport size).
+     * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
      */
     get size(): Point {
         return new Point(this._width, this._height);
