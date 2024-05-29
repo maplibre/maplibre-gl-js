@@ -223,7 +223,7 @@ export class MercatorTransform extends Transform {
      * get the camera position in LngLat and altitudes in meter
      * @returns An object with lngLat & altitude.
      */
-    override getCameraPosition(): {
+    getCameraPosition(): {
         lngLat: LngLat;
         altitude: number;
     } {
@@ -232,12 +232,6 @@ export class MercatorTransform extends Transform {
         return {lngLat, altitude: altitude + this.elevation};
     }
 
-    /**
-     * This method works in combination with freezeElevation activated.
-     * freezeElevtion is enabled during map-panning because during this the camera should sit in constant height.
-     * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
-     * @param terrain - the terrain
-     */
     override recalculateZoom(terrain: Terrain): void {
         const origElevation = this.elevation;
         const origAltitude = Math.cos(this._pitch) * this._cameraToCenterDistance / this._pixelPerMeter;
@@ -311,7 +305,7 @@ export class MercatorTransform extends Transform {
      * @param lnglat - the location
      * @returns The mercator coordinate
      */
-    override locationCoordinate(lnglat: LngLat): MercatorCoordinate {
+    locationCoordinate(lnglat: LngLat): MercatorCoordinate {
         return MercatorCoordinate.fromLngLat(lnglat);
     }
 
@@ -320,7 +314,7 @@ export class MercatorTransform extends Transform {
      * @param coord - mercator coordinates
      * @returns lng and lat
      */
-    override coordinateLocation(coord: MercatorCoordinate): LngLat {
+    coordinateLocation(coord: MercatorCoordinate): LngLat {
         return coord && coord.toLngLat();
     }
 
@@ -374,7 +368,7 @@ export class MercatorTransform extends Transform {
      * @param pixelMatrix - the pixel matrix
      * @returns screen point
      */
-    override coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this.pixelMatrix): Point {
+    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this.pixelMatrix): Point {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
@@ -732,7 +726,7 @@ export class MercatorTransform extends Transform {
         return this.pointLocation(Point.convert(p), terrain);
     }
 
-    override getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat {
+    getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat {
         const a = this.pointCoordinate(point);
         const b = this.pointCoordinate(this.centerPoint);
         const loc = this.locationCoordinate(lnglat);

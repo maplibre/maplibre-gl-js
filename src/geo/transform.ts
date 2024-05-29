@@ -393,15 +393,6 @@ export abstract class Transform {
     abstract unproject(point: Point): LngLat;
 
     /**
-     * get the camera position in LngLat and altitudes in meter
-     * @returns An object with lngLat & altitude.
-     */
-    abstract getCameraPosition(): {
-        lngLat: LngLat;
-        altitude: number;
-    };
-
-    /**
      * This method works in combination with freezeElevation activated.
      * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
      * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
@@ -433,36 +424,12 @@ export abstract class Transform {
     abstract pointLocation(p: Point, terrain?: Terrain): LngLat;
 
     /**
-     * Given a geographical lnglat, return an unrounded
-     * coordinate that represents it at low zoom level.
-     * @param lnglat - the location
-     * @returns The mercator coordinate
-     */
-    abstract locationCoordinate(lnglat: LngLat): MercatorCoordinate;
-
-    /**
-     * Given a Coordinate, return its geographical position.
-     * @param coord - mercator coordinates
-     * @returns lng and lat
-     */
-    abstract coordinateLocation(coord: MercatorCoordinate): LngLat;
-
-    /**
      * Given a Point, return its mercator coordinate.
      * @param p - the point
      * @param terrain - optional terrain
      * @returns lnglat
      */
     abstract pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
-
-    /**
-     * Given a coordinate, return the screen point that corresponds to it
-     * @param coord - the coordinates
-     * @param elevation - the elevation
-     * @param pixelMatrix - the pixel matrix
-     * @returns screen point
-     */
-    abstract coordinatePoint(coord: MercatorCoordinate, elevation?: number, pixelMatrix?: mat4): Point;
 
     /**
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
@@ -714,8 +681,6 @@ export abstract class Transform {
      * @param terrain - Optional terrain.
      */
     abstract unprojectScreenPoint(p: Point, terrain?: Terrain): LngLat;
-
-    abstract getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat;
 
     /**
      * Called before rendering to allow the transform implementation

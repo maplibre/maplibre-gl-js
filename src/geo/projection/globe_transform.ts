@@ -112,15 +112,16 @@ export class GlobeTransform extends Transform {
         }
 
         if (this._oldTransformState) {
-            // JP: TODO: smarter zoom controls for globe
+            // JP: TODO: zoom compensation should probably be handled in the pan controller instead
             if (this._globeProjection.useGlobeControls) {
                 this.zoom += this._getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
+                this._constrain();
             }
             this._oldTransformState.zoom = this.zoom;
             this._oldTransformState.lat = this.center.lat;
         } else {
             this._oldTransformState = {
-                zoom: this.zoom,
+                zoom: this._zoom,
                 lat: this.center.lat
             };
         }
@@ -386,7 +387,6 @@ export class GlobeTransform extends Transform {
 
         if (this._mercatorTransform) {
             this._mercatorTransform.apply(this);
-            this._mercatorTransform._calcMatrices(); // JP: TODO: should not need mercator transform here at all
         }
 
         if (!this._globeProjection) {
@@ -457,9 +457,6 @@ export class GlobeTransform extends Transform {
     override unproject(point: Point): LngLat {
         return this._mercatorTransform.unproject(point);
     }
-    override getCameraPosition(): { lngLat: LngLat; altitude: number } { // Globe: TODO: implement for globe
-        return this._mercatorTransform.getCameraPosition();
-    }
     override recalculateZoom(terrain: Terrain): void {
         this._mercatorTransform.recalculateZoom(terrain);
         this.apply(this._mercatorTransform);
@@ -474,17 +471,8 @@ export class GlobeTransform extends Transform {
     override pointLocation(p: Point, terrain?: Terrain): LngLat {
         return this._mercatorTransform.pointLocation(p, terrain);
     }
-    override locationCoordinate(lnglat: LngLat): MercatorCoordinate {
-        return this._mercatorTransform.locationCoordinate(lnglat);
-    }
-    override coordinateLocation(coord: MercatorCoordinate): LngLat {
-        return this._mercatorTransform.coordinateLocation(coord);
-    }
     override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         return this._mercatorTransform.pointCoordinate(p, terrain);
-    }
-    override coordinatePoint(coord: MercatorCoordinate, elevation?: number, pixelMatrix?: mat4): Point {
-        return this._mercatorTransform.coordinatePoint(coord, elevation, pixelMatrix);
     }
     override getHorizon(): number {
         // JP: TODO: proper implementation?
