@@ -46,9 +46,8 @@ import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {RenderToTexture} from './render_to_texture';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
-import {Tile} from '../source/tile';
 import {ProjectionData} from './program/projection_program';
-import {MercatorTransform, translatePosMatrix as mercatorTranslatePosMatrix} from '../geo/projection/mercator_transform';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -619,21 +618,6 @@ export class Painter {
                 drawCustom(painter, sourceCache, layer as any);
                 break;
         }
-    }
-
-    /**
-     * Temporary function - translate & translate-anchor handling will be moved to projection classes,
-     * since it is inherently projection dependent. Most translations will not be handled by the
-     * projection matrix (like the one this function produces), but by specialized code in the vertex shader.
-     */
-    translatePosMatrix(
-        matrix: mat4,
-        tile: Tile,
-        translate: [number, number],
-        translateAnchor: 'map' | 'viewport',
-        inViewportPixelUnitsUnits: boolean = false
-    ): mat4 {
-        return mercatorTranslatePosMatrix(this.transform, tile, matrix, translate, translateAnchor, inViewportPixelUnitsUnits);
     }
 
     saveTileTexture(texture: Texture) {
