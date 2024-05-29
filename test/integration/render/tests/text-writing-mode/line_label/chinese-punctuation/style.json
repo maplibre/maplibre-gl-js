@@ -9,7 +9,7 @@
   "zoom": 0,
   "center": [0, 0],
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "geojson",
       "data": {
           "type": "FeatureCollection",
@@ -182,7 +182,7 @@
     {
       "id": "lines-symbol",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "layout": {
         "text-field": "{name}",
         "symbol-placement": "line",
@@ -192,7 +192,7 @@
     }, {
       "id": "lines",
       "type": "line",
-      "source": "mapbox",
+      "source": "maplibre",
       "paint": {
           "line-opacity": 0.25
       }
