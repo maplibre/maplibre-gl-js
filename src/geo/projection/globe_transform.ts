@@ -112,6 +112,8 @@ export class GlobeTransform extends Transform {
             return;
         }
 
+        this._globeProjection.useGlobeRendering = this._globeness > 0;
+
         if (this._oldTransformState) {
             // JP: TODO: zoom compensation should probably be handled in the pan controller instead
             if (this._globeProjection.useGlobeControls) {
