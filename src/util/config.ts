@@ -7,6 +7,8 @@ import type {RequestParameters, GetResourceResponse} from './ajax';
  */
 export type AddProtocolAction = (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>
 
+export type FeaturePropertiesTransform = (source: string, sourceLayer: string, tileID: string, properties: { [_: string]: string | number | boolean }) => void
+
 /**
  * This is a global config object used to store the configuration
  * It is available in the workers as well.
@@ -17,6 +19,7 @@ type Config = {
     MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME: number;
     MAX_TILE_CACHE_ZOOM_LEVELS: number;
     REGISTERED_PROTOCOLS: {[x: string]: AddProtocolAction };
+    FEATURE_PROPERTIES_TRANSFORM: FeaturePropertiesTransform;
     WORKER_URL: string;
 };
 
@@ -25,5 +28,6 @@ export const config: Config = {
     MAX_PARALLEL_IMAGE_REQUESTS_PER_FRAME: 8,
     MAX_TILE_CACHE_ZOOM_LEVELS: 5,
     REGISTERED_PROTOCOLS: {},
+    FEATURE_PROPERTIES_TRANSFORM: null,
     WORKER_URL: ''
 };
