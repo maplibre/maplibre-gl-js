@@ -11,6 +11,7 @@ import expectedJson from './tests/text-shaping-linebreak.json' with {type: 'json
 import expectedImagesHorizontal from './tests/text-shaping-images-horizontal.json' with {type: 'json'};
 import expectedNewLine from './tests/text-shaping-newline.json' with {type: 'json'};
 import expectedNewLinesInMiddle from './tests/text-shaping-newlines-in-middle.json' with {type: 'json'};
+import expectedBreakBeforeBracket from './tests/text-shaping-break-before-bracket.json' with {type: 'json'};
 // Prefer zero width spaces when breaking lines. Zero width spaces are used by MapLibre data sources as a hint that
 // a position is ideal for breaking.
 import expectedZeroWidthSpaceBreak from './tests/text-shaping-zero-width-space.json' with {type: 'json'};
@@ -96,6 +97,12 @@ describe('shaping', () => {
         const shaped = shapeText(Formatted.fromString('三三\u200b三三\u200b三三\u200b三三三三三三\u200b三三'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
         if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-zero-width-space.json'), JSON.stringify(shaped, null, 2));
         expect(shaped).toEqual(expectedZeroWidthSpaceBreak);
+    });
+
+    test('break before left parenthesis without whitespace', () => {
+        const shaped = shapeText(Formatted.fromString('oooooooo(aaaaaaaaa)'), glyphs, glyphPositions, images, fontStack, 5 * oneEm, oneEm, 'center', 'center', 0, [0, 0], WritingMode.horizontal, false, layoutTextSize, layoutTextSizeThisZoom);
+        if (UPDATE) fs.writeFileSync(path.resolve(__dirname, './tests/text-shaping-break-before-bracket.json'), JSON.stringify(shaped, null, 2));
+        expect(shaped).toEqual(expectedBreakBeforeBracket);
     });
 
     test('Null shaping', () => {
