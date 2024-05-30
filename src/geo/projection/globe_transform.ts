@@ -29,7 +29,7 @@ function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, 
 /**
  * For given mercator coordinates in range 0..1, returns the angular coordinates on the sphere's surface, in radians.
  */
-function mercatorCoordinatesToAngularCoordinatesRadians(mercatorX: number, mercatorY: number): [number, number] {
+export function mercatorCoordinatesToAngularCoordinatesRadians(mercatorX: number, mercatorY: number): [number, number] {
     const sphericalX = mod(mercatorX * Math.PI * 2.0 + Math.PI, Math.PI * 2);
     const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
     return [sphericalX, sphericalY];
@@ -40,7 +40,7 @@ function mercatorCoordinatesToAngularCoordinatesRadians(mercatorX: number, merca
  * @param lngRadians - Longitude in radians.
  * @param latRadians - Latitude in radians.
  */
-function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3 {
+export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3 {
     const len = Math.cos(latRadians);
     return [
         Math.sin(lngRadians) * len,
@@ -67,7 +67,7 @@ export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number)
 /**
  * Given a 3D point on the surface of a unit sphere, returns its angular coordinates in degrees.
  */
-function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
+export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     const latRadians = Math.asin(surface[1]);
     const latDegrees = latRadians / Math.PI * 180.0;
     const lengthXZ = Math.sqrt(surface[0] * surface[0] + surface[2] * surface[2]);

@@ -3,7 +3,7 @@ import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {expectToBeCloseToArray} from '../mercator_transform.test';
-import {GlobeTransform} from './globe_transform';
+import {GlobeTransform, angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_transform';
 import {OverscaledTileID} from '../../source/tile_id';
 
 describe('GlobeTransform', () => {
@@ -62,42 +62,40 @@ describe('GlobeTransform', () => {
     describe('projection', () => {
         test('mercator coordinate to sphere point', () => {
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjection);
 
             let projectedAngles;
             let projected;
 
-            projectedAngles = globeTransform['_mercatorCoordinatesToAngularCoordinates'](0.5, 0.5);
+            projectedAngles = mercatorCoordinatesToAngularCoordinatesRadians(0.5, 0.5);
             expectToBeCloseToArray(projectedAngles, [0, 0], precisionDigits);
-            projected = globeTransform['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
+            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [0, 0, 1], precisionDigits);
 
-            projectedAngles = globeTransform['_mercatorCoordinatesToAngularCoordinates'](0, 0.5);
+            projectedAngles = mercatorCoordinatesToAngularCoordinatesRadians(0, 0.5);
             expectToBeCloseToArray(projectedAngles, [Math.PI, 0], precisionDigits);
-            projected = globeTransform['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
+            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [0, 0, -1], precisionDigits);
 
-            projectedAngles = globeTransform['_mercatorCoordinatesToAngularCoordinates'](0.75, 0.5);
+            projectedAngles = mercatorCoordinatesToAngularCoordinatesRadians(0.75, 0.5);
             expectToBeCloseToArray(projectedAngles, [Math.PI / 2.0, 0], precisionDigits);
-            projected = globeTransform['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
+            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [1, 0, 0], precisionDigits);
 
-            projectedAngles = globeTransform['_mercatorCoordinatesToAngularCoordinates'](0.5, 0);
+            projectedAngles = mercatorCoordinatesToAngularCoordinatesRadians(0.5, 0);
             expectToBeCloseToArray(projectedAngles, [0, 1.4844222297453324], precisionDigits); // ~0.47pi
-            projected = globeTransform['_angularCoordinatesToVector'](projectedAngles[0], projectedAngles[1]) as [number, number, number];
+            projected = angularCoordinatesRadiansToVector(projectedAngles[0], projectedAngles[1]) as [number, number, number];
             expectToBeCloseToArray(projected, [0, 0.99627207622075, 0.08626673833405434], precisionDigits);
         });
 
         test('sphere point to coordinate', () => {
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjection);
-            let unprojected = globeTransform['_sphereSurfacePointToCoordinates']([0, 0, 1]) as LngLat;
+            let unprojected = sphereSurfacePointToCoordinates([0, 0, 1]) as LngLat;
             expect(unprojected.lng).toBeCloseTo(0, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(0, precisionDigits);
-            unprojected = globeTransform['_sphereSurfacePointToCoordinates']([0, 1, 0]) as LngLat;
+            unprojected = sphereSurfacePointToCoordinates([0, 1, 0]) as LngLat;
             expect(unprojected.lng).toBeCloseTo(0, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(90, precisionDigits);
-            unprojected = globeTransform['_sphereSurfacePointToCoordinates']([1, 0, 0]) as LngLat;
+            unprojected = sphereSurfacePointToCoordinates([1, 0, 0]) as LngLat;
             expect(unprojected.lng).toBeCloseTo(90, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(0, precisionDigits);
         });
