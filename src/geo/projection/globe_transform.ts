@@ -508,7 +508,7 @@ export class GlobeTransform extends Transform {
     //
 
     override setLocationAtPoint(lnglat: LngLat, point: Point): void {
-        if (this._globeProjection.useGlobeRendering) {
+        if (!this._globeProjection.useGlobeRendering) {
             this._mercatorTransform.setLocationAtPoint(lnglat, point);
             this.apply(this._mercatorTransform);
         }
@@ -533,11 +533,11 @@ export class GlobeTransform extends Transform {
     }
 
     override locationPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: test that this works well even with terrain
-        if (this._globeProjection.useGlobeRendering) {
+        if (!this._globeProjection.useGlobeRendering) {
             return this._mercatorTransform.locationPoint(lnglat, terrain);
         }
 
-        const pos = angularCoordinatesRadiansToVector(lnglat.lng * Math.PI / 180, lnglat.lat * Math.PI / 180);
+        const pos = angularCoordinatesToVector(lnglat);
 
         if (terrain) {
             const elevation = terrain.getElevationForLngLatZoom(lnglat, this._tileZoom);
@@ -549,7 +549,7 @@ export class GlobeTransform extends Transform {
         projected[1] /= projected[3];
         return new Point(
             (projected[0] * 0.5 + 0.5) * this.width,
-            (projected[1] * 0.5 + 0.5) * this.height
+            (-projected[1] * 0.5 + 0.5) * this.height
         );
     }
 
@@ -589,8 +589,8 @@ export class GlobeTransform extends Transform {
      */
     private getRayDirectionFromPixel(p: Point): vec3 {
         const pos: vec4 = [
-            ((p.x + 0.5) / this.width) * 2.0 - 1.0,
-            (((p.y + 0.5) / this.height) * 2.0 - 1.0) * -1.0,
+            (p.x / this.width) * 2.0 - 1.0,
+            ((p.y / this.height) * 2.0 - 1.0) * -1.0,
             1.0,
             1.0
         ];
@@ -723,18 +723,17 @@ export class GlobeTransform extends Transform {
     }
 
     public getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat { // JP: TODO: keep this function?
-        if (this._globeProjection.useGlobeControls) {
-            const pointLoc = this.unprojectScreenPoint(point);
-            const lngDelta = pointLoc.lng - this.center.lng;
-            const latDelta = pointLoc.lat - this.center.lat;
-            const newCenter = new LngLat(
-                lnglat.lng - lngDelta,
-                lnglat.lat - latDelta
-            );
-            newCenter.wrap();
-            return newCenter;
-        } else {
+        if (!this._globeProjection.useGlobeControls) {
             return this._mercatorTransform.getCenterForLocationAtPoint(lnglat, point);
         }
+        const pointLoc = this.unprojectScreenPoint(point);
+        const lngDelta = pointLoc.lng - this.center.lng;
+        const latDelta = pointLoc.lat - this.center.lat;
+        const newCenter = new LngLat(
+            lnglat.lng - lngDelta,
+            lnglat.lat - latDelta
+        );
+        newCenter.wrap();
+        return newCenter;
     }
 }
