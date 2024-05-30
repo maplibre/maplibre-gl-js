@@ -23,6 +23,7 @@ jest.mock('../source/source_cache');
 jest.mock('../source/tile');
 jest.mock('../data/bucket/symbol_bucket');
 jest.mock('../symbol/projection');
+(symbolProjection.getPitchedLabelPlaneMatrix as jest.Mock).mockReturnValue(mat4.create());
 
 describe('drawSymbol', () => {
     test('should not do anything', () => {
@@ -35,7 +36,6 @@ describe('drawSymbol', () => {
     });
 
     test('should call program.draw', () => {
-
         const painterMock = new Painter(null, null);
         painterMock.context = {
             gl: {},
@@ -81,19 +81,14 @@ describe('drawSymbol', () => {
             layoutSize: 1
         };
         const tile = new Tile(tileId, 256);
-        tile.tileID = tileId;
-        console.log(tile.tileSize);
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        (tile.getBucket as jest.Mock).mockReturnValue(bucketMock);
-        tile.tileSize = 256;
-        console.log(tile.tileSize);
+        tile.getBucket = () => bucketMock;
+        tile.tileID = tileId;
         const sourceCacheMock = new SourceCache(null, null, null);
-        console.log(tile.tileSize);
-        (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
-        console.log(tile.tileSize);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
+        sourceCacheMock.getTile = (_a) => tile;
 
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
@@ -163,7 +158,7 @@ describe('drawSymbol', () => {
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
         drawSymbols(painterMock, sourceCacheMock, layer, [tileId], null);
 
-        expect(spy.mock.calls[0][8]).toBeFalsy(); // rotateToLine === false
+        expect(spy.mock.calls[0][7]).toBeFalsy(); // rotateToLine === false
     });
 
     test('transparent tile optimization should prevent program.draw from being called', () => {
