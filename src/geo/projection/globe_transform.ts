@@ -511,6 +511,7 @@ export class GlobeTransform extends Transform {
         if (!this._globeProjection.useGlobeRendering) {
             this._mercatorTransform.setLocationAtPoint(lnglat, point);
             this.apply(this._mercatorTransform);
+            return;
         }
 
         // This returns some fake coordinates for pixels that do not lie on the planet.
