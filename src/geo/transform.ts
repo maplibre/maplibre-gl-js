@@ -134,6 +134,10 @@ export abstract class Transform {
      * Gets the transform's height in pixels. Use {@link resize} to set the transform's size.
      */
     get height(): number { return this._height; }
+
+    /**
+     * Gets the transform's bearing in radians.
+     */
     get angle(): number { return this._angle; }
 
     get lngRange(): [number, number] { return this._lngRange; }

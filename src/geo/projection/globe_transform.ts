@@ -15,6 +15,72 @@ import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 
+/**
+ * Returns mercator coordinates in range 0..1 for given coordinates inside a tile and the tile's canonical ID.
+ */
+export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, tileID: UnwrappedTileID): [number, number] {
+    const scale = 1.0 / (1 << tileID.canonical.z);
+    return [
+        inTileX / EXTENT * scale + tileID.canonical.x * scale,
+        inTileY / EXTENT * scale + tileID.canonical.y * scale
+    ];
+}
+
+/**
+ * For given mercator coordinates in range 0..1, returns the angular coordinates on the sphere's surface, in radians.
+ */
+export function mercatorCoordinatesToAngularCoordinatesRadians(mercatorX: number, mercatorY: number): [number, number] {
+    const sphericalX = mod(mercatorX * Math.PI * 2.0 + Math.PI, Math.PI * 2);
+    const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
+    return [sphericalX, sphericalY];
+}
+
+/**
+ * For a given longitude and latitude (note: in degrees) returns the normalized vector from the planet center to the specified place on the surface.
+ * @param lngDegrees - Longitude in degrees.
+ * @param latDegrees - Latitude in degrees.
+ */
+export function angularCoordinatesDegreesToVector(lngDegrees: number, latDegrees: number): vec3 {
+    return angularCoordinatesRadiansToVector(lngDegrees * Math.PI / 180, latDegrees * Math.PI / 180);
+}
+
+/**
+ * For a given longitude and latitude (note: in radians) returns the normalized vector from the planet center to the specified place on the surface.
+ * @param lngRadians - Longitude in radians.
+ * @param latRadians - Latitude in radians.
+ */
+export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3 {
+    const len = Math.cos(latRadians);
+    return [
+        Math.sin(lngRadians) * len,
+        Math.sin(latRadians),
+        Math.cos(lngRadians) * len
+    ];
+}
+
+export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number) {
+    return worldSize / (2.0 * Math.PI) / Math.cos(latitudeDegrees * Math.PI / 180);
+}
+
+/**
+ * Given a 3D point on the surface of a unit sphere, returns its angular coordinates in degrees.
+ */
+export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
+    const latRadians = Math.asin(surface[1]);
+    const latDegrees = latRadians / Math.PI * 180.0;
+    const lengthXZ = Math.sqrt(surface[0] * surface[0] + surface[2] * surface[2]);
+    if (lengthXZ > 1e-6) {
+        const projX = surface[0] / lengthXZ;
+        const projZ = surface[2] / lengthXZ;
+        const acosZ = Math.acos(projZ);
+        const lngRadians = (projX > 0) ? acosZ : -acosZ;
+        const lngDegrees = lngRadians / Math.PI * 180.0;
+        return new LngLat(lngDegrees, latDegrees);
+    } else {
+        return new LngLat(0.0, latDegrees);
+    }
+}
+
 export class GlobeTransform extends Transform {
     private _cachedClippingPlane: vec4 = [1, 0, 0, 0];
 
@@ -247,63 +313,10 @@ export class GlobeTransform extends Transform {
         return [...planeVector, -tangentPlaneDistanceToC * scale];
     }
 
-    /**
-     * Returns mercator coordinates in range 0..1 for given coordinates inside a tile and the tile's canonical ID.
-     */
-    private _tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, tileID: UnwrappedTileID): [number, number] {
-        const scale = 1.0 / (1 << tileID.canonical.z);
-        return [
-            inTileX / EXTENT * scale + tileID.canonical.x * scale,
-            inTileY / EXTENT * scale + tileID.canonical.y * scale
-        ];
-    }
-
-    /**
-     * For given mercator coordinates in range 0..1, returns the angular coordinates on the sphere's surface, in radians.
-     */
-    private _mercatorCoordinatesToAngularCoordinates(mercatorX: number, mercatorY: number): [number, number] {
-        const sphericalX = mod(mercatorX * Math.PI * 2.0 + Math.PI, Math.PI * 2);
-        const sphericalY = 2.0 * Math.atan(Math.exp(Math.PI - (mercatorY * Math.PI * 2.0))) - Math.PI * 0.5;
-        return [sphericalX, sphericalY];
-    }
-
-    /**
-     * For a given longitude and latitude (note: in radians) returns the normalized vector from the planet center to the specified place on the surface.
-     * @param lngRadians - Longitude in radians.
-     * @param latRadians - Latitude in radians.
-     */
-    private _angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3 {
-        const len = Math.cos(latRadians);
-        return [
-            Math.sin(lngRadians) * len,
-            Math.sin(latRadians),
-            Math.cos(lngRadians) * len
-        ];
-    }
-
-    /**
-     * Given a 3D point on the surface of a unit sphere, returns its angular coordinates in degrees.
-     */
-    private _sphereSurfacePointToCoordinates(surface: vec3): LngLat {
-        const latRadians = Math.asin(surface[1]);
-        const latDegrees = latRadians / Math.PI * 180.0;
-        const lengthXZ = Math.sqrt(surface[0] * surface[0] + surface[2] * surface[2]);
-        if (lengthXZ > 1e-6) {
-            const projX = surface[0] / lengthXZ;
-            const projZ = surface[2] / lengthXZ;
-            const acosZ = Math.acos(projZ);
-            const lngRadians = (projX > 0) ? acosZ : -acosZ;
-            const lngDegrees = lngRadians / Math.PI * 180.0;
-            return new LngLat(lngDegrees, latDegrees);
-        } else {
-            return new LngLat(0.0, latDegrees);
-        }
-    }
-
     private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: UnwrappedTileID): vec3 {
-        const mercator = this._tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
-        const angular = this._mercatorCoordinatesToAngularCoordinates(mercator[0], mercator[1]);
-        const sphere = this._angularCoordinatesRadiansToVector(angular[0], angular[1]);
+        const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
+        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator[0], mercator[1]);
+        const sphere = angularCoordinatesRadiansToVector(angular[0], angular[1]);
         return sphere;
     }
 
@@ -361,8 +374,8 @@ export class GlobeTransform extends Transform {
         if (!this._globeProjection.useGlobeRendering) {
             return 1.0;
         }
-        const mercator = this._tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID);
-        const angular = this._mercatorCoordinatesToAngularCoordinates(mercator[0], mercator[1]);
+        const mercator = tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID);
+        const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator[0], mercator[1]);
         return this.getCircleRadiusCorrection() / Math.cos(angular[1]);
     }
 
@@ -407,7 +420,7 @@ export class GlobeTransform extends Transform {
         // We want zoom levels to be consistent between globe and flat views.
         // This means that the pixel size of features at the map center point
         // should be the same for both globe and flat view.
-        const globeRadiusPixels = this.worldSize / (2.0 * Math.PI) / Math.cos(this.center.lat * Math.PI / 180);
+        const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
         const globeMatrix = new Float64Array(16) as any;
@@ -512,7 +525,7 @@ export class GlobeTransform extends Transform {
             return this._mercatorTransform.locationPoint(lnglat, terrain);
         }
 
-        const pos = this._angularCoordinatesRadiansToVector(lnglat.lng * Math.PI / 180, lnglat.lat * Math.PI / 180);
+        const pos = angularCoordinatesRadiansToVector(lnglat.lng * Math.PI / 180, lnglat.lat * Math.PI / 180);
 
         if (terrain) {
             const elevation = terrain.getElevationForLngLatZoom(lnglat, this._tileZoom);
@@ -648,7 +661,7 @@ export class GlobeTransform extends Transform {
             ]);
             const sphereSurface = vec3.create();
             vec3.normalize(sphereSurface, intersectionPoint);
-            return this._sphereSurfacePointToCoordinates(sphereSurface);
+            return sphereSurfacePointToCoordinates(sphereSurface);
         } else {
             // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
             // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
@@ -693,7 +706,7 @@ export class GlobeTransform extends Transform {
             const finalPoint = vec3.create();
             vec3.normalize(finalPoint, offsetPoint);
 
-            return this._sphereSurfacePointToCoordinates(finalPoint);
+            return sphereSurfacePointToCoordinates(finalPoint);
         }
     }
 
