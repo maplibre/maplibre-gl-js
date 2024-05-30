@@ -150,7 +150,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         signal: abortController.signal
     });
 
-    if (requestParameters.type === 'json') {
+    if (requestParameters.type === 'json' && !request.headers.has('Accept')) {
         request.headers.set('Accept', 'application/json');
     }
 
