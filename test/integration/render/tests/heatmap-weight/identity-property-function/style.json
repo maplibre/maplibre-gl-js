@@ -13,7 +13,7 @@
   ],
   "zoom": 14,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -32,7 +32,7 @@
     {
       "id": "poi_label",
       "type": "heatmap",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "poi_label",
       "paint": {
         "heatmap-intensity": 0.05,
