@@ -1,13 +1,13 @@
 import Point from '@mapbox/point-geometry';
-import {MAX_VALID_LATITUDE} from './transform';
-import {LngLat} from './lng_lat';
-import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
-import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
-import type {Terrain} from '../render/terrain';
-import {MercatorTransform, getBasicProjectionData} from './projection/mercator_transform';
+import {MAX_VALID_LATITUDE} from '../transform';
+import {LngLat} from '../lng_lat';
+import {OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
+import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
+import type {Terrain} from '../../render/terrain';
+import {MercatorTransform, getBasicProjectionData} from './mercator_transform';
 import {mat4} from 'gl-matrix';
-import {ProjectionData} from '../render/program/projection_program';
-import {EXTENT} from '../data/extent';
+import {ProjectionData} from '../../render/program/projection_program';
+import {EXTENT} from '../../data/extent';
 
 describe('transform', () => {
     test('creates a transform', () => {
