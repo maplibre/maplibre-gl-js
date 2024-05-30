@@ -49,6 +49,13 @@ function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: numbe
     ];
 }
 
+/**
+ * For a given longitude and latitude (note: in degrees) returns the normalized vector from the planet center to the specified place on the surface.
+ */
+function angularCoordinatesToVector(lngLat: LngLat): vec3 {
+    return angularCoordinatesRadiansToVector(lngLat.lng * Math.PI / 180, lngLat.lat * Math.PI / 180);
+}
+
 export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number) {
     // We want zoom levels to be consistent between globe and flat views.
     // This means that the pixel size of features at the map center point
@@ -506,10 +513,23 @@ export class GlobeTransform extends Transform {
             this.apply(this._mercatorTransform);
         }
 
-        this._mercatorTransform.setLocationAtPoint(lnglat, point);
-        this.apply(this._mercatorTransform);
+        // This returns some fake coordinates for pixels that do not lie on the planet.
+        // Whatever uses this `setLocationAtPoint` function will need to account for that.
+        const pointLngLat = this.unprojectScreenPoint(point);
 
-        // JP: TODO: on globe this can be impossible, eg. for the corner of the screen if the globe is zoomed out
+        const vecToCenter = angularCoordinatesToVector(this.center);
+        const vecToPixelCurrent = angularCoordinatesToVector(pointLngLat);
+        const vecToTarget = angularCoordinatesToVector(lnglat);
+
+        const axis = vec3.create();
+        vec3.cross(axis, vecToPixelCurrent, vecToCenter);
+        vec3.normalize(axis, axis);
+        const angle = Math.acos(vec3.dot(vecToCenter, vecToPixelCurrent));
+        const matrix = mat4.create();
+        mat4.fromRotation(matrix, angle, axis);
+        const newCenterVec = vec3.create();
+        vec3.transformMat4(newCenterVec, vecToTarget, matrix);
+        this.center = sphereSurfacePointToCoordinates(newCenterVec);
     }
 
     override locationPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: test that this works well even with terrain

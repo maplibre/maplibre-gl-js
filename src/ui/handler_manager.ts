@@ -502,15 +502,21 @@ export class HandlerManager {
         map._stop(true);
 
         around = around || map.transform.centerPoint;
-        // Get the LngLat of the place that was under the cursor when panning started
-        const loc = tr.pointLocation(panDelta ? around.sub(panDelta) : around);
-        if (bearingDelta) tr.bearing += bearingDelta;
-        if (pitchDelta) tr.pitch += pitchDelta;
-        if (zoomDelta) tr.zoom += zoomDelta;
 
         // JP: TODO: inertia is NOT handled here
         if (this._map.projection.useGlobeControls) {
             // Globe map controls
+            const aroundLoc = tr.pointLocation(around);
+            if (bearingDelta) tr.bearing += bearingDelta;
+            if (pitchDelta) tr.pitch += pitchDelta;
+            if (zoomDelta) tr.zoom += zoomDelta;
+
+            if (zoomDelta) {
+                tr.setLocationAtPoint(aroundLoc, around);
+            }
+
+            // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
+            // is avoided here - dragging speed is the same no matter what screen pixel you grab.
             if (panDelta) {
                 // These are actually very similar to mercator controls, and should
                 // converge to them at high zooms.
@@ -532,6 +538,11 @@ export class HandlerManager {
             }
         } else {
             // Flat map controls
+            const loc = tr.pointLocation(panDelta ? around.sub(panDelta) : around);
+            if (bearingDelta) tr.bearing += bearingDelta;
+            if (pitchDelta) tr.pitch += pitchDelta;
+            if (zoomDelta) tr.zoom += zoomDelta;
+
             if (!terrain) {
                 tr.setLocationAtPoint(loc, around);
             } else {

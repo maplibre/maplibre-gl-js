@@ -383,14 +383,14 @@ export abstract class Transform {
     scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
     /**
-     * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512)
+     * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512).
      * @param lnglat - the lngLat
      * @returns Point
      */
     abstract project(lnglat: LngLat): Point;
 
     /**
-     * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90])
+     * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90]).
      * @param point - world coordinate
      * @returns LngLat
      */
@@ -412,7 +412,7 @@ export abstract class Transform {
     abstract setLocationAtPoint(lnglat: LngLat, point: Point): void;
 
     /**
-     * Given a LngLat location, return the screen point that corresponds to it
+     * Given a LngLat location, return the screen point that corresponds to it.
      * @param lnglat - location
      * @param terrain - optional terrain
      * @returns screen point
@@ -420,7 +420,7 @@ export abstract class Transform {
     abstract locationPoint(lnglat: LngLat, terrain?: Terrain): Point;
 
     /**
-     * Given a point on screen, return its lnglat
+     * Given a point on screen, return its lnglat.
      * @param p - screen point
      * @param terrain - optional terrain
      * @returns lnglat location
