@@ -20,9 +20,8 @@ import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
 import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
-import {angularCoordinatesDegreesToVector, getGlobeRadiusPixels, sphereSurfacePointToCoordinates} from '../geo/projection/globe_transform';
 import {LngLat} from '../geo/lng_lat';
-import {mat3, mat4, vec3} from 'gl-matrix';
+import {getGlobeRadiusPixels} from '../geo/projection/globe_transform';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
@@ -144,10 +143,6 @@ export class HandlerManager {
     _updatingCamera: boolean;
     _changes: Array<[HandlerResult, EventsInProgress, {[handlerName: string]: Event}]>;
     _terrainMovement: boolean;
-    _panState: {
-        startCenter: LngLat;
-        accumulatedPan: Point;
-    };
     _zoom: {handlerName: string};
     _previousActiveHandlers: {[x: string]: Handler};
     _listeners: Array<[Window | Document | HTMLElement, string, {
@@ -494,7 +489,6 @@ export class HandlerManager {
         const terrain = map.terrain;
 
         if (!hasChange(combinedResult) && !(terrain && this._terrainMovement)) {
-            this._panState = null;
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
@@ -517,76 +511,25 @@ export class HandlerManager {
         // JP: TODO: inertia is NOT handled here
         if (this._map.projection.useGlobeControls) {
             // Globe map controls
-            // if (panDelta) {
-            //     const centerLoc = tr.pointLocation(map.transform.centerPoint);
-            //     const centerLocDx = tr.pointLocation(new Point(map.transform.centerPoint.x + 1, map.transform.centerPoint.y));
-            //     const centerLocDy = tr.pointLocation(new Point(map.transform.centerPoint.x, map.transform.centerPoint.y + 1));
-            //     const lngDx = centerLocDx.lng - centerLoc.lng;
-            //     const latDx = centerLocDx.lat - centerLoc.lat;
-            //     const lngDy = centerLocDy.lng - centerLoc.lng;
-            //     const latDy = centerLocDy.lat - centerLoc.lat;
-            //     tr.center = new LngLat(
-            //         tr.center.lng - panDelta.x * lngDx - panDelta.y * lngDy,
-            //         tr.center.lat - panDelta.x * latDx - panDelta.y * latDy
-            //     );
-            // }
             if (panDelta) {
-                // This control scheme seems okay = if some feature is directly left of the center, and I pan the map left, the feature ends up being in the center eventually
-                // But in practice it is totally cursed, because we intuitively expect panning left to move the map directly west (and the feature is actually a little more south).
-                if (!this._panState) {
-                    this._panState = {
-                        startCenter: tr.center,
-                        accumulatedPan: new Point(0, 0)
-                    };
-                }
-                this._panState.accumulatedPan = this._panState.accumulatedPan.add(panDelta);
+                // These are actually very similar to mercator controls, and should
+                // converge to them at high zooms.
+                // This approach just avoids using the "move map so a specific pixel lies at specific coordinates" function,
+                // since it is impossible to implement for globe without significant problems.
 
-                const sensitivity = 0.015 / tr.zoomScale(tr.zoom);
+                // First we figure out by how many degrees to move the map per pixel of panning
+                const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat);
+                const circumference = 2.0 * Math.PI * radius;
+                const sensitivity = 360.0 / circumference;
 
-                const centerVec = angularCoordinatesDegreesToVector(this._panState.startCenter.lng, this._panState.startCenter.lat);
+                // Apply map bearing to the panning vector
+                const rotatedPanDelta = panDelta.rotate(-tr.angle);
 
-                const vecUp = [0, 1, 0] as vec3;
-
-                // Axis for rotation in the Y screen direction
-                const axisForPitch = vec3.create();
-
-                vec3.cross(axisForPitch, centerVec, vecUp);
-                vec3.normalize(axisForPitch, axisForPitch);
-
-                // Axis for X
-                const axisForYaw = vec3.create();
-                vec3.cross(axisForYaw, centerVec, axisForPitch);
-                vec3.normalize(axisForYaw, axisForYaw);
-
-                const matrixBearing = mat4.create();
-                mat4.fromRotation(matrixBearing, tr.angle, centerVec);
-                vec3.transformMat4(axisForPitch, axisForPitch, matrixBearing);
-                vec3.transformMat4(axisForYaw, axisForYaw, matrixBearing);
-
-                const matrixX = mat4.create();
-                mat4.fromRotation(matrixX, this._panState.accumulatedPan.x * sensitivity, axisForYaw);
-                const matrixY = mat4.create();
-                mat4.fromRotation(matrixY, this._panState.accumulatedPan.y * sensitivity, axisForPitch);
-
-                const newCenter = vec3.clone(centerVec);
-                vec3.transformMat4(newCenter, newCenter, matrixX);
-                vec3.transformMat4(newCenter, newCenter, matrixY);
-
-                tr.center = sphereSurfacePointToCoordinates(newCenter);
-            } else {
-                this._panState = null;
+                tr.center = new LngLat(
+                    tr.center.lng - rotatedPanDelta.x * sensitivity / Math.cos(tr.center.lat * Math.PI / 180), // Note: we divide longitude change by planet width at the given latitude.
+                    tr.center.lat + rotatedPanDelta.y * sensitivity
+                );
             }
-            // if (panDelta) {
-            //     // Simple, but weird around the poles
-            //     const sensitivity = 0.5 / tr.zoomScale(tr.zoom);
-
-            //     const rotatedPanDelta = panDelta.rotate(-tr.angle);
-
-            //     tr.center = new LngLat(
-            //         tr.center.lng - rotatedPanDelta.x * sensitivity,
-            //         tr.center.lat + rotatedPanDelta.y * sensitivity
-            //     );
-            // }
         } else {
             // Flat map controls
             if (!terrain) {
