@@ -24,7 +24,7 @@ export type GeoJSONSourceOptions = GeoJSONSourceSpecification & {
     data: GeoJSON.GeoJSON | string;
 }
 
-export type GeoJSONSourceIntenalOptions = {
+export type GeoJSONSourceInternalOptions = {
     data?: GeoJSON.GeoJSON | string | undefined;
     cluster?: boolean;
     clusterMaxZoom?: number;
@@ -117,7 +117,7 @@ export class GeoJSONSource extends Evented implements Source {
     isTileClipped: boolean;
     reparseOverscaled: boolean;
     _data: GeoJSON.GeoJSON | string | undefined;
-    _options: GeoJSONSourceIntenalOptions;
+    _options: GeoJSONSourceInternalOptions;
     workerOptions: GeoJSONWorkerOptions;
     map: Map;
     actor: Actor;
