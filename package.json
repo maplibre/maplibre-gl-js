@@ -69,7 +69,7 @@
     "@types/minimist": "^1.2.5",
     "@types/murmurhash-js": "^1.0.6",
     "@types/nise": "^1.4.4",
-    "@types/node": "^20.12.12",
+    "@types/node": "^20.12.13",
     "@types/offscreencanvas": "^2019.7.3",
     "@types/pixelmatch": "^5.2.6",
     "@types/pngjs": "^6.0.5",
@@ -135,7 +135,7 @@
     "ts-node": "^10.9.2",
     "tslib": "^2.6.2",
     "typedoc": "^0.25.13",
-    "typedoc-plugin-markdown": "^4.0.2",
+    "typedoc-plugin-markdown": "^4.0.3",
     "typedoc-plugin-missing-exports": "^2.2.0",
     "typescript": "^5.4.5"
   },
