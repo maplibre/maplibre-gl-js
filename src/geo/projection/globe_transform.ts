@@ -267,7 +267,12 @@ export class GlobeTransform extends Transform {
         return [sphericalX, sphericalY];
     }
 
-    private _angularCoordinatesToVector(lngRadians: number, latRadians: number): vec3 {
+    /**
+     * For a given longitude and latitude (note: in radians) returns the normalized vector from the planet center to the specified place on the surface.
+     * @param lngRadians - Longitude in radians.
+     * @param latRadians - Latitude in radians.
+     */
+    private _angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3 {
         const len = Math.cos(latRadians);
         return [
             Math.sin(lngRadians) * len,
@@ -298,7 +303,7 @@ export class GlobeTransform extends Transform {
     private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: UnwrappedTileID): vec3 {
         const mercator = this._tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
         const angular = this._mercatorCoordinatesToAngularCoordinates(mercator[0], mercator[1]);
-        const sphere = this._angularCoordinatesToVector(angular[0], angular[1]);
+        const sphere = this._angularCoordinatesRadiansToVector(angular[0], angular[1]);
         return sphere;
     }
 
@@ -507,20 +512,19 @@ export class GlobeTransform extends Transform {
             return this._mercatorTransform.locationPoint(lnglat, terrain);
         }
 
-        const pos = [...this._angularCoordinatesToVector(lnglat.lng, lnglat.lat), 1] as vec4;
+        const pos = this._angularCoordinatesRadiansToVector(lnglat.lng * Math.PI / 180, lnglat.lat * Math.PI / 180);
 
         if (terrain) {
             const elevation = terrain.getElevationForLngLatZoom(lnglat, this._tileZoom);
-            vec4.scale(pos, pos, 1.0 + elevation / earthRadius);
-            pos[3] = 1; // Do not scale the last component
+            vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
-
-        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
-        pos[0] /= pos[3];
-        pos[1] /= pos[3];
+        const projected = vec4.create();
+        vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeProjMatrixNoCorrection);
+        projected[0] /= projected[3];
+        projected[1] /= projected[3];
         return new Point(
-            (pos[0] * 0.5 + 0.5) * this.width,
-            (pos[1] * 0.5 + 0.5) * this.height
+            (projected[0] * 0.5 + 0.5) * this.width,
+            (projected[1] * 0.5 + 0.5) * this.height
         );
     }
 
