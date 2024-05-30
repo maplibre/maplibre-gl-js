@@ -8,7 +8,7 @@
     }
   },
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "geojson",
       "data": {
         "type": "FeatureCollection",
@@ -39,7 +39,7 @@
     {
       "id": "literal",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "layout": {
         "text-field": ["concat",
             "en == ",

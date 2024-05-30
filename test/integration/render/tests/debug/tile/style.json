@@ -21,7 +21,7 @@
       "maxzoom": 1,
       "tileSize": 256
     },
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -50,7 +50,7 @@
     {
       "id": "line",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road_label",
       "layout": {
         "text-field": "test",
