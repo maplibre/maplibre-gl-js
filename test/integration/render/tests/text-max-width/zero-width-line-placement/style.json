@@ -12,7 +12,7 @@
   ],
   "zoom": 4,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "geojson",
       "data": {
         "type": "FeatureCollection",
@@ -50,7 +50,7 @@
     {
       "id": "literal",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "layout": {
         "symbol-placement": "line",
         "text-field": "Lorem ipsum dolor sit amet.",
