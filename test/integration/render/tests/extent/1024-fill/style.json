@@ -11,7 +11,7 @@
   ],
   "zoom": 0,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -28,9 +28,9 @@
       }
     },
     {
-      "id": "mapbox",
+      "id": "maplibre",
       "type": "fill",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "water",
       "paint": {
         "fill-color": "black",
