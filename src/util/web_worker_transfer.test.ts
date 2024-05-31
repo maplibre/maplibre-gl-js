@@ -1,4 +1,10 @@
+import {AJAXError} from './ajax';
 import {register, serialize, deserialize} from './web_worker_transfer';
+
+const mockTransfer = (input, transferables?) => {
+    const serialized = serialize(input, transferables);
+    return deserialize(structuredClone(serialized, {transfer: transferables}));
+};
 
 describe('web worker transfer', () => {
     test('round trip', () => {
@@ -79,5 +85,17 @@ describe('web worker transfer', () => {
         expect(deserialize(serialize(customSerialization)) instanceof CustomSerialization).toBeTruthy();
         expect(deserialized.id).toBe(customSerialization.id);
         expect(deserialized._deserialized).toBeTruthy();
+    });
+
+    test('AjaxError serialization', () => {
+        const status = 404;
+        const statusText = 'not found';
+        const url = 'https://example.com';
+
+        const ajaxError = new AJAXError(status, statusText, url, new Blob());
+        const deserialized = mockTransfer(ajaxError) as AJAXError;
+        expect(deserialized.status).toBe(404);
+        expect(deserialized.statusText).toBe(statusText);
+        expect(deserialized.url).toBe(url);
     });
 });

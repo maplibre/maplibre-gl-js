@@ -35,7 +35,7 @@ const config: Config = {
     projects: [
         {
             displayName: 'unit',
-            testEnvironment: 'jsdom',
+            testEnvironment: './jest.jsdom.environment.ts',
             setupFiles: [
                 'jest-webgl-canvas-mock',
                 './test/unit/lib/web_worker_mock.ts'
