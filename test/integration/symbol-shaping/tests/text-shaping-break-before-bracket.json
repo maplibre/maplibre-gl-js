@@ -1,0 +1,459 @@
+{
+  "positionedLines": [
+    {
+      "positionedGlyphs": [
+        {
+          "glyph": 111,
+          "imageName": null,
+          "x": -56,
+          "y": -29,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 13,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 14
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 111,
+          "imageName": null,
+          "x": -42,
+          "y": -29,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 13,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 14
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 111,
+          "imageName": null,
+          "x": -28,
+          "y": -29,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 13,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 14
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 111,
+          "imageName": null,
+          "x": -14,
+          "y": -29,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 13,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 14
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 111,
+          "imageName": null,
+          "x": 0,
+          "y": -29,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 13,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 14
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 111,
+          "imageName": null,
+          "x": 14,
+          "y": -29,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 13,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 14
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 111,
+          "imageName": null,
+          "x": 28,
+          "y": -29,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 13,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 14
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 111,
+          "imageName": null,
+          "x": 42,
+          "y": -29,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 13,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 14
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        }
+      ],
+      "lineOffset": 0
+    },
+    {
+      "positionedGlyphs": [
+        {
+          "glyph": 40,
+          "imageName": null,
+          "x": -65.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 7,
+            "height": 22,
+            "left": 0,
+            "top": -8,
+            "advance": 7
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": -58.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": -45.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": -32.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": -19.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": -6.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": 6.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": 19.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": 32.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 97,
+          "imageName": null,
+          "x": 45.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 11,
+            "height": 15,
+            "left": 1,
+            "top": -12,
+            "advance": 13
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        },
+        {
+          "glyph": 41,
+          "imageName": null,
+          "x": 58.5,
+          "y": -5,
+          "vertical": false,
+          "scale": 1,
+          "fontStack": "Test",
+          "sectionIndex": 0,
+          "metrics": {
+            "width": 7,
+            "height": 22,
+            "left": 0,
+            "top": -8,
+            "advance": 7
+          },
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 32,
+            "h": 32
+          }
+        }
+      ],
+      "lineOffset": 0
+    }
+  ],
+  "text": "oooooooo(aaaaaaaaa)",
+  "top": -24,
+  "bottom": 24,
+  "left": -65.5,
+  "right": 65.5,
+  "writingMode": 1,
+  "iconsInText": false,
+  "verticalizable": false
+}
