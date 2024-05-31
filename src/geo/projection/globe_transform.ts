@@ -89,6 +89,32 @@ function getZoomAdjustment(oldLat: number, newLat: number): number {
     return Math.log2(newCircumference / oldCircumference);
 }
 
+/**
+ * Returns the angle in radians between two 2D vectors.
+ * The angle is how much must the first vector be rotated clockwise
+ * (assuming X is right and Y is down) so that it points in the same
+ * direction as the second vector.
+ * Returns an angle in range -PI..PI.
+ */
+function angleToRotateBetweenVectors(vec1x: number, vec1y: number, vec2x: number, vec2y: number): number {
+    // Normalize both vectors
+    const alen = Math.sqrt(vec1x * vec1x + vec1y * vec1y);
+    const blen = Math.sqrt(vec2x * vec2x + vec2y * vec2y);
+    vec1x /= alen;
+    vec1y /= alen;
+    vec2x /= blen;
+    vec2y /= blen;
+    const dot = vec1x * vec2x + vec1y * vec2y;
+    const angle = Math.acos(dot);
+    // dot second vector with vector to the right of first (-vec1y, vec1x)
+    const bRightOfA = (-vec1y * vec2x + vec1x * vec2y) > 0;
+    if (bRightOfA) {
+        return angle;
+    } else {
+        return -angle;
+    }
+}
+
 function createVec4(): vec4 { return new Float64Array(4) as any; }
 function createVec3(): vec3 { return new Float64Array(3) as any; }
 function createMat4(): mat4 { return new Float64Array(16) as any; }
@@ -537,20 +563,109 @@ export class GlobeTransform extends Transform {
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);
-
-        const vecToCenter = angularCoordinatesToVector(this.center);
         const vecToPixelCurrent = angularCoordinatesToVector(pointLngLat);
         const vecToTarget = angularCoordinatesToVector(lnglat);
 
-        const axis = createVec3();
-        vec3.cross(axis, vecToPixelCurrent, vecToCenter);
-        vec3.normalize(axis, axis);
-        const angle = Math.acos(Math.min(Math.max(vec3.dot(vecToCenter, vecToPixelCurrent), -1.0), 1.0));
-        const matrix = createMat4();
-        mat4.fromRotation(matrix, angle, axis);
-        const newCenterVec = createVec3();
-        vec3.transformMat4(newCenterVec, vecToTarget, matrix);
-        this.center = sphereSurfacePointToCoordinates(newCenterVec);
+        const zero = createVec3();
+        vec3.zero(zero);
+
+        const rotatedPixelVector = createVec3();
+        vec3.rotateY(rotatedPixelVector, vecToPixelCurrent, zero, -this.center.lng * Math.PI / 180.0);
+        vec3.rotateX(rotatedPixelVector, rotatedPixelVector, zero, this.center.lat * Math.PI / 180.0);
+
+        // We are looking for the lng,lat that will rotate `vecToTarget`
+        // so that it is equal to `rotatedPixelVector`.
+
+        // The second rotation around X axis cannot change the X component,
+        // so we first must find the longitude such that rotating `vecToTarget` with it
+        // will place it so its X component is equal to X component of `rotatedPixelVector`.
+        // There will exist zero, one or two longitudes that satisfy this.
+
+        //      x  |
+        //     /   |
+        //    /    | the line is the target X - rotatedPixelVector.x
+        //   /     | the x is vecToTarget projected to x,z plane
+        //  .      | the dot is origin
+        //
+        // We need to rotate vecToTarget so that it intersects the line.
+        // If vecToTarget is shorter than the distance to the line from origin, it is impossible.
+
+        // Otherwise, we compute the intersection of the line with a ring with radius equal to
+        // length of vecToTarget projected to XZ plane.
+
+        const vecToTargetXZLengthSquared = vecToTarget[0] * vecToTarget[0] + vecToTarget[2] * vecToTarget[2];
+        const targetXsquared = rotatedPixelVector[0] * rotatedPixelVector[0];
+        if (vecToTargetXZLengthSquared < targetXsquared) {
+            // Zero solutions - setLocationAtPoint is impossible. What do?
+            return;
+        }
+
+        // The intersection's Z coordinates
+        const intersectionA = Math.sqrt(vecToTargetXZLengthSquared - targetXsquared);
+        const intersectionB = -intersectionA; // the second solution
+
+        const lngA = angleToRotateBetweenVectors(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
+        const lngB = angleToRotateBetweenVectors(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionB);
+
+        const vecToTargetLngA = createVec3();
+        vec3.rotateY(vecToTargetLngA, vecToTarget, zero, lngA);
+        const latA = angleToRotateBetweenVectors(vecToTargetLngA[1], vecToTargetLngA[2], rotatedPixelVector[1], rotatedPixelVector[2]);
+        const vecToTargetLngB = createVec3();
+        vec3.rotateY(vecToTargetLngB, vecToTarget, zero, lngB);
+        const latB = angleToRotateBetweenVectors(vecToTargetLngB[1], vecToTargetLngB[2], rotatedPixelVector[1], rotatedPixelVector[2]);
+        // Is at least one of the needed latitudes valid?
+
+        const limit = Math.PI * 0.5;
+        let validLng: number;
+        let validLat: number;
+        if (latA >= -limit && latA <= limit) {
+            validLng = lngA;
+            validLat = latA;
+        } else if (latB >= -limit && latB <= limit) {
+            validLng = lngB;
+            validLat = latB;
+        } else {
+            // No solution. What do?
+            return;
+        }
+
+        const newLng = validLng / Math.PI * 180;
+        const newLat = validLat / Math.PI * 180;
+        this.center = new LngLat(newLng, newLat);
+
+        // const vecToCenter = angularCoordinatesToVector(this.center);
+
+        // const oldCenter = this.center;
+        // const oldZoom = this.zoom;
+
+        // const axis = createVec3();
+        // vec3.cross(axis, vecToPixelCurrent, vecToCenter);
+        // vec3.normalize(axis, axis);
+        // const angle = Math.acos(Math.min(Math.max(vec3.dot(vecToCenter, vecToPixelCurrent), -1.0), 1.0));
+        // const matrix = createMat4();
+        // mat4.fromRotation(matrix, angle, axis);
+        // const epsilon = 1e-9;
+        // if (angle < epsilon || vec3.sqrLen(axis) < epsilon) {
+        //     mat4.identity(matrix);
+        // }
+        // const newCenterVec = createVec3();
+        // vec3.transformMat4(newCenterVec, vecToTarget, matrix);
+        // this.center = sphereSurfacePointToCoordinates(newCenterVec);
+
+        // console.log(
+        //     `target-lnglat ${lnglat}
+        //     target-point ${point.x} ${point.y}
+        //     pre-center ${oldCenter}
+        //     pre-zoom ${oldZoom}
+        //     pointLngLat ${pointLngLat}
+        //     vecToCenter ${vecToCenter}
+        //     vecToPixelCurrent ${vecToPixelCurrent}
+        //     vecToTarget ${vecToTarget}
+        //     axis ${axis}
+        //     angle ${angle}
+        //     newCenterVec ${newCenterVec}
+        //     post-center ${this.center}
+        //     post-zoom ${this.zoom}`);
     }
 
     override locationPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: test that this works well even with terrain
