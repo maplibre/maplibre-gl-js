@@ -170,7 +170,8 @@ describe('ajax', () => {
 
         test('should preserve user-specified Accept header', async () => {
             server.respondWith(request => {
-                request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
+                // Note that postgrest responds to this type of request with application/geo+json
+                request.respond(200, {'Content-Type': 'application/geo+json'}, '{"foo": "bar"}');
             });
 
             const promise = getJSON({url: 'http://example.com/test-params.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123', 'Accept': 'application/geo+json'}}, new AbortController());
