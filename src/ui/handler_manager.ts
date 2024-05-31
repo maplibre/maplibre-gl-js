@@ -518,10 +518,9 @@ export class HandlerManager {
             // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
             // is avoided here - dragging speed is the same no matter what screen pixel you grab.
             if (panDelta) {
-                // These are actually very similar to mercator controls, and should
-                // converge to them at high zooms.
-                // This approach just avoids using the "move map so a specific pixel lies at specific coordinates" function,
-                // since it is impossible to implement for globe without significant problems.
+                // These are actually very similar to mercator controls, and should converge to them at high zooms.
+                // This approach just avoids using the "grab a place and move it around" approach from mercator,
+                // since it is not a very pleasant way to pan a globe.
 
                 // First we figure out by how many degrees to move the map per pixel of panning
                 const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat);

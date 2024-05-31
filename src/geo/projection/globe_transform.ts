@@ -83,6 +83,12 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     }
 }
 
+function getZoomAdjustment(oldLat: number, newLat: number): number {
+    const oldCircumference = Math.cos(oldLat * Math.PI / 180.0);
+    const newCircumference = Math.cos(newLat * Math.PI / 180.0);
+    return Math.log2(newCircumference / oldCircumference);
+}
+
 function createVec4(): vec4 { return new Float64Array(4) as any; }
 function createVec3(): vec3 { return new Float64Array(3) as any; }
 function createMat4(): mat4 { return new Float64Array(16) as any; }
@@ -172,12 +178,6 @@ export class GlobeTransform extends Transform {
         this._globeProjectionOverride = allow;
     }
 
-    private _getZoomAdjustment(oldLat: number, newLat: number): number {
-        const oldCircumference = Math.cos(oldLat * Math.PI / 180.0);
-        const newCircumference = Math.cos(newLat * Math.PI / 180.0);
-        return Math.log2(newCircumference / oldCircumference);
-    }
-
     public translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
@@ -200,21 +200,6 @@ export class GlobeTransform extends Transform {
         }
 
         this._calcMatrices();
-
-        if (this._oldTransformState) {
-            // JP: TODO: zoom compensation should probably be handled in the pan controller instead
-            if (this._globeRendering) {
-                this.zoom += this._getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
-                this._constrain();
-            }
-            this._oldTransformState.zoom = this.zoom;
-            this._oldTransformState.lat = this.center.lat;
-        } else {
-            this._oldTransformState = {
-                zoom: this._zoom,
-                lat: this.center.lat
-            };
-        }
     }
 
     private _updateAnimation() {
@@ -431,6 +416,21 @@ export class GlobeTransform extends Transform {
             return;
         }
 
+        if (this._oldTransformState) {
+            // JP: TODO: zoom compensation should probably be handled in the pan controller instead
+            if (this._globeRendering) {
+                this._zoom += getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
+                this._constrain();
+            }
+            this._oldTransformState.zoom = this.zoom;
+            this._oldTransformState.lat = this.center.lat;
+        } else {
+            this._oldTransformState = {
+                zoom: this._zoom,
+                lat: this.center.lat
+            };
+        }
+
         if (this._mercatorTransform) {
             this._mercatorTransform.apply(this);
         }
@@ -453,14 +453,14 @@ export class GlobeTransform extends Transform {
         mat4.rotateX(globeMatrixUncorrected, globeMatrix, this.center.lat * Math.PI / 180.0);
         mat4.rotateY(globeMatrixUncorrected, globeMatrixUncorrected, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
-        this._globeProjMatrixNoCorrection = globeMatrix;
+        this._globeProjMatrixNoCorrection = globeMatrixUncorrected;
 
         mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeLatitudeErrorCorrectionRadians);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrix = globeMatrix;
 
-        mat4.invert(this._globeProjMatrixNoCorrectionInverted, globeMatrix);
+        mat4.invert(this._globeProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
 
         const cameraPos: vec4 = createVec4();
         cameraPos[2] = -1;
@@ -545,7 +545,7 @@ export class GlobeTransform extends Transform {
         const axis = createVec3();
         vec3.cross(axis, vecToPixelCurrent, vecToCenter);
         vec3.normalize(axis, axis);
-        const angle = Math.acos(vec3.dot(vecToCenter, vecToPixelCurrent));
+        const angle = Math.acos(Math.min(Math.max(vec3.dot(vecToCenter, vecToPixelCurrent), -1.0), 1.0));
         const matrix = createMat4();
         mat4.fromRotation(matrix, angle, axis);
         const newCenterVec = createVec3();
