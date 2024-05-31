@@ -105,7 +105,13 @@ export class GlobeTransform extends Transform {
     private _lastGlobeChangeTime: number = -1000.0;
     private _globeProjectionOverride = true;
 
-    private _globeProjection: GlobeProjection;
+    /**
+     * Note: projection instance should only be accessed in the `updateProjection` function
+     * to ensure the transform's state isn't unintentionally changed.
+     */
+    private _projectionInstance: GlobeProjection;
+    private _globeRendering: boolean = true;
+    private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
@@ -117,12 +123,12 @@ export class GlobeTransform extends Transform {
 
     public constructor(globeProjection: GlobeProjection) {
         super();
-        this._globeProjection = globeProjection;
+        this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
     }
 
     override clone(): Transform {
-        const clone = new GlobeTransform(this._globeProjection);
+        const clone = new GlobeTransform(this._projectionInstance);
         clone.apply(this);
         return clone;
     }
@@ -173,18 +179,26 @@ export class GlobeTransform extends Transform {
         return translatePosition(this, tile, translate, translateAnchor);
     }
 
+    /**
+     * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
+     * May change the transform's state - do not call on cloned transforms that should behave immutably!
+     */
     public updateProjection(): void {
-        this._calcMatrices();
-
-        if (!this._globeProjection) {
-            return;
+        if (this._projectionInstance) {
+            // Note: the _globeRendering field is only updated when `updateProjection` is called.
+            // This function should never be called on a cloned transform, thus ensuring that
+            // the state of a cloned transform is never changed after creation.
+            this._globeRendering = this._globeness > 0;
+            this._projectionInstance.useGlobeRendering = this._globeRendering;
+            this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
+            this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
         }
 
-        this._globeProjection.useGlobeRendering = this._globeness > 0;
+        this._calcMatrices();
 
         if (this._oldTransformState) {
             // JP: TODO: zoom compensation should probably be handled in the pan controller instead
-            if (this._globeProjection.useGlobeControls) {
+            if (this._globeRendering) {
                 this.zoom += this._getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
                 this._constrain();
             }
@@ -238,7 +252,7 @@ export class GlobeTransform extends Transform {
         const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned);
 
         // Set 'u_projection_matrix' to actual globe transform
-        if (this._globeProjection.useGlobeRendering) {
+        if (this._globeRendering) {
             data['u_projection_matrix'] = this._globeProjMatrix;
         }
 
@@ -362,7 +376,7 @@ export class GlobeTransform extends Transform {
     public getPixelScale(): number {
         const globePixelScale = 1.0 / Math.cos(this._center.lat * Math.PI / 180);
         const flatPixelScale = 1.0;
-        if (this._globeProjection.useGlobeRendering) {
+        if (this._globeRendering) {
             return lerp(flatPixelScale, globePixelScale, this._globeness);
         }
         return flatPixelScale;
@@ -373,7 +387,7 @@ export class GlobeTransform extends Transform {
     }
 
     public getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number {
-        if (!this._globeProjection.useGlobeRendering) {
+        if (!this._globeRendering) {
             return 1.0;
         }
         const mercator = tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID);
@@ -382,7 +396,7 @@ export class GlobeTransform extends Transform {
     }
 
     public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
-        if (!this._globeProjection.useGlobeRendering) {
+        if (!this._globeRendering) {
             return this._mercatorTransform.projectTileCoordinates(x, y, unwrappedTileID, getElevation);
         }
 
@@ -412,11 +426,6 @@ export class GlobeTransform extends Transform {
             this._mercatorTransform.apply(this);
         }
 
-        if (!this._globeProjection) {
-            return;
-        }
-
-        this._globeProjection.errorQueryLatitudeDegrees = this.center.lat;
         this._updateAnimation();
 
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
@@ -437,7 +446,7 @@ export class GlobeTransform extends Transform {
         mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrixNoCorrection = globeMatrix;
 
-        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeProjection.latitudeErrorCorrectionRadians);
+        mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeLatitudeErrorCorrectionRadians);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrix = globeMatrix;
@@ -508,7 +517,7 @@ export class GlobeTransform extends Transform {
     //
 
     override setLocationAtPoint(lnglat: LngLat, point: Point): void {
-        if (!this._globeProjection.useGlobeRendering) {
+        if (!this._globeRendering) {
             this._mercatorTransform.setLocationAtPoint(lnglat, point);
             this.apply(this._mercatorTransform);
             return;
@@ -534,7 +543,7 @@ export class GlobeTransform extends Transform {
     }
 
     override locationPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: test that this works well even with terrain
-        if (!this._globeProjection.useGlobeRendering) {
+        if (!this._globeRendering) {
             return this._mercatorTransform.locationPoint(lnglat, terrain);
         }
 
@@ -555,7 +564,7 @@ export class GlobeTransform extends Transform {
     }
 
     override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
-        if (!this._globeProjection.useGlobeRendering || terrain) {
+        if (!this._globeRendering || terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
             return this._mercatorTransform.pointCoordinate(p, terrain);
@@ -564,7 +573,7 @@ export class GlobeTransform extends Transform {
     }
 
     override pointLocation(p: Point, terrain?: Terrain): LngLat {
-        if (!this._globeProjection.useGlobeRendering || terrain) {
+        if (!this._globeRendering || terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
             return this._mercatorTransform.pointLocation(p, terrain);
@@ -573,7 +582,7 @@ export class GlobeTransform extends Transform {
     }
 
     override isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
-        if (!this._globeProjection.useGlobeRendering) {
+        if (!this._globeRendering) {
             return this._mercatorTransform.isPointOnMapSurface(p, terrain);
         }
 
@@ -724,7 +733,7 @@ export class GlobeTransform extends Transform {
     }
 
     public getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat { // JP: TODO: keep this function?
-        if (!this._globeProjection.useGlobeControls) {
+        if (!this._globeRendering) {
             return this._mercatorTransform.getCenterForLocationAtPoint(lnglat, point);
         }
         const pointLoc = this.unprojectScreenPoint(point);
