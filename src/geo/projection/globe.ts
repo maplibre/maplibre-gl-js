@@ -424,24 +424,6 @@ export class GlobeProjection implements Projection {
         return dotResult < 0.0;
     }
 
-    public project(x: number, y: number, unwrappedTileID: UnwrappedTileID) {
-        const spherePos = this._projectToSphereTile(x, y, unwrappedTileID);
-        const pos: vec4 = [spherePos[0], spherePos[1], spherePos[2], 1];
-        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
-
-        // Also check whether the point projects to the backfacing side of the sphere.
-        const plane = this._cachedClippingPlane;
-        // dot(position on sphere, occlusion plane equation)
-        const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
-        const isOccluded = dotResult < 0.0;
-
-        return {
-            point: new Point(pos[0] / pos[3], pos[1] / pos[3]),
-            signedDistanceFromCamera: pos[3],
-            isOccluded
-        };
-    }
-
     public transformPosition(lngLat: LngLat, elev: number): vec3 {
         const pos: vec4 = [0, 0, 0, 1];
 
