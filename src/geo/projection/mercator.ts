@@ -1,9 +1,9 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {Projection, ProjectionGPUContext} from './projection';
-import {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
+import type {Projection, ProjectionGPUContext, TransformLike} from './projection';
+import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
-import {Tile} from '../../source/tile';
-import {ProjectionData} from '../../render/program/projection_program';
+import type {Tile} from '../../source/tile';
+import type {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {EXTENT} from '../../data/extent';
 import {PreparedShader, shaders} from '../../shaders/shaders';
@@ -12,8 +12,8 @@ import {Mesh} from '../../render/mesh';
 import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
-import {LngLat} from '../lng_lat';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import type {LngLat} from '../lng_lat';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -130,28 +130,23 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
-    public project(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID): {
-        point: Point;
-        signedDistanceFromCamera: number;
-        isOccluded: boolean;
-    } {
-        // This function should only be used when useSpecialProjectionForSymbols is set to true.
-        throw new Error('Not implemented.');
-    }
-
-    public getPixelScale(_: any): number {
+    public getPixelScale(_transform: { center: LngLat }): number {
         return 1.0;
     }
 
-    public getCircleRadiusCorrection(_: any): number {
+    public getCircleRadiusCorrection(_transform: { center: LngLat }): number {
         return 1.0;
     }
 
-    public translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    public getPitchedTextCorrection(_transform: { center: LngLat }, _textAnchor: Point, _tileID: UnwrappedTileID): number {
+        return 1.0;
+    }
+
+    public translatePosition(transform: TransformLike, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(transform, tile, translate, translateAnchor);
     }
 
-    public getMeshFromTileID(context: Context, _: CanonicalTileID, _hasBorder: boolean): Mesh {
+    public getMeshFromTileID(context: Context, _tileID: CanonicalTileID, _hasBorder: boolean, _allowPoles: boolean): Mesh {
         if (this._cachedMesh) {
             return this._cachedMesh;
         }
@@ -185,6 +180,15 @@ export class MercatorProjection implements Projection {
 
     public transformLightDirection(_: any, dir: vec3): vec3 {
         return vec3.clone(dir);
+    }
+
+    public projectTileCoordinates(_x: number, _y: number, _unwrappedTileID: UnwrappedTileID, _getElevation: (x: number, y: number) => number): {
+        point: Point;
+        signedDistanceFromCamera: number;
+        isOccluded: boolean;
+    } {
+        // This function should only be used when useSpecialProjectionForSymbols is set to true.
+        throw new Error('Not implemented.');
     }
 }
 

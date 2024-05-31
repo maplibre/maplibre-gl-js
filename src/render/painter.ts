@@ -268,39 +268,58 @@ export class Painter {
     }
 
     _renderTileClippingMasks(layer: StyleLayer, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean) {
-        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs || !tileIDs.length) return;
+        if (this.currentStencilSource === layer.source || !layer.isTileClipped() || !tileIDs || !tileIDs.length) {
+            return;
+        }
 
         this.currentStencilSource = layer.source;
-
-        const context = this.context;
-        const gl = context.gl;
 
         if (this.nextStencilID + tileIDs.length > 256) {
             // we'll run out of fresh IDs so we need to clear and start from scratch
             this.clearStencil();
         }
 
+        const context = this.context;
         context.setColorMode(ColorMode.disabled);
         context.setDepthMode(DepthMode.disabled);
 
-        const program = this.useProgram('clippingMask');
+        const stencilRefs = {};
 
-        this._tileClippingMaskIDs = {};
+        // Set stencil ref values for all tiles
+        for (const tileID of tileIDs) {
+            stencilRefs[tileID.key] = this.nextStencilID++;
+        }
 
+        // A two-pass approach is needed. See comment in draw_raster.ts for more details.
+        // However, we use a simpler approach because we don't care about overdraw here.
+
+        // First pass - draw tiles with borders and with GL_ALWAYS
+        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, true);
+        // Second pass - draw borderless tiles with GL_ALWAYS
+        this._renderTileMasks(stencilRefs, tileIDs, renderToTexture, false);
+
+        this._tileClippingMaskIDs = stencilRefs;
+    }
+
+    _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean) {
+        const context = this.context;
+        const gl = context.gl;
         const projection = this.style.map.projection;
+
+        const program = this.useProgram('clippingMask');
 
         // tiles are usually supplied in ascending order of z, then y, then x
         for (const tileID of tileIDs) {
-            const id = this._tileClippingMaskIDs[tileID.key] = this.nextStencilID++;
+            const stencilRef = tileStencilRefs[tileID.key];
             const terrainData = this.style.map.terrain && this.style.map.terrain.getTerrainData(tileID);
 
-            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, true);
+            const mesh = projection.getMeshFromTileID(this.context, tileID.canonical, useBorders, true);
 
             const projectionData = projection.getProjectionData(tileID.canonical, tileID.posMatrix);
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled,
                 // Tests will always pass, and ref value will be written to stencil buffer.
-                new StencilMode({func: gl.ALWAYS, mask: 0}, id, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
+                new StencilMode({func: gl.ALWAYS, mask: 0}, stencilRef, 0xFF, gl.KEEP, gl.KEEP, gl.REPLACE),
                 ColorMode.disabled, renderToTexture ? CullFaceMode.disabled : CullFaceMode.backCCW, null,
                 terrainData, projectionData, '$clipping', mesh.vertexBuffer,
                 mesh.indexBuffer, mesh.segments);

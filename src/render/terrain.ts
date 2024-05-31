@@ -38,29 +38,35 @@ export type TerrainData = {
 /**
  * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
- *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
- *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
- *    3) creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
- *    4) stores all render-to-texture tiles in the this.sourceCache._tiles
- *    5) calculates the elevation for a specific tile-coordinate
- *    6) creates a terrain-mesh
  *
- *    A note about the GPU resource-usage:
- *    Framebuffers:
- *       - one for the depth & coords framebuffer with the size of the map-div.
- *       - one for rendering a tile to texture with the size of tileSize (= 512x512).
- *    Textures:
- *       - one texture for an empty raster-dem tile with size 1x1
- *       - one texture for an empty depth-buffer, when terrain is disabled with size 1x1
- *       - one texture for an each loaded raster-dem with size of the source.tileSize
- *       - one texture for the coords-framebuffer with the size of the map-div.
- *       - one texture for the depth-framebuffer with the size of the map-div.
- *       - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
- *       - finally for each render-to-texture tile (= this._tiles) a set of textures
- *         for each render stack (The stack-concept is documented in painter.ts).
- *         Normally there exists 1-3 Textures per tile, depending on the stylesheet.
- *         Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a
- *         cache of the last 150 newest rendered tiles.
+ * 1. loads raster-dem tiles via the internal sourceCache this.sourceCache
+ * 2. creates a depth-framebuffer, which is used to calculate the visibility of coordinates
+ * 3. creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
+ * 4. stores all render-to-texture tiles in the this.sourceCache._tiles
+ * 5. calculates the elevation for a specific tile-coordinate
+ * 6. creates a terrain-mesh
+ *
+ * A note about the GPU resource-usage:
+ *
+ * Framebuffers:
+ *
+ * - one for the depth & coords framebuffer with the size of the map-div.
+ * - one for rendering a tile to texture with the size of tileSize (= 512x512).
+ *
+ * Textures:
+ *
+ * - one texture for an empty raster-dem tile with size 1x1
+ * - one texture for an empty depth-buffer, when terrain is disabled with size 1x1
+ * - one texture for an each loaded raster-dem with size of the source.tileSize
+ * - one texture for the coords-framebuffer with the size of the map-div.
+ * - one texture for the depth-framebuffer with the size of the map-div.
+ * - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
+ * - finally for each render-to-texture tile (= this._tiles) a set of textures
+ * for each render stack (The stack-concept is documented in painter.ts).
+ *
+ * Normally there exists 1-3 Textures per tile, depending on the stylesheet.
+ * Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a
+ * cache of the last 150 newest rendered tiles.
  *
  */
 export class Terrain {
@@ -378,7 +384,7 @@ export class Terrain {
             indexArray.emplaceBack(x + y, meshSize + x + y + 1, meshSize + x + y + 2);
             indexArray.emplaceBack(x + y, meshSize + x + y + 2, x + y + 1);
         }
-        // add an extra frame around the mesh to avoid stiching on tile boundaries with different zoomlevels
+        // add an extra frame around the mesh to avoid stitching on tile boundaries with different zoomlevels
         // first code-block is for top-bottom frame and second for left-right frame
         const offsetTop = vertexArray.length, offsetBottom = offsetTop + (meshSize + 1) * 2;
         for (const y of [0, 1]) for (let x = 0; x <= meshSize; x++) for (const z of [0, 1])
@@ -407,7 +413,7 @@ export class Terrain {
     }
 
     /**
-     * Calculates a height of the frame around the terrain-mesh to avoid stiching between
+     * Calculates a height of the frame around the terrain-mesh to avoid stitching between
      * tile boundaries in different zoomlevels.
      * @param zoom - current zoomlevel
      * @returns the elevation delta in meters

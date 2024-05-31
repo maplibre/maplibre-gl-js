@@ -98,6 +98,7 @@ export class ImageSource extends Evented implements Source {
     image: HTMLImageElement | ImageBitmap;
     tileID: CanonicalTileID;
     tileCoords: Array<Point>;
+    flippedWindingOrder: boolean = false;
     _loaded: boolean;
     _request: AbortController;
 
@@ -155,7 +156,6 @@ export class ImageSource extends Evented implements Source {
      * set the `raster-fade-duration` paint property on the raster layer to 0.
      *
      * @param options - The options object.
-     * @returns `this`
      */
     updateImage(options: UpdateImageOptions): this {
         if (!options.url) {
@@ -198,7 +198,6 @@ export class ImageSource extends Evented implements Source {
      * represented as arrays of longitude and latitude numbers, which define the corners of the image.
      * The coordinates start at the top left corner of the image and proceed in clockwise order.
      * They do not have to represent a rectangle.
-     * @returns `this`
      */
     setCoordinates(coordinates: Coordinates): this {
         this.coordinates = coordinates;
@@ -222,6 +221,7 @@ export class ImageSource extends Evented implements Source {
         // Transform the corner coordinates into the coordinate space of our
         // tile.
         this.tileCoords = cornerCoords.map((coord) => this.tileID.getTilePoint(coord)._round());
+        this.flippedWindingOrder = hasWrongWindingOrder(this.tileCoords);
 
         this.fire(new Event('data', {dataType: 'source', sourceDataType: 'content'}));
         return this;
@@ -312,4 +312,15 @@ export function getCoordinatesCenterTileID(coords: Array<MercatorCoordinate>) {
         zoom,
         Math.floor((minX + maxX) / 2 * tilesAtZoom),
         Math.floor((minY + maxY) / 2 * tilesAtZoom));
+}
+
+function hasWrongWindingOrder(coords: Array<Point>) {
+    const e0x = coords[1].x - coords[0].x;
+    const e0y = coords[1].y - coords[0].y;
+    const e1x = coords[2].x - coords[0].x;
+    const e1y = coords[2].y - coords[0].y;
+
+    const crossProduct = e0x * e1y - e0y * e1x;
+
+    return crossProduct < 0;
 }

@@ -22,8 +22,8 @@ import type {
 } from '../source/worker_source';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
+import type {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 export class WorkerTile {
     tileID: OverscaledTileID;
@@ -175,7 +175,8 @@ export class WorkerTile {
                     imageMap: iconMap,
                     imagePositions: imageAtlas.iconPositions,
                     showCollisionBoxes: this.showCollisionBoxes,
-                    canonical: this.tileID.canonical
+                    canonical: this.tileID.canonical,
+                    subdivisionGranularity: options.subdivisionGranularity
                 });
             } else if (bucket.hasPattern &&
                 (bucket instanceof LineBucket ||

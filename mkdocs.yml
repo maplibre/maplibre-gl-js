@@ -6,11 +6,16 @@ extra_css:
 theme:
   name: 'material'
   favicon: https://maplibre.org/favicon.ico
-  logo: https://avatars.githubusercontent.com/u/75709127?s=48&v=4
+  logo: assets/logo.svg
   features:
     - content.code.copy
     - navigation.tabs
     - navigation.tabs.sticky
+    - toc.follow
+    - search.suggest
+    - navigation.instant
+    - navigation.sections
+    - navigation.top  # back to top button
   palette:
     - media: "(prefers-color-scheme)"
       toggle:
@@ -42,11 +47,19 @@ markdown_extensions:
 
 extra:
   social:
-    - icon: fontawesome/brands/twitter
+    - icon: fontawesome/brands/mastodon
+      link: https://mastodon.social/@maplibre
+    - icon: fontawesome/brands/x-twitter
       link: https://twitter.com/maplibre
-    - icon: fontawesome/brands/github
-      link: https://github.com/maplibre
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/maplibre
     - icon: fontawesome/brands/slack
       link: https://osmus.slack.com/archives/C01G3D28DAB
+    - icon: fontawesome/brands/github
+      link: https://github.com/maplibre
 
-copyright: Copyright &copy; 2023 Maplibre
+plugins:
+  - search
+  - social:
+      cards_layout_options:
+        background_color: '#295DAA'

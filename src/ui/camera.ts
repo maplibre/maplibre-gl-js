@@ -13,6 +13,7 @@ import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
+import type {HandlerManager} from './handler_manager';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *
@@ -242,6 +243,7 @@ export type CameraUpdateTransformFunction =  (next: {
 export abstract class Camera extends Evented {
     transform: Transform;
     terrain: Terrain;
+    handlers: HandlerManager;
 
     _moving: boolean;
     _zooming: boolean;
@@ -333,7 +335,6 @@ export abstract class Camera extends Evented {
      *
      * @param center - The centerpoint to set.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * map.setCenter([-74, 38]);
@@ -351,7 +352,6 @@ export abstract class Camera extends Evented {
      * @param offset - `x` and `y` coordinates by which to pan the map.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
     panBy(offset: PointLike, options?: AnimationOptions, eventData?: any): this {
@@ -367,7 +367,6 @@ export abstract class Camera extends Evented {
      * @param lnglat - The location to pan the map to.
      * @param options - Options describing the destination and animation of the transition.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * map.panTo([-74, 38]);
@@ -400,7 +399,6 @@ export abstract class Camera extends Evented {
      *
      * @param zoom - The zoom level to set (0-20).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Zoom to the zoom level 5 without an animated transition
      * ```ts
@@ -420,7 +418,6 @@ export abstract class Camera extends Evented {
      * @param zoom - The zoom level to transition to.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * // Zoom to the zoom level 5 without an animated transition
@@ -445,7 +442,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Zoom the map in one level with a custom animation duration
      * ```ts
@@ -464,7 +460,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Zoom the map out one level with a custom animation offset
      * ```ts
@@ -495,7 +490,6 @@ export abstract class Camera extends Evented {
      *
      * @param bearing - The desired bearing.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Rotate the map to 90 degrees
      * ```ts
@@ -523,7 +517,6 @@ export abstract class Camera extends Evented {
      *
      * @param padding - The desired padding.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Sets a left padding of 300px, and a top padding of 50px
      * ```ts
@@ -544,7 +537,6 @@ export abstract class Camera extends Evented {
      * @param bearing - The desired bearing.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     rotateTo(bearing: number, options?: AnimationOptions, eventData?: any): this {
         return this.easeTo(extend({
@@ -559,7 +551,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     resetNorth(options?: AnimationOptions, eventData?: any): this {
         this.rotateTo(0, extend({duration: 1000}, options), eventData);
@@ -573,7 +564,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     resetNorthPitch(options?: AnimationOptions, eventData?: any): this {
         this.easeTo(extend({
@@ -592,7 +582,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     snapToNorth(options?: AnimationOptions, eventData?: any): this {
         if (Math.abs(this.getBearing()) < this._bearingSnap) {
@@ -615,7 +604,6 @@ export abstract class Camera extends Evented {
      *
      * @param pitch - The pitch to set, measured in degrees away from the plane of the screen (0-60).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     setPitch(pitch: number, eventData?: any): this {
         this.jumpTo({pitch}, eventData);
@@ -637,7 +625,7 @@ export abstract class Camera extends Evented {
      * });
      * ```
      */
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing {
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
         bounds = LngLatBounds.convert(bounds);
         const bearing = options && options.bearing || 0;
         return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
@@ -664,7 +652,7 @@ export abstract class Camera extends Evented {
      * });
      * ```
      */
-    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing {
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -761,7 +749,6 @@ export abstract class Camera extends Evented {
      * zoom level up to and including `Map#getMaxZoom()` that fits them in the viewport.
      * @param options - Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * let bbox = [[-79, 43], [-73, 45]];
@@ -790,7 +777,6 @@ export abstract class Camera extends Evented {
      * @param bearing - Desired map bearing at end of animation, in degrees
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * let p0 = [220, 400];
@@ -835,7 +821,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * // jump to coordinates at current zoom
@@ -956,7 +941,6 @@ export abstract class Camera extends Evented {
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions} and {@link AnimationOptions}.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
     easeTo(options: EaseToOptions & {
@@ -1056,7 +1040,7 @@ export abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            if (this.terrain) this._finalizeElevation();
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData, interruptingEaseId);
         }, options as any);
 
@@ -1204,7 +1188,6 @@ export abstract class Camera extends Evented {
      * Accepts {@link CameraOptions}, {@link AnimationOptions},
      * and the following additional options.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * // fly with default options to null island
@@ -1333,8 +1316,8 @@ export abstract class Camera extends Evented {
             const k = w1 < w0 ? -1 : 1;
             S = Math.abs(Math.log(w1 / w0)) / rho;
 
-            u = function() { return 0; };
-            w = function(s) { return Math.exp(k * rho * s); };
+            u = () => 0;
+            w = (s) => Math.exp(k * rho * s);
         }
 
         if ('duration' in options) {
@@ -1385,7 +1368,7 @@ export abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, () => {
-            if (this.terrain) this._finalizeElevation();
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData);
         }, options);
 
@@ -1398,8 +1381,6 @@ export abstract class Camera extends Evented {
 
     /**
      * Stops any animated transition underway.
-     *
-     * @returns `this`
      */
     stop(): this {
         return this._stop();
@@ -1421,8 +1402,7 @@ export abstract class Camera extends Evented {
             onEaseEnd.call(this, easeId);
         }
         if (!allowGestures) {
-            const handlers = (this as any).handlers;
-            if (handlers) handlers.stop(false);
+            this.handlers?.stop(false);
         }
         return this;
     }

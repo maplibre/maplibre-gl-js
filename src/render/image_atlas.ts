@@ -4,6 +4,7 @@ import {register} from '../util/web_worker_transfer';
 import potpack from 'potpack';
 
 import type {StyleImage} from '../style/style_image';
+import {TextFit} from '../style/style_image';
 import type {ImageManager} from './image_manager';
 import type {Texture} from './texture';
 import type {Rect} from './glyph_atlas';
@@ -19,13 +20,17 @@ export class ImagePosition {
     stretchY: Array<[number, number]>;
     stretchX: Array<[number, number]>;
     content: [number, number, number, number];
+    textFitWidth: TextFit;
+    textFitHeight: TextFit;
 
     constructor(paddedRect: Rect, {
         pixelRatio,
         version,
         stretchX,
         stretchY,
-        content
+        content,
+        textFitWidth,
+        textFitHeight
     }: StyleImage) {
         this.paddedRect = paddedRect;
         this.pixelRatio = pixelRatio;
@@ -33,6 +38,8 @@ export class ImagePosition {
         this.stretchY = stretchY;
         this.content = content;
         this.version = version;
+        this.textFitWidth = textFitWidth;
+        this.textFitHeight = textFitHeight;
     }
 
     get tl(): [number, number] {

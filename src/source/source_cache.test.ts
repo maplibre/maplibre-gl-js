@@ -1,4 +1,5 @@
 import {SourceCache} from './source_cache';
+import {Map} from '../ui/map';
 import {Source, addSourceType} from './source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
@@ -11,6 +12,7 @@ import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {TileBounds} from './tile_bounds';
 import {sleep} from '../util/test/util';
+import {TileCache} from './tile_cache';
 
 class SourceMock extends Evented implements Source {
     id: string;
@@ -78,8 +80,22 @@ function createSourceCache(options?, used?) {
         maxzoom: 14,
         type: 'mock-source-type'
     }, options), {} as Dispatcher);
-    sc.used = typeof used === 'boolean' ? used : true;
-    return sc;
+    const scWithTestLogic = extend(sc, {
+        used: typeof used === 'boolean' ? used : true,
+        addTile(tileID: OverscaledTileID): Tile {
+            return this._addTile(tileID);
+        },
+        getCache(): TileCache {
+            return this._cache;
+        },
+        getTiles(): { [_: string]: Tile } {
+            return this._tiles;
+        },
+        updateLoadedSiblingTileCache(): void {
+            this._updateLoadedSiblingTileCache();
+        }
+    });
+    return scWithTestLogic;
 }
 
 afterEach(() => {
@@ -1184,8 +1200,40 @@ describe('SourceCache#_updateRetainedTiles', () => {
 
     });
 
-    test('Only retain loaded parent tile when zooming in', () => {
+    test('Retain, then cancel loading tiles when zooming in', () => {
         const sourceCache = createSourceCache();
+        // Disabling pending tile canceling (thus retaining) in Map mock:
+        const map = {cancelPendingTileRequestsWhileZooming: false} as Map;
+        sourceCache.onAdd(map);
+        sourceCache._source.loadTile = async (tile) => {
+            tile.state = 'loading';
+        };
+
+        let idealTiles = [new OverscaledTileID(9, 0, 9, 0, 0), new OverscaledTileID(9, 0, 9, 1, 0)];
+        sourceCache._updateRetainedTiles(idealTiles, 9);
+        idealTiles = [new OverscaledTileID(10, 0, 10, 0, 0), new OverscaledTileID(10, 0, 10, 1, 0)];
+        let retained = sourceCache._updateRetainedTiles(idealTiles, 10);
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(9, 0, 9, 0, 0).key,    // retained
+            new OverscaledTileID(10, 0, 10, 0, 0).key,
+            new OverscaledTileID(10, 0, 10, 1, 0).key
+        ]);
+
+        // Canceling pending tiles now via runtime map property:
+        map.cancelPendingTileRequestsWhileZooming = true;
+        retained = sourceCache._updateRetainedTiles(idealTiles, 10);
+        // Parent loading tiles from z=9 not retained:
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(10, 0, 10, 0, 0).key,
+            new OverscaledTileID(10, 0, 10, 1, 0).key
+        ]);
+    });
+
+    test('Cancel, then retain, then cancel loading tiles when zooming in', () => {
+        const sourceCache = createSourceCache();
+        // Applying tile canceling default behavior in Map mock:
+        const map = {cancelPendingTileRequestsWhileZooming: true} as Map;
+        sourceCache.onAdd(map);
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loading';
         };
@@ -1203,6 +1251,19 @@ describe('SourceCache#_updateRetainedTiles', () => {
         expect(Object.keys(retained).sort()).toEqual(
             idealTiles.map((tile) => tile.key).sort()
         );
+
+        // Stopping tile canceling via runtime map property:
+        map.cancelPendingTileRequestsWhileZooming = false;
+        retained = sourceCache._updateRetainedTiles(idealTiles, 10);
+
+        expect(Object.keys(retained).sort()).toEqual([
+            new OverscaledTileID(9, 0, 9, 0, 0).key,    // retained
+            new OverscaledTileID(10, 0, 10, 0, 0).key,
+            new OverscaledTileID(10, 0, 10, 1, 0).key
+        ]);
+
+        // Resuming tile canceling via runtime map property:
+        map.cancelPendingTileRequestsWhileZooming = true;
 
         const loadedTiles = idealTiles;
         loadedTiles.forEach(t => {
@@ -1312,9 +1373,7 @@ describe('SourceCache#clearTiles', () => {
 describe('SourceCache#tilesIn', () => {
     test('graceful response before source loaded', () => {
         const tr = new Transform();
-        tr.width = 512;
-        tr.height = 512;
-        tr._calcMatrices();
+        tr.resize(512, 512);
         const sourceCache = createSourceCache({noLoad: true});
         sourceCache.transform = tr;
         sourceCache.onAdd(undefined);
@@ -1353,7 +1412,6 @@ describe('SourceCache#tilesIn', () => {
                     new OverscaledTileID(1, 0, 1, 0, 0).key
                 ]);
 
-                transform._calcMatrices();
                 const tiles = sourceCache.tilesIn([
                     new Point(0, 0),
                     new Point(512, 256)
@@ -1612,7 +1670,7 @@ describe('source cache loaded', () => {
         sourceCache.on('data', (e) => {
             if (e.sourceDataType !== 'idle') {
                 expect(sourceCache.loaded()).toBeFalsy();
-            // 'idle' emission when source bounds are outside of viewport bounds
+                // 'idle' emission when source bounds are outside of viewport bounds
             } else {
                 expect(sourceCache.loaded()).toBeTruthy();
                 done();
@@ -1752,6 +1810,94 @@ describe('SourceCache#findLoadedParent', () => {
 
     });
 
+});
+
+describe('SourceCache#findLoadedSibling', () => {
+
+    test('adds from previously used tiles (sourceCache._tiles)', () => {
+        const sourceCache = createSourceCache({});
+        sourceCache.onAdd(undefined);
+        const tr = new Transform();
+        tr.width = 512;
+        tr.height = 512;
+        sourceCache.updateCacheSize(tr);
+
+        const tile = {
+            tileID: new OverscaledTileID(1, 0, 1, 0, 0),
+            hasData() { return true; }
+        } as any as Tile;
+
+        sourceCache.getTiles()[tile.tileID.key] = tile;
+
+        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 1, 0))).toBeNull();
+        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 0, 0))).toEqual(tile);
+    });
+
+    test('retains siblings', () => {
+        const sourceCache = createSourceCache({});
+        sourceCache.onAdd(undefined);
+        const tr = new Transform();
+        tr.width = 512;
+        tr.height = 512;
+        sourceCache.updateCacheSize(tr);
+
+        const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
+        sourceCache.getCache().add(tile.tileID, tile);
+
+        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 1, 0))).toBeNull();
+        expect(sourceCache.findLoadedSibling(new OverscaledTileID(1, 0, 1, 0, 0))).toBe(tile);
+        expect(sourceCache.getCache().order).toHaveLength(1);
+    });
+
+    test('Search cache for loaded sibling tiles', () => {
+        const sourceCache = createSourceCache({});
+        sourceCache.onAdd(undefined);
+        const tr = new Transform();
+        tr.width = 512;
+        tr.height = 512;
+        sourceCache.updateCacheSize(tr);
+
+        const mockTile = id => {
+            const tile = {
+                tileID: id,
+                hasData() { return true; }
+            } as any as Tile;
+            sourceCache.getTiles()[id.key] = tile;
+        };
+
+        const tiles = [
+            new OverscaledTileID(0, 0, 0, 0, 0),
+            new OverscaledTileID(1, 0, 1, 1, 0),
+            new OverscaledTileID(2, 0, 2, 0, 0),
+            new OverscaledTileID(2, 0, 2, 1, 0),
+            new OverscaledTileID(2, 0, 2, 2, 0),
+            new OverscaledTileID(2, 0, 2, 1, 2)
+        ];
+
+        tiles.forEach(t => mockTile(t));
+        sourceCache.updateLoadedSiblingTileCache();
+
+        // Loaded tiles should be in the cache
+        expect(sourceCache.findLoadedSibling(tiles[0]).tileID).toBe(tiles[0]);
+        expect(sourceCache.findLoadedSibling(tiles[1]).tileID).toBe(tiles[1]);
+        expect(sourceCache.findLoadedSibling(tiles[2]).tileID).toBe(tiles[2]);
+        expect(sourceCache.findLoadedSibling(tiles[3]).tileID).toBe(tiles[3]);
+        expect(sourceCache.findLoadedSibling(tiles[4]).tileID).toBe(tiles[4]);
+        expect(sourceCache.findLoadedSibling(tiles[5]).tileID).toBe(tiles[5]);
+
+        // Arbitrary tiles should not in the cache
+        const notLoadedTiles = [
+            new OverscaledTileID(2, 1, 2, 0, 0),
+            new OverscaledTileID(2, 0, 2, 3, 0),
+            new OverscaledTileID(2, 0, 2, 3, 3),
+            new OverscaledTileID(3, 0, 3, 2, 1)
+        ];
+
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[0])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[1])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[2])).toBeNull();
+        expect(sourceCache.findLoadedSibling(notLoadedTiles[3])).toBeNull();
+    });
 });
 
 describe('SourceCache#reload', () => {

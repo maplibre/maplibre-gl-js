@@ -1,5 +1,5 @@
 import locationsWithTileID from '../lib/locations_with_tile_id';
-import styleBenchmarkLocations from '../data/style-benchmark-locations.json' assert {type: 'json'};
+import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
 import Layout from '../benchmarks/layout';
 import Placement from '../benchmarks/placement';
 import SymbolLayout from '../benchmarks/symbol_layout';
@@ -21,6 +21,7 @@ import CustomLayer from '../benchmarks/customlayer';
 import MapIdle from '../benchmarks/map_idle';
 
 import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
+import SymbolCollisionBox from '../benchmarks/symbol_collision_box';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -73,6 +74,7 @@ register('FilterEvaluate', new FilterEvaluate());
 register('HillshadeLoad', new HillshadeLoad());
 register('CustomLayer', new CustomLayer());
 register('MapIdle', new MapIdle());
+register('SymbolCollisionBox', new SymbolCollisionBox());
 
 Promise.resolve().then(() => {
     // Ensure the global worker pool is never drained. Browsers have resource limits

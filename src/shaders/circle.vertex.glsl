@@ -74,6 +74,15 @@ void main(void) {
     } else {
         gl_Position = projectTileWithElevation(circle_center, ele);
 
+        if (gl_Position.z / gl_Position.w > 1.0) {
+            // Same as in fill_outline.fragment.glsl and line.fragment.glsl, we need to account for some hardware
+            // doing glFragDepth and clipping in the wrong order by doing clipping manually in the shader.
+            // For screenspace (not u_pitch_with_map) circles, it is enough to detect whether the anchor
+            // point should be clipped here in the vertex shader, and clip it by moving in beyond the
+            // renderable range -1..1 in X and Y (moving it to 10000 is more than enough).
+            gl_Position.xy = vec2(10000.0);
+        }
+
         if (u_scale_with_map) {
             gl_Position.xy += extrude * (radius + stroke_width) * u_extrude_scale * u_camera_to_center_distance;
         } else {

@@ -41,7 +41,7 @@ export type MapSourceDataType = 'content' | 'metadata' | 'visibility' | 'idle';
  * // Initialize the map
  * let map = new Map({ // map options });
  * // Set an event listener for a specific layer
- * map.on('the-event-name', 'poi-label', function(e) {
+ * map.on('the-event-name', 'poi-label', (e) => {
  *   console.log('An event has occurred on a visible portion of the poi-label layer');
  * });
  * ```
@@ -154,7 +154,7 @@ export type MapEventType = {
      */
     error: ErrorEvent;
     /**
-     * @event `load` Fired immediately after all necessary resources have been downloaded
+     * Fired immediately after all necessary resources have been downloaded
      * and the first visually complete rendering of the map has occurred.
      *
      * @see [Draw GeoJSON points](https://maplibre.org/maplibre-gl-js/docs/examples/geojson-markers/)
@@ -465,7 +465,7 @@ export type MapSourceDataEvent = MapLibreEvent & {
  * ```ts
  * // The `click` event is an example of a `MapMouseEvent`.
  * // Set up an event listener on the map.
- * map.on('click', function(e) {
+ * map.on('click', (e) => {
  *   // The event object (e) contains information like the
  *   // coordinates of the point on the map that was clicked.
  *   console.log('A click event has occurred at ' + e.lngLat);
@@ -697,7 +697,7 @@ export type MapLibreZoomEvent = {
  * ```ts
  * // The sourcedata event is an example of MapDataEvent.
  * // Set up an event listener on the map.
- * map.on('sourcedata', function(e) {
+ * map.on('sourcedata', (e) => {
  *    if (e.isSourceLoaded) {
  *        // Do something when the source has finished loading
  *    }

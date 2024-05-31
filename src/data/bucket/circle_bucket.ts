@@ -220,7 +220,7 @@ export class CircleBucket<Layer extends CircleStyleLayer | HeatmapStyleLayer> im
                     for (let x = 0; x < verticesPerAxis - 1; x++) {
                         const lowerIndex = index + y * verticesPerAxis + x;
                         const upperIndex = index + (y + 1) * verticesPerAxis + x;
-                        this.indexArray.emplaceBack(lowerIndex, lowerIndex + 1, upperIndex + 1);
+                        this.indexArray.emplaceBack(lowerIndex, upperIndex + 1, lowerIndex + 1);
                         this.indexArray.emplaceBack(lowerIndex, upperIndex, upperIndex + 1);
                     }
                 }
