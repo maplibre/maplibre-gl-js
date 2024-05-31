@@ -188,7 +188,10 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
         }
         if (requestParameters.type === 'json') {
             xhr.responseType = 'text';
-            xhr.setRequestHeader('Accept', 'application/json');
+            // Do not overwrite the user-provided Accept header
+            if (!requestParameters.headers?.Accept) {
+                xhr.setRequestHeader('Accept', 'application/json');
+            }
         }
         xhr.withCredentials = requestParameters.credentials === 'include';
         xhr.onerror = () => {
