@@ -114,8 +114,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         input instanceof String ||
         input instanceof Date ||
         input instanceof RegExp ||
-        input instanceof Blob ||
-        input instanceof Error) {
+        input instanceof Blob) {
         return input;
     }
 
@@ -217,7 +216,6 @@ export function deserialize(input: Serialized): unknown {
         input instanceof Date ||
         input instanceof RegExp ||
         input instanceof Blob ||
-        input instanceof Error ||
         isArrayBuffer(input) ||
         isImageBitmap(input) ||
         ArrayBuffer.isView(input) ||
