@@ -184,7 +184,6 @@ describe('ajax', () => {
             expect(server.requests[0].requestHeaders['Accept']).toBe('application/geo+json');
         });
 
-
         test('should add default Accept header when user has not specified one', async () => {
             server.respondWith(request => {
                 request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
@@ -200,7 +199,6 @@ describe('ajax', () => {
             expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
             expect(server.requests[0].requestHeaders['Accept']).toBe('application/json');
         });
-
 
     });
 });

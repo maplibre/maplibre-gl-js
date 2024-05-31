@@ -151,7 +151,7 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
     });
 
     // If the user has already set an Accept header, do not overwrite it here
-    if (requestParameters.type === 'json' && !request.headers.has("Accept")) {
+    if (requestParameters.type === 'json' && !request.headers.has('Accept')) {
         request.headers.set('Accept', 'application/json');
     }
 
