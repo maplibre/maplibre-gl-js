@@ -48,7 +48,10 @@ import {TwoFingersTouchPitchHandler, TwoFingersTouchRotateHandler, TwoFingersTou
 import {MessageType} from './util/actor_messages';
 const version = packageJSON.version;
 
-export type * from '@maplibre/maplibre-gl-style-spec';
+// export type * from '@maplibre/maplibre-gl-style-spec';
+
+// TODO fix this
+export  * from '@maplibre/maplibre-gl-style-spec';
 
 /**
  * Sets the map's [RTL text plugin](https://www.mapbox.com/mapbox-gl-js/plugins/#mapbox-gl-rtl-text).

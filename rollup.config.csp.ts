@@ -1,5 +1,5 @@
 import {plugins} from './build/rollup_plugins';
-import banner from './build/banner';
+// import banner from './build/banner';
 import {InputOption, ModuleFormat, RollupOptions} from 'rollup';
 
 // a config for generating a special GL JS bundle with static web worker code (in a separate file)
@@ -17,7 +17,7 @@ const config = (input: InputOption, file: string, format: ModuleFormat): RollupO
         format,
         sourcemap: true,
         indent: false,
-        banner
+        // banner
     },
     treeshake: production,
     plugins: plugins(production)
