@@ -31,7 +31,7 @@ MapLibre GL JS v1 is completely backward compatible with Mapbox GL JS v1. This c
 -      rel="stylesheet"
 -    />
 
-     
+
 +    <script src="https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.js"></script>
 +    <link
 +      href="https://unpkg.com/maplibre-gl@#.#.#/dist/maplibre-gl.css"
