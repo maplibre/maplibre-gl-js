@@ -1,6 +1,9 @@
+# Contributing to MapLibre GL JS
+
 Hi, and thanks in advance for contributing to MapLibre GL JS. Here's how we work. Please follow these conventions when submitting an issue or pull request.
 
 ## Do not violate Mapbox copyright!
+
 In December 2020 Mapbox decided to publish future versions of mapbox-gl-js under a proprietary license. **You are not allowed to backport code from Mapbox projects which has been contributed under this new license**. Unauthorized backports are the biggest threat to the MapLibre project. If you are unsure about this issue, [please ask](https://github.com/maplibre/maplibre-gl-js/discussions)!
 
 ## Best Practices for Contributions
@@ -215,6 +218,7 @@ Additionally, if you're using VSCode, the "Format Document" action or "Editor: F
 ### Version Control Conventions
 
 Here is a recommended way to get setup:
+
 1. Fork this project
 2. Clone your new fork, `git clone git@github.com:GithubUser/maplibre-gl-js.git`
 3. `cd maplibre-gl-js`
