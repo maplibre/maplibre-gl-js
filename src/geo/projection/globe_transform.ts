@@ -83,8 +83,12 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     }
 }
 
+function createVec4(): vec4 { return new Float64Array(4) as any; }
+function createVec3(): vec3 { return new Float64Array(3) as any; }
+function createMat4(): mat4 { return new Float64Array(16) as any; }
+
 export class GlobeTransform extends Transform {
-    private _cachedClippingPlane: vec4 = [1, 0, 0, 0];
+    private _cachedClippingPlane: vec4 = createVec4();
 
     // Transition handling
     private _lastGlobeStateEnabled: boolean = true;
@@ -94,11 +98,11 @@ export class GlobeTransform extends Transform {
 
     private _skipNextAnimation: boolean = true;
 
-    private _globeProjMatrix: mat4 = mat4.create();
-    private _globeProjMatrixNoCorrection: mat4 = mat4.create();
-    private _globeProjMatrixNoCorrectionInverted: mat4 = mat4.create();
+    private _globeProjMatrix: mat4 = createMat4();
+    private _globeProjMatrixNoCorrection: mat4 = createMat4();
+    private _globeProjMatrixNoCorrectionInverted: mat4 = createMat4();
 
-    private _cameraPosition: vec3 = [0, 0, 0];
+    private _cameraPosition: vec3 = createVec3();
 
     private _oldTransformState: {zoom: number; lat: number} = undefined;
 
@@ -118,13 +122,14 @@ export class GlobeTransform extends Transform {
      * Value 0 is mercator, value 1 is globe, anything between is an interpolation between the two projections.
      */
     private _globeness: number = 1.0;
-
     private _mercatorTransform: MercatorTransform;
+    private _initialized: boolean = false;
 
     public constructor(globeProjection: GlobeProjection) {
         super();
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
+        this._initialized = true;
     }
 
     override clone(): Transform {
@@ -422,6 +427,10 @@ export class GlobeTransform extends Transform {
     protected override _calcMatrices(): void { // JP: TODO: _calcMatrices and updateProjection() is too similar in function
         super._calcMatrices();
 
+        if (!this._initialized) {
+            return;
+        }
+
         if (this._mercatorTransform) {
             this._mercatorTransform.apply(this);
         }
@@ -431,8 +440,8 @@ export class GlobeTransform extends Transform {
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 
         // Construct a completely separate matrix for globe view
-        const globeMatrix = new Float64Array(16) as any;
-        const globeMatrixUncorrected = new Float64Array(16) as any;
+        const globeMatrix = createMat4();
+        const globeMatrixUncorrected = createMat4();
         mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, 0.5, this.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -this.pitch * Math.PI / 180);
@@ -453,7 +462,9 @@ export class GlobeTransform extends Transform {
 
         mat4.invert(this._globeProjMatrixNoCorrectionInverted, globeMatrix);
 
-        const cameraPos: vec4 = [0, 0, -1, 1];
+        const cameraPos: vec4 = createVec4();
+        cameraPos[2] = -1;
+        cameraPos[3] = 1;
         vec4.transformMat4(cameraPos, cameraPos, this._globeProjMatrixNoCorrectionInverted);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
@@ -531,13 +542,13 @@ export class GlobeTransform extends Transform {
         const vecToPixelCurrent = angularCoordinatesToVector(pointLngLat);
         const vecToTarget = angularCoordinatesToVector(lnglat);
 
-        const axis = vec3.create();
+        const axis = createVec3();
         vec3.cross(axis, vecToPixelCurrent, vecToCenter);
         vec3.normalize(axis, axis);
         const angle = Math.acos(vec3.dot(vecToCenter, vecToPixelCurrent));
-        const matrix = mat4.create();
+        const matrix = createMat4();
         mat4.fromRotation(matrix, angle, axis);
-        const newCenterVec = vec3.create();
+        const newCenterVec = createVec3();
         vec3.transformMat4(newCenterVec, vecToTarget, matrix);
         this.center = sphereSurfacePointToCoordinates(newCenterVec);
     }
@@ -553,7 +564,7 @@ export class GlobeTransform extends Transform {
             const elevation = terrain.getElevationForLngLatZoom(lnglat, this._tileZoom);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
-        const projected = vec4.create();
+        const projected = createVec4();
         vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeProjMatrixNoCorrection);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
@@ -613,7 +624,7 @@ export class GlobeTransform extends Transform {
             pos[1] - this._cameraPosition[1],
             pos[2] - this._cameraPosition[2],
         ];
-        const rayNormalized: vec3 = vec3.create();
+        const rayNormalized: vec3 = createVec3();
         vec3.normalize(rayNormalized, ray);
         return rayNormalized;
     }
@@ -675,13 +686,13 @@ export class GlobeTransform extends Transform {
 
         if (intersection) {
             // Assume the ray origin is never inside the sphere - just use tMin
-            const intersectionPoint = vec3.create();
+            const intersectionPoint = createVec3();
             vec3.add(intersectionPoint, rayOrigin, [
                 rayDirection[0] * intersection.tMin,
                 rayDirection[1] * intersection.tMin,
                 rayDirection[2] * intersection.tMin
             ]);
-            const sphereSurface = vec3.create();
+            const sphereSurface = createVec3();
             vec3.normalize(sphereSurface, intersectionPoint);
             return sphereSurfacePointToCoordinates(sphereSurface);
         } else {
@@ -698,34 +709,34 @@ export class GlobeTransform extends Transform {
             const originDotPlaneXyz = this._cachedClippingPlane[0] * rayOrigin[0] + this._cachedClippingPlane[1] * rayOrigin[1] + this._cachedClippingPlane[2] * rayOrigin[2];
             const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
             const tPlane = -(originDotPlaneXyz + this._cachedClippingPlane[3]) / directionDotPlaneXyz;
-            const planeIntersection = vec3.create();
+            const planeIntersection = createVec3();
             vec3.add(planeIntersection, rayOrigin, [
                 rayDirection[0] * tPlane,
                 rayDirection[1] * tPlane,
                 rayDirection[2] * tPlane
             ]);
-            const closestOnHorizon = vec3.create();
+            const closestOnHorizon = createVec3();
             vec3.normalize(closestOnHorizon, planeIntersection);
 
             // Now, since we want to somehow map every pixel on screen to a different coordinate,
             // add the ray from camera to horizon to the computed point,
             // multiplied by the plane intersection's distance from the planet surface.
 
-            const toHorizon = vec3.create();
+            const toHorizon = createVec3();
             vec3.sub(toHorizon, closestOnHorizon, rayOrigin);
-            const toHorizonNormalized = vec3.create();
+            const toHorizonNormalized = createVec3();
             vec3.normalize(toHorizonNormalized, toHorizon);
 
             const planeIntersectionAltitude = Math.max(vec3.length(planeIntersection) - 1.0, 0.0);
 
-            const offsetPoint = vec3.create();
+            const offsetPoint = createVec3();
             vec3.add(offsetPoint, closestOnHorizon, [
                 toHorizonNormalized[0] * planeIntersectionAltitude,
                 toHorizonNormalized[1] * planeIntersectionAltitude,
                 toHorizonNormalized[2] * planeIntersectionAltitude
             ]);
 
-            const finalPoint = vec3.create();
+            const finalPoint = createVec3();
             vec3.normalize(finalPoint, offsetPoint);
 
             return sphereSurfacePointToCoordinates(finalPoint);
