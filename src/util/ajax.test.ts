@@ -211,7 +211,7 @@ describe('ajax', () => {
             await promise;
 
             expect(server.requests).toHaveLength(1);
-            expect(server.requests[0].url).toBe('http://example.com/test-params.json');
+            expect(server.requests[0].url).toBe('file:///C:/Temp/abc.json');
             expect(server.requests[0].method).toBe('GET');
             expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
             expect(server.requests[0].requestHeaders['Accept']).toBe('application/json');
@@ -227,10 +227,10 @@ describe('ajax', () => {
             await promise;
 
             expect(server.requests).toHaveLength(1);
-            expect(server.requests[0].url).toBe('http://example.com/test-params.json');
+            expect(server.requests[0].url).toBe('file:///C:/Temp/abc.json');
             expect(server.requests[0].method).toBe('GET');
             expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
-            expect(server.requests[0].requestHeaders['Accept']).toBe('application/json');
+            expect(server.requests[0].requestHeaders['Accept']).toBe('application/geo+json');
         });
 
     });
