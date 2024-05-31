@@ -1,7 +1,7 @@
 {
   "name": "maplibre-gl",
-  "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library, that doeesn't nuke your Accept headers",
-  "version": "0.0.1",
+  "description": "BSD licensed community fork of mapbox-gl, a WebGL interactive maps library",
+  "version": "4.3.2",
   "main": "dist/maplibre-gl.js",
   "style": "dist/maplibre-gl.css",
   "license": "BSD-3-Clause",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/calrobert/maplibre-gl-js.git"
+    "url": "git://github.com/maplibre/maplibre-gl-js.git"
   },
   "types": "dist/maplibre-gl.d.ts",
   "type": "module",
