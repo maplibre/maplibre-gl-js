@@ -225,6 +225,21 @@ export class GlobeTransform extends Transform {
             this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
         }
 
+        if (this._oldTransformState) {
+            // JP: TODO: zoom compensation should probably be handled in the pan controller instead
+            if (this._globeRendering) {
+                this.zoom += getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
+                this._constrain();
+            }
+            this._oldTransformState.zoom = this.zoom;
+            this._oldTransformState.lat = this.center.lat;
+        } else {
+            this._oldTransformState = {
+                zoom: this._zoom,
+                lat: this.center.lat
+            };
+        }
+
         this._calcMatrices();
     }
 
@@ -440,21 +455,6 @@ export class GlobeTransform extends Transform {
 
         if (!this._initialized) {
             return;
-        }
-
-        if (this._oldTransformState) {
-            // JP: TODO: zoom compensation should probably be handled in the pan controller instead
-            if (this._globeRendering) {
-                this._zoom += getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
-                this._constrain();
-            }
-            this._oldTransformState.zoom = this.zoom;
-            this._oldTransformState.lat = this.center.lat;
-        } else {
-            this._oldTransformState = {
-                zoom: this._zoom,
-                lat: this.center.lat
-            };
         }
 
         if (this._mercatorTransform) {
