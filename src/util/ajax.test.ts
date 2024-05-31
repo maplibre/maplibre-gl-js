@@ -201,5 +201,37 @@ describe('ajax', () => {
             expect(server.requests[0].requestHeaders['Accept']).toBe('application/json');
         });
 
+        test('should add default Accept header when user has not specified one, even for file:// requests', async () => {
+            server.respondWith(request => {
+                request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
+            });
+
+            const promise = getJSON({url: 'file:///C:/Temp/abc.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123'}}, new AbortController());
+            server.respond();
+            await promise;
+
+            expect(server.requests).toHaveLength(1);
+            expect(server.requests[0].url).toBe('http://example.com/test-params.json');
+            expect(server.requests[0].method).toBe('GET');
+            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
+            expect(server.requests[0].requestHeaders['Accept']).toBe('application/json');
+        });
+
+        test('should not add default Accept header when user has already specified one, even for file:// requests', async () => {
+            server.respondWith(request => {
+                request.respond(200, {'Content-Type': 'application/json'}, '{"foo": "bar"}');
+            });
+
+            const promise = getJSON({url: 'file:///C:/Temp/abc.json', cache: 'force-cache', headers: {'Authorization': 'Bearer 123', 'Accept': 'application/geo+json'}}, new AbortController());
+            server.respond();
+            await promise;
+
+            expect(server.requests).toHaveLength(1);
+            expect(server.requests[0].url).toBe('http://example.com/test-params.json');
+            expect(server.requests[0].method).toBe('GET');
+            expect(server.requests[0].requestHeaders['Authorization']).toBe('Bearer 123');
+            expect(server.requests[0].requestHeaders['Accept']).toBe('application/json');
+        });
+
     });
 });
