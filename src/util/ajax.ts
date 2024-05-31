@@ -150,10 +150,8 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         signal: abortController.signal
     });
 
-
-    if (request.headers.has('Accept')) {
-        console.log("skipping Accept header")
-    } else if (requestParameters.type === 'json') {
+    // If the user has already set an Accept header, do not overwrite it here
+    if (requestParameters.type === 'json' && !request.headers.has("Accept")) {
         request.headers.set('Accept', 'application/json');
     }
 
