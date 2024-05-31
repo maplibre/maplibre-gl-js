@@ -594,24 +594,24 @@ export class GlobeTransform extends Transform {
         // length of vecToTarget projected to XZ plane.
 
         const vecToTargetXZLengthSquared = vecToTarget[0] * vecToTarget[0] + vecToTarget[2] * vecToTarget[2];
-        const targetXsquared = rotatedPixelVector[0] * rotatedPixelVector[0];
-        if (vecToTargetXZLengthSquared < targetXsquared) {
+        const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
+        if (vecToTargetXZLengthSquared < targetXSquared) {
             // Zero solutions - setLocationAtPoint is impossible. What do?
             return;
         }
 
         // The intersection's Z coordinates
-        const intersectionA = Math.sqrt(vecToTargetXZLengthSquared - targetXsquared);
+        const intersectionA = Math.sqrt(vecToTargetXZLengthSquared - targetXSquared);
         const intersectionB = -intersectionA; // the second solution
 
         const lngA = angleToRotateBetweenVectors(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
         const lngB = angleToRotateBetweenVectors(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionB);
 
         const vecToTargetLngA = createVec3();
-        vec3.rotateY(vecToTargetLngA, vecToTarget, zero, lngA);
+        vec3.rotateY(vecToTargetLngA, vecToTarget, zero, -lngA);
         const latA = angleToRotateBetweenVectors(vecToTargetLngA[1], vecToTargetLngA[2], rotatedPixelVector[1], rotatedPixelVector[2]);
         const vecToTargetLngB = createVec3();
-        vec3.rotateY(vecToTargetLngB, vecToTarget, zero, lngB);
+        vec3.rotateY(vecToTargetLngB, vecToTarget, zero, -lngB);
         const latB = angleToRotateBetweenVectors(vecToTargetLngB[1], vecToTargetLngB[2], rotatedPixelVector[1], rotatedPixelVector[2]);
         // Is at least one of the needed latitudes valid?
 
