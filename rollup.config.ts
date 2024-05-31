@@ -1,7 +1,7 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import {plugins, watchStagingPlugin} from './build/rollup_plugins';
-// import banner from './build/banner'; -- this is failing the build
+import banner from './build/banner';
 import {RollupOptions} from 'rollup';
 
 const {BUILD} = process.env;
@@ -46,7 +46,7 @@ const config: RollupOptions[] = [{
         sourcemap: true,
         indent: false,
         intro: fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8'),
-        // banner
+        banner
     },
     watch: {
         // give the staging chunks a chance to finish before rebuilding the dev build
