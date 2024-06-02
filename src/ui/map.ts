@@ -53,13 +53,15 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
-    TerrainSpecification
+    TerrainSpecification,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {Projection} from '../geo/projection/projection';
 import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
+import {Atmosphere} from '../render/atmosphere';
 
 const version = packageJSON.version;
 
@@ -334,39 +336,11 @@ export type MapOptions = {
      * @defaultValue true
      */
     cancelPendingTileRequestsWhileZooming?: boolean;
-    /**
-     * If true, use a realistic atmosphere when projection used a globe.
-     * @defaultValue 'false'
-     */
-    atmosphere?: boolean;
-    /**
-     * A {@link AtmosphereOption} options object to use _only_ when atmosphere option is true.
-     */
-    atmosphereOptions?: AtmosphereOption;
 };
 
 export type AddImageOptions = {
 
 }
-
-/**
- * Options for {@link Map#atmosphereOptions} parameter
- */
-export type AtmosphereOption = {
-    /**
-     * Display the atmosphere when the zoom level is below the `fullAtmoZoom`.
-     */
-    fullAtmoZoom: number;
-    /**
-     * Hide the atmosphere when the zoom level is above the `noAtmoZoom`.
-     */
-    noAtmoZoom: number;
-    /**
-     * If set, define the date and time to set the Sun position.
-     */
-    sunDateAndTime?: string;
-}
-
 // See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
 type Complete<T> = {
     [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
@@ -432,12 +406,7 @@ const defaultOptions = {
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     projection: 'mercator',
-    cancelPendingTileRequestsWhileZooming: true,
-    atmosphere: false,
-    atmosphereOptions: {
-        fullAtmoZoom: 5,
-        noAtmoZoom: 7
-    }
+    cancelPendingTileRequestsWhileZooming: true
 } as CompleteMapOptions;
 
 /**
@@ -476,6 +445,7 @@ export class Map extends Camera {
     painter: Painter;
     handlers: HandlerManager;
     projection: Projection;
+    atmosphere: Atmosphere;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -524,8 +494,6 @@ export class Map extends Camera {
     _overridePixelRatio: number | null;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
-    atmosphere: boolean;
-    atmosphereOptions: AtmosphereOption;
 
     /**
      * @internal
@@ -664,16 +632,10 @@ export class Map extends Camera {
 
         this.projection = createProjectionFromName(options.projection);
 
-        this.atmosphere = options.atmosphere;
-        if (options.atmosphereOptions) {
-            if (options.atmosphereOptions.sunDateAndTime != null && isNaN(Date.parse(options.atmosphereOptions.sunDateAndTime))) {
-                throw new Error('atmosphereOptions.sunDateAndTime must be use a YYYY-MM-DDTHH:mm:ss.sssZ format.');
-            }
-            this.atmosphereOptions = options.atmosphereOptions;
-        }
-
         this._setupContainer();
         this._setupPainter();
+
+        this.atmosphere = new Atmosphere(this.painter);
 
         this.on('move', () => this._update(false));
         this.on('moveend', () => this._update(false));
@@ -2720,6 +2682,32 @@ export class Map extends Camera {
      */
     getLight(): LightSpecification {
         return this.style.getLight();
+    }
+
+    /**
+     * Sets the value of style's sky properties.
+     *
+     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky).
+     * @param options - Options object.
+     *
+     * @example
+     * ```ts
+     *
+     * ```
+     */
+    setSky(sky: SkySpecification) {
+        this._lazyInitEmptyStyle();
+        this.style.setSky(sky);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's sky.
+     *
+     * @returns sky properties of the style.
+     */
+    getSky(): SkySpecification {
+        return this.style.getSky();
     }
 
     /**

@@ -3,7 +3,7 @@ in vec3 view_direction;
 uniform vec3 u_sun_pos;
 uniform vec3 u_globe_position;
 uniform float u_globe_radius;
-uniform float u_coefficient;
+uniform float u_atmosphere_blend;
 
 /*
  * Shader use from https://github.com/wwwtyro/glsl-atmosphere
@@ -164,5 +164,5 @@ void main() {
 
     vec4 no_effect_color = vec4(0, 0, 0, 0);
 
-    gl_FragColor = mix(color, no_effect_color, u_coefficient);
+    gl_FragColor = mix(color, no_effect_color, 1.0 - u_atmosphere_blend);
 }

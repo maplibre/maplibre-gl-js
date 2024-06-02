@@ -1,9 +1,9 @@
 import {browser} from '../util/browser';
-import {mat4, vec3} from 'gl-matrix';
+import {mat4} from 'gl-matrix';
 import {SourceCache} from '../source/source_cache';
 import {EXTENT} from '../data/extent';
 import {SegmentVector} from '../data/segment';
-import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray, AtmosphereBoundsArray} from '../data/array_types.g';
+import {RasterBoundsArray, PosArray, TriangleIndexArray, LineStripIndexArray} from '../data/array_types.g';
 import rasterBoundsAttributes from '../data/raster_bounds_attributes';
 import posAttributes from '../data/pos_attributes';
 import {ProgramConfiguration} from '../data/program_configuration';
@@ -32,7 +32,6 @@ import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
-import {atmosphereAttributes} from '../data/atmosphere_attributes';
 
 import type {Transform} from '../geo/transform';
 import type {Style} from '../style/style';
@@ -83,7 +82,6 @@ export class Painter {
     tileExtentBuffer: VertexBuffer;
     tileExtentSegments: SegmentVector;
     tileExtentMesh: Mesh;
-    atmosphereMesh: Mesh;
 
     debugBuffer: VertexBuffer;
     debugSegments: SegmentVector;
@@ -213,22 +211,6 @@ export class Painter {
         this.stencilClearMode = new StencilMode({func: gl.ALWAYS, mask: 0}, 0x0, 0xFF, gl.ZERO, gl.ZERO, gl.ZERO);
 
         this.tileExtentMesh = new Mesh(this.tileExtentBuffer, this.quadTriangleIndexBuffer, this.tileExtentSegments);
-
-        const vertexArray = new AtmosphereBoundsArray();
-        vertexArray.emplaceBack(-1, -1, 0.0, 1.0);
-        vertexArray.emplaceBack(+1, -1, 0.0, 1.0);
-        vertexArray.emplaceBack(+1, +1, 0.0, 1.0);
-        vertexArray.emplaceBack(-1, +1, 0.0, 1.0);
-
-        const indexArray = new TriangleIndexArray();
-        indexArray.emplaceBack(0, 1, 2);
-        indexArray.emplaceBack(0, 2, 3);
-
-        this.atmosphereMesh = new Mesh(
-            context.createVertexBuffer(vertexArray, atmosphereAttributes.members),
-            context.createIndexBuffer(indexArray),
-            SegmentVector.simpleSegment(0, 0, vertexArray.length, indexArray.length)
-        );
     }
 
     /*
@@ -557,8 +539,8 @@ export class Painter {
         }
 
         // Render atmosphere, only for Globe projection
-        if (this.style.map.atmosphere && this.style.map.projection.isGlobe()) {
-            drawAtmosphere(this);
+        if (this.style.getSky() && this.style.map.projection.isGlobe()) {
+            drawAtmosphere(this, this.style.map.atmosphere);
         }
 
         if (this.options.showTileBoundaries) {

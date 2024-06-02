@@ -34,7 +34,17 @@
                     'type': 'raster',
                     'source': 'satellite',
                 },
-            ]
+            ],
+            'sky': {
+                'atmosphere-blend': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    0, 1,
+                    5, 1,
+                    7, 0
+                ]
+            }
         },
         atmosphere: true,
         atmosphereOptions: {
