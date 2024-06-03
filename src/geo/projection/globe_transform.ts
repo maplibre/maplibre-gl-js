@@ -42,11 +42,11 @@ export function mercatorCoordinatesToAngularCoordinatesRadians(mercatorX: number
  */
 export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians: number): vec3 {
     const len = Math.cos(latRadians);
-    return [
-        Math.sin(lngRadians) * len,
-        Math.sin(latRadians),
-        Math.cos(lngRadians) * len
-    ];
+    const vec = createVec3();
+    vec[0] = Math.sin(lngRadians) * len;
+    vec[1] = Math.sin(latRadians);
+    vec[2] = Math.cos(lngRadians) * len;
+    return vec;
 }
 
 /**
@@ -176,7 +176,12 @@ export class GlobeTransform extends Transform {
     }
 
     get cameraPosition(): vec3 {
-        return vec3.clone(this._cameraPosition); // Return a copy - don't let outside code mutate our precomputed camera position.
+        // Return a copy - don't let outside code mutate our precomputed camera position.
+        const copy = createVec3(); // Ensure the resulting vector is float64s
+        copy[0] = this._cameraPosition[0];
+        copy[1] = this._cameraPosition[1];
+        copy[2] = this._cameraPosition[2];
+        return copy;
     }
 
     /**
@@ -475,28 +480,33 @@ export class GlobeTransform extends Transform {
         mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
+        const scaleVec = createVec3();
+        scaleVec[0] = globeRadiusPixels;
+        scaleVec[1] = globeRadiusPixels;
+        scaleVec[2] = globeRadiusPixels;
+
         // Keep a atan-correction-free matrix for transformations done on the CPU with accurate math
         mat4.rotateX(globeMatrixUncorrected, globeMatrix, this.center.lat * Math.PI / 180.0);
         mat4.rotateY(globeMatrixUncorrected, globeMatrixUncorrected, -this.center.lng * Math.PI / 180.0);
-        mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
+        mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrixNoCorrection = globeMatrixUncorrected;
 
         mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeLatitudeErrorCorrectionRadians);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
-        mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
+        mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
         this._globeProjMatrix = globeMatrix;
 
+        this._globeProjMatrixNoCorrectionInverted = createMat4();
         mat4.invert(this._globeProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
 
         const cameraPos: vec4 = createVec4();
         cameraPos[2] = -1;
         cameraPos[3] = 1;
         vec4.transformMat4(cameraPos, cameraPos, this._globeProjMatrixNoCorrectionInverted);
-        this._cameraPosition = [
-            cameraPos[0] / cameraPos[3],
-            cameraPos[1] / cameraPos[3],
-            cameraPos[2] / cameraPos[3]
-        ];
+        this._cameraPosition = createVec3();
+        this._cameraPosition[0] = cameraPos[0] / cameraPos[3];
+        this._cameraPosition[1] = cameraPos[1] / cameraPos[3];
+        this._cameraPosition[2] = cameraPos[2] / cameraPos[3];
 
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
     }

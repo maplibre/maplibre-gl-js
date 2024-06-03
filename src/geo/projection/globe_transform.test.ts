@@ -99,6 +99,28 @@ describe('GlobeTransform', () => {
             expectToBeCloseToArray(projected, [0, 0.99627207622075, 0.08626673833405434], precisionDigits);
         });
 
+        test('camera position', () => {
+            const precisionDigits = 10;
+
+            const globeTransform = createGlobeTransform(globeProjection);
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 0, 8.104309944112357], precisionDigits);
+
+            globeTransform.resize(512, 512);
+            globeTransform.zoom = 1;
+            globeTransform.center = new LngLat(0, 80);
+            globeTransform.updateProjection();
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 2.302165755756314, 1.0003766314860534], precisionDigits);
+
+            globeTransform.pitch = 35;
+            globeTransform.bearing = 70;
+            globeTransform.updateProjection();
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.813934800178554, 1.9336231658331533, 1.1632397119512796], precisionDigits);
+
+            globeTransform.center = new LngLat(-10, 42);
+            globeTransform.updateProjection();
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-1.1246693633141367, 1.2767039184581297, 1.691053210772819], precisionDigits);
+        });
+
         test('sphere point to coordinate', () => {
             const precisionDigits = 10;
             let unprojected = sphereSurfacePointToCoordinates([0, 0, 1]) as LngLat;
