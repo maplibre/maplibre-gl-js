@@ -27,7 +27,7 @@ describe('setPaintOverrides', () => {
 
     });
 
-    test('setPaintOverrides, format expression, overriden text-color', () => {
+    test('setPaintOverrides, format expression, overridden text-color', () => {
         const props = {layout: {'text-field': ['format', 'text', {'text-color': 'yellow'}]}};
         const layer = createSymbolLayer(props);
         layer._setPaintOverrides();
@@ -52,7 +52,7 @@ describe('hasPaintOverrides', () => {
 
     });
 
-    test('constant, Formatted type, overriden text-color', () => {
+    test('constant, Formatted type, overridden text-color', () => {
         const props = {layout: {'text-field': ['format', 'text', {'text-color': 'red'}]}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(true);
@@ -66,7 +66,7 @@ describe('hasPaintOverrides', () => {
 
     });
 
-    test('format expression, overriden text-color', () => {
+    test('format expression, overridden text-color', () => {
         const props = {layout: {'text-field': ['format', ['get', 'name'], {'text-color': 'red'}]}};
         const layer = createSymbolLayer(props);
         expect(SymbolStyleLayer.hasPaintOverride(layer.layout, 'text-color')).toBe(true);
@@ -80,7 +80,7 @@ describe('hasPaintOverrides', () => {
 
     });
 
-    test('nested expression, overriden text-color', () => {
+    test('nested expression, overridden text-color', () => {
         const matchExpr = ['match', ['get', 'case'],
             'one', ['format', 'color', {'text-color': 'blue'}],
             'default'];

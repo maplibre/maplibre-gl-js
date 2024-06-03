@@ -389,7 +389,7 @@ describe('#setPadding', () => {
         expect(currentPadding).toEqual(padding);
     });
 
-    test('doesnt change padding thats already present if new value isnt passed in', () => {
+    test('doesn\'t change padding thats already present if new value isn\'t passed in', () => {
         const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
@@ -436,7 +436,7 @@ describe('#panBy', () => {
         camera.panBy([100, 0], {duration: 0}, eventData);
     });
 
-    test('supresses movestart if noMoveStart option is true', done => {
+    test('suppresses movestart if noMoveStart option is true', done => {
         const camera = createCamera();
         let started;
 
@@ -498,7 +498,7 @@ describe('#panTo', () => {
         camera.panTo([100, 0], {duration: 0}, eventData);
     });
 
-    test('supresses movestart if noMoveStart option is true', done => {
+    test('suppresses movestart if noMoveStart option is true', done => {
         const camera = createCamera();
         let started;
 
@@ -1219,10 +1219,10 @@ describe('#flyTo', () => {
             .on('move', (d) => { moved = d.data; })
             .on('rotate', (d) => { rotated = d.data; })
             .on('pitch', (d) => { pitched = d.data; })
-            .on('moveend', function(d) {
-                expect(this._zooming).toBeFalsy();
-                expect(this._panning).toBeFalsy();
-                expect(this._rotating).toBeFalsy();
+            .on('moveend', (d) => {
+                expect(camera._zooming).toBeFalsy();
+                expect(camera._panning).toBeFalsy();
+                expect(camera._rotating).toBeFalsy();
 
                 expect(movestarted).toBe('ok');
                 expect(moved).toBe('ok');
@@ -1287,10 +1287,10 @@ describe('#flyTo', () => {
             .on('pitchstart', (d) => { pitchstarted = d.data; })
             .on('pitch', (d) => { pitched = d.data; })
             .on('pitchend', (d) => { pitchended = d.data; })
-            .on('moveend', function(d) {
-                expect(this._zooming).toBeFalsy();
-                expect(this._panning).toBeFalsy();
-                expect(this._rotating).toBeFalsy();
+            .on('moveend', (d) => {
+                expect(camera._zooming).toBeFalsy();
+                expect(camera._panning).toBeFalsy();
+                expect(camera._rotating).toBeFalsy();
 
                 expect(movestarted).toBe('ok');
                 expect(moved).toBe('ok');
@@ -1728,7 +1728,7 @@ describe('#flyTo', () => {
         camera.flyTo({center: [100, 0], bearing: 90, animate: true});
     });
 
-    test('check freezeElevation events', done => {
+    test('check elevation events freezeElevation=false', async () => {
         const camera = createCamera();
         const stub = jest.spyOn(browser, 'now');
 
@@ -1737,28 +1737,43 @@ describe('#flyTo', () => {
         camera._prepareElevation = () => { terrainCallbacks.prepare++; };
         camera._updateElevation = () => { terrainCallbacks.update++; };
         camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
-
         camera.setCenter([-10, 0]);
+        const moveEnded = camera.once('moveend');
 
-        camera.on('moveend', () => {
-            expect(terrainCallbacks.prepare).toBe(1);
-            expect(terrainCallbacks.update).toBe(0);
-            expect(terrainCallbacks.finalize).toBe(1);
-            done();
-        });
+        stub.mockImplementation(() => 0);
+        camera.flyTo({center: [10, 0], duration: 20, freezeElevation: false});
+        stub.mockImplementation(() => 1);
+        camera.simulateFrame();
+        stub.mockImplementation(() => 20);
+        camera.simulateFrame();
+        await moveEnded;
+        expect(terrainCallbacks.prepare).toBe(1);
+        expect(terrainCallbacks.update).toBe(2);
+        expect(terrainCallbacks.finalize).toBe(0);
+    });
+
+    test('check elevation events freezeElevation=true', async() => {
+        const camera = createCamera();
+        const stub = jest.spyOn(browser, 'now');
+
+        const terrainCallbacks = {prepare: 0, update: 0, finalize: 0} as any;
+        camera.terrain = {} as Terrain;
+        camera._prepareElevation = () => { terrainCallbacks.prepare++; };
+        camera._updateElevation = () => { terrainCallbacks.update++; };
+        camera._finalizeElevation = () => { terrainCallbacks.finalize++; };
+        camera.setCenter([-10, 0]);
+        const moveEnded = camera.once('moveend');
 
         stub.mockImplementation(() => 0);
         camera.flyTo({center: [10, 0], duration: 20, freezeElevation: true});
-
-        setTimeout(() => {
-            stub.mockImplementation(() => 1);
-            camera.simulateFrame();
-
-            setTimeout(() => {
-                stub.mockImplementation(() => 20);
-                camera.simulateFrame();
-            }, 0);
-        }, 0);
+        stub.mockImplementation(() => 1);
+        camera.simulateFrame();
+        stub.mockImplementation(() => 20);
+        camera.simulateFrame();
+        await moveEnded;
+        expect(terrainCallbacks.prepare).toBe(1);
+        expect(terrainCallbacks.update).toBe(0);
+        expect(terrainCallbacks.finalize).toBe(1);
     });
 
     test('check elevation callbacks', done => {

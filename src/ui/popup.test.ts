@@ -14,7 +14,7 @@ function createMap(options?) {
     window.document.body.appendChild(container);
     Object.defineProperty(container, 'clientWidth', {value: options.width || containerWidth});
     Object.defineProperty(container, 'clientHeight', {value: options.height || containerHeight});
-    return globalCreateMap({container});
+    return globalCreateMap({...options, container});
 }
 
 beforeEach(() => {
@@ -130,6 +130,18 @@ describe('popup', () => {
             .remove();
 
         expect(onClose).toHaveBeenCalled();
+    });
+
+    test('Popup does not fire close event when removed if it is not on the map', () => {
+        const onClose = jest.fn();
+
+        new Popup()
+            .setText('Test')
+            .setLngLat([0, 0])
+            .on('close', onClose)
+            .remove();
+
+        expect(onClose).not.toHaveBeenCalled();
     });
 
     test('Popup fires open event when added', () => {
@@ -521,11 +533,13 @@ describe('popup', () => {
         expect(popupContainer.classList.contains('some')).toBeTruthy();
         expect(popupContainer.classList.contains('classes')).toBeTruthy();
 
-        popup.addClassName('addedClass');
+        const addClassNameMethodPopupInstance = popup.addClassName('addedClass');
         expect(popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(addClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
-        popup.removeClassName('addedClass');
+        const removeClassNameMethodPopupInstance = popup.removeClassName('addedClass');
         expect(!popupContainer.classList.contains('addedClass')).toBeTruthy();
+        expect(removeClassNameMethodPopupInstance).toBeInstanceOf(Popup);
 
         popup.toggleClassName('toggle');
         expect(popupContainer.classList.contains('toggle')).toBeTruthy();
@@ -692,10 +706,14 @@ describe('popup', () => {
         const popup = new Popup({closeButton: true})
             .setHTML('<span>Test</span>')
             .setLngLat([0, 0])
-            .addTo(createMap());
+            .addTo(createMap({
+                locale: {
+                    'Popup.Close': 'Alt close label'
+                }
+            }));
 
         // Suboptimal because the string matching is case-sensitive
-        const closeButton = popup._container.querySelector('[aria-label^=\'Close\']');
+        const closeButton = popup._container.querySelector('[aria-label^=\'Alt close label\']');
 
         expect(window.document.activeElement).toBe(closeButton);
     });

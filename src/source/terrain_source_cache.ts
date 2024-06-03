@@ -10,11 +10,12 @@ import {Terrain} from '../render/terrain';
 /**
  * @internal
  * This class is a helper for the Terrain-class, it:
- *   - loads raster-dem tiles
- *   - manages all renderToTexture tiles.
- *   - caches previous rendered tiles.
- *   - finds all necessary renderToTexture tiles for a OverscaledTileID area
- *   - finds the corresponding raster-dem tile for OverscaledTileID
+ *
+ * - loads raster-dem tiles
+ * - manages all renderToTexture tiles.
+ * - caches previous rendered tiles.
+ * - finds all necessary renderToTexture tiles for a OverscaledTileID area
+ * - finds the corresponding raster-dem tile for OverscaledTileID
  */
 export class TerrainSourceCache extends Evented {
     /**
@@ -173,7 +174,7 @@ export class TerrainSourceCache extends Evented {
     /**
      * find the covering raster-dem tile
      * @param tileID - the tile to look for
-     * @param searchForDEM - Optinal parameter to search for (parent) souretiles with loaded dem.
+     * @param searchForDEM - Optional parameter to search for (parent) sourcetiles with loaded dem.
      * @returns the tile
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {

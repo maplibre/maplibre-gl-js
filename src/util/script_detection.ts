@@ -164,7 +164,7 @@ export function charHasUprightVerticalOrientation(char: number) {
  *
  * A character has neutral orientation if it may be drawn rotated or unrotated
  * when the line is oriented vertically, depending on the orientation of the
- * adjacent characters. For example, along a verticlly oriented line, the vulgar
+ * adjacent characters. For example, along a vertically oriented line, the vulgar
  * fraction ½ is drawn upright among Chinese characters but rotated among Latin
  * letters. A neutrally oriented character does not influence whether an
  * adjacent character is drawn upright or rotated.

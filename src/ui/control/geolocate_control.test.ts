@@ -298,12 +298,16 @@ describe('GeolocateControl with no options', () => {
         await secontMoveEnd;
         expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '40.0000', lng: '50.0000'});
         const errorPromise = geolocate.once('error');
-        geolocation.changeError({code: 2, message: 'position unavaliable'});
+        geolocation.changeError({code: 2, message: 'position unavailable'});
         await errorPromise;
         expect(geolocate._userLocationDotMarker._map).toBeTruthy();
         expect(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')).toBeTruthy();
     });
 
+    /**
+     * @deprecated 'trackuserlocationend' event will not be thrown in this situation later,
+     * 'userlocationlostfocus event' test added instead.
+     */
     test('watching map background event', async () => {
         const geolocate = new GeolocateControl({
             trackUserLocation: true,
@@ -328,6 +332,56 @@ describe('GeolocateControl with no options', () => {
         });
         await trackPromise;
         expect(map.getCenter()).toEqual({lng: 10, lat: 5});
+    });
+
+    test('userlocationlostfocus event', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            fitBoundsOptions: {
+                duration: 0
+            }
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const click = new window.Event('click');
+
+        const moveEndPromise = map.once('moveend');
+        // click the button to activate it into the enabled watch state
+        geolocate._geolocateButton.dispatchEvent(click);
+        // send through a location update which should reposition the map and trigger the 'moveend' event above
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30});
+        await moveEndPromise;
+        const trackPromise = geolocate.once('userlocationlostfocus');
+        // manually pan the map away from the geolocation position which should trigger the 'userlocationlostfocus' event above
+        map.jumpTo({
+            center: [10, 5]
+        });
+        await trackPromise;
+        expect(map.getCenter()).toEqual({lng: 10, lat: 5});
+    });
+
+    test('watching geolocate turns off', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            fitBoundsOptions: {
+                duration: 0
+            }
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const click = new window.Event('click');
+
+        const moveEndPromise = map.once('moveend');
+        // click the button to activate it into the enabled watch state
+        geolocate._geolocateButton.dispatchEvent(click);
+        // send through a location update which should reposition the map and trigger the 'moveend' event above
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30});
+        await moveEndPromise;
+        const turnOffPromise = geolocate.once('trackuserlocationend');
+        // click the button to deactivate geolocate and trigger 'trackuserlocationend' event
+        geolocate._geolocateButton.dispatchEvent(click);
+        await turnOffPromise;
+        expect(geolocate._watchState).toBe('OFF');
     });
 
     test('watching map background state', async () => {
@@ -375,6 +429,36 @@ describe('GeolocateControl with no options', () => {
         geolocate._geolocateButton.dispatchEvent(click);
         await promise;
         expect(map.getCenter()).toEqual({lng: 0, lat: 0});
+    });
+
+    test('userlocationfocus event', async () => {
+        const geolocate = new GeolocateControl({
+            trackUserLocation: true,
+            fitBoundsOptions: {
+                duration: 0
+            }
+        });
+        map.addControl(geolocate);
+        await sleep(0);
+        const click = new window.Event('click');
+
+        const moveEndPromise = map.once('moveend');
+        // click the button to activate it into the enabled watch state
+        geolocate._geolocateButton.dispatchEvent(click);
+        // send through a location update which should reposition the map and trigger the 'moveend' event above
+        geolocation.send({latitude: 10, longitude: 20, accuracy: 30});
+        await moveEndPromise;
+        const trackPromise = geolocate.once('userlocationlostfocus');
+        // manually pan the map away from the geolocation position which should trigger the 'userlocationlostfocus' event above
+        map.jumpTo({
+            center: [10, 5]
+        });
+        await trackPromise;
+        const lockToDotPromise = geolocate.once('userlocationfocus');
+        // click the button to focus on user location and trigger 'userlocationfocus' event
+        geolocate._geolocateButton.dispatchEvent(click);
+        await lockToDotPromise;
+        expect(geolocate._watchState).toBe('ACTIVE_LOCK');
     });
 
     test('does not switch to BACKGROUND and stays in ACTIVE_LOCK state on window resize', async () => {
