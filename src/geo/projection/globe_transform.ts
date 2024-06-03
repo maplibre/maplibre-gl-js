@@ -499,14 +499,14 @@ export class GlobeTransform extends Transform {
         this._globeProjMatrixNoCorrectionInverted = createMat4();
         mat4.invert(this._globeProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
 
-        const cameraPos: vec4 = createVec4();
-        cameraPos[2] = -1;
-        cameraPos[3] = 1;
-        vec4.transformMat4(cameraPos, cameraPos, this._globeProjMatrixNoCorrectionInverted);
+        const zero = createVec3();
         this._cameraPosition = createVec3();
-        this._cameraPosition[0] = cameraPos[0] / cameraPos[3];
-        this._cameraPosition[1] = cameraPos[1] / cameraPos[3];
-        this._cameraPosition[2] = cameraPos[2] / cameraPos[3];
+        this._cameraPosition[2] = this.cameraToCenterDistance / globeRadiusPixels;
+        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, this.pitch * Math.PI / 180);
+        vec3.rotateZ(this._cameraPosition, this._cameraPosition, zero, this.angle);
+        vec3.add(this._cameraPosition, this._cameraPosition, [0, 0, 1]);
+        vec3.rotateX(this._cameraPosition, this._cameraPosition, zero, -this.center.lat * Math.PI / 180.0);
+        vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180.0);
 
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
     }
@@ -756,21 +756,19 @@ export class GlobeTransform extends Transform {
      * Computes normalized direction of a ray from the camera to the given screen pixel.
      */
     private getRayDirectionFromPixel(p: Point): vec3 {
-        const pos: vec4 = [
-            (p.x / this.width) * 2.0 - 1.0,
-            ((p.y / this.height) * 2.0 - 1.0) * -1.0,
-            1.0,
-            1.0
-        ];
+        const pos = createVec4();
+        pos[0] = (p.x / this.width) * 2.0 - 1.0;
+        pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;
+        pos[2] = 1;
+        pos[3] = 1;
         vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrectionInverted);
         pos[0] /= pos[3];
         pos[1] /= pos[3];
         pos[2] /= pos[3];
-        const ray: vec3 = [
-            pos[0] - this._cameraPosition[0],
-            pos[1] - this._cameraPosition[1],
-            pos[2] - this._cameraPosition[2],
-        ];
+        const ray = createVec3();
+        ray[0] = pos[0] - this._cameraPosition[0];
+        ray[1] = pos[1] - this._cameraPosition[1];
+        ray[2] = pos[2] - this._cameraPosition[2];
         const rayNormalized: vec3 = createVec3();
         vec3.normalize(rayNormalized, ray);
         return rayNormalized;
@@ -786,22 +784,24 @@ export class GlobeTransform extends Transform {
         tMin: number;
         tMax: number;
     } {
-        const originDotOrigin = vec3.dot(origin, origin);
         const originDotDirection = vec3.dot(origin, direction);
-        const directionDotDirection = vec3.dot(direction, direction);
-        const planetRadiusSquared = 1.0;
+        const planetRadiusSquared = 1.0; // planet is a unit sphere, so its radius squared is 1
 
-        // Ray-sphere intersection involves a quadratic equation ax^2 +bx + c = 0, hence the a,b,c variables below
-        const a = directionDotDirection;
-        const b = 2 * originDotDirection;
-        const c = originDotOrigin - planetRadiusSquared;
+        // Ray-sphere intersection involves a quadratic equation.
+        // However solving it in the traditional schoolbook way leads to floating point precision issues.
+        // Here we instead use the approach suggested in the book Ray Tracing Gems, chapter 7.
+        // https://www.realtimerendering.com/raytracinggems/rtg/index.html
+        const inner = createVec3();
+        const scaledDir = createVec3();
+        vec3.scale(scaledDir, direction, originDotDirection);
+        vec3.sub(inner, origin, scaledDir);
+        const discriminant = planetRadiusSquared - vec3.dot(inner, inner);
 
-        const d = b * b - 4.0 * a * c;
-
-        if (d >= 0) {
-            const sqrtD = Math.sqrt(d);
-            const t0 = (-b + sqrtD) / (2.0 * a);
-            const t1 = (-b - sqrtD) / (2.0 * a);
+        if (discriminant >= 0) {
+            const c = vec3.dot(origin, origin) - planetRadiusSquared;
+            const q = -originDotDirection + (originDotDirection < 0 ? 1 : -1) * Math.sqrt(discriminant);
+            const t0 = c / q;
+            const t1 = q;
             // Assume the ray origin is never inside the sphere
             const tMin = Math.min(t0, t1);
             const tMax = Math.max(t0, t1);
