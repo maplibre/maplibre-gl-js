@@ -204,7 +204,7 @@ describe('GlobeTransform', () => {
             globeTransform.bearing = -90;
             globeTransform.updateProjection();
             const unprojected = globeTransform.pointLocation(screenTopEdgeCenter);
-            expect(unprojected.lng).toBeLessThan(-38.0);
+            expect(unprojected.lng).toBeGreaterThan(250.0);
             expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
         });
 
