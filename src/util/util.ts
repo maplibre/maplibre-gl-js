@@ -5,6 +5,32 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * When given two angles in degrees, returns the angular distance between them - the shorter one of the two possible arcs.
+ */
+export function distanceOfAnglesDegrees(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, 360);
+    const b = mod(degreesB, 360);
+    return Math.min(
+        Math.abs(a - b),
+        Math.abs(a - b + 360),
+        Math.abs(a - b - 360)
+    );
+}
+
+/**
+ * When given two angles in radians, returns the angular distance between them - the shorter one of the two possible arcs.
+ */
+export function distanceOfAnglesRadians(radiansA: number, radiansB: number): number {
+    const a = mod(radiansA, Math.PI * 2);
+    const b = mod(radiansB, Math.PI * 2);
+    return Math.min(
+        Math.abs(a - b),
+        Math.abs(a - b + Math.PI * 2),
+        Math.abs(a - b - Math.PI * 2)
+    );
+}
+
+/**
  * Modulo function, as opposed to javascript's `%`, which is a remainder.
  * This functions will return positive values, even if the first operand is negative.
  */

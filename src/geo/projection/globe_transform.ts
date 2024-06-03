@@ -4,7 +4,7 @@ import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
-import {easeCubicInOut, lerp, mod} from '../../util/util';
+import {clamp, distanceOfAnglesRadians, easeCubicInOut, lerp, mod} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -52,7 +52,7 @@ export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians
 /**
  * For a given longitude and latitude (note: in degrees) returns the normalized vector from the planet center to the specified place on the surface.
  */
-function angularCoordinatesToVector(lngLat: LngLat): vec3 {
+export function angularCoordinatesToVector(lngLat: LngLat): vec3 {
     return angularCoordinatesRadiansToVector(lngLat.lng * Math.PI / 180, lngLat.lat * Math.PI / 180);
 }
 
@@ -77,7 +77,7 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
         const acosZ = Math.acos(projZ);
         const lngRadians = (projX > 0) ? acosZ : -acosZ;
         const lngDegrees = lngRadians / Math.PI * 180.0;
-        return new LngLat(lngDegrees, latDegrees);
+        return new LngLat(mod(lngDegrees, 360), latDegrees);
     } else {
         return new LngLat(0.0, latDegrees);
     }
@@ -560,6 +560,8 @@ export class GlobeTransform extends Transform {
             return;
         }
 
+        // JP: TODO: když zoomuju na špatnou stranu pólu tak se dějí špatné věci, a stále to občas buguje i jinými způsoby
+
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);
@@ -616,12 +618,32 @@ export class GlobeTransform extends Transform {
         // Is at least one of the needed latitudes valid?
 
         const limit = Math.PI * 0.5;
+
+        const isValidA = latA >= -limit && latA <= limit;
+        const isValidB = latB >= -limit && latB <= limit;
+
         let validLng: number;
         let validLat: number;
-        if (latA >= -limit && latA <= limit) {
+        if (isValidA && isValidB) {
+            // Pick the solution that is closer to current map center.
+            const centerLngRadians = this.center.lng * Math.PI / 180.0;
+            const centerLatRadians = this.center.lat * Math.PI / 180.0;
+            const lngDistA = distanceOfAnglesRadians(lngA, centerLngRadians);
+            const latDistA = distanceOfAnglesRadians(latA, centerLatRadians);
+            const lngDistB = distanceOfAnglesRadians(lngB, centerLngRadians);
+            const latDistB = distanceOfAnglesRadians(latB, centerLatRadians);
+
+            if (lngDistA < lngDistB || (lngDistA === lngDistB && latDistA < latDistB)) {
+                validLng = lngA;
+                validLat = latA;
+            } else if (lngDistB < lngDistA) {
+                validLng = lngB;
+                validLat = latB;
+            }
+        } else if (isValidA) {
             validLng = lngA;
             validLat = latA;
-        } else if (latB >= -limit && latB <= limit) {
+        } else if (isValidB) {
             validLng = lngB;
             validLat = latB;
         } else {
@@ -631,7 +653,7 @@ export class GlobeTransform extends Transform {
 
         const newLng = validLng / Math.PI * 180;
         const newLat = validLat / Math.PI * 180;
-        this.center = new LngLat(newLng, newLat);
+        this.center = new LngLat(mod(newLng, 360), clamp(newLat, -90, 90));
 
         // const vecToCenter = angularCoordinatesToVector(this.center);
 

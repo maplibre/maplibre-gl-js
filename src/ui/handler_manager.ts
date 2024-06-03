@@ -17,11 +17,12 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {extend} from '../util/util';
+import {distanceOfAnglesDegrees, extend, mod} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {getGlobeRadiusPixels} from '../geo/projection/globe_transform';
+import {angularCoordinatesToVector, getGlobeRadiusPixels, sphereSurfacePointToCoordinates} from '../geo/projection/globe_transform';
+import {vec3} from 'gl-matrix';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
@@ -506,13 +507,60 @@ export class HandlerManager {
         // JP: TODO: inertia is NOT handled here
         if (this._map.projection.useGlobeControls) {
             // Globe map controls
-            const aroundLoc = tr.pointLocation(around);
+            const zoomPixel = around;
+            const zoomLoc = tr.pointLocation(zoomPixel);
+
+            // We need special handling of cases when the zoomed point is on the more distant hemisphere (aligned with equator).
+            // This can happen when looking at the poles at low zooms.
+
+            // if (zoomDelta && distanceOfAnglesDegrees(zoomLoc.lng, tr.center.lng) > 90) {
+            //     const vectorToCenter = angularCoordinatesToVector(tr.center);
+            //     const vectorToZoomLoc = angularCoordinatesToVector(zoomLoc);
+            //     const zoomPlaneNormal: vec3 = new Float64Array(3) as any;
+            //     vec3.cross(zoomPlaneNormal, vectorToCenter, vectorToZoomLoc);
+            //     vec3.normalize(zoomPlaneNormal, zoomPlaneNormal);
+
+            //     const hemisphereNormal: vec3 = new Float64Array(3) as any;
+            //     hemisphereNormal[0] = vectorToCenter[0];
+            //     hemisphereNormal[2] = vectorToCenter[2];
+            //     vec3.normalize(hemisphereNormal, hemisphereNormal);
+
+            //     const intersectionAxis = new Float64Array(3) as any;
+            //     vec3.cross(intersectionAxis, hemisphereNormal, zoomPlaneNormal);
+            //     vec3.normalize(intersectionAxis, intersectionAxis);
+
+            //     if (vec3.dot(intersectionAxis, vectorToZoomLoc) < 0) {
+            //         vec3.scale(intersectionAxis, intersectionAxis, -1);
+            //     }
+
+            //     zoomLoc = sphereSurfacePointToCoordinates(intersectionAxis);
+            //     zoomPixel = tr.locationPoint(zoomLoc);
+            // }
+
+            // if (zoomDelta && distanceOfAnglesDegrees(zoomLoc.lng, tr.center.lng) > 90) {
+            //     const candidateLngA = mod(tr.center.lng + 90, 360);
+            //     const candidateLngB = mod(tr.center.lng - 90, 360);
+
+            //     if (distanceOfAnglesDegrees(zoomLoc.lng, candidateLngA) < distanceOfAnglesDegrees(zoomLoc.lng, candidateLngB)) {
+            //         zoomLoc.lng = candidateLngA;
+            //     } else {
+            //         zoomLoc.lng = candidateLngB;
+            //     }
+
+            //     // We will instead zoom to the closest point that *is* on the nearer hemisphere,
+            //     // assuming we keep its latitude the same.
+            //     zoomPixel = tr.locationPoint(zoomLoc);
+            // }
+
             if (bearingDelta) tr.bearing += bearingDelta;
             if (pitchDelta) tr.pitch += pitchDelta;
             if (zoomDelta) tr.zoom += zoomDelta;
 
+            // Make sure the pixel under the cursor is still the same location
+            // as what it was before zooming started.
+            // This should happen before we handle panning.
             if (zoomDelta) {
-                tr.setLocationAtPoint(aroundLoc, around);
+                tr.setLocationAtPoint(zoomLoc, zoomPixel);
             }
 
             // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
