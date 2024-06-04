@@ -10,7 +10,7 @@ function createSymbolLayer(layerProperties) {
     return layer;
 }
 
-function isOverriden(paintProperty) {
+function isOverridden(paintProperty) {
     if (paintProperty.value.kind === 'source' || paintProperty.value.kind === 'composite') {
         return paintProperty.value._styleExpression.expression instanceof FormatSectionOverride;
     }
@@ -22,7 +22,7 @@ describe('setPaintOverrides', () => {
         const layer = createSymbolLayer({});
         layer._setPaintOverrides();
         for (const overridable of properties.paint.overridableProperties) {
-            expect(isOverriden(layer.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated))).toBe(false);
+            expect(isOverridden(layer.paint.get(overridable as keyof SymbolPaintPropsPossiblyEvaluated))).toBe(false);
         }
 
     });
@@ -31,7 +31,7 @@ describe('setPaintOverrides', () => {
         const props = {layout: {'text-field': ['format', 'text', {'text-color': 'yellow'}]}};
         const layer = createSymbolLayer(props);
         layer._setPaintOverrides();
-        expect(isOverriden(layer.paint.get('text-color'))).toBe(true);
+        expect(isOverridden(layer.paint.get('text-color'))).toBe(true);
 
     });
 
@@ -39,7 +39,7 @@ describe('setPaintOverrides', () => {
         const props = {layout: {'text-field': ['format', 'text', {}]}};
         const layer = createSymbolLayer(props);
         layer._setPaintOverrides();
-        expect(isOverriden(layer.paint.get('text-color'))).toBe(false);
+        expect(isOverridden(layer.paint.get('text-color'))).toBe(false);
 
     });
 

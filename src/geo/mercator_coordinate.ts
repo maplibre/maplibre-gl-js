@@ -5,13 +5,13 @@ import {IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 /*
  * The average circumference of the world in meters.
  */
-const earthCircumfrence = 2 * Math.PI * earthRadius; // meters
+const earthCircumference = 2 * Math.PI * earthRadius; // meters
 
 /*
  * The circumference at a line of latitude in meters.
  */
 function circumferenceAtLatitude(latitude: number) {
-    return earthCircumfrence * Math.cos(latitude * Math.PI / 180);
+    return earthCircumference * Math.cos(latitude * Math.PI / 180);
 }
 
 export function mercatorXfromLng(lng: number) {
@@ -152,6 +152,6 @@ export class MercatorCoordinate implements IMercatorCoordinate {
      */
     meterInMercatorCoordinateUnits(): number {
         // 1 meter / circumference at equator in meters * Mercator projection scale factor at this latitude
-        return 1 / earthCircumfrence * mercatorScale(latFromMercatorY(this.y));
+        return 1 / earthCircumference * mercatorScale(latFromMercatorY(this.y));
     }
 }
