@@ -174,18 +174,18 @@ export class FillExtrusionBucket implements Bucket {
             // Compute polygon centroid to calculate elevation in GPU
             const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};
             this.processPolygon(centroid, canonical, feature, polygon, subdivisionGranularity);
-        }
 
-        const addedVertices = this.layoutVertexArray.length - oldVertexCount;
+            const addedVertices = this.layoutVertexArray.length - oldVertexCount;
 
-        const centroidX = Math.floor(centroid.x / centroid.sampleCount);
-        const centroidY = Math.floor(centroid.y / centroid.sampleCount);
-
-        for (let i = 0; i < addedVertices; i++) {
-            this.centroidVertexArray.emplaceBack(
-                centroidX,
-                centroidY
-            );
+            const centroidX = Math.floor(centroid.x / centroid.sampleCount);
+            const centroidY = Math.floor(centroid.y / centroid.sampleCount);
+    
+            for (let i = 0; i < addedVertices; i++) {
+                this.centroidVertexArray.emplaceBack(
+                    centroidX,
+                    centroidY
+                );
+            }
         }
 
         this.programConfigurations.populatePaintArrays(this.layoutVertexArray.length, feature, index, imagePositions, canonical);
