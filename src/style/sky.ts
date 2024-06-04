@@ -6,25 +6,25 @@ import {extend} from '../util/util';
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 
-type Props = {
+type SkyProps = {
     'atmosphere-blend': DataConstantProperty<number>;
 };
 
-type PropsPossiblyEvaluated = {
+type SkyPropsPossiblyEvaluated = {
     'atmosphere-blend': number;
 };
 
-const properties: Properties<Props> = new Properties({
+const properties: Properties<SkyProps> = new Properties({
     'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification),
 });
 
 const TRANSITION_SUFFIX = '-transition';
 
 export default class Sky extends Evented {
-    properties: PossiblyEvaluated<Props, PropsPossiblyEvaluated>;
+    properties: PossiblyEvaluated<SkyProps, SkyPropsPossiblyEvaluated>;
 
-    _transitionable: Transitionable<Props>;
-    _transitioning: Transitioning<Props>;
+    _transitionable: Transitionable<SkyProps>;
+    _transitioning: Transitioning<SkyProps>;
 
     constructor(sky?: SkySpecification) {
         super();
@@ -39,9 +39,9 @@ export default class Sky extends Evented {
         for (const name in sky) {
             const value = sky[name];
             if (name.endsWith(TRANSITION_SUFFIX)) {
-                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof Props, value);
+                this._transitionable.setTransition(name.slice(0, -TRANSITION_SUFFIX.length) as keyof SkyProps, value);
             } else {
-                this._transitionable.setValue(name as keyof Props, value);
+                this._transitionable.setValue(name as keyof SkyProps, value);
             }
         }
     }
