@@ -179,7 +179,7 @@ export class FillExtrusionBucket implements Bucket {
 
             const centroidX = Math.floor(centroid.x / centroid.sampleCount);
             const centroidY = Math.floor(centroid.y / centroid.sampleCount);
-    
+
             for (let i = 0; i < addedVertices; i++) {
                 this.centroidVertexArray.emplaceBack(
                     centroidX,
