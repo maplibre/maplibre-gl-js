@@ -7,7 +7,7 @@ import {GlobeTransform, angularCoordinatesRadiansToVector, mercatorCoordinatesTo
 import {OverscaledTileID} from '../../source/tile_id';
 
 describe('GlobeTransform', () => {
-    const globeProjection = {
+    const globeProjection = { // JP: TODO: rename this to mock
         get useGlobeControls(): boolean {
             return true;
         },
@@ -289,6 +289,16 @@ describe('GlobeTransform', () => {
 
             coords = new LngLat(5, 10);
             point = new Point(320, 240);
+            globeTransform.setLocationAtPoint(coords, point);
+            unprojected = globeTransform.pointLocation(point);
+            projected = globeTransform.locationPoint(coords);
+            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            expect(projected.x).toBeCloseTo(point.x, precisionDigits);
+            expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+
+            coords = new LngLat(5, 10);
+            point = new Point(330, 240); // 10 pixels to the right
             globeTransform.setLocationAtPoint(coords, point);
             unprojected = globeTransform.pointLocation(point);
             projected = globeTransform.locationPoint(coords);
