@@ -180,7 +180,7 @@ export class TerrainSourceCache extends Evented {
     /**
      * find the covering raster-dem tile
      * @param tileID - the tile to look for
-     * @param searchForDEM - Optional parameter to search for (parent) source tiles with loaded dem.
+     * @param searchForDEM - Optional parameter to search for (parent) sourcetiles with loaded dem.
      * @returns the tile
      */
     getSourceTile(tileID: OverscaledTileID, searchForDEM?: boolean): Tile {

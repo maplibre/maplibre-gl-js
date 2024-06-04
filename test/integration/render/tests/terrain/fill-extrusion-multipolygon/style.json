@@ -1,0 +1,165 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 500,
+      "width": 500,
+      "timeout": 60000,
+      "operations": [
+        [
+          "sleep",
+          5000
+        ]
+      ]
+    }
+  },
+  "center": [
+    11.037826538085028,
+    47.49076091764255
+  ],
+  "zoom": 13,
+  "pitch": 60,
+  "bearing": -60,
+  "sources": {
+    "terrainSource": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "minzoom": 0,
+      "maxzoom": 12
+    },
+    "hillshadeSource": {
+      "type": "raster-dem",
+      "tiles": [
+        "local://tiles/terrain-shading/{z}-{x}-{y}.terrain.png"
+      ],
+      "minzoom": 0,
+      "maxzoom": 12
+    },
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "MultiPolygon",
+              "coordinates": [
+                [
+                  [
+                    [
+                      11.038,
+                      47.48
+                    ],
+                    [
+                      11.035,
+                      47.48
+                    ],
+                    [
+                      11.035,
+                      47.485
+                    ],
+                    [
+                      11.038,
+                      47.485
+                    ],
+                    [
+                      11.038,
+                      47.48
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      11.04,
+                      47.49
+                    ],
+                    [
+                      11.037,
+                      47.49
+                    ],
+                    [
+                      11.037,
+                      47.495
+                    ],
+                    [
+                      11.04,
+                      47.495
+                    ],
+                    [
+                      11.04,
+                      47.49
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      11.043,
+                      47.50
+                    ],
+                    [
+                      11.046,
+                      47.50
+                    ],
+                    [
+                      11.046,
+                      47.505
+                    ],
+                    [
+                      11.043,
+                      47.505
+                    ],
+                    [
+                      11.043,
+                      47.50
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "hills",
+      "type": "hillshade",
+      "source": "hillshadeSource",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "hillshade-shadow-color": "#473B24",
+        "hillshade-illumination-anchor": "map",
+        "hillshade-illumination-direction": 150
+      }
+    },
+    {
+      "id": "extrusion",
+      "type": "fill-extrusion",
+      "source": "geojson",
+      "paint": {
+        "fill-extrusion-height": 100,
+        "fill-extrusion-base": 10,
+        "fill-extrusion-color": "#999"
+      }
+    }
+  ],
+  "terrain": {
+    "source": "terrainSource",
+    "exaggeration": 1
+  }
+}

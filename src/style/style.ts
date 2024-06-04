@@ -1300,7 +1300,7 @@ export class Style extends Evented {
             this.sourceCaches[layer.source].pause();
         }
 
-        // upon updating, serilized layer dictionary should be reset.
+        // upon updating, serialized layer dictionary should be reset.
         // When needed, it will be populated with the correct copy again.
         this._serializedLayers = null;
         this._changed = true;

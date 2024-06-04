@@ -81,7 +81,7 @@ export class VectorTileWorkerSource implements WorkerSource {
             if (isGzipped) {
                 errorMessage += 'please make sure the data is not gzipped and that you have configured the relevant header in the server';
             } else {
-                errorMessage += `got error: ${ex.messge}`;
+                errorMessage += `got error: ${ex.message}`;
             }
             throw new Error(errorMessage);
         }

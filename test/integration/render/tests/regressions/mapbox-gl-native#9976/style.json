@@ -14,7 +14,7 @@
           {
             "id": "fill",
             "type": "fill",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
               "fill-pattern": "marker"
             }
@@ -36,7 +36,7 @@
           {
             "id": "road",
             "type": "line",
-            "source": "mapbox",
+            "source": "maplibre",
             "paint": {
               "line-width": 20,
               "line-pattern": "generic_icon"
@@ -52,7 +52,7 @@
   },
 "zoom": 11,
  "sources": {
-     "mapbox": {
+     "maplibre": {
        "type": "geojson",
        "maxzoom": 10,
        "data": {

@@ -12,7 +12,7 @@
   "zoom": 14,
   "bearing": 180,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -32,7 +32,7 @@
     {
       "id": "point-placement-align-map-true",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "poi_label",
       "layout": {
         "symbol-placement": "point",

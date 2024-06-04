@@ -8,21 +8,21 @@ describe('evaluate', () => {
 
     test('override constant', () => {
         const defaultColor = {'r': 0, 'g': 1, 'b': 0, 'a': 1};
-        const overridenColor = {'r': 1, 'g': 0, 'b': 0, 'a': 1};
-        const overriden = new PossiblyEvaluatedPropertyValue(
+        const overriddenColor = {'r': 1, 'g': 0, 'b': 0, 'a': 1};
+        const overridden = new PossiblyEvaluatedPropertyValue(
             properties.paint.properties['text-color'],
             {kind: 'constant', value: defaultColor},
             {zoom: 0, zoomHistory: {}} as EvaluationParameters
         );
 
-        const override = new FormatSectionOverride(overriden);
+        const override = new FormatSectionOverride(overridden);
         const ctx = new EvaluationContext();
         ctx.feature = {} as any;
         ctx.featureState = {};
         expect(override.evaluate(ctx)).toEqual(defaultColor);
 
-        ctx.formattedSection = {textColor: overridenColor} as FormattedSection;
-        expect(override.evaluate(ctx)).toEqual(overridenColor);
+        ctx.formattedSection = {textColor: overriddenColor} as FormattedSection;
+        expect(override.evaluate(ctx)).toEqual(overriddenColor);
 
     });
 
@@ -31,19 +31,19 @@ describe('evaluate', () => {
         console.warn = (_) => {};
         const defaultColor = {'r': 0, 'g': 0, 'b': 0, 'a': 1};
         const propertyColor = {'r': 1, 'g': 0, 'b': 0, 'a': 1};
-        const overridenColor = {'r': 0, 'g': 0, 'b': 1, 'a': 1};
+        const overriddenColor = {'r': 0, 'g': 0, 'b': 1, 'a': 1};
         const styleExpr = createExpression(
             ['get', 'color'],
             properties.paint.properties['text-color'].specification);
 
         const sourceExpr = new ZoomConstantExpression('source', styleExpr.value as StyleExpression);
-        const overriden = new PossiblyEvaluatedPropertyValue(
+        const overridden = new PossiblyEvaluatedPropertyValue(
             properties.paint.properties['text-color'],
             sourceExpr,
             {zoom: 0, zoomHistory: {}} as EvaluationParameters
         );
 
-        const override = new FormatSectionOverride(overriden);
+        const override = new FormatSectionOverride(overridden);
         const ctx = new EvaluationContext();
         ctx.feature = {properties: {}} as any;
         ctx.featureState = {};
@@ -53,8 +53,8 @@ describe('evaluate', () => {
         ctx.feature.properties.color = 'red';
         expect(override.evaluate(ctx)).toEqual(propertyColor);
 
-        ctx.formattedSection = {textColor: overridenColor} as FormattedSection;
-        expect(override.evaluate(ctx)).toEqual(overridenColor);
+        ctx.formattedSection = {textColor: overriddenColor} as FormattedSection;
+        expect(override.evaluate(ctx)).toEqual(overriddenColor);
 
         console.warn = warn;
     });

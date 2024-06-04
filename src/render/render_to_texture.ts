@@ -42,7 +42,7 @@ export class RenderToTexture {
      * store for render-stacks
      * a render stack is a set of layers which should be rendered into one texture
      * every stylesheet can have multiple stacks. A new stack is created if layers which should
-     * not rendered to texture sit inbetween layers which should rendered to texture. e.g. hillshading or symbols
+     * not rendered to texture sit between layers which should rendered to texture. e.g. hillshading or symbols
      */
     _stacks: Array<Array<string>>;
     /**
