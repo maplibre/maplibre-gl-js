@@ -43,7 +43,6 @@ You may also run tests and view output with the plugin [orta.vscode-jest](https:
 
 If you do so, note that the initial test run may take a while (3 minutes or so), during which time the test results are not yet available.
 
-
 ## Integration Tests
 
 See [`test/integration/README.md`](./integration/README.md).
