@@ -157,7 +157,7 @@ describe('transform', () => {
         const transform = new Transform(0, 22, 0, 60, true);
         transform.resize(200, 200);
 
-        test('generell', () => {
+        test('general', () => {
 
             // make slightly off center so that sort order is not subject to precision issues
             transform.center = new LngLat(-0.01, 0.01);

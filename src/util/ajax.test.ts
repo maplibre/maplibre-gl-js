@@ -170,7 +170,7 @@ describe('ajax', () => {
 
         test('should preserve user-specified Accept header', async () => {
             server.respondWith(request => {
-                // Note that postgrest responds to this type of request with application/geo+json
+                // Note that PostgREST responds to this type of request with application/geo+json
                 request.respond(200, {'Content-Type': 'application/geo+json'}, '{"foo": "bar"}');
             });
 
