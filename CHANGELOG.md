@@ -2,6 +2,8 @@
 
 ### ✨ Features and improvements
 
+- Improve animation curve when easeTo and flyTo with constraints ([#3793](https://github.com/maplibre/maplibre-gl-js/pull/3793))
+- For filled extrusions, calculate the elevation per polygon (see issue [#3313](https://github.com/maplibre/maplibre-gl-js/issues/3313))
 - Add events to `GeolocateControl` to allow a more granular interaction ([#3847](https://github.com/maplibre/maplibre-gl-js/pull/3847))
 - Make `MapOptions.style` optional to be consistent with `Map.setStyle(null)` ([#4151](https://github.com/maplibre/maplibre-gl-js/pull/4151))
 - Use Autoprefixer to handle vendor prefixes in CSS ([#4165](https://github.com/maplibre/maplibre-gl-js/pull/4165))
@@ -12,6 +14,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - ⚠️ Allow breaking lines in labels before a left parenthesis ([#4138](https://github.com/maplibre/maplibre-gl-js/pull/4138))
 - ⚠️ Fix ignoring embedded line breaks when `symbol-placement` is `line` or `line-center` ([#4124](https://github.com/maplibre/maplibre-gl-js/pull/4124))
 - _...Add new stuff here..._
@@ -2057,7 +2060,7 @@ August 16, 2018
 - Use setData operation when diffing geojson sources [#5332](https://github.com/mapbox/mapbox-gl-js/pull/5332)
 - Return early from draw calls on layers where opacity=0 [#5429](https://github.com/mapbox/mapbox-gl-js/pull/5429)
 - A [heatmap](https://www.mapbox.com/mapbox-gl-js/example/heatmap-layer/) layer type is now available. This layer type allows you to visualize and explore massive datasets of points, reflecting the shape and density of data well while also looking beautiful. See [the blog post](https://blog.mapbox.com/sneak-peek-at-heatmaps-in-mapbox-gl-73b41d4b16ae) for further details.
-  ![](https://cdn-images-1.medium.com/max/1600/1*Dme5MAgdA3pYdTRHUQzvLw.png)
+  ![heatmap screenshot](https://cdn-images-1.medium.com/max/1600/1*Dme5MAgdA3pYdTRHUQzvLw.png)
 - The value of a style property or filter can now be an [expression](https://www.mapbox.com/mapbox-gl-js/style-spec/#expressions). Expressions are a way of doing data-driven and zoom-driven styling that provides more flexibility and control, and unifies property and filter syntax.
 
   Previously, data-driven and zoom-driven styling relied on stop functions: you specify a feature property and a set of input-output pairs that essentially define a “scale” for how the style should be calculated based on the feature property. For example, the following would set circle colors on a green-to-red scale based on the value of `feature.properties.population`:

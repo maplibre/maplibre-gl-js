@@ -233,7 +233,7 @@ export class Transform {
     set padding(padding: PaddingOptions) {
         if (this._edgeInsets.equals(padding)) return;
         this._unmodified = false;
-        //Update edge-insets inplace
+        //Update edge-insets in place
         this._edgeInsets.interpolate(this._edgeInsets, padding, 1);
         this._calcMatrices();
     }
@@ -499,7 +499,7 @@ export class Transform {
 
     /**
      * This method works in combination with freezeElevation activated.
-     * freezeElevtion is enabled during map-panning because during this the camera should sit in constant height.
+     * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
      * After panning finished, call this method to recalculate the zoomlevel for the current camera-height in current terrain.
      * @param terrain - the terrain
      */
@@ -876,9 +876,9 @@ export class Transform {
         // - the more depth precision is available for features (good)
         // - clipping starts appearing sooner when the camera is close to 3d features (bad)
         //
-        // Other values work for mapbox-gl-js but deckgl was encountering precision issues
+        // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
         // when rendering custom layers. This value was experimentally chosen and
-        // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
+        // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
         const nearZ = this.height / 50;
 
         // matrix for conversion from location to clip space(-1 .. 1)
