@@ -99,7 +99,7 @@ function isRegistered(input: unknown) {
     if (klass._classRegistryKey && klass._classRegistryKey !== 'Object') {
         return true;
     }
-    if ((<SerializedObject>input).$name) {
+    if ((input as SerializedObject).$name) {
         return true;
     }
     return false;
