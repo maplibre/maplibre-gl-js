@@ -91,15 +91,6 @@ function isArrayBuffer(value: any): value is ArrayBuffer {
            (value instanceof ArrayBuffer || (value.constructor && value.constructor.name === 'ArrayBuffer'));
 }
 
-function getRegisterName(input: unknown) : string|undefined {
-    if (typeof input !== 'object') {
-        return;
-    }
-    const klass = (input.constructor as any);
-    const name = klass._classRegistryKey;
-    return name;
-}
-
 /**
  * Serialize the given object for transfer to or from a web worker.
  *
@@ -113,22 +104,17 @@ function getRegisterName(input: unknown) : string|undefined {
  * this should happen in the client code, before using serialize().)
  */
 export function serialize(input: unknown, transferables?: Array<Transferable> | null): Serialized {
-    const name = getRegisterName(input);
     if (input === null ||
         input === undefined ||
         typeof input === 'boolean' ||
         typeof input === 'number' ||
         typeof input === 'string' ||
-        (!name &&
-            (input instanceof Boolean ||
-            input instanceof Number ||
-            input instanceof String ||
-            input instanceof Date ||
-            input instanceof RegExp ||
-            input instanceof Blob ||
-            input instanceof Error
-            )
-        )) {
+        input instanceof Boolean ||
+        input instanceof Number ||
+        input instanceof String ||
+        input instanceof Date ||
+        input instanceof RegExp ||
+        input instanceof Blob) {
         return input;
     }
 
@@ -171,6 +157,7 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
 
     if (typeof input === 'object') {
         const klass = (input.constructor as any);
+        const name = klass._classRegistryKey;
         if (!name) {
             throw new Error(`can't serialize object of unregistered class ${klass.name}`);
         }
@@ -218,25 +205,21 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
 }
 
 export function deserialize(input: Serialized): unknown {
-    const hasRegisterName = typeof input === 'object' && (<SerializedObject>input).$name;
     if (input === null ||
         input === undefined ||
         typeof input === 'boolean' ||
         typeof input === 'number' ||
         typeof input === 'string' ||
+        input instanceof Boolean ||
+        input instanceof Number ||
+        input instanceof String ||
+        input instanceof Date ||
+        input instanceof RegExp ||
+        input instanceof Blob ||
         isArrayBuffer(input) ||
         isImageBitmap(input) ||
         ArrayBuffer.isView(input) ||
-        (!hasRegisterName && (
-            input instanceof ImageData ||
-            input instanceof Error ||
-            input instanceof Boolean ||
-            input instanceof Number ||
-            input instanceof String ||
-            input instanceof Date ||
-            input instanceof RegExp ||
-            input instanceof Blob
-        ))) {
+        input instanceof ImageData) {
         return input;
     }
 
@@ -245,7 +228,7 @@ export function deserialize(input: Serialized): unknown {
     }
 
     if (typeof input === 'object') {
-        const name = (<SerializedObject>input).$name || 'Object';
+        const name = input.$name || 'Object';
         if (!registry[name]) {
             throw new Error(`can't deserialize unregistered class ${name}`);
         }
