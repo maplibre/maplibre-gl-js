@@ -646,7 +646,7 @@ export class GlobeTransform extends Transform {
             if (lngDistA < lngDistB || (lngDistA === lngDistB && latDistA < latDistB)) {
                 validLng = lngA;
                 validLat = latA;
-            } else if (lngDistB < lngDistA) {
+            } else {
                 validLng = lngB;
                 validLat = latB;
             }
