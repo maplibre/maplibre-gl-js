@@ -7,9 +7,11 @@
 - Use Autoprefixer to handle vendor prefixes in CSS ([#4165](https://github.com/maplibre/maplibre-gl-js/pull/4165))
 - Make `aria-label` configurable for Map, Marker and Popup [#4147](https://github.com/maplibre/maplibre-gl-js/pull/4147)
 - Map `<canvas>` is focusable only when interactive [#4147](https://github.com/maplibre/maplibre-gl-js/pull/4147)
+- "Accept" headers set in Request Transformers are not overwritten [#4210](https://github.com/maplibre/maplibre-gl-js/pull/4210)
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+
 - ⚠️ Allow breaking lines in labels before a left parenthesis ([#4138](https://github.com/maplibre/maplibre-gl-js/pull/4138))
 - ⚠️ Fix ignoring embedded line breaks when `symbol-placement` is `line` or `line-center` ([#4124](https://github.com/maplibre/maplibre-gl-js/pull/4124))
 - Fix AjaxError not properly serialized ([#4024](https://github.com/maplibre/maplibre-gl-js/pull/4211))
@@ -2056,7 +2058,7 @@ August 16, 2018
 - Use setData operation when diffing geojson sources [#5332](https://github.com/mapbox/mapbox-gl-js/pull/5332)
 - Return early from draw calls on layers where opacity=0 [#5429](https://github.com/mapbox/mapbox-gl-js/pull/5429)
 - A [heatmap](https://www.mapbox.com/mapbox-gl-js/example/heatmap-layer/) layer type is now available. This layer type allows you to visualize and explore massive datasets of points, reflecting the shape and density of data well while also looking beautiful. See [the blog post](https://blog.mapbox.com/sneak-peek-at-heatmaps-in-mapbox-gl-73b41d4b16ae) for further details.
-  ![](https://cdn-images-1.medium.com/max/1600/1*Dme5MAgdA3pYdTRHUQzvLw.png)
+  ![heatmap screenshot](https://cdn-images-1.medium.com/max/1600/1*Dme5MAgdA3pYdTRHUQzvLw.png)
 - The value of a style property or filter can now be an [expression](https://www.mapbox.com/mapbox-gl-js/style-spec/#expressions). Expressions are a way of doing data-driven and zoom-driven styling that provides more flexibility and control, and unifies property and filter syntax.
 
   Previously, data-driven and zoom-driven styling relied on stop functions: you specify a feature property and a set of input-output pairs that essentially define a “scale” for how the style should be calculated based on the feature property. For example, the following would set circle colors on a green-to-red scale based on the value of `feature.properties.population`:

@@ -274,7 +274,7 @@ export function warnOnce(message: string): void {
  *
  * @returns true for a counter clockwise set of points
  */
-// http://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
+// https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
 export function isCounterClockwise(a: Point, b: Point, c: Point): boolean {
     return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
 }

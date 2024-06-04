@@ -54,6 +54,7 @@ _Note that a particular bucket may appear multiple times in `tile.buckets`--once
    - Binding layout buffer data (via `BufferGroup`) and calling `gl.drawElements()`
 
 Compiling and caching GL shader programs is managed by the `Painter` and `ProgramConfiguration` classes.  In particular, an instance of `ProgramConfiguration` handles, for a given (tile, style layer) pair:
+
  - Expanding a `#pragma mapbox` statement in our shader source into either a _uniform_ or _attribute_, _varying_, and _local_ variable declaration, depending on whether or not the relevant style property is data-driven.
  - Creating and populating a _paint_ vertex array for data-driven properties, corresponding to the `attributes` declared in the shader. (This happens at layout time, on the worker side.)
 
