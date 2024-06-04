@@ -49,7 +49,7 @@ const RESIZE_MULTIPLIER = 5;
 
 /**
  * @internal
- * A struct array memeber
+ * A struct array member
  */
 export type StructArrayMember = {
     name: string;

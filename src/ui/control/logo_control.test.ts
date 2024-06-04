@@ -75,7 +75,7 @@ describe('LogoControl', () => {
         ).toHaveLength(1);
     });
 
-    test('has `rel` nooper and nofollow', done => {
+    test('has `rel` noopener and nofollow', done => {
         const map = createMap(undefined, true);
 
         map.on('load', () => {

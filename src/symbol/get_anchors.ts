@@ -81,7 +81,7 @@ function getAnchors(line: Array<Point>,
     tileExtent: number) {
 
     // Resample a line to get anchor points for labels and check that each
-    // potential label passes text-max-angle check and has enough froom to fit
+    // potential label passes text-max-angle check and has enough room to fit
     // on the line.
 
     const angleWindowSize = getAngleWindowSize(shapedText, glyphSize, boxScale);

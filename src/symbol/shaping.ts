@@ -257,7 +257,6 @@ function shapeText(
     translate: [number, number],
     writingMode: WritingMode.horizontal | WritingMode.vertical,
     allowVerticalPlacement: boolean,
-    symbolPlacement: string,
     layoutTextSize: number,
     layoutTextSizeThisZoom: number
 ): Shaping | false {
@@ -275,7 +274,7 @@ function shapeText(
         lines = [];
         const untaggedLines =
             processBidirectionalText(logicalInput.toString(),
-                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
+                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
         for (const line of untaggedLines) {
             const taggedLine = new TaggedString();
             taggedLine.text = line;
@@ -292,7 +291,7 @@ function shapeText(
         const processedLines =
             processStyledBidirectionalText(logicalInput.text,
                 logicalInput.sectionIndex,
-                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
+                determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
         for (const line of processedLines) {
             const taggedLine = new TaggedString();
             taggedLine.text = line[0];
@@ -301,7 +300,7 @@ function shapeText(
             lines.push(taggedLine);
         }
     } else {
-        lines = breakLines(logicalInput, determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, symbolPlacement, layoutTextSize));
+        lines = breakLines(logicalInput, determineLineBreaks(logicalInput, spacing, maxWidth, glyphMap, imagePositions, layoutTextSize));
     }
 
     const positionedLines = [];
@@ -343,7 +342,6 @@ const breakable: {
     [0x0a]: true, // newline
     [0x20]: true, // space
     [0x26]: true, // ampersand
-    [0x28]: true, // left parenthesis
     [0x29]: true, // right parenthesis
     [0x2b]: true, // plus sign
     [0x2d]: true, // hyphen-minus
@@ -357,6 +355,13 @@ const breakable: {
     // Many other characters may be reasonable breakpoints
     // Consider "neutral orientation" characters at scriptDetection.charHasNeutralVerticalOrientation
     // See https://github.com/mapbox/mapbox-gl-js/issues/3658
+};
+
+// Allow breaks depending on the following character
+const breakableBefore: {
+    [_: number]: boolean;
+} = {
+    [0x28]: true, // left parenthesis
 };
 
 function getGlyphAdvance(
@@ -503,12 +508,8 @@ function determineLineBreaks(
         };
     },
     imagePositions: {[_: string]: ImagePosition},
-    symbolPlacement: string,
     layoutTextSize: number
 ): Array<number> {
-    if (symbolPlacement !== 'point')
-        return [];
-
     if (!logicalInput)
         return [];
 
@@ -528,7 +529,7 @@ function determineLineBreaks(
         // surrounding spaces.
         if ((i < logicalInput.length() - 1)) {
             const ideographicBreak = charAllowsIdeographicBreaking(codePoint);
-            if (breakable[codePoint] || ideographicBreak || section.imageName) {
+            if (breakable[codePoint] || ideographicBreak || section.imageName || (i !== logicalInput.length() - 2 && breakableBefore[logicalInput.getCharCode(i + 1)])) {
 
                 potentialLineBreaks.push(
                     evaluateBreak(
@@ -823,13 +824,13 @@ function applyTextFit(shapedIcon: PositionedIcon): Box {
     let iconTop = shapedIcon.top;
     let iconWidth = shapedIcon.right - iconLeft;
     let iconHeight = shapedIcon.bottom - iconTop;
-    // Size of the origional content area
+    // Size of the original content area
     const contentWidth = shapedIcon.image.content[2] - shapedIcon.image.content[0];
     const contentHeight = shapedIcon.image.content[3] - shapedIcon.image.content[1];
     const textFitWidth = shapedIcon.image.textFitWidth ?? TextFit.stretchOrShrink;
     const textFitHeight = shapedIcon.image.textFitHeight ?? TextFit.stretchOrShrink;
     const contentAspectRatio = contentWidth / contentHeight;
-    // Scale to the proportional axis first note that height takes precidence if
+    // Scale to the proportional axis first note that height takes precedence if
     // both axes are set to proportional.
     if (textFitHeight === TextFit.proportional) {
         if ((textFitWidth === TextFit.stretchOnly && iconWidth / iconHeight < contentAspectRatio) || textFitWidth === TextFit.proportional) {

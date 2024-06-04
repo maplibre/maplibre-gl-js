@@ -1160,7 +1160,7 @@ describe('SourceCache#_updateRetainedTiles', () => {
 
     });
 
-    test('dont\'t ascend multiple times if a tile is not found', () => {
+    test('don\'t ascend multiple times if a tile is not found', () => {
         const sourceCache = createSourceCache();
         sourceCache._source.loadTile = async (tile) => {
             tile.state = 'loading';
@@ -1685,7 +1685,7 @@ describe('source cache loaded', () => {
     });
 });
 
-describe('souce cache get ids', () => {
+describe('source cache get ids', () => {
     test('SourceCache#getIds (ascending order by zoom level)', done => {
         const ids = [
             new OverscaledTileID(0, 0, 0, 0, 0),

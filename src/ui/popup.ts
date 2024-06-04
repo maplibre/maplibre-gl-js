@@ -550,7 +550,6 @@ export class Popup extends Evented {
         if (this.options.closeButton) {
             this._closeButton = DOM.create('button', 'maplibregl-popup-close-button', this._content);
             this._closeButton.type = 'button';
-            this._closeButton.setAttribute('aria-label', 'Close popup');
             this._closeButton.innerHTML = '&#215;';
             this._closeButton.addEventListener('click', this._onClose);
         }
@@ -581,6 +580,10 @@ export class Popup extends Evented {
                 for (const name of this.options.className.split(' ')) {
                     this._container.classList.add(name);
                 }
+            }
+
+            if (this._closeButton) {
+                this._closeButton.setAttribute('aria-label', this._map._getUIString('Popup.Close'));
             }
 
             if (this._trackPointer) {

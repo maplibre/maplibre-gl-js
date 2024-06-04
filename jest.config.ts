@@ -29,7 +29,7 @@ const config: Config = {
                 return !sourcePath.includes('node_modules/') && sourcePath.search(/src\//) !== -1;
             },
 
-            outputDir: './coverage/unit'
+            outputDir: './coverage/jest'
         }]
     ],
     projects: [

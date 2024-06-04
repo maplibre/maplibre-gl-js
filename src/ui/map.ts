@@ -1,4 +1,4 @@
-import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, Complete} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
 import packageJSON from '../../package.json' with {type: 'json'};
@@ -103,7 +103,6 @@ export type MapOptions = {
     attributionControl?: false | AttributionControlOptions;
     /**
      * If `true`, the MapLibre logo will be shown.
-     * @defaultValue false
      */
     maplibreLogo?: boolean;
     /**
@@ -123,7 +122,8 @@ export type MapOptions = {
      */
     preserveDrawingBuffer?: boolean;
     /**
-     * If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. This is `false` by default as a performance optimization.
+     * If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers.
+     * Disabled by default as a performance optimization.
      */
     antialias?: boolean;
     /**
@@ -197,7 +197,7 @@ export type MapOptions = {
     touchPitch?: boolean | AroundCenterOptions;
     /**
      * If `true` or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link FullscreenControl}.
-     * @defaultValue undefined
+     * @defaultValue false
      */
     cooperativeGestures?: GestureOptions;
     /**
@@ -239,7 +239,7 @@ export type MapOptions = {
      * The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
      * @defaultValue null
      */
-    maxTileCacheSize?: number;
+    maxTileCacheSize?: number | null;
     /**
      * The maximum number of zoom levels for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying `maxTileCacheZoomLevels` with the approximate number of tiles in the viewport for a given source.
      * @defaultValue 5
@@ -248,13 +248,15 @@ export type MapOptions = {
     /**
      * A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
      * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
+     * @defaultValue null
      */
-    transformRequest?: RequestTransformFunction;
+    transformRequest?: RequestTransformFunction | null;
     /**
      * A callback run before the map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
      * Expected to return an object containing center, zoom, pitch or bearing values to overwrite.
+     * @defaultValue null
      */
-    transformCameraUpdate?: CameraUpdateTransformFunction;
+    transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
      * @defaultValue null
@@ -277,7 +279,7 @@ export type MapOptions = {
     collectResourceTiming?: boolean;
     /**
      * The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).
-     * @defaultValue true
+     * @defaultValue 3
      */
     clickTolerance?: number;
     /**
@@ -301,15 +303,17 @@ export type MapOptions = {
      * The map's MapLibre style. This must be a JSON object conforming to
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
+     * When the style is not specified, calling {@link Map#setStyle} is required to render the map.
      */
-    style: StyleSpecification | string;
+    style?: StyleSpecification | string;
     /**
      * If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
      * @defaultValue true
      */
     pitchWithRotate?: boolean;
     /**
-     * The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
+     * The pixel ratio.
+     * The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
      */
     pixelRatio?: number;
     /**
@@ -319,7 +323,8 @@ export type MapOptions = {
     validateStyle?: boolean;
     /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
-     * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
+     * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
+     * @defaultValue [4096, 4096].
      */
     maxCanvasSize?: [number, number];
     /**
@@ -341,10 +346,6 @@ export type MapOptions = {
 export type AddImageOptions = {
 
 }
-// See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
-type Complete<T> = {
-    [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
-}
 
 // This type is used inside map since all properties are assigned a default value.
 export type CompleteMapOptions = Complete<MapOptions>;
@@ -359,20 +360,22 @@ const defaultMaxPitch = 60;
 // use this variable to check maxPitch for validity
 const maxPitchThreshold = 85;
 
-const defaultOptions = {
-    center: [0, 0],
-    zoom: 0,
-    bearing: 0,
-    pitch: 0,
+const defaultOptions: Readonly<Partial<MapOptions>> = {
+    hash: false,
+    interactive: true,
+    bearingSnap: 7,
+    attributionControl: defaultAttributionControlOptions,
+    maplibreLogo: false,
+    failIfMajorPerformanceCaveat: false,
+    preserveDrawingBuffer: false,
+    refreshExpiredTiles: true,
 
+    scrollZoom: true,
     minZoom: defaultMinZoom,
     maxZoom: defaultMaxZoom,
-
     minPitch: defaultMinPitch,
     maxPitch: defaultMaxPitch,
 
-    interactive: true,
-    scrollZoom: true,
     boxZoom: true,
     dragRotate: true,
     dragPan: true,
@@ -382,32 +385,29 @@ const defaultOptions = {
     touchPitch: true,
     cooperativeGestures: false,
 
-    bearingSnap: 7,
-    clickTolerance: 3,
-    pitchWithRotate: true,
-
-    hash: false,
-    attributionControl: defaultAttributionControlOptions,
-    maplibreLogo: false,
-
-    failIfMajorPerformanceCaveat: false,
-    preserveDrawingBuffer: false,
     trackResize: true,
+
+    center: [0, 0],
+    zoom: 0,
+    bearing: 0,
+    pitch: 0,
+
     renderWorldCopies: true,
-    refreshExpiredTiles: true,
     maxTileCacheSize: null,
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
-    localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
     transformCameraUpdate: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
+    clickTolerance: 3,
+    localIdeographFontFamily: 'sans-serif',
+    pitchWithRotate: true,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
     projection: 'mercator',
     cancelPendingTileRequestsWhileZooming: true
-} as CompleteMapOptions;
+};
 
 /**
  * The `Map` object represents the map on your page. It exposes methods
@@ -450,7 +450,7 @@ export class Map extends Camera {
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
-    _controlPositions: {[_: string]: HTMLElement};
+    _controlPositions: Record<string, HTMLElement>;
     _interactive: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
@@ -459,7 +459,7 @@ export class Map extends Camera {
     _repaint: boolean;
     _vertices: boolean;
     _canvas: HTMLCanvasElement;
-    _maxTileCacheSize: number;
+    _maxTileCacheSize: number | null;
     _maxTileCacheZoomLevels: number;
     _frameRequest: AbortController;
     _styleDirty: boolean;
@@ -467,7 +467,7 @@ export class Map extends Camera {
     _placementDirty: boolean;
 
     _loaded: boolean;
-    _idleTriggered: boolean;
+    _idleTriggered = false;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
     _trackResize: boolean;
@@ -480,18 +480,18 @@ export class Map extends Camera {
     _delegatedListeners: any;
     _fadeDuration: number;
     _crossSourceCollisions: boolean;
-    _crossFadingFactor: number;
+    _crossFadingFactor = 1;
     _collectResourceTiming: boolean;
-    _renderTaskQueue: TaskQueue;
-    _controls: Array<IControl>;
-    _mapId: number;
+    _renderTaskQueue = new TaskQueue();
+    _controls: Array<IControl> = [];
+    _mapId = uniqueId();
     _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _requestManager: RequestManager;
     _locale: typeof defaultLocale;
     _removed: boolean;
     _clickTolerance: number;
-    _overridePixelRatio: number | null;
+    _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
@@ -567,67 +567,63 @@ export class Map extends Camera {
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
-        options = extend({}, defaultOptions, options);
+        const resolvedOptions = {...defaultOptions, ...options} as CompleteMapOptions;
 
-        if (options.minZoom != null && options.maxZoom != null && options.minZoom > options.maxZoom) {
+        if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
             throw new Error('maxZoom must be greater than or equal to minZoom');
         }
 
-        if (options.minPitch != null && options.maxPitch != null && options.minPitch > options.maxPitch) {
+        if (resolvedOptions.minPitch != null && resolvedOptions.maxPitch != null && resolvedOptions.minPitch > resolvedOptions.maxPitch) {
             throw new Error('maxPitch must be greater than or equal to minPitch');
         }
 
-        if (options.minPitch != null && options.minPitch < defaultMinPitch) {
+        if (resolvedOptions.minPitch != null && resolvedOptions.minPitch < defaultMinPitch) {
             throw new Error(`minPitch must be greater than or equal to ${defaultMinPitch}`);
         }
 
-        if (options.maxPitch != null && options.maxPitch > maxPitchThreshold) {
+        if (resolvedOptions.maxPitch != null && resolvedOptions.maxPitch > maxPitchThreshold) {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new Transform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
-        super(transform, {bearingSnap: options.bearingSnap});
+        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies);
+        super(transform, {bearingSnap: resolvedOptions.bearingSnap});
 
-        this._interactive = options.interactive;
-        this._maxTileCacheSize = options.maxTileCacheSize;
-        this._maxTileCacheZoomLevels = options.maxTileCacheZoomLevels;
-        this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
-        this._preserveDrawingBuffer = options.preserveDrawingBuffer;
-        this._antialias = options.antialias;
-        this._trackResize = options.trackResize;
-        this._bearingSnap = options.bearingSnap;
-        this._refreshExpiredTiles = options.refreshExpiredTiles;
-        this._fadeDuration = options.fadeDuration;
-        this._crossSourceCollisions = options.crossSourceCollisions;
-        this._crossFadingFactor = 1;
-        this._collectResourceTiming = options.collectResourceTiming;
-        this._renderTaskQueue = new TaskQueue();
-        this._controls = [];
-        this._mapId = uniqueId();
-        this._locale = extend({}, defaultLocale, options.locale);
-        this._clickTolerance = options.clickTolerance;
-        this._overridePixelRatio = options.pixelRatio;
-        this._maxCanvasSize = options.maxCanvasSize;
-        this.transformCameraUpdate = options.transformCameraUpdate;
-        this.cancelPendingTileRequestsWhileZooming = options.cancelPendingTileRequestsWhileZooming;
+        this._interactive = resolvedOptions.interactive;
+        this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
+        this._maxTileCacheZoomLevels = resolvedOptions.maxTileCacheZoomLevels;
+        this._failIfMajorPerformanceCaveat = resolvedOptions.failIfMajorPerformanceCaveat === true;
+        this._preserveDrawingBuffer = resolvedOptions.preserveDrawingBuffer === true;
+        this._antialias = resolvedOptions.antialias === true;
+        this._trackResize = resolvedOptions.trackResize === true;
+        this._bearingSnap = resolvedOptions.bearingSnap;
+        this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
+        this._fadeDuration = resolvedOptions.fadeDuration;
+        this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;
+        this._collectResourceTiming = resolvedOptions.collectResourceTiming === true;
+        this._locale = {...defaultLocale, ...resolvedOptions.locale};
+        this._clickTolerance = resolvedOptions.clickTolerance;
+        this._overridePixelRatio = resolvedOptions.pixelRatio;
+        this._maxCanvasSize = resolvedOptions.maxCanvasSize;
+        this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
+        this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
-        this._requestManager = new RequestManager(options.transformRequest);
+        this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
-        if (typeof options.container === 'string') {
-            this._container = document.getElementById(options.container);
+        if (typeof resolvedOptions.container === 'string') {
+            this._container = document.getElementById(resolvedOptions.container);
             if (!this._container) {
-                throw new Error(`Container '${options.container}' not found.`);
+                throw new Error(`Container '${resolvedOptions.container}' not found.`);
             }
-        } else if (options.container instanceof HTMLElement) {
-            this._container = options.container;
+        } else if (resolvedOptions.container instanceof HTMLElement) {
+            this._container = resolvedOptions.container;
         } else {
             throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
         }
 
-        if (options.maxBounds) {
-            this.setMaxBounds(options.maxBounds);
+        if (resolvedOptions.maxBounds) {
+            this.setMaxBounds(resolvedOptions.maxBounds);
         }
 
         this.projection = createProjectionFromName(options.projection);
@@ -637,14 +633,14 @@ export class Map extends Camera {
 
         this.atmosphere = new Atmosphere(this.painter);
 
-        this.on('move', () => this._update(false));
-        this.on('moveend', () => this._update(false));
-        this.on('zoom', () => this._update(true));
-        this.on('terrain', () => {
-            this.painter.terrainFacilitator.dirty = true;
-            this._update(true);
-        });
-        this.once('idle', () => { this._idleTriggered = true; });
+        this.on('move', () => this._update(false))
+            .on('moveend', () => this._update(false))
+            .on('zoom', () => this._update(true))
+            .on('terrain', () => {
+                this.painter.terrainFacilitator.dirty = true;
+                this._update(true);
+            })
+            .once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
@@ -664,37 +660,37 @@ export class Map extends Camera {
             this._resizeObserver.observe(this._container);
         }
 
-        this.handlers = new HandlerManager(this, options as CompleteMapOptions);
+        this.handlers = new HandlerManager(this, resolvedOptions);
 
-        const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
-        this._hash = options.hash && (new Hash(hashName)).addTo(this);
+        const hashName = (typeof resolvedOptions.hash === 'string' && resolvedOptions.hash) || undefined;
+        this._hash = resolvedOptions.hash && (new Hash(hashName)).addTo(this);
         // don't set position from options if set through hash
         if (!this._hash || !this._hash._onHashChange()) {
             this.jumpTo({
-                center: options.center,
-                zoom: options.zoom,
-                bearing: options.bearing,
-                pitch: options.pitch
+                center: resolvedOptions.center,
+                zoom: resolvedOptions.zoom,
+                bearing: resolvedOptions.bearing,
+                pitch: resolvedOptions.pitch
             });
 
-            if (options.bounds) {
+            if (resolvedOptions.bounds) {
                 this.resize();
-                this.fitBounds(options.bounds, extend({}, options.fitBoundsOptions, {duration: 0}));
+                this.fitBounds(resolvedOptions.bounds, extend({}, resolvedOptions.fitBoundsOptions, {duration: 0}));
             }
         }
 
         this.resize();
 
-        this._localIdeographFontFamily = options.localIdeographFontFamily;
-        this._validateStyle = options.validateStyle;
+        this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
+        this._validateStyle = resolvedOptions.validateStyle;
 
-        if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
+        if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
-        if (options.attributionControl)
-            this.addControl(new AttributionControl(typeof options.attributionControl === 'boolean' ? undefined : options.attributionControl));
+        if (resolvedOptions.attributionControl)
+            this.addControl(new AttributionControl(typeof resolvedOptions.attributionControl === 'boolean' ? undefined : resolvedOptions.attributionControl));
 
-        if (options.maplibreLogo)
-            this.addControl(new LogoControl(), options.logoPosition);
+        if (resolvedOptions.maplibreLogo)
+            this.addControl(new LogoControl(), resolvedOptions.logoPosition);
 
         this.on('style.load', () => {
             if (this.transform.unmodified) {
@@ -2892,8 +2888,8 @@ export class Map extends Camera {
         this._canvas = DOM.create('canvas', 'maplibregl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
-        this._canvas.setAttribute('tabindex', '0');
-        this._canvas.setAttribute('aria-label', 'Map');
+        this._canvas.setAttribute('tabindex', this._interactive ? '0' : '-1');
+        this._canvas.setAttribute('aria-label', this._getUIString('Map.Title'));
         this._canvas.setAttribute('role', 'region');
 
         const dimensions = this._containerDimensions();
