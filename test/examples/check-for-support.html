@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Check if MapLibre GL JS is supported</title>
-    <meta property="og:description" content="Check for MapLibre GL browser support." />
+    <title>Check if WebGL is supported</title>
+    <meta property="og:description" content="Check for WebGL browser support." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -37,7 +37,7 @@
         return false;
     }
     if (!isWebglSupported()) {
-        alert('Your browser does not support MapLibre GL');
+        alert('Your browser does not support WebGL');
     } else {
         const map = new maplibregl.Map({
             container: 'map',

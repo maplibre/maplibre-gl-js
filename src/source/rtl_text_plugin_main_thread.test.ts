@@ -12,7 +12,7 @@ describe('RTLMainThreadPlugin', () => {
     let broadcastSpy: jest.SpyInstance;
     const url = 'http://example.com/plugin';
     const failedToLoadMessage = `RTL Text Plugin failed to import scripts from ${url}`;
-    const SyncRTLPluginStateMessageName = 'syncRTLPluginState';
+    const SyncRTLPluginStateMessageName = MessageType.syncRTLPluginState;
 
     beforeEach(() => {
         server = fakeServer.create();

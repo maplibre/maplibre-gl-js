@@ -402,7 +402,14 @@ describe('transform', () => {
         transform.elevation = 200;
         transform.center = new LngLat(10.0, 50.0);
         transform.zoom = 14;
+        transform.pitch = 45;
         transform.resize(512, 512);
+
+        // This should be an invariant throughout - the zoom is greater when the camera is
+        // closer to the terrain (and therefore also when the terrain is closer to the camera),
+        // but that shouldn't change the camera's position in world space if that wasn't requested.
+        const expectedAltitude = 1865.7579397718;
+        expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
 
         // expect same values because of no elevation change
         const terrain = {
@@ -410,22 +417,24 @@ describe('transform', () => {
             pointCoordinate: () => null
         };
         transform.recalculateZoom(terrain as any);
+        expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
         expect(transform.zoom).toBe(14);
 
         // expect new zoom because of elevation change
         terrain.getElevationForLngLatZoom = () => 400;
         transform.recalculateZoom(terrain as any);
-        expect(transform.zoom).toBeCloseTo(14.127997275621933, 10);
         expect(transform.elevation).toBe(400);
-
         expect(transform._center.lng).toBeCloseTo(10, 10);
         expect(transform._center.lat).toBeCloseTo(50, 10);
+        expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
+        expect(transform.zoom).toBeCloseTo(14.1845318986, 10);
 
         // expect new zoom because of elevation change to point below sea level
         terrain.getElevationForLngLatZoom = () => -200;
         transform.recalculateZoom(terrain as any);
-        expect(transform.zoom).toBeCloseTo(13.773740316343467, 10);
         expect(transform.elevation).toBe(-200);
+        expect(transform.getCameraPosition().altitude).toBeCloseTo(expectedAltitude, 10);
+        expect(transform.zoom).toBeCloseTo(13.6895075574, 10);
     });
 
     test('pointCoordinate with terrain when returning null should fall back to 2D', () => {

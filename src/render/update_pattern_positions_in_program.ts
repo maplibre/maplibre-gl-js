@@ -7,7 +7,7 @@ import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 
 /**
  * A simple helper shared by draw_fill and draw_fill_extrusions to find the correct pattern positions AND update program.
- * For transtionable properties, especially 'fill-pattern' and 'fill-extrusion-pattern', while rendering certain frames
+ * For transitionable properties, especially 'fill-pattern' and 'fill-extrusion-pattern', while rendering certain frames
  * tile.imageAtlas has been updated by worker to hold the new pattern only, but rendering code is still looking for the previous image.
  * The mismatch was causing setConstantPatternPositions method not being called and pixelRatio was always the
  * default of 1, instead of actual values set by original map.addImage.

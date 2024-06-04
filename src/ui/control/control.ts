@@ -17,9 +17,8 @@ export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom
  * node.
  *
  * @example
- * Control implemented as ES6 class
  * ```ts
- * class HelloWorldControl {
+ * class HelloWorldControl: IControl {
  *     onAdd(map) {
  *         this._map = map;
  *         this._container = document.createElement('div');
@@ -33,22 +32,6 @@ export type ControlPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom
  *         this._map = undefined;
  *     }
  * }
- *
- * // Control implemented as ES5 prototypical class
- * function HelloWorldControl() { }
- *
- * HelloWorldControl.prototype.onAdd = function(map) {
- *     this._map = map;
- *     this._container = document.createElement('div');
- *     this._container.className = 'maplibregl-ctrl';
- *     this._container.textContent = 'Hello, world';
- *     return this._container;
- * };
- *
- * HelloWorldControl.prototype.onRemove = function () {
- *      this._container.parentNode.removeChild(this._container);
- *      this._map = undefined;
- * };
  * ```
  */
 export interface IControl {

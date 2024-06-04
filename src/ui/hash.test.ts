@@ -1,5 +1,6 @@
 import {Hash} from './hash';
 import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
+import type {Map} from './map';
 
 describe('hash', () => {
     function createHash(name: string = undefined) {
@@ -15,7 +16,7 @@ describe('hash', () => {
         return globalCreateMap({container}, undefined);
     }
 
-    let map;
+    let map: Map;
 
     beforeEach(() => {
         beforeMapTest();
@@ -23,7 +24,7 @@ describe('hash', () => {
     });
 
     afterEach(() => {
-        if (map.removed === false) {
+        if (map._removed === false) {
             map.remove();
         }
         window.location.hash = '';

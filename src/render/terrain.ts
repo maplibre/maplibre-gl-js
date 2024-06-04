@@ -49,29 +49,35 @@ export type TerrainMesh = {
 /**
  * @internal
  * This is the main class which handles most of the 3D Terrain logic. It has the following topics:
- *    1) loads raster-dem tiles via the internal sourceCache this.sourceCache
- *    2) creates a depth-framebuffer, which is used to calculate the visibility of coordinates
- *    3) creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
- *    4) stores all render-to-texture tiles in the this.sourceCache._tiles
- *    5) calculates the elevation for a specific tile-coordinate
- *    6) creates a terrain-mesh
  *
- *    A note about the GPU resource-usage:
- *    Framebuffers:
- *       - one for the depth & coords framebuffer with the size of the map-div.
- *       - one for rendering a tile to texture with the size of tileSize (= 512x512).
- *    Textures:
- *       - one texture for an empty raster-dem tile with size 1x1
- *       - one texture for an empty depth-buffer, when terrain is disabled with size 1x1
- *       - one texture for an each loaded raster-dem with size of the source.tileSize
- *       - one texture for the coords-framebuffer with the size of the map-div.
- *       - one texture for the depth-framebuffer with the size of the map-div.
- *       - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
- *       - finally for each render-to-texture tile (= this._tiles) a set of textures
- *         for each render stack (The stack-concept is documented in painter.ts).
- *         Normally there exists 1-3 Textures per tile, depending on the stylesheet.
- *         Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a
- *         cache of the last 150 newest rendered tiles.
+ * 1. loads raster-dem tiles via the internal sourceCache this.sourceCache
+ * 2. creates a depth-framebuffer, which is used to calculate the visibility of coordinates
+ * 3. creates a coords-framebuffer, which is used the get to tile-coordinate for a screen-pixel
+ * 4. stores all render-to-texture tiles in the this.sourceCache._tiles
+ * 5. calculates the elevation for a specific tile-coordinate
+ * 6. creates a terrain-mesh
+ *
+ * A note about the GPU resource-usage:
+ *
+ * Framebuffers:
+ *
+ * - one for the depth & coords framebuffer with the size of the map-div.
+ * - one for rendering a tile to texture with the size of tileSize (= 512x512).
+ *
+ * Textures:
+ *
+ * - one texture for an empty raster-dem tile with size 1x1
+ * - one texture for an empty depth-buffer, when terrain is disabled with size 1x1
+ * - one texture for an each loaded raster-dem with size of the source.tileSize
+ * - one texture for the coords-framebuffer with the size of the map-div.
+ * - one texture for the depth-framebuffer with the size of the map-div.
+ * - one texture for the encoded tile-coords with the size 2*tileSize (=1024x1024)
+ * - finally for each render-to-texture tile (= this._tiles) a set of textures
+ * for each render stack (The stack-concept is documented in painter.ts).
+ *
+ * Normally there exists 1-3 Textures per tile, depending on the stylesheet.
+ * Each Textures has the size 2*tileSize (= 1024x1024). Also there exists a
+ * cache of the last 150 newest rendered tiles.
  *
  */
 export class Terrain {
@@ -327,11 +333,17 @@ export class Terrain {
      * @returns mercator coordinate for a screen pixel
      */
     pointCoordinate(p: Point): MercatorCoordinate {
+        // First, ensure the coords framebuffer is up to date.
+        this.painter.maybeDrawDepthAndCoords(true);
+
         const rgba = new Uint8Array(4);
         const context = this.painter.context, gl = context.gl;
+        const px = Math.round(p.x * this.painter.pixelRatio / devicePixelRatio);
+        const py = Math.round(p.y * this.painter.pixelRatio / devicePixelRatio);
+        const fbHeight = Math.round(this.painter.height / devicePixelRatio);
         // grab coordinate pixel from coordinates framebuffer
         context.bindFramebuffer.set(this.getFramebuffer('coords').framebuffer);
-        gl.readPixels(p.x, this.painter.height / devicePixelRatio - p.y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+        gl.readPixels(px, fbHeight - py - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
         context.bindFramebuffer.set(null);
         // decode coordinates (encoding see getCoordsTexture)
         const x = rgba[0] + ((rgba[2] >> 4) << 8);
