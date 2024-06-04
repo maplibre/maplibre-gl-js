@@ -184,7 +184,7 @@ describe('Worker generic testing', () => {
     });
 
     test('worker source messages dispatched to the correct map instance', done => {
-        const extenalSourceName = 'test';
+        const externalSourceName = 'test';
 
         worker.actor.sendAsync = (message, abortController) => {
             expect(message.type).toBe(MessageType.loadTile);
@@ -194,13 +194,13 @@ describe('Worker generic testing', () => {
             return Promise.resolve({} as any);
         };
 
-        _self.registerWorkerSource(extenalSourceName, WorkerSourceMock);
+        _self.registerWorkerSource(externalSourceName, WorkerSourceMock);
 
         expect(() => {
-            _self.registerWorkerSource(extenalSourceName, WorkerSourceMock);
-        }).toThrow(`Worker source with name "${extenalSourceName}" already registered.`);
+            _self.registerWorkerSource(externalSourceName, WorkerSourceMock);
+        }).toThrow(`Worker source with name "${externalSourceName}" already registered.`);
 
-        worker.actor.messageHandlers[MessageType.loadTile]('999', {type: extenalSourceName} as WorkerTileParameters);
+        worker.actor.messageHandlers[MessageType.loadTile]('999', {type: externalSourceName} as WorkerTileParameters);
     });
 
     test('Referrer is set', () => {

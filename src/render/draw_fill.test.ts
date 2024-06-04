@@ -25,7 +25,7 @@ jest.mock('../symbol/projection');
 describe('drawFill', () => {
     test('should call programConfiguration.setConstantPatternPositions for transitioning fill-pattern', () => {
 
-        const painterMock: Painter = constructMockPainer();
+        const painterMock: Painter = constructMockPainter();
         const layer: FillStyleLayer = constructMockLayer();
 
         const programMock = new Program(null as any, null as any, null as any, null as any, null as any, null as any);
@@ -73,7 +73,7 @@ describe('drawFill', () => {
         return layer;
     }
 
-    function constructMockPainer(): Painter {
+    function constructMockPainter(): Painter {
         const painterMock = new Painter(null as any, null as any);
         painterMock.context = {
             gl: {},
