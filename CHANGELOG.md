@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- Add `showButton` option to `GeoLocateControl`. ([#3103](https://github.com/maplibre/maplibre-gl-js/issues/3103))
 - Add events to `GeolocateControl` to allow a more granular interaction ([#3847](https://github.com/maplibre/maplibre-gl-js/pull/3847))
 - Make `MapOptions.style` optional to be consistent with `Map.setStyle(null)` ([#4151](https://github.com/maplibre/maplibre-gl-js/pull/4151))
 - Use Autoprefixer to handle vendor prefixes in CSS ([#4165](https://github.com/maplibre/maplibre-gl-js/pull/4165))
