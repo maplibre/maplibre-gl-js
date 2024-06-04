@@ -8,6 +8,9 @@
       "allowed": 0.05
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "center": [
     -118.12,
     36.60

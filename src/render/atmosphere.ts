@@ -3,7 +3,7 @@ import {atmosphereAttributes} from '../data/atmosphere_attributes';
 import {SegmentVector} from '../data/segment';
 import {Painter} from './painter';
 import {Mesh} from './mesh';
-import {vec3} from 'gl-matrix';
+import {mat3, mat4, vec3} from 'gl-matrix';
 import {Projection} from '../geo/projection/projection';
 import {LngLat} from '../geo/lng_lat';
 
@@ -122,10 +122,31 @@ export class Atmosphere {
     }
 
     getSunPos(): vec3 {
-        // Use current time if none is provided as option
-        const sunDateAndTime = new Date();
+        // Try to use Light position, if not available, compute the light direction based on current time
+        if (this.painter.style.light) {
+            const light = this.painter.style.light;
 
-        return this.computeSunPos(sunDateAndTime, this.painter.style.map.projection);
+            const _lp = light.properties.get('position');
+            const lightPos = [-_lp.x, -_lp.y, -_lp.z] as vec3;
+
+            const lightMat = mat4.identity(new Float64Array(16) as any);
+
+            if (light.properties.get('anchor') === 'map') {
+                mat4.rotateX(lightMat, lightMat, -this.painter.transform.pitch * Math.PI / 180);
+                mat4.rotateZ(lightMat, lightMat, -this.painter.transform.angle);
+                mat4.rotateX(lightMat, lightMat, this.painter.transform.center.lat * Math.PI / 180.0);
+                mat4.rotateY(lightMat, lightMat, -this.painter.transform.center.lng * Math.PI / 180.0);
+            }
+
+            vec3.transformMat4(lightPos, lightPos, lightMat);
+
+            return lightPos;
+        } else {
+            // Use current time
+            const sunDateAndTime = new Date();
+
+            return this.computeSunPos(sunDateAndTime, this.painter.style.map.projection);
+        }
     }
 
     getAtmosphereBlend(): number {

@@ -2688,7 +2688,6 @@ export class Map extends Camera {
      * Sets the value of style's sky properties.
      *
      * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky).
-     * @param options - Options object.
      *
      * @example
      * ```ts

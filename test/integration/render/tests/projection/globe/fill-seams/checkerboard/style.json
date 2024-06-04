@@ -8,6 +8,9 @@
       "height": 256
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "center": [
     -151.855,
     61.590

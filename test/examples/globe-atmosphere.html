@@ -12,6 +12,11 @@
         html, body, #map { height: 100%; }
     </style>
 </head>
+<style>
+    #map {
+        background: #000;
+    }
+</style>
 <body>
 <div id="map"></div>
 <script>
@@ -44,6 +49,10 @@
                     5, 1,
                     7, 0
                 ]
+            },
+            'light': {
+                'anchor': 'map',
+                'position': [1.5, 90, 80]
             }
         },
         atmosphere: true,

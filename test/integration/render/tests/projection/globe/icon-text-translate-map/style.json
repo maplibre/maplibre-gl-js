@@ -7,6 +7,9 @@
       "projection": "globe"
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "zoom": 1,
   "bearing": 45,
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
