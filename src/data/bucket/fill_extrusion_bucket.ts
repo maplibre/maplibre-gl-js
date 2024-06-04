@@ -168,11 +168,10 @@ export class FillExtrusionBucket implements Bucket {
     }
 
     addFeature(feature: BucketFeature, geometry: Array<Array<Point>>, index: number, canonical: CanonicalTileID, imagePositions: {[_: string]: ImagePosition}, subdivisionGranularity: SubdivisionGranularitySetting) {
-        const oldVertexCount = this.layoutVertexArray.length;
-
         for (const polygon of classifyRings(geometry, EARCUT_MAX_RINGS)) {
             // Compute polygon centroid to calculate elevation in GPU
             const centroid: CentroidAccumulator = {x: 0, y: 0, sampleCount: 0};
+            const oldVertexCount = this.layoutVertexArray.length;
             this.processPolygon(centroid, canonical, feature, polygon, subdivisionGranularity);
 
             const addedVertices = this.layoutVertexArray.length - oldVertexCount;
