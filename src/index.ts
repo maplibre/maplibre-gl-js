@@ -28,7 +28,7 @@ import {RasterTileSource} from './source/raster_tile_source';
 import {VectorTileSource} from './source/vector_tile_source';
 import {VideoSource} from './source/video_source';
 import {Source, addSourceType} from './source/source';
-import {addProtocol, removeProtocol, getFeaturePropertiesTransform, setFeaturePropertiesTransform} from './source/protocol_crud';
+import {addProtocol, removeProtocol} from './source/protocol_crud';
 import {getGlobalDispatcher} from './util/dispatcher';
 import {IControl} from './ui/control/control';
 import {EdgeInsets, PaddingOptions} from './geo/edge_insets';
@@ -240,8 +240,6 @@ export {
     setWorkerUrl,
     addProtocol,
     removeProtocol,
-    getFeaturePropertiesTransform,
-    setFeaturePropertiesTransform,
     addSourceType,
     importScriptInWorkers
 };

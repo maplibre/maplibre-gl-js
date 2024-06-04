@@ -12,6 +12,7 @@ import {GlyphAtlas} from '../render/glyph_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
 import {getFeaturePropertiesTransform} from './protocol_crud';
+import {VectorTileFeature} from '@mapbox/vector-tile';
 
 import type {Bucket} from '../data/bucket';
 import type {IActor} from '../util/actor';
@@ -99,7 +100,7 @@ export class WorkerTile {
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
                 if (featurePropertiesTransform) {
-                    featurePropertiesTransform(this.source, sourceLayerId, this.tileID.toString(), feature.properties);
+                    featurePropertiesTransform(this.source, sourceLayerId, this.tileID.toString(), VectorTileFeature.types[feature.type], feature.id, feature.properties);
                 }
                 const id = featureIndex.getId(feature, sourceLayerId);
                 features.push({feature, id, index, sourceLayerIndex});
