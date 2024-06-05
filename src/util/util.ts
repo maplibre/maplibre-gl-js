@@ -5,6 +5,38 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * For two angles in degrees, returns how many degrees to add to the first angle in order to obtain the second angle.
+ * The returned difference value is always the shorted of the two - its absolute value is never greater than 180°.
+ */
+export function differenceOfAnglesDegrees(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, 360);
+    const b = mod(degreesB, 360);
+    const diff1 = b - a;
+    const diff2 = (b > a) ? (diff1 - 360) : (diff1 + 360);
+    if (Math.abs(diff1) < Math.abs(diff2)) {
+        return diff1;
+    } else {
+        return diff2;
+    }
+}
+
+/**
+ * For two angles in radians, returns how many radians to add to the first angle in order to obtain the second angle.
+ * The returned difference value is always the shorted of the two - its absolute value is never greater than PI.
+ */
+export function differenceOfAnglesRadians(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, Math.PI * 2);
+    const b = mod(degreesB, Math.PI * 2);
+    const diff1 = b - a;
+    const diff2 = (b > a) ? (diff1 - Math.PI * 2) : (diff1 + Math.PI * 2);
+    if (Math.abs(diff1) < Math.abs(diff2)) {
+        return diff1;
+    } else {
+        return diff2;
+    }
+}
+
+/**
  * When given two angles in degrees, returns the angular distance between them - the shorter one of the two possible arcs.
  */
 export function distanceOfAnglesDegrees(degreesA: number, degreesB: number): number {
@@ -39,8 +71,8 @@ export function mod(n, m) {
 }
 
 /**
- * Takes a value in "old range", linearly maps that range to "new range", and returns the value in that new range.
- * Additionally, if the value is outside "old range", it is clamped inside it.
+ * Takes a value in *old range*, linearly maps that range to *new range*, and returns the value in that new range.
+ * Additionally, if the value is outside *old range*, it is clamped inside it.
  * Also works if one of the ranges is flipped (its `min` being larger than `max`).
  */
 export function remapSaturate(value: number, oldRangeMin: number, oldRangeMax: number, newRangeMin: number, newRangeMax: number): number {

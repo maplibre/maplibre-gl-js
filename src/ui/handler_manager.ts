@@ -17,12 +17,12 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {distanceOfAnglesDegrees, extend, mod} from '../util/util';
+import {clamp, differenceOfAnglesDegrees, extend, remapSaturate} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {angularCoordinatesToVector, getGlobeRadiusPixels, sphereSurfacePointToCoordinates} from '../geo/projection/globe_transform';
-import {vec3} from 'gl-matrix';
+import {getGlobeRadiusPixels} from '../geo/projection/globe_transform';
+import {MAX_VALID_LATITUDE} from '../geo/transform';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
@@ -560,7 +560,35 @@ export class HandlerManager {
             // as what it was before zooming started.
             // This should happen before we handle panning.
             if (zoomDelta) {
-                tr.setLocationAtPoint(zoomLoc, zoomPixel);
+                const zoomLocClamped = new LngLat(zoomLoc.lng, clamp(zoomLoc.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE));
+
+                // Get the exact new desired center computed with setLocationAtPoint
+                const clone = tr.clone();
+                clone.setLocationAtPoint(zoomLocClamped, zoomPixel);
+                const exactCenter = clone.center;
+
+                const latitudeFactor = remapSaturate(Math.abs(zoomLocClamped.lat), 80, 84, 1, 0.1);
+
+                // Get an estimated new center that uses a simple interpolation of LngLat
+                const estimateFactor = 1.0 - Math.pow(2, -zoomDelta);
+                const estimateDeltaLng = differenceOfAnglesDegrees(tr.center.lng, zoomLocClamped.lng) * estimateFactor * latitudeFactor;
+                const estimateDeltaLat = differenceOfAnglesDegrees(tr.center.lat, zoomLocClamped.lat) * estimateFactor;
+                const estimateCenter = new LngLat(tr.center.lng + estimateDeltaLng, tr.center.lat + estimateDeltaLat);
+
+                // 0 is exact center, 1 is estimate center
+                const blendFactor = remapSaturate(tr.zoom, 4, 5, 1, 0);
+
+                // Find the shortest angular direction from "exact" new center to the "estimate" center,
+                // and interpolate that instead of the raw center longitudes.
+                // This avoids problems when the centers end up being on the opposite sides of the
+                // prime meridian or the antimeridian.
+                const fromExactToEstimateDeltaLng = differenceOfAnglesDegrees(exactCenter.lng, estimateCenter.lng);
+                const fromExactToEstimateDeltaLat = differenceOfAnglesDegrees(exactCenter.lat, estimateCenter.lat);
+
+                tr.center = new LngLat(
+                    exactCenter.lng + fromExactToEstimateDeltaLng * blendFactor,
+                    exactCenter.lat + fromExactToEstimateDeltaLat * blendFactor
+                );
             }
 
             // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below

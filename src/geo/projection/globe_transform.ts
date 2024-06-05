@@ -96,7 +96,7 @@ function getZoomAdjustment(oldLat: number, newLat: number): number {
  * direction as the second vector.
  * Returns an angle in range -PI..PI.
  */
-function angleToRotateBetweenVectors(vec1x: number, vec1y: number, vec2x: number, vec2y: number): number {
+function angleToRotateBetweenVectors2D(vec1x: number, vec1y: number, vec2x: number, vec2y: number): number {
     // Normalize both vectors
     const alen = Math.sqrt(vec1x * vec1x + vec1y * vec1y);
     const blen = Math.sqrt(vec2x * vec2x + vec2y * vec2y);
@@ -616,15 +616,15 @@ export class GlobeTransform extends Transform {
         const intersectionA = Math.sqrt(vecToTargetXZLengthSquared - targetXSquared);
         const intersectionB = -intersectionA; // the second solution
 
-        const lngA = angleToRotateBetweenVectors(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
-        const lngB = angleToRotateBetweenVectors(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionB);
+        const lngA = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionA);
+        const lngB = angleToRotateBetweenVectors2D(vecToTarget[0], vecToTarget[2], rotatedPixelVector[0], intersectionB);
 
         const vecToTargetLngA = createVec3();
         vec3.rotateY(vecToTargetLngA, vecToTarget, zero, -lngA);
-        const latA = angleToRotateBetweenVectors(vecToTargetLngA[1], vecToTargetLngA[2], rotatedPixelVector[1], rotatedPixelVector[2]);
+        const latA = angleToRotateBetweenVectors2D(vecToTargetLngA[1], vecToTargetLngA[2], rotatedPixelVector[1], rotatedPixelVector[2]);
         const vecToTargetLngB = createVec3();
         vec3.rotateY(vecToTargetLngB, vecToTarget, zero, -lngB);
-        const latB = angleToRotateBetweenVectors(vecToTargetLngB[1], vecToTargetLngB[2], rotatedPixelVector[1], rotatedPixelVector[2]);
+        const latB = angleToRotateBetweenVectors2D(vecToTargetLngB[1], vecToTargetLngB[2], rotatedPixelVector[1], rotatedPixelVector[2]);
         // Is at least one of the needed latitudes valid?
 
         const limit = Math.PI * 0.5;
@@ -643,7 +643,7 @@ export class GlobeTransform extends Transform {
             const lngDistB = distanceOfAnglesRadians(lngB, centerLngRadians);
             const latDistB = distanceOfAnglesRadians(latB, centerLatRadians);
 
-            if (lngDistA < lngDistB || (lngDistA === lngDistB && latDistA < latDistB)) {
+            if ((lngDistA + latDistA) < (lngDistB + latDistB)) {
                 validLng = lngA;
                 validLat = latA;
             } else {
