@@ -107,7 +107,7 @@ describe('web worker transfer', () => {
         expect(deserialized.url).toBe(url);
     });
 
-    test('serialize Object has $name', () => {
+    test('serialize Object has _classRegistryKey', () => {
         class BadClass {
             _classRegistryKey: 'foo';
         }
@@ -117,11 +117,11 @@ describe('web worker transfer', () => {
         expect(trySerialize).toThrow();
     });
     test('deserialize Object has $name', () => {
-        class BadClass {
-            _classRegistryKey: 'foo';
-        }
+        const badObject = {
+            '$name': 'foo'
+        };
         const tryDeserialize = () => {
-            deserialize(new BadClass());
+            deserialize(badObject);
         };
         expect(tryDeserialize).toThrow();
     });
