@@ -35,7 +35,6 @@ export class ScrollZoomHandler implements Handler {
     _active: boolean;
     _zooming: boolean;
     _aroundCenter: boolean;
-    _around: LngLat;
     _aroundPoint: Point;
     _type: 'wheel' | 'trackpad' | null;
     _lastValue: number;
@@ -233,15 +232,13 @@ export class ScrollZoomHandler implements Handler {
         const pos = DOM.mousePos(this._map.getCanvas(), e);
         const tr = this._tr;
 
-        if (tr.transform.isPointOnMapSurface(pos)) {
-            this._around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
+        // Whether aroundPoint is actually unprojectable is not a problem to be solved here, but in handler_manager.ts instead.
+        if (this._aroundCenter) {
+            this._aroundPoint = tr.transform.locationPoint(LngLat.convert(tr.center));
         } else {
-            // Do not use current cursor position if above the horizon to avoid 'unproject' this point
-            // as it is not mapped into 'coords' framebuffer or inversible with 'pixelMatrixInverse'.
-            this._around = LngLat.convert(tr.center);
+            this._aroundPoint = pos;
         }
 
-        this._aroundPoint = tr.transform.locationPoint(this._around);
         if (!this._frameId) {
             this._frameId = true;
             this._triggerRenderFrame();

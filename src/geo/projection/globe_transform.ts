@@ -865,28 +865,30 @@ export class GlobeTransform extends Transform {
             const closestOnHorizon = createVec3();
             vec3.normalize(closestOnHorizon, planeIntersection);
 
-            // Now, since we want to somehow map every pixel on screen to a different coordinate,
-            // add the ray from camera to horizon to the computed point,
-            // multiplied by the plane intersection's distance from the planet surface.
+            return sphereSurfacePointToCoordinates(closestOnHorizon);
 
-            const toHorizon = createVec3();
-            vec3.sub(toHorizon, closestOnHorizon, rayOrigin);
-            const toHorizonNormalized = createVec3();
-            vec3.normalize(toHorizonNormalized, toHorizon);
+            // // Now, since we want to somehow map every pixel on screen to a different coordinate,
+            // // add the ray from camera to horizon to the computed point,
+            // // multiplied by the plane intersection's distance from the planet surface.
 
-            const planeIntersectionAltitude = Math.max(vec3.length(planeIntersection) - 1.0, 0.0);
+            // const toHorizon = createVec3();
+            // vec3.sub(toHorizon, closestOnHorizon, rayOrigin);
+            // const toHorizonNormalized = createVec3();
+            // vec3.normalize(toHorizonNormalized, toHorizon);
 
-            const offsetPoint = createVec3();
-            vec3.add(offsetPoint, closestOnHorizon, [
-                toHorizonNormalized[0] * planeIntersectionAltitude,
-                toHorizonNormalized[1] * planeIntersectionAltitude,
-                toHorizonNormalized[2] * planeIntersectionAltitude
-            ]);
+            // const planeIntersectionAltitude = Math.max(vec3.length(planeIntersection) - 1.0, 0.0);
 
-            const finalPoint = createVec3();
-            vec3.normalize(finalPoint, offsetPoint);
+            // const offsetPoint = createVec3();
+            // vec3.add(offsetPoint, closestOnHorizon, [
+            //     toHorizonNormalized[0] * planeIntersectionAltitude,
+            //     toHorizonNormalized[1] * planeIntersectionAltitude,
+            //     toHorizonNormalized[2] * planeIntersectionAltitude
+            // ]);
 
-            return sphereSurfacePointToCoordinates(finalPoint);
+            // const finalPoint = createVec3();
+            // vec3.normalize(finalPoint, offsetPoint);
+
+            // return sphereSurfacePointToCoordinates(finalPoint);
         }
     }
 

@@ -504,6 +504,10 @@ export class HandlerManager {
 
         around = around || map.transform.centerPoint;
 
+        if (terrain && !tr.isPointOnMapSurface(around)) {
+            around = tr.centerPoint;
+        }
+
         // JP: TODO: inertia is NOT handled here
         if (this._map.projection.useGlobeControls) {
             // Globe map controls
@@ -554,15 +558,17 @@ export class HandlerManager {
 
             if (bearingDelta) tr.bearing += bearingDelta;
             if (pitchDelta) tr.pitch += pitchDelta;
+            const oldZoom = tr.zoom;
             if (zoomDelta) tr.zoom += zoomDelta;
+            const actualZoomDelta = tr.zoom - oldZoom;
 
-            // Make sure the pixel under the cursor is still the same location
-            // as what it was before zooming started.
-            // This should happen before we handle panning.
-            if (zoomDelta) {
+            // If `actualZoomDelta` is zero, it is interpreted as falsy, which is the desired behavior here.
+            if (actualZoomDelta) {
                 const zoomLocClamped = new LngLat(zoomLoc.lng, clamp(zoomLoc.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE));
 
                 // Get the exact new desired center computed with setLocationAtPoint
+                // It makes sure the pixel under the cursor is still the same location as what it was before zooming started.
+                // This should happen before we handle panning.
                 const clone = tr.clone();
                 clone.setLocationAtPoint(zoomLocClamped, zoomPixel);
                 const exactCenter = clone.center;
@@ -570,7 +576,7 @@ export class HandlerManager {
                 const latitudeFactor = remapSaturate(Math.abs(zoomLocClamped.lat), 80, 84, 1, 0.1);
 
                 // Get an estimated new center that uses a simple interpolation of LngLat
-                const estimateFactor = 1.0 - Math.pow(2, -zoomDelta);
+                const estimateFactor = 1.0 - Math.pow(2, Math.min(-actualZoomDelta, 0.5)); // Clamp how much we move LngLat when unzooming
                 const estimateDeltaLng = differenceOfAnglesDegrees(tr.center.lng, zoomLocClamped.lng) * estimateFactor * latitudeFactor;
                 const estimateDeltaLat = differenceOfAnglesDegrees(tr.center.lat, zoomLocClamped.lat) * estimateFactor;
                 const estimateCenter = new LngLat(tr.center.lng + estimateDeltaLng, tr.center.lat + estimateDeltaLat);
@@ -613,6 +619,10 @@ export class HandlerManager {
             }
         } else {
             // Flat map controls
+            if (!tr.isPointOnMapSurface(around)) {
+                around = tr.centerPoint;
+            }
+
             const loc = tr.pointLocation(panDelta ? around.sub(panDelta) : around);
             if (bearingDelta) tr.bearing += bearingDelta;
             if (pitchDelta) tr.pitch += pitchDelta;
