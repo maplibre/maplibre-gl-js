@@ -1,10 +1,6 @@
+import {SerializedObject} from '../../dist/maplibre-gl';
 import {AJAXError} from './ajax';
 import {register, serialize, deserialize} from './web_worker_transfer';
-
-const mockTransfer = (input, transferables?) => {
-    const serialized = serialize(input, transferables);
-    return deserialize(structuredClone(serialized, {transfer: transferables}));
-};
 
 describe('web worker transfer', () => {
     test('round trip', () => {
@@ -93,7 +89,9 @@ describe('web worker transfer', () => {
         const url = 'https://example.com';
 
         const ajaxError = new AJAXError(status, statusText, url, new Blob());
-        const deserialized = mockTransfer(ajaxError) as AJAXError;
+        const serialized = serialize(ajaxError) as SerializedObject;
+        expect(serialized.$name).toBe(ajaxError.constructor.name);
+        const deserialized = deserialize(serialized) as AJAXError;
         expect(deserialized.status).toBe(404);
         expect(deserialized.statusText).toBe(statusText);
         expect(deserialized.url).toBe(url);
