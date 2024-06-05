@@ -9,11 +9,17 @@ describe('web worker transfer', () => {
             buffer;
             blob;
             _cached;
+            dataView;
+            imageData;
+            array;
 
             constructor(n) {
                 this.n = n;
                 this.buffer = new ArrayBuffer(100);
+                this.dataView = new DataView(this.buffer);
+                this.imageData = new ImageData(8, 5);
                 this.blob = new Blob();
+                this.array = [true, 1, 'one', new ArrayBuffer(100)];
                 this.squared();
             }
 
@@ -32,6 +38,7 @@ describe('web worker transfer', () => {
         const transferables = [];
         const deserialized = deserialize(serialize(serializableMock, transferables)) as SerializableMock;
         expect(deserialize(serialize(serializableMock, transferables)) instanceof SerializableMock).toBeTruthy();
+        expect(serializableMock.dataView instanceof DataView).toBeTruthy();
 
         expect(serializableMock !== deserialized).toBeTruthy();
         expect(deserialized.constructor === SerializableMock).toBeTruthy();
@@ -39,8 +46,11 @@ describe('web worker transfer', () => {
         expect(deserialized.buffer === serializableMock.buffer).toBeTruthy();
         expect(deserialized.blob === serializableMock.blob).toBeTruthy();
         expect(transferables[0] === serializableMock.buffer).toBeTruthy();
+        expect(transferables[1] === serializableMock.dataView.buffer).toBeTruthy();
         expect(deserialized._cached === undefined).toBeTruthy();
         expect(deserialized.squared() === 100).toBeTruthy();
+        expect(deserialized.dataView instanceof DataView).toBeTruthy();
+        expect(deserialized.array).toEqual(serializableMock.array);
     });
 
     test('anonymous class', () => {
@@ -95,5 +105,24 @@ describe('web worker transfer', () => {
         expect(deserialized.status).toBe(404);
         expect(deserialized.statusText).toBe(statusText);
         expect(deserialized.url).toBe(url);
+    });
+
+    test('serialize Object has $name', () => {
+        class BadClass {
+            _classRegistryKey: 'foo';
+        }
+        const trySerialize = () => {
+            serialize(new BadClass());
+        };
+        expect(trySerialize).toThrow();
+    });
+    test('deserialize Object has $name', () => {
+        class BadClass {
+            _classRegistryKey: 'foo';
+        }
+        const tryDeserialize = () => {
+            deserialize(new BadClass());
+        };
+        expect(tryDeserialize).toThrow();
     });
 });
