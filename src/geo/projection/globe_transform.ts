@@ -819,6 +819,8 @@ export class GlobeTransform extends Transform {
     /**
      * @internal
      * Returns a {@link LngLat} representing geographical coordinates that correspond to the specified pixel coordinates.
+     * Note: if the point does not lie on the globe, returns a location on the visible globe horizon (edge) that is
+     * as close to the point as possible.
      * @param p - Screen point in pixels to unproject.
      * @param terrain - Optional terrain.
      */
@@ -828,7 +830,6 @@ export class GlobeTransform extends Transform {
         // Ray origin is `_cameraPosition` and direction is `rayNormalized`.
         const rayOrigin = this._cameraPosition;
         const rayDirection = this.getRayDirectionFromPixel(p);
-
         const intersection = this.rayPlanetIntersection(rayOrigin, rayDirection);
 
         if (intersection) {
@@ -845,14 +846,6 @@ export class GlobeTransform extends Transform {
         } else {
             // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
             // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
-
-            // dot(vec4(p,1), plane) == 0
-            // dot(vec4(o+td,1), plane) == 0
-            // (o.x+t*d.x)*plane.x + (o.y+t*d.y)*plane.y + (o.z+t*d.z)*plane.z + plane.w == 0
-            // t*d.x*plane.x + t*d.y*plane.y + t*d.z*plane.z + dot((o,1), plane) == 0
-            // t*dot(d, plane.xyz) + dot((o,1), plane) == 0
-            // t*dot(d, plane.xyz) == -dot((o,1), plane)
-            // t == -dot((o,1), plane) / dot(d, plane.xyz)
             const originDotPlaneXyz = this._cachedClippingPlane[0] * rayOrigin[0] + this._cachedClippingPlane[1] * rayOrigin[1] + this._cachedClippingPlane[2] * rayOrigin[2];
             const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
             const tPlane = -(originDotPlaneXyz + this._cachedClippingPlane[3]) / directionDotPlaneXyz;
@@ -866,44 +859,6 @@ export class GlobeTransform extends Transform {
             vec3.normalize(closestOnHorizon, planeIntersection);
 
             return sphereSurfacePointToCoordinates(closestOnHorizon);
-
-            // // Now, since we want to somehow map every pixel on screen to a different coordinate,
-            // // add the ray from camera to horizon to the computed point,
-            // // multiplied by the plane intersection's distance from the planet surface.
-
-            // const toHorizon = createVec3();
-            // vec3.sub(toHorizon, closestOnHorizon, rayOrigin);
-            // const toHorizonNormalized = createVec3();
-            // vec3.normalize(toHorizonNormalized, toHorizon);
-
-            // const planeIntersectionAltitude = Math.max(vec3.length(planeIntersection) - 1.0, 0.0);
-
-            // const offsetPoint = createVec3();
-            // vec3.add(offsetPoint, closestOnHorizon, [
-            //     toHorizonNormalized[0] * planeIntersectionAltitude,
-            //     toHorizonNormalized[1] * planeIntersectionAltitude,
-            //     toHorizonNormalized[2] * planeIntersectionAltitude
-            // ]);
-
-            // const finalPoint = createVec3();
-            // vec3.normalize(finalPoint, offsetPoint);
-
-            // return sphereSurfacePointToCoordinates(finalPoint);
         }
-    }
-
-    public getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat { // JP: TODO: keep this function?
-        if (!this._globeRendering) {
-            return this._mercatorTransform.getCenterForLocationAtPoint(lnglat, point);
-        }
-        const pointLoc = this.unprojectScreenPoint(point);
-        const lngDelta = pointLoc.lng - this.center.lng;
-        const latDelta = pointLoc.lat - this.center.lat;
-        const newCenter = new LngLat(
-            lnglat.lng - lngDelta,
-            lnglat.lat - latDelta
-        );
-        newCenter.wrap();
-        return newCenter;
     }
 }

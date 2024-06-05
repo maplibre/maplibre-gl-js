@@ -24,6 +24,12 @@ import {LngLat} from '../geo/lng_lat';
 import {getGlobeRadiusPixels} from '../geo/projection/globe_transform';
 import {MAX_VALID_LATITUDE} from '../geo/transform';
 
+function getDegreesPerPixel(worldSize: number, lat: number): number {
+    const radius = getGlobeRadiusPixels(worldSize, lat);
+    const circumference = 2.0 * Math.PI * radius;
+    return 360.0 / circumference;
+}
+
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
 class RenderFrameEvent extends Event {
@@ -559,7 +565,9 @@ export class HandlerManager {
             if (bearingDelta) tr.bearing += bearingDelta;
             if (pitchDelta) tr.pitch += pitchDelta;
             const oldZoom = tr.zoom;
+            const preZoomDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat); // Figure out by how many degrees to move the map per pixel of panning
             if (zoomDelta) tr.zoom += zoomDelta;
+            const postZoomDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat);
             const actualZoomDelta = tr.zoom - oldZoom;
 
             // If `actualZoomDelta` is zero, it is interpreted as falsy, which is the desired behavior here.
@@ -573,16 +581,15 @@ export class HandlerManager {
                 clone.setLocationAtPoint(zoomLocClamped, zoomPixel);
                 const exactCenter = clone.center;
 
-                const latitudeFactor = remapSaturate(Math.abs(zoomLocClamped.lat), 80, 84, 1, 0.1);
-
-                // Get an estimated new center that uses a simple interpolation of LngLat
-                const estimateFactor = 1.0 - Math.pow(2, Math.min(-actualZoomDelta, 0.5)); // Clamp how much we move LngLat when unzooming
-                const estimateDeltaLng = differenceOfAnglesDegrees(tr.center.lng, zoomLocClamped.lng) * estimateFactor * latitudeFactor;
-                const estimateDeltaLat = differenceOfAnglesDegrees(tr.center.lat, zoomLocClamped.lat) * estimateFactor;
-                const estimateCenter = new LngLat(tr.center.lng + estimateDeltaLng, tr.center.lat + estimateDeltaLat);
+                const fromCenterDirection = zoomPixel.sub(tr.centerPoint); // Direction from screen center to cursor
+                const degreesDelta = fromCenterDirection.mult((preZoomDegreesPerPixel - postZoomDegreesPerPixel));
+                const estimateCenter = new LngLat(
+                    tr.center.lng + degreesDelta.x,
+                    clamp(tr.center.lat - degreesDelta.y, -90, 90) // Latitude Y is up, screen Y is down -> flip sign
+                );
 
                 // 0 is exact center, 1 is estimate center
-                const blendFactor = remapSaturate(tr.zoom, 4, 5, 1, 0);
+                const blendFactor = remapSaturate(tr.zoom, 4, 6, 1, 0);
 
                 // Find the shortest angular direction from "exact" new center to the "estimate" center,
                 // and interpolate that instead of the raw center longitudes.
@@ -593,7 +600,7 @@ export class HandlerManager {
 
                 tr.center = new LngLat(
                     exactCenter.lng + fromExactToEstimateDeltaLng * blendFactor,
-                    exactCenter.lat + fromExactToEstimateDeltaLat * blendFactor
+                    clamp(exactCenter.lat + fromExactToEstimateDeltaLat * blendFactor, -90, 90)
                 );
             }
 
@@ -604,17 +611,12 @@ export class HandlerManager {
                 // This approach just avoids using the "grab a place and move it around" approach from mercator,
                 // since it is not a very pleasant way to pan a globe.
 
-                // First we figure out by how many degrees to move the map per pixel of panning
-                const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat);
-                const circumference = 2.0 * Math.PI * radius;
-                const sensitivity = 360.0 / circumference;
-
                 // Apply map bearing to the panning vector
                 const rotatedPanDelta = panDelta.rotate(-tr.angle);
 
                 tr.center = new LngLat(
-                    tr.center.lng - rotatedPanDelta.x * sensitivity / Math.cos(tr.center.lat * Math.PI / 180), // Note: we divide longitude change by planet width at the given latitude.
-                    tr.center.lat + rotatedPanDelta.y * sensitivity
+                    tr.center.lng - rotatedPanDelta.x * postZoomDegreesPerPixel / Math.cos(tr.center.lat * Math.PI / 180), // Note: we divide longitude change by planet width at the given latitude.
+                    clamp(tr.center.lat + rotatedPanDelta.y * postZoomDegreesPerPixel, -90, 90)
                 );
             }
         } else {

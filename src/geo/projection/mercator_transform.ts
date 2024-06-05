@@ -736,20 +736,6 @@ export class MercatorTransform extends Transform {
         };
     }
 
-    getCenterForLocationAtPoint(lnglat: LngLat, point: Point): LngLat {
-        const a = this.pointCoordinate(point);
-        const b = this.pointCoordinate(this.centerPoint);
-        const loc = this.locationCoordinate(lnglat);
-        const newCenter = new MercatorCoordinate(
-            loc.x - (a.x - b.x),
-            loc.y - (a.y - b.y));
-        let center = this.coordinateLocation(newCenter);
-        if (this.renderWorldCopies) {
-            center = center.wrap();
-        }
-        return center;
-    }
-
     override precacheTiles(coords: Array<OverscaledTileID>): void {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
