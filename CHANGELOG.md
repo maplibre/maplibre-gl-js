@@ -14,7 +14,7 @@
 
 - ⚠️ Allow breaking lines in labels before a left parenthesis ([#4138](https://github.com/maplibre/maplibre-gl-js/pull/4138))
 - ⚠️ Fix ignoring embedded line breaks when `symbol-placement` is `line` or `line-center` ([#4124](https://github.com/maplibre/maplibre-gl-js/pull/4124))
-- Fix AjaxError not properly serialized ([#4024](https://github.com/maplibre/maplibre-gl-js/pull/4211))
+- Fix extends of built-ins (currently only AjaxError) not properly getting (de)serialized ([#4024](https://github.com/maplibre/maplibre-gl-js/pull/4211))
 - _...Add new stuff here..._
 
 ## 4.3.2
