@@ -1,0 +1,1028 @@
+{
+  "version": 8,
+  "name": "SwissMap style",
+  "sources": {
+    "swissmap": {
+      "type": "vector",
+      "url": "https://wipfli.github.io/swiss-map/tilejson-swissmap.json"
+    },
+    "qrank": {
+      "type": "vector",
+      "url": "https://wipfli.github.io/swiss-map/tilejson-qrank.json"
+    },
+    "landcover": {
+      "type": "vector",
+      "url": "https://wipfli.github.io/swiss-map/tilejson-h3-landcover.json"
+    },
+    "global-forest-polygons": {
+      "type": "vector",
+      "url": "https://tiles.swiss-map.cc/global-forest-polygons.json"
+    },
+    "swisstopo-vector-hillshade": {
+      "type": "vector",
+      "url": "https://wipfli.github.io/swiss-map/tilejson-swisstopo-vector-hillshade.json",
+      "attribution": "<a href=\"https://geo.admin.ch\">© swisstopo</a>"
+    },
+    "bikeroutes": {
+      "type": "vector",
+      "tiles": [
+        "https://tiles.swiss-map.cc/bikeroutes/{z}/{x}/{y}.pbf"
+      ],
+      "maxzoom": 14
+    },
+    "protomaps": {
+      "type": "vector",
+      "tiles": [
+        "https://tiles.swiss-map.cc/protomaps/{z}/{x}/{y}.pbf"
+      ],
+      "minzoom": 12,
+      "maxzoom": 15
+    },
+    "overture-buildings": {
+      "type": "vector",
+      "url": "https://tiles.swiss-map.cc/overture-buildings.json"
+    }
+  },
+  "light": {
+    "intensity": 0.1
+  },
+  "glyphs": "https://wipfli.github.io/swiss-map/font/{fontstack}/{range}.pbf",
+  "sprite":"https://maputnik.github.io/osm-liberty/sprites/osm-liberty",
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "background-color": "#f8f9fa"
+      }
+    },
+    {
+      "id": "Bare-Snow",
+      "type": "fill",
+      "source": "landcover",
+      "source-layer": "landcover",
+      "filter": [
+        "==",
+        [
+          "get",
+          "kind"
+        ],
+        "Bare-Snow"
+      ],
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "fill-color": "#f3ede0",
+        "fill-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          1,
+          11,
+          0
+        ]
+      }
+    },
+    {
+      "id": "Snow",
+      "type": "fill",
+      "source": "landcover",
+      "source-layer": "landcover",
+      "filter": [
+        "==",
+        [
+          "get",
+          "kind"
+        ],
+        "Snow"
+      ],
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "fill-color": "white",
+        "fill-opacity": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          1,
+          11,
+          0
+        ]
+      }
+    },
+    {
+      "id": "Tree",
+      "type": "fill",
+      "source": "landcover",
+      "source-layer": "landcover",
+      "filter": [
+        "==",
+        [
+          "get",
+          "kind"
+        ],
+        "Tree"
+      ],
+      "layout": {
+        "visibility": "none"
+      },
+      "maxzoom": 10,
+      "paint": {
+        "fill-color": "rgb(205, 230, 190)"
+      }
+    },
+    {
+      "id": "wood",
+      "type": "fill",
+      "source": "global-forest-polygons",
+      "source-layer": "forest",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "fill-color": "rgb(205, 230, 190)"
+      }
+    },
+    {
+      "id": "BuiltUp",
+      "type": "fill",
+      "source": "landcover",
+      "source-layer": "landcover",
+      "filter": [
+        "==",
+        [
+          "get",
+          "kind"
+        ],
+        "BuiltUp"
+      ],
+      "maxzoom": 10,
+      "paint": {
+        "fill-color": "#e8eaed"
+      }
+    },
+    {
+      "id": "residential",
+      "type": "fill",
+      "source": "swissmap",
+      "source-layer": "residential",
+      "minzoom": 10,
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "fill-color": "#e8eaed"
+      }
+    },
+    {
+      "id": "GTON",
+      "type": "fill",
+      "source": "swisstopo-vector-hillshade",
+      "source-layer": "GTON",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "fill-color": "rgba(255, 255, 228, 0.125)"
+      }
+    },
+    {
+        "id": "RELI",
+        "type": "fill",
+        "source": "swisstopo-vector-hillshade",
+        "source-layer": "RELI",
+        "layout": {
+          "visibility": "none"
+        },
+        "paint": {
+          "fill-color": "rgba(173, 188, 199, 0.125)"
+        }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "swissmap",
+      "source-layer": "waterway",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "#abcdfb",
+        "line-width": {
+          "stops": [
+            [
+              9,
+              1
+            ],
+            [
+              11,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "swissmap",
+      "source-layer": "water",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "fill-color": "#abcdfb"
+      }
+    },
+    {
+      "id": "bikeroutes",
+      "type": "line",
+      "source": "bikeroutes",
+      "source-layer": "bikeroutes",
+      "minzoom": 10,
+      "layout": {
+        "visibility": "visible",
+        "line-cap": "round",
+        "line-join": "round"
+      },
+      "paint": {
+        "line-color": "#61c455",
+        "line-opacity": 1.0,
+        "line-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          10, 4,
+          14, 12,
+          20, 30
+        ]
+      }
+    },
+    {
+      "id": "highway-path",
+      "type": "line",
+      "source": "swissmap",
+      "source-layer": "highway-path",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round",
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "#7f8c8e",
+        "line-dasharray": [
+          0.0,
+          2.0
+        ],
+        "line-width": {
+          "stops": [
+            [
+              12,
+              1
+            ],
+            [
+              14,
+              2
+            ],
+            [
+              20,
+              3
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "highway-footway",
+      "type": "line",
+      "source": "swissmap",
+      "source-layer": "highway-footway",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round",
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "#7f8c8e",
+        "line-dasharray": [
+          0.0,
+          2.0
+        ],
+        "line-width": {
+          "stops": [
+            [
+              14,
+              2
+            ],
+            [
+              20,
+              3
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "highway-tracktype-2",
+      "type": "line",
+      "source": "swissmap",
+      "source-layer": "highway-tracktype-2",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "#7f8c8e",
+        "line-width": {
+          "stops": [
+            [
+              12,
+              1
+            ],
+            [
+              14,
+              1.5
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "highway-tracktype-3-4-5",
+      "type": "line",
+      "source": "swissmap",
+      "source-layer": "highway-tracktype-3-4-5",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "#7f8c8e",
+        "line-dasharray": [
+          10.0,
+          2.0
+        ],
+        "line-width": {
+          "stops": [
+            [
+              12,
+              1
+            ],
+            [
+              14,
+              1.5
+            ],
+            [
+              20,
+              3
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "highway",
+      "type": "line",
+      "source": "swissmap",
+      "source-layer": "highway",
+      "layout": {
+        "line-cap": "round",
+        "line-join": "round",
+        "visibility": "visible",
+        "line-sort-key": [
+          "to-number",
+          [
+            "get",
+            "line-sort-key"
+          ]
+        ]
+      },
+      "paint": {
+        "line-color": [
+          "case",
+          [
+            "all",
+            ["==", ["get", "is-casing"], "yes"],
+            ["in", ["get", "kind"], ["literal", ["trunk", "motorway"]]]
+          ],
+          "#555",
+          [
+            "all",
+            ["==", ["get", "is-casing"], "no"],
+            ["in", ["get", "kind"], ["literal", ["trunk", "motorway"]]]
+          ],
+          "#fabe44",
+          [
+            "all",
+            ["==", ["get", "is-casing"], "yes"],
+            ["in", ["get", "kind"], ["literal", ["primary"]]]
+          ],
+          "#555",
+          [
+            "all",
+            ["==", ["get", "is-casing"], "no"],
+            ["in", ["get", "kind"], ["literal", ["primary"]]]
+          ],
+          "#f8c7c8",
+          [
+            "all",
+            ["==", ["get", "is-casing"], "yes"],
+            ["in", ["get", "kind"], ["literal", ["secondary"]]]
+          ],
+          "#555",
+          [
+            "all",
+            ["==", ["get", "is-casing"], "no"],
+            ["in", ["get", "kind"], ["literal", ["secondary"]]]
+          ],
+          "#fff481",
+          [
+            "all",
+            ["==", ["get", "is-casing"], "yes"],
+            ["in", ["get", "kind"], ["literal", ["unclassified", "tertiary"]]]
+          ],
+          "#888",
+          [
+            "all",
+            ["==", ["get", "is-casing"], "no"],
+            ["in", ["get", "kind"], ["literal", ["unclassified", "tertiary"]]]
+          ],
+          "white",
+          "red"
+        ],
+        "line-width": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          14,
+          [
+            "case",
+            [
+              "all",
+              [
+                "<",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "line-width"
+                  ]
+                ],
+                2
+              ],
+              ["==", ["get", "is-casing"], "no"]
+            ],
+            2,
+            [
+              "all",
+              [
+                "<",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "line-width"
+                  ]
+                ],
+                3
+              ],
+              ["==", ["get", "is-casing"], "yes"]
+            ],
+            3,
+            [
+              "to-number",
+              [
+                "get",
+                "line-width"
+              ]
+            ]
+          ],
+          20,
+          [
+            "to-number",
+            [
+              "get",
+              "line-width-z20"
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "boundary",
+      "type": "line",
+      "source": "swissmap",
+      "source-layer": "boundary",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-width": 2,
+        "line-color": "#7f8c8d"
+      }
+    },
+    {
+      "id": "overture_buildings",
+      "type": "fill",
+      "source": "overture-buildings",
+      "source-layer": "buildings/building",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "fill-color": "#000"
+      }
+    },
+    {
+      "id": "overture_buildings_outline",
+      "type": "line",
+      "source": "overture-buildings",
+      "source-layer": "buildings/building",
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "line-color": "#444",
+        "line-width": 1
+      }
+    },
+    {
+      "id": "building",
+      "type": "fill",
+      "source": "swissmap",
+      "source-layer": "building",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "fill-color": "#000"
+      }
+    },
+    {
+      "id": "building_outline",
+      "type": "line",
+      "source": "swissmap",
+      "source-layer": "building",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "line-color": "#444",
+        "line-width": 1
+      }
+    },
+    {
+      "id": "building-extrusion",
+      "type": "fill-extrusion",
+      "source": "swissmap",
+      "minzoom": 15,
+      "source-layer": "building",
+      "filter": ["has", "est_height"],
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "fill-extrusion-color": "#e6e7e9",
+        "fill-extrusion-height": ["to-number", ["get", "est_height"]],
+        "fill-extrusion-opacity": 1.0
+      }
+    },
+    {
+      "id": "pois-circle",
+      "type": "circle",
+      "source": "protomaps",
+      "source-layer": "pois",
+      "filter": [
+        "any",
+        ["in", ["get", "shop"], ["literal", ["convenience", "supermarket", "grocery"]]],
+        ["in", ["get", "tourism"], ["literal", ["camp_site"]]]
+      ],
+      "layout": {
+        "visibility": "visible"
+      },
+      "paint": {
+        "circle-color": [
+          "case",
+          ["in", ["get", "shop"], ["literal", ["convenience", "supermarket", "grocery"]]],
+          "#5d60be",
+          "#7d675e"
+        ], 
+        "circle-radius": 5
+      }
+    },
+    {
+      "id": "pois",
+      "type": "symbol",
+      "source": "protomaps",
+      "source-layer": "pois",
+      "filter": [
+        "any",
+        ["in", ["get", "shop"], ["literal", ["convenience", "supermarket", "grocery"]]],
+        ["in", ["get", "tourism"], ["literal", ["camp_site"]]]
+      ],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Fira Sans Regular"],
+        "text-anchor": "top",
+        "text-offset": [0, 0.6],
+        "icon-image": [
+          "case",
+          ["in", ["get", "shop"], ["literal", ["convenience", "supermarket", "grocery"]]],
+          "grocery_11",
+          "campsite_11"
+        ],
+        "icon-size": 1.0,
+        "text-optional": true
+      },
+      "paint":{
+        "text-halo-width": 1.5,
+        "text-halo-color": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          13,
+          "rgba(255, 255, 255, 0.7)",
+          14,
+          "rgba(255, 255, 255, 1.0)"
+        ]
+      }
+    },
+    {
+      "id": "labels",
+      "type": "symbol",
+      "source": "qrank",
+      "source-layer": "qrank",
+      "layout": {
+        "text-field": [
+          "case",
+          [
+            "==",
+            [
+              "get",
+              "place"
+            ],
+            "country"
+          ],
+          [
+            "get",
+            "name:en"
+          ],
+          [
+            "==",
+            [
+              "get",
+              "place"
+            ],
+            "sea"
+          ],
+          [
+            "get",
+            "name:en"
+          ],
+          [
+            "==",
+            [
+              "get",
+              "place"
+            ],
+            "ocean"
+          ],
+          [
+            "get",
+            "name:en"
+          ],
+          [
+            "has",
+            "ele"
+          ],
+          [
+            "format",
+            [
+              "case",
+              ["is-supported-script", ["get", "name"]],
+              ["get", "name"],
+              ["get", "name:en"]
+            ], {}, 
+            "\n", {}, 
+            ["get", "ele-ft"], {"font-scale": 0.8}
+          ],
+          ["is-supported-script", ["get", "name"]],
+          ["get", "name"],
+          [
+            "get",
+            "name:en"
+          ]
+        ],
+        "text-size": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          7,
+          [
+            "*",
+            1.1,
+            [
+              "case",
+              [
+                ">",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "@qrank"
+                  ]
+                ],
+                10000000
+              ],
+              17,
+              [
+                ">",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "@qrank"
+                  ]
+                ],
+                1000000
+              ],
+              16,
+              [
+                ">",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "@qrank"
+                  ]
+                ],
+                100000
+              ],
+              14,
+              [
+                ">",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "@qrank"
+                  ]
+                ],
+                10000
+              ],
+              12,
+              11
+            ]
+          ],
+          12,
+          [
+            "*",
+            1.5,
+            [
+              "case",
+              [
+                ">",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "@qrank"
+                  ]
+                ],
+                10000000
+              ],
+              17,
+              [
+                ">",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "@qrank"
+                  ]
+                ],
+                1000000
+              ],
+              16,
+              [
+                ">",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "@qrank"
+                  ]
+                ],
+                100000
+              ],
+              14,
+              [
+                ">",
+                [
+                  "to-number",
+                  [
+                    "get",
+                    "@qrank"
+                  ]
+                ],
+                10000
+              ],
+              12,
+              11
+            ]
+          ]
+        ],
+        "text-font": [
+          "Fira Sans Regular"
+        ],
+        "visibility": "visible",
+        "symbol-sort-key": [
+          "-",
+          [
+            "to-number",
+            [
+              "get",
+              "@qrank"
+            ]
+          ]
+        ]
+      },
+      "paint": {
+        "text-color": [
+          "case",
+          [
+            "==",
+            [
+              "get",
+              "natural"
+            ],
+            "water"
+          ],
+          "#0c7ac3",
+          [
+            "==",
+            [
+              "get",
+              "natural"
+            ],
+            "bay"
+          ],
+          "#0c7ac3",
+          [
+            "==",
+            [
+              "get",
+              "place"
+            ],
+            "sea"
+          ],
+          "#0c7ac3",
+          [
+            "==",
+            [
+              "get",
+              "place"
+            ],
+            "ocean"
+          ],
+          "#0c7ac3",
+          [
+            "==",
+            [
+              "get",
+              "place"
+            ],
+            "state"
+          ],
+          "purple",
+          [
+            "has",
+            "place"
+          ],
+          "black",
+          "gray"
+        ],
+        "text-halo-color": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          13,
+          "rgba(255, 255, 255, 0.7)",
+          14,
+          "rgba(255, 255, 255, 1.0)"
+        ],
+        "text-halo-width": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          13,
+          [
+            "case",
+            [
+              "==",
+              [
+                "get",
+                "natural"
+              ],
+              "water"
+            ],
+            0.0,
+            [
+              "==",
+              [
+                "get",
+                "natural"
+              ],
+              "bay"
+            ],
+            0.0,
+            [
+              "==",
+              [
+                "get",
+                "place"
+              ],
+              "sea"
+            ],
+            0.0,
+            [
+              "==",
+              [
+                "get",
+                "place"
+              ],
+              "ocean"
+            ],
+            0.0,
+            1.5
+          ],
+          14,
+          [
+            "case",
+            [
+              "==",
+              [
+                "get",
+                "natural"
+              ],
+              "water"
+            ],
+            0.0,
+            [
+              "==",
+              [
+                "get",
+                "natural"
+              ],
+              "bay"
+            ],
+            0.0,
+            [
+              "==",
+              [
+                "get",
+                "place"
+              ],
+              "sea"
+            ],
+            0.0,
+            [
+              "==",
+              [
+                "get",
+                "place"
+              ],
+              "ocean"
+            ],
+            0.0,
+            2.0
+          ]
+        ]
+        
+        
+      }
+    }
+  ],
+  "id": "swissmap-style"
+}
