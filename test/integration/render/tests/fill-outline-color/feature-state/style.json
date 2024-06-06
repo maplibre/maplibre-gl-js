@@ -1,0 +1,77 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "width": 64,
+      "height": 64,
+      "allowed": 0.00075,
+      "operations": [
+        [
+          "wait"
+        ],
+        [
+          "setFeatureState",
+          {
+            "source": "geojson",
+            "id": 1
+          },
+          {
+            "outline-color": "blue",
+            "fill-color": "red"
+          }
+        ],
+        [
+          "wait"
+        ]
+      ]
+    }
+  },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "id": 1,
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -10,
+                -10
+              ],
+              [
+                -10,
+                10
+              ],
+              [
+                10,
+                10
+              ],
+              [
+                10,
+                -10
+              ],
+              [
+                -10,
+                -10
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "fill",
+      "type": "fill",
+      "source": "geojson",
+      "paint": {
+        "fill-color": ["feature-state", "fill-color"],
+        "fill-outline-color": ["feature-state", "outline-color"]
+      }
+    }
+  ]
+}
