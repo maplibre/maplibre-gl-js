@@ -1098,10 +1098,7 @@ export abstract class Camera extends Evented {
      */
     _getTransformForUpdate(): Transform {
         if (!this.transformCameraUpdate) return this.transform;
-
-        if (!this._requestedCameraState) {
-            this._requestedCameraState = this.transform.clone();
-        }
+        this._requestedCameraState = this.transform.clone();
         return this._requestedCameraState;
     }
 
