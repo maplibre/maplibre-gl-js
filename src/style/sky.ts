@@ -5,6 +5,7 @@ import {emitValidationErrors, validateSky, validateStyle} from './validate_style
 import {extend} from '../util/util';
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Mesh} from '../render/mesh';
 
 type SkyProps = {
     'atmosphere-blend': DataConstantProperty<number>;
@@ -22,6 +23,11 @@ const TRANSITION_SUFFIX = '-transition';
 
 export default class Sky extends Evented {
     properties: PossiblyEvaluated<SkyProps, SkyPropsPossiblyEvaluated>;
+
+    /**
+     * This is used to cache the gl mesh for the atmosphere, it should be initialized only once.
+     */
+    atmosphereMesh: Mesh | undefined;
 
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
@@ -69,5 +75,10 @@ export default class Sky extends Evented {
             style: {glyphs: true, sprite: true},
             styleSpec
         })));
+    }
+
+    getAtmosphereBlend(): number {
+        // Get the atmosphere blend coefficient
+        return this.properties.get('atmosphere-blend');
     }
 }

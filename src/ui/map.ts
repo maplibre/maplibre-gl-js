@@ -61,7 +61,6 @@ import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {Projection} from '../geo/projection/projection';
 import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
-import {Atmosphere} from '../render/atmosphere';
 
 const version = packageJSON.version;
 
@@ -445,7 +444,6 @@ export class Map extends Camera {
     painter: Painter;
     handlers: HandlerManager;
     projection: Projection;
-    atmosphere: Atmosphere;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -630,8 +628,6 @@ export class Map extends Camera {
 
         this._setupContainer();
         this._setupPainter();
-
-        this.atmosphere = new Atmosphere(this.painter);
 
         this.on('move', () => this._update(false))
             .on('moveend', () => this._update(false))

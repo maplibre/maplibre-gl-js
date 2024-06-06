@@ -18,6 +18,8 @@ import type {
     PropertyValue,
     TransitionParameters
 } from './properties';
+import {mat4, vec3} from 'gl-matrix';
+import {Transform} from '../geo/transform';
 
 type LightPosition = {
     x: number;
@@ -131,5 +133,23 @@ export class Light extends Evented {
             style: {glyphs: true, sprite: true},
             styleSpec
         }));
+    }
+
+    getSunPos(transform: Transform): vec3 {
+        const _lp = this.properties.get('position');
+        const lightPos = [-_lp.x, -_lp.y, -_lp.z] as vec3;
+
+        const lightMat = mat4.identity(new Float64Array(16) as any);
+
+        if (this.properties.get('anchor') === 'map') {
+            mat4.rotateX(lightMat, lightMat, -transform.pitch * Math.PI / 180);
+            mat4.rotateZ(lightMat, lightMat, -transform.angle);
+            mat4.rotateX(lightMat, lightMat, transform.center.lat * Math.PI / 180.0);
+            mat4.rotateY(lightMat, lightMat, -transform.center.lng * Math.PI / 180.0);
+        }
+
+        vec3.transformMat4(lightPos, lightPos, lightMat);
+
+        return lightPos;
     }
 }

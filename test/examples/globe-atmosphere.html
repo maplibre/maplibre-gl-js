@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Display a globe with a satellite map</title>
-    <meta property="og:description" content="Display a globe with a satellite raster baselayer." />
+    <title>Display a globe with an atmosphere</title>
+    <meta property="og:description" content="Display a globe with an atmosphere." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
@@ -54,12 +54,6 @@
                 'anchor': 'map',
                 'position': [1.5, 90, 80]
             }
-        },
-        atmosphere: true,
-        atmosphereOptions: {
-            fullAtmoZoom: 0,
-            noAtmoZoom: 22,
-            sunDateAndTime: '2024-04-01T12:00:00Z'
         }
     });
 </script>

@@ -93,14 +93,14 @@ export interface Projection {
     get vertexShaderPreludeCode(): string;
 
     /**
-     * Globe position in camera frame.
+     * World center in camera frame.
      */
-    get globePosition(): vec3;
+    get worldCenterPosition(): vec3;
 
     /**
-     * Globe radius in camera frame.
+     * World size in pixel.
      */
-    get globeRadius(): number;
+    get worldSize(): number;
 
     /**
      * Inverse projection matrix from camera to clip plane.
@@ -199,9 +199,9 @@ export interface Projection {
      * @internal
      * Transform of `LngLat` coordinate with its `elevation` with the projection.
      * @param lngLat - The longitude and latitude coordinate to transform.
-     * @param elev - The elevation coordinate to transform.
+     * @param elevation - The elevation coordinate to transform.
      */
-    transformPosition(lngLat: LngLat, elev: number): vec3;
+    transformPosition(lngLat: LngLat, elevation: number): vec3;
 
     /**
      * @internal

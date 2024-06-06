@@ -137,11 +137,11 @@ export class GlobeProjection implements Projection {
         return granularitySettingsGlobe;
     }
 
-    get globePosition(): vec3 {
+    get worldCenterPosition(): vec3 {
         return this._globePosition;
     }
 
-    get globeRadius(): number {
+    get worldSize(): number {
         return this._globeRadiusPixels;
     }
 
@@ -424,13 +424,13 @@ export class GlobeProjection implements Projection {
         return dotResult < 0.0;
     }
 
-    public transformPosition(lngLat: LngLat, elev: number): vec3 {
+    public transformPosition(lngLat: LngLat, elevation: number): vec3 {
         const pos: vec4 = [0, 0, 0, 1];
 
         const cosLat = Math.cos(lngLat.lat);
-        pos[0] =  cosLat * Math.sin(lngLat.lng) * (this._globeRadiusPixels + elev);
-        pos[1] =  Math.sin(lngLat.lat)          * (this._globeRadiusPixels + elev);
-        pos[2] =  cosLat * Math.cos(lngLat.lng) * (this._globeRadiusPixels + elev);
+        pos[0] =  cosLat * Math.sin(lngLat.lng) * (this._globeRadiusPixels + elevation);
+        pos[1] =  Math.sin(lngLat.lat)          * (this._globeRadiusPixels + elevation);
+        pos[2] =  cosLat * Math.cos(lngLat.lng) * (this._globeRadiusPixels + elevation);
 
         vec4.transformMat4(pos, pos, this._globeMatrix);
 

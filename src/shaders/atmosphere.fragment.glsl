@@ -11,8 +11,8 @@ uniform float u_atmosphere_blend;
  */
 
 const float PI = 3.141592653589793;
-const int iSteps = 8;
-const int jSteps = 6;
+const int iSteps = 5;
+const int jSteps = 3;
 
 /* radius of the planet */
 const float EARTH_RADIUS = 6371e3;

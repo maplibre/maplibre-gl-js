@@ -21,6 +21,9 @@ export const MercatorShaderVariantKey = 'mercator';
 export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh | null = null;
     private _cameraPosition: vec3 = [0, 0, 0];
+    private _worldCenterPosition: vec3 = [0, 0, 0];
+    private _worldSize: number = 0;
+    private _invProjMatrix: mat4 = mat4.create();
 
     get name(): string {
         return 'mercator';
@@ -64,16 +67,16 @@ export class MercatorProjection implements Projection {
         return SubdivisionGranularitySetting.noSubdivision;
     }
 
-    get globePosition(): vec3 {
-        return vec3.fromValues(0.0, 0.0, 0.0);
+    get worldCenterPosition(): vec3 {
+        return this._worldCenterPosition;
     }
 
-    get globeRadius(): number {
-        return 1.0;
+    get worldSize(): number {
+        return this._worldSize;
     }
 
     get invProjMatrix(): mat4 {
-        return mat4.create();
+        return this._invProjMatrix;
     }
 
     public isRenderingDirty(): boolean {
@@ -89,13 +92,24 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public updateProjection(t: { invProjMatrix: mat4 }): void {
+    public updateProjection(transform: TransformLike): void {
+        this._worldSize = transform.worldSize;
+        this._invProjMatrix = mat4.clone(transform.invProjMatrix);
+
         const cameraPos: vec4 = [0, 0, -1, 1];
-        vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
+        vec4.transformMat4(cameraPos, cameraPos, transform.invProjMatrix);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
             cameraPos[2] / cameraPos[3]
+        ];
+
+        const worldPos: vec4 = [0, 0, 0, 1];
+        vec4.transformMat4(worldPos, worldPos, transform.invProjMatrix);
+        this._worldCenterPosition = [
+            worldPos[0] / worldPos[3],
+            worldPos[1] / worldPos[3],
+            worldPos[2] / worldPos[3]
         ];
     }
 
@@ -170,7 +184,7 @@ export class MercatorProjection implements Projection {
         return this._cachedMesh;
     }
 
-    public transformPosition(_lngLat: LngLat, _elev: number): vec3 {
+    public transformPosition(_lngLat: LngLat, _elevation: number): vec3 {
         return vec3.fromValues(0, 0, 0);
     }
 
