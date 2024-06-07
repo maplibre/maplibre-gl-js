@@ -2540,7 +2540,7 @@ describe('Style#serialize', () => {
         expect(style.serialize().terrain).toBeUndefined();
     });
 
-    test('include sky property when map has 3D terrain', async () => {
+    test('include sky property when map has sky', async () => {
         const sky = {
             'atmosphere_blend': 0.5,
         };
