@@ -197,14 +197,6 @@ export interface Projection {
 
     /**
      * @internal
-     * Transform of `LngLat` coordinate with its `elevation` with the projection.
-     * @param lngLat - The longitude and latitude coordinate to transform.
-     * @param elevation - The elevation coordinate to transform.
-     */
-    transformPosition(lngLat: LngLat, elevation: number): vec3;
-
-    /**
-     * @internal
      * Return true if the projection correspond to a Globe.
      */
     isGlobe(): boolean;

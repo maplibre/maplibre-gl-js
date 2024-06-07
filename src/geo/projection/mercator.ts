@@ -184,10 +184,6 @@ export class MercatorProjection implements Projection {
         return this._cachedMesh;
     }
 
-    public transformPosition(_lngLat: LngLat, _elevation: number): vec3 {
-        return vec3.fromValues(0, 0, 0);
-    }
-
     isGlobe(): boolean {
         return false;
     }

@@ -424,24 +424,6 @@ export class GlobeProjection implements Projection {
         return dotResult < 0.0;
     }
 
-    public transformPosition(lngLat: LngLat, elevation: number): vec3 {
-        const pos: vec4 = [0, 0, 0, 1];
-
-        const cosLat = Math.cos(lngLat.lat);
-        pos[0] =  cosLat * Math.sin(lngLat.lng) * (this._globeRadiusPixels + elevation);
-        pos[1] =  Math.sin(lngLat.lat)          * (this._globeRadiusPixels + elevation);
-        pos[2] =  cosLat * Math.cos(lngLat.lng) * (this._globeRadiusPixels + elevation);
-
-        vec4.transformMat4(pos, pos, this._globeMatrix);
-
-        const pos3D: vec3 = [
-            pos[0] / pos[3],
-            pos[1] / pos[3],
-            pos[2] / pos[3]
-        ];
-        return pos3D;
-    }
-
     public transformLightDirection(transform: { center: LngLat; pitch: number; angle: number }, dir: vec3): vec3 {
         const sphereX = -transform.center.lng * Math.PI / 180.0;
         const sphereY = transform.center.lat * Math.PI / 180.0;
