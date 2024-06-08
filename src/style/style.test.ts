@@ -2542,7 +2542,7 @@ describe('Style#serialize', () => {
 
     test('include sky property when map has sky', async () => {
         const sky = {
-            'atmosphere_blend': 0.5,
+            'atmosphere-blend': 0.5,
         };
         const styleJson = createStyleJSON({sky});
         const style = new Style(getStubMap());

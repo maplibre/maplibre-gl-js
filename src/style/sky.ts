@@ -2,10 +2,10 @@ import {DataConstantProperty, PossiblyEvaluated, Properties, Transitionable, Tra
 import {Evented} from '../util/evented';
 import {EvaluationParameters} from './evaluation_parameters';
 import {emitValidationErrors, validateSky, validateStyle} from './validate_style';
-import {extend} from '../util/util';
 import {latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Mesh} from '../render/mesh';
+import {StyleSetterOptions} from './style';
 
 type SkyProps = {
     'atmosphere-blend': DataConstantProperty<number>;
@@ -15,9 +15,7 @@ type SkyPropsPossiblyEvaluated = {
     'atmosphere-blend': number;
 };
 
-const properties: Properties<SkyProps> = new Properties({
-    'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification),
-});
+let skyProperties: Properties<SkyProps>;
 
 const TRANSITION_SUFFIX = '-transition';
 
@@ -32,15 +30,18 @@ export default class Sky extends Evented {
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
 
-    constructor(sky?: SkySpecification) {
+    constructor(skyOptions?: SkySpecification) {
         super();
-        this._transitionable = new Transitionable(properties);
-        this.setSky(sky);
+        skyProperties = skyProperties || new Properties({
+            'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification),
+        });
+        this._transitionable = new Transitionable(skyProperties);
+        this.setSky(skyOptions);
         this._transitioning = this._transitionable.untransitioned();
     }
 
-    setSky(sky?: SkySpecification) {
-        if (this._validate(validateSky, sky)) return;
+    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
+        if (this._validate(validateSky, sky, options)) return;
 
         for (const name in sky) {
             const value = sky[name];
@@ -68,13 +69,19 @@ export default class Sky extends Evented {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    _validate(validate: Function, value: unknown) {
-        return emitValidationErrors(this, validate.call(validateStyle, extend({
+    _validate(validate: Function, value: unknown, options?: {
+        validate?: boolean;
+    }) {
+        if (options && options.validate === false) {
+            return false;
+        }
+
+        return emitValidationErrors(this, validate.call(validateStyle, {
             value,
             // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407
             style: {glyphs: true, sprite: true},
             styleSpec
-        })));
+        }));
     }
 
     getAtmosphereBlend(): number {
