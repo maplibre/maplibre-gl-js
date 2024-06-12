@@ -7,7 +7,7 @@ import type {RequestParameters, GetResourceResponse} from './ajax';
  */
 export type AddProtocolAction = (requestParameters: RequestParameters, abortController: AbortController) => Promise<GetResourceResponse<any>>
 
-export type FeaturePropertiesTransform = (source: string, sourceLayer: string, tileID: string, geometryType: string, featureID: number, properties: { [_: string]: string | number | boolean }) => void
+export type FeaturePropertiesTransform = (source: string, sourceLayer: string, tileID: string, geometryType: string, featureID: number, properties: { [_: string]: string | number | boolean }) => Promise<void>
 
 /**
  * This is a global config object used to store the configuration

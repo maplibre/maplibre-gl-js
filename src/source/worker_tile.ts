@@ -100,7 +100,7 @@ export class WorkerTile {
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
                 if (featurePropertiesTransform) {
-                    featurePropertiesTransform(this.source, sourceLayerId, this.tileID.toString(), VectorTileFeature.types[feature.type], feature.id, feature.properties);
+                    await featurePropertiesTransform(this.source, sourceLayerId, this.tileID.toString(), VectorTileFeature.types[feature.type], feature.id, feature.properties);
                 }
                 const id = featureIndex.getId(feature, sourceLayerId);
                 features.push({feature, id, index, sourceLayerIndex});
