@@ -1740,6 +1740,7 @@ export class Map extends Camera {
         }
 
         if (!style) {
+            this.style?.projection?.destroy();
             delete this.style;
             return this;
         } else {
@@ -3146,7 +3147,6 @@ export class Map extends Camera {
         this._renderTaskQueue.clear();
         this.painter.destroy();
         this.handlers.destroy();
-        this.style.projection.destroy();
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {

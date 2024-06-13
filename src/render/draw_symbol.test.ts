@@ -46,7 +46,8 @@ describe('drawSymbol', () => {
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
         painterMock.style = {
-            map: createMockMap()
+            map: {},
+            projection: new MercatorProjection()
         } as any as Style;
 
         const layerSpec = {
@@ -151,7 +152,8 @@ describe('drawSymbol', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
         painterMock.style = {
-            map: createMockMap()
+            map: {},
+            projection: new MercatorProjection()
         } as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
@@ -173,7 +175,7 @@ describe('drawSymbol', () => {
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
         painterMock.style = {
-            map: createMockMap()
+            projection: new MercatorProjection()
         } as any as Style;
 
         const layerSpec = {
@@ -222,9 +224,3 @@ describe('drawSymbol', () => {
     });
 
 });
-
-function createMockMap() {
-    return {
-        projection: new MercatorProjection()
-    };
-}
