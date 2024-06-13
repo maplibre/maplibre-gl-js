@@ -60,8 +60,8 @@ import {
     type GetImagesParamerters,
     type GetImagesResponse
 } from '../util/actor_messages';
-import { Projection } from '../geo/projection/projection';
-import { createProjectionFromName } from '../geo/projection/projection_factory';
+import {Projection} from '../geo/projection/projection';
+import {createProjectionFromName} from '../geo/projection/projection_factory';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -774,7 +774,7 @@ export class Style extends Evented {
                     throw new Error('Unimplemented: setSky');
                 case 'setProjection':
                     this.setProjection.apply(this, op.args);
-
+                    break;
                 case 'setTransition':
                     operations.push(() => {});
                     break;

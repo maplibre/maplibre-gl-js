@@ -1,4 +1,4 @@
-import { ProjectionSpecification } from '@maplibre/maplibre-gl-style-spec';
+import {ProjectionSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {warnOnce} from '../../util/util';
 import {GlobeProjection} from './globe';
 import {MercatorProjection} from './mercator';
