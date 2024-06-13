@@ -11,6 +11,7 @@
 - Map `<canvas>` is focusable only when interactive [#4147](https://github.com/maplibre/maplibre-gl-js/pull/4147)
 - "Accept" headers set in Request Transformers are not overwritten [#4210](https://github.com/maplibre/maplibre-gl-js/pull/4210)
 - ⚠️ Rename projMatrix to modelViewProjectionMatrix. Also rename invProjMatrix, alignedProjMatrix accordingly [#4215](https://github.com/maplibre/maplibre-gl-js/pull/4215)
+- Publish an unminified prod build [#4265](https://github.com/maplibre/maplibre-gl-js/pull/4265)
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
