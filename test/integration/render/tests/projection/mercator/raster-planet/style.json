@@ -10,7 +10,7 @@
     0.0
   ],
   "zoom": 1,
-  "projection": "mercator",
+  "projection": { "type": "mercator" },
   "sources": {
     "source": {
       "type": "raster",

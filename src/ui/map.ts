@@ -3295,8 +3295,8 @@ export class Map extends Camera {
     }
 
     /**
-     * Returns the active {@link Projection} object.
-     * @returns The projection object.
+     * Gets the {@link ProjectionSpecification}.
+     * @returns the projection specification.
      * @example
      * ```ts
      * let projection = map.getProjection();
@@ -3304,6 +3304,11 @@ export class Map extends Camera {
      */
     getProjection(): ProjectionSpecification { return this.style.getProjection(); }
 
+    /**
+     * Sets the {@link ProjectionSpecification}.
+     * @param projection the projection specification to set
+     * @returns 
+     */
     setProjection(projection: ProjectionSpecification) {
         this._lazyInitEmptyStyle();
         this.style.setProjection(projection);
