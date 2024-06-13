@@ -3306,8 +3306,8 @@ export class Map extends Camera {
 
     /**
      * Sets the {@link ProjectionSpecification}.
-     * @param projection the projection specification to set
-     * @returns 
+     * @param projection - the projection specification to set
+     * @returns
      */
     setProjection(projection: ProjectionSpecification) {
         this._lazyInitEmptyStyle();
