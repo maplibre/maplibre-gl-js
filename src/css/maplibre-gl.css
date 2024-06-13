@@ -58,15 +58,31 @@
 .maplibregl-ctrl-top-left,
 .maplibregl-ctrl-top-right,
 .maplibregl-ctrl-bottom-left,
-.maplibregl-ctrl-bottom-right { position: absolute; pointer-events: none; z-index: 2; }
+.maplibregl-ctrl-bottom-right {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+}
 
-.maplibregl-ctrl-top-left { top: 0; left: 0; }
+.maplibregl-ctrl-top-left {
+    top: 0;
+    left: 0;
+}
 
-.maplibregl-ctrl-top-right { top: 0; right: 0; }
+.maplibregl-ctrl-top-right {
+     top: 0;
+     right: 0;
+    }
 
-.maplibregl-ctrl-bottom-left { bottom: 0; left: 0; }
+.maplibregl-ctrl-bottom-left {
+    bottom: 0;
+    left: 0;
+}
 
-.maplibregl-ctrl-bottom-right { right: 0; bottom: 0; }
+.maplibregl-ctrl-bottom-right {
+     right: 0;
+     bottom: 0;
+}
 
 .maplibregl-ctrl {
     clear: both;
@@ -76,13 +92,25 @@
     transform: translate(0, 0);
 }
 
-.maplibregl-ctrl-top-left .maplibregl-ctrl { margin: 10px 0 0 10px; float: left; }
+.maplibregl-ctrl-top-left .maplibregl-ctrl {
+    margin: 10px 0 0 10px;
+     float: left;
+}
 
-.maplibregl-ctrl-top-right .maplibregl-ctrl { margin: 10px 10px 0 0; float: right; }
+.maplibregl-ctrl-top-right .maplibregl-ctrl {
+    margin: 10px 10px 0 0;
+    float: right;
+}
 
-.maplibregl-ctrl-bottom-left .maplibregl-ctrl { margin: 0 0 10px 10px; float: left; }
+.maplibregl-ctrl-bottom-left .maplibregl-ctrl {
+    margin: 0 0 10px 10px;
+    float: left;
+}
 
-.maplibregl-ctrl-bottom-right .maplibregl-ctrl { margin: 0 10px 10px 0; float: right; }
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl {
+    margin: 0 10px 10px 0;
+    float: right;
+}
 
 .maplibregl-ctrl-group {
     border-radius: 4px;

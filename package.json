@@ -170,7 +170,7 @@
     "start": "run-p watch-css watch-dev start-server",
     "start-bench": "run-p watch-css watch-benchmarks start-server",
     "lint": "eslint --cache --ext .ts,.tsx,.js,.html --ignore-path .gitignore .",
-    "lint-css": "stylelint src/css/maplibre-gl.css",
+    "lint-css": "stylelint **/*.css --fix -f verbose",
     "test": "run-p lint lint-css test-render jest",
     "jest": "jest",
     "test-build": "jest --selectProjects=build --reporters=default",
