@@ -135,7 +135,7 @@ function updateVariableAnchors(coords: Array<OverscaledTileID>,
     translateAnchor: 'map' | 'viewport',
     variableOffsets: {[_ in CrossTileID]: VariableOffset}) {
     const transform = painter.transform;
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const terrain = painter.style.map.terrain;
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';
@@ -310,7 +310,7 @@ function drawLayerSymbols(
     const context = painter.context;
     const gl = context.gl;
     const tr = painter.transform;
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
 
     const rotateWithMap = rotationAlignment === 'map';
     const pitchWithMap = pitchAlignment === 'map';

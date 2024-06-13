@@ -2,7 +2,6 @@
   "version": 8,
   "metadata": {
     "test": {
-      "projection": "globe"
     }
   },
   "center": [
@@ -12,6 +11,7 @@
   "pitch": 15,
   "bearing": 45,
   "zoom": 1,
+  "projection": { "type": "globe" },
   "sources": {
     "fill": {
       "type": "geojson",

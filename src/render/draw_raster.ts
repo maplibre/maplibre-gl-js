@@ -28,7 +28,7 @@ export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: Ra
 
     const source = sourceCache.getSource();
 
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
 
     // When rendering globe (or any other subdivided projection), two passes are needed.
@@ -72,7 +72,7 @@ function drawTiles(
     const gl = context.gl;
     const program = painter.useProgram('raster');
 
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
 
     const colorMode = painter.colorModeForRenderPass();
     const align = !painter.options.moving;

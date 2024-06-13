@@ -2,8 +2,7 @@
   "version": 8,
   "metadata": {
     "test": {
-      "description": "Tests that globe projection works with the raster layer type.",
-      "projection": "globe"
+      "description": "Tests that globe projection works with the raster layer type."
     }
   },
   "center": [
@@ -11,6 +10,7 @@
     0.0
   ],
   "zoom": 1,
+  "projection": { "type": "globe" },
   "sources": {
     "source": {
       "type": "raster",

@@ -2,7 +2,6 @@
   "version": 8,
   "metadata": {
     "test": {
-      "projection": "globe"
     }
   },
   "center": [
@@ -11,6 +10,7 @@
   ],
   "zoom": 1,
   "sources": {},
+  "projection": { "type": "globe" },
   "layers": [
     {
       "id": "background",

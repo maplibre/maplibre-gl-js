@@ -27,7 +27,7 @@ let quadTriangles: QuadTriangleArray;
 export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
     const context = painter.context;
     const gl = context.gl;
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const program = painter.useProgram('collisionBox');
     const tileBatches: Array<TileBatch> = [];
     let circleCount = 0;

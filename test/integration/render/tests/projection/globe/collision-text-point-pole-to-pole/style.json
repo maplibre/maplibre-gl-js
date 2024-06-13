@@ -4,12 +4,12 @@
     "test": {
       "collisionDebug": true,
       "height": 256,
-      "width": 256,
-      "projection": "globe"
+      "width": 256
     }
   },
   "zoom": 1,
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "projection": { "type": "globe" },
   "sources": {
     "geojson": {
       "type": "geojson",

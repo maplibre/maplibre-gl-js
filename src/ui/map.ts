@@ -53,13 +53,12 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
-    TerrainSpecification
+    TerrainSpecification,
+    ProjectionSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {Projection} from '../geo/projection/projection';
-import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
 
 const version = packageJSON.version;
 
@@ -326,13 +325,6 @@ export type MapOptions = {
      */
     maxCanvasSize?: [number, number];
     /**
-     * Map projection to use. Options are:
-     * - 'mercator' - The default, a classical flat Web Mercator map.
-     * - 'globe' - A 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zoom levels.
-     * @defaultValue 'mercator'
-     */
-    projection?: ProjectionName;
-    /**
      * Determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
      * * If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
      * * If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
@@ -403,7 +395,6 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
-    projection: 'mercator',
     cancelPendingTileRequestsWhileZooming: true
 };
 
@@ -442,7 +433,6 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
-    projection: Projection;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -622,8 +612,6 @@ export class Map extends Camera {
         if (resolvedOptions.maxBounds) {
             this.setMaxBounds(resolvedOptions.maxBounds);
         }
-
-        this.projection = createProjectionFromName(options.projection);
 
         this._setupContainer();
         this._setupPainter();
@@ -3065,9 +3053,6 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
-        // This projection update should happen *before* placement update
-        this.projection.updateProjection(this.painter.transform);
-
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
 
         // Actually draw
@@ -3105,7 +3090,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projection.isRenderingDirty();
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.style.projection.isRenderingDirty();
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -3158,10 +3143,10 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
-        this.projection.destroy();
         this._renderTaskQueue.clear();
         this.painter.destroy();
         this.handlers.destroy();
+        this.style.projection.destroy();
         delete this.handlers;
         this.setStyle(null);
         if (typeof window !== 'undefined') {
@@ -3310,12 +3295,18 @@ export class Map extends Camera {
     }
 
     /**
-     * Returns the active `ProjectionBase` object.
+     * Returns the active {@link Projection} object.
      * @returns The projection object.
      * @example
      * ```ts
      * let projection = map.getProjection();
      * ```
      */
-    getProjection(): Projection { return this.projection; }
+    getProjection(): ProjectionSpecification { return this.style.getProjection(); }
+
+    setProjection(projection: ProjectionSpecification) {
+        this._lazyInitEmptyStyle();
+        this.style.setProjection(projection);
+        return this._update(true);
+    }
 }

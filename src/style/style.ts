@@ -48,7 +48,8 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
-    DiffOperations
+    DiffOperations,
+    ProjectionSpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -59,6 +60,8 @@ import {
     type GetImagesParamerters,
     type GetImagesResponse
 } from '../util/actor_messages';
+import { Projection } from '../geo/projection/projection';
+import { createProjectionFromName } from '../geo/projection/projection_factory';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -184,6 +187,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    projection: Projection;
 
     _frameRequest: AbortController;
     _loadStyleRequest: AbortController;
@@ -337,6 +341,7 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
+        this.projection = createProjectionFromName(this.stylesheet.projection?.type || 'mercator');
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
@@ -765,6 +770,11 @@ export class Style extends Evented {
                 case 'setTerrain':
                     operations.push(() => this.map.setTerrain.apply(this, op.args));
                     break;
+                case 'setSky':
+                    throw new Error('Unimplemented: setSky');
+                case 'setProjection':
+                    this.setProjection.apply(this, op.args);
+
                 case 'setTransition':
                     operations.push(() => {});
                     break;
@@ -1284,6 +1294,7 @@ export class Style extends Evented {
             sprite: myStyleSheet.sprite,
             glyphs: myStyleSheet.glyphs,
             transition: myStyleSheet.transition,
+            projection: myStyleSheet.projection,
             sources,
             layers,
             terrain
@@ -1474,6 +1485,21 @@ export class Style extends Evented {
         this.light.updateTransitions(parameters);
     }
 
+    getProjection(): ProjectionSpecification {
+        return this.stylesheet.projection;
+    }
+
+    setProjection(projection: ProjectionSpecification) {
+        this._checkLoaded();
+        if (this.projection) {
+            if (this.projection.name === projection.type) return;
+            this.projection.destroy();
+            delete this.projection;
+        }
+        this.stylesheet.projection = projection;
+        this.projection = createProjectionFromName(projection.type);
+    }
+
     _validate(validate: Validator, key: string, value: any, props: any, options: {
         validate?: boolean;
     } = {}) {
@@ -1541,6 +1567,9 @@ export class Style extends Evented {
     }
 
     _updatePlacement(transform: Transform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false) {
+
+        // This projection update should happen *before* placement update
+        this.projection.updateProjection(transform);
         let symbolBucketsChanged = false;
         let placementCommitted = false;
 
@@ -1571,7 +1600,7 @@ export class Style extends Evented {
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
-            this.pauseablePlacement = new PauseablePlacement(transform, this.map.projection, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(transform, this.projection, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 

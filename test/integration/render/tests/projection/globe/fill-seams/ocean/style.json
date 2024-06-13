@@ -3,7 +3,6 @@
   "metadata": {
     "test": {
       "description": "Tests that single-pixel seams are not visible. These seams were caused by a mismatch between stencil mask and fill layer subdivision granularity.",
-      "projection": "globe",
       "width": 64,
       "height": 1024
     }
@@ -15,6 +14,7 @@
   "pitch": 60.0,
   "bearing": 180.0,
   "zoom": 7,
+  "projection": { "type": "globe" },
   "sources": {
     "vector_tiles": {
       "type": "vector",

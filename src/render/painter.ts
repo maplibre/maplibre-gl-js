@@ -285,7 +285,7 @@ export class Painter {
     _renderTileMasks(tileStencilRefs: {[_: string]: number}, tileIDs: Array<OverscaledTileID>, renderToTexture: boolean, useBorders: boolean) {
         const context = this.context;
         const gl = context.gl;
-        const projection = this.style.map.projection;
+        const projection = this.style.projection;
 
         const program = this.useProgram('clippingMask');
 
@@ -486,7 +486,7 @@ export class Painter {
         }
 
         // Execute offscreen GPU tasks of the projection manager
-        this.style.map.projection.updateGPUdependent({
+        this.style.projection.updateGPUdependent({
             context: this.context,
             useProgram: (name: string) => this.useProgram(name)
         });
@@ -674,7 +674,7 @@ export class Painter {
         this.cache = this.cache || {};
         const useTerrain = !!this.style.map.terrain;
 
-        const projection = this.style.map.projection;
+        const projection = this.style.projection;
 
         const projectionPrelude = forceSimpleProjection ? shaders.projectionMercator : projection.shaderPreludeCode;
         const projectionDefine = forceSimpleProjection ? MercatorShaderDefine : projection.shaderDefine;
