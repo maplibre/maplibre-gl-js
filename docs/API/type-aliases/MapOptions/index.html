@@ -6,6 +6,8 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser.">
+      
       
       
         <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/API/type-aliases/MapOptions/">
@@ -18,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.23">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
     
     
       
@@ -61,7 +63,7 @@
       
         <meta  property="og:title"  content="MapOptions - MapLibre GL JS" >
       
-        <meta  property="og:description"  content="None" >
+        <meta  property="og:description"  content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." >
       
         <meta  property="og:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/type-aliases/MapOptions.png" >
       
@@ -77,7 +79,7 @@
       
         <meta  name="twitter:title"  content="MapOptions - MapLibre GL JS" >
       
-        <meta  name="twitter:description"  content="None" >
+        <meta  name="twitter:description"  content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." >
       
         <meta  name="twitter:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/type-aliases/MapOptions.png" >
       
@@ -212,7 +214,7 @@
       
     </form>
     <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Initializing search
@@ -3010,6 +3012,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../Complete/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Complete&lt;T&gt;
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../Config/" class="md-nav__link">
         
   
@@ -4487,7 +4510,7 @@
           <li class="md-nav__item">
   <a href="#style" class="md-nav__link">
     <span class="md-ellipsis">
-      style
+      style?
     </span>
   </a>
   
@@ -8309,7 +8332,7 @@
           <li class="md-nav__item">
   <a href="#style" class="md-nav__link">
     <span class="md-ellipsis">
-      style
+      style?
     </span>
   </a>
   
@@ -8420,7 +8443,8 @@
 <blockquote>
 <p><code>optional</code> <strong>antialias</strong>: <code>boolean</code></p>
 </blockquote>
-<p>If <code>true</code>, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. This is <code>false</code> by default as a performance optimization.</p>
+<p>If <code>true</code>, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers.
+Disabled by default as a performance optimization.</p>
 <h3 id="attributioncontrol">attributionControl?</h3>
 <blockquote>
 <p><code>optional</code> <strong>attributionControl</strong>: <code>false</code> | <a href="../AttributionControlOptions/"><code>AttributionControlOptions</code></a></p>
@@ -8486,7 +8510,7 @@ the map within 7 degrees of north, the map will automatically snap to exact nort
 </blockquote>
 <p>The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).</p>
 <h4 id="default-value_6">Default Value</h4>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kc">true</span>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="mf">3</span>
 </span></code></pre></div>
 <h3 id="collectresourcetiming">collectResourceTiming?</h3>
 <blockquote>
@@ -8507,7 +8531,7 @@ the map within 7 degrees of north, the map will automatically snap to exact nort
 </blockquote>
 <p>If <code>true</code> or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using <a href="../../classes/FullscreenControl/">FullscreenControl</a>.</p>
 <h4 id="default-value_8">Default Value</h4>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kc">undefined</span>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kc">false</span>
 </span></code></pre></div>
 <h3 id="crosssourcecollisions">crossSourceCollisions?</h3>
 <blockquote>
@@ -8624,9 +8648,6 @@ The purpose of this option is to avoid bandwidth-intensive glyph server requests
 <p><code>optional</code> <strong>maplibreLogo</strong>: <code>boolean</code></p>
 </blockquote>
 <p>If <code>true</code>, the MapLibre logo will be shown.</p>
-<h4 id="default-value_21">Default Value</h4>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="kc">false</span>
-</span></code></pre></div>
 <h3 id="maxbounds">maxBounds?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxBounds</strong>: <a href="../LngLatBoundsLike/"><code>LngLatBoundsLike</code></a></p>
@@ -8637,7 +8658,10 @@ The purpose of this option is to avoid bandwidth-intensive glyph server requests
 <p><code>optional</code> <strong>maxCanvasSize</strong>: [<code>number</code>, <code>number</code>]</p>
 </blockquote>
 <p>The canvas' <code>width</code> and <code>height</code> max size. The values are passed as an array where the first element is max width and the second element is max height.
-You shouldn't set this above WebGl <code>MAX_TEXTURE_SIZE</code>. Defaults to [4096, 4096].</p>
+You shouldn't set this above WebGl <code>MAX_TEXTURE_SIZE</code>.</p>
+<h4 id="default-value_21">Default Value</h4>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="p">[</span><span class="mf">4096</span><span class="p">,</span><span class="w"> </span><span class="mf">4096</span><span class="p">].</span>
+</span></code></pre></div>
 <h3 id="maxpitch">maxPitch?</h3>
 <blockquote>
 <p><code>optional</code> <strong>maxPitch</strong>: <code>number</code> | <code>null</code></p>
@@ -8648,7 +8672,7 @@ You shouldn't set this above WebGl <code>MAX_TEXTURE_SIZE</code>. Defaults to [4
 </span></code></pre></div>
 <h3 id="maxtilecachesize">maxTileCacheSize?</h3>
 <blockquote>
-<p><code>optional</code> <strong>maxTileCacheSize</strong>: <code>number</code></p>
+<p><code>optional</code> <strong>maxTileCacheSize</strong>: <code>number</code> | <code>null</code></p>
 </blockquote>
 <p>The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using <code>maxTileCacheZoomLevels</code> constructor options.</p>
 <h4 id="default-value_23">Default Value</h4>
@@ -8706,7 +8730,8 @@ You shouldn't set this above WebGl <code>MAX_TEXTURE_SIZE</code>. Defaults to [4
 <blockquote>
 <p><code>optional</code> <strong>pixelRatio</strong>: <code>number</code></p>
 </blockquote>
-<p>The pixel ratio. The canvas' <code>width</code> attribute will be <code>container.clientWidth * pixelRatio</code> and its <code>height</code> attribute will be <code>container.clientHeight * pixelRatio</code>. Defaults to <code>devicePixelRatio</code> if not specified.</p>
+<p>The pixel ratio.
+The canvas' <code>width</code> attribute will be <code>container.clientWidth * pixelRatio</code> and its <code>height</code> attribute will be <code>container.clientHeight * pixelRatio</code>. Defaults to <code>devicePixelRatio</code> if not specified.</p>
 <h3 id="preservedrawingbuffer">preserveDrawingBuffer?</h3>
 <blockquote>
 <p><code>optional</code> <strong>preserveDrawingBuffer</strong>: <code>boolean</code></p>
@@ -8745,13 +8770,14 @@ map and the other on the left edge of the map) at every zoom level.</li>
 <h4 id="default-value_33">Default Value</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="kc">true</span>
 </span></code></pre></div>
-<h3 id="style">style</h3>
+<h3 id="style">style?</h3>
 <blockquote>
-<p><strong>style</strong>: <code>StyleSpecification</code> | <code>string</code></p>
+<p><code>optional</code> <strong>style</strong>: <code>StyleSpecification</code> | <code>string</code></p>
 </blockquote>
 <p>The map's MapLibre style. This must be a JSON object conforming to
 the schema described in the <a href="https://maplibre.org/maplibre-style-spec/">MapLibre Style Specification</a>,
-or a URL to such JSON.</p>
+or a URL to such JSON.
+When the style is not specified, calling <a href="../../classes/Map/#setstyle">Map#setStyle</a> is required to render the map.</p>
 <h3 id="touchpitch">touchPitch?</h3>
 <blockquote>
 <p><code>optional</code> <strong>touchPitch</strong>: <code>boolean</code> | <a href="../AroundCenterOptions/"><code>AroundCenterOptions</code></a></p>
@@ -8778,34 +8804,40 @@ or a URL to such JSON.</p>
 </span></code></pre></div>
 <h3 id="transformcameraupdate">transformCameraUpdate?</h3>
 <blockquote>
-<p><code>optional</code> <strong>transformCameraUpdate</strong>: <a href="../CameraUpdateTransformFunction/"><code>CameraUpdateTransformFunction</code></a></p>
+<p><code>optional</code> <strong>transformCameraUpdate</strong>: <a href="../CameraUpdateTransformFunction/"><code>CameraUpdateTransformFunction</code></a> | <code>null</code></p>
 </blockquote>
 <p>A callback run before the map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
 Expected to return an object containing center, zoom, pitch or bearing values to overwrite.</p>
+<h4 id="default-value_37">Default Value</h4>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="kc">null</span>
+</span></code></pre></div>
 <h3 id="transformrequest">transformRequest?</h3>
 <blockquote>
-<p><code>optional</code> <strong>transformRequest</strong>: <a href="../RequestTransformFunction/"><code>RequestTransformFunction</code></a></p>
+<p><code>optional</code> <strong>transformRequest</strong>: <a href="../RequestTransformFunction/"><code>RequestTransformFunction</code></a> | <code>null</code></p>
 </blockquote>
 <p>A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
 Expected to return an object with a <code>url</code> property and optionally <code>headers</code> and <code>credentials</code> properties.</p>
+<h4 id="default-value_38">Default Value</h4>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="kc">null</span>
+</span></code></pre></div>
 <h3 id="validatestyle">validateStyle?</h3>
 <blockquote>
 <p><code>optional</code> <strong>validateStyle</strong>: <code>boolean</code></p>
 </blockquote>
 <p>If false, style validation will be skipped. Useful in production environment.</p>
-<h4 id="default-value_37">Default Value</h4>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="kc">true</span>
+<h4 id="default-value_39">Default Value</h4>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="kc">true</span>
 </span></code></pre></div>
 <h3 id="zoom">zoom?</h3>
 <blockquote>
 <p><code>optional</code> <strong>zoom</strong>: <code>number</code></p>
 </blockquote>
 <p>The initial zoom level of the map. If <code>zoom</code> is not specified in the constructor options, MapLibre GL JS will look for it in the map's style object. If it is not specified in the style, either, it will default to <code>0</code>.</p>
-<h4 id="default-value_38">Default Value</h4>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="mf">0</span>
+<h4 id="default-value_40">Default Value</h4>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="mf">0</span>
 </span></code></pre></div>
 <h2 id="source">Source</h2>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/map.ts#L67">src/ui/map.ts:67</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/map.ts#L67">src/ui/map.ts:67</a></p>
 
 
 
@@ -8873,7 +8905,7 @@ Expected to return an object with a <code>url</code> property and optionally <co
       
       
     
-    <a href="https://twitter.com/maplibre" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+    <a href="https://x.com/maplibre" target="_blank" rel="noopener" title="x.com" class="md-social__link">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8l164.9-188.5L26.8 48h145.6l100.5 132.9L389.2 48zm-24.8 373.8h39.1L151.1 88h-42l255.3 333.8z"/></svg>
     </a>
   
@@ -8925,7 +8957,7 @@ Expected to return an object with a <code>url</code> property and optionally <co
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.ebd0bdb7.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.ad660dcc.min.js"></script>
       
     
   </body>

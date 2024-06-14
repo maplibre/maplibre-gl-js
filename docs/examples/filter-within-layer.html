@@ -5,8 +5,8 @@
     <meta property="og:description" content="Filter a layer based on user input using setFilter()." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.4.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.4.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -60,14 +60,14 @@
                     <label for="felt">Apply <code>felt</code> Filter</label>
                     <div>
                         <div>
-                            <label for="operator-select">Operator:</label>
+                            <label for="operator-felt">Operator:</label>
                             <select name="operator" id="operator-felt">
                                 <option value=">">></option>
                                 <option value="==" selected>==</option>
                                 <option value="<"><</option>
                             </select>
                             <br>
-                            <label for="range">Felt:</label>
+                            <label for="range-felt">Felt:</label>
                             <input type="number" id="range-felt" name="range" value="4" min="1.0" max="10000" />
                         </div>
                     </div>
@@ -80,14 +80,14 @@
                     <label for="mag">Apply <code>magnitude</code> Filter</label>
                     <div>
                         <div>
-                            <label for="operator-select">Operator:</label>
+                            <label for="operator-mag">Operator:</label>
                             <select name="operator" id="operator-mag">
                                 <option value=">">></option>
                                 <option value="==" selected>==</option>
                                 <option value="<"><</option>
                             </select>
                             <br>
-                            <label for="range">Magnitude:</label>
+                            <label for="range-mag">Magnitude:</label>
                             <input type="number" id="range-mag" name="range" value="2.71" min="0.0" max="100" />
                         </div>
                     </div>
@@ -95,7 +95,8 @@
 
             <fieldset>
                 <legend>🌊 Tsunami (0 or 1)</legend>
-                <input id="tsunami" type="checkbox" /> <label>Apply <code>tsunami</code> filter</label>
+                <input id="tsunami" type="checkbox" />
+                <label for="tsunami">Apply <code>tsunami</code> filter</label>
                 <div id="radio-tsunamis">
                     <input type="radio" id="t0" name="tsunami" value="0" /><label>0</label>
                     <input type="radio" id="t1" name="tsunami" value="1" /><label>1</label>

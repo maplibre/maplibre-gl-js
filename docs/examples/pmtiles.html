@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <title>PMTiles source and protocol</title>
-    <meta property="og:description" content="Uses the PM tiles plugin and protocol to present a map." />
+    <meta property="og:description" content="Uses the PMTiles plugin and protocol to present a map." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.js'></script>
-    <script src="https://unpkg.com/pmtiles@2.11.0/dist/index.js"></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.4.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.4.0/dist/maplibre-gl.js'></script>
+    <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -19,20 +19,9 @@
     
     // add the PMTiles plugin to the maplibregl global.
     const protocol = new pmtiles.Protocol();
-    maplibregl.addProtocol('pmtiles', (request) => {
-        return new Promise((resolve, reject) => {
-            const callback = (err, data) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({data});
-                }
-            };
-            protocol.tile(request, callback);
-        });
-    });
+    maplibregl.addProtocol('pmtiles', protocol.tile);
 
-    const PMTILES_URL = 'https://protomaps.github.io/PMTiles/protomaps(vector)ODbL_firenze.pmtiles';
+    const PMTILES_URL = 'https://pmtiles.io/protomaps(vector)ODbL_firenze.pmtiles';
 
     const p = new pmtiles.PMTiles(PMTILES_URL);
 

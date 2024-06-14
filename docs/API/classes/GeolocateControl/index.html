@@ -6,6 +6,8 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser.">
+      
       
       
         <link rel="canonical" href="https://www.maplibre.org/maplibre-gl-js/docs/API/classes/GeolocateControl/">
@@ -18,7 +20,7 @@
       
       
       <link rel="icon" href="https://maplibre.org/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.23">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
     
     
       
@@ -61,7 +63,7 @@
       
         <meta  property="og:title"  content="GeolocateControl - MapLibre GL JS" >
       
-        <meta  property="og:description"  content="None" >
+        <meta  property="og:description"  content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." >
       
         <meta  property="og:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/classes/GeolocateControl.png" >
       
@@ -77,7 +79,7 @@
       
         <meta  name="twitter:title"  content="GeolocateControl - MapLibre GL JS" >
       
-        <meta  name="twitter:description"  content="None" >
+        <meta  name="twitter:description"  content="MapLibre GL JS is a TypeScript library that uses WebGL to render interactive maps from vector tiles in a browser." >
       
         <meta  name="twitter:image"  content="https://www.maplibre.org/maplibre-gl-js/docs/assets/images/social/API/classes/GeolocateControl.png" >
       
@@ -212,7 +214,7 @@
       
     </form>
     <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Initializing search
@@ -1088,6 +1090,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#state-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      State Diagram
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       Examples
@@ -1115,15 +1126,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#state-diagram" class="md-nav__link">
-    <span class="md-ellipsis">
-      State Diagram
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#extends" class="md-nav__link">
     <span class="md-ellipsis">
       Extends
@@ -1138,6 +1140,30 @@
       Implements
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Constructors
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Constructors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-geolocatecontrol" class="md-nav__link">
+    <span class="md-ellipsis">
+      new GeolocateControl()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3211,6 +3237,27 @@
   
   <span class="md-ellipsis">
     ClusterIDAndSource
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../type-aliases/Complete/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Complete&lt;T&gt;
   </span>
   
 
@@ -7640,6 +7687,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#state-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      State Diagram
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       Examples
@@ -7667,15 +7723,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#state-diagram" class="md-nav__link">
-    <span class="md-ellipsis">
-      State Diagram
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#extends" class="md-nav__link">
     <span class="md-ellipsis">
       Extends
@@ -7690,6 +7737,30 @@
       Implements
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Constructors
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Constructors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-geolocatecontrol" class="md-nav__link">
+    <span class="md-ellipsis">
+      new GeolocateControl()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -7848,6 +7919,8 @@ as disabled.</p>
 * passive - the user's location dot automatically updates, but the map's camera does not. Occurs upon the user initiating a map movement.
 * disabled - occurs if Geolocation is not available, disabled or denied.</p>
 <p>These interaction states can't be controlled programmatically, rather they are set based on user interactions.</p>
+<h2 id="state-diagram">State Diagram</h2>
+<p><img alt="GeolocateControl state diagram" src="https://github.com/maplibre/maplibre-gl-js/assets/3269297/78e720e5-d781-4da8-9803-a7a0e6aaaa9f" /></p>
 <h2 id="examples">Examples</h2>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nx">GeolocateControl</span><span class="p">({</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="nx">positionOptions</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
@@ -7896,9 +7969,9 @@ as disabled.</p>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1">// Add the control to the map.</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="nx">geolocate</span><span class="p">);</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1">// Set an event listener that fires</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1">// when a geolocate event occurs.</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nx">geolocate</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;geolocate&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;A geolocate event has occurred.&#39;</span><span class="p">)</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1">// when an userlocationlostfocus event occurs.</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nx">geolocate</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;userlocationlostfocus&#39;</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An userlocationlostfocus event has occurred.&#39;</span><span class="p">)</span>
 </span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="p">});</span>
 </span></code></pre></div>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// Initialize the geolocate control.</span>
@@ -7911,9 +7984,9 @@ as disabled.</p>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1">// Add the control to the map.</span>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="nx">geolocate</span><span class="p">);</span>
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1">// Set an event listener that fires</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1">// when an error event occurs.</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="nx">geolocate</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An error event has occurred.&#39;</span><span class="p">)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1">// when an userlocationfocus event occurs.</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="nx">geolocate</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;userlocationfocus&#39;</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An userlocationfocus event has occurred.&#39;</span><span class="p">)</span>
 </span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">});</span>
 </span></code></pre></div>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1">// Initialize the geolocate control.</span>
@@ -7926,24 +7999,54 @@ as disabled.</p>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="c1">// Add the control to the map.</span>
 </span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="nx">geolocate</span><span class="p">);</span>
 </span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1">// Set an event listener that fires</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="c1">// when an outofmaxbounds event occurs.</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="nx">geolocate</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;outofmaxbounds&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An outofmaxbounds event has occurred.&#39;</span><span class="p">)</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="c1">// when a geolocate event occurs.</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="nx">geolocate</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;geolocate&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;A geolocate event has occurred.&#39;</span><span class="p">)</span>
 </span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="p">});</span>
+</span></code></pre></div>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Initialize the geolocate control.</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">geolocate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">GeolocateControl</span><span class="p">({</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nx">positionOptions</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">      </span><span class="nx">enableHighAccuracy</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nx">trackUserLocation</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">});</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1">// Add the control to the map.</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="nx">geolocate</span><span class="p">);</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1">// Set an event listener that fires</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="c1">// when an error event occurs.</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="nx">geolocate</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An error event has occurred.&#39;</span><span class="p">)</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="p">});</span>
+</span></code></pre></div>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// Initialize the geolocate control.</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">geolocate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">GeolocateControl</span><span class="p">({</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nx">positionOptions</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">      </span><span class="nx">enableHighAccuracy</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nx">trackUserLocation</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="p">});</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1">// Add the control to the map.</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="nx">geolocate</span><span class="p">);</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1">// Set an event listener that fires</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="c1">// when an outofmaxbounds event occurs.</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nx">geolocate</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;outofmaxbounds&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;An outofmaxbounds event has occurred.&#39;</span><span class="p">)</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="p">});</span>
 </span></code></pre></div>
 <h2 id="see">See</h2>
 <p><a href="https://maplibre.org/maplibre-gl-js/docs/examples/locate-user/">Locate the user</a></p>
 <h2 id="events">Events</h2>
 <p><strong>Event</strong> <code>trackuserlocationend</code> of type <a href="../Event/">Event</a> will be fired when the <code>GeolocateControl</code> changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when <code>trackUserLocation</code> is <code>true</code>. In the background state, the dot on the map will update with location updates but the camera will not.</p>
 <p><strong>Event</strong> <code>trackuserlocationstart</code> of type <a href="../Event/">Event</a> will be fired when the <code>GeolocateControl</code> changes to the active lock state, which happens either upon first obtaining a successful Geolocation API position for the user (a <code>geolocate</code> event will follow), or the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state (no <code>geolocate</code> event will follow unless the users's location changes).</p>
+<p><strong>Event</strong> <code>userlocationlostfocus</code> of type <a href="../Event/">Event</a> will be fired when the <code>GeolocateControl</code> changes to the background state, which happens when a user changes the camera during an active position lock. This only applies when <code>trackUserLocation</code> is <code>true</code>. In the background state, the dot on the map will update with location updates but the camera will not.</p>
+<p><strong>Event</strong> <code>userlocationfocus</code> of type <a href="../Event/">Event</a> will be fired when the <code>GeolocateControl</code> changes to the active lock state, which happens upon the user clicks the geolocate button when in the background state which uses the last known position to recenter the map and enter active lock state.</p>
 <p><strong>Event</strong> <code>geolocate</code> of type <a href="../Event/">Event</a> will be fired on each Geolocation API position update which returned as success.
 <code>data</code> - The returned <a href="https://developer.mozilla.org/en-US/docs/Web/API/Position">Position</a> object from the callback in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition">Geolocation.getCurrentPosition()</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition">Geolocation.watchPosition()</a>.</p>
 <p><strong>Event</strong> <code>error</code> of type <a href="../Event/">Event</a> will be fired on each Geolocation API position update which returned as an error.
 <code>data</code> - The returned <a href="https://developer.mozilla.org/en-US/docs/Web/API/PositionError">PositionError</a> object from the callback in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition">Geolocation.getCurrentPosition()</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition">Geolocation.watchPosition()</a>.</p>
 <p><strong>Event</strong> <code>outofmaxbounds</code> of type <a href="../Event/">Event</a> will be fired on each Geolocation API position update which returned as success but user position is out of map <code>maxBounds</code>.
 <code>data</code> - The returned <a href="https://developer.mozilla.org/en-US/docs/Web/API/Position">Position</a> object from the callback in <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition">Geolocation.getCurrentPosition()</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition">Geolocation.watchPosition()</a>.</p>
-<h2 id="state-diagram">State Diagram</h2>
-<p><img alt="GeolocateControl state diagram" src="https://github.com/maplibre/maplibre-gl-js/assets/3269297/78e720e5-d781-4da8-9803-a7a0e6aaaa9f" /></p>
 <h2 id="extends">Extends</h2>
 <ul>
 <li><a href="../Evented/"><code>Evented</code></a></li>
@@ -7952,12 +8055,11 @@ as disabled.</p>
 <ul>
 <li><a href="../../interfaces/IControl/"><code>IControl</code></a></li>
 </ul>
-<h2 id="methods">Methods</h2>
-<h3 id="_isoutofmapmaxbounds">_isOutOfMapMaxBounds()</h3>
+<h2 id="constructors">Constructors</h2>
+<h3 id="new-geolocatecontrol">new GeolocateControl()</h3>
 <blockquote>
-<p><strong>_isOutOfMapMaxBounds</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>boolean</code></p>
+<p><strong>new GeolocateControl</strong>(<code>options</code>: <a href="../../type-aliases/GeolocateControlOptions/"><code>GeolocateControlOptions</code></a>): <a href="./"><code>GeolocateControl</code></a></p>
 </blockquote>
-<p>Check if the Geolocation API Position is outside the map's <code>maxBounds</code>.</p>
 <h4 id="parameters">Parameters</h4>
 <table>
 <thead>
@@ -7969,23 +8071,24 @@ as disabled.</p>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>position</code></td>
-<td style="text-align: left;"><code>GeolocationPosition</code></td>
-<td style="text-align: left;">the Geolocation API Position</td>
+<td style="text-align: left;"><code>options</code></td>
+<td style="text-align: left;"><a href="../../type-aliases/GeolocateControlOptions/"><code>GeolocateControlOptions</code></a></td>
+<td style="text-align: left;">the control's options</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns">Returns</h4>
-<p><code>boolean</code></p>
-<p><code>true</code> if position is outside the map's <code>maxBounds</code>, otherwise returns <code>false</code>.</p>
+<p><a href="./"><code>GeolocateControl</code></a></p>
+<h4 id="overrides">Overrides</h4>
+<p><code>Evented.constructor</code></p>
 <h4 id="source">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L273">src/ui/control/geolocate_control.ts:273</a></p>
-<hr />
-<h3 id="_onsuccess">_onSuccess()</h3>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/control/geolocate_control.ts#L275">src/ui/control/geolocate_control.ts:275</a></p>
+<h2 id="methods">Methods</h2>
+<h3 id="_isoutofmapmaxbounds">_isOutOfMapMaxBounds()</h3>
 <blockquote>
-<p><strong>_onSuccess</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>void</code></p>
+<p><strong>_isOutOfMapMaxBounds</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>boolean</code></p>
 </blockquote>
-<p>When the Geolocation API returns a new location, update the <code>GeolocateControl</code>.</p>
+<p>Check if the Geolocation API Position is outside the map's <code>maxBounds</code>.</p>
 <h4 id="parameters_1">Parameters</h4>
 <table>
 <thead>
@@ -8004,15 +8107,16 @@ as disabled.</p>
 </tbody>
 </table>
 <h4 id="returns_1">Returns</h4>
-<p><code>void</code></p>
+<p><code>boolean</code></p>
+<p><code>true</code> if position is outside the map's <code>maxBounds</code>, otherwise returns <code>false</code>.</p>
 <h4 id="source_1">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L318">src/ui/control/geolocate_control.ts:318</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/control/geolocate_control.ts#L317">src/ui/control/geolocate_control.ts:317</a></p>
 <hr />
-<h3 id="_updatecamera">_updateCamera()</h3>
+<h3 id="_onsuccess">_onSuccess()</h3>
 <blockquote>
-<p><strong>_updateCamera</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>void</code></p>
+<p><strong>_onSuccess</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>void</code></p>
 </blockquote>
-<p>Update the camera location to center on the current position</p>
+<p>When the Geolocation API returns a new location, update the <code>GeolocateControl</code>.</p>
 <h4 id="parameters_2">Parameters</h4>
 <table>
 <thead>
@@ -8033,14 +8137,41 @@ as disabled.</p>
 <h4 id="returns_2">Returns</h4>
 <p><code>void</code></p>
 <h4 id="source_2">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L385">src/ui/control/geolocate_control.ts:385</a></p>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/control/geolocate_control.ts#L362">src/ui/control/geolocate_control.ts:362</a></p>
+<hr />
+<h3 id="_updatecamera">_updateCamera()</h3>
+<blockquote>
+<p><strong>_updateCamera</strong>(<code>position</code>: <code>GeolocationPosition</code>): <code>void</code></p>
+</blockquote>
+<p>Update the camera location to center on the current position</p>
+<h4 id="parameters_3">Parameters</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>position</code></td>
+<td style="text-align: left;"><code>GeolocationPosition</code></td>
+<td style="text-align: left;">the Geolocation API Position</td>
+</tr>
+</tbody>
+</table>
+<h4 id="returns_3">Returns</h4>
+<p><code>void</code></p>
+<h4 id="source_3">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/control/geolocate_control.ts#L429">src/ui/control/geolocate_control.ts:429</a></p>
 <hr />
 <h3 id="_updatemarker">_updateMarker()</h3>
 <blockquote>
 <p><strong>_updateMarker</strong>(<code>position</code>?: <code>GeolocationPosition</code>): <code>void</code></p>
 </blockquote>
 <p>Update the user location dot Marker to the current position</p>
-<h4 id="parameters_3">Parameters</h4>
+<h4 id="parameters_4">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -8057,17 +8188,17 @@ as disabled.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><code>void</code></p>
-<h4 id="source_3">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L402">src/ui/control/geolocate_control.ts:402</a></p>
+<h4 id="source_4">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/control/geolocate_control.ts#L446">src/ui/control/geolocate_control.ts:446</a></p>
 <hr />
 <h3 id="listens">listens()</h3>
 <blockquote>
 <p><strong>listens</strong>(<code>type</code>: <code>string</code>): <code>boolean</code></p>
 </blockquote>
 <p>Returns a true if this instance of Evented or any forwardeed instances of Evented have a listener for the specified type.</p>
-<h4 id="parameters_4">Parameters</h4>
+<h4 id="parameters_5">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -8084,20 +8215,20 @@ as disabled.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_4">Returns</h4>
+<h4 id="returns_5">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if there is at least one registered listener for specified event type, <code>false</code> otherwise</p>
 <h4 id="inherited-from">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#listens"><code>listens</code></a></p>
-<h4 id="source_4">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L161">src/util/evented.ts:161</a></p>
+<h4 id="source_5">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/util/evented.ts#L161">src/util/evented.ts:161</a></p>
 <hr />
 <h3 id="off">off()</h3>
 <blockquote>
 <p><strong>off</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <a href="./"><code>GeolocateControl</code></a></p>
 </blockquote>
 <p>Removes a previously registered event listener.</p>
-<h4 id="parameters_5">Parameters</h4>
+<h4 id="parameters_6">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -8119,19 +8250,19 @@ as disabled.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_5">Returns</h4>
+<h4 id="returns_6">Returns</h4>
 <p><a href="./"><code>GeolocateControl</code></a></p>
 <h4 id="inherited-from_1">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#off"><code>off</code></a></p>
-<h4 id="source_5">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L86">src/util/evented.ts:86</a></p>
+<h4 id="source_6">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/util/evented.ts#L86">src/util/evented.ts:86</a></p>
 <hr />
 <h3 id="on">on()</h3>
 <blockquote>
 <p><strong>on</strong>(<code>type</code>: <code>string</code>, <code>listener</code>: <a href="../../type-aliases/Listener/"><code>Listener</code></a>): <code>this</code></p>
 </blockquote>
 <p>Adds a listener to a specified event type.</p>
-<h4 id="parameters_6">Parameters</h4>
+<h4 id="parameters_7">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -8153,12 +8284,12 @@ as disabled.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_6">Returns</h4>
+<h4 id="returns_7">Returns</h4>
 <p><code>this</code></p>
 <h4 id="inherited-from_2">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#on"><code>on</code></a></p>
-<h4 id="source_6">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
+<h4 id="source_7">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/util/evented.ts#L73">src/util/evented.ts:73</a></p>
 <hr />
 <h3 id="onadd">onAdd()</h3>
 <blockquote>
@@ -8167,7 +8298,7 @@ as disabled.</p>
 <p>Register a control on the map and give it a chance to register event listeners
 and resources. This method is called by <a href="../Map/#addcontrol">Map#addControl</a>
 internally.</p>
-<h4 id="parameters_7">Parameters</h4>
+<h4 id="parameters_8">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -8184,7 +8315,7 @@ internally.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_7">Returns</h4>
+<h4 id="returns_8">Returns</h4>
 <p><code>HTMLElement</code></p>
 <p>The control's container element. This should
 be created by the control and returned by onAdd without being attached
@@ -8192,8 +8323,8 @@ to the DOM: the map will insert the control's element into the DOM
 as necessary.</p>
 <h4 id="implementation-of">Implementation of</h4>
 <p><a href="../../interfaces/IControl/"><code>IControl</code></a>.<a href="../../interfaces/IControl/#onadd"><code>onAdd</code></a></p>
-<h4 id="source_7">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L237">src/ui/control/geolocate_control.ts:237</a></p>
+<h4 id="source_8">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/control/geolocate_control.ts#L281">src/ui/control/geolocate_control.ts:281</a></p>
 <hr />
 <h3 id="onremove">onRemove()</h3>
 <blockquote>
@@ -8202,12 +8333,12 @@ as necessary.</p>
 <p>Unregister a control on the map and give it a chance to detach event listeners
 and resources. This method is called by <a href="../Map/#removecontrol">Map#removeControl</a>
 internally.</p>
-<h4 id="returns_8">Returns</h4>
+<h4 id="returns_9">Returns</h4>
 <p><code>void</code></p>
 <h4 id="implementation-of_1">Implementation of</h4>
 <p><a href="../../interfaces/IControl/"><code>IControl</code></a>.<a href="../../interfaces/IControl/#onremove"><code>onRemove</code></a></p>
-<h4 id="source_8">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L245">src/ui/control/geolocate_control.ts:245</a></p>
+<h4 id="source_9">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/control/geolocate_control.ts#L289">src/ui/control/geolocate_control.ts:289</a></p>
 <hr />
 <h3 id="once">once()</h3>
 <blockquote>
@@ -8215,7 +8346,7 @@ internally.</p>
 </blockquote>
 <p>Adds a listener that will be called only once to a specified event type.</p>
 <p>The listener will be called first time the event fires after the listener is registered.</p>
-<h4 id="parameters_8">Parameters</h4>
+<h4 id="parameters_9">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -8237,20 +8368,20 @@ internally.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_9">Returns</h4>
+<h4 id="returns_10">Returns</h4>
 <p><code>Promise</code>&lt;<code>any</code>&gt; | <a href="./"><code>GeolocateControl</code></a></p>
 <p><code>this</code> or a promise if a listener is not provided</p>
 <h4 id="inherited-from_3">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#once"><code>once</code></a></p>
-<h4 id="source_9">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L102">src/util/evented.ts:102</a></p>
+<h4 id="source_10">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/util/evented.ts#L102">src/util/evented.ts:102</a></p>
 <hr />
 <h3 id="seteventedparent">setEventedParent()</h3>
 <blockquote>
 <p><strong>setEventedParent</strong>(<code>parent</code>?: <a href="../Evented/"><code>Evented</code></a>, <code>data</code>?: <code>any</code>): <a href="./"><code>GeolocateControl</code></a></p>
 </blockquote>
 <p>Bubble all events fired by this instance of Evented to this parent instance of Evented.</p>
-<h4 id="parameters_9">Parameters</h4>
+<h4 id="parameters_10">Parameters</h4>
 <table>
 <thead>
 <tr>
@@ -8269,37 +8400,37 @@ internally.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_10">Returns</h4>
+<h4 id="returns_11">Returns</h4>
 <p><a href="./"><code>GeolocateControl</code></a></p>
 <h4 id="inherited-from_4">Inherited from</h4>
 <p><a href="../Evented/"><code>Evented</code></a>.<a href="../Evented/#seteventedparent"><code>setEventedParent</code></a></p>
-<h4 id="source_10">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/util/evented.ts#L172">src/util/evented.ts:172</a></p>
+<h4 id="source_11">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/util/evented.ts#L172">src/util/evented.ts:172</a></p>
 <hr />
 <h3 id="trigger">trigger()</h3>
 <blockquote>
 <p><strong>trigger</strong>(): <code>boolean</code></p>
 </blockquote>
 <p>Programmatically request and move the map to the user's location.</p>
-<h4 id="returns_11">Returns</h4>
+<h4 id="returns_12">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>false</code> if called before control was added to a map, otherwise returns <code>true</code>.</p>
 <h4 id="example">Example</h4>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Initialize the geolocate control.</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">geolocate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">GeolocateControl</span><span class="p">({</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w"> </span><span class="nx">positionOptions</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">   </span><span class="nx">enableHighAccuracy</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w"> </span><span class="nx">trackUserLocation</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">});</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1">// Add the control to the map.</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="nx">geolocate</span><span class="p">);</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nx">geolocate</span><span class="p">.</span><span class="nx">trigger</span><span class="p">();</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="p">});</span>
+<div class="language-ts highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1">// Initialize the geolocate control.</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kd">let</span><span class="w"> </span><span class="nx">geolocate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">GeolocateControl</span><span class="p">({</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w"> </span><span class="nx">positionOptions</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">   </span><span class="nx">enableHighAccuracy</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w"> </span><span class="nx">trackUserLocation</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">});</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1">// Add the control to the map.</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addControl</span><span class="p">(</span><span class="nx">geolocate</span><span class="p">);</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">  </span><span class="nx">geolocate</span><span class="p">.</span><span class="nx">trigger</span><span class="p">();</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="p">});</span>
 </span></code></pre></div>
-<h4 id="source_11">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/0a04d2af96e14e063eade6c33c695ec89058d4aa/src/ui/control/geolocate_control.ts#L565">src/ui/control/geolocate_control.ts:565</a></p>
+<h4 id="source_12">Source</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/9b139a8e158224597661f4cf43f9963e62203a99/src/ui/control/geolocate_control.ts#L610">src/ui/control/geolocate_control.ts:610</a></p>
 
 
 
@@ -8367,7 +8498,7 @@ internally.</p>
       
       
     
-    <a href="https://twitter.com/maplibre" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+    <a href="https://x.com/maplibre" target="_blank" rel="noopener" title="x.com" class="md-social__link">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8l164.9-188.5L26.8 48h145.6l100.5 132.9L389.2 48zm-24.8 373.8h39.1L151.1 88h-42l255.3 333.8z"/></svg>
     </a>
   
@@ -8419,7 +8550,7 @@ internally.</p>
     <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy", "navigation.tabs", "navigation.tabs.sticky", "toc.follow", "search.suggest", "navigation.instant", "navigation.sections", "navigation.top"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.ebd0bdb7.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.ad660dcc.min.js"></script>
       
     
   </body>
