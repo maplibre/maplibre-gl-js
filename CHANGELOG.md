@@ -1,6 +1,14 @@
 ## main
 
 ### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
+## 4.4.0
+
+### ✨ Features and improvements
 
 - Improve animation curve when easeTo and flyTo with constraints ([#3793](https://github.com/maplibre/maplibre-gl-js/pull/3793))
 - For filled extrusions, calculate the elevation per polygon (see issue [#3313](https://github.com/maplibre/maplibre-gl-js/issues/3313))
@@ -12,7 +20,6 @@
 - "Accept" headers set in Request Transformers are not overwritten [#4210](https://github.com/maplibre/maplibre-gl-js/pull/4210)
 - ⚠️ Rename projMatrix to modelViewProjectionMatrix. Also rename invProjMatrix, alignedProjMatrix accordingly [#4215](https://github.com/maplibre/maplibre-gl-js/pull/4215)
 - Publish an unminified prod build [#4265](https://github.com/maplibre/maplibre-gl-js/pull/4265)
-- _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 
@@ -20,7 +27,6 @@
 - ⚠️ Fix ignoring embedded line breaks when `symbol-placement` is `line` or `line-center` ([#4124](https://github.com/maplibre/maplibre-gl-js/pull/4124))
 - Ensure loseContext exists before calling it ([#4245](https://github.com/maplibre/maplibre-gl-js/pull/4245))
 - Update deprecated `-ms-high-contrast` vendor prefix to `(forced-colors: active)` and `(prefers-color-scheme: light)` as appropriate ([#4250](https://github.com/maplibre/maplibre-gl-js/pull/4250))
-- _...Add new stuff here..._
 
 ## 4.3.2
 
