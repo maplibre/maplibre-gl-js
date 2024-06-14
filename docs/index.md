@@ -36,6 +36,32 @@ Each section describes classes or objects as well as their **properties**, **par
 
 In the examples, we use vector tiles from our [Demo tiles repository](https://github.com/maplibre/demotiles) and from [MapTiler](https://maptiler.com). Get your own API key if you want to use MapTiler data in your project.
 
+## NPM
+
+Install the MapLibre GL JS package via NPM.
+
+```bash
+npm install maplibre-gl
+```
+
+You can then import the MapLibre GL JS module in your project.
+
+```html
+<div id="map"></div>
+```
+
+```javascript
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+const map = new maplibregl.Map({
+    container: 'map', // container id
+    style: 'https://demotiles.maplibre.org/style.json', // style URL
+    center: [0, 0], // starting position [lng, lat]
+    zoom: 1 // starting zoom
+});
+```
+
 ## CSP Directives
 
 As a mitigation for Cross-Site Scripting and other types of web security vulnerabilities, you may use a [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/Security/CSP) to specify security policies for your website. If you do, MapLibre GL JS requires the following CSP directives:
