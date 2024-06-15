@@ -1,15 +1,15 @@
 import Point from '@mapbox/point-geometry';
-import {Terrain} from './terrain';
-import {Context} from '../gl/context';
-import {RGBAImage} from '../util/image';
-import type {SourceCache} from '../source/source_cache';
-import {OverscaledTileID} from '../source/tile_id';
+import {Terrain} from './terrain.ts';
+import {Context} from '../gl/context.ts';
+import {RGBAImage} from '../util/image.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import {OverscaledTileID} from '../source/tile_id.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {DEMData} from '../data/dem_data';
-import {Tile} from '../source/tile';
-import {Painter} from './painter';
+import type {DEMData} from '../data/dem_data.ts';
+import {Tile} from '../source/tile.ts';
+import {Painter} from './painter.ts';
 import {mat4} from 'gl-matrix';
-import {LngLat} from '../geo/lng_lat';
+import {LngLat} from '../geo/lng_lat.ts';
 
 describe('Terrain', () => {
     let gl: WebGLRenderingContext;

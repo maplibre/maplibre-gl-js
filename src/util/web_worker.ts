@@ -1,6 +1,6 @@
-import {AddProtocolAction, config} from './config';
-import type {default as MaplibreWorker} from '../source/worker';
-import type {WorkerSourceConstructor} from '../source/worker_source';
+import {AddProtocolAction, config} from './config.ts';
+import type {default as MaplibreWorker} from '../source/worker.ts';
+import type {WorkerSourceConstructor} from '../source/worker_source.ts';
 
 export interface WorkerGlobalScopeInterface {
     importScripts(...urls: Array<string>): void;

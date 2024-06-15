@@ -1,10 +1,10 @@
-import {Map, MapOptions} from '../map';
-import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util';
-import {Event as EventedEvent} from '../../util/evented';
-import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed';
-import {extend} from '../../util/util';
+import {Map, MapOptions} from '../map.ts';
+import {createMap, beforeMapTest, createStyle, createStyleSource} from '../../util/test/util.ts';
+import {Event as EventedEvent} from '../../util/evented.ts';
+import {fixedLngLat, fixedNum} from '../../../test/unit/lib/fixed.ts';
+import {extend} from '../../util/util.ts';
 import {fakeServer, FakeServer} from 'nise';
-import {Style} from '../../style/style';
+import {Style} from '../../style/style.ts';
 import {GeoJSONSourceSpecification, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 let server: FakeServer;

@@ -1,13 +1,13 @@
-import {GetResourceResponse, getJSON} from '../util/ajax';
-import {ImageRequest} from '../util/image_request';
-import {ResourceType} from '../util/request_manager';
+import {GetResourceResponse, getJSON} from '../util/ajax.ts';
+import {ImageRequest} from '../util/image_request.ts';
+import {ResourceType} from '../util/request_manager.ts';
 
-import {browser} from '../util/browser';
-import {coerceSpriteToArray} from '../util/style';
+import {browser} from '../util/browser.ts';
+import {coerceSpriteToArray} from '../util/style.ts';
 
 import type {SpriteSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {SpriteJSON, StyleImage} from './style_image';
-import type {RequestManager} from '../util/request_manager';
+import type {SpriteJSON, StyleImage} from './style_image.ts';
+import type {RequestManager} from '../util/request_manager.ts';
 
 export type LoadSpriteResult = {
     [spriteName: string]: {

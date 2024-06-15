@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
-import {MAX_VALID_LATITUDE, Transform} from './transform';
-import {LngLat} from './lng_lat';
-import {OverscaledTileID, CanonicalTileID} from '../source/tile_id';
-import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed';
-import type {Terrain} from '../render/terrain';
+import {MAX_VALID_LATITUDE, Transform} from './transform.ts';
+import {LngLat} from './lng_lat.ts';
+import {OverscaledTileID, CanonicalTileID} from '../source/tile_id.ts';
+import {fixedLngLat, fixedCoord} from '../../test/unit/lib/fixed.ts';
+import type {Terrain} from '../render/terrain.ts';
 
 describe('transform', () => {
     test('creates a transform', () => {

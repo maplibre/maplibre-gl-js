@@ -1,3 +1,3 @@
 import '../../../staging/benchmarks/versions/shared';
-import '../../../staging/benchmarks/versions/worker';
-import '../../../staging/benchmarks/versions/index';
+import '../../../staging/benchmarks/versions/worker.ts';
+import '../../../staging/benchmarks/versions/index.ts';

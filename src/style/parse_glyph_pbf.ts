@@ -1,9 +1,9 @@
-import {AlphaImage} from '../util/image';
+import {AlphaImage} from '../util/image.ts';
 
 import Protobuf from 'pbf';
 const border = 3;
 
-import type {StyleGlyph} from './style_glyph';
+import type {StyleGlyph} from './style_glyph.ts';
 
 function readFontstacks(tag: number, glyphs: Array<StyleGlyph>, pbf: Protobuf) {
     if (tag === 1) {

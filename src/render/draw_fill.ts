@@ -1,20 +1,20 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {ColorMode} from '../gl/color_mode';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
+import {ColorMode} from '../gl/color_mode.ts';
 import {
     fillUniformValues,
     fillPatternUniformValues,
     fillOutlineUniformValues,
     fillOutlinePatternUniformValues
-} from './program/fill_program';
+} from './program/fill_program.ts';
 
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import type {FillBucket} from '../data/bucket/fill_bucket';
-import type {OverscaledTileID} from '../source/tile_id';
-import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import type {FillBucket} from '../data/bucket/fill_bucket.ts';
+import type {OverscaledTileID} from '../source/tile_id.ts';
+import {updatePatternPositionsInProgram} from './update_pattern_positions_in_program.ts';
 
 export function drawFill(painter: Painter, sourceCache: SourceCache, layer: FillStyleLayer, coords: Array<OverscaledTileID>) {
     const color = layer.paint.get('fill-color');

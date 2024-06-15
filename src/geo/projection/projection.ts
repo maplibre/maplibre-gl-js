@@ -1,6 +1,6 @@
-import type {Tile} from '../../source/tile';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import type {PointProjection} from '../../symbol/projection';
+import type {Tile} from '../../source/tile.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
+import type {PointProjection} from '../../symbol/projection.ts';
 
 /**
  * A greatly reduced version of the `Projection` interface from the globe branch,

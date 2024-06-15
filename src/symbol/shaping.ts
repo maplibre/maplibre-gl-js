@@ -2,18 +2,18 @@ import {
     charHasUprightVerticalOrientation,
     charAllowsIdeographicBreaking,
     charInComplexShapingScript
-} from '../util/script_detection';
-import {verticalizePunctuation} from '../util/verticalize_punctuation';
-import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
-import ONE_EM from './one_em';
-import {warnOnce} from '../util/util';
+} from '../util/script_detection.ts';
+import {verticalizePunctuation} from '../util/verticalize_punctuation.ts';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
+import ONE_EM from './one_em.ts';
+import {warnOnce} from '../util/util.ts';
 
-import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph';
-import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf';
-import {TextFit} from '../style/style_image';
-import type {ImagePosition} from '../render/image_atlas';
-import {IMAGE_PADDING} from '../render/image_atlas';
-import type {Rect, GlyphPosition} from '../render/glyph_atlas';
+import type {StyleGlyph, GlyphMetrics} from '../style/style_glyph.ts';
+import {GLYPH_PBF_BORDER} from '../style/parse_glyph_pbf.ts';
+import {TextFit} from '../style/style_image.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import {IMAGE_PADDING} from '../render/image_atlas.ts';
+import type {Rect, GlyphPosition} from '../render/glyph_atlas.ts';
 import {Formatted, FormattedSection} from '@maplibre/maplibre-gl-style-spec';
 
 enum WritingMode {

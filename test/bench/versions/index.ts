@@ -1,27 +1,27 @@
-import locationsWithTileID from '../lib/locations_with_tile_id';
+import locationsWithTileID from '../lib/locations_with_tile_id.ts';
 import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
-import Layout from '../benchmarks/layout';
-import Placement from '../benchmarks/placement';
-import SymbolLayout from '../benchmarks/symbol_layout';
-import WorkerTransfer from '../benchmarks/worker_transfer';
-import Paint from '../benchmarks/paint';
-import PaintStates from '../benchmarks/paint_states';
-import {PropertyLevelRemove, FeatureLevelRemove, SourceLevelRemove} from '../benchmarks/remove_paint_state';
-import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers';
-import Load from '../benchmarks/map_load';
-import HillshadeLoad from '../benchmarks/hillshade_load';
-import Validate from '../benchmarks/style_validate';
-import StyleLayerCreate from '../benchmarks/style_layer_create';
-import QueryPoint from '../benchmarks/query_point';
-import QueryBox from '../benchmarks/query_box';
-import {FunctionCreate, FunctionEvaluate, ExpressionCreate, ExpressionEvaluate} from '../benchmarks/expressions';
-import FilterCreate from '../benchmarks/filter_create';
-import FilterEvaluate from '../benchmarks/filter_evaluate';
-import CustomLayer from '../benchmarks/customlayer';
-import MapIdle from '../benchmarks/map_idle';
+import Layout from '../benchmarks/layout.ts';
+import Placement from '../benchmarks/placement.ts';
+import SymbolLayout from '../benchmarks/symbol_layout.ts';
+import WorkerTransfer from '../benchmarks/worker_transfer.ts';
+import Paint from '../benchmarks/paint.ts';
+import PaintStates from '../benchmarks/paint_states.ts';
+import {PropertyLevelRemove, FeatureLevelRemove, SourceLevelRemove} from '../benchmarks/remove_paint_state.ts';
+import {LayerBackground, LayerCircle, LayerFill, LayerFillExtrusion, LayerHeatmap, LayerHillshade, LayerLine, LayerRaster, LayerSymbol, LayerSymbolWithIcons, LayerTextWithVariableAnchor, LayerSymbolWithSortKey} from '../benchmarks/layers.ts';
+import Load from '../benchmarks/map_load.ts';
+import HillshadeLoad from '../benchmarks/hillshade_load.ts';
+import Validate from '../benchmarks/style_validate.ts';
+import StyleLayerCreate from '../benchmarks/style_layer_create.ts';
+import QueryPoint from '../benchmarks/query_point.ts';
+import QueryBox from '../benchmarks/query_box.ts';
+import {FunctionCreate, FunctionEvaluate, ExpressionCreate, ExpressionEvaluate} from '../benchmarks/expressions.ts';
+import FilterCreate from '../benchmarks/filter_create.ts';
+import FilterEvaluate from '../benchmarks/filter_evaluate.ts';
+import CustomLayer from '../benchmarks/customlayer.ts';
+import MapIdle from '../benchmarks/map_idle.ts';
 
-import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
-import SymbolCollisionBox from '../benchmarks/symbol_collision_box';
+import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool.ts';
+import SymbolCollisionBox from '../benchmarks/symbol_collision_box.ts';
 
 const styleLocations = locationsWithTileID(styleBenchmarkLocations.features  as GeoJSON.Feature<GeoJSON.Point>[]).filter(v => v.zoom < 15); // the used maptiler sources have a maxzoom of 14
 
@@ -84,4 +84,4 @@ Promise.resolve().then(() => {
     getGlobalWorkerPool().acquire(-1);
 });
 
-export * from '../../../src';
+export * from '../../../src/index.ts';

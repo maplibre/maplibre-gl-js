@@ -1,6 +1,6 @@
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import Point from '@mapbox/point-geometry';
-import {clamp} from '../util/util';
+import {clamp} from '../util/util.ts';
 
 /**
  * An `EdgeInset` object represents screen space padding applied to the edges of the viewport.

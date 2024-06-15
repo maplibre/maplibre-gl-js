@@ -1,7 +1,7 @@
 
 import emptystyle from '../data/empty.json' with {type: 'json'};
-import Benchmark from '../lib/benchmark';
-import createMap from '../lib/create_map';
+import Benchmark from '../lib/benchmark.ts';
+import createMap from '../lib/create_map.ts';
 
 function generateLayers(layer) {
     const generated = [];

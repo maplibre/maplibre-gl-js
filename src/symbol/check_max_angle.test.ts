@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
-import {checkMaxAngle} from './check_max_angle';
-import {Anchor} from './anchor';
+import {checkMaxAngle} from './check_max_angle.ts';
+import {Anchor} from './anchor.ts';
 
 describe('checkMaxAngle', () => {
     test('line with no sharp angles', () => {

@@ -1,7 +1,7 @@
 import type Point from '@mapbox/point-geometry';
 
-import {DragMoveHandler, DragRotateResult, DragPitchResult, DragHandler} from './drag_handler';
-import {OneFingerTouchMoveStateManager} from './drag_move_state_manager';
+import {DragMoveHandler, DragRotateResult, DragPitchResult, DragHandler} from './drag_handler.ts';
+import {OneFingerTouchMoveStateManager} from './drag_move_state_manager.ts';
 
 export interface OneFingerTouchRotateHandler extends DragMoveHandler<DragRotateResult, TouchEvent> {}
 export interface OneFingerTouchPitchHandler extends DragMoveHandler<DragPitchResult, TouchEvent> {}

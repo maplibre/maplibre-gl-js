@@ -1,16 +1,16 @@
-import {DOM} from '../util/dom';
-import {browser} from '../util/browser';
-import {LngLat} from '../geo/lng_lat';
+import {DOM} from '../util/dom.ts';
+import {browser} from '../util/browser.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
-import {smartWrap} from '../util/smart_wrap';
-import {anchorTranslate, applyAnchorClass} from './anchor';
-import type {PositionAnchor} from './anchor';
-import {Event, Evented} from '../util/evented';
-import type {Map} from './map';
-import {Popup, Offset} from './popup';
-import type {LngLatLike} from '../geo/lng_lat';
-import type {MapMouseEvent, MapTouchEvent} from './events';
-import type {PointLike} from './camera';
+import {smartWrap} from '../util/smart_wrap.ts';
+import {anchorTranslate, applyAnchorClass} from './anchor.ts';
+import type {PositionAnchor} from './anchor.ts';
+import {Event, Evented} from '../util/evented.ts';
+import type {Map} from './map.ts';
+import {Popup, Offset} from './popup.ts';
+import type {LngLatLike} from '../geo/lng_lat.ts';
+import type {MapMouseEvent, MapTouchEvent} from './events.ts';
+import type {PointLike} from './camera.ts';
 
 /**
  * Alignment options of rotation and pitch

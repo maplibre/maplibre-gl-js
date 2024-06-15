@@ -1,7 +1,7 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import replace from '@rollup/plugin-replace';
-import {plugins, nodeResolve} from '../../build/rollup_plugins';
+import {plugins, nodeResolve} from '../../build/rollup_plugins.ts';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import {execSync} from 'child_process';

@@ -1,12 +1,12 @@
-import {Event} from '../util/evented';
+import {Event} from '../util/evented.ts';
 
-import {DOM} from '../util/dom';
+import {DOM} from '../util/dom.ts';
 import Point from '@mapbox/point-geometry';
-import {extend} from '../util/util';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import {extend} from '../util/util.ts';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 
-import type {Map} from './map';
-import type {LngLat} from '../geo/lng_lat';
+import type {Map} from './map.ts';
+import type {LngLat} from '../geo/lng_lat.ts';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**

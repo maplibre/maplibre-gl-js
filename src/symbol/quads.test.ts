@@ -1,5 +1,5 @@
-import {ImagePosition} from '../render/image_atlas';
-import {getIconQuads} from './quads';
+import {ImagePosition} from '../render/image_atlas.ts';
+import {getIconQuads} from './quads.ts';
 
 describe('getIconQuads', () => {
     const image = Object.freeze({

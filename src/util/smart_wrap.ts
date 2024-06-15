@@ -1,7 +1,7 @@
-import {LngLat} from '../geo/lng_lat';
+import {LngLat} from '../geo/lng_lat.ts';
 
 import type Point from '@mapbox/point-geometry';
-import type {Transform} from '../geo/transform';
+import type {Transform} from '../geo/transform.ts';
 
 /**
  * Given a LngLat, prior projected position, and a transform, return a new LngLat shifted

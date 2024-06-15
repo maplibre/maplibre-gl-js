@@ -1,21 +1,21 @@
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {Program} from './program';
-import {circleUniformValues} from './program/circle_program';
-import {SegmentVector} from '../data/segment';
-import {OverscaledTileID} from '../source/tile_id';
+import {StencilMode} from '../gl/stencil_mode.ts';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
+import {Program} from './program.ts';
+import {circleUniformValues} from './program/circle_program.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {OverscaledTileID} from '../source/tile_id.ts';
 
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {CircleStyleLayer} from '../style/style_layer/circle_style_layer';
-import type {CircleBucket} from '../data/bucket/circle_bucket';
-import type {ProgramConfiguration} from '../data/program_configuration';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {UniformValues} from './uniform_binding';
-import type {CircleUniformsType} from './program/circle_program';
-import type {TerrainData} from '../render/terrain';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {CircleStyleLayer} from '../style/style_layer/circle_style_layer.ts';
+import type {CircleBucket} from '../data/bucket/circle_bucket.ts';
+import type {ProgramConfiguration} from '../data/program_configuration.ts';
+import type {VertexBuffer} from '../gl/vertex_buffer.ts';
+import type {IndexBuffer} from '../gl/index_buffer.ts';
+import type {UniformValues} from './uniform_binding.ts';
+import type {CircleUniformsType} from './program/circle_program.ts';
+import type {TerrainData} from '../render/terrain.ts';
 
 type TileRenderState = {
     programConfiguration: ProgramConfiguration;

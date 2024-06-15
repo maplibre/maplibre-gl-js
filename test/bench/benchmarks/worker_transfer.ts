@@ -1,9 +1,9 @@
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import Benchmark from '../lib/benchmark';
-import fetchStyle from '../lib/fetch_style';
-import TileParser from '../lib/tile_parser';
-import {OverscaledTileID} from '../../../src/source/tile_id';
-import {serialize, deserialize} from '../../../src/util/web_worker_transfer';
+import Benchmark from '../lib/benchmark.ts';
+import fetchStyle from '../lib/fetch_style.ts';
+import TileParser from '../lib/tile_parser.ts';
+import {OverscaledTileID} from '../../../src/source/tile_id.ts';
+import {serialize, deserialize} from '../../../src/util/web_worker_transfer.ts';
 
 export default class WorkerTransfer extends Benchmark {
     parser: TileParser;

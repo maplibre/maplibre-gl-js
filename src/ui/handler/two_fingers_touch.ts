@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
-import {DOM} from '../../util/dom';
-import type {Map} from '../map';
-import {Handler, HandlerResult} from '../handler_manager';
+import {DOM} from '../../util/dom.ts';
+import type {Map} from '../map.ts';
+import {Handler, HandlerResult} from '../handler_manager.ts';
 
 /**
  * An options object sent to the enable function of some of the handlers

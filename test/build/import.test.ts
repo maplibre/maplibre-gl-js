@@ -1,4 +1,4 @@
-import {LngLat} from '../../dist/maplibre-gl';
+import {LngLat} from '../../dist/maplibre-gl.js';
 
 describe('Importing a class', () => {
     it('should allow import and contruct', () => {

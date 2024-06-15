@@ -1,7 +1,7 @@
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {Style} from '../../style/style';
-import {config} from '../../util/config';
+import {createMap, beforeMapTest, createStyle} from '../../util/test/util.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {Style} from '../../style/style.ts';
+import {config} from '../../util/config.ts';
 
 beforeEach(() => {
     beforeMapTest();

@@ -1,8 +1,8 @@
-import {Map} from '../../ui/map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {extend} from '../../util/util';
-import {beforeMapTest} from '../../util/test/util';
+import {Map} from '../../ui/map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {extend} from '../../util/util.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 function createMap(options?) {
     return new Map(extend({

@@ -1,23 +1,23 @@
 import {interpolates, Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 
-import {sphericalToCartesian} from '../util/util';
-import {Evented} from '../util/evented';
+import {sphericalToCartesian} from '../util/util.ts';
+import {Evented} from '../util/evented.ts';
 import {
     validateStyle,
     validateLight,
     emitValidationErrors
-} from './validate_style';
+} from './validate_style.ts';
 
 import type {StylePropertySpecification, LightSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {EvaluationParameters} from './evaluation_parameters';
-import type {StyleSetterOptions} from '../style/style';
-import {Properties, Transitionable, Transitioning, PossiblyEvaluated, DataConstantProperty} from './properties';
+import type {EvaluationParameters} from './evaluation_parameters.ts';
+import type {StyleSetterOptions} from '../style/style.ts';
+import {Properties, Transitionable, Transitioning, PossiblyEvaluated, DataConstantProperty} from './properties.ts';
 
 import type {
     Property,
     PropertyValue,
     TransitionParameters
-} from './properties';
+} from './properties.ts';
 
 type LightPosition = {
     x: number;

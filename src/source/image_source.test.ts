@@ -1,15 +1,15 @@
-import {ImageSource} from './image_source';
-import {Evented} from '../util/evented';
-import {Transform} from '../geo/transform';
-import {extend} from '../util/util';
+import {ImageSource} from './image_source.ts';
+import {Evented} from '../util/evented.ts';
+import {Transform} from '../geo/transform.ts';
+import {extend} from '../util/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
-import {RequestManager} from '../util/request_manager';
-import {sleep, stubAjaxGetImage} from '../util/test/util';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
-import {Texture} from '../render/texture';
+import {RequestManager} from '../util/request_manager.ts';
+import {sleep, stubAjaxGetImage} from '../util/test/util.ts';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {VertexBuffer} from '../gl/vertex_buffer.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {Texture} from '../render/texture.ts';
 import type {ImageSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 function createSource(options) {

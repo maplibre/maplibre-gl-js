@@ -1,8 +1,8 @@
-import type {Map} from '../map';
-import type {PointLike} from '../camera';
-import type {Transform} from '../../geo/transform';
+import type {Map} from '../map.ts';
+import type {PointLike} from '../camera.ts';
+import type {Transform} from '../../geo/transform.ts';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../../geo/lng_lat';
+import {LngLat} from '../../geo/lng_lat.ts';
 
 /**
  * @internal

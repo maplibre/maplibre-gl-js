@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {generateMousePanHandler, generateMousePitchHandler, generateMouseRotationHandler} from './mouse';
+import {generateMousePanHandler, generateMousePitchHandler, generateMouseRotationHandler} from './mouse.ts';
 
 describe('mouse handler tests', () => {
     test('MouseRotateHandler', () => {

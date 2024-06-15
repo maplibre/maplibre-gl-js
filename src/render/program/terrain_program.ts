@@ -3,9 +3,9 @@ import {
     Uniform1f,
     Uniform4f,
     UniformMatrix4f
-} from '../uniform_binding';
-import type {Context} from '../../gl/context';
-import type {UniformValues, UniformLocations} from '../../render/uniform_binding';
+} from '../uniform_binding.ts';
+import type {Context} from '../../gl/context.ts';
+import type {UniformValues, UniformLocations} from '../../render/uniform_binding.ts';
 import {mat4} from 'gl-matrix';
 
 export type TerrainPreludeUniformsType = {

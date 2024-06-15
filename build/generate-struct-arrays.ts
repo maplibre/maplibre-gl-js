@@ -9,19 +9,19 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as util from '../src/util/util';
-import {createLayout, viewTypes} from '../src/util/struct_array';
-import type {ViewType, StructArrayLayout} from '../src/util/struct_array';
+import * as util from '../src/util/util.ts';
+import {createLayout, viewTypes} from '../src/util/struct_array.ts';
+import type {ViewType, StructArrayLayout} from '../src/util/struct_array.ts';
 
-import posAttributes from '../src/data/pos_attributes';
-import pos3dAttributes from '../src/data/pos3d_attributes';
-import rasterBoundsAttributes from '../src/data/raster_bounds_attributes';
-import circleAttributes from '../src/data/bucket/circle_attributes';
-import fillAttributes from '../src/data/bucket/fill_attributes';
-import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes';
-import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
-import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';
-import {patternAttributes} from '../src/data/bucket/pattern_attributes';
+import posAttributes from '../src/data/pos_attributes.ts';
+import pos3dAttributes from '../src/data/pos3d_attributes.ts';
+import rasterBoundsAttributes from '../src/data/raster_bounds_attributes.ts';
+import circleAttributes from '../src/data/bucket/circle_attributes.ts';
+import fillAttributes from '../src/data/bucket/fill_attributes.ts';
+import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attributes.ts';
+import {lineLayoutAttributes} from '../src/data/bucket/line_attributes.ts';
+import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext.ts';
+import {patternAttributes} from '../src/data/bucket/pattern_attributes.ts';
 // symbol layer specific arrays
 import {
     symbolLayoutAttributes,
@@ -37,7 +37,7 @@ import {
     glyphOffset,
     lineVertex,
     textAnchorOffset
-} from '../src/data/bucket/symbol_attributes';
+} from '../src/data/bucket/symbol_attributes.ts';
 
 const typeAbbreviations = {
     'Int8': 'b',
@@ -425,8 +425,8 @@ register('${structArrayClass}', ${structArrayClass});
 fs.writeFileSync('src/data/array_types.g.ts',
     `// This file is generated. Edit build/generate-struct-arrays.ts, then run \`npm run codegen\`.
 
-import {Struct, StructArray} from '../util/struct_array';
-import {register} from '../util/web_worker_transfer';
+import {Struct, StructArray} from '../util/struct_array.ts';
+import {register} from '../util/web_worker_transfer.ts';
 import Point from '@mapbox/point-geometry';
 
 ${layouts.map(emitStructArrayLayout).join('\n')}

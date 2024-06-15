@@ -1,10 +1,10 @@
 import {FakeServer, fakeServer} from 'nise';
-import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
-import {sleep} from '../util/test/util';
-import {browser} from '../util/browser';
-import {Dispatcher} from '../util/dispatcher';
-import {PluginState} from './rtl_text_plugin_status';
-import {MessageType} from '../util/actor_messages';
+import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread.ts';
+import {sleep} from '../util/test/util.ts';
+import {browser} from '../util/browser.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {PluginState} from './rtl_text_plugin_status.ts';
+import {MessageType} from '../util/actor_messages.ts';
 const rtlMainThreadPlugin = rtlMainThreadPluginFactory();
 
 describe('RTLMainThreadPlugin', () => {

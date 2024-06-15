@@ -1,31 +1,31 @@
-import {CircleLayoutArray} from '../array_types.g';
+import {CircleLayoutArray} from '../array_types.g.ts';
 
-import {members as layoutAttributes} from './circle_attributes';
-import {SegmentVector} from '../segment';
-import {ProgramConfigurationSet} from '../program_configuration';
-import {TriangleIndexArray} from '../index_array_type';
-import {loadGeometry} from '../load_geometry';
-import {toEvaluationFeature} from '../evaluation_feature';
-import {EXTENT} from '../extent';
-import {register} from '../../util/web_worker_transfer';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {members as layoutAttributes} from './circle_attributes.ts';
+import {SegmentVector} from '../segment.ts';
+import {ProgramConfigurationSet} from '../program_configuration.ts';
+import {TriangleIndexArray} from '../index_array_type.ts';
+import {loadGeometry} from '../load_geometry.ts';
+import {toEvaluationFeature} from '../evaluation_feature.ts';
+import {EXTENT} from '../extent.ts';
+import {register} from '../../util/web_worker_transfer.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
-import type {CanonicalTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../source/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     BucketFeature,
     IndexedFeature,
     PopulateParameters
-} from '../bucket';
-import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer';
-import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer';
-import type {Context} from '../../gl/context';
-import type {IndexBuffer} from '../../gl/index_buffer';
-import type {VertexBuffer} from '../../gl/vertex_buffer';
+} from '../bucket.ts';
+import type {CircleStyleLayer} from '../../style/style_layer/circle_style_layer.ts';
+import type {HeatmapStyleLayer} from '../../style/style_layer/heatmap_style_layer.ts';
+import type {Context} from '../../gl/context.ts';
+import type {IndexBuffer} from '../../gl/index_buffer.ts';
+import type {VertexBuffer} from '../../gl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
-import type {FeatureStates} from '../../source/source_state';
-import type {ImagePosition} from '../../render/image_atlas';
+import type {FeatureStates} from '../../source/source_state.ts';
+import type {ImagePosition} from '../../render/image_atlas.ts';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 function addCircleVertex(layoutVertexArray, x, y, extrudeX, extrudeY) {

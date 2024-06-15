@@ -7,17 +7,17 @@ import {
     UniformColor,
     UniformMatrix4f,
     Uniform4f
-} from '../uniform_binding';
-import {EXTENT} from '../../data/extent';
-import {MercatorCoordinate} from '../../geo/mercator_coordinate';
+} from '../uniform_binding.ts';
+import {EXTENT} from '../../data/extent.ts';
+import {MercatorCoordinate} from '../../geo/mercator_coordinate.ts';
 
-import type {Context} from '../../gl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Tile} from '../../source/tile';
-import type {Painter} from '../painter';
-import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer';
-import type {DEMData} from '../../data/dem_data';
-import type {OverscaledTileID} from '../../source/tile_id';
+import type {Context} from '../../gl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Tile} from '../../source/tile.ts';
+import type {Painter} from '../painter.ts';
+import type {HillshadeStyleLayer} from '../../style/style_layer/hillshade_style_layer.ts';
+import type {DEMData} from '../../data/dem_data.ts';
+import type {OverscaledTileID} from '../../source/tile_id.ts';
 
 export type HillshadeUniformsType = {
     'u_matrix': UniformMatrix4f;

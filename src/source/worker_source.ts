@@ -1,18 +1,18 @@
-import type {ExpiryData, RequestParameters} from '../util/ajax';
-import type {RGBAImage, AlphaImage} from '../util/image';
-import type {GlyphPositions} from '../render/glyph_atlas';
-import type {ImageAtlas} from '../render/image_atlas';
-import type {OverscaledTileID} from './tile_id';
-import type {Bucket} from '../data/bucket';
-import type {FeatureIndex} from '../data/feature_index';
-import type {CollisionBoxArray} from '../data/array_types.g';
-import type {DEMEncoding} from '../data/dem_data';
-import type {StyleGlyph} from '../style/style_glyph';
-import type {StyleImage} from '../style/style_image';
+import type {ExpiryData, RequestParameters} from '../util/ajax.ts';
+import type {RGBAImage, AlphaImage} from '../util/image.ts';
+import type {GlyphPositions} from '../render/glyph_atlas.ts';
+import type {ImageAtlas} from '../render/image_atlas.ts';
+import type {OverscaledTileID} from './tile_id.ts';
+import type {Bucket} from '../data/bucket.ts';
+import type {FeatureIndex} from '../data/feature_index.ts';
+import type {CollisionBoxArray} from '../data/array_types.g.ts';
+import type {DEMEncoding} from '../data/dem_data.ts';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {StyleImage} from '../style/style_image.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {RemoveSourceParams} from '../util/actor_messages';
-import type {IActor} from '../util/actor';
-import type {StyleLayerIndex} from '../style/style_layer_index';
+import type {RemoveSourceParams} from '../util/actor_messages.ts';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 
 /**
  * Parameters to identify a tile

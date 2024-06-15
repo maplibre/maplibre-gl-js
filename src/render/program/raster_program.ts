@@ -1,8 +1,8 @@
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding.ts';
 
-import type {Context} from '../../gl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer';
+import type {Context} from '../../gl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {RasterStyleLayer} from '../../style/style_layer/raster_style_layer.ts';
 import {mat4} from 'gl-matrix';
 
 export type RasterUniformsType = {

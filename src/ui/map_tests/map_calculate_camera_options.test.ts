@@ -1,9 +1,9 @@
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {LngLat} from '../../geo/lng_lat';
-import {OverscaledTileID} from '../../source/tile_id';
-import {CameraOptions} from '../camera';
-import {Terrain} from '../../render/terrain';
-import {mercatorZfromAltitude} from '../../geo/mercator_coordinate';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
+import {OverscaledTileID} from '../../source/tile_id.ts';
+import {CameraOptions} from '../camera.ts';
+import {Terrain} from '../../render/terrain.ts';
+import {mercatorZfromAltitude} from '../../geo/mercator_coordinate.ts';
 
 beforeEach(() => {
     beforeMapTest();

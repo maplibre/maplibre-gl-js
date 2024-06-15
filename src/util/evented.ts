@@ -1,4 +1,4 @@
-import {extend} from './util';
+import {extend} from './util.ts';
 
 /**
  * A listener method used as a callback to events

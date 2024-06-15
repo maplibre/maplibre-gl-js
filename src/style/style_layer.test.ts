@@ -1,11 +1,11 @@
-import {createStyleLayer} from './create_style_layer';
-import {FillStyleLayer} from './style_layer/fill_style_layer';
-import {extend} from '../util/util';
+import {createStyleLayer} from './create_style_layer.ts';
+import {FillStyleLayer} from './style_layer/fill_style_layer.ts';
+import {extend} from '../util/util.ts';
 import {Color, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationParameters} from './evaluation_parameters';
-import {TransitionParameters} from './properties';
-import {BackgroundStyleLayer} from './style_layer/background_style_layer';
-import {SymbolStyleLayer} from './style_layer/symbol_style_layer';
+import {EvaluationParameters} from './evaluation_parameters.ts';
+import {TransitionParameters} from './properties.ts';
+import {BackgroundStyleLayer} from './style_layer/background_style_layer.ts';
+import {SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
 
 describe('StyleLayer', () => {
     test('instantiates the correct subclass', () => {

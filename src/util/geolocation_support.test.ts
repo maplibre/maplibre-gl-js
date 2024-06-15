@@ -1,4 +1,4 @@
-import {checkGeolocationSupport} from './geolocation_support';
+import {checkGeolocationSupport} from './geolocation_support.ts';
 
 describe('checkGeolocationSupport', () => {
     beforeEach(() => {

@@ -1,7 +1,7 @@
-import {RGBAImage} from '../util/image';
+import {RGBAImage} from '../util/image.ts';
 
-import {warnOnce} from '../util/util';
-import {register} from '../util/web_worker_transfer';
+import {warnOnce} from '../util/util.ts';
+import {register} from '../util/web_worker_transfer.ts';
 
 /**
  * The possible DEM encoding types

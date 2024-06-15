@@ -1,14 +1,14 @@
-import {browser} from '../util/browser';
+import {browser} from '../util/browser.ts';
 
-import {Placement} from '../symbol/placement';
+import {Placement} from '../symbol/placement.ts';
 
-import type {Transform} from '../geo/transform';
-import type {StyleLayer} from './style_layer';
-import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
-import type {Tile} from '../source/tile';
-import type {BucketPart} from '../symbol/placement';
-import {Terrain} from '../render/terrain';
-import {createProjection} from '../geo/projection/projection';
+import type {Transform} from '../geo/transform.ts';
+import type {StyleLayer} from './style_layer.ts';
+import type {SymbolStyleLayer} from './style_layer/symbol_style_layer.ts';
+import type {Tile} from '../source/tile.ts';
+import type {BucketPart} from '../symbol/placement.ts';
+import {Terrain} from '../render/terrain.ts';
+import {createProjection} from '../geo/projection/projection.ts';
 
 class LayerPlacement {
     _sortAcrossTiles: boolean;

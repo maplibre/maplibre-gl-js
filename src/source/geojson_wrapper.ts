@@ -3,7 +3,7 @@ import Point from '@mapbox/point-geometry';
 import mvt from '@mapbox/vector-tile';
 import type {VectorTileFeature, VectorTileLayer, VectorTile} from '@mapbox/vector-tile';
 const toGeoJSON = mvt.VectorTileFeature.prototype.toGeoJSON;
-import {EXTENT} from '../data/extent';
+import {EXTENT} from '../data/extent.ts';
 import type {TileFeature, AnyProps} from 'supercluster';
 import type {Feature as GeoJSONVTFeature} from 'geojson-vt';
 

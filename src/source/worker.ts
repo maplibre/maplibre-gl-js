@@ -1,21 +1,21 @@
-import {Actor, ActorTarget, IActor} from '../util/actor';
-import {StyleLayerIndex} from '../style/style_layer_index';
-import {VectorTileWorkerSource} from './vector_tile_worker_source';
-import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source';
-import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
-import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
-import {isWorker} from '../util/util';
-import {addProtocol, removeProtocol} from './protocol_crud';
-import {PluginState} from './rtl_text_plugin_status';
+import {Actor, ActorTarget, IActor} from '../util/actor.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
+import {VectorTileWorkerSource} from './vector_tile_worker_source.ts';
+import {RasterDEMTileWorkerSource} from './raster_dem_tile_worker_source.ts';
+import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker.ts';
+import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import {isWorker} from '../util/util.ts';
+import {addProtocol, removeProtocol} from './protocol_crud.ts';
+import {PluginState} from './rtl_text_plugin_status.ts';
 import type {
     WorkerSource,
     WorkerSourceConstructor,
     WorkerTileParameters,
     WorkerDEMTileParameters,
     TileParameters
-} from '../source/worker_source';
+} from '../source/worker_source.ts';
 
-import type {WorkerGlobalScopeInterface} from '../util/web_worker';
+import type {WorkerGlobalScopeInterface} from '../util/web_worker.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {
     MessageType,
@@ -23,7 +23,7 @@ import {
     type GetClusterLeavesParams,
     type RemoveSourceParams,
     type UpdateLayersParamaeters
-} from '../util/actor_messages';
+} from '../util/actor_messages.ts';
 
 /**
  * The Worker class responsible for background thread related execution

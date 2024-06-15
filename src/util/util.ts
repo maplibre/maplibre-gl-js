@@ -1,8 +1,8 @@
 import Point from '@mapbox/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
-import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
-import type {Size} from './image';
-import type {WorkerGlobalScopeInterface} from './web_worker';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
+import type {Size} from './image.ts';
+import type {WorkerGlobalScopeInterface} from './web_worker.ts';
 
 /**
  * For a given collection of 2D points, returns their axis-aligned bounding box,

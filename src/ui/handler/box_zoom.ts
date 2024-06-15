@@ -1,11 +1,11 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import {Event} from '../../util/evented';
-import {TransformProvider} from './transform-provider';
+import {Event} from '../../util/evented.ts';
+import {TransformProvider} from './transform-provider.ts';
 
-import type {Map} from '../map';
+import type {Map} from '../map.ts';
 import type Point from '@mapbox/point-geometry';
-import {Handler} from '../handler_manager';
+import {Handler} from '../handler_manager.ts';
 
 /**
  * The `BoxZoomHandler` allows the user to zoom the map to fit within a bounding box.

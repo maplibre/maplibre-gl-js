@@ -1,6 +1,6 @@
 /* eslint-disable new-cap */
 
-import {unicodeBlockLookup as isChar} from './is_char_in_unicode_block';
+import {unicodeBlockLookup as isChar} from './is_char_in_unicode_block.ts';
 
 export function allowsIdeographicBreaking(chars: string) {
     for (const char of chars) {

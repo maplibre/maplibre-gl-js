@@ -1,12 +1,12 @@
-import type {LoadGeoJSONParameters} from '../source/geojson_worker_source';
-import type {TileParameters, WorkerDEMTileParameters, WorkerTileParameters, WorkerTileResult} from '../source/worker_source';
-import type {DEMData} from '../data/dem_data';
-import type {StyleImage} from '../style/style_image';
-import type {StyleGlyph} from '../style/style_glyph';
-import type {PluginState} from '../source/rtl_text_plugin_status';
+import type {LoadGeoJSONParameters} from '../source/geojson_worker_source.ts';
+import type {TileParameters, WorkerDEMTileParameters, WorkerTileParameters, WorkerTileResult} from '../source/worker_source.ts';
+import type {DEMData} from '../data/dem_data.ts';
+import type {StyleImage} from '../style/style_image.ts';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {PluginState} from '../source/rtl_text_plugin_status.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {OverscaledTileID} from '../source/tile_id';
-import type {GetResourceResponse, RequestParameters} from './ajax';
+import type {OverscaledTileID} from '../source/tile_id.ts';
+import type {GetResourceResponse, RequestParameters} from './ajax.ts';
 
 /**
  * The parameters needed in order to get information about the cluster

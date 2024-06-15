@@ -1,5 +1,5 @@
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {LngLat} from '../../geo/lng_lat';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 
 beforeEach(() => {
     beforeMapTest();

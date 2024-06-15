@@ -1,13 +1,13 @@
-import locationsWithTileID from '../lib/locations_with_tile_id';
+import locationsWithTileID from '../lib/locations_with_tile_id.ts';
 import styleBenchmarkLocations from '../data/style-benchmark-locations.json' with {type: 'json'};
-import StyleLayerCreate from '../benchmarks/style_layer_create';
-import Validate from '../benchmarks/style_validate';
-import Layout from '../benchmarks/layout';
-import Paint from '../benchmarks/paint';
-import QueryPoint from '../benchmarks/query_point';
-import QueryBox from '../benchmarks/query_box';
+import StyleLayerCreate from '../benchmarks/style_layer_create.ts';
+import Validate from '../benchmarks/style_validate.ts';
+import Layout from '../benchmarks/layout.ts';
+import Paint from '../benchmarks/paint.ts';
+import QueryPoint from '../benchmarks/query_point.ts';
+import QueryBox from '../benchmarks/query_box.ts';
 
-import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool';
+import {getGlobalWorkerPool} from '../../../src/util/global_worker_pool.ts';
 
 const locations = locationsWithTileID(styleBenchmarkLocations.features as GeoJSON.Feature<GeoJSON.Point>[]);
 
@@ -40,4 +40,4 @@ Promise.resolve().then(() => {
     getGlobalWorkerPool().acquire(-1);
 });
 
-export * from '../../../src';
+export * from '../../../src/index.ts';

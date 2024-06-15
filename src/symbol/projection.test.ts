@@ -1,8 +1,8 @@
-import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, project, projectVertexToViewport, transformToOffsetNormal} from './projection';
+import {SymbolProjectionContext, ProjectionSyntheticVertexArgs, findOffsetIntersectionPoint, project, projectVertexToViewport, transformToOffsetNormal} from './projection.ts';
 
 import Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
-import {SymbolLineVertexArray} from '../data/array_types.g';
+import {SymbolLineVertexArray} from '../data/array_types.g.ts';
 
 describe('Projection', () => {
     test('matrix float precision', () => {

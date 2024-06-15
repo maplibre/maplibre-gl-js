@@ -1,4 +1,4 @@
-import type {StencilOpConstant, StencilTestGL} from './types';
+import type {StencilOpConstant, StencilTestGL} from './types.ts';
 
 const ALWAYS = 0x0207;
 const KEEP = 0x1E00;

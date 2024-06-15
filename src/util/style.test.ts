@@ -1,4 +1,4 @@
-import {coerceSpriteToArray} from './style';
+import {coerceSpriteToArray} from './style.ts';
 
 describe('style utils', () => {
     describe('#coerceSpriteToArray', () => {

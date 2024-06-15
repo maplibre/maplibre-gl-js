@@ -1,14 +1,14 @@
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {debugUniformValues} from './program/debug_program';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {StencilMode} from '../gl/stencil_mode.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
+import {debugUniformValues} from './program/debug_program.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {ColorMode} from '../gl/color_mode';
+import {ColorMode} from '../gl/color_mode.ts';
 
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {OverscaledTileID} from '../source/tile_id';
-import {Style} from '../style/style';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {OverscaledTileID} from '../source/tile_id.ts';
+import {Style} from '../style/style.ts';
 
 const topColor = new Color(1, 0, 0, 1);
 const btmColor = new Color(0, 1, 0, 1);

@@ -1,12 +1,12 @@
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {terrainUniformValues, terrainDepthUniformValues, terrainCoordsUniformValues} from './program/terrain_program';
-import type {Painter} from './painter';
-import type {Tile} from '../source/tile';
-import {CullFaceMode} from '../gl/cull_face_mode';
+import {StencilMode} from '../gl/stencil_mode.ts';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {terrainUniformValues, terrainDepthUniformValues, terrainCoordsUniformValues} from './program/terrain_program.ts';
+import type {Painter} from './painter.ts';
+import type {Tile} from '../source/tile.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {ColorMode} from '../gl/color_mode';
-import {Terrain} from './terrain';
+import {ColorMode} from '../gl/color_mode.ts';
+import {Terrain} from './terrain.ts';
 
 /**
  * Redraw the Depth Framebuffer

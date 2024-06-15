@@ -1,5 +1,5 @@
 import {mat4} from 'gl-matrix';
-import {Context} from '../gl/context';
+import {Context} from '../gl/context.ts';
 import {
     Uniform1i,
     Uniform1f,
@@ -7,7 +7,7 @@ import {
     Uniform3f,
     Uniform4f,
     UniformMatrix4f
-} from './uniform_binding';
+} from './uniform_binding.ts';
 
 describe('Uniform Binding', () => {
     test('Uniform1i', () => {

@@ -1,9 +1,9 @@
-import {LocationsWithTileID} from '../lib/locations_with_tile_id';
-import {probabilitiesOfSuperiority} from '../lib/statistics';
-import {BenchmarkStatistic} from './BenchmarkStatistic';
-import {RegressionPlot} from './RegressionPlot';
-import {StatisticsPlot} from './StatisticsPlot';
-import {formatSample, Version, versionColor} from './util';
+import {LocationsWithTileID} from '../lib/locations_with_tile_id.ts';
+import {probabilitiesOfSuperiority} from '../lib/statistics.ts';
+import {BenchmarkStatistic} from './BenchmarkStatistic.tsx';
+import {RegressionPlot} from './RegressionPlot.tsx';
+import {StatisticsPlot} from './StatisticsPlot.tsx';
+import {formatSample, Version, versionColor} from './util.ts';
 import React from 'react';
 
 export type BenchmarkRowProps = {

@@ -1,6 +1,6 @@
-import {warnOnce, clamp} from '../util/util';
+import {warnOnce, clamp} from '../util/util.ts';
 
-import {EXTENT} from './extent';
+import {EXTENT} from './extent.ts';
 
 import type Point from '@mapbox/point-geometry';
 import type {VectorTileFeature} from '@mapbox/vector-tile';

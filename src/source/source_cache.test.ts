@@ -1,18 +1,18 @@
-import {SourceCache} from './source_cache';
-import {Map} from '../ui/map';
-import {Source, addSourceType} from './source';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
-import {Transform} from '../geo/transform';
-import {LngLat} from '../geo/lng_lat';
+import {SourceCache} from './source_cache.ts';
+import {Map} from '../ui/map.ts';
+import {Source, addSourceType} from './source.ts';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {Transform} from '../geo/transform.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {extend} from '../util/util';
-import {browser} from '../util/browser';
-import {Dispatcher} from '../util/dispatcher';
-import {TileBounds} from './tile_bounds';
-import {sleep} from '../util/test/util';
-import {TileCache} from './tile_cache';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {extend} from '../util/util.ts';
+import {browser} from '../util/browser.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {TileBounds} from './tile_bounds.ts';
+import {sleep} from '../util/test/util.ts';
+import {TileCache} from './tile_cache.ts';
 
 class SourceMock extends Evented implements Source {
     id: string;

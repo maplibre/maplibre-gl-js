@@ -3,12 +3,12 @@ import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
-import {SegmentVector} from '../segment';
-import {LineBucket} from './line_bucket';
-import {LineStyleLayer} from '../../style/style_layer/line_style_layer';
+import {SegmentVector} from '../segment.ts';
+import {LineBucket} from './line_bucket.ts';
+import {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {BucketFeature, BucketParameters} from '../bucket';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {BucketFeature, BucketParameters} from '../bucket.ts';
 
 // Load a line feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));

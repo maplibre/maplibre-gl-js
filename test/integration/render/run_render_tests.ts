@@ -9,10 +9,10 @@ import {globSync} from 'glob';
 import http from 'http';
 import puppeteer, {Page, Browser} from 'puppeteer';
 import {CoverageReport} from 'monocart-coverage-reports';
-import {localizeURLs} from '../lib/localize-urls';
-import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import {localizeURLs} from '../lib/localize-urls.ts';
+import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl.js';
 import jnuitReportBuilder, {type TestSuite} from 'junit-report-builder';
-import * as maplibreglModule from '../../../dist/maplibre-gl';
+import * as maplibreglModule from '../../../dist/maplibre-gl.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof maplibreglModule;

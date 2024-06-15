@@ -1,11 +1,11 @@
-import {OverscaledTileID} from './tile_id';
-import {Tile} from './tile';
-import {EXTENT} from '../data/extent';
+import {OverscaledTileID} from './tile_id.ts';
+import {Tile} from './tile.ts';
+import {EXTENT} from '../data/extent.ts';
 import {mat4} from 'gl-matrix';
-import {Evented} from '../util/evented';
-import type {Transform} from '../geo/transform';
-import type {SourceCache} from '../source/source_cache';
-import {Terrain} from '../render/terrain';
+import {Evented} from '../util/evented.ts';
+import type {Transform} from '../geo/transform.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import {Terrain} from '../render/terrain.ts';
 
 /**
  * @internal

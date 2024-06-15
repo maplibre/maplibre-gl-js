@@ -1,22 +1,22 @@
-import {ImageRequest} from '../util/image_request';
-import {ResourceType} from '../util/request_manager';
-import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util';
-import {Evented} from '../util/evented';
-import {browser} from '../util/browser';
-import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported';
-import {OverscaledTileID} from './tile_id';
-import {RasterTileSource} from './raster_tile_source';
+import {ImageRequest} from '../util/image_request.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {extend, isImageBitmap, readImageUsingVideoFrame} from '../util/util.ts';
+import {Evented} from '../util/evented.ts';
+import {browser} from '../util/browser.ts';
+import {offscreenCanvasSupported} from '../util/offscreen_canvas_supported.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {RasterTileSource} from './raster_tile_source.ts';
 // ensure DEMData is registered for worker transfer on main thread:
-import '../data/dem_data';
-import type {DEMEncoding} from '../data/dem_data';
+import '../data/dem_data.ts';
+import type {DEMEncoding} from '../data/dem_data.ts';
 
-import type {Source} from './source';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Source} from './source.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from './tile.ts';
 import type {RasterDEMSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted';
-import {RGBAImage} from '../util/image';
-import {MessageType} from '../util/actor_messages';
+import {isOffscreenCanvasDistorted} from '../util/offscreen_canvas_distorted.ts';
+import {RGBAImage} from '../util/image.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 /**
  * A source containing raster DEM tiles (See the [Style Specification](https://maplibre.org/maplibre-style-spec/) for detailed documentation of options.)

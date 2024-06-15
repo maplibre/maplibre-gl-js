@@ -1,4 +1,4 @@
-import {PluginState, RTLPluginStatus} from './rtl_text_plugin_status';
+import {PluginState, RTLPluginStatus} from './rtl_text_plugin_status.ts';
 
 export interface RTLTextPlugin {
     applyArabicShaping: (a: string) => string;

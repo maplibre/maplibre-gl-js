@@ -1,5 +1,5 @@
-import {Context} from './context';
-import {RenderPool} from './render_pool';
+import {Context} from './context.ts';
+import {RenderPool} from './render_pool.ts';
 
 describe('render pool', () => {
     const POOL_SIZE = 3;

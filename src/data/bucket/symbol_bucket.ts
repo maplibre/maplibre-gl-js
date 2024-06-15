@@ -3,7 +3,7 @@ import {
     collisionVertexAttributes,
     collisionBoxLayout,
     dynamicLayoutAttributes,
-} from './symbol_attributes';
+} from './symbol_attributes.ts';
 
 import {SymbolLayoutArray,
     SymbolDynamicLayoutArray,
@@ -15,47 +15,47 @@ import {SymbolLayoutArray,
     GlyphOffsetArray,
     SymbolLineVertexArray,
     TextAnchorOffsetArray
-} from '../array_types.g';
+} from '../array_types.g.ts';
 
 import Point from '@mapbox/point-geometry';
-import {SegmentVector} from '../segment';
-import {ProgramConfigurationSet} from '../program_configuration';
-import {TriangleIndexArray, LineIndexArray} from '../index_array_type';
-import {transformText} from '../../symbol/transform_text';
-import {mergeLines} from '../../symbol/merge_lines';
-import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection';
-import {WritingMode} from '../../symbol/shaping';
-import {loadGeometry} from '../load_geometry';
-import {toEvaluationFeature} from '../evaluation_feature';
+import {SegmentVector} from '../segment.ts';
+import {ProgramConfigurationSet} from '../program_configuration.ts';
+import {TriangleIndexArray, LineIndexArray} from '../index_array_type.ts';
+import {transformText} from '../../symbol/transform_text.ts';
+import {mergeLines} from '../../symbol/merge_lines.ts';
+import {allowsVerticalWritingMode, stringContainsRTLText} from '../../util/script_detection.ts';
+import {WritingMode} from '../../symbol/shaping.ts';
+import {loadGeometry} from '../load_geometry.ts';
+import {toEvaluationFeature} from '../evaluation_feature.ts';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
-import {verticalizedCharacterMap} from '../../util/verticalize_punctuation';
-import {Anchor} from '../../symbol/anchor';
-import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size';
+import {verticalizedCharacterMap} from '../../util/verticalize_punctuation.ts';
+import {Anchor} from '../../symbol/anchor.ts';
+import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size.ts';
 
-import {register} from '../../util/web_worker_transfer';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {register} from '../../util/web_worker_transfer.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
+import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker.ts';
 import {mat4} from 'gl-matrix';
-import {getOverlapMode} from '../../style/style_layer/overlap_mode';
-import type {CanonicalTileID} from '../../source/tile_id';
+import {getOverlapMode} from '../../style/style_layer/overlap_mode.ts';
+import type {CanonicalTileID} from '../../source/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     IndexedFeature,
     PopulateParameters
-} from '../bucket';
-import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types.g';
-import type {StructArray, StructArrayMember, ViewType} from '../../util/struct_array';
-import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer';
-import type {Context} from '../../gl/context';
-import type {IndexBuffer} from '../../gl/index_buffer';
-import type {VertexBuffer} from '../../gl/vertex_buffer';
-import type {SymbolQuad} from '../../symbol/quads';
-import type {SizeData} from '../../symbol/symbol_size';
-import type {FeatureStates} from '../../source/source_state';
-import type {ImagePosition} from '../../render/image_atlas';
+} from '../bucket.ts';
+import type {CollisionBoxArray, CollisionBox, SymbolInstance} from '../array_types.g.ts';
+import type {StructArray, StructArrayMember, ViewType} from '../../util/struct_array.ts';
+import type {SymbolStyleLayer} from '../../style/style_layer/symbol_style_layer.ts';
+import type {Context} from '../../gl/context.ts';
+import type {IndexBuffer} from '../../gl/index_buffer.ts';
+import type {VertexBuffer} from '../../gl/vertex_buffer.ts';
+import type {SymbolQuad} from '../../symbol/quads.ts';
+import type {SizeData} from '../../symbol/symbol_size.ts';
+import type {FeatureStates} from '../../source/source_state.ts';
+import type {ImagePosition} from '../../render/image_atlas.ts';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type SingleCollisionBox = {

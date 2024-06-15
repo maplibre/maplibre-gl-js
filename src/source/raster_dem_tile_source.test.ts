@@ -1,9 +1,9 @@
 import {fakeServer, FakeServer} from 'nise';
-import {RasterDEMTileSource} from './raster_dem_tile_source';
-import {OverscaledTileID} from './tile_id';
-import {RequestManager} from '../util/request_manager';
-import {Tile} from './tile';
-import {waitForMetadataEvent} from '../util/test/util';
+import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {Tile} from './tile.ts';
+import {waitForMetadataEvent} from '../util/test/util.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterDEMTileSource('id', options, {} as any, options.eventedParent);

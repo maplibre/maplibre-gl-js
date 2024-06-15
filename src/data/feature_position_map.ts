@@ -1,5 +1,5 @@
 import murmur3 from 'murmurhash-js';
-import {register} from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer.ts';
 
 type SerializedFeaturePositionMap = {
     ids: Float64Array;

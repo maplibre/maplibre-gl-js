@@ -1,8 +1,8 @@
-import {Map} from '../../ui/map';
-import {extend} from '../../util/util';
-import {Dispatcher} from '../../util/dispatcher';
-import {IActor} from '../actor';
-import type {Evented} from '../evented';
+import {Map} from '../../ui/map.ts';
+import {extend} from '../../util/util.ts';
+import {Dispatcher} from '../../util/dispatcher.ts';
+import {IActor} from '../actor.ts';
+import type {Evented} from '../evented.ts';
 import {SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export function createMap(options?, callback?) {

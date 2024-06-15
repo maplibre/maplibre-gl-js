@@ -1,4 +1,4 @@
-import {WorkerPool} from './worker_pool';
+import {WorkerPool} from './worker_pool.ts';
 
 describe('WorkerPool', () => {
     test('#acquire', () => {

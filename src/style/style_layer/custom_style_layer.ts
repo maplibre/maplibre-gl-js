@@ -1,5 +1,5 @@
-import {StyleLayer} from '../style_layer';
-import type {Map} from '../../ui/map';
+import {StyleLayer} from '../style_layer.ts';
+import type {Map} from '../../ui/map.ts';
 import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 

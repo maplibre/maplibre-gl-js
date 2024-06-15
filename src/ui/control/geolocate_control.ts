@@ -1,14 +1,14 @@
-import {Event, Evented} from '../../util/evented';
-import {DOM} from '../../util/dom';
-import {extend, warnOnce} from '../../util/util';
-import {checkGeolocationSupport} from '../../util/geolocation_support';
-import {LngLat} from '../../geo/lng_lat';
-import {Marker} from '../marker';
+import {Event, Evented} from '../../util/evented.ts';
+import {DOM} from '../../util/dom.ts';
+import {extend, warnOnce} from '../../util/util.ts';
+import {checkGeolocationSupport} from '../../util/geolocation_support.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
+import {Marker} from '../marker.ts';
 
-import type {Map} from '../map';
-import type {FitBoundsOptions} from '../camera';
-import type {IControl} from './control';
-import {LngLatBounds} from '../../geo/lng_lat_bounds';
+import type {Map} from '../map.ts';
+import type {FitBoundsOptions} from '../camera.ts';
+import type {IControl} from './control.ts';
+import {LngLatBounds} from '../../geo/lng_lat_bounds.ts';
 
 /**
  * The {@link GeolocateControl} options object

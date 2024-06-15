@@ -1,6 +1,6 @@
-import {createStyleLayer} from '../create_style_layer';
-import {extend} from '../../util/util';
-import {LineStyleLayer} from './line_style_layer';
+import {createStyleLayer} from '../create_style_layer.ts';
+import {extend} from '../../util/util.ts';
+import {LineStyleLayer} from './line_style_layer.ts';
 
 describe('LineStyleLayer', () => {
     function createLineLayer(layer?) {

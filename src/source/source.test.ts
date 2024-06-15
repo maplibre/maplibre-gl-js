@@ -1,5 +1,5 @@
-import {Dispatcher} from '../util/dispatcher';
-import {SourceClass, addSourceType, create} from './source';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {SourceClass, addSourceType, create} from './source.ts';
 
 describe('addSourceType', () => {
     test('adds factory function without a worker url does not dispatch to worker', async () => {

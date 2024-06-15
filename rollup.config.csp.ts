@@ -1,5 +1,5 @@
-import {plugins} from './build/rollup_plugins';
-import banner from './build/banner';
+import {plugins} from './build/rollup_plugins.ts';
+import banner from './build/banner.ts';
 import {InputOption, ModuleFormat, RollupOptions} from 'rollup';
 
 // a config for generating a special GL JS bundle with static web worker code (in a separate file)

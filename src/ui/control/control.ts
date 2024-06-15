@@ -1,4 +1,4 @@
-import type {Map} from '../map';
+import type {Map} from '../map.ts';
 
 /**
  * A position defintion for the control to be placed, can be in one of the corners of the map.

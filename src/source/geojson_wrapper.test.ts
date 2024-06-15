@@ -1,4 +1,4 @@
-import {GeoJSONWrapper} from './geojson_wrapper';
+import {GeoJSONWrapper} from './geojson_wrapper.ts';
 
 describe('geojsonwrapper', () => {
     test('linestring', () => {

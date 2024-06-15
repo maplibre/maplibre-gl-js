@@ -1,6 +1,6 @@
-import {ZoomHistory} from './zoom_history';
-import {isStringInSupportedScript} from '../util/script_detection';
-import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
+import {ZoomHistory} from './zoom_history.ts';
+import {isStringInSupportedScript} from '../util/script_detection.ts';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
 
 import type {TransitionSpecification} from '@maplibre/maplibre-gl-style-spec';
 

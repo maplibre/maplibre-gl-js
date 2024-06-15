@@ -1,10 +1,10 @@
-import {RasterTileSource} from './raster_tile_source';
-import {OverscaledTileID} from './tile_id';
-import {RequestManager} from '../util/request_manager';
-import {Dispatcher} from '../util/dispatcher';
+import {RasterTileSource} from './raster_tile_source.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {Tile} from './tile';
-import {stubAjaxGetImage} from '../util/test/util';
+import {Tile} from './tile.ts';
+import {stubAjaxGetImage} from '../util/test/util.ts';
 
 function createSource(options, transformCallback?) {
     const source = new RasterTileSource('id', options, {send() {}} as any as Dispatcher, options.eventedParent);

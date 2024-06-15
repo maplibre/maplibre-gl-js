@@ -3,7 +3,7 @@ import {
     getJSON,
     AJAXError,
     sameOrigin
-} from './ajax';
+} from './ajax.ts';
 
 import {fakeServer, type FakeServer} from 'nise';
 

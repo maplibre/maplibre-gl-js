@@ -1,7 +1,7 @@
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {isWebGL2} from './webgl2';
+import {isWebGL2} from './webgl2.ts';
 
-import type {Context} from './context';
+import type {Context} from './context.ts';
 import type {
     BlendFuncType,
     BlendEquationType,
@@ -15,7 +15,7 @@ import type {
     ViewportType,
     CullFaceModeType,
     FrontFaceType,
-} from './types';
+} from './types.ts';
 
 export interface IValue<T> {
     current: T;

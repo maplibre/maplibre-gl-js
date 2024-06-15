@@ -1,4 +1,4 @@
-import type {RequestParameters} from '../util/ajax';
+import type {RequestParameters} from '../util/ajax.ts';
 
 export type PerformanceMetrics = {
     loadTime: number;

@@ -1,14 +1,14 @@
-import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer';
-import {Tile} from '../source/tile';
-import {GeoJSONWrapper, Feature} from '../source/geojson_wrapper';
-import {OverscaledTileID} from '../source/tile_id';
+import {createSymbolBucket} from '../../test/unit/lib/create_symbol_layer.ts';
+import {Tile} from '../source/tile.ts';
+import {GeoJSONWrapper, Feature} from '../source/geojson_wrapper.ts';
+import {OverscaledTileID} from '../source/tile_id.ts';
 import fs from 'fs';
 import path from 'path';
 import vtpbf from 'vt-pbf';
-import {FeatureIndex} from '../data/feature_index';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {extend} from '../util/util';
-import {serialize, deserialize} from '../util/web_worker_transfer';
+import {FeatureIndex} from '../data/feature_index.ts';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {extend} from '../util/util.ts';
+import {serialize, deserialize} from '../util/web_worker_transfer.ts';
 
 describe('querySourceFeatures', () => {
     const features = [{

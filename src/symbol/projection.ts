@@ -1,21 +1,21 @@
 import Point from '@mapbox/point-geometry';
 
 import {mat4, vec4} from 'gl-matrix';
-import * as symbolSize from './symbol_size';
-import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
+import * as symbolSize from './symbol_size.ts';
+import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
 
-import type {Painter} from '../render/painter';
-import type {Transform} from '../geo/transform';
-import type {SymbolBucket} from '../data/bucket/symbol_bucket';
+import type {Painter} from '../render/painter.ts';
+import type {Transform} from '../geo/transform.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
     SymbolLineVertexArray,
     SymbolDynamicLayoutArray
-} from '../data/array_types.g';
-import {WritingMode} from '../symbol/shaping';
-import {findLineIntersection} from '../util/util';
-import {UnwrappedTileID} from '../source/tile_id';
-import {Projection} from '../geo/projection/projection';
+} from '../data/array_types.g.ts';
+import {WritingMode} from '../symbol/shaping.ts';
+import {findLineIntersection} from '../util/util.ts';
+import {UnwrappedTileID} from '../source/tile_id.ts';
+import {Projection} from '../geo/projection/projection.ts';
 
 export {
     updateLineLabels,

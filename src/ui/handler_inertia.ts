@@ -1,8 +1,8 @@
-import {browser} from '../util/browser';
-import type {Map} from './map';
-import {bezier, clamp, extend} from '../util/util';
+import {browser} from '../util/browser.ts';
+import type {Map} from './map.ts';
+import {bezier, clamp, extend} from '../util/util.ts';
 import Point from '@mapbox/point-geometry';
-import type {DragPanOptions} from './handler/shim/drag_pan';
+import type {DragPanOptions} from './handler/shim/drag_pan.ts';
 
 const defaultInertiaOptions = {
     linearity: 0.3,

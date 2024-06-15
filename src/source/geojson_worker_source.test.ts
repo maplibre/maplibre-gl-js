@@ -1,11 +1,11 @@
-import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
-import {StyleLayerIndex} from '../style/style_layer_index';
-import {OverscaledTileID} from './tile_id';
-import perf from '../util/performance';
+import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import perf from '../util/performance.ts';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {Actor} from '../util/actor';
-import {WorkerTileParameters} from './worker_source';
-import {setPerformance, sleep} from '../util/test/util';
+import {Actor} from '../util/actor.ts';
+import {WorkerTileParameters} from './worker_source.ts';
+import {setPerformance, sleep} from '../util/test/util.ts';
 import {type FakeServer, fakeServer} from 'nise';
 
 const actor = {send: () => {}} as any as Actor;

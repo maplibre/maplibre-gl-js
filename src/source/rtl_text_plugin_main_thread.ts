@@ -1,9 +1,9 @@
 
-import {browser} from '../util/browser';
-import {Event, Evented} from '../util/evented';
-import {RTLPluginStatus, RTLPluginLoadedEventName, PluginState} from './rtl_text_plugin_status';
-import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher';
-import {MessageType} from '../util/actor_messages';
+import {browser} from '../util/browser.ts';
+import {Event, Evented} from '../util/evented.ts';
+import {RTLPluginStatus, RTLPluginLoadedEventName, PluginState} from './rtl_text_plugin_status.ts';
+import {Dispatcher, getGlobalDispatcher} from '../util/dispatcher.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 class RTLMainThreadPlugin extends Evented {
     status: RTLPluginStatus = 'unavailable';

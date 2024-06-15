@@ -1,4 +1,4 @@
-import type {RequestParameters} from './ajax';
+import type {RequestParameters} from './ajax.ts';
 
 /**
  * A type of MapLibre resource.

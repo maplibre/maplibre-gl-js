@@ -1,19 +1,19 @@
 import Point from '@mapbox/point-geometry';
 
-import {StyleLayer} from '../style_layer';
-import {LineBucket} from '../../data/bucket/line_bucket';
-import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests';
-import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils';
-import properties, {LineLayoutPropsPossiblyEvaluated, LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g';
-import {extend} from '../../util/util';
-import {EvaluationParameters} from '../evaluation_parameters';
-import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties';
+import {StyleLayer} from '../style_layer.ts';
+import {LineBucket} from '../../data/bucket/line_bucket.ts';
+import {polygonIntersectsBufferedMultiLine} from '../../util/intersection_tests.ts';
+import {getMaximumPaintValue, translateDistance, translate, offsetLine} from '../query_utils.ts';
+import properties, {LineLayoutPropsPossiblyEvaluated, LinePaintPropsPossiblyEvaluated} from './line_style_layer_properties.g.ts';
+import {extend} from '../../util/util.ts';
+import {EvaluationParameters} from '../evaluation_parameters.ts';
+import {Transitionable, Transitioning, Layout, PossiblyEvaluated, DataDrivenProperty} from '../properties.ts';
 
 import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Bucket, BucketParameters} from '../../data/bucket';
-import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
-import type {Transform} from '../../geo/transform';
+import type {Bucket, BucketParameters} from '../../data/bucket.ts';
+import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g.ts';
+import type {Transform} from '../../geo/transform.ts';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class LineFloorwidthProperty extends DataDrivenProperty<number> {

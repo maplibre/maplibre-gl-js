@@ -1,14 +1,14 @@
 /* eslint-disable key-spacing */
-import {RGBAImage} from '../util/image';
-import {register} from '../util/web_worker_transfer';
+import {RGBAImage} from '../util/image.ts';
+import {register} from '../util/web_worker_transfer.ts';
 import potpack from 'potpack';
 
-import type {StyleImage} from '../style/style_image';
-import {TextFit} from '../style/style_image';
-import type {ImageManager} from './image_manager';
-import type {Texture} from './texture';
-import type {Rect} from './glyph_atlas';
-import type {GetImagesResponse} from '../util/actor_messages';
+import type {StyleImage} from '../style/style_image.ts';
+import {TextFit} from '../style/style_image.ts';
+import type {ImageManager} from './image_manager.ts';
+import type {Texture} from './texture.ts';
+import type {Rect} from './glyph_atlas.ts';
+import type {GetImagesResponse} from '../util/actor_messages.ts';
 
 const IMAGE_PADDING: number = 1;
 export {IMAGE_PADDING};

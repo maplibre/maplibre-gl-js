@@ -1,16 +1,16 @@
-import {clamp} from '../util/util';
+import {clamp} from '../util/util.ts';
 
-import {ImageSource} from '../source/image_source';
-import {browser} from '../util/browser';
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {rasterUniformValues} from './program/raster_program';
+import {ImageSource} from '../source/image_source.ts';
+import {browser} from '../util/browser.ts';
+import {StencilMode} from '../gl/stencil_mode.ts';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
+import {rasterUniformValues} from './program/raster_program.ts';
 
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {RasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import type {OverscaledTileID} from '../source/tile_id.ts';
 
 export function drawRaster(painter: Painter, sourceCache: SourceCache, layer: RasterStyleLayer, tileIDs: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'translucent') return;

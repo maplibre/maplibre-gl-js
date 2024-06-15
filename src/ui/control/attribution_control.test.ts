@@ -1,9 +1,9 @@
-import {AttributionControl, defaultAttributionControlOptions} from './attribution_control';
-import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
-import simulate from '../../../test/unit/lib/simulate_interaction';
+import {AttributionControl, defaultAttributionControlOptions} from './attribution_control.ts';
+import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 import {fakeServer} from 'nise';
-import {Map} from '../../ui/map';
-import {MapSourceDataEvent} from '../events';
+import {Map} from '../../ui/map.ts';
+import {MapSourceDataEvent} from '../events.ts';
 
 function createMap() {
 

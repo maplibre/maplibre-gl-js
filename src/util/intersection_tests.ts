@@ -1,4 +1,4 @@
-import {isCounterClockwise} from './util';
+import {isCounterClockwise} from './util.ts';
 
 import Point from '@mapbox/point-geometry';
 

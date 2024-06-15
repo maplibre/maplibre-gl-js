@@ -1,18 +1,18 @@
-import {patternUniformValues} from './pattern';
+import {patternUniformValues} from './pattern.ts';
 import {
     Uniform1i,
     Uniform1f,
     Uniform2f,
     Uniform3f,
     UniformMatrix4f
-} from '../uniform_binding';
-import {extend} from '../../util/util';
+} from '../uniform_binding.ts';
+import {extend} from '../../util/util.ts';
 
-import type {Painter} from '../painter';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Context} from '../../gl/context';
-import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type {Tile} from '../../source/tile';
+import type {Painter} from '../painter.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Context} from '../../gl/context.ts';
+import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
+import type {Tile} from '../../source/tile.ts';
 import {mat4} from 'gl-matrix';
 
 export type FillUniformsType = {

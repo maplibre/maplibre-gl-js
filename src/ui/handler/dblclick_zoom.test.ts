@@ -1,6 +1,6 @@
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
-import {Map, MapOptions} from '../map';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
+import {Map, MapOptions} from '../map.ts';
 
 function createMap() {
     return new Map({container: window.document.createElement('div')} as any as MapOptions);

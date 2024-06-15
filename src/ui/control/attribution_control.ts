@@ -1,8 +1,8 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import type {Map} from '../map';
-import type {ControlPosition, IControl} from './control';
-import type {MapDataEvent} from '../events';
+import type {Map} from '../map.ts';
+import type {ControlPosition, IControl} from './control.ts';
+import type {MapDataEvent} from '../events.ts';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * The {@link AttributionControl} options object

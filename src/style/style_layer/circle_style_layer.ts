@@ -1,16 +1,16 @@
-import {StyleLayer} from '../style_layer';
+import {StyleLayer} from '../style_layer.ts';
 
-import {CircleBucket} from '../../data/bucket/circle_bucket';
-import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests';
-import {getMaximumPaintValue, translateDistance, translate} from '../query_utils';
-import properties, {CircleLayoutPropsPossiblyEvaluated, CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g';
-import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties';
+import {CircleBucket} from '../../data/bucket/circle_bucket.ts';
+import {polygonIntersectsBufferedPoint} from '../../util/intersection_tests.ts';
+import {getMaximumPaintValue, translateDistance, translate} from '../query_utils.ts';
+import properties, {CircleLayoutPropsPossiblyEvaluated, CirclePaintPropsPossiblyEvaluated} from './circle_style_layer_properties.g.ts';
+import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../properties.ts';
 import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Transform} from '../../geo/transform';
-import type {Bucket, BucketParameters} from '../../data/bucket';
-import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
+import type {Transform} from '../../geo/transform.ts';
+import type {Bucket, BucketParameters} from '../../data/bucket.ts';
+import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g.ts';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 /**

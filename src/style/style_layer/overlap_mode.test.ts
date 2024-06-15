@@ -1,7 +1,7 @@
-import {getOverlapMode} from './overlap_mode';
-import {SymbolStyleLayer} from './symbol_style_layer';
-import {ZoomHistory} from '../zoom_history';
-import {EvaluationParameters} from '../evaluation_parameters';
+import {getOverlapMode} from './overlap_mode.ts';
+import {SymbolStyleLayer} from './symbol_style_layer.ts';
+import {ZoomHistory} from '../zoom_history.ts';
+import {EvaluationParameters} from '../evaluation_parameters.ts';
 
 function createSymbolLayer(layerProperties) {
     const layer = new SymbolStyleLayer(layerProperties);

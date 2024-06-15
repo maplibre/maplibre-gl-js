@@ -1,9 +1,9 @@
-import {StyleLayer} from './style_layer';
-import {createStyleLayer} from './create_style_layer';
+import {StyleLayer} from './style_layer.ts';
+import {createStyleLayer} from './create_style_layer.ts';
 
 import {featureFilter, groupByLayout} from '@maplibre/maplibre-gl-style-spec';
 
-import type {TypedStyleLayer} from './style_layer/typed_style_layer';
+import type {TypedStyleLayer} from './style_layer/typed_style_layer.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export type LayerConfigs = {[_: string]: LayerSpecification};

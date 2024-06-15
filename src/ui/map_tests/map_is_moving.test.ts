@@ -1,8 +1,8 @@
-import {browser} from '../../util/browser';
-import {Map} from '../map';
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import {browser} from '../../util/browser.ts';
+import {Map} from '../map.ts';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
 
 let map;
 

@@ -1,5 +1,5 @@
-import {extend} from '../util/util';
-import {Tile} from './tile';
+import {extend} from '../util/util.ts';
+import {Tile} from './tile.ts';
 import type {FeatureState} from '@maplibre/maplibre-gl-style-spec';
 
 export type FeatureStates = {[featureId: string]: FeatureState};

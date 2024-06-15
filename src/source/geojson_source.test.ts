@@ -1,13 +1,13 @@
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
-import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
-import {Transform} from '../geo/transform';
-import {LngLat} from '../geo/lng_lat';
-import {extend} from '../util/util';
-import {Dispatcher} from '../util/dispatcher';
-import {RequestManager} from '../util/request_manager';
-import {ActorMessage, MessageType} from '../util/actor_messages';
-import {Actor} from '../util/actor';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source.ts';
+import {Transform} from '../geo/transform.ts';
+import {LngLat} from '../geo/lng_lat.ts';
+import {extend} from '../util/util.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {ActorMessage, MessageType} from '../util/actor_messages.ts';
+import {Actor} from '../util/actor.ts';
 
 const wrapDispatcher = (dispatcher) => {
     return {

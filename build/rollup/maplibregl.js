@@ -14,9 +14,9 @@ import '../../staging/maplibregl/shared';
 // it gets stringified, together with the shared wrapper (using
 // Function.toString()), and the resulting string of code is made into a
 // Blob URL that gets used by the main module to create the web workers.
-import '../../staging/maplibregl/worker';
+import '../../staging/maplibregl/worker.ts';
 
 // Main module and its dependencies
-import '../../staging/maplibregl/index';
+import '../../staging/maplibregl/index.ts';
 
 export default maplibregl;

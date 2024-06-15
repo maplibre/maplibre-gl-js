@@ -1,18 +1,18 @@
-import {VectorTileSource} from '../source/vector_tile_source';
-import {RasterTileSource} from '../source/raster_tile_source';
-import {RasterDEMTileSource} from '../source/raster_dem_tile_source';
-import {GeoJSONSource} from '../source/geojson_source';
-import {VideoSource} from '../source/video_source';
-import {ImageSource} from '../source/image_source';
-import {CanvasSource} from '../source/canvas_source';
-import {Dispatcher} from '../util/dispatcher';
+import {VectorTileSource} from '../source/vector_tile_source.ts';
+import {RasterTileSource} from '../source/raster_tile_source.ts';
+import {RasterDEMTileSource} from '../source/raster_dem_tile_source.ts';
+import {GeoJSONSource} from '../source/geojson_source.ts';
+import {VideoSource} from '../source/video_source.ts';
+import {ImageSource} from '../source/image_source.ts';
+import {CanvasSource} from '../source/canvas_source.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
 
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Event, Evented} from '../util/evented';
-import type {Map} from '../ui/map';
-import type {Tile} from './tile';
-import type {OverscaledTileID, CanonicalTileID} from './tile_id';
-import type {CanvasSourceSpecification} from '../source/canvas_source';
+import type {Event, Evented} from '../util/evented.ts';
+import type {Map} from '../ui/map.ts';
+import type {Tile} from './tile.ts';
+import type {OverscaledTileID, CanonicalTileID} from './tile_id.ts';
+import type {CanvasSourceSpecification} from '../source/canvas_source.ts';
 
 const registeredSources = {} as {[key:string]: SourceClass};
 
