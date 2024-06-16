@@ -11,6 +11,26 @@ import {AtmosphereBoundsArray, TriangleIndexArray} from '../data/array_types.g';
 import {atmosphereAttributes} from '../data/atmosphere_attributes';
 import {Mesh} from './mesh';
 import {SegmentVector} from '../data/segment';
+import {Transform} from '../geo/transform';
+import {mat4, vec3} from 'gl-matrix';
+
+function getSunPos(light: Light, transform: Transform): vec3 {
+    const _lp = light.properties.get('position');
+    const lightPos = [-_lp.x, -_lp.y, -_lp.z] as vec3;
+
+    const lightMat = mat4.identity(new Float64Array(16) as any);
+
+    if (light.properties.get('anchor') === 'map') {
+        mat4.rotateX(lightMat, lightMat, -transform.pitch * Math.PI / 180);
+        mat4.rotateZ(lightMat, lightMat, -transform.angle);
+        mat4.rotateX(lightMat, lightMat, transform.center.lat * Math.PI / 180.0);
+        mat4.rotateY(lightMat, lightMat, -transform.center.lng * Math.PI / 180.0);
+    }
+
+    vec3.transformMat4(lightPos, lightPos, lightMat);
+
+    return lightPos;
+}
 
 export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
     const context = painter.context;
@@ -21,7 +41,7 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
     const projection = painter.style.map.projection;
     const projectionData = projection.getProjectionData(null, null);
 
-    const sunPos = light.getSunPos(painter.transform);
+    const sunPos = getSunPos(light, painter.transform);
 
     const atmosphereBlend = sky.getAtmosphereBlend();
     if (atmosphereBlend === 0) {
