@@ -47,6 +47,7 @@ markdown_extensions:
   - pymdownx.escapeall:
       hardbreak: True
       nbsp: True
+  - attr_list
 
 extra:
   social:
