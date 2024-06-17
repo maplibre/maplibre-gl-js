@@ -43,9 +43,9 @@ export class Transform {
      */
     cameraToCenterDistance: number;
     mercatorMatrix: mat4;
-    projMatrix: mat4;
-    invProjMatrix: mat4;
-    alignedProjMatrix: mat4;
+    modelViewProjectionMatrix: mat4;
+    invModelViewProjectionMatrix: mat4;
+    alignedModelViewProjectionMatrix: mat4;
     pixelMatrix: mat4;
     pixelMatrix3D: mat4;
     pixelMatrixInverse: mat4;
@@ -362,7 +362,7 @@ export class Transform {
         const numTiles = Math.pow(2, z);
         const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix, this.worldSize, z);
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invModelViewProjectionMatrix, this.worldSize, z);
 
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
@@ -723,7 +723,7 @@ export class Transform {
         const posMatrix = mat4.identity(new Float64Array(16) as any);
         mat4.translate(posMatrix, posMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
         mat4.scale(posMatrix, posMatrix, [scale / EXTENT, scale / EXTENT, 1]);
-        mat4.multiply(posMatrix, aligned ? this.alignedProjMatrix : this.projMatrix, posMatrix);
+        mat4.multiply(posMatrix, aligned ? this.alignedModelViewProjectionMatrix : this.modelViewProjectionMatrix, posMatrix);
 
         cache[posMatrixKey] = new Float32Array(posMatrix);
         return cache[posMatrixKey];
@@ -922,8 +922,8 @@ export class Transform {
 
         // matrix for conversion from world space to clip space (-1 .. 1)
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
-        this.projMatrix = m;
-        this.invProjMatrix = mat4.invert([] as any, m);
+        this.modelViewProjectionMatrix = m;
+        this.invModelViewProjectionMatrix = mat4.invert([] as any, m);
 
         // matrix for conversion from world space to screen coordinates in 3D
         this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.labelPlaneMatrix, m);
@@ -940,7 +940,7 @@ export class Transform {
             dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;
         const alignedM = new Float64Array(m) as any as mat4;
         mat4.translate(alignedM, alignedM, [dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0]);
-        this.alignedProjMatrix = alignedM;
+        this.alignedModelViewProjectionMatrix = alignedM;
 
         // inverse matrix for conversion from screen coordinates to location
         m = mat4.invert(new Float64Array(16) as any, this.pixelMatrix);
@@ -1024,7 +1024,7 @@ export class Transform {
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
         const coord = this.locationCoordinate(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, this.projMatrix);
+        vec4.transformMat4(p, p, this.modelViewProjectionMatrix);
         return (p[2] / p[3]);
     }
 }

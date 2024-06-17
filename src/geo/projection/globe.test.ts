@@ -154,6 +154,6 @@ function createMockTransform(object: {
         pitch: object?.pitch || 0, // in degrees
         angle: -(object?.bearing || 0) / 180.0 * Math.PI,
         zoom: 0,
-        invProjMatrix: null,
+        invModelViewProjectionMatrix: null,
     };
 }

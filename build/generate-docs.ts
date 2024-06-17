@@ -51,7 +51,7 @@ function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
         indexMarkdown += `
 ## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
 
-![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')})
+![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')}){ loading=lazy }
 
 ${indexArrayItem.description}
 `;
@@ -85,12 +85,12 @@ function generateExamplesFolder() {
     fs.mkdirSync(examplesDocsFolder);
     const examplesFolder = path.join('test', 'examples');
     const files = fs.readdirSync(examplesFolder).filter(f => f.endsWith('html'));
-    const maplibreUnpgk = `https://unpkg.com/maplibre-gl@${packageJson.version}/`;
+    const maplibreUnpkg = `https://unpkg.com/maplibre-gl@${packageJson.version}/`;
     const indexArray = [] as HtmlDoc[];
     for (const file of files) {
         const htmlFile = path.join(examplesFolder, file);
         let htmlContent = fs.readFileSync(htmlFile, 'utf-8');
-        htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpgk);
+        htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpkg);
         htmlContent = htmlContent.replace(/-dev.js/g, '.js');
         const htmlContentLines = htmlContent.split('\n');
         const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim()!;
