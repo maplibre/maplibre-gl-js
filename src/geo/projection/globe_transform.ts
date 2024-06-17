@@ -16,11 +16,13 @@ import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 
 function maxLatitudeForZoomLevel(oldLatitude: number, oldZoom: number, height: number, tileSize: number): number {
+    // zoomAdjustment = log2(newCircumference / oldCircumference)
+    // zoom = baseZoom + zoomAdjustment
     // worldSize = tileSize * 2^zoom
     // oldCircumference = cos(oldLat)
     // newCircumference = cos(newLat)
-    // zoomAdjustment = log2(newCircumference / oldCircumference)
-    // mercatorYToLat = 0.5 * Math.atan(Math.exp(PI - y * 2 * Math.PI)) - PI * 0.5
+    // mercatorYToLat(y) = 2.0 * Math.atan(Math.exp(PI - y * 2 * Math.PI)) - PI * 0.5
+    //     where y is mercator coordinate in range 0..1
     // maxLat = mercatorYToLat(height * 0.5 / worldSize)
     // maxLat = mercatorYToLat(height * 0.5 / (tileSize * 2^zoom))
     // maxLat = mercatorYToLat(height * 0.5 / (tileSize * 2^(baseZoom + log2(newCircumference / oldCircumference))))
@@ -31,12 +33,13 @@ function maxLatitudeForZoomLevel(oldLatitude: number, oldZoom: number, height: n
     // maxLat = mercatorYToLat(height * 0.5 * cos(oldLat) / tileSize / 2^baseZoom / cos(maxLat))
     // k = height * 0.5 * cos(oldLat) / tileSize / 2^baseZoom
     // maxLat = mercatorYToLat(k / cos(maxLat))
-    // maxLat = 0.5 * Math.atan(Math.exp(PI - (k / cos(maxLat)) * 2 * Math.PI)) - PI * 0.5
-    // maxLat = 0.5 * Math.atan(Math.exp(PI - k / cos(maxLat) * 2 * Math.PI)) - PI * 0.5
-    // x = 0.5 * Math.atan(Math.exp(PI - k / cos(x) * 2 * Math.PI)) - PI * 0.5
+    // maxLat = 2.0 * Math.atan(Math.exp(PI - (k / cos(maxLat)) * 2 * Math.PI)) - PI * 0.5
+    // maxLat = 2.0 * Math.atan(Math.exp(PI - k / cos(maxLat) * 2 * Math.PI)) - PI * 0.5
+    // x = 2.0 * Math.atan(Math.exp(PI - k / cos(x) * 2 * Math.PI)) - PI * 0.5
 
     const k = height * 0.5 * Math.cos(oldLatitude * Math.PI / 180) / tileSize / Math.pow(2, oldZoom);
-    return Math.abs(0.5 * Math.atan(Math.exp(Math.PI - k / Math.cos(oldLatitude) * 2 * Math.PI)) - Math.PI * 0.5) / Math.PI * 180;
+    const maxLat = Math.abs(2.0 * Math.atan(Math.exp(Math.PI - k / Math.cos(oldLatitude) * 2 * Math.PI)) - Math.PI * 0.5) / Math.PI * 180;
+    return maxLat;
 }
 
 /**
