@@ -4,6 +4,7 @@
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
+- Fix `terrain` listener memory leak when adding and removing Marker ([#4284](https://github.com/maplibre/maplibre-gl-js/pull/4284))
 - _...Add new stuff here..._
 
 ## 4.4.0
