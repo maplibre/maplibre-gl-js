@@ -149,6 +149,10 @@ A library for making it easier to use Esri services in MapLibre GL JS. Supports 
 A library for retrieving tiles from single-file, cloud-storage-optimized PMTiles archives, which don't require running a server or API.
 <br/><small>[View on GitHub](https://github.com/protomaps/PMTiles)</small>
 
+#### maplibre-google-maps
+A library for integrating Google Maps as raster layers into MapLibre GL JS. It uses the new Google Map Tiles API.
+<br/><small>[View on GitHub](https://github.com/traccar/maplibre-google-maps)</small>
+
 ##  Framework Integrations
 
 #### echartslayer

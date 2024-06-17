@@ -562,7 +562,7 @@ export class Painter {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
-        const currMatrix = this.transform.projMatrix;
+        const currMatrix = this.transform.modelViewProjectionMatrix;
 
         // Update coords/depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.dirty;
