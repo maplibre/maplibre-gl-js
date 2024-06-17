@@ -55,7 +55,7 @@ export type * from '@maplibre/maplibre-gl-style-spec';
  * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
  *
  * @param pluginURL - URL pointing to the Mapbox RTL text plugin source.
- * @param lazy - If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
+ * @param lazy - If set to `true`, maplibre will defer loading the plugin until rtl text is encountered,
  * rtl text will then be rendered only after the plugin finishes loading.
  * @example
  * ```ts
