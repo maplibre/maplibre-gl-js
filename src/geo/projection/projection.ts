@@ -27,7 +27,7 @@ export type TransformLike = {
     width: number;
     height: number;
     cameraToCenterDistance: number;
-    invProjMatrix: mat4;
+    invModelViewProjectionMatrix: mat4;
 }
 
 /**

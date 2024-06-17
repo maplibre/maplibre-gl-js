@@ -77,9 +77,9 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public updateProjection(t: { invProjMatrix: mat4 }): void {
+    public updateProjection(t: { invModelViewProjectionMatrix: mat4 }): void {
         const cameraPos: vec4 = [0, 0, -1, 1];
-        vec4.transformMat4(cameraPos, cameraPos, t.invProjMatrix);
+        vec4.transformMat4(cameraPos, cameraPos, t.invModelViewProjectionMatrix);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
