@@ -97,7 +97,7 @@ export class MercatorProjection implements Projection {
         this._invProjMatrix = mat4.clone(transform.invModelViewProjectionMatrix);
 
         const cameraPos: vec4 = [0, 0, -1, 1];
-        vec4.transformMat4(cameraPos, cameraPos, t.invModelViewProjectionMatrix);
+        vec4.transformMat4(cameraPos, cameraPos, transform.invModelViewProjectionMatrix);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
@@ -105,7 +105,7 @@ export class MercatorProjection implements Projection {
         ];
 
         const worldPos: vec4 = [0, 0, 0, 1];
-        vec4.transformMat4(worldPos, worldPos, transform.invProjMatrix);
+        vec4.transformMat4(worldPos, worldPos, transform.invModelViewProjectionMatrix);
         this._worldCenterPosition = [
             worldPos[0] / worldPos[3],
             worldPos[1] / worldPos[3],
