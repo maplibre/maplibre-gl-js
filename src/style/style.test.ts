@@ -557,6 +557,20 @@ describe('Style#_load', () => {
         style._load(styleSpec, {validate: false});
         expect(style._serializedLayers).toBeNull();
     });
+
+    test('projection is mercator if not specified', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }]
+        });
+
+        style._load(styleSpec, {validate: false});
+        expect(style.projection.name).toBe('mercator');
+        expect(style.serialize().projection).toBeUndefined();
+    });
 });
 
 describe('Style#_remove', () => {
@@ -2531,5 +2545,29 @@ describe('Style#serialize', () => {
 
         await style.once('style.load');
         expect(style.serialize().terrain).toBeUndefined();
+    });
+
+    test('include projection property when projection is defined in the style', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            projection: {
+                type: 'globe'
+            }
+        }));
+
+        await style.once('style.load');
+        expect(style.serialize().projection).toBeDefined();
+        expect(style.serialize().projection.type).toBe('globe');
+    });
+
+    test('include projection property when projection is set', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setProjection({type: 'globe'});
+
+        expect(style.serialize().projection).toBeDefined();
+        expect(style.serialize().projection.type).toBe('globe');
     });
 });
