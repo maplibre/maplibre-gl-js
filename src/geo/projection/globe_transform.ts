@@ -1,5 +1,5 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {Transform} from '../transform';
+import {MAX_VALID_LATITUDE, Transform} from '../transform';
 import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
@@ -14,33 +14,6 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-
-function maxLatitudeForZoomLevel(oldLatitude: number, oldZoom: number, height: number, tileSize: number): number {
-    // zoomAdjustment = log2(newCircumference / oldCircumference)
-    // zoom = baseZoom + zoomAdjustment
-    // worldSize = tileSize * 2^zoom
-    // oldCircumference = cos(oldLat)
-    // newCircumference = cos(newLat)
-    // mercatorYToLat(y) = 2.0 * Math.atan(Math.exp(PI - y * 2 * Math.PI)) - PI * 0.5
-    //     where y is mercator coordinate in range 0..1
-    // maxLat = mercatorYToLat(height * 0.5 / worldSize)
-    // maxLat = mercatorYToLat(height * 0.5 / (tileSize * 2^zoom))
-    // maxLat = mercatorYToLat(height * 0.5 / (tileSize * 2^(baseZoom + log2(newCircumference / oldCircumference))))
-    // maxLat = mercatorYToLat(height * 0.5 / (tileSize * 2^baseZoom * 2^log2(newCircumference / oldCircumference)))
-    // maxLat = mercatorYToLat(height * 0.5 / (tileSize * 2^baseZoom * newCircumference / oldCircumference))
-    // maxLat = mercatorYToLat(height * 0.5 / (tileSize * 2^baseZoom * cos(maxLat) / cos(oldLat)))
-    // maxLat = mercatorYToLat(height * 0.5 / tileSize / 2^baseZoom / cos(maxLat) * cos(oldLat))
-    // maxLat = mercatorYToLat(height * 0.5 * cos(oldLat) / tileSize / 2^baseZoom / cos(maxLat))
-    // k = height * 0.5 * cos(oldLat) / tileSize / 2^baseZoom
-    // maxLat = mercatorYToLat(k / cos(maxLat))
-    // maxLat = 2.0 * Math.atan(Math.exp(PI - (k / cos(maxLat)) * 2 * Math.PI)) - PI * 0.5
-    // maxLat = 2.0 * Math.atan(Math.exp(PI - k / cos(maxLat) * 2 * Math.PI)) - PI * 0.5
-    // x = 2.0 * Math.atan(Math.exp(PI - k / cos(x) * 2 * Math.PI)) - PI * 0.5
-
-    const k = height * 0.5 * Math.cos(oldLatitude * Math.PI / 180) / tileSize / Math.pow(2, oldZoom);
-    const maxLat = Math.abs(2.0 * Math.atan(Math.exp(Math.PI - k / Math.cos(oldLatitude) * 2 * Math.PI)) - Math.PI * 0.5) / Math.PI * 180;
-    return maxLat;
-}
 
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a tile and the tile's canonical ID.
@@ -163,7 +136,7 @@ export class GlobeTransform extends Transform {
 
     private _cameraPosition: vec3 = createVec3();
 
-    private _oldTransformState: {lat: number} = undefined;
+    private _oldTransformState: {lat: number; zoom: number} = undefined;
 
     private _lastGlobeChangeTime: number = -1000.0;
     private _globeProjectionOverride = true;
@@ -260,25 +233,14 @@ export class GlobeTransform extends Transform {
         if (this._oldTransformState) {
             // JP: TODO: zoom compensation should probably be handled in the pan controller instead
             if (this._globeRendering) {
-                // Store current transform state (pre-constrain)
-                const preZoom = this.zoom;
-                const preLat = this.center.lat;
-                // Compute new zoom based on pre-constrain state
                 const targetZoomForPreLat = this.zoom + getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
-
-                // Apply zoom & constrain
                 this.zoom = targetZoomForPreLat;
-
-                if (this.zoom !== targetZoomForPreLat || this.center.lat !== preLat) {
-                    const maxLatitude = maxLatitudeForZoomLevel(this._oldTransformState.lat, preZoom, this.height, this.tileSize) * Math.sign(this._oldTransformState.lat);
-                    this.zoom = preZoom + getZoomAdjustment(this._oldTransformState.lat, maxLatitude);
-                    this.center = new LngLat(this.center.lng, maxLatitude);
-                }
             }
             this._oldTransformState.lat = this.center.lat;
         } else {
             this._oldTransformState = {
-                lat: this.center.lat
+                lat: this.center.lat,
+                zoom: this.zoom
             };
         }
 
@@ -578,7 +540,19 @@ export class GlobeTransform extends Transform {
         return this._mercatorTransform.customLayerMatrix();
     }
     override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
-        return this._mercatorTransform.getConstrained(lngLat, zoom);
+        // JP: TODO:
+        // - respect _lngRange, _latRange
+        // - when transitioning to mercator respect _renderWorldCopies
+        // - when transitioning to mercator interpolate to mercator constraint center+zoom
+        const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        return {
+            center: new LngLat(
+                mod(lngLat.lng + 180, 360) - 180,
+                constrainedLat
+            ),
+            zoom: constrainedZoom
+        };
     }
     override maxPitchScaleFactor(): number {
         return this._mercatorTransform.maxPitchScaleFactor();

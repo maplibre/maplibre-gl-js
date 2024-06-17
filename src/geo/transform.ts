@@ -240,7 +240,7 @@ export abstract class Transform {
 
     get zoom(): number { return this._zoom; }
     set zoom(zoom: number) {
-        const constrainedZoom = Math.min(Math.max(zoom, this.minZoom), this.maxZoom);
+        const constrainedZoom = this.getConstrained(this._center, zoom).zoom;
         if (this._zoom === constrainedZoom) return;
         this._unmodified = false;
         this._zoom = constrainedZoom;

@@ -1266,7 +1266,7 @@ export abstract class Camera extends Evented {
             u1 = delta.mag();
 
         if ('minZoom' in options) {
-            const minZoom = clamp(Math.min(options.minZoom, startZoom, zoom), tr.minZoom, tr.maxZoom);
+            const minZoom = clamp(Math.min(options.minZoom, startZoom, zoom), tr.minZoom, tr.maxZoom); // JP: TODO: this clamp is wrong under globe
             // w<sub>m</sub>: Maximum visible span, measured in pixels with respect to the initial
             // scale.
             const wMax = w0 / tr.zoomScale(minZoom - startZoom);

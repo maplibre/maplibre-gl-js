@@ -265,7 +265,7 @@ export class ScrollZoomHandler implements Handler {
             }
 
             const fromScale = typeof this._targetZoom === 'number' ? tr.zoomScale(this._targetZoom) : tr.scale;
-            this._targetZoom = Math.min(tr.maxZoom, Math.max(tr.minZoom, tr.scaleZoom(fromScale * scale)));
+            this._targetZoom = tr.getConstrained(tr.center, tr.scaleZoom(fromScale * scale)).zoom;
 
             // if this is a mouse wheel, refresh the starting zoom and easing
             // function we're using to smooth out the zooming between wheel
