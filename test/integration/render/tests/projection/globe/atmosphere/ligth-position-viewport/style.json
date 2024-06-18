@@ -2,10 +2,10 @@
     "version": 8,
     "metadata": {
       "test": {
-        "description": "Tests atmosphere with position on left viewport.",
-        "projection": "globe"
+        "description": "Tests atmosphere with position on left viewport."
       }
     },
+    "projection": { "type": "globe" },
     "sky": {
       "atmosphere-blend": 1.0
     },

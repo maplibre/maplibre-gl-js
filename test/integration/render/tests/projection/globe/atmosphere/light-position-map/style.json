@@ -2,10 +2,10 @@
     "version": 8,
     "metadata": {
       "test": {
-        "description": "Tests atmosphere with position on right map.",
-        "projection": "globe"
+        "description": "Tests atmosphere with position on right map."
       }
     },
+    "projection": { "type": "globe" },
     "sky": {
       "atmosphere-blend": 1.0
     },

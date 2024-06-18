@@ -2,10 +2,10 @@
     "version": 8,
     "metadata": {
       "test": {
-        "description": "Tests atmosphere with atmosphere-blend to 0.5.",
-        "projection": "globe"
+        "description": "Tests atmosphere with atmosphere-blend to 0.5."
       }
     },
+    "projection": { "type": "globe" },
     "sky": {
       "atmosphere-blend": 0.5
     },

@@ -2,10 +2,10 @@
     "version": 8,
     "metadata": {
       "test": {
-        "description": "Tests that atmosphere is well display with blend to 1.0.",
-        "projection": "globe"
+        "description": "Tests that atmosphere is well display with blend to 1.0."
       }
     },
+    "projection": { "type": "globe" },
     "sky": {
       "atmosphere-blend": 1.0
     },

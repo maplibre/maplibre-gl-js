@@ -2,10 +2,10 @@
     "version": 8,
     "metadata": {
       "test": {
-        "description": "Tests atmosphere with atmosphere-blend interpolated to a mid zoom level.",
-        "projection": "globe"
+        "description": "Tests atmosphere with atmosphere-blend interpolated to a mid zoom level."
       }
     },
+    "projection": { "type": "globe" },
     "sky": {
       "atmosphere-blend": [
         "interpolate",
