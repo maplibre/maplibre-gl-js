@@ -5,6 +5,27 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * Solves a quadratic equation in the form ax^2 + bx + c = 0 and returns its roots in no particular order.
+ * Returns null if the equation has no roots.
+ */
+export function solveQuadratic(a: number, b: number, c: number): {
+    t0: number;
+    t1: number;
+} {
+    // Uses a more precise solution from the book Ray Tracing Gems, chapter 7.
+    // https://www.realtimerendering.com/raytracinggems/rtg/index.html
+    const d = b * b - 4 * a * c;
+    if (d < 0) {
+        return null;
+    }
+    const q = -0.5 * (b + Math.sign(b) * Math.sqrt(d));
+    return {
+        t0: c / q,
+        t1: q / a
+    };
+}
+
+/**
  * For two angles in degrees, returns how many degrees to add to the first angle in order to obtain the second angle.
  * The returned difference value is always the shorted of the two - its absolute value is never greater than 180°.
  */

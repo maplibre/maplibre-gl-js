@@ -17,12 +17,13 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {clamp, extend, lerp, remapSaturate} from '../util/util';
+import {clamp, differenceOfAnglesDegrees, extend, lerp, remapSaturate, solveQuadratic} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_transform';
+import {angularCoordinatesToVector, getGlobeRadiusPixels, getZoomAdjustment, sphereSurfacePointToCoordinates} from '../geo/projection/globe_transform';
 import {MAX_VALID_LATITUDE} from '../geo/transform';
+import {vec3} from 'gl-matrix';
 
 function getDegreesPerPixel(worldSize: number, lat: number): number {
     const radius = getGlobeRadiusPixels(worldSize, lat);
@@ -35,6 +36,26 @@ const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotat
 class RenderFrameEvent extends Event {
     type: 'renderFrame';
     timeStamp: number;
+}
+
+function createVec3(): vec3 { return new Float64Array(3) as any; }
+
+/**
+ * When given a list of vectors, return the one with the greatest dot product in regards to the target vector.
+ * @param target - Target vector the dot product is computed with.
+ * @param vectors - The list of vectors to pick from. Must not be empty.
+ */
+function pickVector(target: vec3, ...vectors: Array<vec3>): vec3 {
+    let bestVec: vec3 = vectors[0];
+    let bestDot = -1;
+    for (const v of vectors) {
+        const dot = vec3.dot(target, v);
+        if (dot > bestDot) {
+            bestDot = dot;
+            bestVec = v;
+        }
+    }
+    return bestVec;
 }
 
 /**
@@ -571,7 +592,155 @@ export class HandlerManager {
 
             // If `actualZoomDelta` is zero, it is interpreted as falsy, which is the desired behavior here.
             if (actualZoomDelta) {
+                // Problem: `setLocationAtPoint` for globe works when it is called a single time, but is absolutely cursed in practice, unless the globe is in such a state that it approximates a flat map anyway.
+                // - `setLocationAtPoint` at location behind a pole will eventually glitch out
+                // - `setLocationAtPoint` at location the longitude of which is more than 90° different from current center will eventually glitch out
+                // - possibly some more random glitches
+                // - but works fine at higher zooms, where the map is still curved, but not yet mercator
+                // Solution: use a heuristic zooming at low zoom levels, interpolate to `setLocationAtPoint` at higher zoom levels.
+                // Needed:
+                // - a good heuristic zooming
+                // - interpolation approach
+                // - interpolation constants tuning
+
+                // Hard cases:
+                // - cursor is not on planet surface
+                // - cursor is on the other side of a pole
+
+                // For our heuristic, we want to move the map center towards the location under the cursor.
+                // But if the location is behind the pole region (that is beyond mercator edge), we first
+                // project a line from the original target to current center, and choose a point on the line
+                // that intersects the pole ring closer to the map center.
+                // This translates to a plane-cone intersection.
+
+                const zoomLocVec = angularCoordinatesToVector(zoomLoc);
+                const centerVec = angularCoordinatesToVector(tr.center);
+
+                let targetLocVec: vec3 = zoomLocVec;
+
+                const planeNormal = createVec3();
+                vec3.cross(planeNormal, zoomLocVec, centerVec);
+                vec3.normalize(planeNormal, planeNormal);
+                const nx = planeNormal[0];
+                const ny = planeNormal[1];
+                const nz = planeNormal[2];
+
+                const coneAngleCos = Math.cos((90 - MAX_VALID_LATITUDE) * Math.PI / 180);
+
+                const epsilon = 1e-10;
+                const isNxZero = Math.abs(planeNormal[0]) < epsilon;
+                const isNzZero = Math.abs(planeNormal[2]) < epsilon;
+                if (!isNxZero) {
+                    const a = nz * nz / nx / nx + 1;
+                    const b = 2 * coneAngleCos * ny * nz / nx / nx;
+                    const c = coneAngleCos * coneAngleCos * ny * ny / nx / nx + coneAngleCos * coneAngleCos - 1;
+                    const sol = solveQuadratic(a, b, c);
+                    if (sol) {
+                        // 0 = we use t0
+                        // 1 = we use t1
+                        // a = we assume north pole
+                        // b = we assume south pole
+                        const vz0a = sol.t0;
+                        const vy0a = coneAngleCos;
+                        const vx0a = -(vy0a * ny + vz0a * nz) / nx;
+
+                        const vz0b = sol.t0;
+                        const vy0b = -coneAngleCos;
+                        const vx0b = -(vy0b * ny + vz0b * nz) / nx;
+
+                        const vz1a = sol.t1;
+                        const vy1a = coneAngleCos;
+                        const vx1a = -(vy1a * ny + vz1a * nz) / nx;
+
+                        const vz1b = sol.t1;
+                        const vy1b = -coneAngleCos;
+                        const vx1b = -(vy1b * ny + vz1b * nz) / nx;
+
+                        targetLocVec = pickVector(
+                            centerVec,
+                            [vx0a, vy0a, vz0a],
+                            [vx0b, vy0b, vz0b],
+                            [vx1a, vy1a, vz1a],
+                            [vx1b, vy1b, vz1b]
+                        );
+                    }
+                } else if (!isNzZero) {
+                    const a = nx * nx / nz / nz + 1;
+                    const b = 2 * coneAngleCos * ny * nx / nz / nz;
+                    const c = coneAngleCos * coneAngleCos * ny * ny / nz / nz + coneAngleCos * coneAngleCos - 1;
+                    const sol = solveQuadratic(a, b, c);
+                    if (sol) {
+                        // 0 = we use t0
+                        // 1 = we use t1
+                        // a = we assume north pole
+                        // b = we assume south pole
+                        const vx0a = sol.t0;
+                        const vy0a = coneAngleCos;
+                        const vz0a = -(vy0a * ny + vx0a * nx) / nz;
+
+                        const vx0b = sol.t0;
+                        const vy0b = -coneAngleCos;
+                        const vz0b = -(vy0b * ny + vx0b * nx) / nz;
+
+                        const vx1a = sol.t1;
+                        const vy1a = coneAngleCos;
+                        const vz1a = -(vy1a * ny + vx1a * nx) / nz;
+
+                        const vx1b = sol.t1;
+                        const vy1b = -coneAngleCos;
+                        const vz1b = -(vy1b * ny + vx1b * nx) / nz;
+
+                        targetLocVec = pickVector(
+                            centerVec,
+                            [vx0a, vy0a, vz0a],
+                            [vx0b, vy0b, vz0b],
+                            [vx1a, vy1a, vz1a],
+                            [vx1b, vy1b, vz1b]
+                        );
+                    }
+                } else {
+                    // Use the original zoomLoc as target loc
+                }
+
+                const targetLoc = sphereSurfacePointToCoordinates(targetLocVec);
+                const dLng = differenceOfAnglesDegrees(tr.center.lng, targetLoc.lng);
+                const dLat = differenceOfAnglesDegrees(tr.center.lat, targetLoc.lat);
+
+                tr.center = new LngLat(
+                );
+
                 //
+
+                // cos(x) * a + sin(x) * b = c, solve for x
+
+                // rovina normála: (nx ny nz)
+                // cone vector: (cx cy cz)
+                // cos(cone angle): ca
+                // hledaný vektor: (vx vy vz)
+                //
+                // splňuje:
+                // vx^2 + vy^2 + vz^2 = 1     ... je jednotkový
+                // vx*nx + vy*ny + vz*nz = 0  ... leží v rovině
+                // vx*cx + vy*cy + vz*cz = ca ... je na okraji kuželu
+                //
+                // vím, že cx,cz=0, cy=1,-1 pak umím zjednodušit:
+                // vx^2 + vy^2 + vz^2 = 1     ... je jednotkový
+                // vx*nx + vy*ny + vz*nz = 0  ... leží v rovině
+                // vy*cy = ca ... je na okraji kuželu
+                //       -> znám vy: vy = ca nebo -ca
+                // vx = -(vy*ny + vz*nz) / nx
+                // ... kde nx != 0
+                // Dosadíme:
+                // (-(vy*ny + vz*nz) / nx)^2 + vy^2 + vz^2 = 1
+                // (vy^2*ny^2 + 2*vy*ny*vz*nz + vz^2*nz^2) / nx^2 + vy^2 + vz^2 = 1
+                // vy^2*ny^2/nx^2 + vy^2 - 1 = -vz^2 - 2*vy*ny*vz*nz/nx^2 - vz^2*nz^2/nx^2
+                // vz^2 + 2*vy*ny*vz*nz/nx^2 + vz^2*nz^2/nx^2 + vy^2*ny^2/nx^2 + vy^2 - 1 = 0
+                //
+                // Což je kvadratická rovnice pro vz:
+                // a = nz^2/nx^2 + 1
+                // b = 2*vy*ny*nz/nx^2
+                // c = vy^2*ny^2/nx^2 + vy^2 - 1
+                // ... kde nx != 0
             }
 
             // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
