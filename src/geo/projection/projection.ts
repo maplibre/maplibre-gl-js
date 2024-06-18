@@ -197,12 +197,6 @@ export interface Projection {
 
     /**
      * @internal
-     * Return true if the projection correspond to a Globe.
-     */
-    isGlobe(): boolean;
-
-    /**
-     * @internal
      * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
      * @param transform - Current map transform.
      * @param dir - The light direction.

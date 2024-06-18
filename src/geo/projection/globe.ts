@@ -603,10 +603,6 @@ export class GlobeProjection implements Projection {
         return mesh;
     }
 
-    isGlobe(): boolean {
-        return true;
-    }
-
     public projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number) {
         const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
         const elevation = getElevation ? getElevation(x, y) : 0.0;

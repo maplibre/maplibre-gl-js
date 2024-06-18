@@ -538,7 +538,7 @@ export class Painter {
         }
 
         // Render atmosphere, only for Globe projection
-        if (this.style.map.projection.isGlobe()) {
+        if (this.style.projection.name === 'globe') {
             drawAtmosphere(this, this.style.sky, this.style.light);
         }
 

@@ -184,10 +184,6 @@ export class MercatorProjection implements Projection {
         return this._cachedMesh;
     }
 
-    isGlobe(): boolean {
-        return false;
-    }
-
     public transformLightDirection(_: any, dir: vec3): vec3 {
         return vec3.clone(dir);
     }

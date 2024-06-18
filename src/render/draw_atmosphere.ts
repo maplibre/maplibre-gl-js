@@ -38,7 +38,7 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
     const program = painter.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
 
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const projectionData = projection.getProjectionData(null, null);
 
     const sunPos = getSunPos(light, painter.transform);

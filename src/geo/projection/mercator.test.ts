@@ -51,10 +51,6 @@ describe('MercatorProjection', () => {
             }, mat);
             expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 1 / EXTENT, 1 / EXTENT]); // same as for zoom=0, as it gets clamped
         });
-        test('mercator is not a globe', () => {
-            const isGlobe = mercator.isGlobe();
-            expect(isGlobe).toBe(false);
-        });
     });
 });
 

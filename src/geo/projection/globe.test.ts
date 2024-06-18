@@ -28,10 +28,6 @@ describe('GlobeProjection', () => {
             }, mat);
             expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
         });
-        test('globe is a globe', () => {
-            const isGlobe = globe.isGlobe();
-            expect(isGlobe).toBe(true);
-        });
     });
 
     describe('clipping plane', () => {

@@ -770,9 +770,6 @@ export class Style extends Evented {
                 case 'setLight':
                     operations.push(() => this.setLight.apply(this, op.args));
                     break;
-                case 'setSky':
-                    operations.push(() => this.setSky.apply(this, op.args));
-                    break;
                 case 'setGeoJSONSourceData':
                     operations.push(() => this.setGeoJSONSourceData.apply(this, op.args));
                     break;
@@ -786,7 +783,8 @@ export class Style extends Evented {
                     operations.push(() => this.map.setTerrain.apply(this, op.args));
                     break;
                 case 'setSky':
-                    throw new Error('Unimplemented: setSky');
+                    operations.push(() => this.setSky.apply(this, op.args));
+                    break;
                 case 'setProjection':
                     this.setProjection.apply(this, op.args);
                     break;
