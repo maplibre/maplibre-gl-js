@@ -118,6 +118,11 @@ function angleToRotateBetweenVectors2D(vec1x: number, vec1y: number, vec2x: numb
 function createVec4(): vec4 { return new Float64Array(4) as any; }
 function createVec3(): vec3 { return new Float64Array(3) as any; }
 function createMat4(): mat4 { return new Float64Array(16) as any; }
+function createIdentityMat4(): mat4 {
+    const m = new Float64Array(16) as any;
+    mat4.identity(m);
+    return m;
+}
 
 export class GlobeTransform extends Transform {
     private _cachedClippingPlane: vec4 = createVec4();
@@ -130,9 +135,9 @@ export class GlobeTransform extends Transform {
 
     private _skipNextAnimation: boolean = true;
 
-    private _globeProjMatrix: mat4 = createMat4();
-    private _globeProjMatrixNoCorrection: mat4 = createMat4();
-    private _globeProjMatrixNoCorrectionInverted: mat4 = createMat4();
+    private _globeProjMatrix: mat4 = createIdentityMat4();
+    private _globeProjMatrixNoCorrection: mat4 = createIdentityMat4();
+    private _globeProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4();
 
     private _cameraPosition: vec3 = createVec3();
 

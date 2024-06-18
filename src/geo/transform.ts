@@ -149,14 +149,14 @@ export abstract class Transform {
     set minZoom(zoom: number) {
         if (this._minZoom === zoom) return;
         this._minZoom = zoom;
-        this.zoom = Math.max(this.zoom, zoom);
+        this.zoom = this.getConstrained(this._center, this.zoom).zoom;
     }
 
     get maxZoom(): number { return this._maxZoom; }
     set maxZoom(zoom: number) {
         if (this._maxZoom === zoom) return;
         this._maxZoom = zoom;
-        this.zoom = Math.min(this.zoom, zoom);
+        this.zoom = this.getConstrained(this._center, this.zoom).zoom;
     }
 
     get minPitch(): number { return this._minPitch; }

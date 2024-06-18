@@ -581,7 +581,13 @@ export class HandlerManager {
                 clone.setLocationAtPoint(zoomLocClamped, zoomPixel);
                 const exactCenter = clone.center;
 
-                const fromCenterDirection = zoomPixel.sub(tr.centerPoint); // Direction from screen center to cursor
+                let fromCenterDirection = zoomPixel.sub(tr.centerPoint); // Direction from screen center to cursor
+                const globeRadius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat);
+                const fromCenterDirectionLength = fromCenterDirection.mag();
+                // Clamp vector to cursor to globe's edge
+                if (fromCenterDirectionLength > globeRadius) {
+                    fromCenterDirection = fromCenterDirection.mult(globeRadius / fromCenterDirectionLength);
+                }
                 const degreesDelta = fromCenterDirection.mult((preZoomDegreesPerPixel - postZoomDegreesPerPixel));
                 const estimateCenter = new LngLat(
                     tr.center.lng + degreesDelta.x,
