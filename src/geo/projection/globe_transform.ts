@@ -83,7 +83,7 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     }
 }
 
-function getZoomAdjustment(oldLat: number, newLat: number): number {
+export function getZoomAdjustment(oldLat: number, newLat: number): number {
     const oldCircumference = Math.cos(oldLat * Math.PI / 180.0);
     const newCircumference = Math.cos(newLat * Math.PI / 180.0);
     return Math.log2(newCircumference / oldCircumference);
@@ -98,17 +98,17 @@ function getZoomAdjustment(oldLat: number, newLat: number): number {
  */
 function angleToRotateBetweenVectors2D(vec1x: number, vec1y: number, vec2x: number, vec2y: number): number {
     // Normalize both vectors
-    const alen = Math.sqrt(vec1x * vec1x + vec1y * vec1y);
-    const blen = Math.sqrt(vec2x * vec2x + vec2y * vec2y);
-    vec1x /= alen;
-    vec1y /= alen;
-    vec2x /= blen;
-    vec2y /= blen;
+    const length1 = Math.sqrt(vec1x * vec1x + vec1y * vec1y);
+    const length2 = Math.sqrt(vec2x * vec2x + vec2y * vec2y);
+    vec1x /= length1;
+    vec1y /= length1;
+    vec2x /= length2;
+    vec2y /= length2;
     const dot = vec1x * vec2x + vec1y * vec2y;
     const angle = Math.acos(dot);
     // dot second vector with vector to the right of first (-vec1y, vec1x)
-    const bRightOfA = (-vec1y * vec2x + vec1x * vec2y) > 0;
-    if (bRightOfA) {
+    const isVec2RightOfVec1 = (-vec1y * vec2x + vec1x * vec2y) > 0;
+    if (isVec2RightOfVec1) {
         return angle;
     } else {
         return -angle;
@@ -141,8 +141,6 @@ export class GlobeTransform extends Transform {
 
     private _cameraPosition: vec3 = createVec3();
 
-    private _oldTransformState: {lat: number; zoom: number} = undefined;
-
     private _lastGlobeChangeTime: number = -1000.0;
     private _globeProjectionOverride = true;
 
@@ -172,6 +170,7 @@ export class GlobeTransform extends Transform {
     override clone(): Transform {
         const clone = new GlobeTransform(this._projectionInstance);
         clone.apply(this);
+        this.updateProjection();
         return clone;
     }
 
@@ -233,20 +232,6 @@ export class GlobeTransform extends Transform {
             this._projectionInstance.useGlobeRendering = this._globeRendering;
             this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
             this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
-        }
-
-        if (this._oldTransformState) {
-            // JP: TODO: zoom compensation should probably be handled in the pan controller instead
-            if (this._globeRendering) {
-                const targetZoomForPreLat = this.zoom + getZoomAdjustment(this._oldTransformState.lat, this.center.lat);
-                this.zoom = targetZoomForPreLat;
-            }
-            this._oldTransformState.lat = this.center.lat;
-        } else {
-            this._oldTransformState = {
-                lat: this.center.lat,
-                zoom: this.zoom
-            };
         }
 
         this._calcMatrices();

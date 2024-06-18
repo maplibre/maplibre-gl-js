@@ -17,11 +17,11 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {clamp, differenceOfAnglesDegrees, extend, remapSaturate} from '../util/util';
+import {clamp, extend, lerp, remapSaturate} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {getGlobeRadiusPixels} from '../geo/projection/globe_transform';
+import {getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_transform';
 import {MAX_VALID_LATITUDE} from '../geo/transform';
 
 function getDegreesPerPixel(worldSize: number, lat: number): number {
@@ -565,65 +565,34 @@ export class HandlerManager {
             if (bearingDelta) tr.bearing += bearingDelta;
             if (pitchDelta) tr.pitch += pitchDelta;
             const oldZoom = tr.zoom;
-            const preZoomDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat); // Figure out by how many degrees to move the map per pixel of panning
             if (zoomDelta) tr.zoom += zoomDelta;
             const postZoomDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat);
             const actualZoomDelta = tr.zoom - oldZoom;
 
             // If `actualZoomDelta` is zero, it is interpreted as falsy, which is the desired behavior here.
             if (actualZoomDelta) {
-                const zoomLocClamped = new LngLat(zoomLoc.lng, clamp(zoomLoc.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE));
-
-                // Get the exact new desired center computed with setLocationAtPoint
-                // It makes sure the pixel under the cursor is still the same location as what it was before zooming started.
-                // This should happen before we handle panning.
-                const clone = tr.clone();
-                clone.setLocationAtPoint(zoomLocClamped, zoomPixel);
-                const exactCenter = clone.center;
-
-                let fromCenterDirection = zoomPixel.sub(tr.centerPoint); // Direction from screen center to cursor
-                const globeRadius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat);
-                const fromCenterDirectionLength = fromCenterDirection.mag();
-                // Clamp vector to cursor to globe's edge
-                if (fromCenterDirectionLength > globeRadius) {
-                    fromCenterDirection = fromCenterDirection.mult(globeRadius / fromCenterDirectionLength);
-                }
-                const degreesDelta = fromCenterDirection.mult((preZoomDegreesPerPixel - postZoomDegreesPerPixel));
-                const estimateCenter = new LngLat(
-                    tr.center.lng + degreesDelta.x,
-                    clamp(tr.center.lat - degreesDelta.y, -90, 90) // Latitude Y is up, screen Y is down -> flip sign
-                );
-
-                // 0 is exact center, 1 is estimate center
-                const blendFactor = remapSaturate(tr.zoom, 4, 6, 1, 0);
-
-                // Find the shortest angular direction from "exact" new center to the "estimate" center,
-                // and interpolate that instead of the raw center longitudes.
-                // This avoids problems when the centers end up being on the opposite sides of the
-                // prime meridian or the antimeridian.
-                const fromExactToEstimateDeltaLng = differenceOfAnglesDegrees(exactCenter.lng, estimateCenter.lng);
-                const fromExactToEstimateDeltaLat = differenceOfAnglesDegrees(exactCenter.lat, estimateCenter.lat);
-
-                tr.center = new LngLat(
-                    exactCenter.lng + fromExactToEstimateDeltaLng * blendFactor,
-                    clamp(exactCenter.lat + fromExactToEstimateDeltaLat * blendFactor, -90, 90)
-                );
+                //
             }
 
             // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
             // is avoided here - dragging speed is the same no matter what screen pixel you grab.
             if (panDelta) {
                 // These are actually very similar to mercator controls, and should converge to them at high zooms.
-                // This approach just avoids using the "grab a place and move it around" approach from mercator,
+                // We avoid using the "grab a place and move it around" approach from mercator here,
                 // since it is not a very pleasant way to pan a globe.
 
                 // Apply map bearing to the panning vector
                 const rotatedPanDelta = panDelta.rotate(-tr.angle);
 
+                const oldLat = tr.center.lat;
+                // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.
+                const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr.center.lat, 0); // If the transform center would be moved to latitude 0, what would the current zoom be?
+                const lngSpeed = lerp(1.0 / Math.cos(tr.center.lat * Math.PI / 180), 1.0, remapSaturate(normalizedGlobeZoom, 6, 4, 0, 1)); // Empirically chosen values
                 tr.center = new LngLat(
-                    tr.center.lng - rotatedPanDelta.x * postZoomDegreesPerPixel / Math.cos(tr.center.lat * Math.PI / 180), // Note: we divide longitude change by planet width at the given latitude.
-                    clamp(tr.center.lat + rotatedPanDelta.y * postZoomDegreesPerPixel, -90, 90)
+                    tr.center.lng - rotatedPanDelta.x * postZoomDegreesPerPixel * lngSpeed,
+                    clamp(tr.center.lat + rotatedPanDelta.y * postZoomDegreesPerPixel, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
                 );
+                tr.zoom += getZoomAdjustment(oldLat, tr.center.lat);
             }
         } else {
             // Flat map controls
