@@ -48,7 +48,7 @@ export function drawCircles(painter: Painter, sourceCache: SourceCache, layer: C
 
     const context = painter.context;
     const gl = context.gl;
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const transform = painter.transform;
 
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);

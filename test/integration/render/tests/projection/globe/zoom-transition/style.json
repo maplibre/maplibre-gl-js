@@ -4,7 +4,6 @@
     "test": {
       "description": "Tests that globe projection transitions to mercator at high zoom levels.",
       "height": 256,
-      "projection": "globe",
       "operations": [
         [
           "sleep",
@@ -21,6 +20,7 @@
     52.499167
   ],
   "zoom": 16,
+  "projection": { "type": "globe" },
   "sources": {
     "satellite": {
       "type": "raster",

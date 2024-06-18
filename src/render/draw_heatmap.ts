@@ -25,7 +25,7 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
     if (painter.renderPass === 'offscreen') {
         const context = painter.context;
         const gl = context.gl;
-        const projection = painter.style.map.projection;
+        const projection = painter.style.projection;
         const transform = painter.transform;
 
         // Allow kernels to be drawn across boundaries, so that

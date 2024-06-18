@@ -3,8 +3,7 @@
   "metadata": {
     "test": {
       "width": 256,
-      "height": 256,
-      "projection": "globe"
+      "height": 256
     }
   },
   "sky": {
@@ -17,6 +16,7 @@
   "zoom": 3,
   "pitch": 60,
   "bearing": 90,
+  "projection": { "type": "globe" },
   "sources": {
     "geojson": {
       "type": "geojson",

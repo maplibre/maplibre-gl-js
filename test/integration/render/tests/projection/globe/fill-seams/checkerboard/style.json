@@ -3,7 +3,6 @@
   "metadata": {
     "test": {
       "description": "Tests that tiny seams caused by improper stencil mask border handling are not visible.",
-      "projection": "globe",
       "width": 256,
       "height": 256
     }
@@ -16,6 +15,7 @@
     61.590
   ],
   "zoom": 7.95,
+  "projection": { "type": "globe" },
   "sources": {
     "vector_tiles": {
       "type": "vector",

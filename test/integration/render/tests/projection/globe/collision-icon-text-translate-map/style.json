@@ -4,8 +4,7 @@
     "test": {
       "collisionDebug": true,
       "height": 256,
-      "width": 256,
-      "projection": "globe"
+      "width": 256
     }
   },
   "sky": {
@@ -15,6 +14,7 @@
   "bearing": 45,
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
   "sprite": "local://sprites/sprite",
+  "projection": { "type": "globe" },
   "sources": {
     "geojson": {
       "type": "geojson",

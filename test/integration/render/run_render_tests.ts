@@ -13,7 +13,6 @@ import {localizeURLs} from '../lib/localize-urls';
 import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
 import jnuitReportBuilder, {type TestSuite} from 'junit-report-builder';
 import * as maplibreglModule from '../../../dist/maplibre-gl';
-import {ProjectionName} from '../../../src/geo/projection/projection_factory';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 let maplibregl: typeof maplibreglModule;
@@ -58,8 +57,6 @@ type TestData = {
     actual: string;
     diff: string;
     expected: string;
-
-    projection?: ProjectionName;
 }
 
 type RenderOptions = {
@@ -599,8 +596,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
                 crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
-                maxCanvasSize: [8192, 8192],
-                projection: options.projection,
+                maxCanvasSize: [8192, 8192]
             });
 
             let idle = false;

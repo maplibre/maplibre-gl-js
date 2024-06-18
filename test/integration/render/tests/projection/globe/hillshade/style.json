@@ -4,7 +4,6 @@
     "test": {
       "height": 256,
       "width": 256,
-      "projection": "globe",
       "allowed": 0.05
     }
   },
@@ -16,6 +15,7 @@
     36.60
   ],
   "zoom": 4.5,
+  "projection": { "type": "globe" },
   "sources": {
     "hillshadeSource": {
       "type": "raster-dem",
