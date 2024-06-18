@@ -391,9 +391,11 @@ describe('GeoJSONSource#update', () => {
         source.map = {
             transform: {} as Transform,
             getPixelRatio() { return 1; },
-            projection: {
-                get subdivisionGranularity() {
-                    return SubdivisionGranularitySetting.noSubdivision;
+            style: {
+                projection: {
+                    get subdivisionGranularity() {
+                        return SubdivisionGranularitySetting.noSubdivision;
+                    }
                 }
             }
         } as any;

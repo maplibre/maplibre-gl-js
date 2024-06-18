@@ -61,7 +61,7 @@ function drawExtrusionTiles(
     const crossfade = layer.getCrossfadeParameters();
     const opacity = layer.paint.get('fill-extrusion-opacity');
     const constantPattern = patternProperty.constantOr(null);
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const globeCameraPosition = projection.cameraPosition;
 
     for (const coord of coords) {

@@ -18,13 +18,15 @@ function createSource(options, transformCallback?, clearTiles = () => {}) {
         transform: {showCollisionBoxes: false},
         _getMapId: () => 1,
         _requestManager: new RequestManager(transformCallback),
-        style: {sourceCaches: {id: {clearTiles}}},
-        getPixelRatio() { return 1; },
-        projection: {
-            get subdivisionGranularity() {
-                return SubdivisionGranularitySetting.noSubdivision;
+        style: {
+            sourceCaches: {id: {clearTiles}},
+            projection: {
+                get subdivisionGranularity() {
+                    return SubdivisionGranularitySetting.noSubdivision;
+                }
             }
-        }
+        },
+        getPixelRatio() { return 1; },
     } as any as Map);
 
     source.on('error', () => { }); // to prevent console log of errors

@@ -2,7 +2,6 @@
   "version": 8,
   "metadata": {
     "test": {
-      "projection": "globe"
     }
   },
   "center": [
@@ -10,6 +9,7 @@
     80.0
   ],
   "zoom": 1,
+  "projection": { "type": "globe" },
   "sources": {
     "vector_tiles": {
       "type": "vector",

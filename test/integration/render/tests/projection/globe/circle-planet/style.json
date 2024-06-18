@@ -3,8 +3,7 @@
   "metadata": {
     "test": {
       "width": 256,
-      "height": 256,
-      "projection": "globe"
+      "height": 256
     }
   },
   "center": [
@@ -12,6 +11,7 @@
     0
   ],
   "zoom": 1,
+  "projection": { "type": "globe" },
   "sources": {
     "geojson": {
       "type": "geojson",

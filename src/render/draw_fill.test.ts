@@ -86,20 +86,19 @@ describe('drawFill', () => {
         painterMock.transform = {pitch: 0, labelPlaneMatrix: mat4.create()} as any as Transform;
         painterMock.options = {} as any;
         painterMock.style = {
-            map: {
-                projection: {
-                    getProjectionData(_canonical, fallback) {
-                        return {
-                            'u_projection_matrix': fallback,
-                            'u_projection_tile_mercator_coords': [0, 0, 1, 1],
-                            'u_projection_clipping_plane': [0, 0, 0, 0],
-                            'u_projection_transition': 0.0,
-                            'u_projection_fallback_matrix': fallback,
-                        };
-                    },
-                    translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
-                        return translatePosition(transform, tile, translate, translateAnchor);
-                    }
+            map: {},
+            projection: {
+                getProjectionData(_canonical, fallback) {
+                    return {
+                        'u_projection_matrix': fallback,
+                        'u_projection_tile_mercator_coords': [0, 0, 1, 1],
+                        'u_projection_clipping_plane': [0, 0, 0, 0],
+                        'u_projection_transition': 0.0,
+                        'u_projection_fallback_matrix': fallback,
+                    };
+                },
+                translatePosition(transform: Transform, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+                    return translatePosition(transform, tile, translate, translateAnchor);
                 }
             }
         } as any as Style;

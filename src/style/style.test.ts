@@ -557,6 +557,20 @@ describe('Style#_load', () => {
         style._load(styleSpec, {validate: false});
         expect(style._serializedLayers).toBeNull();
     });
+
+    test('projection is mercator if not specified', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }]
+        });
+
+        style._load(styleSpec, {validate: false});
+        expect(style.projection.name).toBe('mercator');
+        expect(style.serialize().projection).toBeUndefined();
+    });
 });
 
 describe('Style#_remove', () => {
@@ -695,6 +709,7 @@ describe('Style#setState', () => {
         spys.push(jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
+        spys.push(jest.spyOn(style, 'setProjection').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
 
         const newStyle = JSON.parse(JSON.stringify(styleJson)) as StyleSpecification;
@@ -723,6 +738,7 @@ describe('Style#setState', () => {
             exaggeration: 0.5
         };
         newStyle.zoom = 2;
+        newStyle.projection = {type: 'globe'};
         const didChange = style.setState(newStyle);
         expect(didChange).toBeTruthy();
         for (const spy of spys) {
@@ -2529,5 +2545,29 @@ describe('Style#serialize', () => {
 
         await style.once('style.load');
         expect(style.serialize().terrain).toBeUndefined();
+    });
+
+    test('include projection property when projection is defined in the style', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            projection: {
+                type: 'globe'
+            }
+        }));
+
+        await style.once('style.load');
+        expect(style.serialize().projection).toBeDefined();
+        expect(style.serialize().projection.type).toBe('globe');
+    });
+
+    test('include projection property when projection is set', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setProjection({type: 'globe'});
+
+        expect(style.serialize().projection).toBeDefined();
+        expect(style.serialize().projection.type).toBe('globe');
     });
 });

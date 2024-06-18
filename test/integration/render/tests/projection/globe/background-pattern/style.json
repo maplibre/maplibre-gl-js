@@ -2,12 +2,12 @@
   "version": 8,
   "metadata": {
     "test": {
-      "projection": "globe"
     }
   },
   "zoom": 2,
   "sources": {},
   "sprite": "local://sprites/emerald",
+  "projection": { "type": "globe" },
   "layers": [
     {
       "id": "background",
