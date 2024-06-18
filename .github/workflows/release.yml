@@ -9,6 +9,7 @@ jobs:
   release-check:
     name: Check if version changed
     runs-on: ubuntu-latest
+    if: github.repository == 'maplibre/maplibre-gl-js'
     defaults:
       run:
         shell: bash
