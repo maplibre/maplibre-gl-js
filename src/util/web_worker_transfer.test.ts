@@ -116,6 +116,20 @@ describe('web worker transfer', () => {
         };
         expect(trySerialize).toThrow();
     });
+    test('serialize can not used reserved property #name', () => {
+        class BadClass {
+            static serialize() {
+                return {
+                    '$name': 'foo'
+                };
+            }
+        }
+        register('BadClass', BadClass);
+        const badObject = new BadClass();
+        expect(() => {
+            serialize(badObject);
+        }).toThrow();
+    });
     test('deserialize Object has $name', () => {
         const badObject = {
             '$name': 'foo'
@@ -124,5 +138,16 @@ describe('web worker transfer', () => {
             deserialize(badObject);
         };
         expect(tryDeserialize).toThrow();
+    });
+
+    test('some objects can not be serialized', () => {
+        expect(() => {
+            serialize(BigInt(123));
+        }).toThrow();
+    });
+    test('some objects can not be deserialized', () => {
+        expect(() => {
+            deserialize(<SerializedObject><unknown>BigInt(123));
+        }).toThrow();
     });
 });
