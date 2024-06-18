@@ -587,7 +587,11 @@ export class HandlerManager {
                 const oldLat = tr.center.lat;
                 // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.
                 const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr.center.lat, 0); // If the transform center would be moved to latitude 0, what would the current zoom be?
-                const lngSpeed = lerp(1.0 / Math.cos(tr.center.lat * Math.PI / 180), 1.0, remapSaturate(normalizedGlobeZoom, 6, 4, 0, 1)); // Empirically chosen values
+                const lngSpeed = lerp(
+                    1.0 / Math.cos(tr.center.lat * Math.PI / 180), // speed adjusted by latitude
+                    1.0 / Math.cos(Math.min(Math.abs(tr.center.lat), 60) * Math.PI / 180), // also adjusted, but latitude is clamped to 60° to avoid too large speeds near poles
+                    remapSaturate(normalizedGlobeZoom, 7, 3, 0, 1.0) // Empirically chosen values
+                );
                 tr.center = new LngLat(
                     tr.center.lng - rotatedPanDelta.x * postZoomDegreesPerPixel * lngSpeed,
                     clamp(tr.center.lat + rotatedPanDelta.y * postZoomDegreesPerPixel, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
