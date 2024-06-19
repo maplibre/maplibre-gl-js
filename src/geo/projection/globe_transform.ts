@@ -83,10 +83,13 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     }
 }
 
-export function getZoomAdjustment(oldLat: number, newLat: number): number {
+/**
+ * Computes how much to modify zoom to keep the globe size constant when changing latitude.
+ */
+export function getZoomAdjustment(transform: { scaleZoom(scale: number): number }, oldLat: number, newLat: number): number {
     const oldCircumference = Math.cos(oldLat * Math.PI / 180.0);
     const newCircumference = Math.cos(newLat * Math.PI / 180.0);
-    return Math.log2(newCircumference / oldCircumference);
+    return transform.scaleZoom(newCircumference / oldCircumference);
 }
 
 /**
@@ -535,7 +538,7 @@ export class GlobeTransform extends Transform {
         // - when transitioning to mercator respect _renderWorldCopies
         // - when transitioning to mercator interpolate to mercator constraint center+zoom
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
+        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(this, 0, constrainedLat), this.maxZoom);
         return {
             center: new LngLat(
                 mod(lngLat.lng + 180, 360) - 180,

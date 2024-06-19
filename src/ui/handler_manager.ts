@@ -41,21 +41,40 @@ class RenderFrameEvent extends Event {
 function createVec3(): vec3 { return new Float64Array(3) as any; }
 
 /**
- * When given a list of vectors, return the one with the greatest dot product in regards to the target vector.
+ * When given a list of vectors, return the one with the greatest dot product in regards to the target vector AND is in the direction of the direction vector.
  * @param target - Target vector the dot product is computed with.
  * @param vectors - The list of vectors to pick from. Must not be empty.
  */
-function pickVector(target: vec3, ...vectors: Array<vec3>): vec3 {
+function pickVector(target: vec3, direction: vec3, ...vectors: Array<vec3>): vec3 {
     let bestVec: vec3 = vectors[0];
     let bestDot = -1;
+    let bestIsInDirection = false;
     for (const v of vectors) {
         const dot = vec3.dot(target, v);
-        if (dot > bestDot) {
+        const isDir = vec3.dot(direction, v) > 0;
+        if ((isDir && !bestIsInDirection) || (isDir === bestIsInDirection && dot > bestDot)) {
             bestDot = dot;
             bestVec = v;
+            bestIsInDirection = isDir;
         }
     }
     return bestVec;
+}
+
+function createConeVectorWhenPlaneNormalXNonZero(planeNormal: vec3, quadraticSolution: number, vectorY: number): vec3 {
+    return [
+        -(vectorY * planeNormal[1] + quadraticSolution * planeNormal[2]) / planeNormal[0],
+        vectorY,
+        quadraticSolution
+    ];
+}
+
+function createConeVectorWhenPlaneNormalZNonZero(planeNormal: vec3, quadraticSolution: number, vectorY: number): vec3 {
+    return [
+        quadraticSolution,
+        vectorY,
+        -(vectorY * planeNormal[1] + quadraticSolution * planeNormal[0]) / planeNormal[2]
+    ];
 }
 
 /**
@@ -593,7 +612,7 @@ export class HandlerManager {
             // If `actualZoomDelta` is zero, it is interpreted as falsy, which is the desired behavior here.
             if (actualZoomDelta) {
                 // Problem: `setLocationAtPoint` for globe works when it is called a single time, but is absolutely cursed in practice, unless the globe is in such a state that it approximates a flat map anyway.
-                // - `setLocationAtPoint` at location behind a pole will eventually glitch out
+                // - `setLocationAtPoint` repeatedly called at a location behind a pole will eventually glitch out
                 // - `setLocationAtPoint` at location the longitude of which is more than 90° different from current center will eventually glitch out
                 // - possibly some more random glitches
                 // - but works fine at higher zooms, where the map is still curved, but not yet mercator
@@ -619,95 +638,74 @@ export class HandlerManager {
                 let targetLocVec: vec3 = zoomLocVec;
 
                 const planeNormal = createVec3();
-                vec3.cross(planeNormal, zoomLocVec, centerVec);
+                vec3.cross(planeNormal, centerVec, zoomLocVec);
                 vec3.normalize(planeNormal, planeNormal);
+
+                const desiredDirectionNormal = createVec3();
+                vec3.cross(desiredDirectionNormal, planeNormal, centerVec);
+                vec3.normalize(desiredDirectionNormal, desiredDirectionNormal);
+
+                // Separate plane normal components for better readability
                 const nx = planeNormal[0];
                 const ny = planeNormal[1];
                 const nz = planeNormal[2];
 
-                const coneAngleCos = Math.cos((90 - MAX_VALID_LATITUDE) * Math.PI / 180);
+                const angleEpsilon = 0.1;
+                const coneAngleCos = Math.cos((90 - MAX_VALID_LATITUDE - angleEpsilon) * Math.PI / 180);
 
                 const epsilon = 1e-10;
                 const isNxZero = Math.abs(planeNormal[0]) < epsilon;
                 const isNzZero = Math.abs(planeNormal[2]) < epsilon;
                 if (!isNxZero) {
-                    const a = nz * nz / nx / nx + 1;
-                    const b = 2 * coneAngleCos * ny * nz / nx / nx;
-                    const c = coneAngleCos * coneAngleCos * ny * ny / nx / nx + coneAngleCos * coneAngleCos - 1;
+                    const a = nz * nz / (nx * nx) + 1;
+                    const b = 2 * coneAngleCos * ny * nz / (nx * nx);
+                    const c = coneAngleCos * coneAngleCos * ny * ny / (nx * nx) + coneAngleCos * coneAngleCos - 1;
                     const sol = solveQuadratic(a, b, c);
                     if (sol) {
-                        // 0 = we use t0
-                        // 1 = we use t1
-                        // a = we assume north pole
-                        // b = we assume south pole
-                        const vz0a = sol.t0;
-                        const vy0a = coneAngleCos;
-                        const vx0a = -(vy0a * ny + vz0a * nz) / nx;
-
-                        const vz0b = sol.t0;
-                        const vy0b = -coneAngleCos;
-                        const vx0b = -(vy0b * ny + vz0b * nz) / nx;
-
-                        const vz1a = sol.t1;
-                        const vy1a = coneAngleCos;
-                        const vx1a = -(vy1a * ny + vz1a * nz) / nx;
-
-                        const vz1b = sol.t1;
-                        const vy1b = -coneAngleCos;
-                        const vx1b = -(vy1b * ny + vz1b * nz) / nx;
-
                         targetLocVec = pickVector(
                             centerVec,
-                            [vx0a, vy0a, vz0a],
-                            [vx0b, vy0b, vz0b],
-                            [vx1a, vy1a, vz1a],
-                            [vx1b, vy1b, vz1b]
+                            desiredDirectionNormal,
+                            createConeVectorWhenPlaneNormalXNonZero(planeNormal, sol.t0, coneAngleCos),
+                            createConeVectorWhenPlaneNormalXNonZero(planeNormal, sol.t0, -coneAngleCos),
+                            createConeVectorWhenPlaneNormalXNonZero(planeNormal, sol.t1, coneAngleCos),
+                            createConeVectorWhenPlaneNormalXNonZero(planeNormal, sol.t1, -coneAngleCos),
+                            zoomLocVec
                         );
                     }
                 } else if (!isNzZero) {
-                    const a = nx * nx / nz / nz + 1;
-                    const b = 2 * coneAngleCos * ny * nx / nz / nz;
-                    const c = coneAngleCos * coneAngleCos * ny * ny / nz / nz + coneAngleCos * coneAngleCos - 1;
+                    const a = nx * nx / (nz * nz) + 1;
+                    const b = 2 * coneAngleCos * ny * nx / (nz * nz);
+                    const c = coneAngleCos * coneAngleCos * ny * ny / (nz * nz) + coneAngleCos * coneAngleCos - 1;
                     const sol = solveQuadratic(a, b, c);
                     if (sol) {
-                        // 0 = we use t0
-                        // 1 = we use t1
-                        // a = we assume north pole
-                        // b = we assume south pole
-                        const vx0a = sol.t0;
-                        const vy0a = coneAngleCos;
-                        const vz0a = -(vy0a * ny + vx0a * nx) / nz;
-
-                        const vx0b = sol.t0;
-                        const vy0b = -coneAngleCos;
-                        const vz0b = -(vy0b * ny + vx0b * nx) / nz;
-
-                        const vx1a = sol.t1;
-                        const vy1a = coneAngleCos;
-                        const vz1a = -(vy1a * ny + vx1a * nx) / nz;
-
-                        const vx1b = sol.t1;
-                        const vy1b = -coneAngleCos;
-                        const vz1b = -(vy1b * ny + vx1b * nx) / nz;
-
                         targetLocVec = pickVector(
                             centerVec,
-                            [vx0a, vy0a, vz0a],
-                            [vx0b, vy0b, vz0b],
-                            [vx1a, vy1a, vz1a],
-                            [vx1b, vy1b, vz1b]
+                            desiredDirectionNormal,
+                            createConeVectorWhenPlaneNormalZNonZero(planeNormal, sol.t0, coneAngleCos),
+                            createConeVectorWhenPlaneNormalZNonZero(planeNormal, sol.t0, -coneAngleCos),
+                            createConeVectorWhenPlaneNormalZNonZero(planeNormal, sol.t1, coneAngleCos),
+                            createConeVectorWhenPlaneNormalZNonZero(planeNormal, sol.t1, -coneAngleCos),
+                            zoomLocVec
                         );
                     }
                 } else {
-                    // Use the original zoomLoc as target loc
+                    // Both plane normal X and Z are zero -> plane is earth's equator.
+                    // Points on the equator cannot intersect the cones around the poles.
+                    // Use the original zoomLoc as target loc.
                 }
 
                 const targetLoc = sphereSurfacePointToCoordinates(targetLocVec);
                 const dLng = differenceOfAnglesDegrees(tr.center.lng, targetLoc.lng);
                 const dLat = differenceOfAnglesDegrees(tr.center.lat, targetLoc.lat);
+                const factor = 1.0 - tr.zoomScale(-actualZoomDelta);
 
+                const oldLat = tr.center.lat;
+                const oldZoom = tr.zoom;
                 tr.center = new LngLat(
+                    tr.center.lng + dLng * factor,
+                    clamp(tr.center.lat + dLat * factor, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
                 );
+                tr.zoom = oldZoom + getZoomAdjustment(tr, oldLat, tr.center.lat);
 
                 //
 
@@ -754,8 +752,9 @@ export class HandlerManager {
                 const rotatedPanDelta = panDelta.rotate(-tr.angle);
 
                 const oldLat = tr.center.lat;
+                const oldZoom = tr.zoom;
                 // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.
-                const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr.center.lat, 0); // If the transform center would be moved to latitude 0, what would the current zoom be?
+                const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr, tr.center.lat, 0); // If the transform center would be moved to latitude 0, what would the current zoom be?
                 const lngSpeed = lerp(
                     1.0 / Math.cos(tr.center.lat * Math.PI / 180), // speed adjusted by latitude
                     1.0 / Math.cos(Math.min(Math.abs(tr.center.lat), 60) * Math.PI / 180), // also adjusted, but latitude is clamped to 60° to avoid too large speeds near poles
@@ -765,7 +764,8 @@ export class HandlerManager {
                     tr.center.lng - rotatedPanDelta.x * postZoomDegreesPerPixel * lngSpeed,
                     clamp(tr.center.lat + rotatedPanDelta.y * postZoomDegreesPerPixel, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
                 );
-                tr.zoom += getZoomAdjustment(oldLat, tr.center.lat);
+                // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
+                tr.zoom = oldZoom + getZoomAdjustment(tr, oldLat, tr.center.lat);
             }
         } else {
             // Flat map controls
