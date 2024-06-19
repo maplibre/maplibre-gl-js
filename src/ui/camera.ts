@@ -226,13 +226,7 @@ export type AnimationOptions = {
 /**
  * A callback hook that allows manipulating the camera and being notified about camera updates before they happen
  */
-export type CameraUpdateTransformFunction =  (next: {
-    center: LngLat;
-    zoom: number;
-    pitch: number;
-    bearing: number;
-    elevation: number;
-}) => {
+export type CameraUpdateTransformFunction =  (next: Transform) => {
     center?: LngLat;
     zoom?: number;
     pitch?: number;
