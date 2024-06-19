@@ -2592,6 +2592,20 @@ describe('Style#serialize', () => {
         expect(style.serialize().sky).toBe(sky);
     });
 
+    test('include sky property when sky is set', async () => {
+        const sky = {
+            'atmosphere-blend': 0.5,
+        };
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setSky(sky);
+
+        expect(style.serialize().sky).toBeDefined();
+        expect(style.serialize().sky).toBe(sky);
+    });
+
     test('do not include sky property when map does not have sky', async () => {
         const style = new Style(getStubMap());
         style.loadJSON(createStyleJSON());

@@ -46,12 +46,16 @@ test('Sky#getSky', () => {
 describe('Sky#setSky', () => {
     test('sets Sky', () => {
         const sky = new Sky({});
-        sky.setSky({'atmosphere-blend': 1, 'atmosphere-blend-transition': {duration: 3000}} as SkySpecification);
-        sky.updateTransitions({transition: true} as any as TransitionParameters);
+        sky.setSky({'atmosphere-blend': 1} as SkySpecification);
+        sky.updateTransitions({
+            now: 0,
+            transition: {
+                duration: 3000,
+                delay: 0
+            }
+        } as any as TransitionParameters);
         sky.recalculate({zoom: 16, zoomHistory: {}, now: 1500} as EvaluationParameters);
-        // Not working for the moment. The Sky Style validation does not accept '*-transition' parameters.
-        // expect(sky.properties.get('atmosphere-blend')).toBe(0.9);
-        expect(sky.properties.get('atmosphere-blend')).toBe(0.8);
+        expect(sky.properties.get('atmosphere-blend')).toBe(0.9);
     });
 
     test('validates by default', () => {

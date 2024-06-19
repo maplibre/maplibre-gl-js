@@ -18,8 +18,6 @@ import type {
     PropertyValue,
     TransitionParameters
 } from './properties';
-import {mat4, vec3} from 'gl-matrix';
-import {Transform} from '../geo/transform';
 
 type LightPosition = {
     x: number;

@@ -1518,25 +1518,30 @@ export class Style extends Evented {
         return this.sky?.getSky();
     }
 
-    setSky(skyOptions?: SkySpecification) {
+    setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
         this._checkLoaded();
 
-        if (!skyOptions) {
-            this.sky = null;
-            return;
+        const sky = this.sky.getSky();
+        let _update = false;
+        for (const key in skyOptions) {
+            if (!deepEqual(skyOptions[key], sky[key])) {
+                _update = true;
+                break;
+            }
         }
-        if (this.sky) {
-            this.sky.setSky(skyOptions);
-            return;
-        }
-        this.sky = new Sky(skyOptions);
-        this.sky.updateTransitions({
+        if (!_update) return;
+
+        const parameters = {
             now: browser.now(),
             transition: extend({
                 duration: 300,
                 delay: 0
             }, this.stylesheet.transition)
-        });
+        };
+
+        this.stylesheet.sky = skyOptions;
+        this.sky.setSky(skyOptions, options);
+        this.sky.updateTransitions(parameters);
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
