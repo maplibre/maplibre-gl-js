@@ -546,10 +546,9 @@ export class HandlerManager {
                 // - cursor is not on planet surface
                 // - cursor is on the other side of a pole
 
-                const targetLoc = zoomLoc;
-                const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, targetLoc.lng);
+                const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);
                 const dLng = dLngRaw / (Math.abs(dLngRaw / 180) + 1.0); // This gradually reduces the amount of longitude change if the zoom location is very far, eg. on the other side of the pole (possible when looking at a pole).
-                const dLat = differenceOfAnglesDegrees(tr.center.lat, targetLoc.lat);
+                const dLat = differenceOfAnglesDegrees(tr.center.lat, zoomLoc.lat);
 
                 const rayDirection = tr.getRayDirectionFromPixel(zoomPixel);
                 const rayOrigin = tr.cameraPosition;
@@ -566,13 +565,26 @@ export class HandlerManager {
                 // Compute how much to move towards the zoom location
                 const factor = (1.0 - tr.zoomScale(-actualZoomDelta)) * distanceFactor;
 
-                const oldLat = tr.center.lat;
+                const oldCenter = tr.center;
                 const oldZoom = tr.zoom;
-                tr.center = new LngLat(
+                const heuristicCenter = new LngLat(
                     tr.center.lng + dLng * factor,
                     clamp(tr.center.lat + dLat * factor, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
                 );
-                tr.zoom = oldZoom + getZoomAdjustment(tr, oldLat, tr.center.lat);
+                tr.setLocationAtPoint(zoomLoc, zoomPixel);
+                const exactCenter = tr.center;
+
+                // Interpolate between exact zooming and heuristic zooming depending on the longitude difference between current center and zoom location.
+                const heuristicFactor = Math.pow(remapSaturate(Math.abs(dLngRaw), 55, 80, 0, 1), 0.5);
+
+                const lngExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lng, heuristicCenter.lng);
+                const latExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lat, heuristicCenter.lat);
+
+                tr.center = new LngLat(
+                    exactCenter.lng + lngExactToHeuristic * heuristicFactor,
+                    exactCenter.lat + latExactToHeuristic * heuristicFactor
+                );
+                tr.zoom = oldZoom + getZoomAdjustment(tr, oldCenter.lat, tr.center.lat);
             }
 
             // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
