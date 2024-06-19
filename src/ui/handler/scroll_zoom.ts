@@ -253,6 +253,17 @@ export class ScrollZoomHandler implements Handler {
         if (!this.isActive()) return;
         const tr = this._tr.transform;
 
+        // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)
+        if (this._lastExpectedZoom !== null) {
+            const externalZoomChange = tr.zoom - this._lastExpectedZoom;
+            if (this._startZoom !== null) {
+                this._startZoom += externalZoomChange;
+            }
+            if (this._targetZoom !== null) {
+                this._targetZoom += externalZoomChange;
+            }
+        }
+
         // if we've had scroll events since the last render frame, consume the
         // accumulated delta, and update the target zoom level accordingly
         if (this._delta !== 0) {
@@ -277,17 +288,6 @@ export class ScrollZoomHandler implements Handler {
             }
 
             this._delta = 0;
-        }
-
-        // When globe is enabled zoom might be modified by the map center latitude being changes (either by panning or by zoom moving the map)
-        if (this._lastExpectedZoom !== null) {
-            const externalZoomChange = tr.zoom - this._lastExpectedZoom;
-            if (this._startZoom !== null) {
-                this._startZoom += externalZoomChange;
-            }
-            if (this._targetZoom !== null) {
-                this._targetZoom += externalZoomChange;
-            }
         }
 
         const targetZoom = this._targetZoom === null ?

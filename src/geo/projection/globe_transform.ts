@@ -853,15 +853,35 @@ export class GlobeTransform extends Transform {
             const originDotPlaneXyz = this._cachedClippingPlane[0] * rayOrigin[0] + this._cachedClippingPlane[1] * rayOrigin[1] + this._cachedClippingPlane[2] * rayOrigin[2];
             const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
             const tPlane = -(originDotPlaneXyz + this._cachedClippingPlane[3]) / directionDotPlaneXyz;
+
+            const maxRayLength = 2.0; // One globe diameter
             const planeIntersection = createVec3();
-            vec3.add(planeIntersection, rayOrigin, [
-                rayDirection[0] * tPlane,
-                rayDirection[1] * tPlane,
-                rayDirection[2] * tPlane
-            ]);
+
+            if (tPlane > 0) {
+                vec3.add(planeIntersection, rayOrigin, [
+                    rayDirection[0] * tPlane,
+                    rayDirection[1] * tPlane,
+                    rayDirection[2] * tPlane
+                ]);
+            } else {
+                // When the ray takes too long to hit the plane (>maxRayLength), or if the plane intersection is behind the camera, handle things differently.
+                // Take a point along the ray at distance maxRayLength, project it to clipping plane, then continue as normal to find the horizon point.
+                const distantPoint = createVec3();
+                vec3.add(distantPoint, rayOrigin, [
+                    rayDirection[0] * maxRayLength,
+                    rayDirection[1] * maxRayLength,
+                    rayDirection[2] * maxRayLength
+                ]);
+                const distanceFromPlane = distantPoint[0] * this._cachedClippingPlane[0] + distantPoint[1] * this._cachedClippingPlane[1] + distantPoint[2] * this._cachedClippingPlane[2] + this._cachedClippingPlane[3];
+                vec3.sub(planeIntersection, distantPoint, [
+                    this._cachedClippingPlane[0] * distanceFromPlane,
+                    this._cachedClippingPlane[1] * distanceFromPlane,
+                    this._cachedClippingPlane[2] * distanceFromPlane
+                ]);
+            }
+
             const closestOnHorizon = createVec3();
             vec3.normalize(closestOnHorizon, planeIntersection);
-
             return sphereSurfacePointToCoordinates(closestOnHorizon);
         }
     }
