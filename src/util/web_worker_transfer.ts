@@ -92,12 +92,12 @@ function isArrayBuffer(value: any): value is ArrayBuffer {
            (value instanceof ArrayBuffer || (value.constructor && value.constructor.name === 'ArrayBuffer'));
 }
 
-function getClassRegistryKey(input: Object|SerializedObject) {
+function getClassRegistryKey(input: Object|SerializedObject): string {
     const klass = (input.constructor as any);
     return (input as SerializedObject).$name || klass._classRegistryKey;
 }
 
-function isRegistered(input: unknown) {
+function isRegistered(input: unknown): boolean {
     if (input === null || typeof input !== 'object') {
         return false;
     }
