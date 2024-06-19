@@ -519,12 +519,6 @@ export class GlobeTransform extends Transform {
     }): OverscaledTileID[] {
         return this._mercatorTransform.coveringTiles(options);
     }
-    override project(lnglat: LngLat): Point { // JP: TODO:figure out how to get rid of this
-        return this._mercatorTransform.project(lnglat);
-    }
-    override unproject(point: Point): LngLat { // JP: TODO:figure out how to get rid of this
-        return this._mercatorTransform.unproject(point);
-    }
     override recalculateZoom(terrain: Terrain): void {
         this._mercatorTransform.recalculateZoom(terrain);
         this.apply(this._mercatorTransform);
@@ -532,21 +526,7 @@ export class GlobeTransform extends Transform {
     override customLayerMatrix(): mat4 {
         return this._mercatorTransform.customLayerMatrix();
     }
-    override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
-        // JP: TODO:
-        // - respect _lngRange, _latRange
-        // - when transitioning to mercator respect _renderWorldCopies
-        // - when transitioning to mercator interpolate to mercator constraint center+zoom
-        const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(this, 0, constrainedLat), this.maxZoom);
-        return {
-            center: new LngLat(
-                mod(lngLat.lng + 180, 360) - 180,
-                constrainedLat
-            ),
-            zoom: constrainedZoom
-        };
-    }
+
     override maxPitchScaleFactor(): number {
         return this._mercatorTransform.maxPitchScaleFactor();
     }
@@ -566,6 +546,30 @@ export class GlobeTransform extends Transform {
     //
     // End of placeholder overridden functions
     //
+
+    override projectToWorldCoordinates(_lnglat: LngLat): Point {
+        throw new Error('Globe projection has no mapping to 2D coordinates.');
+    }
+
+    override unprojectFromWorldCoordinates(_point: Point): LngLat {
+        throw new Error('Globe projection has no mapping to 2D coordinates.');
+    }
+
+    override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
+        // JP: TODO:
+        // - respect _lngRange, _latRange
+        // - when transitioning to mercator respect _renderWorldCopies
+        // - when transitioning to mercator interpolate to mercator constraint center+zoom
+        const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(this, 0, constrainedLat), this.maxZoom);
+        return {
+            center: new LngLat(
+                mod(lngLat.lng + 180, 360) - 180,
+                constrainedLat
+            ),
+            zoom: constrainedZoom
+        };
+    }
 
     override setLocationAtPoint(lnglat: LngLat, point: Point): void {
         if (!this._globeRendering) {

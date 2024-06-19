@@ -204,7 +204,7 @@ export class MercatorTransform extends Transform {
      * @param lnglat - the lngLat
      * @returns Point
      */
-    override project(lnglat: LngLat) {
+    override projectToWorldCoordinates(lnglat: LngLat) {
         const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
         return new Point(
             mercatorXfromLng(lnglat.lng) * this.worldSize,
@@ -216,7 +216,7 @@ export class MercatorTransform extends Transform {
      * @param point - world coordinate
      * @returns LngLat
      */
-    override unproject(point: Point): LngLat {
+    override unprojectFromWorldCoordinates(point: Point): LngLat {
         return new MercatorCoordinate(point.x / this.worldSize, point.y / this.worldSize).toLngLat();
     }
 
@@ -486,7 +486,7 @@ export class MercatorTransform extends Transform {
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
-        const {x: originalX, y: originalY} = this.project.call({worldSize}, lngLat);
+        const {x: originalX, y: originalY} = this.projectToWorldCoordinates.call({worldSize}, lngLat);
         let modifiedX, modifiedY;
 
         const scale = Math.max(scaleX || 0, scaleY || 0);
@@ -496,7 +496,7 @@ export class MercatorTransform extends Transform {
             const newPoint = new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY);
-            result.center = this.unproject.call({worldSize}, newPoint).wrap();
+            result.center = this.unprojectFromWorldCoordinates.call({worldSize}, newPoint).wrap();
             result.zoom += this.scaleZoom(scale);
             return result;
         }
@@ -522,7 +522,7 @@ export class MercatorTransform extends Transform {
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
-            result.center = this.unproject.call({worldSize}, newPoint).wrap();
+            result.center = this.unprojectFromWorldCoordinates.call({worldSize}, newPoint).wrap();
         }
 
         return result;
@@ -535,7 +535,7 @@ export class MercatorTransform extends Transform {
 
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
-        const point = this.project(this.center);
+        const point = this.projectToWorldCoordinates(this.center);
         const x = point.x, y = point.y;
         this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;

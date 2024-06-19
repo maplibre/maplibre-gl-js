@@ -383,18 +383,18 @@ export abstract class Transform {
     scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
     /**
-     * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512).
+     * Convert from LngLat to world coordinates ([0, 512],[0, 512], for mercator, those are mercator coordinates scaled by 512).
      * @param lnglat - the lngLat
      * @returns Point
      */
-    abstract project(lnglat: LngLat): Point;
+    abstract projectToWorldCoordinates(lnglat: LngLat): Point;
 
     /**
      * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90]).
      * @param point - world coordinate
      * @returns LngLat
      */
-    abstract unproject(point: Point): LngLat;
+    abstract unprojectFromWorldCoordinates(point: Point): LngLat;
 
     /**
      * This method works in combination with freezeElevation activated.
