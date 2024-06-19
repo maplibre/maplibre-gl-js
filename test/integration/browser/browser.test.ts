@@ -26,7 +26,13 @@ describe('Browser tests', () => {
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
-        browser = await puppeteer.launch({headless: true});
+        browser = await puppeteer.launch({
+            headless: true,
+            args: [
+                '--use-gl=angle',
+                '--use-angle=gl'
+            ],
+        });
 
     }, 40000);
 
@@ -400,4 +406,76 @@ describe('Browser tests', () => {
         await expect(rtlPromise).rejects.toThrow(regex);
 
     }, 2000);
+
+    test('Movement with transformCameraUpdate and terrain', async () => {
+        await page.evaluate(() => {
+            map.setPitch(52)
+                .setZoom(15)
+                .setCenter([11.40, 47.30])
+                .setStyle({
+                    version: 8,
+                    sources: {
+                        osm: {
+                            type: 'raster',
+                            tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                            tileSize: 256,
+                            attribution: '&copy; OpenStreetMap Contributors',
+                            maxzoom: 19
+                        },
+                        // Use a different source for terrain and hillshade layers, to improve render quality
+                        terrainSource: {
+                            type: 'raster-dem',
+                            url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                            tileSize: 256
+                        },
+                        hillshadeSource: {
+                            type: 'raster-dem',
+                            url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                            tileSize: 256
+                        }
+                    },
+                    layers: [
+                        {
+                            id: 'osm',
+                            type: 'raster',
+                            source: 'osm'
+                        },
+                        {
+                            id: 'hills',
+                            type: 'hillshade',
+                            source: 'hillshadeSource',
+                            layout: {visibility: 'visible'},
+                            paint: {'hillshade-shadow-color': '#473B24'}
+                        }
+                    ],
+                    terrain: {
+                        source: 'terrainSource',
+                        exaggeration: 1
+                    }
+                });
+
+            return new Promise<any>((resolve) => {
+                map.once('idle', () => {
+                    map.transformCameraUpdate = () => ({});
+                    resolve({});
+                });
+            });
+        });
+
+        const canvas = await page.$('.maplibregl-canvas');
+        const canvasBB = await canvas?.boundingBox();
+        await page.mouse.move(canvasBB!.x, canvasBB!.y);
+        await page.mouse.down();
+        await page.mouse.move(100, 0, {
+            steps: 10,
+        });
+        await page.mouse.up();
+        await sleep(200);
+
+        const center = await page.evaluate(() => {
+            return map.getCenter();
+        });
+        expect(center.lng).toBeCloseTo(11.39770);
+        expect(center.lat).toBeCloseTo(47.29960);
+    }, 20000);
 });
