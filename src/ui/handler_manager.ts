@@ -697,7 +697,21 @@ export class HandlerManager {
                 const targetLoc = sphereSurfacePointToCoordinates(targetLocVec);
                 const dLng = differenceOfAnglesDegrees(tr.center.lng, targetLoc.lng);
                 const dLat = differenceOfAnglesDegrees(tr.center.lat, targetLoc.lat);
-                const factor = 1.0 - tr.zoomScale(-actualZoomDelta);
+
+                const rayDirection = tr.getRayDirectionFromPixel(zoomPixel);
+                const rayOrigin = tr.cameraPosition;
+                const distanceToClosestPoint = vec3.dot(rayOrigin, rayDirection) * -1; // globe center relative to ray origin is -rayOrigin and rayDirection is normalized, this we want dot(-rayOrigin, rayDirection)
+                const closestPoint = createVec3();
+                vec3.add(closestPoint, rayOrigin, [
+                    rayDirection[0] * distanceToClosestPoint,
+                    rayDirection[1] * distanceToClosestPoint,
+                    rayDirection[2] * distanceToClosestPoint
+                ]);
+                const distanceFromSurface = vec3.length(closestPoint) - 1;
+                const distanceFactor = Math.exp(-Math.max(distanceFromSurface - 0.2, 0) * 0.5); // Scale zoom movement down if the mouse ray is far from the planet
+
+                // Compute how much to move towards the zoom location
+                const factor = (1.0 - tr.zoomScale(-actualZoomDelta)) * distanceFactor;
 
                 const oldLat = tr.center.lat;
                 const oldZoom = tr.zoom;

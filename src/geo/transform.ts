@@ -501,6 +501,8 @@ export abstract class Transform {
      */
     abstract getCameraPoint(): Point;
 
+    abstract getRayDirectionFromPixel(p: Point): vec3;
+
     /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect
      * the query at the surface of the earth. Instead the feature may be closer and only intersect

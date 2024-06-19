@@ -759,7 +759,7 @@ export class GlobeTransform extends Transform {
     /**
      * Computes normalized direction of a ray from the camera to the given screen pixel.
      */
-    private getRayDirectionFromPixel(p: Point): vec3 {
+    override getRayDirectionFromPixel(p: Point): vec3 {
         const pos = createVec4();
         pos[0] = (p.x / this.width) * 2.0 - 1.0;
         pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;

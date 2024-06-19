@@ -718,6 +718,10 @@ export class MercatorTransform extends Transform {
         return vec3.clone(dir);
     }
 
+    override getRayDirectionFromPixel(_p: Point): vec3 {
+        throw new Error('Not implemented.'); // No need for this in mercator transform
+    }
+
     override projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
         const matrix = this.calculatePosMatrix(unwrappedTileID);
         let pos;
