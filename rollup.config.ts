@@ -1,7 +1,7 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import {plugins, watchStagingPlugin} from './build/rollup_plugins';
-import banner from './build/banner';
+import {plugins, watchStagingPlugin} from './build/rollup_plugins.ts';
+import banner from './build/banner.ts';
 import {RollupOptions} from 'rollup';
 
 const {BUILD, MINIFY} = process.env;

@@ -1,3 +1,3 @@
 import '../../../staging/benchmarks/styles/shared';
-import '../../../staging/benchmarks/styles/worker';
-import '../../../staging/benchmarks/styles/index';
+import '../../../staging/benchmarks/styles/worker.ts';
+import '../../../staging/benchmarks/styles/index.ts';

@@ -1,25 +1,25 @@
 import Point from '@mapbox/point-geometry';
-import {clipLine} from './clip_line';
-import {PathInterpolator} from './path_interpolator';
+import {clipLine} from './clip_line.ts';
+import {PathInterpolator} from './path_interpolator.ts';
 
-import * as intersectionTests from '../util/intersection_tests';
-import {GridIndex} from './grid_index';
+import * as intersectionTests from '../util/intersection_tests.ts';
+import {GridIndex} from './grid_index.ts';
 import {mat4} from 'gl-matrix';
-import ONE_EM from '../symbol/one_em';
+import ONE_EM from '../symbol/one_em.ts';
 
-import * as projection from '../symbol/projection';
+import * as projection from '../symbol/projection.ts';
 
-import type {Transform} from '../geo/transform';
-import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
+import type {Transform} from '../geo/transform.ts';
+import type {SingleCollisionBox} from '../data/bucket/symbol_bucket.ts';
 import type {
     GlyphOffsetArray,
     SymbolLineVertexArray
-} from '../data/array_types.g';
-import type {OverlapMode} from '../style/style_layer/overlap_mode';
-import {UnwrappedTileID} from '../source/tile_id';
-import {SymbolProjectionContext} from '../symbol/projection';
-import {Projection} from '../geo/projection/projection';
-import {clamp, getAABB} from '../util/util';
+} from '../data/array_types.g.ts';
+import type {OverlapMode} from '../style/style_layer/overlap_mode.ts';
+import {UnwrappedTileID} from '../source/tile_id.ts';
+import {SymbolProjectionContext} from '../symbol/projection.ts';
+import {Projection} from '../geo/projection/projection.ts';
+import {clamp, getAABB} from '../util/util.ts';
 
 // When a symbol crosses the edge that causes it to be included in
 // collision detection, it will cause changes in the symbols around

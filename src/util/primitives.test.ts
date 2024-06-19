@@ -1,4 +1,4 @@
-import {Aabb, Frustum} from './primitives';
+import {Aabb, Frustum} from './primitives.ts';
 import {mat4, vec3, vec4} from 'gl-matrix';
 
 describe('primitives', () => {

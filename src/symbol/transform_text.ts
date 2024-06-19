@@ -1,6 +1,6 @@
-import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker';
+import {rtlWorkerPlugin} from '../source/rtl_text_plugin_worker.ts';
 
-import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 import type {Feature} from '@maplibre/maplibre-gl-style-spec';
 import {Formatted} from '@maplibre/maplibre-gl-style-spec';
 

@@ -1,4 +1,4 @@
-import {offscreenCanvasSupported} from './offscreen_canvas_supported';
+import {offscreenCanvasSupported} from './offscreen_canvas_supported.ts';
 
 let offscreenCanvasDistorted: boolean;
 

@@ -1,4 +1,4 @@
-import {Event, Evented} from './evented';
+import {Event, Evented} from './evented.ts';
 
 describe('Evented', () => {
 

@@ -1,10 +1,10 @@
-import {config} from './config';
-import {webpSupported} from './webp_supported';
-import {sleep, stubAjaxGetImage} from './test/util';
+import {config} from './config.ts';
+import {webpSupported} from './webp_supported.ts';
+import {sleep, stubAjaxGetImage} from './test/util.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {ImageRequest} from './image_request';
-import {isAbortError} from './abort_error';
-import * as ajax from './ajax';
+import {ImageRequest} from './image_request.ts';
+import {isAbortError} from './abort_error.ts';
+import * as ajax from './ajax.ts';
 
 describe('ImageRequest', () => {
     let server: FakeServer;

@@ -1,28 +1,28 @@
-import {FeatureIndex} from '../data/feature_index';
-import {performSymbolLayout} from '../symbol/symbol_layout';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {DictionaryCoder} from '../util/dictionary_coder';
-import {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {LineBucket} from '../data/bucket/line_bucket';
-import {FillBucket} from '../data/bucket/fill_bucket';
-import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket';
-import {warnOnce, mapObject} from '../util/util';
-import {ImageAtlas} from '../render/image_atlas';
-import {GlyphAtlas} from '../render/glyph_atlas';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {OverscaledTileID} from './tile_id';
+import {FeatureIndex} from '../data/feature_index.ts';
+import {performSymbolLayout} from '../symbol/symbol_layout.ts';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {DictionaryCoder} from '../util/dictionary_coder.ts';
+import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import {LineBucket} from '../data/bucket/line_bucket.ts';
+import {FillBucket} from '../data/bucket/fill_bucket.ts';
+import {FillExtrusionBucket} from '../data/bucket/fill_extrusion_bucket.ts';
+import {warnOnce, mapObject} from '../util/util.ts';
+import {ImageAtlas} from '../render/image_atlas.ts';
+import {GlyphAtlas} from '../render/glyph_atlas.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {OverscaledTileID} from './tile_id.ts';
 
-import type {Bucket} from '../data/bucket';
-import type {IActor} from '../util/actor';
-import type {StyleLayer} from '../style/style_layer';
-import type {StyleLayerIndex} from '../style/style_layer_index';
+import type {Bucket} from '../data/bucket.ts';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 import type {
     WorkerTileParameters,
     WorkerTileResult,
-} from '../source/worker_source';
+} from '../source/worker_source.ts';
 import type {PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {VectorTile} from '@mapbox/vector-tile';
-import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages';
+import {MessageType, type GetGlyphsResponse, type GetImagesResponse} from '../util/actor_messages.ts';
 
 export class WorkerTile {
     tileID: OverscaledTileID;

@@ -1,27 +1,27 @@
-import {create as createSource} from './source';
+import {create as createSource} from './source.ts';
 
-import {Tile} from './tile';
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {TileCache} from './tile_cache';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {keysDifference} from '../util/util';
-import {EXTENT} from '../data/extent';
-import {Context} from '../gl/context';
+import {Tile} from './tile.ts';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {TileCache} from './tile_cache.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {keysDifference} from '../util/util.ts';
+import {EXTENT} from '../data/extent.ts';
+import {Context} from '../gl/context.ts';
 import Point from '@mapbox/point-geometry';
-import {browser} from '../util/browser';
-import {OverscaledTileID} from './tile_id';
-import {SourceFeatureState} from './source_state';
+import {browser} from '../util/browser.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {SourceFeatureState} from './source_state.ts';
 
-import type {Source} from './source';
-import type {Map} from '../ui/map';
-import type {Style} from '../style/style';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Transform} from '../geo/transform';
-import type {TileState} from './tile';
+import type {Source} from './source.ts';
+import type {Map} from '../ui/map.ts';
+import type {Style} from '../style/style.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Transform} from '../geo/transform.ts';
+import type {TileState} from './tile.ts';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {MapSourceDataEvent} from '../ui/events';
-import {Terrain} from '../render/terrain';
-import {config} from '../util/config';
+import type {MapSourceDataEvent} from '../ui/events.ts';
+import {Terrain} from '../render/terrain.ts';
+import {config} from '../util/config.ts';
 
 /**
  * @internal

@@ -1,6 +1,6 @@
-import {Hash} from './hash';
-import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
-import type {Map} from './map';
+import {Hash} from './hash.ts';
+import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util.ts';
+import type {Map} from './map.ts';
 
 describe('hash', () => {
     function createHash(name: string = undefined) {
@@ -107,7 +107,7 @@ describe('hash', () => {
         expect(map.getBearing()).toBe(30);
         expect(window.location.hash).toBe('#5/1/0.5/30');
 
-        window.location.hash = '#4/wrongly/formed/hash';
+        window.location.hash = '#4/wrongly/formed/hash.ts';
 
         expect(hash._onHashChange()).toBeFalsy();
 

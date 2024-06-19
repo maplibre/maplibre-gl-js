@@ -4,13 +4,14 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "checkJs": true,
+    "allowImportingTsExtensions": true,
     "isolatedModules": false,
     "noEmit": true,
     "esModuleInterop": true,
     "importHelpers": false,
     "jsx": "react",
-    "module": "ESNext",
-    "moduleResolution": "Node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "skipLibCheck": false,
     "strict": false,
@@ -30,6 +31,7 @@
     "experimentalSpecifierResolution": "node",
     "esm": true,
     "compilerOptions": {
+      "transpileOnly": true,
       "target": "es2019",
       "types": [
         "node"

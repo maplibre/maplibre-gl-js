@@ -1,9 +1,9 @@
-import {SourceCache} from '../source/source_cache';
+import {SourceCache} from '../source/source_cache.ts';
 import {RasterSourceSpecification, SourceSpecification, VectorSourceSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {Style} from '../style/style';
-import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import {selectDebugSource} from './draw_debug';
+import {Style} from '../style/style.ts';
+import {FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {RasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import {selectDebugSource} from './draw_debug.ts';
 
 jest.mock('../style/style');
 

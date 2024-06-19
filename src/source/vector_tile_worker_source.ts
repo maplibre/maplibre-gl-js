@@ -1,20 +1,20 @@
-import {ExpiryData, getArrayBuffer} from '../util/ajax';
+import {ExpiryData, getArrayBuffer} from '../util/ajax.ts';
 
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import {WorkerTile} from './worker_tile';
-import {extend} from '../util/util';
-import {RequestPerformance} from '../util/performance';
+import {WorkerTile} from './worker_tile.ts';
+import {extend} from '../util/util.ts';
+import {RequestPerformance} from '../util/performance.ts';
 
 import type {
     WorkerSource,
     WorkerTileParameters,
     TileParameters,
     WorkerTileResult
-} from '../source/worker_source';
+} from '../source/worker_source.ts';
 
-import type {IActor} from '../util/actor';
-import type {StyleLayerIndex} from '../style/style_layer_index';
+import type {IActor} from '../util/actor.ts';
+import type {StyleLayerIndex} from '../style/style_layer_index.ts';
 import type {VectorTile} from '@mapbox/vector-tile';
 
 export type LoadVectorTileResult = {

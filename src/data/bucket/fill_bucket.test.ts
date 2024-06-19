@@ -4,13 +4,13 @@ import path from 'path';
 import Protobuf from 'pbf';
 import {VectorTile} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
-import {SegmentVector} from '../segment';
-import {FillBucket} from './fill_bucket';
-import {FillStyleLayer} from '../../style/style_layer/fill_style_layer';
+import {SegmentVector} from '../segment.ts';
+import {FillBucket} from './fill_bucket.ts';
+import {FillStyleLayer} from '../../style/style_layer/fill_style_layer.ts';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
-import {ZoomHistory} from '../../style/zoom_history';
-import {BucketFeature, BucketParameters} from '../bucket';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
+import {ZoomHistory} from '../../style/zoom_history.ts';
+import {BucketFeature, BucketParameters} from '../bucket.ts';
 
 // Load a fill feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));

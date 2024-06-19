@@ -1,43 +1,43 @@
 import Point from '@mapbox/point-geometry';
-import {drawCollisionDebug} from './draw_collision_debug';
+import {drawCollisionDebug} from './draw_collision_debug.ts';
 
-import {SegmentVector} from '../data/segment';
-import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
-import * as symbolProjection from '../symbol/projection';
-import {EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../symbol/symbol_size';
+import {SegmentVector} from '../data/segment.ts';
+import {pixelsToTileUnits} from '../source/pixels_to_tile_units.ts';
+import * as symbolProjection from '../symbol/projection.ts';
+import {EvaluatedZoomSize, evaluateSizeForFeature, evaluateSizeForZoom} from '../symbol/symbol_size.ts';
 import {mat4} from 'gl-matrix';
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
+import {StencilMode} from '../gl/stencil_mode.ts';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
+import {addDynamicAttributes} from '../data/bucket/symbol_bucket.ts';
 
-import {getAnchorAlignment, WritingMode} from '../symbol/shaping';
-import ONE_EM from '../symbol/one_em';
+import {getAnchorAlignment, WritingMode} from '../symbol/shaping.ts';
+import ONE_EM from '../symbol/one_em.ts';
 
 import {
     SymbolIconUniformsType,
     symbolIconUniformValues,
     symbolSDFUniformValues,
     symbolTextAndIconUniformValues
-} from './program/symbol_program';
+} from './program/symbol_program.ts';
 
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
 
-import type {Texture, TextureFilter} from '../render/texture';
-import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id';
-import type {UniformValues} from './uniform_binding';
-import type {SymbolSDFUniformsType} from '../render/program/symbol_program';
-import type {CrossTileID, VariableOffset} from '../symbol/placement';
-import type {SymbolBucket, SymbolBuffers} from '../data/bucket/symbol_bucket';
-import type {TerrainData} from '../render/terrain';
+import type {Texture, TextureFilter} from '../render/texture.ts';
+import type {OverscaledTileID, UnwrappedTileID} from '../source/tile_id.ts';
+import type {UniformValues} from './uniform_binding.ts';
+import type {SymbolSDFUniformsType} from '../render/program/symbol_program.ts';
+import type {CrossTileID, VariableOffset} from '../symbol/placement.ts';
+import type {SymbolBucket, SymbolBuffers} from '../data/bucket/symbol_bucket.ts';
+import type {TerrainData} from '../render/terrain.ts';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Transform} from '../geo/transform';
-import type {ColorMode} from '../gl/color_mode';
-import type {Program} from './program';
-import type {TextAnchor} from '../style/style_layer/variable_text_anchor';
-import {createProjection, Projection} from '../geo/projection/projection';
+import type {Transform} from '../geo/transform.ts';
+import type {ColorMode} from '../gl/color_mode.ts';
+import type {Program} from './program.ts';
+import type {TextAnchor} from '../style/style_layer/variable_text_anchor.ts';
+import {createProjection, Projection} from '../geo/projection/projection.ts';
 
 type SymbolTileRenderState = {
     segments: SegmentVector;

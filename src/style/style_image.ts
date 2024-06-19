@@ -1,6 +1,6 @@
-import {RGBAImage} from '../util/image';
+import {RGBAImage} from '../util/image.ts';
 
-import type {Map} from '../ui/map';
+import type {Map} from '../ui/map.ts';
 
 export type SpriteJSON = {[id: string]: StyleImageMetadata & {
     width: number;

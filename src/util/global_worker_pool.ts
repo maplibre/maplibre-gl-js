@@ -1,4 +1,4 @@
-import {WorkerPool, PRELOAD_POOL_ID} from './worker_pool';
+import {WorkerPool, PRELOAD_POOL_ID} from './worker_pool.ts';
 
 let globalWorkerPool;
 

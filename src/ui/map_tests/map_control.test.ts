@@ -1,5 +1,5 @@
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {IControl} from '../control/control';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {IControl} from '../control/control.ts';
 
 beforeEach(() => {
     beforeMapTest();

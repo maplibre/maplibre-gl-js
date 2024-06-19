@@ -1,9 +1,9 @@
-import {RequestParameters, makeRequest, sameOrigin, GetResourceResponse} from './ajax';
-import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util';
-import {webpSupported} from './webp_supported';
-import {config} from './config';
-import {createAbortError} from './abort_error';
-import {getProtocol} from '../source/protocol_crud';
+import {RequestParameters, makeRequest, sameOrigin, GetResourceResponse} from './ajax.ts';
+import {arrayBufferToImageBitmap, arrayBufferToImage, extend, isWorker, isImageBitmap} from './util.ts';
+import {webpSupported} from './webp_supported.ts';
+import {config} from './config.ts';
+import {createAbortError} from './abort_error.ts';
+import {getProtocol} from '../source/protocol_crud.ts';
 
 type ImageQueueThrottleControlCallback = () => boolean;
 

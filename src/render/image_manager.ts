@@ -1,17 +1,17 @@
 /* eslint-disable key-spacing */
 import potpack from 'potpack';
 
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {RGBAImage} from '../util/image';
-import {ImagePosition} from './image_atlas';
-import {Texture} from './texture';
-import {renderStyleImage} from '../style/style_image';
-import {warnOnce} from '../util/util';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {RGBAImage} from '../util/image.ts';
+import {ImagePosition} from './image_atlas.ts';
+import {Texture} from './texture.ts';
+import {renderStyleImage} from '../style/style_image.ts';
+import {warnOnce} from '../util/util.ts';
 
-import type {StyleImage} from '../style/style_image';
-import type {Context} from '../gl/context';
+import type {StyleImage} from '../style/style_image.ts';
+import type {Context} from '../gl/context.ts';
 import type {PotpackBox} from 'potpack';
-import type {GetImagesResponse} from '../util/actor_messages';
+import type {GetImagesResponse} from '../util/actor_messages.ts';
 
 type Pattern = {
     bin: PotpackBox;

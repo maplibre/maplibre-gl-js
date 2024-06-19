@@ -1,19 +1,19 @@
-import {Event, ErrorEvent, Evented} from '../util/evented';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
 
-import {extend} from '../util/util';
-import {EXTENT} from '../data/extent';
-import {ResourceType} from '../util/request_manager';
-import {browser} from '../util/browser';
+import {extend} from '../util/util.ts';
+import {EXTENT} from '../data/extent.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {browser} from '../util/browser.ts';
 
-import type {Source} from './source';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
-import type {Actor} from '../util/actor';
+import type {Source} from './source.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from './tile.ts';
+import type {Actor} from '../util/actor.ts';
 import type {GeoJSONSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {GeoJSONSourceDiff} from './geojson_source_diff';
-import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source';
-import {MessageType} from '../util/actor_messages';
+import type {GeoJSONSourceDiff} from './geojson_source_diff.ts';
+import type {GeoJSONWorkerOptions, LoadGeoJSONParameters} from './geojson_worker_source.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 /**
  * Options object for GeoJSONSource.

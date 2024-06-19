@@ -1,8 +1,8 @@
-import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {FormatSectionOverride} from '../style/format_section_override';
-import properties, {SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
-import {ZoomHistory} from '../style/zoom_history';
-import {EvaluationParameters} from '../style/evaluation_parameters';
+import {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import {FormatSectionOverride} from '../style/format_section_override.ts';
+import properties, {SymbolPaintPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g.ts';
+import {ZoomHistory} from '../style/zoom_history.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
 
 function createSymbolLayer(layerProperties) {
     const layer = new SymbolStyleLayer(layerProperties);

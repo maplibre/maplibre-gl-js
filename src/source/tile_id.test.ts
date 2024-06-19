@@ -1,4 +1,4 @@
-import {CanonicalTileID, OverscaledTileID} from '../source/tile_id';
+import {CanonicalTileID, OverscaledTileID} from '../source/tile_id.ts';
 
 describe('CanonicalTileID', () => {
     test('#constructor', () => {

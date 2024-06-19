@@ -1,5 +1,5 @@
-import {setPerformance} from '../util/test/util';
-import {type GeoJSONFeatureId, isUpdateableGeoJSON, toUpdateable, applySourceDiff} from './geojson_source_diff';
+import {setPerformance} from '../util/test/util.ts';
+import {type GeoJSONFeatureId, isUpdateableGeoJSON, toUpdateable, applySourceDiff} from './geojson_source_diff.ts';
 
 beforeEach(() => {
     setPerformance();

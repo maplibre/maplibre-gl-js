@@ -1,4 +1,4 @@
-import Benchmark from '../lib/benchmark';
+import Benchmark from '../lib/benchmark.ts';
 
 import {featureFilter as createFilter} from '@maplibre/maplibre-gl-style-spec';
 import filters from '../data/filters.json' with {type: 'json'};

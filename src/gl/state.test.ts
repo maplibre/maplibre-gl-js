@@ -1,7 +1,7 @@
-import {IValue, ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha} from './value';
-import {Context} from './context';
+import {IValue, ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha} from './value.ts';
+import {Context} from './context.ts';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
-import {deepEqual} from '../util/util';
+import {deepEqual} from '../util/util.ts';
 
 describe('Value classes', () => {
 

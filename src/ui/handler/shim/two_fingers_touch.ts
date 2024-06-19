@@ -1,5 +1,5 @@
-import type {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, AroundCenterOptions} from '../two_fingers_touch';
-import type {TapDragZoomHandler} from '../tap_drag_zoom';
+import type {TwoFingersTouchZoomHandler, TwoFingersTouchRotateHandler, AroundCenterOptions} from '../two_fingers_touch.ts';
+import type {TapDragZoomHandler} from '../tap_drag_zoom.ts';
 
 /**
  * The `TwoFingersTouchZoomRotateHandler` allows the user to zoom and rotate the map by

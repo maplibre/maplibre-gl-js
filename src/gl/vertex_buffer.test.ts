@@ -1,7 +1,7 @@
-import {VertexBuffer} from './vertex_buffer';
-import {StructArrayLayout3i6} from '../data/array_types.g';
-import {Context} from '../gl/context';
-import {StructArrayMember} from '../util/struct_array';
+import {VertexBuffer} from './vertex_buffer.ts';
+import {StructArrayLayout3i6} from '../data/array_types.g.ts';
+import {Context} from '../gl/context.ts';
+import {StructArrayMember} from '../util/struct_array.ts';
 
 describe('VertexBuffer', () => {
     let gl: WebGLRenderingContext;

@@ -1,13 +1,13 @@
-import {CanvasSource} from '../source/canvas_source';
-import {Transform} from '../geo/transform';
-import {Event, Evented} from '../util/evented';
-import {extend} from '../util/util';
+import {CanvasSource} from '../source/canvas_source.ts';
+import {Transform} from '../geo/transform.ts';
+import {Event, Evented} from '../util/evented.ts';
+import {extend} from '../util/util.ts';
 
-import type {Dispatcher} from '../util/dispatcher';
-import {Tile} from './tile';
-import {OverscaledTileID} from './tile_id';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import {Tile} from './tile.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {VertexBuffer} from '../gl/vertex_buffer.ts';
+import {SegmentVector} from '../data/segment.ts';
 
 function createSource(options?) {
     const c = options && options.canvas || window.document.createElement('canvas');

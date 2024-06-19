@@ -1,5 +1,5 @@
-import {TerrainControl} from './terrain_control';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
+import {TerrainControl} from './terrain_control.ts';
+import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util.ts';
 
 function createMap() {
 

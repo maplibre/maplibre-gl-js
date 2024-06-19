@@ -1,6 +1,6 @@
-import type {Context} from '../gl/context';
-import type {RGBAImage, AlphaImage} from '../util/image';
-import {isImageBitmap} from '../util/util';
+import type {Context} from '../gl/context.ts';
+import type {RGBAImage, AlphaImage} from '../util/image.ts';
+import {isImageBitmap} from '../util/util.ts';
 
 export type TextureFormat = WebGLRenderingContextBase['RGBA'] | WebGLRenderingContextBase['ALPHA'];
 export type TextureFilter = WebGLRenderingContextBase['LINEAR'] | WebGLRenderingContextBase['LINEAR_MIPMAP_NEAREST'] | WebGLRenderingContextBase['NEAREST'];

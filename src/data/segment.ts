@@ -1,9 +1,9 @@
-import {warnOnce} from '../util/util';
+import {warnOnce} from '../util/util.ts';
 
-import {register} from '../util/web_worker_transfer';
+import {register} from '../util/web_worker_transfer.ts';
 
-import type {VertexArrayObject} from '../render/vertex_array_object';
-import type {StructArray} from '../util/struct_array';
+import type {VertexArrayObject} from '../render/vertex_array_object.ts';
+import type {StructArray} from '../util/struct_array.ts';
 
 /**
  * @internal

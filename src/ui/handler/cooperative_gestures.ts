@@ -1,7 +1,7 @@
-import {DOM} from '../../util/dom';
-import {Handler} from '../handler_manager';
+import {DOM} from '../../util/dom.ts';
+import {Handler} from '../handler_manager.ts';
 
-import type {Map} from '../map';
+import type {Map} from '../map.ts';
 
 /**
  * The {@link CooperativeGesturesHandler} options object for the gesture settings

@@ -1,5 +1,5 @@
-import {createMap, beforeMapTest} from '../../util/test/util';
-import simulate from '../../../test/unit/lib/simulate_interaction';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
 
 beforeEach(() => {
     beforeMapTest();

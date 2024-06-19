@@ -1,21 +1,21 @@
-import {IndexBuffer} from './index_buffer';
+import {IndexBuffer} from './index_buffer.ts';
 
-import {VertexBuffer} from './vertex_buffer';
-import {Framebuffer} from './framebuffer';
-import {DepthMode} from './depth_mode';
-import {StencilMode} from './stencil_mode';
-import {ColorMode} from './color_mode';
-import {CullFaceMode} from './cull_face_mode';
-import {deepEqual} from '../util/util';
-import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value';
+import {VertexBuffer} from './vertex_buffer.ts';
+import {Framebuffer} from './framebuffer.ts';
+import {DepthMode} from './depth_mode.ts';
+import {StencilMode} from './stencil_mode.ts';
+import {ColorMode} from './color_mode.ts';
+import {CullFaceMode} from './cull_face_mode.ts';
+import {deepEqual} from '../util/util.ts';
+import {ClearColor, ClearDepth, ClearStencil, ColorMask, DepthMask, StencilMask, StencilFunc, StencilOp, StencilTest, DepthRange, DepthTest, DepthFunc, Blend, BlendFunc, BlendColor, BlendEquation, CullFace, CullFaceSide, FrontFace, ProgramValue, ActiveTextureUnit, Viewport, BindFramebuffer, BindRenderbuffer, BindTexture, BindVertexBuffer, BindElementBuffer, BindVertexArray, PixelStoreUnpack, PixelStoreUnpackPremultiplyAlpha, PixelStoreUnpackFlipY} from './value.ts';
 
-import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type';
+import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type.ts';
 import type {
     StructArray,
     StructArrayMember
-} from '../util/struct_array';
+} from '../util/struct_array.ts';
 import type {Color} from '@maplibre/maplibre-gl-style-spec';
-import {isWebGL2} from './webgl2';
+import {isWebGL2} from './webgl2.ts';
 
 type ClearArgs = {
     color?: Color;

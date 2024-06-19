@@ -1,9 +1,9 @@
 import {
     queryRenderedFeatures,
     querySourceFeatures
-} from './query_features';
-import {SourceCache} from './source_cache';
-import {Transform} from '../geo/transform';
+} from './query_features.ts';
+import {SourceCache} from './source_cache.ts';
+import {Transform} from '../geo/transform.ts';
 import Point from '@mapbox/point-geometry';
 
 describe('QueryFeatures#rendered', () => {

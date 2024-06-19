@@ -1,7 +1,7 @@
-import {workerFactory} from './web_worker';
-import {browser} from './browser';
-import {isSafari} from './util';
-import {ActorTarget} from './actor';
+import {workerFactory} from './web_worker.ts';
+import {browser} from './browser.ts';
+import {isSafari} from './util.ts';
+import {ActorTarget} from './actor.ts';
 
 export const PRELOAD_POOL_ID = 'maplibre_preloaded_worker_pool';
 

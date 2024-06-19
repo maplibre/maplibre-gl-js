@@ -1,18 +1,18 @@
-import {Texture} from './texture';
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {ColorMode} from '../gl/color_mode';
-import {Tile} from '../source/tile';
+import {Texture} from './texture.ts';
+import {StencilMode} from '../gl/stencil_mode.ts';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
+import {ColorMode} from '../gl/color_mode.ts';
+import {Tile} from '../source/tile.ts';
 import {
     hillshadeUniformValues,
     hillshadeUniformPrepareValues
-} from './program/hillshade_program';
+} from './program/hillshade_program.ts';
 
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import type {OverscaledTileID} from '../source/tile_id';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
+import type {OverscaledTileID} from '../source/tile_id.ts';
 
 export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer: HillshadeStyleLayer, tileIDs: Array<OverscaledTileID>) {
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;

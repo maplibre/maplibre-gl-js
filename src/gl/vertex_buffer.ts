@@ -2,10 +2,10 @@
 import type {
     StructArray,
     StructArrayMember
-} from '../util/struct_array';
+} from '../util/struct_array.ts';
 
-import type {Program} from '../render/program';
-import type {Context} from '../gl/context';
+import type {Program} from '../render/program.ts';
+import type {Context} from '../gl/context.ts';
 
 /**
  * An Enum for AttributeType

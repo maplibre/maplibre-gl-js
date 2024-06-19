@@ -1,24 +1,24 @@
 
-import {Tile} from '../source/tile';
+import {Tile} from '../source/tile.ts';
 import {mat4, vec2} from 'gl-matrix';
-import {OverscaledTileID} from '../source/tile_id';
-import {RGBAImage} from '../util/image';
-import {warnOnce} from '../util/util';
-import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g';
-import pos3dAttributes from '../data/pos3d_attributes';
-import {SegmentVector} from '../data/segment';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
-import {Painter} from './painter';
-import {Texture} from '../render/texture';
-import type {Framebuffer} from '../gl/framebuffer';
+import {OverscaledTileID} from '../source/tile_id.ts';
+import {RGBAImage} from '../util/image.ts';
+import {warnOnce} from '../util/util.ts';
+import {Pos3dArray, TriangleIndexArray} from '../data/array_types.g.ts';
+import pos3dAttributes from '../data/pos3d_attributes.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {VertexBuffer} from '../gl/vertex_buffer.ts';
+import {IndexBuffer} from '../gl/index_buffer.ts';
+import {Painter} from './painter.ts';
+import {Texture} from '../render/texture.ts';
+import type {Framebuffer} from '../gl/framebuffer.ts';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {TerrainSourceCache} from '../source/terrain_source_cache';
-import {SourceCache} from '../source/source_cache';
-import {EXTENT} from '../data/extent';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {TerrainSourceCache} from '../source/terrain_source_cache.ts';
+import {SourceCache} from '../source/source_cache.ts';
+import {EXTENT} from '../data/extent.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {LngLat, earthRadius} from '../geo/lng_lat';
+import {LngLat, earthRadius} from '../geo/lng_lat.ts';
 
 /**
  * @internal

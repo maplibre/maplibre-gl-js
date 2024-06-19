@@ -1,20 +1,20 @@
-import {shaders} from '../shaders/shaders';
-import {ProgramConfiguration} from '../data/program_configuration';
-import {VertexArrayObject} from './vertex_array_object';
-import {Context} from '../gl/context';
+import {shaders} from '../shaders/shaders.ts';
+import {ProgramConfiguration} from '../data/program_configuration.ts';
+import {VertexArrayObject} from './vertex_array_object.ts';
+import {Context} from '../gl/context.ts';
 
-import type {SegmentVector} from '../data/segment';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {IndexBuffer} from '../gl/index_buffer';
-import type {DepthMode} from '../gl/depth_mode';
-import type {StencilMode} from '../gl/stencil_mode';
-import type {ColorMode} from '../gl/color_mode';
-import type {CullFaceMode} from '../gl/cull_face_mode';
-import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding';
-import type {BinderUniform} from '../data/program_configuration';
-import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program';
-import type {TerrainData} from '../render/terrain';
-import {Terrain} from '../render/terrain';
+import type {SegmentVector} from '../data/segment.ts';
+import type {VertexBuffer} from '../gl/vertex_buffer.ts';
+import type {IndexBuffer} from '../gl/index_buffer.ts';
+import type {DepthMode} from '../gl/depth_mode.ts';
+import type {StencilMode} from '../gl/stencil_mode.ts';
+import type {ColorMode} from '../gl/color_mode.ts';
+import type {CullFaceMode} from '../gl/cull_face_mode.ts';
+import type {UniformBindings, UniformValues, UniformLocations} from './uniform_binding.ts';
+import type {BinderUniform} from '../data/program_configuration.ts';
+import {terrainPreludeUniforms, TerrainPreludeUniformsType} from './program/terrain_program.ts';
+import type {TerrainData} from '../render/terrain.ts';
+import {Terrain} from '../render/terrain.ts';
 
 export type DrawMode = WebGLRenderingContextBase['LINES'] | WebGLRenderingContextBase['TRIANGLES'] | WebGL2RenderingContext['LINE_STRIP'];
 

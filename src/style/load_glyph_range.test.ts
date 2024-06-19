@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import {RequestManager} from '../util/request_manager';
-import {loadGlyphRange} from './load_glyph_range';
+import {RequestManager} from '../util/request_manager.ts';
+import {loadGlyphRange} from './load_glyph_range.ts';
 import {fakeServer} from 'nise';
-import {bufferToArrayBuffer} from '../util/test/util';
+import {bufferToArrayBuffer} from '../util/test/util.ts';
 
 test('loadGlyphRange', async ()  => {
     global.fetch = null;

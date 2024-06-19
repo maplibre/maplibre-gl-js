@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
-import {indexTouches} from './handler_util';
-import {Handler} from '../handler_manager';
-import type {Map} from '../map';
+import {indexTouches} from './handler_util.ts';
+import {Handler} from '../handler_manager.ts';
+import type {Map} from '../map.ts';
 
 /**
  * A `TouchPanHandler` allows the user to pan the map using touch gestures.

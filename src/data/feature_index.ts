@@ -1,27 +1,27 @@
 import Point from '@mapbox/point-geometry';
-import {loadGeometry} from './load_geometry';
-import {toEvaluationFeature} from './evaluation_feature';
-import {EXTENT} from './extent';
+import {loadGeometry} from './load_geometry.ts';
+import {toEvaluationFeature} from './evaluation_feature.ts';
+import {EXTENT} from './extent.ts';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
-import {TransferableGridIndex} from '../util/transferable_grid_index';
-import {DictionaryCoder} from '../util/dictionary_coder';
+import {TransferableGridIndex} from '../util/transferable_grid_index.ts';
+import {DictionaryCoder} from '../util/dictionary_coder.ts';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import {GeoJSONFeature} from '../util/vectortile_to_geojson';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
-import {arraysIntersect, mapObject, extend} from '../util/util';
-import {OverscaledTileID} from '../source/tile_id';
-import {register} from '../util/web_worker_transfer';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {SourceFeatureState} from '../source/source_state';
-import {polygonIntersectsBox} from '../util/intersection_tests';
-import {PossiblyEvaluated} from '../style/properties';
-import {FeatureIndexArray} from './array_types.g';
+import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
+import {arraysIntersect, mapObject, extend} from '../util/util.ts';
+import {OverscaledTileID} from '../source/tile_id.ts';
+import {register} from '../util/web_worker_transfer.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {SourceFeatureState} from '../source/source_state.ts';
+import {polygonIntersectsBox} from '../util/intersection_tests.ts';
+import {PossiblyEvaluated} from '../style/properties.ts';
+import {FeatureIndexArray} from './array_types.g.ts';
 import {mat4} from 'gl-matrix';
 
-import type {StyleLayer} from '../style/style_layer';
+import type {StyleLayer} from '../style/style_layer.ts';
 import type {FeatureFilter, FeatureState, FilterSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {Transform} from '../geo/transform';
+import type {Transform} from '../geo/transform.ts';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 
 type QueryParameters = {

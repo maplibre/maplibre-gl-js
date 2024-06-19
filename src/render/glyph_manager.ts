@@ -1,12 +1,12 @@
-import {loadGlyphRange} from '../style/load_glyph_range';
+import {loadGlyphRange} from '../style/load_glyph_range.ts';
 
 import TinySDF from '@mapbox/tiny-sdf';
-import {unicodeBlockLookup} from '../util/is_char_in_unicode_block';
-import {AlphaImage} from '../util/image';
+import {unicodeBlockLookup} from '../util/is_char_in_unicode_block.ts';
+import {AlphaImage} from '../util/image.ts';
 
-import type {StyleGlyph} from '../style/style_glyph';
-import type {RequestManager} from '../util/request_manager';
-import type {GetGlyphsResponse} from '../util/actor_messages';
+import type {StyleGlyph} from '../style/style_glyph.ts';
+import type {RequestManager} from '../util/request_manager.ts';
+import type {GetGlyphsResponse} from '../util/actor_messages.ts';
 
 type Entry = {
     // null means we've requested the range, but the glyph wasn't included in the result.

@@ -2,14 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import vt from '@mapbox/vector-tile';
 import Protobuf from 'pbf';
-import {LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile_worker_source';
-import {StyleLayerIndex} from '../style/style_layer_index';
+import {LoadVectorData, VectorTileWorkerSource} from '../source/vector_tile_worker_source.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {IActor} from '../util/actor';
-import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source';
-import {WorkerTile} from './worker_tile';
-import {setPerformance, sleep} from '../util/test/util';
-import {ABORT_ERROR} from '../util/abort_error';
+import {IActor} from '../util/actor.ts';
+import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_source.ts';
+import {WorkerTile} from './worker_tile.ts';
+import {setPerformance, sleep} from '../util/test/util.ts';
+import {ABORT_ERROR} from '../util/abort_error.ts';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;

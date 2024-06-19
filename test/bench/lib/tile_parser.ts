@@ -2,20 +2,20 @@ import Protobuf from 'pbf';
 import VT from '@mapbox/vector-tile';
 
 import {derefLayers as deref} from '@maplibre/maplibre-gl-style-spec';
-import {Style} from '../../../src/style/style';
-import {Transform} from '../../../src/geo/transform';
-import {Evented} from '../../../src/util/evented';
-import {RequestManager} from '../../../src/util/request_manager';
-import {WorkerTile} from '../../../src/source/worker_tile';
-import {StyleLayerIndex} from '../../../src/style/style_layer_index';
+import {Style} from '../../../src/style/style.ts';
+import {Transform} from '../../../src/geo/transform.ts';
+import {Evented} from '../../../src/util/evented.ts';
+import {RequestManager} from '../../../src/util/request_manager.ts';
+import {WorkerTile} from '../../../src/source/worker_tile.ts';
+import {StyleLayerIndex} from '../../../src/style/style_layer_index.ts';
 
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileResult} from '../../../src/source/worker_source';
-import type {OverscaledTileID} from '../../../src/source/tile_id';
-import type {TileJSON} from '../../../src/util/util';
-import type {Map} from '../../../src/ui/map';
-import type {IActor} from '../../../src/util/actor';
-import {MessageType} from '../../../src/util/actor_messages';
+import type {WorkerTileResult} from '../../../src/source/worker_source.ts';
+import type {OverscaledTileID} from '../../../src/source/tile_id.ts';
+import type {TileJSON} from '../../../src/util/util.ts';
+import type {Map} from '../../../src/ui/map.ts';
+import type {IActor} from '../../../src/util/actor.ts';
+import {MessageType} from '../../../src/util/actor_messages.ts';
 
 class StubMap extends Evented {
     style: Style;

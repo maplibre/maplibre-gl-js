@@ -1,9 +1,9 @@
-import {Actor, ActorTarget} from './actor';
-import {WorkerGlobalScopeInterface, workerFactory} from './web_worker';
-import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock';
-import {sleep} from './test/util';
-import {ABORT_ERROR, createAbortError} from './abort_error';
-import {MessageType} from './actor_messages';
+import {Actor, ActorTarget} from './actor.ts';
+import {WorkerGlobalScopeInterface, workerFactory} from './web_worker.ts';
+import {setGlobalWorker} from '../../test/unit/lib/web_worker_mock.ts';
+import {sleep} from './test/util.ts';
+import {ABORT_ERROR, createAbortError} from './abort_error.ts';
+import {MessageType} from './actor_messages.ts';
 
 class MockWorker {
     self: any;

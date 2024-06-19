@@ -1,14 +1,14 @@
-import {StyleLayer} from '../style_layer';
+import {StyleLayer} from '../style_layer.ts';
 
-import {HeatmapBucket} from '../../data/bucket/heatmap_bucket';
-import {RGBAImage} from '../../util/image';
-import properties, {HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g';
-import {renderColorRamp} from '../../util/color_ramp';
-import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
+import {HeatmapBucket} from '../../data/bucket/heatmap_bucket.ts';
+import {RGBAImage} from '../../util/image.ts';
+import properties, {HeatmapPaintPropsPossiblyEvaluated} from './heatmap_style_layer_properties.g.ts';
+import {renderColorRamp} from '../../util/color_ramp.ts';
+import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 
-import type {Texture} from '../../render/texture';
-import type {Framebuffer} from '../../gl/framebuffer';
-import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g';
+import type {Texture} from '../../render/texture.ts';
+import type {Framebuffer} from '../../gl/framebuffer.ts';
+import type {HeatmapPaintProps} from './heatmap_style_layer_properties.g.ts';
 import type {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**

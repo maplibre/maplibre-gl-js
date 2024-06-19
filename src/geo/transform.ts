@@ -1,17 +1,17 @@
-import {LngLat} from './lng_lat';
-import {LngLatBounds} from './lng_lat_bounds';
-import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate';
+import {LngLat} from './lng_lat.ts';
+import {LngLatBounds} from './lng_lat_bounds.ts';
+import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from './mercator_coordinate.ts';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp} from '../util/util';
+import {wrap, clamp} from '../util/util.ts';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
-import {EXTENT} from '../data/extent';
+import {EXTENT} from '../data/extent.ts';
 import {vec3, vec4, mat4, mat2, vec2} from 'gl-matrix';
-import {Aabb, Frustum} from '../util/primitives';
-import {EdgeInsets} from './edge_insets';
+import {Aabb, Frustum} from '../util/primitives.ts';
+import {EdgeInsets} from './edge_insets.ts';
 
-import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
-import type {PaddingOptions} from './edge_insets';
-import {Terrain} from '../render/terrain';
+import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id.ts';
+import type {PaddingOptions} from './edge_insets.ts';
+import {Terrain} from '../render/terrain.ts';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 

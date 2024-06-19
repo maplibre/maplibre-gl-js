@@ -1,7 +1,7 @@
 
 import puppeteer, {Page, Browser} from 'puppeteer';
 
-import {deepEqual} from '../lib/json-diff';
+import {deepEqual} from '../lib/json-diff.ts';
 import st from 'st';
 import http from 'node:http';
 import type {Server} from 'node:http';
@@ -10,10 +10,10 @@ import path from 'node:path/posix';
 import fs from 'node:fs';
 import type {AddressInfo} from 'node:net';
 
-import {localizeURLs} from '../lib/localize-urls';
+import {localizeURLs} from '../lib/localize-urls.ts';
 import {globSync} from 'glob';
 
-import * as maplibreglModule from '../../../dist/maplibre-gl';
+import * as maplibreglModule from '../../../dist/maplibre-gl.js';
 let maplibregl: typeof maplibreglModule;
 
 jest.retryTimes(3);

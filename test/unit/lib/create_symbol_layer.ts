@@ -1,8 +1,8 @@
-import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket';
-import {SymbolStyleLayer} from '../../../src/style/style_layer/symbol_style_layer';
+import {SymbolBucket} from '../../../src/data/bucket/symbol_bucket.ts';
+import {SymbolStyleLayer} from '../../../src/style/style_layer/symbol_style_layer.ts';
 import {featureFilter, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {EvaluationParameters} from '../../../src/style/evaluation_parameters';
-import {BucketParameters} from '../../../src/data/bucket';
+import {EvaluationParameters} from '../../../src/style/evaluation_parameters.ts';
+import {BucketParameters} from '../../../src/data/bucket.ts';
 
 export function createSymbolBucket(layerId, font, text, collisionBoxArray) {
     const layer = new SymbolStyleLayer({

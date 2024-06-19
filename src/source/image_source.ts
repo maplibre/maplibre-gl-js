@@ -1,20 +1,20 @@
-import {CanonicalTileID} from './tile_id';
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {ImageRequest} from '../util/image_request';
-import {ResourceType} from '../util/request_manager';
-import {EXTENT} from '../data/extent';
-import {RasterBoundsArray} from '../data/array_types.g';
-import rasterBoundsAttributes from '../data/raster_bounds_attributes';
-import {SegmentVector} from '../data/segment';
-import {Texture} from '../render/texture';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {CanonicalTileID} from './tile_id.ts';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {ImageRequest} from '../util/image_request.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {EXTENT} from '../data/extent.ts';
+import {RasterBoundsArray} from '../data/array_types.g.ts';
+import rasterBoundsAttributes from '../data/raster_bounds_attributes.ts';
+import {SegmentVector} from '../data/segment.ts';
+import {Texture} from '../render/texture.ts';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
 
-import type {Source} from './source';
-import type {CanvasSourceSpecification} from './canvas_source';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
-import type {VertexBuffer} from '../gl/vertex_buffer';
+import type {Source} from './source.ts';
+import type {CanvasSourceSpecification} from './canvas_source.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from './tile.ts';
+import type {VertexBuffer} from '../gl/vertex_buffer.ts';
 import type {
     ImageSourceSpecification,
     VideoSourceSpecification

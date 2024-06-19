@@ -1,7 +1,7 @@
-import {Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding';
-import type {Context} from '../../gl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Transform} from '../../geo/transform';
+import {Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding.ts';
+import type {Context} from '../../gl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Transform} from '../../geo/transform.ts';
 import {mat4} from 'gl-matrix';
 
 export type CollisionUniformsType = {

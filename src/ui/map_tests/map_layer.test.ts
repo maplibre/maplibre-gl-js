@@ -1,8 +1,8 @@
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
-import {extend} from '../../util/util';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {createMap, beforeMapTest, createStyle} from '../../util/test/util.ts';
+import {extend} from '../../util/util.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 import {fakeServer, FakeServer} from 'nise';
-import {MessageType} from '../../util/actor_messages';
+import {MessageType} from '../../util/actor_messages.ts';
 
 let server: FakeServer;
 

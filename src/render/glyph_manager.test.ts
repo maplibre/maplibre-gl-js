@@ -1,7 +1,7 @@
-import {parseGlyphPbf} from '../style/parse_glyph_pbf';
-import {GlyphManager} from './glyph_manager';
+import {parseGlyphPbf} from '../style/parse_glyph_pbf.ts';
+import {GlyphManager} from './glyph_manager.ts';
 import fs from 'fs';
-import {RequestManager} from '../util/request_manager';
+import {RequestManager} from '../util/request_manager.ts';
 
 describe('GlyphManager', () => {
     const GLYPHS = {};

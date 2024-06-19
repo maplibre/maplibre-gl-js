@@ -1,4 +1,4 @@
-import {wrap} from '../util/util';
+import {wrap} from '../util/util.ts';
 
 /*
 * Approximate radius of the earth in meters.

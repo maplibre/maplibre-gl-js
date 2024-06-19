@@ -1,14 +1,14 @@
-import {Camera, CameraOptions} from '../ui/camera';
-import {Transform} from '../geo/transform';
-import {TaskQueue, TaskID} from '../util/task_queue';
-import {browser} from '../util/browser';
-import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed';
-import {setMatchMedia} from '../util/test/util';
-import {mercatorZfromAltitude} from '../geo/mercator_coordinate';
-import {Terrain} from '../render/terrain';
-import {LngLat, LngLatLike} from '../geo/lng_lat';
-import {Event} from '../util/evented';
-import {LngLatBounds} from '../geo/lng_lat_bounds';
+import {Camera, CameraOptions} from '../ui/camera.ts';
+import {Transform} from '../geo/transform.ts';
+import {TaskQueue, TaskID} from '../util/task_queue.ts';
+import {browser} from '../util/browser.ts';
+import {fixedLngLat, fixedNum} from '../../test/unit/lib/fixed.ts';
+import {setMatchMedia} from '../util/test/util.ts';
+import {mercatorZfromAltitude} from '../geo/mercator_coordinate.ts';
+import {Terrain} from '../render/terrain.ts';
+import {LngLat, LngLatLike} from '../geo/lng_lat.ts';
+import {Event} from '../util/evented.ts';
+import {LngLatBounds} from '../geo/lng_lat_bounds.ts';
 
 beforeEach(() => {
     setMatchMedia();

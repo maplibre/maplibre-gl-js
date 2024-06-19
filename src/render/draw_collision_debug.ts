@@ -1,18 +1,18 @@
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {StyleLayer} from '../style/style_layer';
-import type {OverscaledTileID} from '../source/tile_id';
-import type {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
-import {collisionUniformValues, collisionCircleUniformValues} from './program/collision_program';
-import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g';
-import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
-import {SegmentVector} from '../data/segment';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {OverscaledTileID} from '../source/tile_id.ts';
+import type {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {StencilMode} from '../gl/stencil_mode.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
+import {collisionUniformValues, collisionCircleUniformValues} from './program/collision_program.ts';
+import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g.ts';
+import {collisionCircleLayout} from '../data/bucket/symbol_attributes.ts';
+import {SegmentVector} from '../data/segment.ts';
 import {mat4} from 'gl-matrix';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {IndexBuffer} from '../gl/index_buffer';
+import {VertexBuffer} from '../gl/vertex_buffer.ts';
+import {IndexBuffer} from '../gl/index_buffer.ts';
 
 type TileBatch = {
     circleArray: Array<number>;

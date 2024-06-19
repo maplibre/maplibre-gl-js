@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import React from 'react';
-import {Axis} from './Axis';
-import {formatSample, Version, versionColor} from './util';
+import {Axis} from './Axis.tsx';
+import {formatSample, Version, versionColor} from './util.ts';
 
 type RegressionPlotProps = {
     versions: Version[];

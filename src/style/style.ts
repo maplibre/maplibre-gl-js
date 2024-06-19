@@ -1,31 +1,31 @@
-import {Event, ErrorEvent, Evented} from '../util/evented';
-import {StyleLayer} from './style_layer';
-import {createStyleLayer} from './create_style_layer';
-import {loadSprite} from './load_sprite';
-import {ImageManager} from '../render/image_manager';
-import {GlyphManager} from '../render/glyph_manager';
-import {Light} from './light';
-import {LineAtlas} from '../render/line_atlas';
-import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
-import {coerceSpriteToArray} from '../util/style';
-import {getJSON, getReferrer} from '../util/ajax';
-import {ResourceType} from '../util/request_manager';
-import {browser} from '../util/browser';
-import {Dispatcher} from '../util/dispatcher';
-import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
-import {Source} from '../source/source';
-import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
-import {SourceCache} from '../source/source_cache';
-import {GeoJSONSource} from '../source/geojson_source';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
+import {StyleLayer} from './style_layer.ts';
+import {createStyleLayer} from './create_style_layer.ts';
+import {loadSprite} from './load_sprite.ts';
+import {ImageManager} from '../render/image_manager.ts';
+import {GlyphManager} from '../render/glyph_manager.ts';
+import {Light} from './light.ts';
+import {LineAtlas} from '../render/line_atlas.ts';
+import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util.ts';
+import {coerceSpriteToArray} from '../util/style.ts';
+import {getJSON, getReferrer} from '../util/ajax.ts';
+import {ResourceType} from '../util/request_manager.ts';
+import {browser} from '../util/browser.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
+import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style.ts';
+import {Source} from '../source/source.ts';
+import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features.ts';
+import {SourceCache} from '../source/source_cache.ts';
+import {GeoJSONSource} from '../source/geojson_source.ts';
 import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
-import {getGlobalWorkerPool} from '../util/global_worker_pool';
-import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
-import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
-import {PauseablePlacement} from './pauseable_placement';
-import {ZoomHistory} from './zoom_history';
-import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
-import {validateCustomStyleLayer} from './style_layer/custom_style_layer';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import {getGlobalWorkerPool} from '../util/global_worker_pool.ts';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
+import {PauseablePlacement} from './pauseable_placement.ts';
+import {ZoomHistory} from './zoom_history.ts';
+import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index.ts';
+import {validateCustomStyleLayer} from './style_layer/custom_style_layer.ts';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 
 // We're skipping validation errors with the `source.canvas` identifier in order
 // to continue to allow canvas sources to be added at runtime/updated in
@@ -36,11 +36,11 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
 }> | null) =>
     _emitValidationErrors(evented, errors && errors.filter(error => error.identifier !== 'source.canvas'));
 
-import type {Map} from '../ui/map';
-import type {Transform} from '../geo/transform';
-import type {StyleImage} from './style_image';
-import type {EvaluationParameters} from './evaluation_parameters';
-import type {Placement} from '../symbol/placement';
+import type {Map} from '../ui/map.ts';
+import type {Transform} from '../geo/transform.ts';
+import type {StyleImage} from './style_image.ts';
+import type {EvaluationParameters} from './evaluation_parameters.ts';
+import type {Placement} from '../symbol/placement.ts';
 import type {
     LayerSpecification,
     FilterSpecification,
@@ -50,15 +50,15 @@ import type {
     SpriteSpecification,
     DiffOperations
 } from '@maplibre/maplibre-gl-style-spec';
-import type {CustomLayerInterface} from './style_layer/custom_style_layer';
-import type {Validator} from './validate_style';
+import type {CustomLayerInterface} from './style_layer/custom_style_layer.ts';
+import type {Validator} from './validate_style.ts';
 import {
     MessageType,
     type GetGlyphsParamerters,
     type GetGlyphsResponse,
     type GetImagesParamerters,
     type GetImagesResponse
-} from '../util/actor_messages';
+} from '../util/actor_messages.ts';
 
 const empty = emptyStyle() as StyleSpecification;
 /**

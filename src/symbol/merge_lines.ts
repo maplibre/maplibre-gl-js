@@ -1,4 +1,4 @@
-import type {SymbolFeature} from '../data/bucket/symbol_bucket';
+import type {SymbolFeature} from '../data/bucket/symbol_bucket.ts';
 
 export function mergeLines(features: Array<SymbolFeature>): Array<SymbolFeature> {
     const leftIndex: {[_: string]: number} = {};

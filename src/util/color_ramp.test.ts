@@ -1,5 +1,5 @@
 
-import {renderColorRamp} from './color_ramp';
+import {renderColorRamp} from './color_ramp.ts';
 import {createPropertyExpression, StylePropertyExpression, StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 
 const spec = {

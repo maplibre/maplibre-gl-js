@@ -1,7 +1,7 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import type {Map} from '../map';
-import type {IControl} from './control';
+import type {Map} from '../map.ts';
+import type {IControl} from './control.ts';
 import type {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**

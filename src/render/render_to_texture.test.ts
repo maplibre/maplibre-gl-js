@@ -1,20 +1,20 @@
-import {RenderToTexture} from './render_to_texture';
-import type {Painter} from './painter';
-import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
-import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
-import {Context} from '../gl/context';
-import {ColorMode} from '../gl/color_mode';
-import {Terrain} from './terrain';
-import {Style} from '../style/style';
-import {Tile} from '../source/tile';
-import {Map} from '../ui/map';
-import {OverscaledTileID} from '../source/tile_id';
-import {SourceCache} from '../source/source_cache';
+import {RenderToTexture} from './render_to_texture.ts';
+import type {Painter} from './painter.ts';
+import type {LineStyleLayer} from '../style/style_layer/line_style_layer.ts';
+import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer.ts';
+import {Context} from '../gl/context.ts';
+import {ColorMode} from '../gl/color_mode.ts';
+import {Terrain} from './terrain.ts';
+import {Style} from '../style/style.ts';
+import {Tile} from '../source/tile.ts';
+import {Map} from '../ui/map.ts';
+import {OverscaledTileID} from '../source/tile_id.ts';
+import {SourceCache} from '../source/source_cache.ts';
 import {TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
-import {RasterStyleLayer} from '../style/style_layer/raster_style_layer';
-import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
-import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
+import {FillStyleLayer} from '../style/style_layer/fill_style_layer.ts';
+import {RasterStyleLayer} from '../style/style_layer/raster_style_layer.ts';
+import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer.ts';
+import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
 
 describe('render to texture', () => {
     const gl = document.createElement('canvas').getContext('webgl');

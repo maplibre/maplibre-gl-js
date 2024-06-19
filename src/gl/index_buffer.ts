@@ -1,7 +1,7 @@
 
-import type {StructArray} from '../util/struct_array';
-import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type';
-import type {Context} from '../gl/context';
+import type {StructArray} from '../util/struct_array.ts';
+import type {TriangleIndexArray, LineIndexArray, LineStripIndexArray} from '../data/index_array_type.ts';
+import type {Context} from '../gl/context.ts';
 
 /**
  * @internal

@@ -1,13 +1,13 @@
 import Point from '@mapbox/point-geometry';
-import {Projection, createProjection} from '../../../src/geo/projection/projection';
-import {Transform} from '../../../src/geo/transform';
-import {CollisionIndex} from '../../../src/symbol/collision_index';
-import Benchmark from '../lib/benchmark';
+import {Projection, createProjection} from '../../../src/geo/projection/projection.ts';
+import {Transform} from '../../../src/geo/transform.ts';
+import {CollisionIndex} from '../../../src/symbol/collision_index.ts';
+import Benchmark from '../lib/benchmark.ts';
 import {mat4} from 'gl-matrix';
-import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
-import {CanonicalTileID, UnwrappedTileID} from '../../../src/source/tile_id';
-import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
-import {EXTENT} from '../../../src/data/extent';
+import {OverlapMode} from '../../../src/style/style_layer/overlap_mode.ts';
+import {CanonicalTileID, UnwrappedTileID} from '../../../src/source/tile_id.ts';
+import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket.ts';
+import {EXTENT} from '../../../src/data/extent.ts';
 
 type TestSymbol = {
     collisionBox: SingleCollisionBox;

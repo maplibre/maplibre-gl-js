@@ -2,8 +2,8 @@ import puppeteer, {Page, Browser} from 'puppeteer';
 import st from 'st';
 import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
-import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
-import {sleep} from '../../../src/util/test/util';
+import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl.js';
+import {sleep} from '../../../src/util/test/util.ts';
 
 const testWidth = 800;
 const testHeight = 600;

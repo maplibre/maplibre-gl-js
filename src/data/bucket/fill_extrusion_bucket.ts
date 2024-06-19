@@ -1,37 +1,37 @@
-import {FillExtrusionLayoutArray, PosArray} from '../array_types.g';
+import {FillExtrusionLayoutArray, PosArray} from '../array_types.g.ts';
 
-import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes';
-import {SegmentVector} from '../segment';
-import {ProgramConfigurationSet} from '../program_configuration';
-import {TriangleIndexArray} from '../index_array_type';
-import {EXTENT} from '../extent';
+import {members as layoutAttributes, centroidAttributes} from './fill_extrusion_attributes.ts';
+import {SegmentVector} from '../segment.ts';
+import {ProgramConfigurationSet} from '../program_configuration.ts';
+import {TriangleIndexArray} from '../index_array_type.ts';
+import {EXTENT} from '../extent.ts';
 import earcut from 'earcut';
 import mvt from '@mapbox/vector-tile';
 const vectorTileFeatureTypes = mvt.VectorTileFeature.types;
 import {classifyRings} from '@maplibre/maplibre-gl-style-spec';
 const EARCUT_MAX_RINGS = 500;
-import {register} from '../../util/web_worker_transfer';
-import {hasPattern, addPatternDependencies} from './pattern_bucket_features';
-import {loadGeometry} from '../load_geometry';
-import {toEvaluationFeature} from '../evaluation_feature';
-import {EvaluationParameters} from '../../style/evaluation_parameters';
+import {register} from '../../util/web_worker_transfer.ts';
+import {hasPattern, addPatternDependencies} from './pattern_bucket_features.ts';
+import {loadGeometry} from '../load_geometry.ts';
+import {toEvaluationFeature} from '../evaluation_feature.ts';
+import {EvaluationParameters} from '../../style/evaluation_parameters.ts';
 
-import type {CanonicalTileID} from '../../source/tile_id';
+import type {CanonicalTileID} from '../../source/tile_id.ts';
 import type {
     Bucket,
     BucketParameters,
     BucketFeature,
     IndexedFeature,
     PopulateParameters
-} from '../bucket';
+} from '../bucket.ts';
 
-import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer';
-import type {Context} from '../../gl/context';
-import type {IndexBuffer} from '../../gl/index_buffer';
-import type {VertexBuffer} from '../../gl/vertex_buffer';
+import type {FillExtrusionStyleLayer} from '../../style/style_layer/fill_extrusion_style_layer.ts';
+import type {Context} from '../../gl/context.ts';
+import type {IndexBuffer} from '../../gl/index_buffer.ts';
+import type {VertexBuffer} from '../../gl/vertex_buffer.ts';
 import type Point from '@mapbox/point-geometry';
-import type {FeatureStates} from '../../source/source_state';
-import type {ImagePosition} from '../../render/image_atlas';
+import type {FeatureStates} from '../../source/source_state.ts';
+import type {ImagePosition} from '../../render/image_atlas.ts';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 const FACTOR = Math.pow(2, 13);

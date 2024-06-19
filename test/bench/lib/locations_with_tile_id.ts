@@ -1,5 +1,5 @@
-import {MercatorCoordinate} from '../../../src/geo/mercator_coordinate';
-import {OverscaledTileID} from '../../../src/source/tile_id';
+import {MercatorCoordinate} from '../../../src/geo/mercator_coordinate.ts';
+import {OverscaledTileID} from '../../../src/source/tile_id.ts';
 
 export type LocationsWithTileID = {
     description: string;

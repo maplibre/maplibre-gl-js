@@ -1,9 +1,9 @@
-import {DepthMode} from '../gl/depth_mode';
-import {StencilMode} from '../gl/stencil_mode';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {StencilMode} from '../gl/stencil_mode.ts';
 
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {CustomStyleLayer} from '../style/style_layer/custom_style_layer';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {CustomStyleLayer} from '../style/style_layer/custom_style_layer.ts';
 
 export function drawCustom(painter: Painter, sourceCache: SourceCache, layer: CustomStyleLayer) {
 

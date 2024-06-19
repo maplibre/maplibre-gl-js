@@ -1,10 +1,10 @@
-import type {SourceCache} from './source_cache';
-import type {StyleLayer} from '../style/style_layer';
-import type {CollisionIndex} from '../symbol/collision_index';
-import type {Transform} from '../geo/transform';
-import type {RetainedQueryData} from '../symbol/placement';
+import type {SourceCache} from './source_cache.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CollisionIndex} from '../symbol/collision_index.ts';
+import type {Transform} from '../geo/transform.ts';
+import type {RetainedQueryData} from '../symbol/placement.ts';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
+import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 

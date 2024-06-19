@@ -1,5 +1,5 @@
 
-import Benchmark from '../lib/benchmark';
+import Benchmark from '../lib/benchmark.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 import Pbf from 'pbf';
 import {featureFilter as createFilter} from '@maplibre/maplibre-gl-style-spec';

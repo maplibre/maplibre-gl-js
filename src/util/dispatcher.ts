@@ -1,11 +1,11 @@
-import {Actor, MessageHandler} from './actor';
-import {getGlobalWorkerPool} from './global_worker_pool';
-import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax';
+import {Actor, MessageHandler} from './actor.ts';
+import {getGlobalWorkerPool} from './global_worker_pool.ts';
+import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax.ts';
 
-import type {WorkerPool} from './worker_pool';
-import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
-import type {RequestResponseMessageMap} from './actor_messages';
-import {MessageType} from './actor_messages';
+import type {WorkerPool} from './worker_pool.ts';
+import type {WorkerSource} from '../source/worker_source.ts'; /* eslint-disable-line */ // this is used for the docs' import
+import type {RequestResponseMessageMap} from './actor_messages.ts';
+import {MessageType} from './actor_messages.ts';
 
 /**
  * Responsible for sending messages from a {@link Source} to an associated

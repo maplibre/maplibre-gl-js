@@ -1,11 +1,11 @@
-import {createMap as globalCreateMap, beforeMapTest, sleep} from '../util/test/util';
-import {Marker} from './marker';
-import {Popup} from './popup';
-import {LngLat} from '../geo/lng_lat';
+import {createMap as globalCreateMap, beforeMapTest, sleep} from '../util/test/util.ts';
+import {Marker} from './marker.ts';
+import {Popup} from './popup.ts';
+import {LngLat} from '../geo/lng_lat.ts';
 import Point from '@mapbox/point-geometry';
-import simulate from '../../test/unit/lib/simulate_interaction';
-import type {Terrain} from '../render/terrain';
-import type {defaultLocale} from './default_locale';
+import simulate from '../../test/unit/lib/simulate_interaction.ts';
+import type {Terrain} from '../render/terrain.ts';
+import type {defaultLocale} from './default_locale.ts';
 
 type MapOptions = {
     locale?: Partial<typeof defaultLocale>;

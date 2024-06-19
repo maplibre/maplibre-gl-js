@@ -1,7 +1,7 @@
-import {DOM} from '../../util/dom';
+import {DOM} from '../../util/dom.ts';
 
-import type {Map} from '../map';
-import type {ControlPosition, IControl} from './control';
+import type {Map} from '../map.ts';
+import type {ControlPosition, IControl} from './control.ts';
 
 /**
  * The {@link LogoControl} options object

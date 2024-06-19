@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {BenchmarksTable} from './components/BenchmarkTable';
-import {summaryStatistics, regression, Summary} from './lib/statistics';
-import type {BenchmarkRowProps} from './components/BenchmarkRow';
+import {BenchmarksTable} from './components/BenchmarkTable.tsx';
+import {summaryStatistics, regression, Summary} from './lib/statistics.ts';
+import type {BenchmarkRowProps} from './components/BenchmarkRow.tsx';
 
 function updateUI(benchmarks: BenchmarkRowProps[], finished?: boolean) {
     finished = !!finished;

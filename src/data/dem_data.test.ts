@@ -1,6 +1,6 @@
-import {DEMData} from './dem_data';
-import {RGBAImage} from '../util/image';
-import {serialize, deserialize} from '../util/web_worker_transfer';
+import {DEMData} from './dem_data.ts';
+import {RGBAImage} from '../util/image.ts';
+import {serialize, deserialize} from '../util/web_worker_transfer.ts';
 
 function createMockImage(height, width) {
     // RGBAImage passed to constructor has uniform 1px padding on all sides.

@@ -1,15 +1,15 @@
-import {TerrainSourceCache} from './terrain_source_cache';
-import {Style} from '../style/style';
-import {RequestManager} from '../util/request_manager';
-import {Dispatcher} from '../util/dispatcher';
+import {TerrainSourceCache} from './terrain_source_cache.ts';
+import {Style} from '../style/style.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {Dispatcher} from '../util/dispatcher.ts';
 import {fakeServer, type FakeServer} from 'nise';
-import {Transform} from '../geo/transform';
-import {Evented} from '../util/evented';
-import {Painter} from '../render/painter';
-import {RasterDEMTileSource} from './raster_dem_tile_source';
-import {OverscaledTileID} from './tile_id';
-import {Tile} from './tile';
-import {DEMData} from '../data/dem_data';
+import {Transform} from '../geo/transform.ts';
+import {Evented} from '../util/evented.ts';
+import {Painter} from '../render/painter.ts';
+import {RasterDEMTileSource} from './raster_dem_tile_source.ts';
+import {OverscaledTileID} from './tile_id.ts';
+import {Tile} from './tile.ts';
+import {DEMData} from '../data/dem_data.ts';
 
 const transform = new Transform();
 

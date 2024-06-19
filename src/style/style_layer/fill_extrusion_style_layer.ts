@@ -1,16 +1,16 @@
-import {StyleLayer} from '../style_layer';
+import {StyleLayer} from '../style_layer.ts';
 
-import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket';
-import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests';
-import {translateDistance, translate} from '../query_utils';
-import properties, {FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g';
-import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties';
+import {FillExtrusionBucket} from '../../data/bucket/fill_extrusion_bucket.ts';
+import {polygonIntersectsPolygon, polygonIntersectsMultiPolygon} from '../../util/intersection_tests.ts';
+import {translateDistance, translate} from '../query_utils.ts';
+import properties, {FillExtrusionPaintPropsPossiblyEvaluated} from './fill_extrusion_style_layer_properties.g.ts';
+import {Transitionable, Transitioning, PossiblyEvaluated} from '../properties.ts';
 import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {BucketParameters} from '../../data/bucket';
-import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
-import type {Transform} from '../../geo/transform';
+import type {BucketParameters} from '../../data/bucket.ts';
+import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g.ts';
+import type {Transform} from '../../geo/transform.ts';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {

@@ -3,15 +3,15 @@ import {
     Uniform1f,
     Uniform2f,
     Uniform3f
-} from '../uniform_binding';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
+} from '../uniform_binding.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
 
-import type {Painter} from '../painter';
-import type {OverscaledTileID} from '../../source/tile_id';
-import type {CrossFaded} from '../../style/properties';
-import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import type {UniformValues} from '../uniform_binding';
-import type {Tile} from '../../source/tile';
+import type {Painter} from '../painter.ts';
+import type {OverscaledTileID} from '../../source/tile_id.ts';
+import type {CrossFaded} from '../../style/properties.ts';
+import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
+import type {UniformValues} from '../uniform_binding.ts';
+import type {Tile} from '../../source/tile.ts';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 
 type BackgroundPatternUniformsType = {

@@ -1,9 +1,9 @@
-import {Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding';
-import {extend} from '../../util/util';
+import {Uniform1i, Uniform1f, Uniform2f, UniformMatrix4f} from '../uniform_binding.ts';
+import {extend} from '../../util/util.ts';
 
-import type {Context} from '../../gl/context';
-import type {Painter} from '../painter';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
+import type {Context} from '../../gl/context.ts';
+import type {Painter} from '../painter.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
 import {mat4} from 'gl-matrix';
 
 export type SymbolIconUniformsType = {

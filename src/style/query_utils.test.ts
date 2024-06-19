@@ -1,6 +1,6 @@
 import Point from '@mapbox/point-geometry';
 
-import {offsetLine} from './query_utils';
+import {offsetLine} from './query_utils.ts';
 
 const defaultPrecision = 10;
 

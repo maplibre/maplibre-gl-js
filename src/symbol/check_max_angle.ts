@@ -1,5 +1,5 @@
 import type Point from '@mapbox/point-geometry';
-import type {Anchor} from './anchor';
+import type {Anchor} from './anchor.ts';
 
 /**
  * Labels placed around really sharp angles aren't readable. Check if any

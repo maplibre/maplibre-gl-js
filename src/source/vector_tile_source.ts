@@ -1,18 +1,18 @@
-import {Event, ErrorEvent, Evented} from '../util/evented';
+import {Event, ErrorEvent, Evented} from '../util/evented.ts';
 
-import {extend, pick} from '../util/util';
-import {loadTileJson} from './load_tilejson';
-import {TileBounds} from './tile_bounds';
-import {ResourceType} from '../util/request_manager';
+import {extend, pick} from '../util/util.ts';
+import {loadTileJson} from './load_tilejson.ts';
+import {TileBounds} from './tile_bounds.ts';
+import {ResourceType} from '../util/request_manager.ts';
 
-import type {Source} from './source';
-import type {OverscaledTileID} from './tile_id';
-import type {Map} from '../ui/map';
-import type {Dispatcher} from '../util/dispatcher';
-import type {Tile} from './tile';
+import type {Source} from './source.ts';
+import type {OverscaledTileID} from './tile_id.ts';
+import type {Map} from '../ui/map.ts';
+import type {Dispatcher} from '../util/dispatcher.ts';
+import type {Tile} from './tile.ts';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {WorkerTileResult} from './worker_source';
-import {MessageType} from '../util/actor_messages';
+import type {WorkerTileResult} from './worker_source.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;

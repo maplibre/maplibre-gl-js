@@ -1,4 +1,4 @@
-import {register, serialize, deserialize} from './web_worker_transfer';
+import {register, serialize, deserialize} from './web_worker_transfer.ts';
 
 describe('web worker transfer', () => {
     test('round trip', () => {

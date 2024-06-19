@@ -1,6 +1,6 @@
-import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value';
+import {ColorAttachment, DepthAttachment, DepthStencilAttachment} from './value.ts';
 
-import type {Context} from './context';
+import type {Context} from './context.ts';
 
 /**
  * @internal

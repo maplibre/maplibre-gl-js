@@ -1,8 +1,8 @@
 import {getTileBBox} from '@mapbox/whoots-js';
-import {EXTENT} from '../data/extent';
+import {EXTENT} from '../data/extent.ts';
 import Point from '@mapbox/point-geometry';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {register} from '../util/web_worker_transfer';
+import {MercatorCoordinate} from '../geo/mercator_coordinate.ts';
+import {register} from '../util/web_worker_transfer.ts';
 import {mat4} from 'gl-matrix';
 import {ICanonicalTileID, IMercatorCoordinate} from '@maplibre/maplibre-gl-style-spec';
 

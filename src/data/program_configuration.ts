@@ -1,23 +1,23 @@
-import {packUint8ToFloat} from '../shaders/encode_attribute';
+import {packUint8ToFloat} from '../shaders/encode_attribute.ts';
 import {Color, supportsPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
-import {register} from '../util/web_worker_transfer';
-import {PossiblyEvaluatedPropertyValue} from '../style/properties';
-import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g';
-import {clamp} from '../util/util';
-import {patternAttributes} from './bucket/pattern_attributes';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {FeaturePositionMap} from './feature_position_map';
-import {Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding';
+import {register} from '../util/web_worker_transfer.ts';
+import {PossiblyEvaluatedPropertyValue} from '../style/properties.ts';
+import {StructArrayLayout1f4, StructArrayLayout2f8, StructArrayLayout4f16, PatternLayoutArray} from './array_types.g.ts';
+import {clamp} from '../util/util.ts';
+import {patternAttributes} from './bucket/pattern_attributes.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {FeaturePositionMap} from './feature_position_map.ts';
+import {Uniform, Uniform1f, UniformColor, Uniform4f} from '../render/uniform_binding.ts';
 
-import type {UniformLocations} from '../render/uniform_binding';
+import type {UniformLocations} from '../render/uniform_binding.ts';
 
-import type {CanonicalTileID} from '../source/tile_id';
-import type {Context} from '../gl/context';
-import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
-import type {CrossfadeParameters} from '../style/evaluation_parameters';
-import type {StructArray, StructArrayMember} from '../util/struct_array';
-import type {VertexBuffer} from '../gl/vertex_buffer';
-import type {ImagePosition} from '../render/image_atlas';
+import type {CanonicalTileID} from '../source/tile_id.ts';
+import type {Context} from '../gl/context.ts';
+import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer.ts';
+import type {CrossfadeParameters} from '../style/evaluation_parameters.ts';
+import type {StructArray, StructArrayMember} from '../util/struct_array.ts';
+import type {VertexBuffer} from '../gl/vertex_buffer.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
 import type {
     Feature,
     FeatureState,
@@ -26,7 +26,7 @@ import type {
     CompositeExpression,
     FormattedSection
 } from '@maplibre/maplibre-gl-style-spec';
-import type {FeatureStates} from '../source/source_state';
+import type {FeatureStates} from '../source/source_state.ts';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
 
 export type BinderUniform = {

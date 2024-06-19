@@ -1,10 +1,10 @@
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {StyleLayer} from '../../style/style_layer';
-import {createMap, beforeMapTest, createStyle} from '../../util/test/util';
-import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
-import {MapLayerEventType, MapLibreEvent} from '../events';
-import {Map, MapOptions} from '../map';
-import {Event as EventedEvent, ErrorEvent} from '../../util/evented';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {StyleLayer} from '../../style/style_layer.ts';
+import {createMap, beforeMapTest, createStyle} from '../../util/test/util.ts';
+import {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
+import {MapLayerEventType, MapLibreEvent} from '../events.ts';
+import {Map, MapOptions} from '../map.ts';
+import {Event as EventedEvent, ErrorEvent} from '../../util/evented.ts';
 
 type IsAny<T> = 0 extends T & 1 ? T : never;
 type NotAny<T> = T extends IsAny<T> ? never : T;

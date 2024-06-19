@@ -1,4 +1,4 @@
-import {createAbortError} from './abort_error';
+import {createAbortError} from './abort_error.ts';
 
 const now = typeof performance !== 'undefined' && performance && performance.now ?
     performance.now.bind(performance) :

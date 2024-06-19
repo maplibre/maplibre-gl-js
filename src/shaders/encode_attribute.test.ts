@@ -1,4 +1,4 @@
-import {packUint8ToFloat} from './encode_attribute';
+import {packUint8ToFloat} from './encode_attribute.ts';
 
 test('packUint8ToFloat', () => {
     expect(packUint8ToFloat(0, 0)).toBe(0);

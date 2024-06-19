@@ -1,9 +1,9 @@
 import Point from '@mapbox/point-geometry';
 
-import type {PossiblyEvaluatedPropertyValue} from './properties';
-import type {StyleLayer} from '../style/style_layer';
-import type {CircleBucket} from '../data/bucket/circle_bucket';
-import type {LineBucket} from '../data/bucket/line_bucket';
+import type {PossiblyEvaluatedPropertyValue} from './properties.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {CircleBucket} from '../data/bucket/circle_bucket.ts';
+import type {LineBucket} from '../data/bucket/line_bucket.ts';
 
 export function getMaximumPaintValue(
     property: string,

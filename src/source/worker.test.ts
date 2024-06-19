@@ -1,13 +1,13 @@
 import {fakeServer} from 'nise';
-import Worker from './worker';
+import Worker from './worker.ts';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {WorkerGlobalScopeInterface} from '../util/web_worker';
-import {CanonicalTileID, OverscaledTileID} from './tile_id';
-import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source';
-import {rtlWorkerPlugin} from './rtl_text_plugin_worker';
-import {ActorTarget, IActor} from '../util/actor';
-import {PluginState} from './rtl_text_plugin_status';
-import {MessageType} from '../util/actor_messages';
+import {WorkerGlobalScopeInterface} from '../util/web_worker.ts';
+import {CanonicalTileID, OverscaledTileID} from './tile_id.ts';
+import {WorkerSource, WorkerTileParameters, WorkerTileResult} from './worker_source.ts';
+import {rtlWorkerPlugin} from './rtl_text_plugin_worker.ts';
+import {ActorTarget, IActor} from '../util/actor.ts';
+import {PluginState} from './rtl_text_plugin_status.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 class WorkerSourceMock implements WorkerSource {
     availableImages: string[];

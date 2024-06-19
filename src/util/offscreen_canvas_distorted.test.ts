@@ -1,6 +1,6 @@
-import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted.ts';
 import {Canvas} from 'canvas';
-import {offscreenCanvasSupported} from './offscreen_canvas_supported';
+import {offscreenCanvasSupported} from './offscreen_canvas_supported.ts';
 
 test('normal operation does not mangle canvas', () => {
     const OffscreenCanvas = (window as any).OffscreenCanvas = jest.fn((width:number, height: number) => {

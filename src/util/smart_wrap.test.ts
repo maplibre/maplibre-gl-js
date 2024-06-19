@@ -1,7 +1,7 @@
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../geo/lng_lat';
-import {Transform} from '../geo/transform';
-import {smartWrap} from './smart_wrap';
+import {LngLat} from '../geo/lng_lat.ts';
+import {Transform} from '../geo/transform.ts';
+import {smartWrap} from './smart_wrap.ts';
 
 const transform = new Transform();
 transform.width = 100;

@@ -1,8 +1,8 @@
-import {DOM} from '../../util/dom';
-import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
-import {Map, MapOptions} from '../map';
-import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson';
+import {DOM} from '../../util/dom.ts';
+import simulate from '../../../test/unit/lib/simulate_interaction.ts';
+import {beforeMapTest} from '../../util/test/util.ts';
+import {Map, MapOptions} from '../map.ts';
+import type {MapGeoJSONFeature} from '../../util/vectortile_to_geojson.ts';
 
 function createMap(clickTolerance?, dragPan?) {
     return new Map({

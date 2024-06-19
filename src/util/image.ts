@@ -1,4 +1,4 @@
-import {register} from './web_worker_transfer';
+import {register} from './web_worker_transfer.ts';
 
 export type Size = {
     width: number;

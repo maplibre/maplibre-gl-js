@@ -1,16 +1,16 @@
-import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding';
-import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
-import {extend} from '../../util/util';
+import {Uniform1i, Uniform1f, Uniform2f, Uniform3f, UniformMatrix4f} from '../uniform_binding.ts';
+import {pixelsToTileUnits} from '../../source/pixels_to_tile_units.ts';
+import {extend} from '../../util/util.ts';
 
-import type {Context} from '../../gl/context';
-import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Transform} from '../../geo/transform';
-import type {Tile} from '../../source/tile';
-import type {CrossFaded} from '../../style/properties';
-import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
-import type {Painter} from '../painter';
-import type {CrossfadeParameters} from '../../style/evaluation_parameters';
-import {OverscaledTileID} from '../../source/tile_id';
+import type {Context} from '../../gl/context.ts';
+import type {UniformValues, UniformLocations} from '../uniform_binding.ts';
+import type {Transform} from '../../geo/transform.ts';
+import type {Tile} from '../../source/tile.ts';
+import type {CrossFaded} from '../../style/properties.ts';
+import type {LineStyleLayer} from '../../style/style_layer/line_style_layer.ts';
+import type {Painter} from '../painter.ts';
+import type {CrossfadeParameters} from '../../style/evaluation_parameters.ts';
+import {OverscaledTileID} from '../../source/tile_id.ts';
 
 export type LineUniformsType = {
     'u_matrix': UniformMatrix4f;

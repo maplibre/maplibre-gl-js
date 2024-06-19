@@ -1,8 +1,8 @@
-import {WorkerTile} from '../source/worker_tile';
-import {GeoJSONWrapper, Feature} from '../source/geojson_wrapper';
-import {OverscaledTileID} from '../source/tile_id';
-import {StyleLayerIndex} from '../style/style_layer_index';
-import {WorkerTileParameters} from './worker_source';
+import {WorkerTile} from '../source/worker_tile.ts';
+import {GeoJSONWrapper, Feature} from '../source/geojson_wrapper.ts';
+import {OverscaledTileID} from '../source/tile_id.ts';
+import {StyleLayerIndex} from '../style/style_layer_index.ts';
+import {WorkerTileParameters} from './worker_source.ts';
 import {VectorTile} from '@mapbox/vector-tile';
 
 function createWorkerTile() {

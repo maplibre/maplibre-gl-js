@@ -1,8 +1,8 @@
-import {StyleLayer} from '../style_layer';
+import {StyleLayer} from '../style_layer.ts';
 
-import {SymbolBucket, SymbolFeature} from '../../data/bucket/symbol_bucket';
-import {resolveTokens} from '../../util/resolve_tokens';
-import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g';
+import {SymbolBucket, SymbolFeature} from '../../data/bucket/symbol_bucket.ts';
+import {resolveTokens} from '../../util/resolve_tokens.ts';
+import properties, {SymbolLayoutPropsPossiblyEvaluated, SymbolPaintPropsPossiblyEvaluated} from './symbol_style_layer_properties.g.ts';
 
 import {
     Transitionable,
@@ -11,7 +11,7 @@ import {
     PossiblyEvaluated,
     PossiblyEvaluatedPropertyValue,
     PropertyValue
-} from '../properties';
+} from '../properties.ts';
 
 import {
     isExpression,
@@ -24,12 +24,12 @@ import {
     FormatExpression,
     Literal} from '@maplibre/maplibre-gl-style-spec';
 
-import type {BucketParameters} from '../../data/bucket';
-import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g';
-import type {EvaluationParameters} from '../evaluation_parameters';
+import type {BucketParameters} from '../../data/bucket.ts';
+import type {SymbolLayoutProps, SymbolPaintProps} from './symbol_style_layer_properties.g.ts';
+import type {EvaluationParameters} from '../evaluation_parameters.ts';
 import type {Expression, Feature, SourceExpression, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {CanonicalTileID} from '../../source/tile_id';
-import {FormatSectionOverride} from '../format_section_override';
+import type {CanonicalTileID} from '../../source/tile_id.ts';
+import {FormatSectionOverride} from '../format_section_override.ts';
 
 export class SymbolStyleLayer extends StyleLayer {
     _unevaluatedLayout: Layout<SymbolLayoutProps>;

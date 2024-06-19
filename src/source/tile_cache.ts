@@ -1,5 +1,5 @@
-import {OverscaledTileID} from './tile_id';
-import type {Tile} from './tile';
+import {OverscaledTileID} from './tile_id.ts';
+import type {Tile} from './tile.ts';
 
 /**
  * @internal

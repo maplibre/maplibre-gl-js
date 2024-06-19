@@ -1,15 +1,15 @@
-import {StencilMode} from '../gl/stencil_mode';
-import {DepthMode} from '../gl/depth_mode';
-import {CullFaceMode} from '../gl/cull_face_mode';
+import {StencilMode} from '../gl/stencil_mode.ts';
+import {DepthMode} from '../gl/depth_mode.ts';
+import {CullFaceMode} from '../gl/cull_face_mode.ts';
 import {
     backgroundUniformValues,
     backgroundPatternUniformValues
-} from './program/background_program';
+} from './program/background_program.ts';
 
-import type {Painter} from './painter';
-import type {SourceCache} from '../source/source_cache';
-import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
-import {OverscaledTileID} from '../source/tile_id';
+import type {Painter} from './painter.ts';
+import type {SourceCache} from '../source/source_cache.ts';
+import type {BackgroundStyleLayer} from '../style/style_layer/background_style_layer.ts';
+import {OverscaledTileID} from '../source/tile_id.ts';
 
 export function drawBackground(painter: Painter, sourceCache: SourceCache, layer: BackgroundStyleLayer, coords?: Array<OverscaledTileID>) {
     const color = layer.paint.get('background-color');

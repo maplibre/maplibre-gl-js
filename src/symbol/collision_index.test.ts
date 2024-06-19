@@ -1,8 +1,8 @@
-import {CollisionIndex} from './collision_index';
+import {CollisionIndex} from './collision_index.ts';
 import {mat4} from 'gl-matrix';
 
-import {Transform} from '../geo/transform';
-import {createProjection} from '../geo/projection/projection';
+import {Transform} from '../geo/transform.ts';
+import {createProjection} from '../geo/projection/projection.ts';
 
 describe('CollisionIndex', () => {
 

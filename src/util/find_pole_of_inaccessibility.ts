@@ -1,7 +1,7 @@
 import Queue from 'tinyqueue';
 
 import Point from '@mapbox/point-geometry';
-import {distToSegmentSquared} from './intersection_tests';
+import {distToSegmentSquared} from './intersection_tests.ts';
 
 /**
  * Finds an approximation of a polygon's Pole Of Inaccessibility https://en.wikipedia.org/wiki/Pole_of_inaccessibility

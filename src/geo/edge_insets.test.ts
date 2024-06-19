@@ -1,5 +1,5 @@
 import expect from 'expect';
-import {EdgeInsets} from '../geo/edge_insets';
+import {EdgeInsets} from '../geo/edge_insets.ts';
 
 describe('EdgeInsets', () => {
     describe('#constructor', () => {

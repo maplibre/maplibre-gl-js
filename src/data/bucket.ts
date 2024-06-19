@@ -1,11 +1,11 @@
-import type {CollisionBoxArray} from './array_types.g';
-import type {Style} from '../style/style';
-import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer';
-import type {FeatureIndex} from './feature_index';
-import type {Context} from '../gl/context';
-import type {FeatureStates} from '../source/source_state';
-import type {ImagePosition} from '../render/image_atlas';
-import type {CanonicalTileID} from '../source/tile_id';
+import type {CollisionBoxArray} from './array_types.g.ts';
+import type {Style} from '../style/style.ts';
+import type {TypedStyleLayer} from '../style/style_layer/typed_style_layer.ts';
+import type {FeatureIndex} from './feature_index.ts';
+import type {Context} from '../gl/context.ts';
+import type {FeatureStates} from '../source/source_state.ts';
+import type {ImagePosition} from '../render/image_atlas.ts';
+import type {CanonicalTileID} from '../source/tile_id.ts';
 import type {VectorTileFeature, VectorTileLayer} from '@mapbox/vector-tile';
 import Point from '@mapbox/point-geometry';
 

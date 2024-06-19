@@ -1,4 +1,4 @@
-import type {CullFaceModeType, FrontFaceType} from './types';
+import type {CullFaceModeType, FrontFaceType} from './types.ts';
 
 const BACK = 0x0405;
 const CCW = 0x0901;

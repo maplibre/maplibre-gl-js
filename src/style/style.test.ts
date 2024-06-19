@@ -1,22 +1,22 @@
-import {Style} from './style';
-import {SourceCache} from '../source/source_cache';
-import {StyleLayer} from './style_layer';
-import {Transform} from '../geo/transform';
-import {extend} from '../util/util';
-import {RequestManager} from '../util/request_manager';
-import {Event, Evented} from '../util/evented';
-import {RGBAImage} from '../util/image';
-import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
-import {browser} from '../util/browser';
-import {OverscaledTileID} from '../source/tile_id';
+import {Style} from './style.ts';
+import {SourceCache} from '../source/source_cache.ts';
+import {StyleLayer} from './style_layer.ts';
+import {Transform} from '../geo/transform.ts';
+import {extend} from '../util/util.ts';
+import {RequestManager} from '../util/request_manager.ts';
+import {Event, Evented} from '../util/evented.ts';
+import {RGBAImage} from '../util/image.ts';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread.ts';
+import {browser} from '../util/browser.ts';
+import {OverscaledTileID} from '../source/tile_id.ts';
 import {fakeServer, type FakeServer} from 'nise';
 
-import {EvaluationParameters} from './evaluation_parameters';
+import {EvaluationParameters} from './evaluation_parameters.ts';
 import {LayerSpecification, GeoJSONSourceSpecification, FilterSpecification, SourceSpecification, StyleSpecification, SymbolLayerSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
-import {GeoJSONSource} from '../source/geojson_source';
-import {sleep} from '../util/test/util';
-import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
-import {MessageType} from '../util/actor_messages';
+import {GeoJSONSource} from '../source/geojson_source.ts';
+import {sleep} from '../util/test/util.ts';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status.ts';
+import {MessageType} from '../util/actor_messages.ts';
 
 function createStyleJSON(properties?): StyleSpecification {
     return extend({

@@ -1,7 +1,7 @@
-import Benchmark from '../lib/benchmark';
+import Benchmark from '../lib/benchmark.ts';
 
 import {latest as spec, convertFunction, isFunction, createFunction, createPropertyExpression} from '@maplibre/maplibre-gl-style-spec';
-import fetchStyle from '../lib/fetch_style';
+import fetchStyle from '../lib/fetch_style.ts';
 
 import type {StyleSpecification, StylePropertyExpression, StylePropertySpecification} from '@maplibre/maplibre-gl-style-spec';
 

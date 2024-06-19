@@ -1,38 +1,38 @@
-import {uniqueId, parseCacheControl} from '../util/util';
-import {deserialize as deserializeBucket} from '../data/bucket';
-import '../data/feature_index';
-import type {FeatureIndex} from '../data/feature_index';
-import {GeoJSONFeature} from '../util/vectortile_to_geojson';
+import {uniqueId, parseCacheControl} from '../util/util.ts';
+import {deserialize as deserializeBucket} from '../data/bucket.ts';
+import '../data/feature_index.ts';
+import type {FeatureIndex} from '../data/feature_index.ts';
+import {GeoJSONFeature} from '../util/vectortile_to_geojson.ts';
 import {featureFilter} from '@maplibre/maplibre-gl-style-spec';
-import {SymbolBucket} from '../data/bucket/symbol_bucket';
-import {CollisionBoxArray} from '../data/array_types.g';
-import {Texture} from '../render/texture';
-import {browser} from '../util/browser';
-import {toEvaluationFeature} from '../data/evaluation_feature';
-import {EvaluationParameters} from '../style/evaluation_parameters';
-import {SourceFeatureState} from '../source/source_state';
-import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread';
+import {SymbolBucket} from '../data/bucket/symbol_bucket.ts';
+import {CollisionBoxArray} from '../data/array_types.g.ts';
+import {Texture} from '../render/texture.ts';
+import {browser} from '../util/browser.ts';
+import {toEvaluationFeature} from '../data/evaluation_feature.ts';
+import {EvaluationParameters} from '../style/evaluation_parameters.ts';
+import {SourceFeatureState} from '../source/source_state.ts';
+import {rtlMainThreadPluginFactory} from './rtl_text_plugin_main_thread.ts';
 
 const CLOCK_SKEW_RETRY_TIMEOUT = 30000;
 
-import type {Bucket} from '../data/bucket';
-import type {StyleLayer} from '../style/style_layer';
-import type {WorkerTileResult} from './worker_source';
-import type {Actor} from '../util/actor';
-import type {DEMData} from '../data/dem_data';
-import type {AlphaImage} from '../util/image';
-import type {ImageAtlas} from '../render/image_atlas';
-import type {ImageManager} from '../render/image_manager';
-import type {Context} from '../gl/context';
-import type {OverscaledTileID} from './tile_id';
-import type {Framebuffer} from '../gl/framebuffer';
-import type {Transform} from '../geo/transform';
-import type {LayerFeatureStates} from './source_state';
+import type {Bucket} from '../data/bucket.ts';
+import type {StyleLayer} from '../style/style_layer.ts';
+import type {WorkerTileResult} from './worker_source.ts';
+import type {Actor} from '../util/actor.ts';
+import type {DEMData} from '../data/dem_data.ts';
+import type {AlphaImage} from '../util/image.ts';
+import type {ImageAtlas} from '../render/image_atlas.ts';
+import type {ImageManager} from '../render/image_manager.ts';
+import type {Context} from '../gl/context.ts';
+import type {OverscaledTileID} from './tile_id.ts';
+import type {Framebuffer} from '../gl/framebuffer.ts';
+import type {Transform} from '../geo/transform.ts';
+import type {LayerFeatureStates} from './source_state.ts';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
 import {mat4} from 'gl-matrix';
 import type {VectorTileLayer} from '@mapbox/vector-tile';
-import {ExpiryData} from '../util/ajax';
+import {ExpiryData} from '../util/ajax.ts';
 
 /**
  * The tile's state, can be:

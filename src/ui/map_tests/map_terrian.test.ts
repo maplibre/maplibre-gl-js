@@ -1,8 +1,8 @@
-import {createMap, beforeMapTest} from '../../util/test/util';
-import {LngLat} from '../../geo/lng_lat';
+import {createMap, beforeMapTest} from '../../util/test/util.ts';
+import {LngLat} from '../../geo/lng_lat.ts';
 import {fakeServer, FakeServer} from 'nise';
-import {Terrain} from '../../render/terrain';
-import {Transform} from '../../geo/transform';
+import {Terrain} from '../../render/terrain.ts';
+import {Transform} from '../../geo/transform.ts';
 
 let server: FakeServer;
 
