@@ -948,6 +948,7 @@ export abstract class Camera extends Evented {
         noMoveStart?: boolean;
     }, eventData?: any): this {
         this._stop(false, options.easeId);
+        return; // JP: TODO: remove me!
 
         options = extend({
             offset: [0, 0],
@@ -1223,6 +1224,8 @@ export abstract class Camera extends Evented {
         // function in van Wijk (2003).
 
         this.stop();
+
+        return; // JP: TODO: remove me!
 
         options = extend({
             offset: [0, 0],
