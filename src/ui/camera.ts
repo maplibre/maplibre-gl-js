@@ -16,6 +16,7 @@ import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {Projection} from '../geo/projection/projection';
 import {angularCoordinatesToVector, getZoomAdjustment} from '../geo/projection/globe_transform';
+import {mat4, vec3} from 'gl-matrix';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *
@@ -783,6 +784,7 @@ export abstract class Camera extends Evented {
                 angularCoordinatesToVector(new LngLat(lngMid, latNorth)),
                 angularCoordinatesToVector(new LngLat(lngMid, latSouth))
             ];
+            const vecToCenter = angularCoordinatesToVector(center);
 
             const xLeft = (edgePadding.left + options.padding.left) / clonedTr.width * 2.0 - 1.0;
             const xRight = (clonedTr.width - edgePadding.right - options.padding.right) / clonedTr.width * 2.0 - 1.0;
@@ -793,20 +795,14 @@ export abstract class Camera extends Evented {
             let smallestNeededScale = Number.POSITIVE_INFINITY;
 
             for (const vec of testVectors) {
-                const vecDotRowX = vec[0] * matrix[0] + vec[1] * matrix[4] + vec[2] * matrix[8];
-                const vecDotRowY = vec[0] * matrix[1] + vec[1] * matrix[5] + vec[2] * matrix[9];
-                const vecDotRowW = vec[0] * matrix[3] + vec[1] * matrix[7] + vec[2] * matrix[11];
-                const offsetX = matrix[12];
-                const offsetY = matrix[13];
-                const offsetW = matrix[15];
                 console.log(smallestNeededScale);
-                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vecDotRowX, vecDotRowW, offsetX, offsetW, xLeft));
+                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 0, xLeft));
                 console.log(smallestNeededScale);
-                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vecDotRowX, vecDotRowW, offsetX, offsetW, xRight));
+                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 0, xRight));
                 console.log(smallestNeededScale);
-                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vecDotRowY, vecDotRowW, offsetY, offsetW, yTop));
+                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 1, yTop));
                 console.log(smallestNeededScale);
-                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vecDotRowY, vecDotRowW, offsetY, offsetW, yBottom));
+                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vec, vecToCenter, matrix, 1, yBottom));
             }
             console.log(smallestNeededScale);
 
@@ -1569,12 +1565,59 @@ export abstract class Camera extends Evented {
     }
 }
 
-function solveVectorScale(vectorDotRowMain: number, vectorDotRowW: number, matrixRowOffsetMain: number, matrixOffsetW: number, targetValue: number): number | null {
-    if (vectorDotRowMain === vectorDotRowW * targetValue || vectorDotRowW * matrixRowOffsetMain === vectorDotRowMain * matrixOffsetW) {
+function solveVectorScale(vector: vec3, toCenter: vec3, projection: mat4, targetDimension: number, targetValue: number): number | null {
+    // We want to compute how much to scale the sphere in order for the input `vector` to project to `targetValue` in the given `targetDimension` (0=x, 1=y)
+    // Let vectors be column, let the first row of a matrix be at indices 0,4,8,12
+    // Let t := the scale we are looking for
+    // Let v := `vector`
+    // Let c := `toCenter` (map center vector)
+    // Let v_p := the vector that gets projected
+    // Let k := targetValue
+    // Let m := projection matrix
+    // Then:
+    // v_p = v*t + (1-t)*c
+    // Let . be a dot product
+    // Assume that targetDimension = 0 (X)
+    // For v_p to project to k, it must hold (from how matrix multiplication + projection division works):
+    // Let a_xyz := m[row 0][columns 0,1,2]
+    // Let a_w := m[row 0][column 3]
+    // Let b_xyz := m[row 3][columns 0,1,2]
+    // Let b_w := m[row 3][column 3]
+    // (v_p.m[row 0][columns 0,1,2] + m[row0][col3]) / (v_p.m[row 3][columns 0,1,2] + m[row3][col3]) = k
+    // We are doing dot products with v_p with some `d`, which we can write out as:
+    // (v*t + (1-t)*c).d
+    // v.d*t + (1-t)*c.d
+    // Thus we want to precompute:
+    // v_a := v.a_xyz
+    // c_a := c.a_xyz
+    // v_b := v.b_xyz
+    // c_b := c.b_xyz
+    // Then the matrix projection becomes:
+    // (v_a*t + (1-t)*c_a + a_w) / (v_b*t + (1-t)*c_b + b_w) = k
+    // Then we plug this to some equation solver and get:
+    // t = (c_a + a_w - k*c_b - k*b_w) / (c_a - v_a - k*c_b + k*v_b)
+    //     if:
+    //        c_a + k*v_b != v_a + k*c_b
+    //        b_w*(v_a-c_a) + a_w*(c_b-v_b) + v_a*c_b != c_a*v_b
+    const k = targetValue;
+    const a = targetDimension === 0 ?
+        [projection[0], projection[4], projection[8], projection[12]] :
+        [projection[1], projection[5], projection[9], projection[13]];
+    const b = [projection[3], projection[7], projection[11], projection[15]];
+
+    const aw = a[3];
+    const bw = b[3];
+    const va = vector[0] * a[0] + vector[1] * a[1] + vector[2] * a[2];
+    const vb = vector[0] * b[0] + vector[1] * b[1] + vector[2] * b[2];
+    const ca = toCenter[0] * a[0] + toCenter[1] * a[1] + toCenter[2] * a[2];
+    const cb = toCenter[0] * b[0] + toCenter[1] * b[1] + toCenter[2] * b[2];
+
+    const t = (ca + aw - k * cb - k * bw) / (ca - va - k * cb + k * vb);
+
+    if (ca + k * vb === va + k * cb || bw * (va - ca) + aw * (cb - vb) + va * cb === ca * vb) {
         return null;
     }
-    const result = (matrixOffsetW * targetValue - matrixRowOffsetMain) / (vectorDotRowMain - vectorDotRowW * targetValue);
-    return result;
+    return t;
 }
 
 function getLesserNonNegativeNonNull(oldValue: number, newValue: number): number {
