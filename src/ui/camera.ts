@@ -758,14 +758,35 @@ export abstract class Camera extends Evented {
             // JP: TODO: nesymetrický padding nefunguje
             // JP: TODO: unit test this
 
-            const lngEast = bounds.getEast();
-            const lngWest = bounds.getWest();
-            const lngMid = lngEast + differenceOfAnglesDegrees(lngEast, lngWest) * 0.5;
-            const latNorth = bounds.getNorth();
-            const latSouth = bounds.getSouth();
-            const latMid = latNorth + differenceOfAnglesDegrees(latNorth, latSouth) * 0.5;
+            const xLeft = (edgePadding.left + options.padding.left) / tr.width * 2.0 - 1.0;
+            const xRight = (tr.width - edgePadding.right - options.padding.right) / tr.width * 2.0 - 1.0;
+            const yTop = (edgePadding.top + options.padding.top) / tr.height * -2.0 + 1.0;
+            const yBottom = (tr.height - edgePadding.bottom - options.padding.bottom) / tr.height * -2.0 + 1.0;
 
-            const center = new LngLat(lngMid, latMid);
+            // |                |xxxxxxxxxxxxxxxx|
+            //                  ^center
+            // |                |    xxxxxxxxx   |
+            //                  ^center
+            // |                |            xxxx|
+            //                  ^center
+
+            // 0 is east edge, 1 is west edge
+            const centerBiasX = -xLeft / (xRight - xLeft);
+            const centerBiasY = yTop / (yTop - yBottom);
+
+            const flipEastWest = differenceOfAnglesDegrees(bounds.getWest(), bounds.getEast()) < 0;
+            const lngWest = flipEastWest ? bounds.getEast() : bounds.getWest();
+            const lngEast = flipEastWest ? bounds.getWest() : bounds.getEast();
+            const lngDiffWestToEast = differenceOfAnglesDegrees(lngWest, lngEast);
+            const latNorth = Math.max(bounds.getNorth(), bounds.getSouth()); // "getNorth" doesn't always return north...
+            const latSouth = Math.min(bounds.getNorth(), bounds.getSouth());
+            const latDiffNorthToSouth = differenceOfAnglesDegrees(latNorth, latSouth);
+
+            const center = new LngLat(lngWest + lngDiffWestToEast * centerBiasX, latNorth + latDiffNorthToSouth * centerBiasY);
+
+            // Additional vectors will be tested for the rectangle midpoints
+            const lngMid = lngWest + lngDiffWestToEast * 0.5;
+            const latMid = latNorth + latDiffNorthToSouth * 0.5;
 
             const clonedTr = tr.clone();
             clonedTr.center = center;
@@ -785,11 +806,6 @@ export abstract class Camera extends Evented {
                 angularCoordinatesToVector(new LngLat(lngMid, latSouth))
             ];
             const vecToCenter = angularCoordinatesToVector(center);
-
-            const xLeft = (edgePadding.left + options.padding.left) / clonedTr.width * 2.0 - 1.0;
-            const xRight = (clonedTr.width - edgePadding.right - options.padding.right) / clonedTr.width * 2.0 - 1.0;
-            const yTop = (edgePadding.top + options.padding.top) / clonedTr.height * -2.0 + 1.0;
-            const yBottom = (clonedTr.height - edgePadding.bottom - options.padding.bottom) / clonedTr.height * -2.0 + 1.0;
 
             const matrix = clonedTr.projectionMatrix;
             let smallestNeededScale = Number.POSITIVE_INFINITY;
