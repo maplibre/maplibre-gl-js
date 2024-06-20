@@ -84,8 +84,8 @@
     },
     "sky": {
         "sky-color": "#199EF3",
-        "fog-color": "#daeff0",
-        "horizon-fog-blend": 1,
+        "horizon-color": "#daeff0",
+        "sky-horizon-blend": 1,
         "fog-ground-blend": 1
     }
 }
