@@ -85,7 +85,7 @@
     "sky": {
         "sky-color": "#199EF3",
         "fog-color": "#daeff0",
-        "horizon-blend": 1,
-        "fog-blend": 1
+        "horizon-fog-blend": 1,
+        "fog-ground-blend": 1
     }
 }
