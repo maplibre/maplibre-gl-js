@@ -45,7 +45,7 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
 
     const atmosphereBlend = sky.getAtmosphereBlend();
     if (atmosphereBlend === 0) {
-        // Dont draw anythink if atmosphere is fully transparent
+        // Don't draw anythink if atmosphere is fully transparent
         return;
     }
 

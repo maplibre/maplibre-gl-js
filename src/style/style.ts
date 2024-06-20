@@ -594,8 +594,7 @@ export class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
-
-            if (this.sky) this.sky.updateTransitions(parameters);
+            this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }

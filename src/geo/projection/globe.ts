@@ -424,7 +424,7 @@ export class GlobeProjection implements Projection {
         return dotResult < 0.0;
     }
 
-    public transformLightDirection(transform: { center: LngLat; pitch: number; angle: number }, dir: vec3): vec3 {
+    public transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3 {
         const sphereX = -transform.center.lng * Math.PI / 180.0;
         const sphereY = transform.center.lat * Math.PI / 180.0;
 
