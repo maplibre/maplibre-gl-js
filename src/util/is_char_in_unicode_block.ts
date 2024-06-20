@@ -1,5 +1,5 @@
-// The following table comes from <http://www.unicode.org/Public/12.0.0/ucd/Blocks.txt>.
-// Keep it synchronized with <http://www.unicode.org/Public/UCD/latest/ucd/Blocks.txt>.
+// The following table comes from <https://www.unicode.org/Public/12.0.0/ucd/Blocks.txt>.
+// Keep it synchronized with <https://www.unicode.org/Public/UCD/latest/ucd/Blocks.txt>.
 
 type UnicodeBlockLookup = {[key: string]: (char: number) => boolean};
 

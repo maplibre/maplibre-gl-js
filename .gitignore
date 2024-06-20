@@ -6,6 +6,7 @@
 /docs/API
 /docs/examples
 /docs/example
+.cache/
 *.es.js
 *.js.map
 node_modules
@@ -36,3 +37,4 @@ npm-debug.log
 *.iml
 /.vs/
 .*.swp
+junit.xml

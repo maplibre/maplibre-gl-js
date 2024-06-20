@@ -17,6 +17,7 @@ const config: Config = {
     coverageProvider: 'v8',
     reporters: [
         'github-actions',
+        'jest-junit',
         ['jest-monocart-coverage', {
             name: 'MapLibre Unit Coverage Report',
 
@@ -28,7 +29,7 @@ const config: Config = {
                 return !sourcePath.includes('node_modules/') && sourcePath.search(/src\//) !== -1;
             },
 
-            outputDir: './coverage/unit'
+            outputDir: './coverage/jest'
         }]
     ],
     projects: [

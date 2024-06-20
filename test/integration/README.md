@@ -18,11 +18,11 @@ The contents of vector tile fixtures can be read using the [`vt2geojson`](https:
 
 ## Running tests in GitHub
 All tests are run for every PR. If you're not sure yet if the tests are good, you may use a Draft PR to indicate that the work is still in progress.
-Each jos, or a group of tests, will create an atrifact of any of its tests fail. The artifacts are found at the bottom of the jobs summary
+Each jos, or a group of tests, will create an artifact of any of its tests fail. The artifacts are found at the bottom of the jobs summary
 
 <image width="80%" src="https://github.com/maplibre/maplibre-gl-js/assets/1304610/bc313a30-cdec-4de5-b6c9-90637ffbf79a"/>
 
-Download the appropriate artifact as a zip file, open it and view the `resutls.html` file it contains.
+Download the appropriate artifact as a zip file, open it and view the `results.html` file it contains.
 The "Actual" image of a failed test can be saved and used as the new "Expected" image.
 
 ## Running tests in the development environment
@@ -59,7 +59,7 @@ Additionally, it may be helpful to use a visual jest frontend (e.g. `npx majesti
 
 To run a subset of tests or an individual test, you can pass a specific subdirectory to the `test-render` script. For example, to run all the tests for a given property, e.g. `circle-radius`:
 ```
-$ npm run test-render circle-radius
+$ npm run test-render -- circle-radius
 ...
 * passed circle-radius/antimeridian
 * passed circle-radius/default
@@ -73,7 +73,7 @@ Done in 2.71s.
 ```
 Or to run a single test:
 ```
-$ npm run test-render circle-radius/literal
+$ npm run test-render -- circle-radius/literal
 ...
 * passed circle-radius/literal
 1 passed (100.0%)
@@ -83,7 +83,7 @@ Done in 2.32s.
 ### Detailed debug messages for render tests
 Render tests are executed in browser, and by default console messages are hidden. If need to see them, please pass <code>--debug</code> parameter:
 ```
-$ npm run test-render raster-masking/overlapping-zoom -- --debug
+$ npm run test-render -- raster-masking/overlapping-zoom --debug
 ```
 
 ### Viewing render test results
@@ -106,7 +106,7 @@ open ./test/integration/render/results.html
 
 If want to skip the report, please pass <code>--skip-report</code> parameter
 ```
-$ npm run test-render circle-radius/literal -- --skip-report
+$ npm run test-render -- circle-radius/literal --skip-report
 ```
 
 ### Updating results of render test results
@@ -137,7 +137,7 @@ In test/integration/lib/query-browser-jest.test.ts a web server is automatically
 npx st  -l --port 7357 -d test/integration -co
 ```
 
-We currently run each test in a new tab. Alterantively we might gain some speed by clearing the webgl context instead, and running everything in one tab.
+We currently run each test in a new tab. Alternatively we might gain some speed by clearing the webgl context instead, and running everything in one tab.
 
 ```
 delete map.painter.context.gl;

@@ -1,6 +1,7 @@
 import {extend, isWorker} from './util';
 import {createAbortError} from './abort_error';
 import {getProtocol} from '../source/protocol_crud';
+import {MessageType} from './actor_messages';
 
 /**
  * This is used to identify the global dispatcher id when sending a message from the worker without a target map id.
@@ -149,7 +150,8 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         signal: abortController.signal
     });
 
-    if (requestParameters.type === 'json') {
+    // If the user has already set an Accept header, do not overwrite it here
+    if (requestParameters.type === 'json' && !request.headers.has('Accept')) {
         request.headers.set('Accept', 'application/json');
     }
 
@@ -158,9 +160,14 @@ async function makeFetchRequest(requestParameters: RequestParameters, abortContr
         const body = await response.blob();
         throw new AJAXError(response.status, response.statusText, requestParameters.url, body);
     }
-    const parsePromise = (requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image') ? response.arrayBuffer() :
-        requestParameters.type === 'json' ? response.json() :
-            response.text();
+    let parsePromise: Promise<any>;
+    if ((requestParameters.type === 'arrayBuffer' || requestParameters.type === 'image')) {
+        parsePromise = response.arrayBuffer();
+    } else if (requestParameters.type === 'json') {
+        parsePromise = response.json();
+    } else {
+        parsePromise = response.text();
+    }
     const result = await parsePromise;
     if (abortController.signal.aborted) {
         throw createAbortError();
@@ -181,7 +188,10 @@ function makeXMLHttpRequest(requestParameters: RequestParameters, abortControlle
         }
         if (requestParameters.type === 'json') {
             xhr.responseType = 'text';
-            xhr.setRequestHeader('Accept', 'application/json');
+            // Do not overwrite the user-provided Accept header
+            if (!requestParameters.headers?.Accept) {
+                xhr.setRequestHeader('Accept', 'application/json');
+            }
         }
         xhr.withCredentials = requestParameters.credentials === 'include';
         xhr.onerror = () => {
@@ -231,7 +241,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
             return protocolLoadFn(requestParameters, abortController);
         }
         if (isWorker(self) && self.worker && self.worker.actor) {
-            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
+            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
         }
     }
     if (!isFileURL(requestParameters.url)) {
@@ -239,7 +249,7 @@ export const makeRequest = function(requestParameters: RequestParameters, abortC
             return makeFetchRequest(requestParameters, abortController);
         }
         if (isWorker(self) && self.worker && self.worker.actor) {
-            return self.worker.actor.sendAsync({type: 'getResource', data: requestParameters, mustQueue: true, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
+            return self.worker.actor.sendAsync({type: MessageType.getResource, data: requestParameters, mustQueue: true, targetMapId: GLOBAL_DISPATCHER_ID}, abortController);
         }
     }
     return makeXMLHttpRequest(requestParameters, abortController);

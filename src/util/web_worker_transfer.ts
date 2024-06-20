@@ -5,7 +5,7 @@ import {AJAXError} from './ajax';
 import {isImageBitmap} from './util';
 
 /**
- * A class that is serizlized to and json, that can be constructed back to the original class in the worker or in the main thread
+ * A class that is serialized to and json, that can be constructed back to the original class in the worker or in the main thread
  */
 type SerializedObject<S extends Serialized = any> = {
     [_: string]: S;

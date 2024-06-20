@@ -1,7 +1,7 @@
-import {extend, warnOnce, uniqueId, isImageBitmap} from '../util/util';
+import {extend, warnOnce, uniqueId, isImageBitmap, Complete} from '../util/util';
 import {browser} from '../util/browser';
 import {DOM} from '../util/dom';
-import packageJSON from '../../package.json' assert {type: 'json'};
+import packageJSON from '../../package.json' with {type: 'json'};
 import {GetResourceResponse, getJSON} from '../util/ajax';
 import {ImageRequest} from '../util/image_request';
 import {RequestManager, ResourceType} from '../util/request_manager';
@@ -15,7 +15,7 @@ import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} 
 import {LngLat} from '../geo/lng_lat';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
-import {AttributionControl, AttributionControlOptions, defaultAtributionControlOptions} from './control/attribution_control';
+import {AttributionControl, AttributionControlOptions, defaultAttributionControlOptions} from './control/attribution_control';
 import {LogoControl} from './control/logo_control';
 import {RGBAImage} from '../util/image';
 import {Event, ErrorEvent, Listener} from '../util/evented';
@@ -100,7 +100,6 @@ export type MapOptions = {
     attributionControl?: false | AttributionControlOptions;
     /**
      * If `true`, the MapLibre logo will be shown.
-     * @defaultValue false
      */
     maplibreLogo?: boolean;
     /**
@@ -120,7 +119,8 @@ export type MapOptions = {
      */
     preserveDrawingBuffer?: boolean;
     /**
-     * If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers. This is `false` by default as a performance optimization.
+     * If `true`, the gl context will be created with MSAA antialiasing, which can be useful for antialiasing custom layers.
+     * Disabled by default as a performance optimization.
      */
     antialias?: boolean;
     /**
@@ -194,7 +194,7 @@ export type MapOptions = {
     touchPitch?: boolean | AroundCenterOptions;
     /**
      * If `true` or set to an options object, the map is only accessible on desktop while holding Command/Ctrl and only accessible on mobile with two fingers. Interacting with the map using normal gestures will trigger an informational screen. With this option enabled, "drag to pitch" requires a three-finger gesture. Cooperative gestures are disabled when a map enters fullscreen using {@link FullscreenControl}.
-     * @defaultValue undefined
+     * @defaultValue false
      */
     cooperativeGestures?: GestureOptions;
     /**
@@ -236,7 +236,7 @@ export type MapOptions = {
      * The maximum number of tiles stored in the tile cache for a given source. If omitted, the cache will be dynamically sized based on the current viewport which can be set using `maxTileCacheZoomLevels` constructor options.
      * @defaultValue null
      */
-    maxTileCacheSize?: number;
+    maxTileCacheSize?: number | null;
     /**
      * The maximum number of zoom levels for which to store tiles for a given source. Tile cache dynamic size is calculated by multiplying `maxTileCacheZoomLevels` with the approximate number of tiles in the viewport for a given source.
      * @defaultValue 5
@@ -245,13 +245,15 @@ export type MapOptions = {
     /**
      * A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
      * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties.
+     * @defaultValue null
      */
-    transformRequest?: RequestTransformFunction;
+    transformRequest?: RequestTransformFunction | null;
     /**
      * A callback run before the map's camera is moved due to user input or animation. The callback can be used to modify the new center, zoom, pitch and bearing.
      * Expected to return an object containing center, zoom, pitch or bearing values to overwrite.
+     * @defaultValue null
      */
-    transformCameraUpdate?: CameraUpdateTransformFunction;
+    transformCameraUpdate?: CameraUpdateTransformFunction | null;
     /**
      * A patch to apply to the default localization table for UI strings, e.g. control tooltips. The `locale` object maps namespaced UI string IDs to translated strings in the target language; see `src/ui/default_locale.js` for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
      * @defaultValue null
@@ -274,7 +276,7 @@ export type MapOptions = {
     collectResourceTiming?: boolean;
     /**
      * The max number of pixels a user can shift the mouse pointer during a click for it to be considered a valid click (as opposed to a mouse drag).
-     * @defaultValue true
+     * @defaultValue 3
      */
     clickTolerance?: number;
     /**
@@ -286,27 +288,29 @@ export type MapOptions = {
      */
     fitBoundsOptions?: FitBoundsOptions;
     /**
-     *  Defines a CSS
+     * Defines a CSS
      * font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana' and 'Hangul Syllables' ranges.
      * In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold).
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
      * The purpose of this option is to avoid bandwidth-intensive glyph server requests. (See [Use locally generated ideographs](https://maplibre.org/maplibre-gl-js/docs/examples/local-ideographs).)
      * @defaultValue 'sans-serif'
      */
-    localIdeographFontFamily?: string;
+    localIdeographFontFamily?: string | false;
     /**
      * The map's MapLibre style. This must be a JSON object conforming to
      * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
      * or a URL to such JSON.
+     * When the style is not specified, calling {@link Map#setStyle} is required to render the map.
      */
-    style: StyleSpecification | string;
+    style?: StyleSpecification | string;
     /**
      * If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
      * @defaultValue true
      */
     pitchWithRotate?: boolean;
     /**
-     * The pixel ratio. The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
+     * The pixel ratio.
+     * The canvas' `width` attribute will be `container.clientWidth * pixelRatio` and its `height` attribute will be `container.clientHeight * pixelRatio`. Defaults to `devicePixelRatio` if not specified.
      */
     pixelRatio?: number;
     /**
@@ -316,18 +320,21 @@ export type MapOptions = {
     validateStyle?: boolean;
     /**
      * The canvas' `width` and `height` max size. The values are passed as an array where the first element is max width and the second element is max height.
-     * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`. Defaults to [4096, 4096].
+     * You shouldn't set this above WebGl `MAX_TEXTURE_SIZE`.
+     * @defaultValue [4096, 4096].
      */
     maxCanvasSize?: [number, number];
+    /**
+     * Determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
+     * * If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
+     * * If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
+     * @defaultValue true
+     */
+    cancelPendingTileRequestsWhileZooming?: boolean;
 };
 
 export type AddImageOptions = {
 
-}
-
-// See article here: https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
-type Complete<T> = {
-    [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
 }
 
 // This type is used inside map since all properties are assigned a default value.
@@ -343,20 +350,22 @@ const defaultMaxPitch = 60;
 // use this variable to check maxPitch for validity
 const maxPitchThreshold = 85;
 
-const defaultOptions = {
-    center: [0, 0],
-    zoom: 0,
-    bearing: 0,
-    pitch: 0,
+const defaultOptions: Readonly<Partial<MapOptions>> = {
+    hash: false,
+    interactive: true,
+    bearingSnap: 7,
+    attributionControl: defaultAttributionControlOptions,
+    maplibreLogo: false,
+    failIfMajorPerformanceCaveat: false,
+    preserveDrawingBuffer: false,
+    refreshExpiredTiles: true,
 
+    scrollZoom: true,
     minZoom: defaultMinZoom,
     maxZoom: defaultMaxZoom,
-
     minPitch: defaultMinPitch,
     maxPitch: defaultMaxPitch,
 
-    interactive: true,
-    scrollZoom: true,
     boxZoom: true,
     dragRotate: true,
     dragPan: true,
@@ -366,30 +375,28 @@ const defaultOptions = {
     touchPitch: true,
     cooperativeGestures: false,
 
-    bearingSnap: 7,
-    clickTolerance: 3,
-    pitchWithRotate: true,
-
-    hash: false,
-    attributionControl: defaultAtributionControlOptions,
-    maplibreLogo: false,
-
-    failIfMajorPerformanceCaveat: false,
-    preserveDrawingBuffer: false,
     trackResize: true,
+
+    center: [0, 0],
+    zoom: 0,
+    bearing: 0,
+    pitch: 0,
+
     renderWorldCopies: true,
-    refreshExpiredTiles: true,
     maxTileCacheSize: null,
     maxTileCacheZoomLevels: config.MAX_TILE_CACHE_ZOOM_LEVELS,
-    localIdeographFontFamily: 'sans-serif',
     transformRequest: null,
     transformCameraUpdate: null,
     fadeDuration: 300,
     crossSourceCollisions: true,
+    clickTolerance: 3,
+    localIdeographFontFamily: 'sans-serif',
+    pitchWithRotate: true,
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
-    maxCanvasSize: [4096, 4096]
-} as CompleteMapOptions;
+    maxCanvasSize: [4096, 4096],
+    cancelPendingTileRequestsWhileZooming: true
+};
 
 /**
  * The `Map` object represents the map on your page. It exposes methods
@@ -425,12 +432,11 @@ const defaultOptions = {
 export class Map extends Camera {
     style: Style;
     painter: Painter;
-    handlers: HandlerManager;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
     _controlContainer: HTMLElement;
-    _controlPositions: {[_: string]: HTMLElement};
+    _controlPositions: Record<string, HTMLElement>;
     _interactive: boolean;
     _showTileBoundaries: boolean;
     _showCollisionBoxes: boolean;
@@ -439,7 +445,7 @@ export class Map extends Camera {
     _repaint: boolean;
     _vertices: boolean;
     _canvas: HTMLCanvasElement;
-    _maxTileCacheSize: number;
+    _maxTileCacheSize: number | null;
     _maxTileCacheZoomLevels: number;
     _frameRequest: AbortController;
     _styleDirty: boolean;
@@ -447,7 +453,7 @@ export class Map extends Camera {
     _placementDirty: boolean;
 
     _loaded: boolean;
-    _idleTriggered: boolean;
+    _idleTriggered = false;
     // accounts for placement finishing as well
     _fullyLoaded: boolean;
     _trackResize: boolean;
@@ -460,18 +466,18 @@ export class Map extends Camera {
     _delegatedListeners: any;
     _fadeDuration: number;
     _crossSourceCollisions: boolean;
-    _crossFadingFactor: number;
+    _crossFadingFactor = 1;
     _collectResourceTiming: boolean;
-    _renderTaskQueue: TaskQueue;
-    _controls: Array<IControl>;
-    _mapId: number;
-    _localIdeographFontFamily: string;
+    _renderTaskQueue = new TaskQueue();
+    _controls: Array<IControl> = [];
+    _mapId = uniqueId();
+    _localIdeographFontFamily: string | false;
     _validateStyle: boolean;
     _requestManager: RequestManager;
     _locale: typeof defaultLocale;
     _removed: boolean;
     _clickTolerance: number;
-    _overridePixelRatio: number | null;
+    _overridePixelRatio: number | null | undefined;
     _maxCanvasSize: [number, number];
     _terrainDataCallback: (e: MapStyleDataEvent | MapSourceDataEvent) => void;
 
@@ -536,82 +542,87 @@ export class Map extends Camera {
      */
     cooperativeGestures: CooperativeGesturesHandler;
 
+    /**
+     * The map's property which determines whether to cancel, or retain, tiles from the current viewport which are still loading but which belong to a farther (smaller) zoom level than the current one.
+     * * If `true`, when zooming in, tiles which didn't manage to load for previous zoom levels will become canceled. This might save some computing resources for slower devices, but the map details might appear more abruptly at the end of the zoom.
+     * * If `false`, when zooming in, the previous zoom level(s) tiles will progressively appear, giving a smoother map details experience. However, more tiles will be rendered in a short period of time.
+     * @defaultValue true
+     */
+    cancelPendingTileRequestsWhileZooming: boolean;
+
     constructor(options: MapOptions) {
         PerformanceUtils.mark(PerformanceMarkers.create);
 
-        options = extend({}, defaultOptions, options);
+        const resolvedOptions = {...defaultOptions, ...options} as CompleteMapOptions;
 
-        if (options.minZoom != null && options.maxZoom != null && options.minZoom > options.maxZoom) {
+        if (resolvedOptions.minZoom != null && resolvedOptions.maxZoom != null && resolvedOptions.minZoom > resolvedOptions.maxZoom) {
             throw new Error('maxZoom must be greater than or equal to minZoom');
         }
 
-        if (options.minPitch != null && options.maxPitch != null && options.minPitch > options.maxPitch) {
+        if (resolvedOptions.minPitch != null && resolvedOptions.maxPitch != null && resolvedOptions.minPitch > resolvedOptions.maxPitch) {
             throw new Error('maxPitch must be greater than or equal to minPitch');
         }
 
-        if (options.minPitch != null && options.minPitch < defaultMinPitch) {
+        if (resolvedOptions.minPitch != null && resolvedOptions.minPitch < defaultMinPitch) {
             throw new Error(`minPitch must be greater than or equal to ${defaultMinPitch}`);
         }
 
-        if (options.maxPitch != null && options.maxPitch > maxPitchThreshold) {
+        if (resolvedOptions.maxPitch != null && resolvedOptions.maxPitch > maxPitchThreshold) {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new Transform(options.minZoom, options.maxZoom, options.minPitch, options.maxPitch, options.renderWorldCopies);
-        super(transform, {bearingSnap: options.bearingSnap});
+        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies);
+        super(transform, {bearingSnap: resolvedOptions.bearingSnap});
 
-        this._interactive = options.interactive;
-        this._maxTileCacheSize = options.maxTileCacheSize;
-        this._maxTileCacheZoomLevels = options.maxTileCacheZoomLevels;
-        this._failIfMajorPerformanceCaveat = options.failIfMajorPerformanceCaveat;
-        this._preserveDrawingBuffer = options.preserveDrawingBuffer;
-        this._antialias = options.antialias;
-        this._trackResize = options.trackResize;
-        this._bearingSnap = options.bearingSnap;
-        this._refreshExpiredTiles = options.refreshExpiredTiles;
-        this._fadeDuration = options.fadeDuration;
-        this._crossSourceCollisions = options.crossSourceCollisions;
-        this._crossFadingFactor = 1;
-        this._collectResourceTiming = options.collectResourceTiming;
-        this._renderTaskQueue = new TaskQueue();
-        this._controls = [];
-        this._mapId = uniqueId();
-        this._locale = extend({}, defaultLocale, options.locale);
-        this._clickTolerance = options.clickTolerance;
-        this._overridePixelRatio = options.pixelRatio;
-        this._maxCanvasSize = options.maxCanvasSize;
-        this.transformCameraUpdate = options.transformCameraUpdate;
+        this._interactive = resolvedOptions.interactive;
+        this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
+        this._maxTileCacheZoomLevels = resolvedOptions.maxTileCacheZoomLevels;
+        this._failIfMajorPerformanceCaveat = resolvedOptions.failIfMajorPerformanceCaveat === true;
+        this._preserveDrawingBuffer = resolvedOptions.preserveDrawingBuffer === true;
+        this._antialias = resolvedOptions.antialias === true;
+        this._trackResize = resolvedOptions.trackResize === true;
+        this._bearingSnap = resolvedOptions.bearingSnap;
+        this._refreshExpiredTiles = resolvedOptions.refreshExpiredTiles === true;
+        this._fadeDuration = resolvedOptions.fadeDuration;
+        this._crossSourceCollisions = resolvedOptions.crossSourceCollisions === true;
+        this._collectResourceTiming = resolvedOptions.collectResourceTiming === true;
+        this._locale = {...defaultLocale, ...resolvedOptions.locale};
+        this._clickTolerance = resolvedOptions.clickTolerance;
+        this._overridePixelRatio = resolvedOptions.pixelRatio;
+        this._maxCanvasSize = resolvedOptions.maxCanvasSize;
+        this.transformCameraUpdate = resolvedOptions.transformCameraUpdate;
+        this.cancelPendingTileRequestsWhileZooming = resolvedOptions.cancelPendingTileRequestsWhileZooming === true;
 
         this._imageQueueHandle = ImageRequest.addThrottleControl(() => this.isMoving());
 
-        this._requestManager = new RequestManager(options.transformRequest);
+        this._requestManager = new RequestManager(resolvedOptions.transformRequest);
 
-        if (typeof options.container === 'string') {
-            this._container = document.getElementById(options.container);
+        if (typeof resolvedOptions.container === 'string') {
+            this._container = document.getElementById(resolvedOptions.container);
             if (!this._container) {
-                throw new Error(`Container '${options.container}' not found.`);
+                throw new Error(`Container '${resolvedOptions.container}' not found.`);
             }
-        } else if (options.container instanceof HTMLElement) {
-            this._container = options.container;
+        } else if (resolvedOptions.container instanceof HTMLElement) {
+            this._container = resolvedOptions.container;
         } else {
             throw new Error('Invalid type: \'container\' must be a String or HTMLElement.');
         }
 
-        if (options.maxBounds) {
-            this.setMaxBounds(options.maxBounds);
+        if (resolvedOptions.maxBounds) {
+            this.setMaxBounds(resolvedOptions.maxBounds);
         }
 
         this._setupContainer();
         this._setupPainter();
 
-        this.on('move', () => this._update(false));
-        this.on('moveend', () => this._update(false));
-        this.on('zoom', () => this._update(true));
-        this.on('terrain', () => {
-            this.painter.terrainFacilitator.dirty = true;
-            this._update(true);
-        });
-        this.once('idle', () => { this._idleTriggered = true; });
+        this.on('move', () => this._update(false))
+            .on('moveend', () => this._update(false))
+            .on('zoom', () => this._update(true))
+            .on('terrain', () => {
+                this.painter.terrainFacilitator.dirty = true;
+                this._update(true);
+            })
+            .once('idle', () => { this._idleTriggered = true; });
 
         if (typeof window !== 'undefined') {
             addEventListener('online', this._onWindowOnline, false);
@@ -631,37 +642,37 @@ export class Map extends Camera {
             this._resizeObserver.observe(this._container);
         }
 
-        this.handlers = new HandlerManager(this, options as CompleteMapOptions);
+        this.handlers = new HandlerManager(this, resolvedOptions);
 
-        const hashName = (typeof options.hash === 'string' && options.hash) || undefined;
-        this._hash = options.hash && (new Hash(hashName)).addTo(this);
+        const hashName = (typeof resolvedOptions.hash === 'string' && resolvedOptions.hash) || undefined;
+        this._hash = resolvedOptions.hash && (new Hash(hashName)).addTo(this);
         // don't set position from options if set through hash
         if (!this._hash || !this._hash._onHashChange()) {
             this.jumpTo({
-                center: options.center,
-                zoom: options.zoom,
-                bearing: options.bearing,
-                pitch: options.pitch
+                center: resolvedOptions.center,
+                zoom: resolvedOptions.zoom,
+                bearing: resolvedOptions.bearing,
+                pitch: resolvedOptions.pitch
             });
 
-            if (options.bounds) {
+            if (resolvedOptions.bounds) {
                 this.resize();
-                this.fitBounds(options.bounds, extend({}, options.fitBoundsOptions, {duration: 0}));
+                this.fitBounds(resolvedOptions.bounds, extend({}, resolvedOptions.fitBoundsOptions, {duration: 0}));
             }
         }
 
         this.resize();
 
-        this._localIdeographFontFamily = options.localIdeographFontFamily;
-        this._validateStyle = options.validateStyle;
+        this._localIdeographFontFamily = resolvedOptions.localIdeographFontFamily;
+        this._validateStyle = resolvedOptions.validateStyle;
 
-        if (options.style) this.setStyle(options.style, {localIdeographFontFamily: options.localIdeographFontFamily});
+        if (resolvedOptions.style) this.setStyle(resolvedOptions.style, {localIdeographFontFamily: resolvedOptions.localIdeographFontFamily});
 
-        if (options.attributionControl)
-            this.addControl(new AttributionControl(typeof options.attributionControl === 'boolean' ? undefined : options.attributionControl));
+        if (resolvedOptions.attributionControl)
+            this.addControl(new AttributionControl(typeof resolvedOptions.attributionControl === 'boolean' ? undefined : resolvedOptions.attributionControl));
 
-        if (options.maplibreLogo)
-            this.addControl(new LogoControl(), options.logoPosition);
+        if (resolvedOptions.maplibreLogo)
+            this.addControl(new LogoControl(), resolvedOptions.logoPosition);
 
         this.on('style.load', () => {
             if (this.transform.unmodified) {
@@ -698,7 +709,6 @@ export class Map extends Camera {
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
      * Valid values are `'top-left'`, `'top-right'`, `'bottom-left'`, and `'bottom-right'`. Defaults to `'top-right'`.
-     * @returns `this`
      * @example
      * Add zoom and rotation controls to the map.
      * ```ts
@@ -736,7 +746,6 @@ export class Map extends Camera {
      * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
      * @param control - The {@link IControl} to remove.
-     * @returns `this`
      * @example
      * ```ts
      * // Define a new navigation control.
@@ -797,7 +806,6 @@ export class Map extends Camera {
      * @param eventData - Additional properties to be passed to `movestart`, `move`, `resize`, and `moveend`
      * events that get triggered as a result of resize. This can be useful for differentiating the
      * source of an event (for example, user-initiated or programmatically-triggered events).
-     * @returns `this`
      * @example
      * Resize the map when the map container is shown after being initially hidden with CSS.
      * ```ts
@@ -917,7 +925,6 @@ export class Map extends Camera {
      * remaining within the bounds.
      *
      * @param bounds - The maximum bounds to set. If `null` or `undefined` is provided, the function removes the map's maximum bounds.
-     * @returns `this`
      * @example
      * Define bounds that conform to the `LngLatBoundsLike` object as set the max bounds.
      * ```ts
@@ -947,7 +954,6 @@ export class Map extends Camera {
      *
      * @param minZoom - The minimum zoom level to set (-2 - 24).
      * If `null` or `undefined` is provided, the function removes the current minimum zoom (i.e. sets it to -2).
-     * @returns `this`
      * @example
      * ```ts
      * map.setMinZoom(12.25);
@@ -988,7 +994,6 @@ export class Map extends Camera {
      *
      * @param maxZoom - The maximum zoom level to set.
      * If `null` or `undefined` is provided, the function removes the current maximum zoom (sets it to 22).
-     * @returns `this`
      * @example
      * ```ts
      * map.setMaxZoom(18.75);
@@ -1029,7 +1034,6 @@ export class Map extends Camera {
      *
      * @param minPitch - The minimum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current minimum pitch (i.e. sets it to 0).
-     * @returns `this`
      */
     setMinPitch(minPitch?: number | null): Map {
 
@@ -1066,7 +1070,6 @@ export class Map extends Camera {
      *
      * @param maxPitch - The maximum pitch to set (0-85). Values greater than 60 degrees are experimental and may result in rendering issues. If you encounter any, please raise an issue with details in the MapLibre project.
      * If `null` or `undefined` is provided, the function removes the current maximum pitch (sets it to 60).
-     * @returns `this`
      */
     setMaxPitch(maxPitch?: number | null): Map {
 
@@ -1121,7 +1124,6 @@ export class Map extends Camera {
      * map and the other on the left edge of the map) at every zoom level.
      *
      * `undefined` is treated as `true`, `null` is treated as `false`.
-     * @returns `this`
      * @example
      * ```ts
      * map.setRenderWorldCopies(true);
@@ -1157,7 +1159,7 @@ export class Map extends Camera {
      * @returns The {@link LngLat} corresponding to `point`.
      * @example
      * ```ts
-     * map.on('click', function(e) {
+     * map.on('click', (e) => {
      *   // When the map is clicked, get the geographic coordinate.
      *   let coordinate = map.unproject(e.point);
      * });
@@ -1320,12 +1322,11 @@ export class Map extends Camera {
      * an array of the matching features. If `layer` is not supplied, the event will not have a `features` property.
      * Please note that many event types are not compatible with the optional `layer` parameter.
      * @param listener - The function to be called when the event is fired.
-     * @returns `this`
      * @example
      * ```ts
      * // Set an event listener that will fire
      * // when the map has finished loading
-     * map.on('load', function() {
+     * map.on('load', () => {
      *   // Once the map has finished loading,
      *   // add a new layer
      *   map.addLayer({
@@ -1371,7 +1372,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
-     * @returns `this`
      */
     on<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     /**
@@ -1379,7 +1379,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
-     * @returns `this`
      */
     on(type: keyof MapEventType | string, listener: Listener): this;
     on(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
@@ -1426,7 +1425,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
-     * @returns `this`
      */
     once<T extends keyof MapEventType>(type: T, listener?: (ev: MapEventType[T] & Object) => void): this | Promise<any>;
     /**
@@ -1434,7 +1432,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The listener callback.
-     * @returns `this`
      */
     once(type: keyof MapEventType | string, listener?: Listener): this | Promise<any>;
     once(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this | Promise<any> {
@@ -1459,7 +1456,6 @@ export class Map extends Camera {
      * @param type - The event type previously used to install the listener.
      * @param layer - The layer ID or listener previously used to install the listener.
      * @param listener - The function previously installed as a listener.
-     * @returns `this`
      */
     off<T extends keyof MapLayerEventType>(
         type: T,
@@ -1471,7 +1467,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The function previously installed as a listener.
-     * @returns `this`
      */
     off<T extends keyof MapEventType>(type: T, listener: (ev: MapEventType[T] & Object) => void): this;
     /**
@@ -1479,7 +1474,6 @@ export class Map extends Camera {
      * @event
      * @param type - The type of the event.
      * @param listener - The function previously installed as a listener.
-     * @returns `this`
      */
     off(type: keyof MapEventType | string, listener: Listener): this;
     off(type: keyof MapEventType | string, layerIdOrListener: string | Listener, listener?: Listener): this {
@@ -1654,7 +1648,6 @@ export class Map extends Camera {
      * @param style - A JSON object conforming to the schema described in the
      * [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/), or a URL to such JSON.
      * @param options - The options object.
-     * @returns `this`
      *
      * @example
      * ```ts
@@ -1710,8 +1703,6 @@ export class Map extends Camera {
      *
      * @param transformRequest - A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests.
      * Expected to return an object with a `url` property and optionally `headers` and `credentials` properties
-     *
-     * @returns `this`
      *
      * @example
      * ```ts
@@ -1845,7 +1836,6 @@ export class Map extends Camera {
      * @param source - The source object, conforming to the
      * MapLibre Style Specification's [source definition](https://maplibre.org/maplibre-style-spec/sources) or
      * {@link CanvasSourceSpecification}.
-     * @returns `this`
      * @example
      * ```ts
      * map.addSource('my-data', {
@@ -1906,7 +1896,6 @@ export class Map extends Camera {
      * Triggers the `terrain` event.
      *
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setTerrain({ source: 'terrain' });
@@ -2000,7 +1989,6 @@ export class Map extends Camera {
      * Removes a source from the map's style.
      *
      * @param id - The ID of the source to remove.
-     * @returns `this`
      * @example
      * ```ts
      * map.removeSource('bathymetry-data');
@@ -2015,7 +2003,7 @@ export class Map extends Camera {
      * Returns the source with the specified ID in the map's style.
      *
      * This method is often used to update a source using the instance members for the relevant
-     * source type as defined in [Sources](#sources).
+     * source type as defined in classes that derive from {@link Source}.
      * For example, setting the `data` for a GeoJSON source or updating the `url` and `coordinates`
      * of an image source.
      *
@@ -2051,27 +2039,21 @@ export class Map extends Camera {
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * // If the style's sprite does not already contain an image with ID 'cat',
      * // add the image 'cat-icon.png' to the style's sprite with the ID 'cat'.
-     * map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/400px-Cat_silhouette.svg.png', function(error, image) {
-     *    if (error) throw error;
-     *    if (!map.hasImage('cat')) map.addImage('cat', image);
-     * });
+     * const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/400px-Cat_silhouette.svg.png');
+     * if (!map.hasImage('cat')) map.addImage('cat', image.data);
      *
      * // Add a stretchable image that can be used with `icon-text-fit`
      * // In this example, the image is 600px wide by 400px high.
-     * map.loadImage('https://upload.wikimedia.org/wikipedia/commons/8/89/Black_and_White_Boxed_%28bordered%29.png', function(error, image) {
-     *    if (error) throw error;
-     *    if (!map.hasImage('border-image')) {
-     *      map.addImage('border-image', image, {
-     *          content: [16, 16, 300, 384], // place text over left half of image, avoiding the 16px border
-     *          stretchX: [[16, 584]], // stretch everything horizontally except the 16px border
-     *          stretchY: [[16, 384]], // stretch everything vertically except the 16px border
-     *      });
-     *    }
+     * const image = await map.loadImage('https://upload.wikimedia.org/wikipedia/commons/8/89/Black_and_White_Boxed_%28bordered%29.png');
+     * if (map.hasImage('border-image')) return;
+     * map.addImage('border-image', image.data, {
+     *     content: [16, 16, 300, 384], // place text over left half of image, avoiding the 16px border
+     *     stretchX: [[16, 584]], // stretch everything horizontally except the 16px border
+     *     stretchY: [[16, 384]], // stretch everything vertically except the 16px border
      * });
      * ```
      * @see Use `HTMLImageElement`: [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
@@ -2089,14 +2071,16 @@ export class Map extends Camera {
             sdf = false,
             stretchX,
             stretchY,
-            content
+            content,
+            textFitWidth,
+            textFitHeight
         } = options;
         this._lazyInitEmptyStyle();
         const version = 0;
 
         if (image instanceof HTMLImageElement || isImageBitmap(image)) {
             const {width, height, data} = browser.getImageData(image);
-            this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, sdf, version});
+            this.style.addImage(id, {data: new RGBAImage({width, height}, data), pixelRatio, stretchX, stretchY, content, textFitWidth, textFitHeight, sdf, version});
         } else if (image.width === undefined || image.height === undefined) {
             return this.fire(new ErrorEvent(new Error(
                 'Invalid arguments to map.addImage(). The second argument must be an `HTMLImageElement`, `ImageData`, `ImageBitmap`, ' +
@@ -2111,6 +2095,8 @@ export class Map extends Camera {
                 stretchX,
                 stretchY,
                 content,
+                textFitWidth,
+                textFitHeight,
                 sdf,
                 version,
                 userImage
@@ -2136,7 +2122,6 @@ export class Map extends Camera {
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
      * properties with the same format as `ImageData`.
-     * @returns `this`
      * @example
      * ```ts
      * // If an image with the ID 'cat' already exists in the style's sprite,
@@ -2249,9 +2234,9 @@ export class Map extends Camera {
      * @example
      * Load an image from an external URL.
      * ```ts
-     * const response = await map.loadImage('http://placekitten.com/50/50');
-     * // Add the loaded image to the style's sprite with the ID 'kitten'.
-     * map.addImage('kitten', response.data);
+     * const response = await map.loadImage('https://picsum.photos/50/50');
+     * // Add the loaded image to the style's sprite with the ID 'photo'.
+     * map.addImage('photo', response.data);
      * ```
      * @see [Add an icon to the map](https://maplibre.org/maplibre-gl-js/docs/examples/add-image/)
      */
@@ -2291,8 +2276,6 @@ export class Map extends Camera {
      * resulting in the new layer appearing visually beneath the existing layer.
      * If this argument is not specified, the layer will be appended to the end of the layers array
      * and appear visually above all other layers.
-     *
-     * @returns `this`
      *
      * @example
      * Add a circle layer with a vector source
@@ -2367,7 +2350,6 @@ export class Map extends Camera {
      *
      * @param id - The ID of the layer to move.
      * @param beforeId - The ID of an existing layer to insert the new layer before. When viewing the map, the `id` layer will appear beneath the `beforeId` layer. If `beforeId` is omitted, the layer will be appended to the end of the layers array and appear above all other layers on the map.
-     * @returns `this`
      *
      * @example
      * Move a layer with ID 'polygon' before the layer with ID 'country-label'. The `polygon` layer will appear beneath the `country-label` layer on the map.
@@ -2386,7 +2368,6 @@ export class Map extends Camera {
      * An {@link ErrorEvent} will be fired if the image parameter is invald.
      *
      * @param id - The ID of the layer to remove
-     * @returns `this`
      *
      * @example
      * If a layer with ID 'state-data' exists, remove it.
@@ -2445,7 +2426,6 @@ export class Map extends Camera {
      * @param layerId - The ID of the layer to which the zoom extent will be applied.
      * @param minzoom - The minimum zoom to set (0-24).
      * @param maxzoom - The maximum zoom to set (0-24).
-     * @returns `this`
      *
      * @example
      * ```ts
@@ -2472,7 +2452,6 @@ export class Map extends Camera {
      * @param filter - The filter, conforming to the MapLibre Style Specification's
      * [filter definition](https://maplibre.org/maplibre-style-spec/layers/#filter).  If `null` or `undefined` is provided, the function removes any existing filter from the layer.
      * @param options - Options object.
-     * @returns `this`
      *
      * @example
      * Display only features with the 'name' property 'USA'
@@ -2515,7 +2494,6 @@ export class Map extends Camera {
      * Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * Pass `null` to unset the existing value.
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setPaintProperty('my-layer', 'fill-color', '#faafee');
@@ -2546,7 +2524,6 @@ export class Map extends Camera {
      * @param name - The name of the layout property to set.
      * @param value - The value of the layout property. Must be of a type appropriate for the property, as defined in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/).
      * @param options - The options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setLayoutProperty('my-layer', 'visibility', 'none');
@@ -2573,7 +2550,6 @@ export class Map extends Camera {
      *
      * @param glyphsUrl - Glyph URL to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/glyphs/).
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setGlyphs('https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf');
@@ -2600,7 +2576,6 @@ export class Map extends Camera {
      * @param id - The ID of the sprite to add. Must not conflict with existing sprites.
      * @param url - The URL to load the sprite from
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.addSprite('sprite-two', 'http://example.com/sprite-two');
@@ -2620,7 +2595,6 @@ export class Map extends Camera {
      * Removes the sprite from the map's style. Fires the `style` event.
      *
      * @param id - The ID of the sprite to remove. If the sprite is declared as a single URL, the ID must be "default".
-     * @returns `this`
      * @example
      * ```ts
      * map.removeSprite('sprite-two');
@@ -2647,7 +2621,6 @@ export class Map extends Camera {
      *
      * @param spriteUrl - Sprite URL to set.
      * @param options - Options object.
-     * @returns `this`
      * @example
      * ```ts
      * map.setSprite('YOUR_SPRITE_URL');
@@ -2668,7 +2641,6 @@ export class Map extends Camera {
      *
      * @param light - Light properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/light).
      * @param options - Options object.
-     * @returns `this`
      *
      * @example
      * ```ts
@@ -2732,13 +2704,12 @@ export class Map extends Camera {
      * @param feature - Feature identifier. Feature objects returned from
      * {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param state - A set of key-value pairs. The values should be valid JSON types.
-     * @returns `this`
      *
      * @example
      * ```ts
      * // When the mouse moves over the `my-layer` layer, update
      * // the feature state for the feature under the mouse
-     * map.on('mousemove', 'my-layer', function(e) {
+     * map.on('mousemove', 'my-layer', (e) => {
      *   if (e.features.length > 0) {
      *     map.setFeatureState({
      *       source: 'my-source',
@@ -2767,7 +2738,6 @@ export class Map extends Camera {
      * @param target - Identifier of where to remove state. It can be a source, a feature, or a specific key of feature.
      * Feature objects returned from {@link Map#queryRenderedFeatures} or event handlers can be used as feature identifiers.
      * @param key - (optional) The key in the feature state to reset.
-     * @returns `this`
      * @example
      * Reset the entire state object for all features in the `my-source` source
      * ```ts
@@ -2781,7 +2751,7 @@ export class Map extends Camera {
      * reset the entire state object for the
      * feature under the mouse
      * ```ts
-     * map.on('mouseleave', 'my-layer', function(e) {
+     * map.on('mouseleave', 'my-layer', (e) => {
      *   map.removeFeatureState({
      *     source: 'my-source',
      *     sourceLayer: 'my-source-layer',
@@ -2795,7 +2765,7 @@ export class Map extends Camera {
      * reset only the `hover` key-value pair in the
      * state for the feature under the mouse
      * ```ts
-     * map.on('mouseleave', 'my-layer', function(e) {
+     * map.on('mouseleave', 'my-layer', (e) => {
      *   map.removeFeatureState({
      *     source: 'my-source',
      *     sourceLayer: 'my-source-layer',
@@ -2824,7 +2794,7 @@ export class Map extends Camera {
      * When the mouse moves over the `my-layer` layer,
      * get the feature state for the feature under the mouse
      * ```ts
-     * map.on('mousemove', 'my-layer', function(e) {
+     * map.on('mousemove', 'my-layer', (e) => {
      *   if (e.features.length > 0) {
      *     map.getFeatureState({
      *       source: 'my-source',
@@ -2900,8 +2870,8 @@ export class Map extends Camera {
         this._canvas = DOM.create('canvas', 'maplibregl-canvas', canvasContainer);
         this._canvas.addEventListener('webglcontextlost', this._contextLost, false);
         this._canvas.addEventListener('webglcontextrestored', this._contextRestored, false);
-        this._canvas.setAttribute('tabindex', '0');
-        this._canvas.setAttribute('aria-label', 'Map');
+        this._canvas.setAttribute('tabindex', this._interactive ? '0' : '-1');
+        this._canvas.setAttribute('aria-label', this._getUIString('Map.Title'));
         this._canvas.setAttribute('role', 'region');
 
         const dimensions = this._containerDimensions();
@@ -2948,8 +2918,8 @@ export class Map extends Camera {
         }, {once: true});
 
         const gl =
-        this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
-        this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
+            this._canvas.getContext('webgl2', attributes) as WebGL2RenderingContext ||
+            this._canvas.getContext('webgl', attributes) as WebGLRenderingContext;
 
         if (!gl) {
             const msg = 'Failed to initialize WebGL';
@@ -3010,7 +2980,6 @@ export class Map extends Camera {
      *
      * @param updateStyle - mark the map's style for reprocessing as
      * well as its sources
-     * @returns `this`
      */
     _update(updateStyle?: boolean) {
         if (!this.style || !this.style._loaded) return this;
@@ -3048,8 +3017,6 @@ export class Map extends Camera {
      * - A transition is in progress
      *
      * @param paintStartTimeStamp - The time when the animation frame began executing.
-     *
-     * @returns `this`
      */
     _render(paintStartTimeStamp: number) {
         const fadeDuration = this._idleTriggered ? this._fadeDuration : 0;
@@ -3164,7 +3131,6 @@ export class Map extends Camera {
 
     /**
      * Force a synchronous redraw of the map.
-     * @returns `this`
      * @example
      * ```ts
      * map.redraw();
@@ -3214,7 +3180,7 @@ export class Map extends Camera {
 
         this._resizeObserver?.disconnect();
         const extension = this.painter.context.gl.getExtension('WEBGL_lose_context');
-        if (extension) extension.loseContext();
+        if (extension?.loseContext) extension.loseContext();
         this._canvas.removeEventListener('webglcontextrestored', this._contextRestored, false);
         this._canvas.removeEventListener('webglcontextlost', this._contextLost, false);
         DOM.remove(this._canvasContainer);
