@@ -640,7 +640,7 @@ export class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
-        if (this.sky) this.sky.recalculate(parameters);
+        this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
