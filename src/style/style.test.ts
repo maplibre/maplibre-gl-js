@@ -727,7 +727,7 @@ describe('Style#setState', () => {
         newStyle.sky = {
             'fog-color': '#000001',
             'sky-color': '#000002',
-            'horizon-blend': 0.5,
+            'horizon-fog-blend': 0.5,
         };
         const didChange = style.setState(newStyle);
         expect(didChange).toBeTruthy();
@@ -2539,7 +2539,7 @@ describe('Style#serialize', () => {
 
     test('include sky property when map has sky', async () => {
         const sky: SkySpecification = {
-            'fog-blend': 0.5,
+            'horizon-fog-blend': 0.5,
             'fog-color': '#fff'
         };
         const styleJson = createStyleJSON({sky});
@@ -2560,7 +2560,7 @@ describe('Style#serialize', () => {
 
     test('do not include sky property after removing sky from the map', async () => {
         const sky: SkySpecification = {
-            'fog-blend': 0.5,
+            'horizon-fog-blend': 0.5,
             'fog-color': '#fff'
         };
         const styleJson = createStyleJSON({sky});
@@ -2578,7 +2578,7 @@ describe('Style#serialize', () => {
 
         await style.once('style.load');
         style.setSky({
-            'fog-blend': 0.5,
+            'horizon-fog-blend': 0.5,
             'fog-color': '#fff'
         });
         expect(style.serialize().sky).toBeDefined();
