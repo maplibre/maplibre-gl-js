@@ -1,4 +1,4 @@
-import {extend, warnOnce, clamp, wrap, defaultEasing, pick, degreesToRadians} from '../util/util';
+import {extend, warnOnce, clamp, wrap, defaultEasing, pick, degreesToRadians, differenceOfAnglesDegrees} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
@@ -14,6 +14,8 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
+import {Projection} from '../geo/projection/projection';
+import {angularCoordinatesToVector, getZoomAdjustment} from '../geo/projection/globe_transform';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *
@@ -244,6 +246,7 @@ export abstract class Camera extends Evented {
     transform: Transform;
     terrain: Terrain;
     handlers: HandlerManager;
+    projection: Projection;
 
     _moving: boolean;
     _zooming: boolean;
@@ -300,13 +303,14 @@ export abstract class Camera extends Evented {
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
 
-    constructor(transform: Transform, options: {
+    constructor(transform: Transform, projection: Projection, options: {
         bearingSnap: number;
     }) {
         super();
         this._moving = false;
         this._zooming = false;
         this.transform = transform;
+        this.projection = projection;
         this._bearingSnap = options.bearingSnap;
 
         this.on('moveend', () => {
@@ -633,6 +637,15 @@ export abstract class Camera extends Evented {
 
     /**
      * @internal
+     */
+    private _cameraBoundsWarning() {
+        warnOnce(
+            'Map cannot fit within canvas with the given bounds, padding, and/or offset.'
+        );
+    }
+
+    /**
+     * @internal
      * Calculate the center of these two points in the viewport and use
      * the highest zoom level up to and including `Map#getMaxZoom()` that fits
      * the points in the viewport at the specified bearing.
@@ -679,64 +692,139 @@ export abstract class Camera extends Evented {
         const tr = this.transform;
         const edgePadding = tr.padding;
 
-        // Consider all corners of the rotated bounding box derived from the given points
-        // when find the camera position that fits the given points.
         const bounds = new LngLatBounds(p0, p1);
-        const nwWorld = tr.project(bounds.getNorthWest());
-        const neWorld = tr.project(bounds.getNorthEast());
-        const seWorld = tr.project(bounds.getSouthEast());
-        const swWorld = tr.project(bounds.getSouthWest());
 
-        const bearingRadians = degreesToRadians(-bearing);
+        if (!this.projection.useGlobeControls) {
+            // Consider all corners of the rotated bounding box derived from the given points
+            // when find the camera position that fits the given points.
+            const nwWorld = tr.projectToWorldCoordinates(bounds.getNorthWest());
+            const neWorld = tr.projectToWorldCoordinates(bounds.getNorthEast());
+            const seWorld = tr.projectToWorldCoordinates(bounds.getSouthEast());
+            const swWorld = tr.projectToWorldCoordinates(bounds.getSouthWest());
 
-        const nwRotatedWorld = nwWorld.rotate(bearingRadians);
-        const neRotatedWorld = neWorld.rotate(bearingRadians);
-        const seRotatedWorld = seWorld.rotate(bearingRadians);
-        const swRotatedWorld = swWorld.rotate(bearingRadians);
+            const bearingRadians = degreesToRadians(-bearing);
 
-        const upperRight = new Point(
-            Math.max(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
-            Math.max(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
-        );
+            const nwRotatedWorld = nwWorld.rotate(bearingRadians);
+            const neRotatedWorld = neWorld.rotate(bearingRadians);
+            const seRotatedWorld = seWorld.rotate(bearingRadians);
+            const swRotatedWorld = swWorld.rotate(bearingRadians);
 
-        const lowerLeft = new Point(
-            Math.min(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
-            Math.min(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
-        );
-
-        // Calculate zoom: consider the original bbox and padding.
-        const size = upperRight.sub(lowerLeft);
-        const scaleX = (tr.width - (edgePadding.left + edgePadding.right + options.padding.left + options.padding.right)) / size.x;
-        const scaleY = (tr.height - (edgePadding.top + edgePadding.bottom + options.padding.top + options.padding.bottom)) / size.y;
-
-        if (scaleY < 0 || scaleX < 0) {
-            warnOnce(
-                'Map cannot fit within canvas with the given bounds, padding, and/or offset.'
+            const upperRight = new Point(
+                Math.max(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
+                Math.max(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
             );
-            return undefined;
+
+            const lowerLeft = new Point(
+                Math.min(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
+                Math.min(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
+            );
+
+            // Calculate zoom: consider the original bbox and padding.
+            const size = upperRight.sub(lowerLeft);
+
+            const availableWidth = (tr.width - (edgePadding.left + edgePadding.right + options.padding.left + options.padding.right));
+            const availableHeight = (tr.height - (edgePadding.top + edgePadding.bottom + options.padding.top + options.padding.bottom));
+            const scaleX = availableWidth / size.x;
+            const scaleY = availableHeight / size.y;
+
+            if (scaleY < 0 || scaleX < 0) {
+                this._cameraBoundsWarning();
+                return undefined;
+            }
+
+            const zoom = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
+
+            // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of padding.
+            const offset = Point.convert(options.offset);
+            const paddingOffsetX = (options.padding.left - options.padding.right) / 2;
+            const paddingOffsetY = (options.padding.top - options.padding.bottom) / 2;
+            const paddingOffset = new Point(paddingOffsetX, paddingOffsetY);
+            const rotatedPaddingOffset = paddingOffset.rotate(degreesToRadians(bearing));
+            const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
+            const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
+
+            const center = tr.unprojectFromWorldCoordinates(
+                // either world diagonal can be used (NW-SE or NE-SW)
+                nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
+            );
+
+            return {
+                center,
+                zoom,
+                bearing
+            };
+        } else {
+            // JP: TODO: nesymetrický padding nefunguje
+            // JP: TODO: unit test this
+
+            const lngEast = bounds.getEast();
+            const lngWest = bounds.getWest();
+            const lngMid = lngEast + differenceOfAnglesDegrees(lngEast, lngWest) * 0.5;
+            const latNorth = bounds.getNorth();
+            const latSouth = bounds.getSouth();
+            const latMid = latNorth + differenceOfAnglesDegrees(latNorth, latSouth) * 0.5;
+
+            const center = new LngLat(lngMid, latMid);
+
+            const clonedTr = tr.clone();
+            clonedTr.center = center;
+            clonedTr.bearing = bearing;
+            clonedTr.pitch = 0;
+            clonedTr.zoom = tr.zoom + getZoomAdjustment(clonedTr, tr.center.lat, clonedTr.center.lat);
+
+            const testVectors = [
+                angularCoordinatesToVector(bounds.getNorthWest()),
+                angularCoordinatesToVector(bounds.getNorthEast()),
+                angularCoordinatesToVector(bounds.getSouthWest()),
+                angularCoordinatesToVector(bounds.getSouthEast()),
+                // Also test edge midpoints
+                angularCoordinatesToVector(new LngLat(lngEast, latMid)),
+                angularCoordinatesToVector(new LngLat(lngWest, latMid)),
+                angularCoordinatesToVector(new LngLat(lngMid, latNorth)),
+                angularCoordinatesToVector(new LngLat(lngMid, latSouth))
+            ];
+
+            const xLeft = (edgePadding.left + options.padding.left) / clonedTr.width * 2.0 - 1.0;
+            const xRight = (clonedTr.width - edgePadding.right - options.padding.right) / clonedTr.width * 2.0 - 1.0;
+            const yTop = (edgePadding.top + options.padding.top) / clonedTr.height * -2.0 + 1.0;
+            const yBottom = (clonedTr.height - edgePadding.bottom - options.padding.bottom) / clonedTr.height * -2.0 + 1.0;
+
+            const matrix = clonedTr.projectionMatrix;
+            let smallestNeededScale = Number.POSITIVE_INFINITY;
+
+            for (const vec of testVectors) {
+                const vecDotRowX = vec[0] * matrix[0] + vec[1] * matrix[4] + vec[2] * matrix[8];
+                const vecDotRowY = vec[0] * matrix[1] + vec[1] * matrix[5] + vec[2] * matrix[9];
+                const vecDotRowW = vec[0] * matrix[3] + vec[1] * matrix[7] + vec[2] * matrix[11];
+                const offsetX = matrix[12];
+                const offsetY = matrix[13];
+                const offsetW = matrix[15];
+                console.log(smallestNeededScale);
+                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vecDotRowX, vecDotRowW, offsetX, offsetW, xLeft));
+                console.log(smallestNeededScale);
+                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vecDotRowX, vecDotRowW, offsetX, offsetW, xRight));
+                console.log(smallestNeededScale);
+                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vecDotRowY, vecDotRowW, offsetY, offsetW, yTop));
+                console.log(smallestNeededScale);
+                smallestNeededScale = getLesserNonNegativeNonNull(smallestNeededScale, solveVectorScale(vecDotRowY, vecDotRowW, offsetY, offsetW, yBottom));
+            }
+            console.log(smallestNeededScale);
+
+            if (!Number.isFinite(smallestNeededScale) || smallestNeededScale === 0) {
+                this._cameraBoundsWarning();
+                return undefined;
+            }
+
+            const zoom = clonedTr.zoom + tr.scaleZoom(smallestNeededScale);
+
+            console.log(`Oldzoom ${tr.zoom} cloned: ${clonedTr.zoom} targetzoom ${zoom}`);
+
+            return {
+                center,
+                zoom,
+                bearing
+            };
         }
-
-        const zoom = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
-
-        // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of padding.
-        const offset = Point.convert(options.offset);
-        const paddingOffsetX = (options.padding.left - options.padding.right) / 2;
-        const paddingOffsetY = (options.padding.top - options.padding.bottom) / 2;
-        const paddingOffset = new Point(paddingOffsetX, paddingOffsetY);
-        const rotatedPaddingOffset = paddingOffset.rotate(degreesToRadians(bearing));
-        const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
-        const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
-
-        const center = tr.unproject(
-            // either world diagonal can be used (NW-SE or NE-SW)
-            nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
-        );
-
-        return {
-            center,
-            zoom,
-            bearing
-        };
     }
 
     /**
@@ -948,7 +1036,7 @@ export abstract class Camera extends Evented {
         noMoveStart?: boolean;
     }, eventData?: any): this {
         this._stop(false, options.easeId);
-        return; // JP: TODO: remove me!
+        //return; // JP: TODO: remove me!
 
         options = extend({
             offset: [0, 0],
@@ -978,8 +1066,8 @@ export abstract class Camera extends Evented {
         );
         this._normalizeCenter(center);
 
-        const from = tr.project(locationAtOffset);
-        const delta = tr.project(center).sub(from);
+        const from = tr.projectToWorldCoordinates(locationAtOffset);
+        const delta = tr.projectToWorldCoordinates(center).sub(from);
         const finalScale = tr.zoomScale(zoom - startZoom);
 
         let around, aroundPoint;
@@ -1032,7 +1120,7 @@ export abstract class Camera extends Evented {
                     Math.min(2, finalScale) :
                     Math.max(0.5, finalScale);
                 const speedup = Math.pow(base, 1 - k);
-                const newCenter = tr.unproject(from.add(delta.mult(k * speedup)).mult(scale));
+                const newCenter = tr.unprojectFromWorldCoordinates(from.add(delta.mult(k * speedup)).mult(scale));
                 tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
             }
 
@@ -1225,7 +1313,7 @@ export abstract class Camera extends Evented {
 
         this.stop();
 
-        return; // JP: TODO: remove me!
+        //return; // JP: TODO: remove me!
 
         options = extend({
             offset: [0, 0],
@@ -1255,8 +1343,8 @@ export abstract class Camera extends Evented {
         this._normalizeCenter(center);
         const scale = tr.zoomScale(zoom - startZoom);
 
-        const from = tr.project(locationAtOffset);
-        const delta = tr.project(center).sub(from);
+        const from = tr.projectToWorldCoordinates(locationAtOffset);
+        const delta = tr.projectToWorldCoordinates(center).sub(from);
 
         let rho = options.curve;
 
@@ -1363,7 +1451,7 @@ export abstract class Camera extends Evented {
 
             if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
-            const newCenter = k === 1 ? center : tr.unproject(from.add(delta.mult(u(s))).mult(scale));
+            const newCenter = k === 1 ? center : tr.unprojectFromWorldCoordinates(from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
 
             this._applyUpdatedTransform(tr);
@@ -1478,5 +1566,21 @@ export abstract class Camera extends Evented {
         }
         const elevation = this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
         return elevation - this.transform.elevation;
+    }
+}
+
+function solveVectorScale(vectorDotRowMain: number, vectorDotRowW: number, matrixRowOffsetMain: number, matrixOffsetW: number, targetValue: number): number | null {
+    if (vectorDotRowMain === vectorDotRowW * targetValue || vectorDotRowW * matrixRowOffsetMain === vectorDotRowMain * matrixOffsetW) {
+        return null;
+    }
+    const result = (matrixOffsetW * targetValue - matrixRowOffsetMain) / (vectorDotRowMain - vectorDotRowW * targetValue);
+    return result;
+}
+
+function getLesserNonNegativeNonNull(oldValue: number, newValue: number): number {
+    if (newValue !== null && newValue >= 0 && newValue < oldValue) {
+        return newValue;
+    } else {
+        return oldValue;
     }
 }

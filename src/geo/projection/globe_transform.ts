@@ -66,6 +66,7 @@ export function getGlobeRadiusPixels(worldSize: number, latitudeDegrees: number)
 
 /**
  * Given a 3D point on the surface of a unit sphere, returns its angular coordinates in degrees.
+ * The input vector must be normalized.
  */
 export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
     const latRadians = Math.asin(surface[1]);
@@ -182,7 +183,9 @@ export class GlobeTransform extends Transform {
         this._mercatorTransform.apply(this);
     }
 
-    get cameraPosition(): vec3 {
+    public override get projectionMatrix(): mat4 { return this._globeProjMatrixNoCorrection; }
+
+    public override get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
         const copy = createVec3(); // Ensure the resulting vector is float64s
         copy[0] = this._cameraPosition[0];
@@ -548,10 +551,12 @@ export class GlobeTransform extends Transform {
     //
 
     override projectToWorldCoordinates(_lnglat: LngLat): Point {
+        return this._mercatorTransform.projectToWorldCoordinates(_lnglat); // JP: TODO: fixme
         throw new Error('Globe projection has no mapping to 2D coordinates.');
     }
 
     override unprojectFromWorldCoordinates(_point: Point): LngLat {
+        return this._mercatorTransform.unprojectFromWorldCoordinates(_point); // JP: TODO: fixme
         throw new Error('Globe projection has no mapping to 2D coordinates.');
     }
 

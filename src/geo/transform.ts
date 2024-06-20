@@ -113,6 +113,8 @@ export abstract class Transform {
      */
     public abstract get cameraToCenterDistance(): number;
 
+    abstract get projectionMatrix(): mat4;
+
     get pixelsToClipSpaceMatrix(): mat4 { return this._pixelsToClipSpaceMatrix; }
     get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
 

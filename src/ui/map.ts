@@ -442,7 +442,6 @@ export class Map extends Camera {
     style: Style;
     painter: Painter;
     handlers: HandlerManager;
-    projection: Projection;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -599,8 +598,7 @@ export class Map extends Camera {
             transform.renderWorldCopies = options.renderWorldCopies;
         }
 
-        super(transform, {bearingSnap: options.bearingSnap});
-        this.projection = projection;
+        super(transform, projection, {bearingSnap: options.bearingSnap});
 
         this._interactive = options.interactive;
         this._maxTileCacheSize = options.maxTileCacheSize;
