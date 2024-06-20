@@ -17,6 +17,7 @@ type ValidateStyle = {
     glyphs: Validator;
     layer: Validator;
     light: Validator;
+    sky: Validator;
     terrain: Validator;
     filter: Validator;
     paintProperty: Validator;
@@ -28,6 +29,7 @@ export const validateStyle = (validateStyleMin as unknown as ValidateStyle);
 
 export const validateSource = validateStyle.source;
 export const validateLight = validateStyle.light;
+export const validateSky = validateStyle.sky;
 export const validateTerrain = validateStyle.terrain;
 export const validateFilter = validateStyle.filter;
 export const validatePaintProperty = validateStyle.paintProperty;

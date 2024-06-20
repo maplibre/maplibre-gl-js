@@ -1,0 +1,49 @@
+{
+    "version": 8,
+    "metadata": {
+      "test": {
+        "description": "Tests atmosphere with atmosphere-blend to 0.5."
+      }
+    },
+    "projection": { "type": "globe" },
+    "sky": {
+      "atmosphere-blend": 0.5
+    },
+    "light": {
+        "anchor": "map",
+        "position": [1.5, 90, 90]
+    },
+    "center": [
+      160.0,
+      0.0
+    ],
+    "zoom": 1,
+    "sources": {
+      "source": {
+        "type": "raster",
+        "tiles": [
+          "local://tiles/{z}-{x}-{y}.satellite.png"
+        ],
+        "minzoom": 1,
+        "maxzoom": 1,
+        "tileSize": 256
+      }
+    },
+    "layers": [
+      {
+        "id": "background",
+        "type": "background",
+        "paint": {
+          "background-color": "white"
+        }
+      },
+      {
+        "id": "raster",
+        "type": "raster",
+        "source": "source",
+        "paint": {
+          "raster-fade-duration": 0
+        }
+      }
+    ]
+  }

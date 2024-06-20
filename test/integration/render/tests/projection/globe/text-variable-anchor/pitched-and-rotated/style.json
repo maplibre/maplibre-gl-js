@@ -6,6 +6,9 @@
       "width": 512
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "center": [
     15,
     0

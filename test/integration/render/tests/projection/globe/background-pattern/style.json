@@ -4,6 +4,9 @@
     "test": {
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "zoom": 2,
   "sources": {},
   "sprite": "local://sprites/emerald",

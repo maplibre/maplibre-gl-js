@@ -49,7 +49,8 @@ import type {
     SourceSpecification,
     SpriteSpecification,
     DiffOperations,
-    ProjectionSpecification
+    ProjectionSpecification,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -62,6 +63,7 @@ import {
 } from '../util/actor_messages';
 import {Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
+import Sky from './sky';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -188,6 +190,7 @@ export class Style extends Evented {
     lineAtlas: LineAtlas;
     light: Light;
     projection: Projection;
+    sky: Sky;
 
     _frameRequest: AbortController;
     _loadStyleRequest: AbortController;
@@ -342,6 +345,8 @@ export class Style extends Evented {
 
         this.light = new Light(this.stylesheet.light);
         this.projection = createProjectionFromName(this.stylesheet.projection?.type || 'mercator');
+
+        this.sky = new Sky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
@@ -527,6 +532,10 @@ export class Style extends Evented {
             return true;
         }
 
+        if (this.sky && this.sky.hasTransition()) {
+            return true;
+        }
+
         for (const id in this.sourceCaches) {
             if (this.sourceCaches[id].hasTransition()) {
                 return true;
@@ -585,6 +594,7 @@ export class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
+            this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }
@@ -629,6 +639,7 @@ export class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
+        this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -771,7 +782,8 @@ export class Style extends Evented {
                     operations.push(() => this.map.setTerrain.apply(this, op.args));
                     break;
                 case 'setSky':
-                    throw new Error('Unimplemented: setSky');
+                    operations.push(() => this.setSky.apply(this, op.args));
+                    break;
                 case 'setProjection':
                     this.setProjection.apply(this, op.args);
                     break;
@@ -1287,6 +1299,7 @@ export class Style extends Evented {
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
             light: myStyleSheet.light,
+            sky: myStyleSheet.sky,
             center: myStyleSheet.center,
             zoom: myStyleSheet.zoom,
             bearing: myStyleSheet.bearing,
@@ -1498,6 +1511,36 @@ export class Style extends Evented {
         }
         this.stylesheet.projection = projection;
         this.projection = createProjectionFromName(projection.type);
+    }
+
+    getSky(): SkySpecification {
+        return this.sky?.getSky();
+    }
+
+    setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
+        this._checkLoaded();
+
+        const sky = this.sky.getSky();
+        let _update = false;
+        for (const key in skyOptions) {
+            if (!deepEqual(skyOptions[key], sky[key])) {
+                _update = true;
+                break;
+            }
+        }
+        if (!_update) return;
+
+        const parameters = {
+            now: browser.now(),
+            transition: extend({
+                duration: 300,
+                delay: 0
+            }, this.stylesheet.transition)
+        };
+
+        this.stylesheet.sky = skyOptions;
+        this.sky.setSky(skyOptions, options);
+        this.sky.updateTransitions(parameters);
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {

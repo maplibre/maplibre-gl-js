@@ -5,6 +5,9 @@
       "description": "Tests that globe projection works with the raster layer type."
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "center": [
     15.0,
     0.0

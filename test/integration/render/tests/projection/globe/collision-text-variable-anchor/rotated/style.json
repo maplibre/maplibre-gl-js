@@ -7,6 +7,9 @@
       "width": 512
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "zoom": 2,
   "bearing": 60,
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",

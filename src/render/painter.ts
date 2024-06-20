@@ -27,6 +27,7 @@ import {drawFillExtrusion} from './draw_fill_extrusion';
 import {drawHillshade} from './draw_hillshade';
 import {drawRaster} from './draw_raster';
 import {drawBackground} from './draw_background';
+import {drawAtmosphere} from './draw_atmosphere';
 import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
@@ -534,6 +535,11 @@ export class Painter {
 
             this._renderTileClippingMasks(layer, coordsAscending[layer.source], false);
             this.renderLayer(this, sourceCache, layer, coords);
+        }
+
+        // Render atmosphere, only for Globe projection
+        if (this.style.projection.name === 'globe') {
+            drawAtmosphere(this, this.style.sky, this.style.light);
         }
 
         if (this.options.showTileBoundaries) {

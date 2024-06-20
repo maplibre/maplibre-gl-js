@@ -19,8 +19,11 @@ export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
 export class MercatorProjection implements Projection {
-    private _cachedMesh: Mesh = null;
+    private _cachedMesh: Mesh | null = null;
     private _cameraPosition: vec3 = [0, 0, 0];
+    private _worldCenterPosition: vec3 = [0, 0, 0];
+    private _worldSize: number = 0;
+    private _invProjMatrix: mat4 = mat4.create();
 
     get name(): string {
         return 'mercator';
@@ -64,6 +67,18 @@ export class MercatorProjection implements Projection {
         return SubdivisionGranularitySetting.noSubdivision;
     }
 
+    get worldCenterPosition(): vec3 {
+        return this._worldCenterPosition;
+    }
+
+    get worldSize(): number {
+        return this._worldSize;
+    }
+
+    get invProjMatrix(): mat4 {
+        return this._invProjMatrix;
+    }
+
     public isRenderingDirty(): boolean {
         // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
         return false;
@@ -77,13 +92,24 @@ export class MercatorProjection implements Projection {
         // Do nothing.
     }
 
-    public updateProjection(t: { invModelViewProjectionMatrix: mat4 }): void {
+    public updateProjection(transform: TransformLike): void {
+        this._worldSize = transform.worldSize;
+        this._invProjMatrix = mat4.clone(transform.invModelViewProjectionMatrix);
+
         const cameraPos: vec4 = [0, 0, -1, 1];
-        vec4.transformMat4(cameraPos, cameraPos, t.invModelViewProjectionMatrix);
+        vec4.transformMat4(cameraPos, cameraPos, transform.invModelViewProjectionMatrix);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
             cameraPos[2] / cameraPos[3]
+        ];
+
+        const worldPos: vec4 = [0, 0, 0, 1];
+        vec4.transformMat4(worldPos, worldPos, transform.invModelViewProjectionMatrix);
+        this._worldCenterPosition = [
+            worldPos[0] / worldPos[3],
+            worldPos[1] / worldPos[3],
+            worldPos[2] / worldPos[3]
         ];
     }
 

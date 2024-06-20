@@ -4,6 +4,9 @@
     "test": {
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "center": [
     10.0,
     -15.0

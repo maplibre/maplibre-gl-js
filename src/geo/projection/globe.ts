@@ -72,10 +72,18 @@ export class GlobeProjection implements Projection {
 
     private _globeProjectionOverride = true;
 
+    private _globeMatrix: mat4 = mat4.create();
+    private _globeMatrixNoCorrection: mat4 = mat4.create();
     private _globeProjMatrix: mat4 = mat4.create();
     private _globeProjMatrixNoCorrection: mat4 = mat4.create();
 
     private _cameraPosition: vec3 = [0, 0, 0];
+
+    private _globePosition: vec3 = [0, 0, 0];
+    private _globeRadiusPixels: number = 0.0;
+
+    private _projMatrix: mat4 = mat4.create();
+    private _invProjMatrix: mat4 = mat4.create();
 
     get name(): string {
         return 'globe';
@@ -127,6 +135,18 @@ export class GlobeProjection implements Projection {
 
     get subdivisionGranularity(): SubdivisionGranularitySetting {
         return granularitySettingsGlobe;
+    }
+
+    get worldCenterPosition(): vec3 {
+        return this._globePosition;
+    }
+
+    get worldSize(): number {
+        return this._globeRadiusPixels;
+    }
+
+    get invProjMatrix(): mat4 {
+        return this._invProjMatrix;
     }
 
     /**
@@ -193,41 +213,55 @@ export class GlobeProjection implements Projection {
         // We want zoom levels to be consistent between globe and flat views.
         // This means that the pixel size of features at the map center point
         // should be the same for both globe and flat view.
-        const globeRadiusPixels = transform.worldSize / (2.0 * Math.PI) / Math.cos(transform.center.lat * Math.PI / 180);
+        this._globeRadiusPixels = transform.worldSize / (2.0 * Math.PI) / Math.cos(transform.center.lat * Math.PI / 180);
+
+        mat4.perspective(this._projMatrix, transform.fov * Math.PI / 180, transform.width / transform.height, 0.5, transform.cameraToCenterDistance + this._globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        const invProjMatrix = mat4.create();
+        mat4.invert(invProjMatrix, this._projMatrix);
+        this._invProjMatrix = invProjMatrix;
 
         // Construct a completely separate matrix for globe view
-        const globeMatrix = new Float64Array(16) as any;
-        const globeMatrixUncorrected = new Float64Array(16) as any;
-        mat4.perspective(globeMatrix, transform.fov * Math.PI / 180, transform.width / transform.height, 0.5, transform.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        const globeMatrix = mat4.identity(new Float64Array(16) as any);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -transform.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -transform.pitch * Math.PI / 180);
         mat4.rotateZ(globeMatrix, globeMatrix, -transform.angle);
-        mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -globeRadiusPixels]);
+        mat4.translate(globeMatrix, globeMatrix, [0.0, 0, -this._globeRadiusPixels]);
         // Rotate the sphere to center it on viewed coordinates
 
         // Keep a atan-correction-free matrix for transformations done on the CPU with accurate math
+        const globeMatrixUncorrected = new Float64Array(16) as any;
         mat4.rotateX(globeMatrixUncorrected, globeMatrix, transform.center.lat * Math.PI / 180.0);
         mat4.rotateY(globeMatrixUncorrected, globeMatrixUncorrected, -transform.center.lng * Math.PI / 180.0);
-        mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
-        this._globeProjMatrixNoCorrection = globeMatrix;
+        mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, [this._globeRadiusPixels, this._globeRadiusPixels, this._globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
+        mat4.copy(this._globeMatrixNoCorrection, globeMatrixUncorrected);
+        mat4.mul(this._globeProjMatrixNoCorrection, this._projMatrix, this._globeMatrixNoCorrection);
 
         mat4.rotateX(globeMatrix, globeMatrix, transform.center.lat * Math.PI / 180.0 - this._errorCorrectionUsable);
         mat4.rotateY(globeMatrix, globeMatrix, -transform.center.lng * Math.PI / 180.0);
-        mat4.scale(globeMatrix, globeMatrix, [globeRadiusPixels, globeRadiusPixels, globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
+        mat4.scale(this._globeMatrix, globeMatrix, [this._globeRadiusPixels, this._globeRadiusPixels, this._globeRadiusPixels]); // Scale the unit sphere to a sphere with diameter of 1
+        mat4.mul(globeMatrix, this._projMatrix, this._globeMatrix);
         this._globeProjMatrix = globeMatrix;
 
-        const invProj = mat4.create();
-        mat4.invert(invProj, globeMatrix);
+        const invGlobeProj = mat4.create();
+        mat4.invert(invGlobeProj, this._globeProjMatrix);
 
         const cameraPos: vec4 = [0, 0, -1, 1];
-        vec4.transformMat4(cameraPos, cameraPos, invProj);
+        vec4.transformMat4(cameraPos, cameraPos, invGlobeProj);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
             cameraPos[2] / cameraPos[3]
         ];
 
-        this._cachedClippingPlane = this._computeClippingPlane(transform, globeRadiusPixels);
+        const globePos: vec4 = [0, 0, 0, 1];
+        vec4.transformMat4(globePos, globePos, this._globeMatrix);
+        this._globePosition = [
+            globePos[0] / globePos[3],
+            globePos[1] / globePos[3],
+            globePos[2] / globePos[3]
+        ];
+
+        this._cachedClippingPlane = this._computeClippingPlane(transform, this._globeRadiusPixels);
     }
 
     public getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4, useAtanCorrection: boolean = true): ProjectionData {
@@ -391,7 +425,7 @@ export class GlobeProjection implements Projection {
     }
 
     public transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3 {
-        const sphereX = transform.center.lng * Math.PI / 180.0;
+        const sphereX = -transform.center.lng * Math.PI / 180.0;
         const sphereY = transform.center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);

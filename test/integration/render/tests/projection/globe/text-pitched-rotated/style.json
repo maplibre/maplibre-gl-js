@@ -6,6 +6,9 @@
       "width": 256
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "zoom": 1,
   "pitch": 30,
   "bearing": 45,

@@ -54,7 +54,8 @@ import type {
     LightSpecification,
     SourceSpecification,
     TerrainSpecification,
-    ProjectionSpecification
+    ProjectionSpecification,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
@@ -2662,6 +2663,32 @@ export class Map extends Camera {
      */
     getLight(): LightSpecification {
         return this.style.getLight();
+    }
+
+    /**
+     * Sets the value of style's sky properties.
+     *
+     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky).
+     * @param options - Options object.
+     *
+     * @example
+     * ```ts
+     * map.setSky({'atmosphere-blend': 1.0});
+     * ```
+     */
+    setSky(sky: SkySpecification, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.setSky(sky, options);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's sky.
+     *
+     * @returns sky properties of the style.
+     */
+    getSky(): SkySpecification {
+        return this.style.getSky();
     }
 
     /**

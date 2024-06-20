@@ -7,6 +7,9 @@
       "width": 256
     }
   },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
   "zoom": 1,
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
   "projection": { "type": "globe" },
