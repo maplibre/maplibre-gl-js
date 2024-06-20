@@ -8,33 +8,33 @@ import {Mesh} from '../render/mesh';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 
 type SkyProps = {
-    "sky-color": DataConstantProperty<Color>;
-	"horizon-color": DataConstantProperty<Color>;
-	"fog-color": DataConstantProperty<Color>;
-	"fog-ground-blend": DataConstantProperty<number>;
-	"horizon-fog-blend": DataConstantProperty<number>;
-	"sky-horizon-blend": DataConstantProperty<number>;
-	"atmosphere-blend": DataConstantProperty<number>;
+    'sky-color': DataConstantProperty<Color>;
+    'horizon-color': DataConstantProperty<Color>;
+    'fog-color': DataConstantProperty<Color>;
+    'fog-ground-blend': DataConstantProperty<number>;
+    'horizon-fog-blend': DataConstantProperty<number>;
+    'sky-horizon-blend': DataConstantProperty<number>;
+    'atmosphere-blend': DataConstantProperty<number>;
 };
 
 type SkyPropsPossiblyEvaluated = {
-    "sky-color": Color;
-	"horizon-color": Color;
-	"fog-color": Color;
-	"fog-ground-blend": number;
-	"horizon-fog-blend": number;
-	"sky-horizon-blend": number;
-	"atmosphere-blend": number;
+    'sky-color': Color;
+    'horizon-color': Color;
+    'fog-color': Color;
+    'fog-ground-blend': number;
+    'horizon-fog-blend': number;
+    'sky-horizon-blend': number;
+    'atmosphere-blend': number;
 };
 
 const properties: Properties<SkyProps> = new Properties({
-    "sky-color": new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification),
-	"horizon-color": new DataConstantProperty(styleSpec.sky['horizon-color'] as StylePropertySpecification),
-	"fog-color": new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification),
-	"fog-ground-blend": new DataConstantProperty(styleSpec.sky['fog-ground-blend'] as StylePropertySpecification),
-	"horizon-fog-blend": new DataConstantProperty(styleSpec.sky['horizon-fog-blend'] as StylePropertySpecification),
-	"sky-horizon-blend": new DataConstantProperty(styleSpec.sky['sky-horizon-blend'] as StylePropertySpecification),
-	"atmosphere-blend": new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification)
+    'sky-color': new DataConstantProperty(styleSpec.sky['sky-color'] as StylePropertySpecification),
+    'horizon-color': new DataConstantProperty(styleSpec.sky['horizon-color'] as StylePropertySpecification),
+    'fog-color': new DataConstantProperty(styleSpec.sky['fog-color'] as StylePropertySpecification),
+    'fog-ground-blend': new DataConstantProperty(styleSpec.sky['fog-ground-blend'] as StylePropertySpecification),
+    'horizon-fog-blend': new DataConstantProperty(styleSpec.sky['horizon-fog-blend'] as StylePropertySpecification),
+    'sky-horizon-blend': new DataConstantProperty(styleSpec.sky['sky-horizon-blend'] as StylePropertySpecification),
+    'atmosphere-blend': new DataConstantProperty(styleSpec.sky['atmosphere-blend'] as StylePropertySpecification)
 });
 
 const TRANSITION_SUFFIX = '-transition';
