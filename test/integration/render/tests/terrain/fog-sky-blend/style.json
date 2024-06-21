@@ -23,7 +23,7 @@
         "hillshadeSource": {
             "type": "raster-dem",
             "tiles": [
-                "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+                "local://tiles/zero-elevation-terrain-tile.png"
             ],
             "minzoom": 0,
             "maxzoom": 12
@@ -31,7 +31,7 @@
         "terrain": {
             "type": "raster-dem",
             "tiles": [
-                "local://tiles/terrain/{z}-{x}-{y}.terrain.png"
+                "local://tiles/zero-elevation-terrain-tile.png"
             ],
             "minzoom": 7,
             "maxzoom": 12,
@@ -43,21 +43,8 @@
           "id": "background",
           "type": "background",
           "paint": {
-            "background-color": "#ccaa83"
+            "background-color": "white"
           }
-        },
-        {
-            "id": "hills",
-            "type": "hillshade",
-            "source": "hillshadeSource",
-            "layout": {
-                "visibility": "visible"
-            },
-            "paint": {
-                "hillshade-shadow-color": "#473B24",
-                "hillshade-illumination-anchor": "map",
-                "hillshade-illumination-direction": 150
-            }
         }
     ],
     "terrain": {
@@ -65,9 +52,11 @@
         "exaggeration": 1
     },
     "sky": {
-        "sky-color": "#199EF3",
-        "horizon-color": "#daeff0",
+        "sky-color": "#00ff00",
+        "horizon-color": "#00ff00",
+        "fog-color": "#ff0000",
         "sky-horizon-blend": 1,
-        "fog-ground-blend": 1
+        "horizon-fog-blend": 0,
+        "fog-ground-blend": 0
     }
 }
