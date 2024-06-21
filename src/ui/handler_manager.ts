@@ -542,8 +542,8 @@ export class HandlerManager {
                 // - when we interpolate from exact zooming to heuristic zooming
                 const raySurfaceDistanceForSlowingStart = 0.3; // Zoom movement slowing will start when the planet surface to ray distance is greater than this number (globe radius is 1, so 0.3 is ~2000km form the surface).
                 const slowingMultiplier = 0.5; // The lower this value, the slower will the "zoom movement slowing" occur.
-                const interpolateToHeuristicStartLng = 50; // When zoom location longitude is this many degrees away from map center, we start interpolating from exact zooming to heuristic zooming.
-                const interpolateToHeuristicEndLng = 85; // Longitude difference at which interpolation to heuristic zooming ends.
+                const interpolateToHeuristicStartLng = 45; // When zoom location longitude is this many degrees away from map center, we start interpolating from exact zooming to heuristic zooming.
+                const interpolateToHeuristicEndLng = 75; // Longitude difference at which interpolation to heuristic zooming ends.
                 const interpolateToHeuristicExponent = 0.5; // Makes interpolation smoother.
 
                 const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);

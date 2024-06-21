@@ -15,7 +15,7 @@ import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {Projection} from '../geo/projection/projection';
-import {angularCoordinatesToVector, getZoomAdjustment} from '../geo/projection/globe_transform';
+import {angularCoordinatesToVector} from '../geo/projection/globe_transform';
 import {mat4, vec3} from 'gl-matrix';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -865,7 +865,7 @@ export abstract class Camera extends Evented {
      * ```
      * @see Used by {@link BoxZoomHandler}
      */
-    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this { // JP: TODO: adapt this for globe
+    fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this {
         return this._fitInternal(
             this._cameraForBoxAndBearing(
                 this.transform.pointLocation(Point.convert(p0)),
