@@ -86,6 +86,10 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
 
 /**
  * Computes how much to modify zoom to keep the globe size constant when changing latitude.
+ * @param transform - An instance of any transform. Does not have any relation on the computed values.
+ * @param oldLat - Latitude before change.
+ * @param newLat - Latitude after change.
+ * @returns A value to add to zoom level used for old latitude to keep same planet radius at new latitude.
  */
 export function getZoomAdjustment(transform: { scaleZoom(scale: number): number }, oldLat: number, newLat: number): number {
     const oldCircumference = Math.cos(oldLat * Math.PI / 180.0);
@@ -569,7 +573,7 @@ export class GlobeTransform extends Transform {
         const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(this, 0, constrainedLat), this.maxZoom);
         return {
             center: new LngLat(
-                mod(lngLat.lng + 180, 360) - 180,
+                lngLat.lng,
                 constrainedLat
             ),
             zoom: constrainedZoom
@@ -676,7 +680,7 @@ export class GlobeTransform extends Transform {
 
         const newLng = validLng / Math.PI * 180;
         const newLat = validLat / Math.PI * 180;
-        this.center = new LngLat(mod(newLng, 360), clamp(newLat, -90, 90));
+        this.center = new LngLat(newLng, clamp(newLat, -90, 90));
 
         // const vecToCenter = angularCoordinatesToVector(this.center);
 

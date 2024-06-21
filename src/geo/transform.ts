@@ -382,7 +382,7 @@ export abstract class Transform {
     }
 
     zoomScale(zoom: number) { return Math.pow(2, zoom); }
-    scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
+    scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; } // JP: TODO: convert this to a static function
 
     /**
      * Convert from LngLat to world coordinates ([0, 512],[0, 512], for mercator, those are mercator coordinates scaled by 512).

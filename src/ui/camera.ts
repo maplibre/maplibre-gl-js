@@ -15,7 +15,7 @@ import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {Projection} from '../geo/projection/projection';
-import {angularCoordinatesToVector} from '../geo/projection/globe_transform';
+import {angularCoordinatesToVector, getZoomAdjustment, sphereSurfacePointToCoordinates} from '../geo/projection/globe_transform';
 import {mat4, vec3} from 'gl-matrix';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -1045,12 +1045,12 @@ export abstract class Camera extends Evented {
             bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
             pitch = 'pitch' in options ? +options.pitch : startPitch,
             padding = 'padding' in options ? options.padding : tr.padding;
-
+        const startCenter = tr.center;
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
 
-        const {center, zoom} = tr.getConstrained(
+        const {center, zoom: endZoom} = tr.getConstrained(
             LngLat.convert(options.center || locationAtOffset),
             options.zoom ?? startZoom
         );
@@ -1058,7 +1058,7 @@ export abstract class Camera extends Evented {
 
         const from = tr.projectToWorldCoordinates(locationAtOffset);
         const delta = tr.projectToWorldCoordinates(center).sub(from);
-        const finalScale = tr.zoomScale(zoom - startZoom);
+        const finalScale = tr.zoomScale(endZoom - startZoom);
 
         let around, aroundPoint;
 
@@ -1074,7 +1074,7 @@ export abstract class Camera extends Evented {
             pitching: this._pitching
         };
 
-        this._zooming = this._zooming || (zoom !== startZoom);
+        this._zooming = this._zooming || (endZoom !== startZoom);
         this._rotating = this._rotating || (startBearing !== bearing);
         this._pitching = this._pitching || (pitch !== startPitch);
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
@@ -1083,45 +1083,108 @@ export abstract class Camera extends Evented {
         this._prepareEase(eventData, options.noMoveStart, currently);
         if (this.terrain) this._prepareElevation(center);
 
-        this._ease((k) => {
-            if (this._zooming) {
-                tr.zoom = interpolates.number(startZoom, zoom, k);
-            }
-            if (this._rotating) {
-                tr.bearing = interpolates.number(startBearing, bearing, k);
-            }
-            if (this._pitching) {
-                tr.pitch = interpolates.number(startPitch, pitch, k);
-            }
-            if (this._padding) {
-                tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
-                // When padding is being applied, Transform#centerPoint is changing continuously,
-                // thus we need to recalculate offsetPoint every frame
-                pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-            }
+        if (this.projection.useGlobeControls) {
+            const clonedTr = tr.clone();
+            clonedTr.center = center;
+            clonedTr.zoom = endZoom;
+            clonedTr.setLocationAtPoint(center, pointAtOffset);
+            const endCenterWithShift = clonedTr.center;
+            const endZoomWithShift = endZoom + getZoomAdjustment(clonedTr, center.lat, endCenterWithShift.lat);
 
-            if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+            // Planet radius for a given zoom level differs according to latitude
+            // Convert zooms to what they would be at equator for the given planet radius
+            const normalizedStartZoom = startZoom + getZoomAdjustment(tr, startCenter.lat, 0);
+            const normalizedEndZoom = endZoomWithShift + getZoomAdjustment(tr, endCenterWithShift.lat, 0);
+            const deltaLng = differenceOfAnglesDegrees(startCenter.lng, endCenterWithShift.lng);
+            const deltaLat = differenceOfAnglesDegrees(startCenter.lat, endCenterWithShift.lat);
+            this._ease((k) => {
+                if (this._rotating) {
+                    tr.bearing = interpolates.number(startBearing, bearing, k);
+                }
+                if (this._pitching) {
+                    tr.pitch = interpolates.number(startPitch, pitch, k);
+                }
+                if (this._padding) {
+                    tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
+                    // When padding is being applied, Transform#centerPoint is changing continuously,
+                    // thus we need to recalculate offsetPoint every frame
+                    pointAtOffset = tr.centerPoint.add(offsetAsPoint);
+                }
 
-            if (around) {
-                tr.setLocationAtPoint(around, aroundPoint);
-            } else {
-                const scale = tr.zoomScale(tr.zoom - startZoom);
-                const base = zoom > startZoom ?
-                    Math.min(2, finalScale) :
-                    Math.max(0.5, finalScale);
-                const speedup = Math.pow(base, 1 - k);
-                const newCenter = tr.unprojectFromWorldCoordinates(from.add(delta.mult(k * speedup)).mult(scale));
-                tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
-            }
+                if (around) {
+                    // JP: TODO: this will probably need a copy of zoom logic?
+                    tr.setLocationAtPoint(around, aroundPoint);
+                } else {
+                    const base = normalizedEndZoom > normalizedStartZoom ?
+                        Math.min(2, finalScale) :
+                        Math.max(0.5, finalScale);
+                    const speedup = Math.pow(base, 1 - k);
+                    const factor = k * speedup;
+                    // Interpolating LngLat directly is somewhat inaccurate, but saves a *lot* of trouble.
+                    const newCenter = new LngLat(
+                        startCenter.lng + deltaLng * factor,
+                        startCenter.lat + deltaLat * factor
+                    );
+                    tr.center = newCenter;
+                }
 
-            this._applyUpdatedTransform(tr);
+                if (this._zooming) {
+                    const normalizedInterpolatedZoom = interpolates.number(normalizedStartZoom, normalizedEndZoom, k);
+                    const interpolatedZoom = normalizedInterpolatedZoom + getZoomAdjustment(tr, 0, tr.center.lat);
+                    tr.zoom = interpolatedZoom;
+                }
 
-            this._fireMoveEvents(eventData);
+                if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
-        }, (interruptingEaseId?: string) => {
-            if (this.terrain && options.freezeElevation) this._finalizeElevation();
-            this._afterEase(eventData, interruptingEaseId);
-        }, options as any);
+                this._applyUpdatedTransform(tr);
+
+                this._fireMoveEvents(eventData);
+
+            }, (interruptingEaseId?: string) => {
+                if (this.terrain && options.freezeElevation) this._finalizeElevation();
+                this._afterEase(eventData, interruptingEaseId);
+            }, options as any);
+        } else {
+            this._ease((k) => {
+                if (this._zooming) {
+                    tr.zoom = interpolates.number(startZoom, endZoom, k);
+                }
+                if (this._rotating) {
+                    tr.bearing = interpolates.number(startBearing, bearing, k);
+                }
+                if (this._pitching) {
+                    tr.pitch = interpolates.number(startPitch, pitch, k);
+                }
+                if (this._padding) {
+                    tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
+                    // When padding is being applied, Transform#centerPoint is changing continuously,
+                    // thus we need to recalculate offsetPoint every frame
+                    pointAtOffset = tr.centerPoint.add(offsetAsPoint);
+                }
+
+                if (this.terrain && !options.freezeElevation) this._updateElevation(k);
+
+                if (around) {
+                    tr.setLocationAtPoint(around, aroundPoint);
+                } else {
+                    const scale = tr.zoomScale(tr.zoom - startZoom);
+                    const base = endZoom > startZoom ?
+                        Math.min(2, finalScale) :
+                        Math.max(0.5, finalScale);
+                    const speedup = Math.pow(base, 1 - k);
+                    const newCenter = tr.unprojectFromWorldCoordinates(from.add(delta.mult(k * speedup)).mult(scale));
+                    tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+                }
+
+                this._applyUpdatedTransform(tr);
+
+                this._fireMoveEvents(eventData);
+
+            }, (interruptingEaseId?: string) => {
+                if (this.terrain && options.freezeElevation) this._finalizeElevation();
+                this._afterEase(eventData, interruptingEaseId);
+            }, options as any);
+        }
 
         return this;
     }
