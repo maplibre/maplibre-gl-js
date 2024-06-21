@@ -80,7 +80,7 @@ export type CenterZoomBearing = {
      */
     center?: LngLatLike;
     /**
-     * The desired zoom level.
+     * The desired mercator zoom level.
      */
     zoom?: number;
     /**
@@ -88,6 +88,12 @@ export type CenterZoomBearing = {
      * is "up". For example, `bearing: 90` orients the map so that east is up.
      */
     bearing?: number;
+    /**
+     * The desired apparent zoom level, relative to the starting zoom level.
+     * This is relevant for globe projection, where changing latitude shifts the actual zoom level
+     * to match mercator.
+     */
+    apparentZoom?: number;
 }
 
 /**
@@ -631,9 +637,19 @@ export abstract class Camera extends Evented {
      * ```
      */
     cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+        this._convertApparentZoom(options);
         bounds = LngLatBounds.convert(bounds);
         const bearing = options && options.bearing || 0;
         return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
+    }
+
+    /**
+     * @internal
+     */
+    private _convertApparentZoom(options: CenterZoomBearing) {
+        if (options && typeof options.apparentZoom === 'number' && options.center) {
+            options.zoom = options.apparentZoom + getZoomAdjustment(this.transform, this.transform.center.lat, LngLat.convert(options.center).lat);
+        }
     }
 
     /**
@@ -667,6 +683,7 @@ export abstract class Camera extends Evented {
      * ```
      */
     _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
+        this._convertApparentZoom(options);
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -837,6 +854,7 @@ export abstract class Camera extends Evented {
      * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
      */
     fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this {
+        this._convertApparentZoom(options);
         return this._fitInternal(
             this.cameraForBounds(bounds, options),
             options,
@@ -866,6 +884,7 @@ export abstract class Camera extends Evented {
      * @see Used by {@link BoxZoomHandler}
      */
     fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this {
+        this._convertApparentZoom(options);
         return this._fitInternal(
             this._cameraForBoxAndBearing(
                 this.transform.pointLocation(Point.convert(p0)),
@@ -881,6 +900,7 @@ export abstract class Camera extends Evented {
         if (!calculatedOptions) return this;
 
         options = extend(calculatedOptions, options);
+        this._convertApparentZoom(options);
         // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
         delete options.padding;
 
@@ -915,6 +935,7 @@ export abstract class Camera extends Evented {
      * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
      */
     jumpTo(options: JumpToOptions, eventData?: any): this {
+        this._convertApparentZoom(options);
         this.stop();
 
         const tr = this._getTransformForUpdate();
@@ -991,6 +1012,7 @@ export abstract class Camera extends Evented {
 
         const groundDistance = Math.hypot(dx, dy);
 
+        // JP: TODO: proper zoom for globe here?
         const zoom = this.transform.scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
         const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
         let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
@@ -1025,6 +1047,7 @@ export abstract class Camera extends Evented {
         easeId?: string;
         noMoveStart?: boolean;
     }, eventData?: any): this {
+        this._convertApparentZoom(options);
         this._stop(false, options.easeId);
         //return; // JP: TODO: remove me!
 
@@ -1350,6 +1373,7 @@ export abstract class Camera extends Evented {
      * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
      */
     flyTo(options: FlyToOptions, eventData?: any): this {
+        this._convertApparentZoom(options);
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
             const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'around']) as CameraOptions;
