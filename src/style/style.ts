@@ -1503,6 +1503,13 @@ export class Style extends Evented {
         }
         if (this.sky) {
             this.sky.setSky(skyOptions);
+            this.sky.updateTransitions({
+                now: browser.now(),
+                transition: extend({
+                    duration: 300,
+                    delay: 0
+                }, this.stylesheet.transition)
+            });
             return;
         }
         this.sky = new Sky(skyOptions);
