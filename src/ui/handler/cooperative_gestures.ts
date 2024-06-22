@@ -19,7 +19,7 @@ export type GestureOptions = boolean;
  *   cooperativeGestures: true
  * });
  * ```
- * @see [Example: cooperative gestures](https://maplibre.org/maplibre-gl-js-docs/example/cooperative-gestures/)
+ * @see [Example: cooperative gestures](https://maplibre.org/maplibre-gl-js/docs/examples/cooperative-gestures/)
  **/
 export class CooperativeGesturesHandler implements Handler {
     _options: GestureOptions;
