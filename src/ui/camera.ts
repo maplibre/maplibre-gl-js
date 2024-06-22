@@ -647,9 +647,15 @@ export abstract class Camera extends Evented {
      * @internal
      */
     private _convertApparentZoom(options: CenterZoomBearing) {
-        if (options && typeof options.apparentZoom === 'number' && options.center) {
-            options.zoom = options.apparentZoom + getZoomAdjustment(this.transform, this.transform.center.lat, LngLat.convert(options.center).lat);
-        }
+        // if (!this.projection.useGlobeControls) {
+        //     return;
+        // }
+        // if (options && typeof options.zoom !== 'number') {
+        //     options.zoom = this.transform.zoom;
+        // }
+        // if (options && typeof options.apparentZoom === 'number' && options.center) {
+        //     options.zoom = options.apparentZoom + getZoomAdjustment(this.transform, this.transform.center.lat, LngLat.convert(options.center).lat);
+        // }
     }
 
     /**
@@ -1070,18 +1076,6 @@ export abstract class Camera extends Evented {
             padding = 'padding' in options ? options.padding : tr.padding;
         const startCenter = tr.center;
         const offsetAsPoint = Point.convert(options.offset);
-        let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-        const locationAtOffset = tr.pointLocation(pointAtOffset);
-
-        const {center, zoom: endZoom} = tr.getConstrained(
-            LngLat.convert(options.center || locationAtOffset),
-            options.zoom ?? startZoom
-        );
-        this._normalizeCenter(center);
-
-        const from = tr.projectToWorldCoordinates(locationAtOffset);
-        const delta = tr.projectToWorldCoordinates(center).sub(from);
-        const finalScale = tr.zoomScale(endZoom - startZoom);
 
         let around, aroundPoint;
 
@@ -1096,17 +1090,27 @@ export abstract class Camera extends Evented {
             rotating: this._rotating,
             pitching: this._pitching
         };
-
-        this._zooming = this._zooming || (endZoom !== startZoom);
         this._rotating = this._rotating || (startBearing !== bearing);
         this._pitching = this._pitching || (pitch !== startPitch);
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
-        this._easeId = options.easeId;
-        this._prepareEase(eventData, options.noMoveStart, currently);
-        if (this.terrain) this._prepareElevation(center);
-
         if (this.projection.useGlobeControls) {
+            let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
+            const preConstrainCenter = LngLat.convert(options.center) || this.transform.center;
+            const {center, zoom: endZoom} = tr.getConstrained(
+                preConstrainCenter,
+                options.zoom ?? startZoom // JP: TODO
+            );
+            this._normalizeCenter(center);
+
+            // Asi chci použít setLocationAtPoint s tím offsetem a extraktovat center
+
+            const finalScale = tr.zoomScale(endZoom - startZoom);
+            this._zooming = this._zooming || (endZoom !== startZoom);
+            this._easeId = options.easeId;
+            this._prepareEase(eventData, options.noMoveStart, currently);
+            if (this.terrain) this._prepareElevation(center);
+
             const clonedTr = tr.clone();
             clonedTr.center = center;
             clonedTr.zoom = endZoom;
@@ -1168,6 +1172,23 @@ export abstract class Camera extends Evented {
                 this._afterEase(eventData, interruptingEaseId);
             }, options as any);
         } else {
+            let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
+            const locationAtOffset = tr.pointLocation(pointAtOffset);
+            const {center, zoom: endZoom} = tr.getConstrained(
+                LngLat.convert(options.center || locationAtOffset),
+                options.zoom ?? startZoom
+            );
+            this._normalizeCenter(center);
+
+            const from = tr.projectToWorldCoordinates(locationAtOffset);
+            const delta = tr.projectToWorldCoordinates(center).sub(from);
+
+            const finalScale = tr.zoomScale(endZoom - startZoom);
+            this._zooming = this._zooming || (endZoom !== startZoom);
+            this._easeId = options.easeId;
+            this._prepareEase(eventData, options.noMoveStart, currently);
+            if (this.terrain) this._prepareElevation(center);
+
             this._ease((k) => {
                 if (this._zooming) {
                     tr.zoom = interpolates.number(startZoom, endZoom, k);
