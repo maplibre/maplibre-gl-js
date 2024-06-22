@@ -2596,7 +2596,7 @@ describe('Style#serialize', () => {
             'fog-color': '#00FF00'
         });
         style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
-        expect(style.sky.properties.get("fog-color").g).toBe(1);
-        expect(style.sky.properties.get("fog-color").r).toBe(0);
+        expect(style.sky.properties.get('fog-color').g).toBe(1);
+        expect(style.sky.properties.get('fog-color').r).toBe(0);
     });
 });
