@@ -2583,4 +2583,20 @@ describe('Style#serialize', () => {
         });
         expect(style.serialize().sky).toBeDefined();
     });
+
+    test('update sky properties after setting the sky on initial load', async () => {
+        const sky: SkySpecification = {
+            'fog-color': '#FF0000'
+        };
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({sky, transition: {duration: 0, delay: 0}}));
+
+        await style.once('style.load');
+        style.setSky({
+            'fog-color': '#00FF00'
+        });
+        style.update({transition: {duration: 0, delay: 0}} as EvaluationParameters);
+        expect(style.sky.properties.get("fog-color").g).toBe(1);
+        expect(style.sky.properties.get("fog-color").r).toBe(0);
+    });
 });

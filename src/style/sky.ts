@@ -69,7 +69,7 @@ export class Sky extends Evented {
         }
     }
 
-    getSky() {
+    getSky(): SkySpecification {
         return this._transitionable.serialize();
     }
 
