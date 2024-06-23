@@ -89,9 +89,12 @@ export type CenterZoomBearing = {
      */
     bearing?: number;
     /**
-     * The desired apparent zoom level, relative to the starting zoom level.
-     * This is relevant for globe projection, where changing latitude shifts the actual zoom level
-     * to match mercator.
+     * The desired apparent zoom level, relative to the animation's starting zoom level.
+     * This is only used when globe projection is enabled, where changing latitude shifts the actual zoom level to match mercator.
+     *
+     * For example, when easing from near the pole with starting zoom 4 and end zoom 5, the map will
+     * seem to zoom out, but will end up being at mercator zoom 5. When instead apparentZoom is set
+     * to 5, the map will appear to zoom in by one level, but its end mercator zoom will be larger than 5.
      */
     apparentZoom?: number;
 }
@@ -1095,28 +1098,43 @@ export abstract class Camera extends Evented {
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
         if (this.projection.useGlobeControls) {
+            // Globe needs special handling for how zoom should be animated.
+            // 1) if zoom is set, ease to the given mercator zoom
+            // 2) if apparentZoom is set, ease to the given apparent zoom
+            // 3) if neither is set, assume constant apparent zoom is to be kept and go to case 2
             let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
-            const preConstrainCenter = LngLat.convert(options.center) || this.transform.center;
-            const {center, zoom: endZoom} = tr.getConstrained(
+            const preConstrainCenter = options.center ?
+                LngLat.convert(options.center) :
+                startCenter;
+            const constrainedCenter = tr.getConstrained(
                 preConstrainCenter,
-                options.zoom ?? startZoom // JP: TODO
-            );
-            this._normalizeCenter(center);
+                startZoom // zoom can be whatever at this stage, it should not affect anything if globe is enabled
+            ).center;
+            this._normalizeCenter(constrainedCenter);
 
-            // Asi chci použít setLocationAtPoint s tím offsetem a extraktovat center
-
-            const finalScale = tr.zoomScale(endZoom - startZoom);
-            this._zooming = this._zooming || (endZoom !== startZoom);
-            this._easeId = options.easeId;
-            this._prepareEase(eventData, options.noMoveStart, currently);
-            if (this.terrain) this._prepareElevation(center);
+            // Compute target mercator zoom which we will use to compute final animation targets
+            const desiredApparentZoom = typeof options.apparentZoom === 'number' ?
+                options.apparentZoom :
+                (typeof options.zoom === 'number' ?
+                    undefined :
+                    tr.zoom);
+            const hasApparentZoom = typeof desiredApparentZoom === 'number';
+            const desiredMercatorZoom = hasApparentZoom ?
+                undefined :
+                options.zoom;
+            const targetMercatorZoom = hasApparentZoom ?
+                desiredApparentZoom + getZoomAdjustment(tr, startCenter.lat, preConstrainCenter.lat) :
+                desiredMercatorZoom;
 
             const clonedTr = tr.clone();
-            clonedTr.center = center;
-            clonedTr.zoom = endZoom;
-            clonedTr.setLocationAtPoint(center, pointAtOffset);
+            clonedTr.center = constrainedCenter;
+            clonedTr.zoom = targetMercatorZoom;
+            clonedTr.setLocationAtPoint(constrainedCenter, pointAtOffset);
+            // Find final animation targets
             const endCenterWithShift = clonedTr.center;
-            const endZoomWithShift = endZoom + getZoomAdjustment(clonedTr, center.lat, endCenterWithShift.lat);
+            const endZoomWithShift = hasApparentZoom ?
+                desiredApparentZoom + getZoomAdjustment(tr, startCenter.lat, endCenterWithShift.lat) :
+                desiredMercatorZoom; // Not adjusting this zoom will reduce accuracy of the offset center
 
             // Planet radius for a given zoom level differs according to latitude
             // Convert zooms to what they would be at equator for the given planet radius
@@ -1124,6 +1142,13 @@ export abstract class Camera extends Evented {
             const normalizedEndZoom = endZoomWithShift + getZoomAdjustment(tr, endCenterWithShift.lat, 0);
             const deltaLng = differenceOfAnglesDegrees(startCenter.lng, endCenterWithShift.lng);
             const deltaLat = differenceOfAnglesDegrees(startCenter.lat, endCenterWithShift.lat);
+
+            const finalScale = tr.zoomScale(normalizedEndZoom - normalizedStartZoom);
+            this._zooming = this._zooming || (endZoomWithShift !== startZoom);
+            this._easeId = options.easeId;
+            this._prepareEase(eventData, options.noMoveStart, currently);
+            if (this.terrain) this._prepareElevation(endCenterWithShift);
+
             this._ease((k) => {
                 if (this._rotating) {
                     tr.bearing = interpolates.number(startBearing, bearing, k);
