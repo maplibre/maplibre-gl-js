@@ -1126,10 +1126,14 @@ export abstract class Camera extends Evented {
                 desiredApparentZoom + getZoomAdjustment(tr, startCenter.lat, preConstrainCenter.lat) :
                 desiredMercatorZoom;
 
+            const clampedPoint = new Point(
+                clamp(pointAtOffset.x, 0, tr.width),
+                clamp(pointAtOffset.y, 0, tr.height)
+            );
             const clonedTr = tr.clone();
             clonedTr.center = constrainedCenter;
             clonedTr.zoom = targetMercatorZoom;
-            clonedTr.setLocationAtPoint(constrainedCenter, pointAtOffset);
+            clonedTr.setLocationAtPoint(constrainedCenter, clampedPoint);
             // Find final animation targets
             const endCenterWithShift = clonedTr.center;
             const endZoomWithShift = hasApparentZoom ?

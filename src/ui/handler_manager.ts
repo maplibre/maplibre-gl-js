@@ -725,7 +725,6 @@ export class HandlerManager {
                     inertialEase.bearing = 0;
                 }
                 inertialEase.freezeElevation = true;
-                inertialEase.apparentZoom = inertialEase.zoom ?? this._map.transform.zoom;
                 this._map.easeTo(inertialEase, {originalEvent: originalEndEvent});
             } else {
                 this._map.fire(new Event('moveend', {originalEvent: originalEndEvent}));
