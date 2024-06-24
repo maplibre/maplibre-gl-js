@@ -534,23 +534,24 @@ export class HandlerManager {
                 // Magic numbers that control:
                 // - when zoom movement slowing starts for cursor not on globe (avoid unnatural map movements)
                 // - when we interpolate from exact zooming to heuristic zooming based on longitude difference of target location to current center
-                // - when we interpolate from exact zooming to heuristic zooming based on current zoom (zoom levels are normalized to equator zoom)
+                // - when we interpolate from exact zooming to heuristic zooming based on globe being too small on screen
                 // - when zoom movement slowing starts for globe being too small on viewport (avoids unnatural/unwanted map movements when map is zoomed out a lot)
                 const raySurfaceDistanceForSlowingStart = 0.3; // Zoom movement slowing will start when the planet surface to ray distance is greater than this number (globe radius is 1, so 0.3 is ~2000km form the surface).
                 const slowingMultiplier = 0.5; // The lower this value, the slower will the "zoom movement slowing" occur.
                 const interpolateToHeuristicStartLng = 45; // When zoom location longitude is this many degrees away from map center, we start interpolating from exact zooming to heuristic zooming.
-                const interpolateToHeuristicEndLng = 75; // Longitude difference at which interpolation to heuristic zooming ends.
-                const interpolateToHeuristicExponent = 0.5; // Makes interpolation smoother.
-                const interpolateToHeuristicStartZoom = 5.5; // When zoom level (at equator) is this value, we start interpolating from exact zooming to heuristic zooming.
-                const interpolateToHeuristicEndZoom = 4.0; // Zoom level at which interpolation to heuristic zooming ends.
-                const slowingRadiusStart = 0.90; // If globe is 1.2x larger than the larger viewport dimension, start inhibiting map movement while zooming
-                const slowingRadiusStop = 0.25;
-                const slowingRadiusSlowFactor = 0.3; // How much is movement slowed when globe is too small
+                const interpolateToHeuristicEndLng = 85; // Longitude difference at which interpolation to heuristic zooming ends.
+                const interpolateToHeuristicExponent = 0.25; // Makes interpolation smoother.
+                const interpolateToHeuristicStartRadius = 0.75; // When globe is this many times larger than the smaller viewport dimension, we start interpolating from exact zooming to heuristic zooming.
+                const interpolateToHeuristicEndRadius = 0.35; // Globe size at which interpolation to heuristic zooming ends.
+                const slowingRadiusStart = 0.9; // If globe is this many times larger than the smaller viewport dimension, start inhibiting map movement while zooming
+                const slowingRadiusStop = 0.5;
+                const slowingRadiusSlowFactor = 0.25; // How much is movement slowed when globe is too small
 
                 const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);
                 const dLng = dLngRaw / (Math.abs(dLngRaw / 180) + 1.0); // This gradually reduces the amount of longitude change if the zoom location is very far, eg. on the other side of the pole (possible when looking at a pole).
                 const dLat = differenceOfAnglesDegrees(tr.center.lat, zoomLoc.lat);
 
+                // Slow zoom movement down if the mouse ray is far from the planet.
                 const rayDirection = tr.getRayDirectionFromPixel(zoomPixel);
                 const rayOrigin = tr.cameraPosition;
                 const distanceToClosestPoint = vec3.dot(rayOrigin, rayDirection) * -1; // Globe center relative to ray origin is equal to -rayOrigin and rayDirection is normalized, thus we want to compute dot(-rayOrigin, rayDirection).
@@ -561,15 +562,14 @@ export class HandlerManager {
                     rayDirection[2] * distanceToClosestPoint
                 ]);
                 const distanceFromSurface = vec3.length(closestPoint) - 1;
-                // Slow zoom movement down if the mouse ray is far from the planet.
                 const distanceFactor = Math.exp(-Math.max(distanceFromSurface - raySurfaceDistanceForSlowingStart, 0) * slowingMultiplier);
+
                 // Slow zoom movement down if the globe is too small on viewport
-                const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.max(tr.width, tr.height); // Radius relative to larger viewport dimension
+                const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.min(tr.width, tr.height); // Radius relative to larger viewport dimension
                 const radiusFactor = remapSaturate(radius, slowingRadiusStart, slowingRadiusStop, 1.0, slowingRadiusSlowFactor);
-                console.log(`${radius} factor: ${radiusFactor}`);
 
                 // Compute how much to move towards the zoom location
-                const factor = (1.0 - tr.zoomScale(-actualZoomDelta)) * distanceFactor * radiusFactor;
+                const factor = (1.0 - tr.zoomScale(-actualZoomDelta)) * Math.min(distanceFactor, radiusFactor);
 
                 const oldCenterLat = tr.center.lat;
                 const heuristicCenter = new LngLat(
@@ -582,10 +582,9 @@ export class HandlerManager {
                 const exactCenter = tr.center;
 
                 // Interpolate between exact zooming and heuristic zooming depending on the longitude difference between current center and zoom location.
-                const normalizedZoom = tr.zoom + getZoomAdjustment(tr, exactCenter.lat, 0);
                 const interpolationFactorLongitude = remapSaturate(Math.abs(dLngRaw), interpolateToHeuristicStartLng, interpolateToHeuristicEndLng, 0, 1);
-                const interpolationFactorZoom = remapSaturate(normalizedZoom, interpolateToHeuristicStartZoom, interpolateToHeuristicEndZoom, 0, 1);
-                const heuristicFactor = Math.pow(Math.max(interpolationFactorLongitude, interpolationFactorZoom), interpolateToHeuristicExponent);
+                const interpolationFactorRadius = remapSaturate(radius, interpolateToHeuristicStartRadius, interpolateToHeuristicEndRadius, 0, 1);
+                const heuristicFactor = Math.pow(Math.max(interpolationFactorLongitude, interpolationFactorRadius), interpolateToHeuristicExponent);
 
                 const lngExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lng, heuristicCenter.lng);
                 const latExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lat, heuristicCenter.lat);
