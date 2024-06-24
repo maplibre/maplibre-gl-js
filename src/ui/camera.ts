@@ -15,7 +15,7 @@ import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {Projection} from '../geo/projection/projection';
-import {angularCoordinatesToVector, getZoomAdjustment, sphereSurfacePointToCoordinates} from '../geo/projection/globe_transform';
+import {angularCoordinatesToVector, getZoomAdjustment} from '../geo/projection/globe_transform';
 import {mat4, vec3} from 'gl-matrix';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -640,25 +640,9 @@ export abstract class Camera extends Evented {
      * ```
      */
     cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
-        this._convertApparentZoom(options);
         bounds = LngLatBounds.convert(bounds);
         const bearing = options && options.bearing || 0;
         return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
-    }
-
-    /**
-     * @internal
-     */
-    private _convertApparentZoom(options: CenterZoomBearing) {
-        // if (!this.projection.useGlobeControls) {
-        //     return;
-        // }
-        // if (options && typeof options.zoom !== 'number') {
-        //     options.zoom = this.transform.zoom;
-        // }
-        // if (options && typeof options.apparentZoom === 'number' && options.center) {
-        //     options.zoom = options.apparentZoom + getZoomAdjustment(this.transform, this.transform.center.lat, LngLat.convert(options.center).lat);
-        // }
     }
 
     /**
@@ -692,7 +676,6 @@ export abstract class Camera extends Evented {
      * ```
      */
     _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
-        this._convertApparentZoom(options);
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -863,7 +846,6 @@ export abstract class Camera extends Evented {
      * @see [Fit a map to a bounding box](https://maplibre.org/maplibre-gl-js/docs/examples/fitbounds/)
      */
     fitBounds(bounds: LngLatBoundsLike, options?: FitBoundsOptions, eventData?: any): this {
-        this._convertApparentZoom(options);
         return this._fitInternal(
             this.cameraForBounds(bounds, options),
             options,
@@ -893,7 +875,6 @@ export abstract class Camera extends Evented {
      * @see Used by {@link BoxZoomHandler}
      */
     fitScreenCoordinates(p0: PointLike, p1: PointLike, bearing: number, options?: FitBoundsOptions, eventData?: any): this {
-        this._convertApparentZoom(options);
         return this._fitInternal(
             this._cameraForBoxAndBearing(
                 this.transform.pointLocation(Point.convert(p0)),
@@ -909,7 +890,6 @@ export abstract class Camera extends Evented {
         if (!calculatedOptions) return this;
 
         options = extend(calculatedOptions, options);
-        this._convertApparentZoom(options);
         // Explicitly remove the padding field because, calculatedOptions already accounts for padding by setting zoom and center accordingly.
         delete options.padding;
 
@@ -939,12 +919,16 @@ export abstract class Camera extends Evented {
      *   pitch: 45,
      *   bearing: 90
      * });
+     * // jump while preserving planet size under globe projection
+     * map.jumpTo({
+     *   center: [0, 0],
+     *   apparentZoom: map.getZoom(),
+     * });
      * ```
      * @see [Jump to a series of locations](https://maplibre.org/maplibre-gl-js/docs/examples/jump-to/)
      * @see [Update a feature in realtime](https://maplibre.org/maplibre-gl-js/docs/examples/live-update-feature/)
      */
     jumpTo(options: JumpToOptions, eventData?: any): this {
-        this._convertApparentZoom(options);
         this.stop();
 
         const tr = this._getTransformForUpdate();
@@ -952,13 +936,37 @@ export abstract class Camera extends Evented {
             bearingChanged = false,
             pitchChanged = false;
 
-        if ('zoom' in options && tr.zoom !== +options.zoom) {
-            zoomChanged = true;
-            tr.zoom = +options.zoom;
-        }
+        const optionsZoom = typeof options.zoom === 'number';
+        const optionsApparentZoom = typeof options.apparentZoom === 'number';
 
-        if (options.center !== undefined) {
-            tr.center = LngLat.convert(options.center);
+        // Special zoom & center handling for globe
+        if (this.projection.useGlobeControls) {
+            // Globe constrain's center isn't dependent on zoom level
+            const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
+            let targetZoom;
+            if (optionsApparentZoom) {
+                targetZoom = +options.apparentZoom + getZoomAdjustment(tr, tr.center.lat, constrainedCenter.lat);
+            } else if (optionsZoom) {
+                targetZoom = +options.zoom;
+            } else {
+                targetZoom = tr.zoom + getZoomAdjustment(tr, tr.center.lat, constrainedCenter.lat);
+            }
+            if (tr.zoom !== targetZoom) {
+                zoomChanged = true;
+                tr.zoom = targetZoom;
+            }
+            tr.center = constrainedCenter;
+
+        } else {
+            const zoom = optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : tr.zoom);
+            if (tr.zoom !== zoom) {
+                zoomChanged = true;
+                tr.zoom = +options.zoom;
+            }
+
+            if (options.center !== undefined) {
+                tr.center = LngLat.convert(options.center);
+            }
         }
 
         if ('bearing' in options && tr.bearing !== +options.bearing) {
@@ -1049,6 +1057,7 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions} and {@link AnimationOptions}.
+     * Supports `apparentZoom` for consistent planet radius when animating with globe projection enabled.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
@@ -1056,7 +1065,6 @@ export abstract class Camera extends Evented {
         easeId?: string;
         noMoveStart?: boolean;
     }, eventData?: any): this {
-        this._convertApparentZoom(options);
         this._stop(false, options.easeId);
         //return; // JP: TODO: remove me!
 
@@ -1079,6 +1087,9 @@ export abstract class Camera extends Evented {
             padding = 'padding' in options ? options.padding : tr.padding;
         const startCenter = tr.center;
         const offsetAsPoint = Point.convert(options.offset);
+
+        const optionsZoom = typeof options.zoom === 'number';
+        const optionsApparentZoom = typeof options.apparentZoom === 'number';
 
         let around, aroundPoint;
 
@@ -1112,15 +1123,15 @@ export abstract class Camera extends Evented {
             this._normalizeCenter(constrainedCenter);
 
             // Compute target mercator zoom which we will use to compute final animation targets
-            const desiredApparentZoom = typeof options.apparentZoom === 'number' ?
-                options.apparentZoom :
-                (typeof options.zoom === 'number' ?
+            const desiredApparentZoom = optionsApparentZoom ?
+                +options.apparentZoom :
+                (optionsZoom ?
                     undefined :
                     tr.zoom);
             const hasApparentZoom = typeof desiredApparentZoom === 'number';
             const desiredMercatorZoom = hasApparentZoom ?
                 undefined :
-                options.zoom;
+                +options.zoom;
             const targetMercatorZoom = hasApparentZoom ?
                 desiredApparentZoom + getZoomAdjustment(tr, startCenter.lat, preConstrainCenter.lat) :
                 desiredMercatorZoom;
@@ -1197,11 +1208,13 @@ export abstract class Camera extends Evented {
                 this._afterEase(eventData, interruptingEaseId);
             }, options as any);
         } else {
+            const zoom = optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : tr.zoom);
+
             let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             const locationAtOffset = tr.pointLocation(pointAtOffset);
             const {center, zoom: endZoom} = tr.getConstrained(
                 LngLat.convert(options.center || locationAtOffset),
-                options.zoom ?? startZoom
+                zoom ?? startZoom
             );
             this._normalizeCenter(center);
 
@@ -1419,12 +1432,13 @@ export abstract class Camera extends Evented {
      * @see [Fly to a location based on scroll position](https://maplibre.org/maplibre-gl-js/docs/examples/scroll-fly-to/)
      */
     flyTo(options: FlyToOptions, eventData?: any): this {
-        this._convertApparentZoom(options);
         // Fall through to jumpTo if user has set prefers-reduced-motion
         if (!options.essential && browser.prefersReducedMotion) {
             const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'around']) as CameraOptions;
             return this.jumpTo(coercedOptions, eventData);
         }
+
+        // JP: TODO: apparentZoom
 
         // This method implements an “optimal path” animation, as detailed in:
         //
