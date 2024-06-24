@@ -98,11 +98,16 @@ export class HandlerInertia {
         const easeOptions = {} as any;
 
         if (deltas.pan.mag()) {
-            // JP: TODO: convert this for globe (zoom)
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
             const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
             if (this._map.projection.useGlobeControls) {
-                easeOptions.center = computeGlobePanCenter(finalPan, this._map.transform);
+                const panCenter = computeGlobePanCenter(finalPan, this._map.transform);
+                if (Math.abs(panCenter.lng - this._map.transform.center.lng) > 180) {
+                    // If easeTo target would be over 180° distant, the animation would move in the opposite direction that what the user intended.
+                    // Thus we clamp the movement to 179.5°.
+                    panCenter.lng = this._map.transform.center.lng + 179.5 * Math.sign(panCenter.lng - this._map.transform.center.lng);
+                }
+                easeOptions.center = panCenter;
             } else {
                 easeOptions.offset = finalPan;
                 easeOptions.center = this._map.transform.center;
