@@ -7,7 +7,6 @@ import {CullFaceMode} from '../gl/cull_face_mode';
 import {Color} from '@maplibre/maplibre-gl-style-spec';
 import {ColorMode} from '../gl/color_mode';
 import {Terrain} from './terrain';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 /**
  * Redraw the Depth Framebuffer
@@ -17,6 +16,7 @@ import {MercatorTransform} from '../geo/projection/mercator_transform';
 function drawDepth(painter: Painter, terrain: Terrain) {
     const context = painter.context;
     const gl = context.gl;
+    const tr = painter.transform;
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const mesh = terrain.getTerrainMesh();
@@ -27,9 +27,9 @@ function drawDepth(painter: Painter, terrain: Terrain) {
     context.clear({color: Color.transparent, depth: 1});
     for (const tile of tiles) {
         const terrainData = terrain.getTerrainData(tile.tileID);
-        const posMatrix = (painter.transform as MercatorTransform).calculatePosMatrix(tile.tileID.toUnwrapped()); // JP: TODO: remove this hack
-        const uniformValues = terrainDepthUniformValues(posMatrix, terrain.getMeshFrameDelta(painter.transform.zoom));
-        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, null, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        const projectionData = tr.getProjectionData(tile.tileID);
+        const uniformValues = terrainDepthUniformValues(terrain.getMeshFrameDelta(tr.zoom));
+        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
     context.bindFramebuffer.set(null);
     context.viewport.set([0, 0, painter.width, painter.height]);
@@ -43,6 +43,7 @@ function drawDepth(painter: Painter, terrain: Terrain) {
 function drawCoords(painter: Painter, terrain: Terrain) {
     const context = painter.context;
     const gl = context.gl;
+    const tr = painter.transform;
     const colorMode = ColorMode.unblended;
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
     const mesh = terrain.getTerrainMesh();
@@ -59,9 +60,9 @@ function drawCoords(painter: Painter, terrain: Terrain) {
         const terrainData = terrain.getTerrainData(tile.tileID);
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, coords.texture);
-        const posMatrix = (painter.transform as MercatorTransform).calculatePosMatrix(tile.tileID.toUnwrapped()); // JP: TODO: remove this hack
-        const uniformValues = terrainCoordsUniformValues(posMatrix, 255 - terrain.coordsIndex.length, terrain.getMeshFrameDelta(painter.transform.zoom));
-        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, null, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        const uniformValues = terrainCoordsUniformValues(255 - terrain.coordsIndex.length, terrain.getMeshFrameDelta(tr.zoom));
+        const projectionData = tr.getProjectionData(tile.tileID);
+        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
         terrain.coordsIndex.push(tile.tileID.key);
     }
     context.bindFramebuffer.set(null);
@@ -71,6 +72,7 @@ function drawCoords(painter: Painter, terrain: Terrain) {
 function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
     const context = painter.context;
     const gl = context.gl;
+    const tr = painter.transform;
     const colorMode = painter.colorModeForRenderPass();
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, painter.depthRangeFor3D);
     const program = painter.useProgram('terrain');
@@ -84,9 +86,9 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
         const terrainData = terrain.getTerrainData(tile.tileID);
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
-        const posMatrix = (painter.transform as MercatorTransform).calculatePosMatrix(tile.tileID.toUnwrapped()); // JP: TODO: remove this hack
-        const uniformValues = terrainUniformValues(posMatrix, terrain.getMeshFrameDelta(painter.transform.zoom));
-        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, null, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+        const uniformValues = terrainUniformValues(terrain.getMeshFrameDelta(tr.zoom));
+        const projectionData = tr.getProjectionData(tile.tileID);
+        program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 
 }
