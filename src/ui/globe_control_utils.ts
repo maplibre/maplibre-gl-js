@@ -1,13 +1,11 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
 import {clamp, lerp, remapSaturate} from '../util/util';
-import {getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_transform';
+import {getGlobeCircumferencePixels, getZoomAdjustment} from '../geo/projection/globe_transform';
 import {MAX_VALID_LATITUDE} from '../geo/transform';
 
 export function getDegreesPerPixel(worldSize: number, lat: number): number {
-    const radius = getGlobeRadiusPixels(worldSize, lat);
-    const circumference = 2.0 * Math.PI * radius;
-    return 360.0 / circumference;
+    return 360.0 / getGlobeCircumferencePixels({worldSize, center: {lat}});
 }
 
 export function computeGlobePanCenter(panDelta: Point, tr: {

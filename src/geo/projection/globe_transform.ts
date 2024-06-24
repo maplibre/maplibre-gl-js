@@ -15,6 +15,21 @@ import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 
+export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
+    const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+    const circumference = 2.0 * Math.PI * radius;
+    return circumference;
+}
+
+export function globeDistanceOfLocationsPixels(transform: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
+    const vecA = angularCoordinatesToVector(a);
+    const vecB = angularCoordinatesToVector(b);
+    const dot = vec3.dot(vecA, vecB);
+    const radians = Math.acos(dot);
+    const circumference = getGlobeCircumferencePixels(transform);
+    return radians / (2.0 * Math.PI) * circumference;
+}
+
 /**
  * Returns mercator coordinates in range 0..1 for given coordinates inside a tile and the tile's canonical ID.
  */
