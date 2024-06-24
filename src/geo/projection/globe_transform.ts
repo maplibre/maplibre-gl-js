@@ -238,7 +238,7 @@ export class GlobeTransform extends Transform {
         this._globeProjectionOverride = allow;
     }
 
-    public translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    override translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
         return translatePosition(this, tile, translate, translateAnchor);
@@ -248,7 +248,7 @@ export class GlobeTransform extends Transform {
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      * May change the transform's state - do not call on cloned transforms that should behave immutably!
      */
-    public updateProjection(): void {
+    override updateProjection(): void {
         if (this._projectionInstance) {
             // Note: the _globeRendering field is only updated when `updateProjection` is called.
             // This function should never be called on a cloned transform, thus ensuring that

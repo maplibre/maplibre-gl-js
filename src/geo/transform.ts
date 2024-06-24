@@ -254,9 +254,10 @@ export abstract class Transform {
 
     get center(): LngLat { return this._center; }
     set center(center: LngLat) {
-        if (center.lat === this._center.lat && center.lng === this._center.lng) return;
+        const wrapped = center.wrap();
+        if (wrapped.lat === this._center.lat && wrapped.lng === this._center.lng) return;
         this._unmodified = false;
-        this._center = center;
+        this._center = wrapped;
         this._constrain();
         this._calcMatrices();
     }
