@@ -18,6 +18,7 @@ import {Projection} from '../geo/projection/projection';
 import {angularCoordinatesToVector, getZoomAdjustment, globeDistanceOfLocationsPixels} from '../geo/projection/globe_transform';
 import {mat4, vec3} from 'gl-matrix';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_transform';
+import {interpolateLngLatForGlobe} from './globe_control_utils';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *
@@ -1194,10 +1195,7 @@ export abstract class Camera extends Evented {
 
                     // Interpolating LngLat directly is somewhat inaccurate, but saves a *lot* of trouble.
                     // We might think of using spherical lerp instead, but that leads to very weird paths when the interpolated arc gets near the poles.
-                    const newCenter = new LngLat(
-                        startCenter.lng + deltaLng * factor,
-                        startCenter.lat + deltaLat * factor
-                    );
+                    const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
                     tr.center = newCenter;
                 }
 
@@ -1647,8 +1645,8 @@ export abstract class Camera extends Evented {
         if (this.terrain) this._prepareElevation(targetCenter);
 
         if (this.projection.useGlobeControls) {
-            const lngDelta = differenceOfAnglesDegrees(startCenter.lng, targetCenter.lng);
-            const latDelta = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);
+            const deltaLng = differenceOfAnglesDegrees(startCenter.lng, targetCenter.lng);
+            const deltaLat = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);
 
             this._ease((k) => {
                 // s: The distance traveled along the flight path, measured in ρ-screenfuls.
@@ -1668,10 +1666,7 @@ export abstract class Camera extends Evented {
                 if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
                 const centerFactor = u(s);
-                const interpolatedCenter = new LngLat(
-                    startCenter.lng + lngDelta * centerFactor,
-                    startCenter.lat + latDelta * centerFactor
-                );
+                const interpolatedCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, centerFactor);
 
                 const newCenter = k === 1 ? targetCenter : interpolatedCenter;
                 tr.center = newCenter;

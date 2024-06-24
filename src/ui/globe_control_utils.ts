@@ -30,3 +30,43 @@ export function computeGlobePanCenter(panDelta: Point, tr: {
         clamp(tr.center.lat + rotatedPanDelta.y * panningDegreesPerPixel, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
     );
 }
+
+// Integration of 1/cos(x)
+function integrateSecX(x: number): number {
+    const xHalf = 0.5 * x;
+    const sin = Math.sin(xHalf);
+    const cos = Math.cos(xHalf);
+    return Math.log(sin + cos) - Math.log(cos - sin);
+}
+
+export function interpolateLngLatForGlobe(start: LngLat, deltaLng: number, deltaLat: number, t: number): LngLat {
+    // Rate of change of longitude when moving the globe should be roughly 1/cos(latitude)
+    // We want to keep this rate of change even for interpolation during easing.
+    // Thus we know the derivative of our interpolation function: 1/cos(x)
+    // To get our function, we need to integrate that.
+
+    const interpolatedLat = start.lat + deltaLat * t;
+    if (Math.abs(deltaLat) > 1) {
+        const endLat = start.lat + deltaLat;
+        const onDifferentHemispheres = Math.sign(endLat) !== Math.sign(start.lat);
+        const speedCurveSampleA = (onDifferentHemispheres ? -Math.abs(start.lat) : Math.abs(start.lat)) * Math.PI / 180;
+        const speedCurveSampleB = Math.abs(start.lat + deltaLat) * Math.PI / 180;
+        const curveA = integrateSecX(speedCurveSampleA);
+        const curveB = integrateSecX(speedCurveSampleB);
+        const offset = curveA;
+        const multiplier = 1.0 / (curveB - offset);
+        const newT = (integrateSecX(speedCurveSampleA + t * (speedCurveSampleB - speedCurveSampleA)) - offset) * multiplier;
+        const interpolatedLng = start.lng + deltaLng * newT;
+        return new LngLat(
+            interpolatedLng,
+            interpolatedLat
+        );
+    } else {
+        // Fall back to simple interpolation when latitude doesn't change much.
+        const interpolatedLng = start.lng + deltaLng * t;
+        return new LngLat(
+            interpolatedLng,
+            interpolatedLat
+        );
+    }
+}
