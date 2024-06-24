@@ -512,7 +512,6 @@ export class HandlerManager {
             around = tr.centerPoint;
         }
 
-        // JP: TODO: inertia is NOT handled here
         if (this._map.projection.useGlobeControls) {
             // Globe map controls
             const zoomPixel = around;

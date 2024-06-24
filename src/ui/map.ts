@@ -3334,5 +3334,5 @@ export class Map extends Camera {
      * let projection = map.getProjection();
      * ```
      */
-    getProjection(): Projection { return this.projection; } // JP: TODO: this API is stupid, we can already access map.transform directly
+    getProjection(): Projection { return this.projection; }
 }

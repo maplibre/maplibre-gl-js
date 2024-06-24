@@ -1039,7 +1039,6 @@ export abstract class Camera extends Evented {
 
         const groundDistance = Math.hypot(dx, dy);
 
-        // JP: TODO: proper zoom for globe here?
         const zoom = this.transform.scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
         const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
         let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
@@ -1450,8 +1449,6 @@ export abstract class Camera extends Evented {
             const coercedOptions = pick(options, ['center', 'zoom', 'bearing', 'pitch', 'around']) as CameraOptions;
             return this.jumpTo(coercedOptions, eventData);
         }
-
-        // JP: TODO: apparentZoom
 
         // This method implements an “optimal path” animation, as detailed in:
         //

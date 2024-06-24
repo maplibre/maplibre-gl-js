@@ -7,7 +7,7 @@ import {GlobeTransform, angularCoordinatesRadiansToVector, mercatorCoordinatesTo
 import {OverscaledTileID} from '../../source/tile_id';
 
 describe('GlobeTransform', () => {
-    const globeProjection = { // JP: TODO: rename this to mock
+    const globeProjectionMock = {
         get useGlobeControls(): boolean {
             return true;
         },
@@ -22,7 +22,7 @@ describe('GlobeTransform', () => {
     } as GlobeProjection;
 
     describe('getProjectionData', () => {
-        const globeTransform = createGlobeTransform(globeProjection);
+        const globeTransform = createGlobeTransform(globeProjectionMock);
         test('mercator tile extents are set', () => {
             const projectionData = globeTransform.getProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
             expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
@@ -30,7 +30,7 @@ describe('GlobeTransform', () => {
     });
 
     describe('clipping plane', () => {
-        const globeTransform = createGlobeTransform(globeProjection);
+        const globeTransform = createGlobeTransform(globeProjectionMock);
 
         describe('general plane properties', () => {
             globeTransform.updateProjection();
@@ -102,7 +102,7 @@ describe('GlobeTransform', () => {
         test('camera position', () => {
             const precisionDigits = 10;
 
-            const globeTransform = createGlobeTransform(globeProjection);
+            const globeTransform = createGlobeTransform(globeProjectionMock);
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 0, 8.110445867263898], precisionDigits);
 
             globeTransform.resize(512, 512);
@@ -139,7 +139,7 @@ describe('GlobeTransform', () => {
 
         test('project location to coordinates', () => {
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjection);
+            const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.updateProjection();
             let projected: Point;
 
@@ -171,7 +171,7 @@ describe('GlobeTransform', () => {
 
         test('unproject screen center', () => {
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjection);
+            const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.updateProjection();
             let unprojected = globeTransform.pointLocation(screenCenter);
             expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
@@ -193,7 +193,7 @@ describe('GlobeTransform', () => {
 
         test('unproject point to the side', () => {
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjection);
+            const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.updateProjection();
             let coords: LngLat;
             let projected: Point;
@@ -224,7 +224,7 @@ describe('GlobeTransform', () => {
             // This particular case turned out to be problematic, hence this test.
 
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjection);
+            const globeTransform = createGlobeTransform(globeProjectionMock);
             // Transform settings from the render test projection/globe/fill-planet-pole
             // See the expected result for how the globe should look with this transform.
             globeTransform.resize(512, 512);
@@ -256,7 +256,7 @@ describe('GlobeTransform', () => {
 
         test('unproject outside of sphere', () => {
             const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjection);
+            const globeTransform = createGlobeTransform(globeProjectionMock);
             // Try unprojection a point somewhere above the western horizon
             globeTransform.pitch = 60;
             globeTransform.bearing = -90;
@@ -268,7 +268,7 @@ describe('GlobeTransform', () => {
 
         test('setLocationAtPoint', () => {
             const precisionDigits = 2; // JP: TODO: increase precision
-            const globeTransform = createGlobeTransform(globeProjection);
+            const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.zoom = 1;
             globeTransform.updateProjection();
             let coords: LngLat;

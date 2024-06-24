@@ -525,16 +525,11 @@ export class GlobeTransform extends Transform {
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
     }
 
-    //
-    // JP: TODO: Overriding function storage, remove stuff below and including this line. Placeholder implementations just call the underlying mercator transform.
-    //
-
-    public override get cameraToCenterDistance(): number {
-        return this._mercatorTransform.cameraToCenterDistance;
-    }
     override getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
+        // Globe: TODO: implement for globe
         return this._mercatorTransform.getVisibleUnwrappedCoordinates(tileID);
     }
+
     override coveringTiles(options: {
         tileSize: number; minzoom?: number;
         maxzoom?: number; roundZoom?: boolean; reparseOverscaled?: boolean; renderWorldCopies?: boolean; terrain?: Terrain;
@@ -542,33 +537,47 @@ export class GlobeTransform extends Transform {
         // Globe: TODO: implement for globe
         return this._mercatorTransform.coveringTiles(options);
     }
+
     override recalculateZoom(terrain: Terrain): void {
         this._mercatorTransform.recalculateZoom(terrain);
         this.apply(this._mercatorTransform);
     }
     override customLayerMatrix(): mat4 {
+        // Globe: TODO
         return this._mercatorTransform.customLayerMatrix();
     }
 
     override maxPitchScaleFactor(): number {
+        // JP: TODO
         return this._mercatorTransform.maxPitchScaleFactor();
     }
+
     override getCameraPoint(): Point {
+        // JP: TODO
         return this._mercatorTransform.getCameraPoint();
     }
+
     override lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
+        // JP: TODO
         return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
     }
+
     override precacheTiles(coords: OverscaledTileID[]): void {
         this._mercatorTransform.precacheTiles(coords);
     }
-    override getBounds(): LngLatBounds { // JP: TODO: write a proper implementation of this function
+
+    override getBounds(): LngLatBounds {
+        // JP: TODO: write a proper implementation of this function
         return this._mercatorTransform.getBounds();
     }
 
     //
     // End of placeholder overridden functions
     //
+
+    override get cameraToCenterDistance(): number {
+        return this._mercatorTransform.cameraToCenterDistance;
+    }
 
     override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
         // JP: TODO:
