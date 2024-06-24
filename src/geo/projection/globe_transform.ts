@@ -1,5 +1,5 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, Transform} from '../transform';
+import {MAX_VALID_LATITUDE, Transform, TransformUpdateResult} from '../transform';
 import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
@@ -165,7 +165,7 @@ export class GlobeTransform extends Transform {
     private _cameraPosition: vec3 = createVec3();
 
     private _lastGlobeChangeTime: number = -1000.0;
-    private _globeProjectionOverride = true;
+    private _globeProjectionEnabled = true;
 
     /**
      * Note: projection instance should only be accessed in the `updateProjection` function
@@ -173,6 +173,7 @@ export class GlobeTransform extends Transform {
      */
     private _projectionInstance: GlobeProjection;
     private _globeRendering: boolean = true;
+    private _lastGlobeRenderingState: boolean = true;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
 
     /**
@@ -183,15 +184,17 @@ export class GlobeTransform extends Transform {
     private _mercatorTransform: MercatorTransform;
     private _initialized: boolean = false;
 
-    public constructor(globeProjection: GlobeProjection) {
+    public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
         super();
+        this._globeProjectionEnabled = globeProjectionEnabled;
+        this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
         this._initialized = true;
     }
 
     override clone(): Transform {
-        const clone = new GlobeTransform(this._projectionInstance);
+        const clone = new GlobeTransform(null, this._globeProjectionEnabled);
         clone.apply(this);
         this.updateProjection();
         return clone;
@@ -221,7 +224,7 @@ export class GlobeTransform extends Transform {
      * Set with {@link setGlobeViewAllowed}.
      */
     public getGlobeViewAllowed(): boolean {
-        return this._globeProjectionOverride;
+        return this._globeProjectionEnabled;
     }
 
     /**
@@ -232,10 +235,10 @@ export class GlobeTransform extends Transform {
      * @param animateTransition - Controls whether the transition between globe view and mercator (if triggered by this call) should be animated. True by default.
      */
     public setGlobeViewAllowed(allow: boolean, animateTransition: boolean = true) {
-        if (!animateTransition && allow !== this._globeProjectionOverride) {
+        if (!animateTransition && allow !== this._globeProjectionEnabled) {
             this._skipNextAnimation = true;
         }
-        this._globeProjectionOverride = allow;
+        this._globeProjectionEnabled = allow;
     }
 
     override translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
@@ -248,23 +251,30 @@ export class GlobeTransform extends Transform {
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      * May change the transform's state - do not call on cloned transforms that should behave immutably!
      */
-    override updateProjection(): void {
+    override updateProjection(): TransformUpdateResult {
         if (this._projectionInstance) {
             // Note: the _globeRendering field is only updated when `updateProjection` is called.
             // This function should never be called on a cloned transform, thus ensuring that
             // the state of a cloned transform is never changed after creation.
-            this._globeRendering = this._globeness > 0;
             this._projectionInstance.useGlobeRendering = this._globeRendering;
             this._projectionInstance.errorQueryLatitudeDegrees = this.center.lat;
             this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
         }
 
         this._calcMatrices();
+        let forcePlacementUpdate = false;
+        if (this._lastGlobeRenderingState !== this._globeRendering) {
+            forcePlacementUpdate = true;
+        }
+        this._lastGlobeRenderingState = this._globeRendering;
+        return {
+            forcePlacementUpdate
+        };
     }
 
     private _updateAnimation() {
         // Update globe transition animation
-        const globeState = this._globeProjectionOverride;
+        const globeState = this._globeProjectionEnabled;
         const currentTime = browser.now();
         if (globeState !== this._lastGlobeStateEnabled) {
             this._lastGlobeChangeTime = currentTime;
@@ -481,6 +491,7 @@ export class GlobeTransform extends Transform {
         }
 
         this._updateAnimation();
+        this._globeRendering = this._globeness > 0;
 
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 

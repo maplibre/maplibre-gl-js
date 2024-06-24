@@ -8,7 +8,7 @@ import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent';
-import {MAX_VALID_LATITUDE, Transform} from '../transform';
+import {MAX_VALID_LATITUDE, Transform, TransformUpdateResult} from '../transform';
 import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
@@ -709,8 +709,10 @@ export class MercatorTransform extends Transform {
         return 1.0;
     }
 
-    override updateProjection(): void {
-        // Intentionally left empty.
+    override updateProjection(): TransformUpdateResult {
+        return {
+            forcePlacementUpdate: false
+        };
     }
 
     override translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {

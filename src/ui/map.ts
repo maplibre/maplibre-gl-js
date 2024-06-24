@@ -3083,9 +3083,9 @@ export class Map extends Camera {
         }
 
         // This projection update should happen *before* placement update
-        this.transform.updateProjection();
+        const transformUpdateResult = this.transform.updateProjection();
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
+        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
 
         // Actually draw
         this.painter.render(this.style, {

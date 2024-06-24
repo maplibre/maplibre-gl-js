@@ -13,6 +13,8 @@ import {PointProjection} from '../symbol/projection';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 
+export type TransformUpdateResult = {forcePlacementUpdate: boolean};
+
 /**
  * @internal
  * A single transform. TODO.
@@ -630,7 +632,7 @@ export abstract class Transform {
      * Signals to the transform that a new frame is starting.
      * The transform might update some of its internal variables and animations based on this.
      */
-    abstract updateProjection(): void;
+    abstract updateProjection(): TransformUpdateResult;
 
     /**
      * @internal
