@@ -21,7 +21,7 @@ import {clamp, differenceOfAnglesDegrees, extend, remapSaturate} from '../util/u
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {getZoomAdjustment} from '../geo/projection/globe_transform';
+import {getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_transform';
 import {MAX_VALID_LATITUDE} from '../geo/transform';
 import {vec3} from 'gl-matrix';
 import {computeGlobePanCenter} from './globe_control_utils';
@@ -532,13 +532,20 @@ export class HandlerManager {
                 // Solution: use a heuristic zooming in the problematic cases and interpolate to `setLocationAtPoint` when possible.
 
                 // Magic numbers that control:
-                // - when zoom movement slowing starts for cursor not on globe
-                // - when we interpolate from exact zooming to heuristic zooming
+                // - when zoom movement slowing starts for cursor not on globe (avoid unnatural map movements)
+                // - when we interpolate from exact zooming to heuristic zooming based on longitude difference of target location to current center
+                // - when we interpolate from exact zooming to heuristic zooming based on current zoom (zoom levels are normalized to equator zoom)
+                // - when zoom movement slowing starts for globe being too small on viewport (avoids unnatural/unwanted map movements when map is zoomed out a lot)
                 const raySurfaceDistanceForSlowingStart = 0.3; // Zoom movement slowing will start when the planet surface to ray distance is greater than this number (globe radius is 1, so 0.3 is ~2000km form the surface).
                 const slowingMultiplier = 0.5; // The lower this value, the slower will the "zoom movement slowing" occur.
                 const interpolateToHeuristicStartLng = 45; // When zoom location longitude is this many degrees away from map center, we start interpolating from exact zooming to heuristic zooming.
                 const interpolateToHeuristicEndLng = 75; // Longitude difference at which interpolation to heuristic zooming ends.
                 const interpolateToHeuristicExponent = 0.5; // Makes interpolation smoother.
+                const interpolateToHeuristicStartZoom = 5.5; // When zoom level (at equator) is this value, we start interpolating from exact zooming to heuristic zooming.
+                const interpolateToHeuristicEndZoom = 4.0; // Zoom level at which interpolation to heuristic zooming ends.
+                const slowingRadiusStart = 0.90; // If globe is 1.2x larger than the larger viewport dimension, start inhibiting map movement while zooming
+                const slowingRadiusStop = 0.25;
+                const slowingRadiusSlowFactor = 0.3; // How much is movement slowed when globe is too small
 
                 const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);
                 const dLng = dLngRaw / (Math.abs(dLngRaw / 180) + 1.0); // This gradually reduces the amount of longitude change if the zoom location is very far, eg. on the other side of the pole (possible when looking at a pole).
@@ -556,12 +563,15 @@ export class HandlerManager {
                 const distanceFromSurface = vec3.length(closestPoint) - 1;
                 // Slow zoom movement down if the mouse ray is far from the planet.
                 const distanceFactor = Math.exp(-Math.max(distanceFromSurface - raySurfaceDistanceForSlowingStart, 0) * slowingMultiplier);
+                // Slow zoom movement down if the globe is too small on viewport
+                const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.max(tr.width, tr.height); // Radius relative to larger viewport dimension
+                const radiusFactor = remapSaturate(radius, slowingRadiusStart, slowingRadiusStop, 1.0, slowingRadiusSlowFactor);
+                console.log(`${radius} factor: ${radiusFactor}`);
 
                 // Compute how much to move towards the zoom location
-                const factor = (1.0 - tr.zoomScale(-actualZoomDelta)) * distanceFactor;
+                const factor = (1.0 - tr.zoomScale(-actualZoomDelta)) * distanceFactor * radiusFactor;
 
                 const oldCenterLat = tr.center.lat;
-                const oldZoom = tr.zoom;
                 const heuristicCenter = new LngLat(
                     tr.center.lng + dLng * factor,
                     clamp(tr.center.lat + dLat * factor, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
@@ -572,7 +582,10 @@ export class HandlerManager {
                 const exactCenter = tr.center;
 
                 // Interpolate between exact zooming and heuristic zooming depending on the longitude difference between current center and zoom location.
-                const heuristicFactor = Math.pow(remapSaturate(Math.abs(dLngRaw), interpolateToHeuristicStartLng, interpolateToHeuristicEndLng, 0, 1), interpolateToHeuristicExponent);
+                const normalizedZoom = tr.zoom + getZoomAdjustment(tr, exactCenter.lat, 0);
+                const interpolationFactorLongitude = remapSaturate(Math.abs(dLngRaw), interpolateToHeuristicStartLng, interpolateToHeuristicEndLng, 0, 1);
+                const interpolationFactorZoom = remapSaturate(normalizedZoom, interpolateToHeuristicStartZoom, interpolateToHeuristicEndZoom, 0, 1);
+                const heuristicFactor = Math.pow(Math.max(interpolationFactorLongitude, interpolationFactorZoom), interpolateToHeuristicExponent);
 
                 const lngExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lng, heuristicCenter.lng);
                 const latExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lat, heuristicCenter.lat);
@@ -581,7 +594,7 @@ export class HandlerManager {
                     exactCenter.lng + lngExactToHeuristic * heuristicFactor,
                     exactCenter.lat + latExactToHeuristic * heuristicFactor
                 );
-                tr.zoom = oldZoom + getZoomAdjustment(tr, oldCenterLat, tr.center.lat);
+                tr.zoom += getZoomAdjustment(tr, oldCenterLat, tr.center.lat);
             }
 
             // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
