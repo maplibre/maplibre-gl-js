@@ -14,6 +14,29 @@ import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 
+/**
+ * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512).
+ * @param transform - The reference transform instance - only the `worldSize` property is used, which itself depends on zoom.
+ * @param lnglat - The location to convert.
+ * @returns Point
+ */
+export function projectToWorldCoordinates(transform: {worldSize}, lnglat: LngLat) {
+    const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
+    return new Point(
+        mercatorXfromLng(lnglat.lng) * transform.worldSize,
+        mercatorYfromLat(lat) * transform.worldSize);
+}
+
+/**
+ * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90]).
+ * @param transform - The reference transform instance - only the `worldSize` property is used, which itself depends on zoom.
+ * @param point - World coordinate.
+ * @returns LngLat
+ */
+export function unprojectFromWorldCoordinates(transform: {worldSize}, point: Point): LngLat {
+    return new MercatorCoordinate(point.x / transform.worldSize, point.y / transform.worldSize).toLngLat();
+}
+
 export class MercatorTransform extends Transform {
     private _cameraToCenterDistance: number;
     private _cameraPosition: vec3;
@@ -198,27 +221,6 @@ export class MercatorTransform extends Transform {
         }
 
         return result.sort((a, b) => a.distanceSq - b.distanceSq).map(a => a.tileID);
-    }
-
-    /**
-     * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512)
-     * @param lnglat - the lngLat
-     * @returns Point
-     */
-    override projectToWorldCoordinates(lnglat: LngLat) {
-        const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        return new Point(
-            mercatorXfromLng(lnglat.lng) * this.worldSize,
-            mercatorYfromLat(lat) * this.worldSize);
-    }
-
-    /**
-     * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90])
-     * @param point - world coordinate
-     * @returns LngLat
-     */
-    override unprojectFromWorldCoordinates(point: Point): LngLat {
-        return new MercatorCoordinate(point.x / this.worldSize, point.y / this.worldSize).toLngLat();
     }
 
     /**
@@ -487,7 +489,7 @@ export class MercatorTransform extends Transform {
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
-        const {x: originalX, y: originalY} = this.projectToWorldCoordinates.call({worldSize}, lngLat);
+        const {x: originalX, y: originalY} = projectToWorldCoordinates({worldSize}, lngLat);
         let modifiedX, modifiedY;
 
         const scale = Math.max(scaleX || 0, scaleY || 0);
@@ -497,7 +499,7 @@ export class MercatorTransform extends Transform {
             const newPoint = new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY);
-            result.center = this.unprojectFromWorldCoordinates.call({worldSize}, newPoint).wrap();
+            result.center = unprojectFromWorldCoordinates({worldSize}, newPoint).wrap();
             result.zoom += this.scaleZoom(scale);
             return result;
         }
@@ -523,7 +525,7 @@ export class MercatorTransform extends Transform {
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
-            result.center = this.unprojectFromWorldCoordinates.call({worldSize}, newPoint).wrap();
+            result.center = unprojectFromWorldCoordinates({worldSize}, newPoint).wrap();
         }
 
         return result;
@@ -536,7 +538,7 @@ export class MercatorTransform extends Transform {
 
         const halfFov = this._fov / 2;
         const offset = this.centerOffset;
-        const point = this.projectToWorldCoordinates(this.center);
+        const point = projectToWorldCoordinates(this, this.center);
         const x = point.x, y = point.y;
         this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._height;
         this._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;

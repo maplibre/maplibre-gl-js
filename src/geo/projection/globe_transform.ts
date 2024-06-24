@@ -292,7 +292,7 @@ export class GlobeTransform extends Transform {
         this._globeness = easeCubicInOut(this._globeness); // Smooth animation
     }
 
-    override isRenderingDirty(): boolean { // JP: TODO: move this to projection?
+    override isRenderingDirty(): boolean {
         const now = browser.now();
         // Globe transition
         return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
@@ -469,7 +469,7 @@ export class GlobeTransform extends Transform {
         };
     }
 
-    protected override _calcMatrices(): void { // JP: TODO: _calcMatrices and updateProjection() is too similar in function
+    protected override _calcMatrices(): void {
         super._calcMatrices();
 
         if (!this._initialized) {
@@ -568,16 +568,6 @@ export class GlobeTransform extends Transform {
     //
     // End of placeholder overridden functions
     //
-
-    override projectToWorldCoordinates(_lnglat: LngLat): Point {
-        return this._mercatorTransform.projectToWorldCoordinates(_lnglat); // JP: TODO: fixme
-        throw new Error('Globe projection has no mapping to 2D coordinates.');
-    }
-
-    override unprojectFromWorldCoordinates(_point: Point): LngLat {
-        return this._mercatorTransform.unprojectFromWorldCoordinates(_point); // JP: TODO: fixme
-        throw new Error('Globe projection has no mapping to 2D coordinates.');
-    }
 
     override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
         // JP: TODO:

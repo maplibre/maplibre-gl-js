@@ -4,7 +4,7 @@ import {LngLat} from '../lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
 import type {Terrain} from '../../render/terrain';
-import {MercatorTransform, getBasicProjectionData} from './mercator_transform';
+import {MercatorTransform, getBasicProjectionData, projectToWorldCoordinates} from './mercator_transform';
 import {mat4} from 'gl-matrix';
 import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
@@ -36,7 +36,7 @@ describe('transform', () => {
         expect(transform.centerPoint.equals(new Point(250, 250))).toBe(true);
         expect(transform.scaleZoom(0)).toBe(-Infinity);
         expect(transform.scaleZoom(10)).toBe(3.3219280948873626);
-        expect(transform.projectToWorldCoordinates(transform.center)).toEqual(new Point(262144, 262144));
+        expect(projectToWorldCoordinates(transform, transform.center)).toEqual(new Point(262144, 262144));
         expect(transform.height).toBe(500);
         expect(fixedLngLat(transform.pointLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.pointCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
@@ -356,8 +356,8 @@ describe('transform', () => {
     test('clamps latitude', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
 
-        expect(transform.projectToWorldCoordinates(new LngLat(0, -90))).toEqual(transform.projectToWorldCoordinates(new LngLat(0, -MAX_VALID_LATITUDE)));
-        expect(transform.projectToWorldCoordinates(new LngLat(0, 90))).toEqual(transform.projectToWorldCoordinates(new LngLat(0, MAX_VALID_LATITUDE)));
+        expect(projectToWorldCoordinates(transform, new LngLat(0, -90))).toEqual(projectToWorldCoordinates(transform, new LngLat(0, -MAX_VALID_LATITUDE)));
+        expect(projectToWorldCoordinates(transform, new LngLat(0, 90))).toEqual(projectToWorldCoordinates(transform, new LngLat(0, MAX_VALID_LATITUDE)));
     });
 
     test('clamps pitch', () => {
