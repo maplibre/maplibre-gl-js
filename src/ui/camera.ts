@@ -1102,7 +1102,6 @@ export abstract class Camera extends Evented {
             // 1) if zoom is set, ease to the given mercator zoom
             // 2) if apparentZoom is set, ease to the given apparent zoom
             // 3) if neither is set, assume constant apparent zoom is to be kept and go to case 2
-            let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
             const preConstrainCenter = options.center ?
                 LngLat.convert(options.center) :
                 startCenter;
@@ -1126,16 +1125,19 @@ export abstract class Camera extends Evented {
                 desiredApparentZoom + getZoomAdjustment(tr, startCenter.lat, preConstrainCenter.lat) :
                 desiredMercatorZoom;
 
-            const clampedPoint = new Point(
-                clamp(pointAtOffset.x, 0, tr.width),
-                clamp(pointAtOffset.y, 0, tr.height)
-            );
             const clonedTr = tr.clone();
             clonedTr.center = constrainedCenter;
+            if (this._padding) {
+                clonedTr.padding = padding as PaddingOptions;
+            }
             clonedTr.zoom = targetMercatorZoom;
+            const clampedPoint = new Point(
+                clamp(tr.centerPoint.x + offsetAsPoint.x, 0, tr.width),
+                clamp(tr.centerPoint.y + offsetAsPoint.y, 0, tr.height)
+            );
             clonedTr.setLocationAtPoint(constrainedCenter, clampedPoint);
             // Find final animation targets
-            const endCenterWithShift = clonedTr.center;
+            const endCenterWithShift = (options.offset && offsetAsPoint.mag()) > 0 ? clonedTr.center : constrainedCenter;
             const endZoomWithShift = hasApparentZoom ?
                 desiredApparentZoom + getZoomAdjustment(tr, startCenter.lat, endCenterWithShift.lat) :
                 desiredMercatorZoom; // Not adjusting this zoom will reduce accuracy of the offset center
@@ -1159,12 +1161,6 @@ export abstract class Camera extends Evented {
                 }
                 if (this._pitching) {
                     tr.pitch = interpolates.number(startPitch, pitch, k);
-                }
-                if (this._padding) {
-                    tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
-                    // When padding is being applied, Transform#centerPoint is changing continuously,
-                    // thus we need to recalculate offsetPoint every frame
-                    pointAtOffset = tr.centerPoint.add(offsetAsPoint);
                 }
 
                 if (around) {

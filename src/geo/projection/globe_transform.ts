@@ -586,9 +586,6 @@ export class GlobeTransform extends Transform {
             this.apply(this._mercatorTransform);
             return;
         }
-
-        // JP: TODO: když zoomuju na špatnou stranu pólu tak se dějí špatné věci, a stále to občas buguje i jinými způsoby
-
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);

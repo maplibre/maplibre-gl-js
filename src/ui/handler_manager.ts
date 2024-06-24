@@ -17,19 +17,14 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {clamp, differenceOfAnglesDegrees, extend, lerp, remapSaturate} from '../util/util';
+import {clamp, differenceOfAnglesDegrees, extend, remapSaturate} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_transform';
+import {getZoomAdjustment} from '../geo/projection/globe_transform';
 import {MAX_VALID_LATITUDE} from '../geo/transform';
 import {vec3} from 'gl-matrix';
-
-function getDegreesPerPixel(worldSize: number, lat: number): number {
-    const radius = getGlobeRadiusPixels(worldSize, lat);
-    const circumference = 2.0 * Math.PI * radius;
-    return 360.0 / circumference;
-}
+import {computeGlobePanCenter} from './globe_control_utils';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
@@ -502,14 +497,14 @@ export class HandlerManager {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
+        // stop any ongoing camera animations (easeTo, flyTo)
+        map._stop(true);
+
         let {panDelta, zoomDelta, bearingDelta, pitchDelta, around, pinchAround} = combinedResult;
 
         if (pinchAround !== undefined) {
             around = pinchAround;
         }
-
-        // stop any ongoing camera animations (easeTo, flyTo)
-        map._stop(true);
 
         around = around || map.transform.centerPoint;
 
@@ -527,7 +522,6 @@ export class HandlerManager {
             if (pitchDelta) tr.pitch += pitchDelta;
             const oldZoom = tr.zoom;
             if (zoomDelta) tr.zoom += zoomDelta;
-            const postZoomDegreesPerPixel = getDegreesPerPixel(tr.worldSize, tr.center.lat);
             const actualZoomDelta = tr.zoom - oldZoom;
 
             if (actualZoomDelta !== 0) {
@@ -597,22 +591,9 @@ export class HandlerManager {
                 // We avoid using the "grab a place and move it around" approach from mercator here,
                 // since it is not a very pleasant way to pan a globe.
 
-                // Apply map bearing to the panning vector
-                const rotatedPanDelta = panDelta.rotate(-tr.angle);
-
                 const oldLat = tr.center.lat;
                 const oldZoom = tr.zoom;
-                // Note: we divide longitude speed by planet width at the given latitude. But we diminish this effect when the globe is zoomed out a lot.
-                const normalizedGlobeZoom = tr.zoom + getZoomAdjustment(tr, tr.center.lat, 0); // If the transform center would be moved to latitude 0, what would the current zoom be?
-                const lngSpeed = lerp(
-                    1.0 / Math.cos(tr.center.lat * Math.PI / 180), // speed adjusted by latitude
-                    1.0 / Math.cos(Math.min(Math.abs(tr.center.lat), 60) * Math.PI / 180), // also adjusted, but latitude is clamped to 60° to avoid too large speeds near poles
-                    remapSaturate(normalizedGlobeZoom, 7, 3, 0, 1.0) // Empirically chosen values
-                );
-                tr.center = new LngLat(
-                    tr.center.lng - rotatedPanDelta.x * postZoomDegreesPerPixel * lngSpeed,
-                    clamp(tr.center.lat + rotatedPanDelta.y * postZoomDegreesPerPixel, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
-                );
+                tr.center = computeGlobePanCenter(panDelta, tr);
                 // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
                 tr.zoom = oldZoom + getZoomAdjustment(tr, oldLat, tr.center.lat);
             }

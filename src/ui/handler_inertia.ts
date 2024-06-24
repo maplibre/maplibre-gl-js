@@ -4,6 +4,7 @@ import {bezier, clamp, extend} from '../util/util';
 import Point from '@mapbox/point-geometry';
 import type {DragPanOptions} from './handler/shim/drag_pan';
 import {EaseToOptions} from './camera';
+import {computeGlobePanCenter} from './globe_control_utils';
 
 const defaultInertiaOptions = {
     linearity: 0.3,
@@ -99,8 +100,13 @@ export class HandlerInertia {
         if (deltas.pan.mag()) {
             // JP: TODO: convert this for globe (zoom)
             const result = calculateEasing(deltas.pan.mag(), duration, extend({}, defaultPanInertiaOptions, panInertiaOptions || {}));
-            easeOptions.offset = deltas.pan.mult(result.amount / deltas.pan.mag());
-            easeOptions.center = this._map.transform.center;
+            const finalPan = deltas.pan.mult(result.amount / deltas.pan.mag());
+            if (this._map.projection.useGlobeControls) {
+                easeOptions.center = computeGlobePanCenter(finalPan, this._map.transform);
+            } else {
+                easeOptions.offset = finalPan;
+                easeOptions.center = this._map.transform.center;
+            }
             extendDuration(easeOptions, result);
         }
 
