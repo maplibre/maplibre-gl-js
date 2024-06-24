@@ -15,12 +15,13 @@ import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
 
-export const globeConstants = { // JP: TODO: maybe refactor this
+const EXTENT_STENCIL_BORDER = EXTENT / 128;
+
+export const globeConstants = {
     /**
      * The size of border region for stencil masks, in internal tile coordinates.
      * Used for globe rendering.
      */
-    EXTENT_STENCIL_BORDER: EXTENT / 128,
     globeTransitionTimeSeconds: 0.5,
     zoomTransitionTimeSeconds: 0.5,
     maxGlobeZoom: 12.0,
@@ -45,7 +46,7 @@ export class GlobeProjection implements Projection {
 
     /**
      * Stores whether globe rendering should be used.
-     * The value is injected from GlobeTransform. // JP: TODO: this is suboptimal
+     * The value is injected from GlobeTransform.
      */
     private _useGlobeRendering: boolean = true;
 
@@ -220,17 +221,17 @@ export class GlobeProjection implements Projection {
             for (let x = offsetX; x <= endX; x++) {
                 let vx = x / granularity * EXTENT;
                 if (x === -1) {
-                    vx = -globeConstants.EXTENT_STENCIL_BORDER;
+                    vx = -EXTENT_STENCIL_BORDER;
                 }
                 if (x === granularity + 1) {
-                    vx = EXTENT + globeConstants.EXTENT_STENCIL_BORDER;
+                    vx = EXTENT + EXTENT_STENCIL_BORDER;
                 }
                 let vy = y / granularity * EXTENT;
                 if (y === -1) {
-                    vy = north ? northY : (-globeConstants.EXTENT_STENCIL_BORDER);
+                    vy = north ? northY : (-EXTENT_STENCIL_BORDER);
                 }
                 if (y === granularity + 1) {
-                    vy = south ? southY : EXTENT + globeConstants.EXTENT_STENCIL_BORDER;
+                    vy = south ? southY : EXTENT + EXTENT_STENCIL_BORDER;
                 }
                 vertexArray.emplaceBack(vx, vy);
             }

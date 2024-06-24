@@ -529,16 +529,17 @@ export class GlobeTransform extends Transform {
     // JP: TODO: Overriding function storage, remove stuff below and including this line. Placeholder implementations just call the underlying mercator transform.
     //
 
-    public override get cameraToCenterDistance(): number { // Globe: TODO: implement for globe
+    public override get cameraToCenterDistance(): number {
         return this._mercatorTransform.cameraToCenterDistance;
     }
     override getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
         return this._mercatorTransform.getVisibleUnwrappedCoordinates(tileID);
     }
-    override coveringTiles(options: { // Globe: TODO: implement for globe
+    override coveringTiles(options: {
         tileSize: number; minzoom?: number;
         maxzoom?: number; roundZoom?: boolean; reparseOverscaled?: boolean; renderWorldCopies?: boolean; terrain?: Terrain;
     }): OverscaledTileID[] {
+        // Globe: TODO: implement for globe
         return this._mercatorTransform.coveringTiles(options);
     }
     override recalculateZoom(terrain: Terrain): void {
