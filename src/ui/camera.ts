@@ -15,8 +15,8 @@ import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {Projection} from '../geo/projection/projection';
-import {angularCoordinatesToVector, getZoomAdjustment, globeDistanceOfLocationsPixels, sphereSurfacePointToCoordinates} from '../geo/projection/globe_transform';
-import {mat3, mat4, vec3} from 'gl-matrix';
+import {angularCoordinatesToVector, getZoomAdjustment, globeDistanceOfLocationsPixels} from '../geo/projection/globe_transform';
+import {mat4, vec3} from 'gl-matrix';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_transform';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
@@ -1167,8 +1167,6 @@ export abstract class Camera extends Evented {
             const normalizedEndZoom = endZoomWithShift + getZoomAdjustment(tr, endCenterWithShift.lat, 0);
             const deltaLng = differenceOfAnglesDegrees(startCenter.lng, endCenterWithShift.lng);
             const deltaLat = differenceOfAnglesDegrees(startCenter.lat, endCenterWithShift.lat);
-            const startCenterVec = angularCoordinatesToVector(startCenter);
-            const endCenterVec = angularCoordinatesToVector(endCenterWithShift);
 
             const finalScale = tr.zoomScale(normalizedEndZoom - normalizedStartZoom);
             this._zooming = this._zooming || (endZoomWithShift !== startZoom);
@@ -1194,13 +1192,12 @@ export abstract class Camera extends Evented {
                     const speedup = Math.pow(base, 1 - k);
                     const factor = k * speedup;
 
-                    const interpolatedVec = badSphericalLerp(startCenterVec, endCenterVec, factor);
-                    const newCenter = sphereSurfacePointToCoordinates(interpolatedVec);
                     // Interpolating LngLat directly is somewhat inaccurate, but saves a *lot* of trouble.
-                    // const newCenter = new LngLat(
-                    //     startCenter.lng + deltaLng * factor,
-                    //     startCenter.lat + deltaLat * factor
-                    // );
+                    // We might think of using spherical lerp instead, but that leads to very weird paths when the interpolated arc gets near the poles.
+                    const newCenter = new LngLat(
+                        startCenter.lng + deltaLng * factor,
+                        startCenter.lat + deltaLat * factor
+                    );
                     tr.center = newCenter;
                 }
 
@@ -1892,24 +1889,4 @@ function getLesserNonNegativeNonNull(oldValue: number, newValue: number): number
     } else {
         return oldValue;
     }
-}
-
-/**
- * Performs a spherical interpolation between two normalized vectors.
- * Replace any usage of this with gl-matrix's `vec3.slerp` once we upgrade to gl-matrix version 4. (And use double precision vectors.)
- * @param a - First vector (for t=0). Must be normalized.
- * @param b - Second vector (for t=1). Must be normalized.
- * @param t - The interpolation factor in range [0..1].
- */
-function badSphericalLerp(a: vec3, b: vec3, t: number): vec3 {
-    const normal = new Float64Array(3) as any as vec3;
-    vec3.cross(normal, a, b);
-    vec3.normalize(normal, normal);
-    const dot = vec3.dot(a, b);
-    const angle = Math.acos(dot);
-    const mat = new Float64Array(16) as any as mat4;
-    mat4.fromRotation(mat, angle * t, normal);
-    const result = new Float64Array(3) as any as vec3;
-    vec3.transformMat4(result, a, mat);
-    return result;
 }
