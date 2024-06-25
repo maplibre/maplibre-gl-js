@@ -13,7 +13,7 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'mapblibre',
+            owner: 'maplibre',
             id: 'demotiles',
         },
         hash: true
@@ -187,7 +187,7 @@ describe('AttributionControl', () => {
         expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(1);
     });
 
-    test('is not hidden if adding a source with attributtion', async () => {
+    test('is not hidden if adding a source with attribution', async () => {
         const attribution = new AttributionControl({});
         map.addControl(attribution);
         await map.once('load');
@@ -256,7 +256,7 @@ describe('AttributionControl', () => {
         await map.once('load');
         map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
         map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Not used'});
-        map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Vibility none'});
+        map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Visibility none'});
         map.addLayer({id: 'layer1', type: 'fill', source: '1'});
         map.addLayer({id: 'layer3', type: 'fill', source: '3', layout: {visibility: 'none'}});
 

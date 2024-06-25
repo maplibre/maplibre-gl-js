@@ -381,7 +381,7 @@ export function warnOnce(message: string): void {
  *
  * @returns true for a counter clockwise set of points
  */
-// http://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
+// https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
 export function isCounterClockwise(a: Point, b: Point, c: Point): boolean {
     return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
 }
@@ -775,3 +775,45 @@ export function subscribe(target: Subscriber, message: keyof WindowEventMap, lis
 export function degreesToRadians(degrees: number): number {
     return degrees * Math.PI / 180;
 }
+
+/**
+ * Makes optional keys required and add the the undefined type.
+ *
+ * ```
+ * interface Test {
+ *  foo: number;
+ *  bar?: number;
+ *  baz: number | undefined;
+ * }
+ *
+ * Complete<Test> {
+ *  foo: number;
+ *  bar: number | undefined;
+ *  baz: number | undefined;
+ * }
+ *
+ * ```
+ *
+ * See https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
+ */
+
+export type Complete<T> = {
+    [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
+}
+
+export type TileJSON = {
+    tilejson: '2.2.0' | '2.1.0' | '2.0.1' | '2.0.0' | '1.0.0';
+    name?: string;
+    description?: string;
+    version?: string;
+    attribution?: string;
+    template?: string;
+    tiles: Array<string>;
+    grids?: Array<string>;
+    data?: Array<string>;
+    minzoom?: number;
+    maxzoom?: number;
+    bounds?: [number, number, number, number];
+    center?: [number, number, number];
+    vector_layers: [{id: string}]; // this is partial but enough for what we need
+};

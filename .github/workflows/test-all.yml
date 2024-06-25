@@ -49,7 +49,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ${{ github.workspace }}/coverage/unit/codecov.json
+          files: ${{ github.workspace }}/coverage/jest/codecov.json
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
           disable_search: true
@@ -79,6 +79,14 @@ jobs:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
       - run: npm run test-integration-ci
+      - name: Upload coverage reports to Codecov
+        if: '!cancelled()'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
 
   render-tests:
     name: Render tests

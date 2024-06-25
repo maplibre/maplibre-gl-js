@@ -716,8 +716,8 @@ describe('Style#setState', () => {
         });
         ((newStyle.sources.sourceId0 as GeoJSONSourceSpecification).data as GeoJSON.FeatureCollection).features.push({} as any);
 
-        newStyle.glyphs = 'http://example.com/{fontstack}/{range}.pbf';
-        newStyle.sprite = 'http://example.com';
+        newStyle.glyphs = 'https://example.com/{fontstack}/{range}.pbf';
+        newStyle.sprite = 'https://example.com';
 
         newStyle.terrain = {
             source: 'foo',
@@ -731,7 +731,7 @@ describe('Style#setState', () => {
         }
     });
 
-    test('change transition doesnt change the style, but is considered a change', async () => {
+    test('change transition doesn\'t change the style, but is considered a change', async () => {
         const style = createStyle();
         const styleJson = createStyleJSON();
         style.loadJSON(styleJson);

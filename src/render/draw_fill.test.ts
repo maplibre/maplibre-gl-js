@@ -67,7 +67,7 @@ describe('drawFill', () => {
         // Important: this setup is on purpose -- to NOT match layerspec
         // 'fill-pattern': 'pattern0'
         // so tile.imageAtlas.patternPositions['pattern0'] would return nothing
-        // mimicing the transitiong fill-pattern value
+        // mimicing the transitioning fill-pattern value
         layer.getPaintProperty = () => {
             return 'pattern1';
         };
@@ -122,7 +122,7 @@ describe('drawFill', () => {
         // Important: this setup is on purpose -- to NOT match layerspec
         // 'fill-pattern': 'pattern0'
         // so tile.imageAtlas.patternPositions['pattern0'] would return nothing
-        // mimicing the transitiong fill-pattern value
+        // mimicing the transitioning fill-pattern value
         tile.imageAtlas = {
             patternPositions: {
                 'pattern1': {}

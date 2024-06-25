@@ -4,9 +4,11 @@ import {plugins, watchStagingPlugin} from './build/rollup_plugins';
 import banner from './build/banner';
 import {RollupOptions} from 'rollup';
 
-const {BUILD} = process.env;
+const {BUILD, MINIFY} = process.env;
+const minified = MINIFY === 'true';
+
 const production = BUILD === 'production';
-const outputFile = production ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-dev.js';
+const outputFile = production ? (minified ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-unminified.js') : 'dist/maplibre-gl-dev.js';
 
 const config: RollupOptions[] = [{
     // Before rollup you should run build-tsc to transpile from typescript to javascript (except when running rollup in watch mode)
@@ -33,7 +35,7 @@ const config: RollupOptions[] = [{
         throw message;
     },
     treeshake: production,
-    plugins: plugins(production)
+    plugins: plugins(production, minified)
 }, {
     // Next, bundle together the three "chunks" produced in the previous pass
     // into a single, final bundle. See rollup/bundle_prelude.js and

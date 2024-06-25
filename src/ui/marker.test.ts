@@ -5,8 +5,10 @@ import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import type {Terrain} from '../render/terrain';
+import type {defaultLocale} from './default_locale';
 
 type MapOptions = {
+    locale?: Partial<typeof defaultLocale>;
     width?: number;
     renderWorldCopies?: boolean;
 }
@@ -248,6 +250,13 @@ describe('marker', () => {
         const marker = new Marker({element})
             .setPopup(popup);
         expect(marker.getElement().getAttribute('tabindex')).toBe('5');
+    });
+
+    test('Marker aria-label is set accordingly to its label value', () => {
+        const map = createMap({locale: {'Marker.Title': 'alt title'}});
+        const marker = new Marker().setLngLat([0, 0]).addTo(map);
+
+        expect(marker.getElement().getAttribute('aria-label')).toBe('alt title');
     });
 
     test('Marker anchor defaults to center', () => {
@@ -946,22 +955,22 @@ describe('marker', () => {
             getElevationForLngLatZoom: () => 0,
             depthAtPoint: () => .95 // Mocking distance to terrain
         } as any as Terrain;
-        await sleep(100);
         map.fire('terrain');
+        await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('1');
 
         // Terrain blocks marker
         map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
-        await sleep(100);
         map.fire('moveend');
+        await sleep(100);
 
         expect(marker.getElement().style.opacity).toMatch('.2');
 
         // Remove terrain
         map.terrain = null;
-        await sleep(100);
         map.fire('terrain');
+        await sleep(100);
         expect(marker.getElement().style.opacity).toMatch('1');
 
         map.remove();

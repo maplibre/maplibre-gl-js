@@ -49,7 +49,7 @@ export interface Handler {
     isEnabled(): boolean;
     /**
      * This is used to indicate if the handler is currently active or not.
-     * In case a handler is active, it will block other handlers from gettting the relevant events.
+     * In case a handler is active, it will block other handlers from getting the relevant events.
      * There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.
      */
     isActive(): boolean;

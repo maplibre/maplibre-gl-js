@@ -50,6 +50,9 @@ export class ScaleControl implements IControl {
     _container: HTMLElement;
     options: ScaleControlOptions;
 
+    /**
+     * @param options - the control's options
+     */
     constructor(options?: ScaleControlOptions) {
         this.options = {...defaultOptions, ...options};
     }

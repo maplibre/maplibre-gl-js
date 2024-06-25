@@ -33,7 +33,7 @@ import {interpolateLngLatForGlobe} from './globe_control_utils';
 export type PointLike = Point | [number, number];
 
 /**
- * A helper to allow require of at least one propery
+ * A helper to allow require of at least one property
  */
 export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 

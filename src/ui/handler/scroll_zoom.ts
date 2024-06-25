@@ -173,7 +173,7 @@ export class ScrollZoomHandler implements Handler {
             this._type = null;
             this._lastValue = value;
 
-            // Start a timeout in case this was a singular event, and dely it by up to 40ms.
+            // Start a timeout in case this was a singular event, and delay it by up to 40ms.
             this._timeout = setTimeout(this._onTimeout, 40, e);
 
         } else if (!this._type) {

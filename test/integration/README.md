@@ -18,11 +18,11 @@ The contents of vector tile fixtures can be read using the [`vt2geojson`](https:
 
 ## Running tests in GitHub
 All tests are run for every PR. If you're not sure yet if the tests are good, you may use a Draft PR to indicate that the work is still in progress.
-Each jos, or a group of tests, will create an atrifact of any of its tests fail. The artifacts are found at the bottom of the jobs summary
+Each jos, or a group of tests, will create an artifact of any of its tests fail. The artifacts are found at the bottom of the jobs summary
 
 <image width="80%" src="https://github.com/maplibre/maplibre-gl-js/assets/1304610/bc313a30-cdec-4de5-b6c9-90637ffbf79a"/>
 
-Download the appropriate artifact as a zip file, open it and view the `resutls.html` file it contains.
+Download the appropriate artifact as a zip file, open it and view the `results.html` file it contains.
 The "Actual" image of a failed test can be saved and used as the new "Expected" image.
 
 ## Running tests in the development environment
@@ -137,7 +137,7 @@ In test/integration/lib/query-browser-jest.test.ts a web server is automatically
 npx st  -l --port 7357 -d test/integration -co
 ```
 
-We currently run each test in a new tab. Alterantively we might gain some speed by clearing the webgl context instead, and running everything in one tab.
+We currently run each test in a new tab. Alternatively we might gain some speed by clearing the webgl context instead, and running everything in one tab.
 
 ```
 delete map.painter.context.gl;

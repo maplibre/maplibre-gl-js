@@ -55,7 +55,7 @@ export type * from '@maplibre/maplibre-gl-style-spec';
  * Necessary for supporting the Arabic and Hebrew languages, which are written right-to-left.
  *
  * @param pluginURL - URL pointing to the Mapbox RTL text plugin source.
- * @param lazy - If set to `true`, mapboxgl will defer loading the plugin until rtl text is encountered,
+ * @param lazy - If set to `true`, maplibre will defer loading the plugin until rtl text is encountered,
  * rtl text will then be rendered only after the plugin finishes loading.
  * @example
  * ```ts
@@ -143,7 +143,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  *
  * It can be useful for the following examples:
  * 1. Using `self.addProtocol` in the worker thread - note that you might need to also register the protocol on the main thread.
- * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which sould come with `addSourceType` usually.
+ * 2. Using `self.registerWorkerSource(workerSource: WorkerSource)` to register a worker source, which should come with `addSourceType` usually.
  * 3. using `self.actor.registerMessageHandler` to override some internal worker operations
  * @param workerUrl - the worker url e.g. a url of a javascript file to load in the worker
  * @returns
@@ -162,7 +162,7 @@ function setWorkerUrl(value: string) { config.WORKER_URL = value; }
  *         throw new Error(`Tile fetch error: ${t.statusText}`);
  *     }
  * }
- * self.addPRotocol('custom', loadFn);
+ * self.addProtocol('custom', loadFn);
  *
  * // main.js
  * importScriptInWorkers('add-protocol-worker.js');

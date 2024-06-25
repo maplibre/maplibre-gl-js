@@ -298,7 +298,7 @@ describe('GeolocateControl with no options', () => {
         await secontMoveEnd;
         expect(lngLatAsFixed(map.getCenter(), 4)).toEqual({lat: '40.0000', lng: '50.0000'});
         const errorPromise = geolocate.once('error');
-        geolocation.changeError({code: 2, message: 'position unavaliable'});
+        geolocation.changeError({code: 2, message: 'position unavailable'});
         await errorPromise;
         expect(geolocate._userLocationDotMarker._map).toBeTruthy();
         expect(geolocate._userLocationDotMarker._element.classList.contains('maplibregl-user-location-dot-stale')).toBeTruthy();

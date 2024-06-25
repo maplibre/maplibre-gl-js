@@ -82,7 +82,7 @@ describe('map events', () => {
 
     });
 
-    test('Map#on adds a listener not triggered when the specified layer does not exiist', () => {
+    test('Map#on adds a listener not triggered when the specified layer does not exist', () => {
         const map = createMap();
 
         jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);
@@ -514,7 +514,7 @@ describe('map events', () => {
     });
 
     (['mouseleave', 'mouseout'] as (keyof MapLayerEventType)[]).forEach((event) => {
-        test(`Map#on ${event} does not fire if the specified layer does not exiist`, () => {
+        test(`Map#on ${event} does not fire if the specified layer does not exist`, () => {
             const map = createMap();
 
             jest.spyOn(map, 'getLayer').mockReturnValue(null as unknown as StyleLayer);

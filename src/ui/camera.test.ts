@@ -390,7 +390,7 @@ describe('#setPadding', () => {
         expect(currentPadding).toEqual(padding);
     });
 
-    test('doesnt change padding thats already present if new value isnt passed in', () => {
+    test('doesn\'t change padding thats already present if new value isn\'t passed in', () => {
         const camera = createCamera();
         const padding = {left: 300, top: 100, right: 50, bottom: 10};
         camera.setPadding(padding);
@@ -437,7 +437,7 @@ describe('#panBy', () => {
         camera.panBy([100, 0], {duration: 0}, eventData);
     });
 
-    test('supresses movestart if noMoveStart option is true', done => {
+    test('suppresses movestart if noMoveStart option is true', done => {
         const camera = createCamera();
         let started;
 
@@ -499,7 +499,7 @@ describe('#panTo', () => {
         camera.panTo([100, 0], {duration: 0}, eventData);
     });
 
-    test('supresses movestart if noMoveStart option is true', done => {
+    test('suppresses movestart if noMoveStart option is true', done => {
         const camera = createCamera();
         let started;
 

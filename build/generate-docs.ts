@@ -15,7 +15,7 @@ function generateAPIIntroMarkdown(lines: string[]): string {
 This file is intended as a reference for the important and public classes of this API.
 We recommend looking at the [examples](../examples/index.md) as they will help you the most to start with MapLibre.
 
-Most of the classes wirtten here have an "Options" object for initialization, it is recommended to check which options exist.
+Most of the classes written here have an "Options" object for initialization, it is recommended to check which options exist.
 
 It is recommended to import what you need and the use it. Some examples for classes assume you did that.
 For example, import the \`Map\` class like this:
@@ -51,7 +51,7 @@ function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
         indexMarkdown += `
 ## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
 
-![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')})
+![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')}){ loading=lazy }
 
 ${indexArrayItem.description}
 `;
@@ -85,12 +85,12 @@ function generateExamplesFolder() {
     fs.mkdirSync(examplesDocsFolder);
     const examplesFolder = path.join('test', 'examples');
     const files = fs.readdirSync(examplesFolder).filter(f => f.endsWith('html'));
-    const maplibreUnpgk = `https://unpkg.com/maplibre-gl@${packageJson.version}/`;
+    const maplibreUnpkg = `https://unpkg.com/maplibre-gl@${packageJson.version}/`;
     const indexArray = [] as HtmlDoc[];
     for (const file of files) {
         const htmlFile = path.join(examplesFolder, file);
         let htmlContent = fs.readFileSync(htmlFile, 'utf-8');
-        htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpgk);
+        htmlContent = htmlContent.replace(/\.\.\/\.\.\//g, maplibreUnpkg);
         htmlContent = htmlContent.replace(/-dev.js/g, '.js');
         const htmlContentLines = htmlContent.split('\n');
         const title = htmlContentLines.find(l => l.includes('<title'))?.replace('<title>', '').replace('</title>', '').trim()!;
