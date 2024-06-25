@@ -47,7 +47,8 @@ describe('drawSymbol', () => {
         painterMock.transform = createMockTransform();
         painterMock.options = {} as any;
         painterMock.style = {
-            map: createMockMap()
+            map: {},
+            projection: new MercatorProjection()
         } as any as Style;
 
         const layerSpec = {
@@ -152,7 +153,8 @@ describe('drawSymbol', () => {
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
         painterMock.style = {
-            map: createMockMap()
+            map: {},
+            projection: new MercatorProjection()
         } as any as Style;
 
         const spy = jest.spyOn(symbolProjection, 'updateLineLabels');
@@ -174,7 +176,7 @@ describe('drawSymbol', () => {
         painterMock.transform = createMockTransform();
         painterMock.options = {} as any;
         painterMock.style = {
-            map: createMockMap()
+            projection: new MercatorProjection()
         } as any as Style;
 
         const layerSpec = {
@@ -224,10 +226,6 @@ describe('drawSymbol', () => {
 
 });
 
-function createMockMap() {
-    return {
-        projection: new MercatorProjection()
-    };
 }
 
 function createMockTransform() {
@@ -250,4 +248,3 @@ function createMockTransform() {
             return translatePosition({angle: 0, zoom: 0}, tile, translate, translateAnchor);
         }
     } as any as Transform;
-}

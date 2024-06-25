@@ -3,13 +3,16 @@
   "metadata": {
     "test": {
       "height": 512,
-      "width": 512,
-      "projection": "globe"
+      "width": 512
     }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
   },
   "zoom": 2,
   "bearing": 60,
   "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "projection": { "type": "globe" },
   "sources": {
     "geojson": {
       "type": "geojson",

@@ -19,7 +19,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
 
     const context = painter.context;
     const gl = context.gl;
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const transform = painter.transform;
     const tileSize = transform.tileSize;
     const image = layer.paint.get('background-pattern');

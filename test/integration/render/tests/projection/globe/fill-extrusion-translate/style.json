@@ -2,8 +2,10 @@
   "version": 8,
   "metadata": {
     "test": {
-      "projection": "globe"
     }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
   },
   "center": [
     10.0,
@@ -12,6 +14,7 @@
   "pitch": 45,
   "bearing": 45,
   "zoom": 1.5,
+  "projection": { "type": "globe" },
   "sources": {
     "fill": {
       "type": "geojson",

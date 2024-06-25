@@ -70,6 +70,21 @@ export interface Projection {
     get vertexShaderPreludeCode(): string;
 
     /**
+     * World center in camera frame.
+     */
+    get worldCenterPosition(): vec3;
+
+    /**
+     * World size in pixel.
+     */
+    get worldSize(): number;
+
+    /**
+     * Inverse projection matrix from camera to clip plane.
+     */
+    get invProjMatrix(): mat4;
+
+    /**
      * @internal
      * An object describing how much subdivision should be applied to rendered geometry.
      * The subdivision settings should be a constant for a given projection.

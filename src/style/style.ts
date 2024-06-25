@@ -48,7 +48,9 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
-    DiffOperations
+    DiffOperations,
+    ProjectionSpecification,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -59,6 +61,9 @@ import {
     type GetImagesParamerters,
     type GetImagesResponse
 } from '../util/actor_messages';
+import {Projection} from '../geo/projection/projection';
+import {createProjectionFromName} from '../geo/projection/projection_factory';
+import Sky from './sky';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -184,6 +189,8 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    projection: Projection;
+    sky: Sky;
 
     _frameRequest: AbortController;
     _loadStyleRequest: AbortController;
@@ -337,6 +344,9 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
+        this.projection = createProjectionFromName(this.stylesheet.projection?.type || 'mercator');
+
+        this.sky = new Sky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
@@ -522,6 +532,10 @@ export class Style extends Evented {
             return true;
         }
 
+        if (this.sky && this.sky.hasTransition()) {
+            return true;
+        }
+
         for (const id in this.sourceCaches) {
             if (this.sourceCaches[id].hasTransition()) {
                 return true;
@@ -580,6 +594,7 @@ export class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
+            this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }
@@ -624,6 +639,7 @@ export class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
+        this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -764,6 +780,12 @@ export class Style extends Evented {
                     break;
                 case 'setTerrain':
                     operations.push(() => this.map.setTerrain.apply(this, op.args));
+                    break;
+                case 'setSky':
+                    operations.push(() => this.setSky.apply(this, op.args));
+                    break;
+                case 'setProjection':
+                    this.setProjection.apply(this, op.args);
                     break;
                 case 'setTransition':
                     operations.push(() => {});
@@ -1277,6 +1299,7 @@ export class Style extends Evented {
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
             light: myStyleSheet.light,
+            sky: myStyleSheet.sky,
             center: myStyleSheet.center,
             zoom: myStyleSheet.zoom,
             bearing: myStyleSheet.bearing,
@@ -1284,6 +1307,7 @@ export class Style extends Evented {
             sprite: myStyleSheet.sprite,
             glyphs: myStyleSheet.glyphs,
             transition: myStyleSheet.transition,
+            projection: myStyleSheet.projection,
             sources,
             layers,
             terrain
@@ -1474,6 +1498,51 @@ export class Style extends Evented {
         this.light.updateTransitions(parameters);
     }
 
+    getProjection(): ProjectionSpecification {
+        return this.stylesheet.projection;
+    }
+
+    setProjection(projection: ProjectionSpecification) {
+        this._checkLoaded();
+        if (this.projection) {
+            if (this.projection.name === projection.type) return;
+            this.projection.destroy();
+            delete this.projection;
+        }
+        this.stylesheet.projection = projection;
+        this.projection = createProjectionFromName(projection.type);
+    }
+
+    getSky(): SkySpecification {
+        return this.sky?.getSky();
+    }
+
+    setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
+        this._checkLoaded();
+
+        const sky = this.sky.getSky();
+        let _update = false;
+        for (const key in skyOptions) {
+            if (!deepEqual(skyOptions[key], sky[key])) {
+                _update = true;
+                break;
+            }
+        }
+        if (!_update) return;
+
+        const parameters = {
+            now: browser.now(),
+            transition: extend({
+                duration: 300,
+                delay: 0
+            }, this.stylesheet.transition)
+        };
+
+        this.stylesheet.sky = skyOptions;
+        this.sky.setSky(skyOptions, options);
+        this.sky.updateTransitions(parameters);
+    }
+
     _validate(validate: Validator, key: string, value: any, props: any, options: {
         validate?: boolean;
     } = {}) {
@@ -1541,6 +1610,9 @@ export class Style extends Evented {
     }
 
     _updatePlacement(transform: Transform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false) {
+
+        // This projection update should happen *before* placement update
+        this.projection.updateProjection(transform);
         let symbolBucketsChanged = false;
         let placementCommitted = false;
 
@@ -1571,7 +1643,7 @@ export class Style extends Evented {
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
-            this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(transform, this.projection, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 

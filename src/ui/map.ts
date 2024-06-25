@@ -52,13 +52,13 @@ import type {
     StyleSpecification,
     LightSpecification,
     SourceSpecification,
-    TerrainSpecification
+    TerrainSpecification,
+    ProjectionSpecification,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
-import {Projection} from '../geo/projection/projection';
-import {ProjectionName, createProjectionFromName} from '../geo/projection/projection_factory';
 
 const version = packageJSON.version;
 
@@ -402,8 +402,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
     validateStyle: true,
     /**Because GL MAX_TEXTURE_SIZE is usually at least 4096px. */
     maxCanvasSize: [4096, 4096],
-    cancelPendingTileRequestsWhileZooming: true,
-    projection: 'mercator'
+    cancelPendingTileRequestsWhileZooming: true
 };
 
 /**
@@ -1764,6 +1763,7 @@ export class Map extends Camera {
         }
 
         if (!style) {
+            this.style?.projection?.destroy();
             delete this.style;
             return this;
         } else {
@@ -2688,6 +2688,32 @@ export class Map extends Camera {
     }
 
     /**
+     * Sets the value of style's sky properties.
+     *
+     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky).
+     * @param options - Options object.
+     *
+     * @example
+     * ```ts
+     * map.setSky({'atmosphere-blend': 1.0});
+     * ```
+     */
+    setSky(sky: SkySpecification, options: StyleSetterOptions = {}) {
+        this._lazyInitEmptyStyle();
+        this.style.setSky(sky, options);
+        return this._update(true);
+    }
+
+    /**
+     * Returns the value of the style's sky.
+     *
+     * @returns sky properties of the style.
+     */
+    getSky(): SkySpecification {
+        return this.style.getSky();
+    }
+
+    /**
      * Sets the `state` of a feature.
      * A feature's `state` is a set of user-defined key-value pairs that are assigned to a feature at runtime.
      * When using this method, the `state` object is merged with any existing key-value pairs in the feature's state.
@@ -3077,9 +3103,7 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
-        // This projection update should happen *before* placement update
         const transformUpdateResult = this.transform.updateProjection();
-
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
 
         // Actually draw
@@ -3170,7 +3194,6 @@ export class Map extends Camera {
             this._frameRequest.abort();
             this._frameRequest = null;
         }
-        this.projection.destroy();
         this._renderTaskQueue.clear();
         this.painter.destroy();
         this.handlers.destroy();
@@ -3322,12 +3345,23 @@ export class Map extends Camera {
     }
 
     /**
-     * Returns the active `ProjectionBase` object.
-     * @returns The projection object.
+     * Gets the {@link ProjectionSpecification}.
+     * @returns the projection specification.
      * @example
      * ```ts
      * let projection = map.getProjection();
      * ```
      */
-    getProjection(): Projection { return this.projection; }
+    getProjection(): ProjectionSpecification { return this.style.getProjection(); }
+
+    /**
+     * Sets the {@link ProjectionSpecification}.
+     * @param projection - the projection specification to set
+     * @returns
+     */
+    setProjection(projection: ProjectionSpecification) {
+        this._lazyInitEmptyStyle();
+        this.style.setProjection(projection);
+        return this._update(true);
+    }
 }

@@ -4,15 +4,18 @@
     "test": {
       "description": "This test ensures that images that are placed into the root tile do not stretch all the way to the poles.",
       "width": 64,
-      "height": 256,
-      "projection": "globe"
+      "height": 256
     }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
   },
   "zoom": 0.5,
   "center": [
     0,
     45
   ],
+  "projection": { "type": "globe" },
   "sources": {
     "image": {
       "type": "image",

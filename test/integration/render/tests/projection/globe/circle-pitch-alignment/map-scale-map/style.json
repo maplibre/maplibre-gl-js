@@ -3,14 +3,17 @@
   "metadata": {
     "test": {
       "width": 256,
-      "height": 256,
-      "projection": "globe"
+      "height": 256
     }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
   },
   "center": [
     0,
     0
   ],
+  "projection": { "type": "globe" },
   "zoom": 3,
   "pitch": 60,
   "bearing": 90,
