@@ -580,24 +580,24 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies);
-        super(transform, {bearingSnap: resolvedOptions.bearingSnap});
-            transform.minZoom = options.minZoom;
+        const {projection, transform} = createProjectionFromName(resolvedOptions.projection);
+        if (resolvedOptions.minZoom !== undefined) {
+            transform.minZoom = resolvedOptions.minZoom;
         }
-        if (options.maxZoom !== undefined) {
-            transform.maxZoom = options.maxZoom;
+        if (resolvedOptions.maxZoom !== undefined) {
+            transform.maxZoom = resolvedOptions.maxZoom;
         }
-        if (options.minPitch !== undefined) {
-            transform.minPitch = options.minPitch;
+        if (resolvedOptions.minPitch !== undefined) {
+            transform.minPitch = resolvedOptions.minPitch;
         }
-        if (options.maxPitch !== undefined) {
-            transform.maxPitch = options.maxPitch;
+        if (resolvedOptions.maxPitch !== undefined) {
+            transform.maxPitch = resolvedOptions.maxPitch;
         }
-        if (options.renderWorldCopies !== undefined) {
-            transform.renderWorldCopies = options.renderWorldCopies;
+        if (resolvedOptions.renderWorldCopies !== undefined) {
+            transform.renderWorldCopies = resolvedOptions.renderWorldCopies;
         }
 
-        super(transform, projection, {bearingSnap: options.bearingSnap});
+        super(transform, projection, {bearingSnap: resolvedOptions.bearingSnap});
 
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
