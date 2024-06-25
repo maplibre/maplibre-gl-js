@@ -555,7 +555,7 @@ export class GlobeTransform extends Transform {
     }
 
     override maxPitchScaleFactor(): number {
-        // JP: TODO
+        // Using mercator version of this should be good enough approximation for globe.
         return this._mercatorTransform.maxPitchScaleFactor();
     }
 
@@ -657,19 +657,14 @@ export class GlobeTransform extends Transform {
         return new LngLatBounds(boundsArray);
     }
 
-    //
-    // End of placeholder overridden functions
-    //
-
     override get cameraToCenterDistance(): number {
+        // Globe uses the same cameraToCenterDistance as mercator.
         return this._mercatorTransform.cameraToCenterDistance;
     }
 
     override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
-        // JP: TODO:
-        // - respect _lngRange, _latRange
-        // - when transitioning to mercator respect _renderWorldCopies
-        // - when transitioning to mercator interpolate to mercator constraint center+zoom
+        // Globe: TODO: respect _lngRange, _latRange
+        // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
         const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(this, 0, constrainedLat), this.maxZoom);
         return {
@@ -723,7 +718,7 @@ export class GlobeTransform extends Transform {
         const vecToTargetXZLengthSquared = vecToTarget[0] * vecToTarget[0] + vecToTarget[2] * vecToTarget[2];
         const targetXSquared = rotatedPixelVector[0] * rotatedPixelVector[0];
         if (vecToTargetXZLengthSquared < targetXSquared) {
-            // Zero solutions - setLocationAtPoint is impossible. What do?
+            // Zero solutions - setLocationAtPoint is impossible.
             return;
         }
 
@@ -772,50 +767,16 @@ export class GlobeTransform extends Transform {
             validLng = lngB;
             validLat = latB;
         } else {
-            // No solution. What do?
+            // No solution.
             return;
         }
 
         const newLng = validLng / Math.PI * 180;
         const newLat = validLat / Math.PI * 180;
         this.center = new LngLat(newLng, clamp(newLat, -90, 90));
-
-        // const vecToCenter = angularCoordinatesToVector(this.center);
-
-        // const oldCenter = this.center;
-        // const oldZoom = this.zoom;
-
-        // const axis = createVec3();
-        // vec3.cross(axis, vecToPixelCurrent, vecToCenter);
-        // vec3.normalize(axis, axis);
-        // const angle = Math.acos(Math.min(Math.max(vec3.dot(vecToCenter, vecToPixelCurrent), -1.0), 1.0));
-        // const matrix = createMat4();
-        // mat4.fromRotation(matrix, angle, axis);
-        // const epsilon = 1e-9;
-        // if (angle < epsilon || vec3.sqrLen(axis) < epsilon) {
-        //     mat4.identity(matrix);
-        // }
-        // const newCenterVec = createVec3();
-        // vec3.transformMat4(newCenterVec, vecToTarget, matrix);
-        // this.center = sphereSurfacePointToCoordinates(newCenterVec);
-
-        // console.log(
-        //     `target-lnglat ${lnglat}
-        //     target-point ${point.x} ${point.y}
-        //     pre-center ${oldCenter}
-        //     pre-zoom ${oldZoom}
-        //     pointLngLat ${pointLngLat}
-        //     vecToCenter ${vecToCenter}
-        //     vecToPixelCurrent ${vecToPixelCurrent}
-        //     vecToTarget ${vecToTarget}
-        //     axis ${axis}
-        //     angle ${angle}
-        //     newCenterVec ${newCenterVec}
-        //     post-center ${this.center}
-        //     post-zoom ${this.zoom}`);
     }
 
-    override locationPoint(lnglat: LngLat, terrain?: Terrain): Point { // JP: TODO: test that this works well even with terrain
+    override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         if (!this._globeRendering) {
             return this._mercatorTransform.locationPoint(lnglat, terrain);
         }
