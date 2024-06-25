@@ -22,8 +22,8 @@ export function getGlobeCircumferencePixels(transform: {worldSize: number; cente
 }
 
 export function globeDistanceOfLocationsPixels(transform: {worldSize: number; center: {lat: number}}, a: LngLat, b: LngLat): number {
-    const vecA = angularCoordinatesToVector(a);
-    const vecB = angularCoordinatesToVector(b);
+    const vecA = angularCoordinatesToSurfaceVector(a);
+    const vecB = angularCoordinatesToSurfaceVector(b);
     const dot = vec3.dot(vecA, vecB);
     const radians = Math.acos(dot);
     const circumference = getGlobeCircumferencePixels(transform);
@@ -67,7 +67,7 @@ export function angularCoordinatesRadiansToVector(lngRadians: number, latRadians
 /**
  * For a given longitude and latitude (note: in degrees) returns the normalized vector from the planet center to the specified place on the surface.
  */
-export function angularCoordinatesToVector(lngLat: LngLat): vec3 {
+export function angularCoordinatesToSurfaceVector(lngLat: LngLat): vec3 {
     return angularCoordinatesRadiansToVector(lngLat.lng * Math.PI / 180, lngLat.lat * Math.PI / 180);
 }
 
@@ -537,7 +537,7 @@ export class GlobeTransform extends Transform {
     }
 
     override getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
-        // Globe: TODO: implement for globe
+        // Globe: TODO: implement for globe #3887
         return this._mercatorTransform.getVisibleUnwrappedCoordinates(tileID);
     }
 
@@ -545,7 +545,7 @@ export class GlobeTransform extends Transform {
         tileSize: number; minzoom?: number;
         maxzoom?: number; roundZoom?: boolean; reparseOverscaled?: boolean; renderWorldCopies?: boolean; terrain?: Terrain;
     }): OverscaledTileID[] {
-        // Globe: TODO: implement for globe
+        // Globe: TODO: implement for globe #3887
         return this._mercatorTransform.coveringTiles(options);
     }
 
@@ -564,13 +564,21 @@ export class GlobeTransform extends Transform {
     }
 
     override getCameraPoint(): Point {
-        // JP: TODO
         return this._mercatorTransform.getCameraPoint();
     }
 
     override lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
-        // JP: TODO
-        return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
+        if (!this._globeRendering) {
+            return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
+        }
+        if (!this._globeProjMatrixNoCorrection) {
+            return 1.0; // _calcMatrices hasn't run yet
+        }
+        const vec = angularCoordinatesToSurfaceVector(lngLat);
+        vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
+        const result = createVec4();
+        vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeProjMatrixNoCorrection);
+        return result[2] / result[3];
     }
 
     override precacheTiles(coords: OverscaledTileID[]): void {
@@ -578,7 +586,32 @@ export class GlobeTransform extends Transform {
     }
 
     override getBounds(): LngLatBounds {
-        // JP: TODO: write a proper implementation of this function
+        if (!this._globeRendering) {
+            return this._mercatorTransform.getBounds();
+        }
+
+        const xMid = this.width * 0.5;
+        const yMid = this.height * 0.5;
+
+        const testPoints = [
+            new Point(0, 0),
+            new Point(xMid, 0),
+            new Point(this.width, 0),
+            new Point(this.width, yMid),
+            new Point(this.width, this.height),
+            new Point(xMid, this.height),
+            new Point(0, this.height),
+            new Point(0, yMid),
+        ];
+
+        const projectedPoints = [];
+        for (const p of testPoints) {
+            projectedPoints.push(this.unprojectScreenPoint(p));
+        }
+
+        // JP: TODO: tohle je trochu průser, protože prostě mám hromadu bodů na kouli a chci kolem nich postavit bbox,
+        // ale to jde udělat nejednoznačně
+
         return this._mercatorTransform.getBounds();
     }
 
@@ -615,8 +648,8 @@ export class GlobeTransform extends Transform {
         // This returns some fake coordinates for pixels that do not lie on the planet.
         // Whatever uses this `setLocationAtPoint` function will need to account for that.
         const pointLngLat = this.unprojectScreenPoint(point);
-        const vecToPixelCurrent = angularCoordinatesToVector(pointLngLat);
-        const vecToTarget = angularCoordinatesToVector(lnglat);
+        const vecToPixelCurrent = angularCoordinatesToSurfaceVector(pointLngLat);
+        const vecToTarget = angularCoordinatesToSurfaceVector(lnglat);
 
         const zero = createVec3();
         vec3.zero(zero);
@@ -745,7 +778,7 @@ export class GlobeTransform extends Transform {
             return this._mercatorTransform.locationPoint(lnglat, terrain);
         }
 
-        const pos = angularCoordinatesToVector(lnglat);
+        const pos = angularCoordinatesToSurfaceVector(lnglat);
 
         if (terrain) {
             const elevation = terrain.getElevationForLngLatZoom(lnglat, this._tileZoom);
@@ -853,8 +886,6 @@ export class GlobeTransform extends Transform {
             return null;
         }
     }
-
-    // JP: TODO: unprojectExact for waypoint placement, unproject for interaction?
 
     /**
      * @internal

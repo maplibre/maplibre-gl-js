@@ -15,7 +15,7 @@ import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
 import {Projection} from '../geo/projection/projection';
-import {angularCoordinatesToVector, getZoomAdjustment, globeDistanceOfLocationsPixels} from '../geo/projection/globe_transform';
+import {angularCoordinatesToSurfaceVector, getZoomAdjustment, globeDistanceOfLocationsPixels} from '../geo/projection/globe_transform';
 import {mat4, vec3} from 'gl-matrix';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_transform';
 import {interpolateLngLatForGlobe} from './globe_control_utils';
@@ -799,17 +799,17 @@ export abstract class Camera extends Evented {
             clonedTr.zoom = result.zoom;
 
             const testVectors = [
-                angularCoordinatesToVector(bounds.getNorthWest()),
-                angularCoordinatesToVector(bounds.getNorthEast()),
-                angularCoordinatesToVector(bounds.getSouthWest()),
-                angularCoordinatesToVector(bounds.getSouthEast()),
+                angularCoordinatesToSurfaceVector(bounds.getNorthWest()),
+                angularCoordinatesToSurfaceVector(bounds.getNorthEast()),
+                angularCoordinatesToSurfaceVector(bounds.getSouthWest()),
+                angularCoordinatesToSurfaceVector(bounds.getSouthEast()),
                 // Also test edge midpoints
-                angularCoordinatesToVector(new LngLat(lngEast, latMid)),
-                angularCoordinatesToVector(new LngLat(lngWest, latMid)),
-                angularCoordinatesToVector(new LngLat(lngMid, latNorth)),
-                angularCoordinatesToVector(new LngLat(lngMid, latSouth))
+                angularCoordinatesToSurfaceVector(new LngLat(lngEast, latMid)),
+                angularCoordinatesToSurfaceVector(new LngLat(lngWest, latMid)),
+                angularCoordinatesToSurfaceVector(new LngLat(lngMid, latNorth)),
+                angularCoordinatesToSurfaceVector(new LngLat(lngMid, latSouth))
             ];
-            const vecToCenter = angularCoordinatesToVector(result.center);
+            const vecToCenter = angularCoordinatesToSurfaceVector(result.center);
 
             const matrix = clonedTr.projectionMatrix;
             let smallestNeededScale = Number.POSITIVE_INFINITY;
@@ -1183,7 +1183,6 @@ export abstract class Camera extends Evented {
                 }
 
                 if (around) {
-                    // JP: TODO: this will probably need a copy of zoom logic?
                     tr.setLocationAtPoint(around, aroundPoint);
                 } else {
                     const base = normalizedEndZoom > normalizedStartZoom ?
@@ -1192,8 +1191,9 @@ export abstract class Camera extends Evented {
                     const speedup = Math.pow(base, 1 - k);
                     const factor = k * speedup;
 
-                    // Interpolating LngLat directly is somewhat inaccurate, but saves a *lot* of trouble.
-                    // We might think of using spherical lerp instead, but that leads to very weird paths when the interpolated arc gets near the poles.
+                    // Spherical lerp might be used here instead, but that was tested and it leads to very weird paths when the interpolated arc gets near the poles.
+                    // Instead we interpolate LngLat almost directly, but taking into account that
+                    // one degree of longitude gets progressively smaller relative to latitude towards the poles.
                     const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
                     tr.center = newCenter;
                 }

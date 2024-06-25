@@ -41,7 +41,7 @@ function integrateSecX(x: number): number {
 
 export function interpolateLngLatForGlobe(start: LngLat, deltaLng: number, deltaLat: number, t: number): LngLat {
     // Rate of change of longitude when moving the globe should be roughly 1/cos(latitude)
-    // We want to keep this rate of change even for interpolation during easing.
+    // We want to use this rate of change, even for interpolation during easing.
     // Thus we know the derivative of our interpolation function: 1/cos(x)
     // To get our function, we need to integrate that.
 

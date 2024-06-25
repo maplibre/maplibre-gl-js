@@ -17,14 +17,16 @@ export type TransformUpdateResult = {forcePlacementUpdate: boolean};
 
 /**
  * @internal
- * A single transform. TODO.
+ * The transform class stores everything needed to project or otherwise transform points on a map,
+ * including most of the map's view state - center, zoom, pitch, etc.
+ * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
+ *
+ * This base class stores all data about a transform that is common across all projections.
+ * This data is what actually defines the map's position, angles, etc.
+ * This data should be transferable to a transform implementation for any different projection,
+ * hence the implementation of `Transform.apply`, which works on any Transform and accepts any Transform.
  */
 export abstract class Transform {
-    // This base class stores all data about a transform that is common across all projections.
-    // This data is what actually defines the map's position, angles, etc.
-    // This data should be transferable to a transform implementation for a different projection,
-    // hence the implementation of `Transform.apply`, which works on any Transform and accepts any Transform.
-
     private _tileSize: number; // constant
     protected _tileZoom: number; // integer zoom level for tiles
     protected _lngRange: [number, number];
