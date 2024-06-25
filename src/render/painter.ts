@@ -33,6 +33,8 @@ import {drawDebug, drawDebugPadding, selectDebugSource} from './draw_debug';
 import {drawCustom} from './draw_custom';
 import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
+import {RenderToTexture} from './render_to_texture';
+import {drawSky} from './draw_sky';
 
 import type {Transform} from '../geo/transform';
 import type {Tile} from '../source/tile';
@@ -46,8 +48,6 @@ import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import {RenderToTexture} from './render_to_texture';
-import {drawSky} from './draw_sky';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -409,7 +409,7 @@ export class Painter {
         this.clearStencil();
 
         // draw sky first to not overwrite symbols
-        if (this.style.sky) drawSky(this, this.style.sky);
+        if (this.style.stylesheet.sky) drawSky(this, this.style.sky);
 
         this._showOverdrawInspector = options.showOverdrawInspector;
         this.depthRangeFor3D = [0, 1 - ((style._order.length + 2) * this.numSublayers * this.depthEpsilon)];

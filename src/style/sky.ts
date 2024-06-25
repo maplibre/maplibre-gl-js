@@ -6,6 +6,7 @@ import {extend} from '../util/util';
 import {Color, latest as styleSpec} from '@maplibre/maplibre-gl-style-spec';
 import {Mesh} from '../render/mesh';
 import type {StylePropertySpecification, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
+import type {StyleSetterOptions} from './style';
 
 type SkyProps = {
     'sky-color': DataConstantProperty<Color>;
@@ -56,8 +57,8 @@ export class Sky extends Evented {
         this._transitioning = this._transitionable.untransitioned();
     }
 
-    setSky(sky?: SkySpecification) {
-        if (this._validate(validateSky, sky)) return;
+    setSky(sky?: SkySpecification, options: StyleSetterOptions = {}) {
+        if (this._validate(validateSky, sky, options)) return;
 
         for (const name in sky) {
             const value = sky[name];
@@ -85,7 +86,10 @@ export class Sky extends Evented {
         this.properties = this._transitioning.possiblyEvaluate(parameters);
     }
 
-    _validate(validate: Function, value: unknown) {
+    _validate(validate: Function, value: unknown, options: StyleSetterOptions = {}) {
+        if (options?.validate === false) {
+            return false;
+        }
         return emitValidationErrors(this, validate.call(validateStyle, extend({
             value,
             // Workaround for https://github.com/mapbox/mapbox-gl-js/issues/2407

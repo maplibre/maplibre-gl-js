@@ -2558,6 +2558,14 @@ describe('Style#serialize', () => {
         expect(style.serialize().sky).toBeUndefined();
     });
 
+    test('sky should be undefined when map does not have sky', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        expect(style.getSky()).toBeUndefined();
+    });
+
     test('do not include sky property after removing sky from the map', async () => {
         const sky: SkySpecification = {
             'horizon-fog-blend': 0.5,

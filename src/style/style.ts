@@ -340,8 +340,7 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
-
-        if (this.stylesheet.sky) this.setSky(this.stylesheet.sky);
+        this.sky = new Sky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
@@ -589,7 +588,7 @@ export class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
-            if (this.sky) this.sky.updateTransitions(parameters);
+            this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }
@@ -634,7 +633,7 @@ export class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
-        if (this.sky) this.sky.recalculate(parameters);
+        this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -1285,13 +1284,13 @@ export class Style extends Evented {
         const layers = this._serializeByIds(this._order);
         const terrain = this.map.getTerrain() || undefined;
         const myStyleSheet = this.stylesheet;
-        const sky = this.getSky();
 
         return filterObject({
             version: myStyleSheet.version,
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
             light: myStyleSheet.light,
+            sky: myStyleSheet.sky,
             center: myStyleSheet.center,
             zoom: myStyleSheet.zoom,
             bearing: myStyleSheet.bearing,
@@ -1301,8 +1300,7 @@ export class Style extends Evented {
             transition: myStyleSheet.transition,
             sources,
             layers,
-            terrain,
-            sky
+            terrain
         },
         (value) => { return value !== undefined; });
     }
@@ -1490,36 +1488,37 @@ export class Style extends Evented {
         this.light.updateTransitions(parameters);
     }
 
-    getSky() {
-        return this.sky?.getSky();
+    getSky(): SkySpecification {
+        return this.stylesheet?.sky;
     }
 
-    setSky(skyOptions?: SkySpecification) {
-        this._checkLoaded();
-
+    setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
+        const sky = this.sky.getSky();
+        let update = false;
         if (!skyOptions) {
-            this.sky = null;
-            return;
+            if (sky) {
+                update = true;
+            }
         }
-        if (this.sky) {
-            this.sky.setSky(skyOptions);
-            this.sky.updateTransitions({
-                now: browser.now(),
-                transition: extend({
-                    duration: 300,
-                    delay: 0
-                }, this.stylesheet.transition)
-            });
-            return;
+        for (const key in skyOptions) {
+            if (!deepEqual(skyOptions[key], sky[key])) {
+                update = true;
+                break;
+            }
         }
-        this.sky = new Sky(skyOptions);
-        this.sky.updateTransitions({
+        if (!update) return;
+
+        const parameters = {
             now: browser.now(),
             transition: extend({
                 duration: 300,
                 delay: 0
             }, this.stylesheet.transition)
-        });
+        };
+
+        this.stylesheet.sky = skyOptions;
+        this.sky.setSky(skyOptions, options);
+        this.sky.updateTransitions(parameters);
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
