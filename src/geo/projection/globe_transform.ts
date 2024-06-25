@@ -4,7 +4,7 @@ import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
-import {clamp, distanceOfAnglesRadians, easeCubicInOut, lerp, mod} from '../../util/util';
+import {clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, mod} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -398,11 +398,7 @@ export class GlobeTransform extends Transform {
 
     public isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
         const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
-
-        const plane = this._cachedClippingPlane;
-        // dot(position on sphere, occlusion plane equation)
-        const dotResult = plane[0] * spherePos[0] + plane[1] * spherePos[1] + plane[2] * spherePos[2] + plane[3];
-        return dotResult < 0.0;
+        return !this.isSurfacePointVisible(spherePos);
     }
 
     public transformLightDirection(dir: vec3): vec3 {
@@ -593,6 +589,8 @@ export class GlobeTransform extends Transform {
         const xMid = this.width * 0.5;
         const yMid = this.height * 0.5;
 
+        // LngLat extremes will probably tend to be in screen corners or in middle of screen edges.
+        // These test points should result in a pretty good approximation.
         const testPoints = [
             new Point(0, 0),
             new Point(xMid, 0),
@@ -609,10 +607,54 @@ export class GlobeTransform extends Transform {
             projectedPoints.push(this.unprojectScreenPoint(p));
         }
 
-        // JP: TODO: tohle je trochu průser, protože prostě mám hromadu bodů na kouli a chci kolem nich postavit bbox,
-        // ale to jde udělat nejednoznačně
+        // We can't construct a simple min/max aabb, since points might lie on either side of the antimeridian.
+        // We will instead compute the furthest points relative to map center.
+        // We also take advantage of the fact that `unprojectScreenPoint` will snap pixels
+        // outside the planet to the closest point on the planet's horizon.
+        let mostEast = 0, mostWest = 0, mostNorth = 0, mostSouth = 0; // We will store these values signed.
+        const center = this.center;
+        for (const p of projectedPoints) {
+            const dLng = differenceOfAnglesDegrees(center.lng, p.lng);
+            const dLat = differenceOfAnglesDegrees(center.lat, p.lat);
+            if (dLng < mostWest) {
+                mostWest = dLng;
+            }
+            if (dLng > mostEast) {
+                mostEast = dLng;
+            }
+            if (dLat < mostSouth) {
+                mostSouth = dLat;
+            }
+            if (dLat > mostNorth) {
+                mostNorth = dLat;
+            }
+        }
 
-        return this._mercatorTransform.getBounds();
+        const boundsArray: [number, number, number, number] = [
+            center.lng + mostWest,  // west
+            center.lat + mostSouth, // south
+            center.lng + mostEast,  // east
+            center.lat + mostNorth  // north
+        ];
+
+        // Sometimes the poles might end up not being on the horizon,
+        // thus not being detected as the northernmost/southernmost points.
+        // We fix that here.
+        if (this.isSurfacePointVisible([0, 1, 0])) {
+            // North pole is visible
+            // This also means that the entire longitude range must be visible
+            boundsArray[3] = 90;
+            boundsArray[0] = -180;
+            boundsArray[2] = 180;
+        }
+        if (this.isSurfacePointVisible([0, -1, 0])) {
+            // South pole is visible
+            boundsArray[1] = -90;
+            boundsArray[0] = -180;
+            boundsArray[2] = 180;
+        }
+
+        return new LngLatBounds(boundsArray);
     }
 
     //
@@ -845,6 +887,17 @@ export class GlobeTransform extends Transform {
         const rayNormalized: vec3 = createVec3();
         vec3.normalize(rayNormalized, ray);
         return rayNormalized;
+    }
+
+    /**
+     * For a given point on the unit sphere of the planet, returns whether it is visible from
+     * camera's position (not taking into account camera rotation at all).
+     */
+    private isSurfacePointVisible(p: vec3): boolean {
+        const plane = this._cachedClippingPlane;
+        // dot(position on sphere, occlusion plane equation)
+        const dotResult = plane[0] * p[0] + plane[1] * p[1] + plane[2] * p[2] + plane[3];
+        return dotResult >= 0.0;
     }
 
     /**
