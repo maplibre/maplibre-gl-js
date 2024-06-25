@@ -27,7 +27,7 @@ function drawDepth(painter: Painter, terrain: Terrain) {
     context.clear({color: Color.transparent, depth: 1});
     for (const tile of tiles) {
         const terrainData = terrain.getTerrainData(tile.tileID);
-        const projectionData = tr.getProjectionData(tile.tileID);
+        const projectionData = tr.getProjectionData(tile.tileID, false, true);
         const uniformValues = terrainDepthUniformValues(terrain.getMeshFrameDelta(tr.zoom));
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
@@ -61,7 +61,7 @@ function drawCoords(painter: Painter, terrain: Terrain) {
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, coords.texture);
         const uniformValues = terrainCoordsUniformValues(255 - terrain.coordsIndex.length, terrain.getMeshFrameDelta(tr.zoom));
-        const projectionData = tr.getProjectionData(tile.tileID);
+        const projectionData = tr.getProjectionData(tile.tileID, false, true);
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
         terrain.coordsIndex.push(tile.tileID.key);
     }
@@ -87,7 +87,7 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
         const uniformValues = terrainUniformValues(terrain.getMeshFrameDelta(tr.zoom));
-        const projectionData = tr.getProjectionData(tile.tileID);
+        const projectionData = tr.getProjectionData(tile.tileID, false, true);
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
     }
 

@@ -588,7 +588,7 @@ export abstract class Transform {
      * @param overscaledTileID - The ID of the current tile.
      * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
      */
-    abstract getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean): ProjectionData;
+    abstract getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData;
 
     /**
      * @internal

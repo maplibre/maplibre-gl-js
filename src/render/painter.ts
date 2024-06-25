@@ -47,7 +47,6 @@ import {RenderToTexture} from './render_to_texture';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 import {ProjectionData} from './program/projection_program';
-import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';
 
@@ -563,7 +562,7 @@ export class Painter {
             return;
         }
         const prevMatrix = this.terrainFacilitator.matrix;
-        const currMatrix = (this.transform as MercatorTransform).projMatrix; // JP: TODO: remove this hack
+        const currMatrix = this.transform.projectionMatrix;
 
         // Update coords/depth-framebuffer on camera movement, or tile reloading
         let doUpdate = this.terrainFacilitator.dirty;

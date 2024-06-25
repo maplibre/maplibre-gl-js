@@ -205,7 +205,7 @@ export class GlobeTransform extends Transform {
         this._mercatorTransform.apply(this);
     }
 
-    public override get projectionMatrix(): mat4 { return this._globeProjMatrixNoCorrection; }
+    public override get projectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixNoCorrection : this._mercatorTransform.projectionMatrix; }
 
     public override get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
@@ -308,8 +308,8 @@ export class GlobeTransform extends Transform {
         return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
     }
 
-    override getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean): ProjectionData {
-        const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned);
+    override getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
+        const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix);
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this._globeRendering) {

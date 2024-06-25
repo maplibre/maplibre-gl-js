@@ -20,7 +20,7 @@ import {LngLatBounds} from '../lng_lat_bounds';
  * @param lnglat - The location to convert.
  * @returns Point
  */
-export function projectToWorldCoordinates(transform: {worldSize}, lnglat: LngLat) {
+export function projectToWorldCoordinates(transform: {worldSize}, lnglat: LngLat): Point {
     const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
     return new Point(
         mercatorXfromLng(lnglat.lng) * transform.worldSize,
@@ -688,9 +688,9 @@ export class MercatorTransform extends Transform {
         return false;
     }
 
-    override getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean): ProjectionData {
+    override getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
         const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned) : null;
-        return getBasicProjectionData(overscaledTileID, matrix);
+        return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
 
     override isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
@@ -806,7 +806,7 @@ export function translatePosition(
         inViewportPixelUnitsUnits ? translate[1] : pixelsToTileUnits(tile, translate[1], transform.zoom)];
 }
 
-export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4): ProjectionData {
+export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tilePosMatrix?: mat4, ignoreTerrainMatrix?: boolean): ProjectionData {
     let tileOffsetSize: [number, number, number, number];
 
     if (overscaledTileID) {
@@ -822,7 +822,7 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     let mainMatrix: mat4;
-    if (overscaledTileID.terrainRttPosMatrix) {
+    if (overscaledTileID.terrainRttPosMatrix && !ignoreTerrainMatrix) {
         mainMatrix = overscaledTileID.terrainRttPosMatrix;
     } else if (tilePosMatrix) {
         mainMatrix = tilePosMatrix;
