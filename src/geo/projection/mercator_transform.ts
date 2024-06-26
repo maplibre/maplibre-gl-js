@@ -827,7 +827,7 @@ export function getBasicProjectionData(overscaledTileID: OverscaledTileID, tileP
     }
 
     let mainMatrix: mat4;
-    if (overscaledTileID.terrainRttPosMatrix && !ignoreTerrainMatrix) {
+    if (overscaledTileID && overscaledTileID.terrainRttPosMatrix && !ignoreTerrainMatrix) {
         mainMatrix = overscaledTileID.terrainRttPosMatrix;
     } else if (tilePosMatrix) {
         mainMatrix = tilePosMatrix;

@@ -42,7 +42,9 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
 
     const sunPos = getSunPos(light, painter.transform);
 
-    const atmosphereBlend = sky.getAtmosphereBlend();
+    const projectionData = transform.getProjectionData(null);
+
+    const atmosphereBlend = sky.getAtmosphereBlend() * projectionData.u_projection_transition;
     if (atmosphereBlend === 0) {
         // Don't draw anything if atmosphere is fully transparent
         return;
