@@ -634,7 +634,7 @@ export abstract class Transform {
      * Signals to the transform that a new frame is starting.
      * The transform might update some of its internal variables and animations based on this.
      */
-    abstract updateProjection(): TransformUpdateResult;
+    abstract newFrameUpdate(): TransformUpdateResult;
 
     /**
      * @internal

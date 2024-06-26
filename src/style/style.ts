@@ -1610,9 +1610,6 @@ export class Style extends Evented {
     }
 
     _updatePlacement(transform: Transform, showCollisionBoxes: boolean, fadeDuration: number, crossSourceCollisions: boolean, forceFullPlacement: boolean = false) {
-
-        // This projection update should happen *before* placement update
-        this.projection.updateProjection(transform);
         let symbolBucketsChanged = false;
         let placementCommitted = false;
 

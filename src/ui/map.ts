@@ -3103,7 +3103,7 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
-        const transformUpdateResult = this.transform.updateProjection();
+        const transformUpdateResult = this.transform.newFrameUpdate();
         this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
 
         // Actually draw

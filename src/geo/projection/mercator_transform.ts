@@ -709,7 +709,7 @@ export class MercatorTransform extends Transform {
         return 1.0;
     }
 
-    override updateProjection(): TransformUpdateResult {
+    override newFrameUpdate(): TransformUpdateResult {
         return {
             forcePlacementUpdate: false
         };

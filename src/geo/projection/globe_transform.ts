@@ -168,7 +168,7 @@ export class GlobeTransform extends Transform {
     private _globeProjectionEnabled = true;
 
     /**
-     * Note: projection instance should only be accessed in the `updateProjection` function
+     * Note: projection instance should only be accessed in the {@link newFrameUpdate} function
      * to ensure the transform's state isn't unintentionally changed.
      */
     private _projectionInstance: GlobeProjection;
@@ -196,7 +196,7 @@ export class GlobeTransform extends Transform {
     override clone(): Transform {
         const clone = new GlobeTransform(null, this._globeProjectionEnabled);
         clone.apply(this);
-        this.updateProjection();
+        this.newFrameUpdate();
         return clone;
     }
 
@@ -251,9 +251,9 @@ export class GlobeTransform extends Transform {
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      * May change the transform's state - do not call on cloned transforms that should behave immutably!
      */
-    override updateProjection(): TransformUpdateResult {
+    override newFrameUpdate(): TransformUpdateResult {
         if (this._projectionInstance) {
-            // Note: the _globeRendering field is only updated when `updateProjection` is called.
+            // Note: the _globeRendering field is only updated inside this function.
             // This function should never be called on a cloned transform, thus ensuring that
             // the state of a cloned transform is never changed after creation.
             this._projectionInstance.useGlobeRendering = this._globeRendering;
