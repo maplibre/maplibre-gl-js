@@ -270,7 +270,6 @@ export class GlobeTransform extends Transform {
 
         if (this._initialized) {
             this._updateAnimation();
-            this._globeRendering = this._globeness > 0;
         }
 
         this._calcMatrices();
@@ -494,6 +493,8 @@ export class GlobeTransform extends Transform {
         if (!this._initialized) {
             return;
         }
+
+        this._globeRendering = this._globeness > 0;
 
         if (this._mercatorTransform) {
             this._mercatorTransform.apply(this);
