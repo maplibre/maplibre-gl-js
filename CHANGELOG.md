@@ -1,6 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
+- Add sky implementation according to spec ([#3645](https://github.com/maplibre/maplibre-gl-js/pull/3645))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
