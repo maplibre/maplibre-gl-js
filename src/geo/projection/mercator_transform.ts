@@ -67,6 +67,7 @@ export class MercatorTransform extends Transform {
     public override get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
     public override get cameraPosition(): vec3 { return this._cameraPosition; }
     public override get modelViewProjectionMatrix(): mat4 { return this._projMatrix; }
+    public override get useGlobeControls(): boolean { return false; }
 
     /**
      * Return any "wrapped" copies of a given tile coordinate that are visible

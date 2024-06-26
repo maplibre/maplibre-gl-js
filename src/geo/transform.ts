@@ -111,13 +111,20 @@ export abstract class Transform {
     }
 
     /**
+     * @internal
+     * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
+     * will assume the underlying map is a spherical surface, as opposed to a plane.
+     */
+    abstract get useGlobeControls(): boolean;
+
+    /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.
      * Center is considered to be in the middle of the viewport.
      */
-    public abstract get cameraToCenterDistance(): number;
-    abstract get modelViewProjectionMatrix(): mat4;
+    abstract get cameraToCenterDistance(): number;
 
+    abstract get modelViewProjectionMatrix(): mat4;
 
     get pixelsToClipSpaceMatrix(): mat4 { return this._pixelsToClipSpaceMatrix; }
     get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }

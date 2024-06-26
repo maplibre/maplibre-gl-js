@@ -241,6 +241,8 @@ export class GlobeTransform extends Transform {
         this._globeProjectionEnabled = allow;
     }
 
+    override get useGlobeControls(): boolean { return this._globeRendering; }
+
     override translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
@@ -261,7 +263,13 @@ export class GlobeTransform extends Transform {
             this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
         }
 
+        if (this._initialized) {
+            this._updateAnimation();
+            this._globeRendering = this._globeness > 0;
+        }
+
         this._calcMatrices();
+
         let forcePlacementUpdate = false;
         if (this._lastGlobeRenderingState !== this._globeRendering) {
             forcePlacementUpdate = true;
@@ -485,9 +493,6 @@ export class GlobeTransform extends Transform {
         if (this._mercatorTransform) {
             this._mercatorTransform.apply(this);
         }
-
-        this._updateAnimation();
-        this._globeRendering = this._globeness > 0;
 
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
 

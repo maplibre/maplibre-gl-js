@@ -37,9 +37,7 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
     const gl = context.gl;
     const program = painter.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
-
-    const projection = painter.style.projection;
-    const projectionData = projection.getProjectionData(null, null);
+    const transform = painter.transform;
 
     const sunPos = getSunPos(light, painter.transform);
 
@@ -76,5 +74,5 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
 
     const mesh = sky.atmosphereMesh;
 
-    program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, projectionData, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
+    program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }
