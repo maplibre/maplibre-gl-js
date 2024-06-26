@@ -344,8 +344,9 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
-        this.projection = createProjectionFromName(this.stylesheet.projection?.type || 'mercator');
-        this.map.migrateProjection(this.projection);
+        const projTransform = createProjectionFromName(this.stylesheet.projection?.type || 'mercator');
+        this.projection = projTransform.projection;
+        this.map.migrateProjection(projTransform.transform);
 
         this.sky = new Sky(this.stylesheet.sky);
 
@@ -1511,8 +1512,9 @@ export class Style extends Evented {
             delete this.projection;
         }
         this.stylesheet.projection = projection;
-        this.projection = createProjectionFromName(projection.type);
-        this.map.migrateProjection(this.projection);
+        const projTransform = createProjectionFromName(projection.type);
+        this.projection = projTransform.projection;
+        this.map.migrateProjection(projTransform.transform);
     }
 
     getSky(): SkySpecification {

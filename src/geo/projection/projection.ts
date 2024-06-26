@@ -4,7 +4,6 @@ import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import {Transform} from '../transform';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -83,12 +82,6 @@ export interface Projection {
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;
-
-    /**
-     * @internal
-     * Creates an instance of a subtype of the Transform base class specialized for this projection.
-     */
-    createTransformInstance(): Transform;
 
     /**
      * @internal

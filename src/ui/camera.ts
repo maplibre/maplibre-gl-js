@@ -14,7 +14,6 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
-import {Projection} from '../geo/projection/projection';
 import {angularCoordinatesToSurfaceVector, getZoomAdjustment, globeDistanceOfLocationsPixels} from '../geo/projection/globe_transform';
 import {mat4, vec3} from 'gl-matrix';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_transform';
@@ -341,8 +340,7 @@ export abstract class Camera extends Evented {
      * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
      * When the style's projection is changed (or first set), this function should be called.
      */
-    migrateProjection(newProjection: Projection) {
-        const newTransform = newProjection.createTransformInstance();
+    migrateProjection(newTransform: Transform) {
         newTransform.apply(this.transform);
         this.transform = newTransform;
     }

@@ -14,8 +14,6 @@ import type {Projection, ProjectionGPUContext} from './projection';
 import {PreparedShader, shaders} from '../../shaders/shaders';
 import {MercatorProjection} from './mercator';
 import {ProjectionErrorMeasurement} from './globe_projection_error_measurement';
-import {Transform} from '../transform';
-import {GlobeTransform} from './globe_transform';
 
 const EXTENT_STENCIL_BORDER = EXTENT / 128;
 
@@ -135,10 +133,6 @@ export class GlobeProjection implements Projection {
         if (this._errorMeasurement) {
             this._errorMeasurement.destroy();
         }
-    }
-
-    public createTransformInstance(): Transform {
-        return new GlobeTransform(this);
     }
 
     public isRenderingDirty(): boolean {
