@@ -207,7 +207,10 @@ export class GlobeTransform extends Transform {
     }
 
     public override get modelViewProjectionMatrix(): mat4 { return this._globeRendering ? this._globeViewProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
+
     public override get inverseProjectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixInverted : this._mercatorTransform.inverseProjectionMatrix; }
+
+    public override get useGlobeControls(): boolean { return this._globeRendering; }
 
     public override get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
@@ -216,6 +219,11 @@ export class GlobeTransform extends Transform {
         copy[1] = this._cameraPosition[1];
         copy[2] = this._cameraPosition[2];
         return copy;
+    }
+
+    override get cameraToCenterDistance(): number {
+        // Globe uses the same cameraToCenterDistance as mercator.
+        return this._mercatorTransform.cameraToCenterDistance;
     }
 
     /**
@@ -245,8 +253,6 @@ export class GlobeTransform extends Transform {
             this._lastGlobeChangeTime = browser.now();
         }
     }
-
-    override get useGlobeControls(): boolean { return this._globeRendering; }
 
     override translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
@@ -292,6 +298,9 @@ export class GlobeTransform extends Transform {
             this._lastGlobeChangeTime = currentTime;
             this._lastGlobeStateEnabled = globeState;
         }
+
+        const oldGlobeness = this._globeness;
+
         // Transition parameter, where 0 is the start and 1 is end.
         const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeConstants.globeTransitionTimeSeconds, 0.0), 1.0);
         this._globeness = globeState ? globeTransition : (1.0 - globeTransition);
@@ -312,6 +321,14 @@ export class GlobeTransform extends Transform {
         const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
         this._globeness = Math.min(this._globeness, zoomGlobenessBound);
         this._globeness = easeCubicInOut(this._globeness); // Smooth animation
+
+        if (oldGlobeness !== this._globeness) {
+            this.center = new LngLat(
+                this._mercatorTransform.center.lng + differenceOfAnglesDegrees(this._mercatorTransform.center.lng, this.center.lng) * this._globeness,
+                lerp(this._mercatorTransform.center.lat, this.center.lat, this._globeness)
+            );
+            this.zoom = lerp(this._mercatorTransform.zoom, this.zoom, this._globeness);
+        }
     }
 
     override isRenderingDirty(): boolean {
@@ -441,17 +458,16 @@ export class GlobeTransform extends Transform {
         return normalized;
     }
 
+    private getAnimatedLatitude() {
+        return lerp(this._mercatorTransform.center.lat, this._center.lat, this._globeness);
+    }
+
     public getPixelScale(): number {
-        const globePixelScale = 1.0 / Math.cos(this._center.lat * Math.PI / 180);
-        const flatPixelScale = 1.0;
-        if (this._globeRendering) {
-            return lerp(flatPixelScale, globePixelScale, this._globeness);
-        }
-        return flatPixelScale;
+        return 1.0 / Math.cos(this.getAnimatedLatitude() * Math.PI / 180);
     }
 
     public getCircleRadiusCorrection(): number {
-        return Math.cos(this._center.lat * Math.PI / 180);
+        return Math.cos(this.getAnimatedLatitude() * Math.PI / 180);
     }
 
     public getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number {
@@ -497,7 +513,7 @@ export class GlobeTransform extends Transform {
         this._globeRendering = this._globeness > 0;
 
         if (this._mercatorTransform) {
-            this._mercatorTransform.apply(this);
+            this._mercatorTransform.apply(this, true);
         }
 
         const globeRadiusPixels = getGlobeRadiusPixels(this.worldSize, this.center.lat);
@@ -562,6 +578,7 @@ export class GlobeTransform extends Transform {
         this._mercatorTransform.recalculateZoom(terrain);
         this.apply(this._mercatorTransform);
     }
+
     override customLayerMatrix(): mat4 {
         // Globe: TODO
         return this._mercatorTransform.customLayerMatrix();
@@ -668,11 +685,6 @@ export class GlobeTransform extends Transform {
         }
 
         return new LngLatBounds(boundsArray);
-    }
-
-    override get cameraToCenterDistance(): number {
-        // Globe uses the same cameraToCenterDistance as mercator.
-        return this._mercatorTransform.cameraToCenterDistance;
     }
 
     override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {

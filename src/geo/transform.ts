@@ -93,7 +93,7 @@ export abstract class Transform {
 
     abstract clone(): Transform;
 
-    public apply(that: Transform): void {
+    public apply(that: Transform, constrain: boolean = false): void {
         this._tileSize = that._tileSize;
         this._latRange = that._latRange;
         this._width = that._width;
@@ -107,6 +107,9 @@ export abstract class Transform {
         this._pitch = that._pitch;
         this._unmodified = that._unmodified;
         this._edgeInsets = that._edgeInsets.clone();
+        if (constrain) {
+            this._constrain();
+        }
         this._calcMatrices();
     }
 
@@ -553,9 +556,10 @@ export abstract class Transform {
     abstract lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
 
     /**
+     * @internal
      * Snaps the transform's center, zoom, etc. into the valid range.
      */
-    protected _constrain(): void {
+    private _constrain(): void {
         if (!this.center || !this._width || !this._height || this._constraining) return;
         this._constraining = true;
         const unmodified = this._unmodified;
