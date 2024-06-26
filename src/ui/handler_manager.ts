@@ -512,7 +512,7 @@ export class HandlerManager {
             around = tr.centerPoint;
         }
 
-        if (this._map.projection.useGlobeControls) {
+        if (this._map.transform.useGlobeControls) {
             // Globe map controls
             const zoomPixel = around;
             const zoomLoc = tr.pointLocation(zoomPixel);

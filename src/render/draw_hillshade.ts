@@ -17,7 +17,7 @@ export function drawHillshade(painter: Painter, sourceCache: SourceCache, layer:
     if (painter.renderPass !== 'offscreen' && painter.renderPass !== 'translucent') return;
 
     const context = painter.context;
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const useSubdivision = projection.useSubdivision;
 
     const depthMode = painter.depthModeForSublayer(0, DepthMode.ReadOnly);
@@ -53,7 +53,7 @@ function renderHillshade(
     colorMode: Readonly<ColorMode>,
     useBorder: boolean
 ) {
-    const projection = painter.style.map.projection;
+    const projection = painter.style.projection;
     const context = painter.context;
     const transform = painter.transform;
     const gl = context.gl;
