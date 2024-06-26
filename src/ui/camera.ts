@@ -265,7 +265,6 @@ export abstract class Camera extends Evented {
     transform: Transform;
     terrain: Terrain;
     handlers: HandlerManager;
-    projection: Projection;
 
     _moving: boolean;
     _zooming: boolean;
@@ -322,19 +321,30 @@ export abstract class Camera extends Evented {
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
 
-    constructor(transform: Transform, projection: Projection, options: {
+    constructor(transform: Transform, options: {
         bearingSnap: number;
     }) {
         super();
         this._moving = false;
         this._zooming = false;
         this.transform = transform;
-        this.projection = projection;
         this._bearingSnap = options.bearingSnap;
 
         this.on('moveend', () => {
             delete this._requestedCameraState;
         });
+    }
+
+    /**
+     * @internal
+     * Creates a new specialized transform instance from a projection instance and migrates
+     * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
+     * When the style's projection is changed (or first set), this function should be called.
+     */
+    migrateProjection(newProjection: Projection) {
+        const newTransform = newProjection.createTransformInstance();
+        newTransform.apply(this.transform);
+        this.transform = newTransform;
     }
 
     /**
@@ -774,7 +784,7 @@ export abstract class Camera extends Evented {
         };
 
         // If globe is enabled, we use the parameters computed for mercator, and just update the zoom to fit the bounds.
-        if (this.projection.useGlobeControls) {
+        if (this.transform.useGlobeControls) {
             const xLeft = (options.padding.left) / tr.width * 2.0 - 1.0;
             const xRight = (tr.width - options.padding.right) / tr.width * 2.0 - 1.0;
             const yTop = (options.padding.top) / tr.height * -2.0 + 1.0;
@@ -811,7 +821,7 @@ export abstract class Camera extends Evented {
             ];
             const vecToCenter = angularCoordinatesToSurfaceVector(result.center);
 
-            const matrix = clonedTr.projectionMatrix;
+            const matrix = clonedTr.modelViewProjectionMatrix;
             let smallestNeededScale = Number.POSITIVE_INFINITY;
 
             for (const vec of testVectors) {
@@ -950,7 +960,7 @@ export abstract class Camera extends Evented {
         const optionsApparentZoom = typeof options.apparentZoom === 'number';
 
         // Special zoom & center handling for globe
-        if (this.projection.useGlobeControls) {
+        if (this.transform.useGlobeControls) {
             // Globe constrain's center isn't dependent on zoom level
             const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
             let targetZoom;
@@ -1116,7 +1126,7 @@ export abstract class Camera extends Evented {
         this._pitching = this._pitching || (pitch !== startPitch);
         this._padding = !tr.isPaddingEqual(padding as PaddingOptions);
 
-        if (this.projection.useGlobeControls) {
+        if (this.transform.useGlobeControls) {
             // Globe needs special handling for how zoom should be animated.
             // 1) if zoom is set, ease to the given mercator zoom
             // 2) if apparentZoom is set, ease to the given apparent zoom
@@ -1484,7 +1494,7 @@ export abstract class Camera extends Evented {
 
         let targetCenter, targetZoom;
 
-        if (this.projection.useGlobeControls) {
+        if (this.transform.useGlobeControls) {
             const optionsZoom = typeof options.zoom === 'number';
             const optionsApparentZoom = typeof options.apparentZoom === 'number';
 
@@ -1525,7 +1535,7 @@ export abstract class Camera extends Evented {
 
         const normalizedStartZoom = startZoom + getZoomAdjustment(tr, startCenter.lat, 0);
         const normalizedTargetZoom = targetZoom + getZoomAdjustment(tr, targetCenter.lat, 0);
-        const scale = this.projection.useGlobeControls ? tr.zoomScale(normalizedTargetZoom - normalizedStartZoom) : tr.zoomScale(targetZoom - startZoom);
+        const scale = this.transform.useGlobeControls ? tr.zoomScale(normalizedTargetZoom - normalizedStartZoom) : tr.zoomScale(targetZoom - startZoom);
 
         const from = projectToWorldCoordinates(tr, locationAtOffset);
         const delta = projectToWorldCoordinates(tr, targetCenter).sub(from);
@@ -1538,7 +1548,7 @@ export abstract class Camera extends Evented {
         const w1 = w0 / scale;
         // Length of the flight path as projected onto the ground plane, measured in pixels from
         // the world image origin at the initial scale.
-        const u1 = this.projection.useGlobeControls ?
+        const u1 = this.transform.useGlobeControls ?
             globeDistanceOfLocationsPixels(tr, startCenter, targetCenter) :
             delta.mag();
 
@@ -1549,7 +1559,7 @@ export abstract class Camera extends Evented {
             // w<sub>m</sub>: Maximum visible span, measured in pixels with respect to the initial
             // scale.
             let wMax;
-            if (this.projection.useGlobeControls) {
+            if (this.transform.useGlobeControls) {
                 let normalizedOptionsMinZoom;
                 if (optionsApparentMinZoom) {
                     normalizedOptionsMinZoom = +options.apparentMinZoom + startZoom + getZoomAdjustment(tr, startCenter.lat, 0);
@@ -1641,7 +1651,7 @@ export abstract class Camera extends Evented {
         this._prepareEase(eventData, false);
         if (this.terrain) this._prepareElevation(targetCenter);
 
-        if (this.projection.useGlobeControls) {
+        if (this.transform.useGlobeControls) {
             const deltaLng = differenceOfAnglesDegrees(startCenter.lng, targetCenter.lng);
             const deltaLat = differenceOfAnglesDegrees(startCenter.lat, targetCenter.lat);
 

@@ -8,6 +8,8 @@ import {PosArray, TriangleIndexArray} from '../../data/array_types.g';
 import {SegmentVector} from '../../data/segment';
 import posAttributes from '../../data/pos_attributes';
 import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {MercatorTransform} from './mercator_transform';
+import {Transform} from '../transform';
 
 export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
@@ -15,7 +17,7 @@ export const MercatorShaderVariantKey = 'mercator';
 export class MercatorProjection implements Projection {
     private _cachedMesh: Mesh = null;
 
-    get projectionName(): string {
+    get name(): string {
         return 'mercator';
     }
 
@@ -48,13 +50,17 @@ export class MercatorProjection implements Projection {
         return false;
     }
 
+    public destroy(): void {
+        // Do nothing.
+    }
+
+    public createTransformInstance(): Transform {
+        return new MercatorTransform();
+    }
+
     public isRenderingDirty(): boolean {
         // Mercator projection does no animations of its own, so rendering is never dirty from its perspective.
         return false;
-    }
-
-    public destroy(): void {
-        // Do nothing.
     }
 
     public updateGPUdependent(_: ProjectionGPUContext): void {

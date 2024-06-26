@@ -4,6 +4,7 @@ import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {Transform} from '../transform';
 
 /**
  * Custom projections are handled both by a class which implements this `Projection` interface,
@@ -34,7 +35,7 @@ export interface Projection {
      * @internal
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
      */
-    get projectionName(): string;
+    get name(): string;
 
     /**
      * @internal
@@ -70,21 +71,6 @@ export interface Projection {
     get vertexShaderPreludeCode(): string;
 
     /**
-     * World center in camera frame.
-     */
-    get worldCenterPosition(): vec3;
-
-    /**
-     * World size in pixel.
-     */
-    get worldSize(): number;
-
-    /**
-     * Inverse projection matrix from camera to clip plane.
-     */
-    get invProjMatrix(): mat4;
-
-    /**
      * @internal
      * An object describing how much subdivision should be applied to rendered geometry.
      * The subdivision settings should be a constant for a given projection.
@@ -94,16 +80,15 @@ export interface Projection {
 
     /**
      * @internal
-     * When true, any transforms resulting from user interactions with the map (panning, zooming, etc.)
-     * will assume the underlying map is a spherical surface, as opposed to a plane.
-     */
-    get useGlobeControls(): boolean;
-
-    /**
-     * @internal
      * Cleans up any resources the projection created, especially GPU buffers.
      */
     destroy(): void;
+
+    /**
+     * @internal
+     * Creates an instance of a subtype of the Transform base class specialized for this projection.
+     */
+    createTransformInstance(): Transform;
 
     /**
      * @internal

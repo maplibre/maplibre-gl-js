@@ -59,6 +59,7 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 const version = packageJSON.version;
 
@@ -331,13 +332,6 @@ export type MapOptions = {
      * @defaultValue true
      */
     cancelPendingTileRequestsWhileZooming?: boolean;
-    /**
-     * Map projection to use. Options are:
-     * - 'mercator' - The default, a classical flat Web Mercator map.
-     * - 'globe' - A 3D spherical view of the planet when zoomed out, transitioning seamlessly to Web Mercator at high zoom levels.
-     * @defaultValue 'mercator'
-     */
-    projection?: ProjectionName;
 };
 
 export type AddImageOptions = {
@@ -579,7 +573,10 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const {projection, transform} = createProjectionFromName(resolvedOptions.projection);
+        // For now we will use a temporary MercatorTransform instance.
+        // Transform specialization will later be set by style when it creates its projection instance.
+        // When this happens, the new transform will inherit all properties of this temporary transform.
+        const transform = new MercatorTransform();
         if (resolvedOptions.minZoom !== undefined) {
             transform.minZoom = resolvedOptions.minZoom;
         }
@@ -596,7 +593,7 @@ export class Map extends Camera {
             transform.renderWorldCopies = resolvedOptions.renderWorldCopies;
         }
 
-        super(transform, projection, {bearingSnap: resolvedOptions.bearingSnap});
+        super(transform, {bearingSnap: resolvedOptions.bearingSnap});
 
         this._interactive = resolvedOptions.interactive;
         this._maxTileCacheSize = resolvedOptions.maxTileCacheSize;
@@ -3141,7 +3138,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.projection.isRenderingDirty() || this.transform.isRenderingDirty();
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.style.projection.isRenderingDirty() || this.transform.isRenderingDirty();
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

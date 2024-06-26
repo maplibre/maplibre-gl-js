@@ -345,6 +345,7 @@ export class Style extends Evented {
 
         this.light = new Light(this.stylesheet.light);
         this.projection = createProjectionFromName(this.stylesheet.projection?.type || 'mercator');
+        this.map.migrateProjection(this.projection);
 
         this.sky = new Sky(this.stylesheet.sky);
 
@@ -1511,6 +1512,7 @@ export class Style extends Evented {
         }
         this.stylesheet.projection = projection;
         this.projection = createProjectionFromName(projection.type);
+        this.map.migrateProjection(this.projection);
     }
 
     getSky(): SkySpecification {
@@ -1640,7 +1642,7 @@ export class Style extends Evented {
         forceFullPlacement = forceFullPlacement || this._layerOrderChanged || fadeDuration === 0;
 
         if (forceFullPlacement || !this.pauseablePlacement || (this.pauseablePlacement.isDone() && !this.placement.stillRecent(browser.now(), transform.zoom))) {
-            this.pauseablePlacement = new PauseablePlacement(transform, this.projection, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
+            this.pauseablePlacement = new PauseablePlacement(transform, this.map.terrain, this._order, forceFullPlacement, showCollisionBoxes, fadeDuration, crossSourceCollisions, this.placement);
             this._layerOrderChanged = false;
         }
 
@@ -1708,14 +1710,14 @@ export class Style extends Evented {
     }
 
     async getGlyphs(mapId: string | number, params: GetGlyphsParamerters): Promise<GetGlyphsResponse> {
-        const glypgs = await this.glyphManager.getGlyphs(params.stacks);
+        const glyphs = await this.glyphManager.getGlyphs(params.stacks);
         const sourceCache = this.sourceCaches[params.source];
         if (sourceCache) {
             // we are not setting stacks as dependencies since for now
             // we just need to know which tiles have glyph dependencies
             sourceCache.setDependencies(params.tileID.key, params.type, ['']);
         }
-        return glypgs;
+        return glyphs;
     }
 
     getGlyphsUrl() {
