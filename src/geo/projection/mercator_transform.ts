@@ -41,13 +41,13 @@ export class MercatorTransform extends Transform {
     private _cameraToCenterDistance: number;
     private _cameraPosition: vec3;
 
-    mercatorMatrix: mat4;
-    projMatrix: mat4;
-    invProjMatrix: mat4;
-    alignedProjMatrix: mat4;
-    pixelMatrix: mat4;
-    pixelMatrix3D: mat4;
-    pixelMatrixInverse: mat4;
+    private _mercatorMatrix: mat4;
+    private _projMatrix: mat4;
+    private _invProjMatrix: mat4;
+    private _alignedProjMatrix: mat4;
+    private _pixelMatrix: mat4;
+    private _pixelMatrix3D: mat4;
+    private _pixelMatrixInverse: mat4;
 
     private _posMatrixCache: {[_: string]: mat4};
     private _alignedPosMatrixCache: {[_: string]: mat4};
@@ -66,7 +66,7 @@ export class MercatorTransform extends Transform {
 
     public override get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
     public override get cameraPosition(): vec3 { return this._cameraPosition; }
-    public override get projectionMatrix(): mat4 { return this.projMatrix; }
+    public override get modelViewProjectionMatrix(): mat4 { return this._projMatrix; }
 
     /**
      * Return any "wrapped" copies of a given tile coordinate that are visible
@@ -123,7 +123,7 @@ export class MercatorTransform extends Transform {
         const numTiles = Math.pow(2, z);
         const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(this.invProjMatrix, this.worldSize, z);
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this._invProjMatrix, this.worldSize, z);
 
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
@@ -289,7 +289,7 @@ export class MercatorTransform extends Transform {
      */
     override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return terrain ?
-            this.coordinatePoint(this.locationCoordinate(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._tileZoom), this.pixelMatrix3D) :
+            this.coordinatePoint(this.locationCoordinate(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._tileZoom), this._pixelMatrix3D) :
             this.coordinatePoint(this.locationCoordinate(lnglat));
     }
 
@@ -346,8 +346,8 @@ export class MercatorTransform extends Transform {
         const coord0 = [p.x, p.y, 0, 1] as vec4;
         const coord1 = [p.x, p.y, 1, 1] as vec4;
 
-        vec4.transformMat4(coord0, coord0, this.pixelMatrixInverse);
-        vec4.transformMat4(coord1, coord1, this.pixelMatrixInverse);
+        vec4.transformMat4(coord0, coord0, this._pixelMatrixInverse);
+        vec4.transformMat4(coord1, coord1, this._pixelMatrixInverse);
 
         const w0 = coord0[3];
         const w1 = coord1[3];
@@ -372,7 +372,7 @@ export class MercatorTransform extends Transform {
      * @param pixelMatrix - the pixel matrix
      * @returns screen point
      */
-    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this.pixelMatrix): Point {
+    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this._pixelMatrix): Point {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
@@ -424,14 +424,14 @@ export class MercatorTransform extends Transform {
         const posMatrix = mat4.identity(new Float64Array(16) as any);
         mat4.translate(posMatrix, posMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
         mat4.scale(posMatrix, posMatrix, [scale / EXTENT, scale / EXTENT, 1]);
-        mat4.multiply(posMatrix, aligned ? this.alignedProjMatrix : this.projMatrix, posMatrix);
+        mat4.multiply(posMatrix, aligned ? this._alignedProjMatrix : this._projMatrix, posMatrix);
 
         cache[posMatrixKey] = new Float32Array(posMatrix);
         return cache[posMatrixKey];
     }
 
     override customLayerMatrix(): mat4 {
-        return this.mercatorMatrix.slice() as any;
+        return this._mercatorMatrix.slice() as any;
     }
 
     /**
@@ -595,21 +595,21 @@ export class MercatorTransform extends Transform {
 
         // The mercatorMatrix can be used to transform points from mercator coordinates
         // ([0, 0] nw, [1, 1] se) to clip space.
-        this.mercatorMatrix = mat4.scale([] as any, m, [this.worldSize, this.worldSize, this.worldSize]);
+        this._mercatorMatrix = mat4.scale([] as any, m, [this.worldSize, this.worldSize, this.worldSize]);
 
         // scale vertically to meters per pixel (inverse of ground resolution):
         mat4.scale(m, m, [1, 1, this._pixelPerMeter]);
 
         // matrix for conversion from world space to screen coordinates in 2D
-        this.pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
+        this._pixelMatrix = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
 
         // matrix for conversion from world space to clip space (-1 .. 1)
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
-        this.projMatrix = m;
-        this.invProjMatrix = mat4.invert([] as any, m);
+        this._projMatrix = m;
+        this._invProjMatrix = mat4.invert([] as any, m);
 
         const cameraPos: vec4 = [0, 0, -1, 1];
-        vec4.transformMat4(cameraPos, cameraPos, this.invProjMatrix);
+        vec4.transformMat4(cameraPos, cameraPos, this._invProjMatrix);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
@@ -617,7 +617,7 @@ export class MercatorTransform extends Transform {
         ];
 
         // matrix for conversion from world space to screen coordinates in 3D
-        this.pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
+        this._pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
 
         // Make a second projection matrix that is aligned to a pixel grid for rendering raster tiles.
         // We're rounding the (floating point) x/y values to achieve to avoid rendering raster images to fractional
@@ -631,12 +631,12 @@ export class MercatorTransform extends Transform {
             dy = y - Math.round(y) + angleCos * yShift + angleSin * xShift;
         const alignedM = new Float64Array(m) as any as mat4;
         mat4.translate(alignedM, alignedM, [dx > 0.5 ? dx - 1 : dx, dy > 0.5 ? dy - 1 : dy, 0]);
-        this.alignedProjMatrix = alignedM;
+        this._alignedProjMatrix = alignedM;
 
         // inverse matrix for conversion from screen coordinates to location
-        m = mat4.invert(new Float64Array(16) as any, this.pixelMatrix);
+        m = mat4.invert(new Float64Array(16) as any, this._pixelMatrix);
         if (!m) throw new Error('failed to invert matrix');
-        this.pixelMatrixInverse = m;
+        this._pixelMatrixInverse = m;
 
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
@@ -644,11 +644,11 @@ export class MercatorTransform extends Transform {
 
     override maxPitchScaleFactor(): number {
         // calcMatrices hasn't run yet
-        if (!this.pixelMatrixInverse) return 1;
+        if (!this._pixelMatrixInverse) return 1;
 
         const coord = this.pointCoordinate(new Point(0, 0));
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, 0, 1] as vec4;
-        const topPoint = vec4.transformMat4(p, p, this.pixelMatrix);
+        const topPoint = vec4.transformMat4(p, p, this._pixelMatrix);
         return topPoint[3] / this._cameraToCenterDistance;
     }
 
@@ -680,7 +680,7 @@ export class MercatorTransform extends Transform {
     override lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
         const coord = this.locationCoordinate(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, this.projMatrix);
+        vec4.transformMat4(p, p, this._projMatrix);
         return (p[2] / p[3]);
     }
 

@@ -205,7 +205,7 @@ export class GlobeTransform extends Transform {
         this._mercatorTransform.apply(this);
     }
 
-    public override get projectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixNoCorrection : this._mercatorTransform.projectionMatrix; }
+    public override get modelViewProjectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
 
     public override get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.

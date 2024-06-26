@@ -116,8 +116,8 @@ export abstract class Transform {
      * Center is considered to be in the middle of the viewport.
      */
     public abstract get cameraToCenterDistance(): number;
+    abstract get modelViewProjectionMatrix(): mat4;
 
-    abstract get projectionMatrix(): mat4;
 
     get pixelsToClipSpaceMatrix(): mat4 { return this._pixelsToClipSpaceMatrix; }
     get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
