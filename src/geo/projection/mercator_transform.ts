@@ -42,7 +42,8 @@ export class MercatorTransform extends Transform {
     private _cameraPosition: vec3;
 
     private _mercatorMatrix: mat4;
-    private _projMatrix: mat4;
+    private _viewProjMatrix: mat4;
+    private _invViewProjMatrix: mat4;
     private _invProjMatrix: mat4;
     private _alignedProjMatrix: mat4;
     private _pixelMatrix: mat4;
@@ -66,7 +67,8 @@ export class MercatorTransform extends Transform {
 
     public override get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
     public override get cameraPosition(): vec3 { return this._cameraPosition; }
-    public override get modelViewProjectionMatrix(): mat4 { return this._projMatrix; }
+    public override get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
+    public override get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
     public override get useGlobeControls(): boolean { return false; }
 
     /**
@@ -124,7 +126,7 @@ export class MercatorTransform extends Transform {
         const numTiles = Math.pow(2, z);
         const cameraPoint = [numTiles * cameraCoord.x, numTiles * cameraCoord.y, 0];
         const centerPoint = [numTiles * centerCoord.x, numTiles * centerCoord.y, 0];
-        const cameraFrustum = Frustum.fromInvProjectionMatrix(this._invProjMatrix, this.worldSize, z);
+        const cameraFrustum = Frustum.fromInvProjectionMatrix(this._invViewProjMatrix, this.worldSize, z);
 
         // No change of LOD behavior for pitch lower than 60 and when there is no top padding: return only tile ids from the requested zoom level
         let minZoom = options.minzoom || 0;
@@ -425,7 +427,7 @@ export class MercatorTransform extends Transform {
         const posMatrix = mat4.identity(new Float64Array(16) as any);
         mat4.translate(posMatrix, posMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
         mat4.scale(posMatrix, posMatrix, [scale / EXTENT, scale / EXTENT, 1]);
-        mat4.multiply(posMatrix, aligned ? this._alignedProjMatrix : this._projMatrix, posMatrix);
+        mat4.multiply(posMatrix, aligned ? this._alignedProjMatrix : this._viewProjMatrix, posMatrix);
 
         cache[posMatrixKey] = new Float32Array(posMatrix);
         return cache[posMatrixKey];
@@ -583,6 +585,8 @@ export class MercatorTransform extends Transform {
         let m: mat4;
         m = new Float64Array(16) as any;
         mat4.perspective(m, this._fov, this._width / this._height, nearZ, farZ);
+        this._invProjMatrix = new Float64Array(16) as any as mat4;
+        mat4.invert(this._invProjMatrix, m);
 
         // Apply center of perspective offset
         m[8] = -offset.x * 2 / this._width;
@@ -606,11 +610,11 @@ export class MercatorTransform extends Transform {
 
         // matrix for conversion from world space to clip space (-1 .. 1)
         mat4.translate(m, m, [0, 0, -this.elevation]); // elevate camera over terrain
-        this._projMatrix = m;
-        this._invProjMatrix = mat4.invert([] as any, m);
+        this._viewProjMatrix = m;
+        this._invViewProjMatrix = mat4.invert([] as any, m);
 
         const cameraPos: vec4 = [0, 0, -1, 1];
-        vec4.transformMat4(cameraPos, cameraPos, this._invProjMatrix);
+        vec4.transformMat4(cameraPos, cameraPos, this._invViewProjMatrix);
         this._cameraPosition = [
             cameraPos[0] / cameraPos[3],
             cameraPos[1] / cameraPos[3],
@@ -681,7 +685,7 @@ export class MercatorTransform extends Transform {
     override lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
         const coord = this.locationCoordinate(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
-        vec4.transformMat4(p, p, this._projMatrix);
+        vec4.transformMat4(p, p, this._viewProjMatrix);
         return (p[2] / p[3]);
     }
 

@@ -126,6 +126,11 @@ export abstract class Transform {
 
     abstract get modelViewProjectionMatrix(): mat4;
 
+    /**
+     * Inverse of matrix from camera space to clip space.
+     */
+    abstract get inverseProjectionMatrix(): mat4;
+
     get pixelsToClipSpaceMatrix(): mat4 { return this._pixelsToClipSpaceMatrix; }
     get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
 

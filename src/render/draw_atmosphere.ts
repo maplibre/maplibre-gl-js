@@ -12,7 +12,8 @@ import {atmosphereAttributes} from '../data/atmosphere_attributes';
 import {Mesh} from './mesh';
 import {SegmentVector} from '../data/segment';
 import {Transform} from '../geo/transform';
-import {mat4, vec3} from 'gl-matrix';
+import {mat4, vec3, vec4} from 'gl-matrix';
+import {getGlobeRadiusPixels} from '../geo/projection/globe_transform';
 
 function getSunPos(light: Light, transform: Transform): vec3 {
     const _lp = light.properties.get('position');
@@ -43,13 +44,25 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
 
     const atmosphereBlend = sky.getAtmosphereBlend();
     if (atmosphereBlend === 0) {
-        // Don't draw anythink if atmosphere is fully transparent
+        // Don't draw anything if atmosphere is fully transparent
         return;
     }
 
-    const globePosition = projection.worldCenterPosition;
-    const globeRadius = projection.worldSize;
-    const invProjMatrix = projection.invProjMatrix;
+    const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+    const invProjMatrix = transform.inverseProjectionMatrix;
+    const vec = new Float64Array(4) as any as vec4;
+    vec[3] = 1;
+    vec4.transformMat4(vec, vec, transform.modelViewProjectionMatrix);
+    vec[0] /= vec[3];
+    vec[1] /= vec[3];
+    vec[2] /= vec[3];
+    vec[3] = 1;
+    vec4.transformMat4(vec, vec, invProjMatrix);
+    vec[0] /= vec[3];
+    vec[1] /= vec[3];
+    vec[2] /= vec[3];
+    vec[3] = 1;
+    const globePosition = [vec[0], vec[1], vec[2]] as vec3;
 
     const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, invProjMatrix);
 

@@ -158,9 +158,10 @@ export class GlobeTransform extends Transform {
 
     private _skipNextAnimation: boolean = true;
 
-    private _globeProjMatrix: mat4 = createIdentityMat4();
-    private _globeProjMatrixNoCorrection: mat4 = createIdentityMat4();
-    private _globeProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4();
+    private _globeViewProjMatrix: mat4 = createIdentityMat4();
+    private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4();
+    private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4();
+    private _globeProjMatrixInverted: mat4 = createIdentityMat4();
 
     private _cameraPosition: vec3 = createVec3();
 
@@ -205,7 +206,8 @@ export class GlobeTransform extends Transform {
         this._mercatorTransform.apply(this);
     }
 
-    public override get modelViewProjectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
+    public override get modelViewProjectionMatrix(): mat4 { return this._globeRendering ? this._globeViewProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
+    public override get inverseProjectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixInverted : this._mercatorTransform.inverseProjectionMatrix; }
 
     public override get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
@@ -321,7 +323,7 @@ export class GlobeTransform extends Transform {
 
         // Set 'u_projection_matrix' to actual globe transform
         if (this._globeRendering) {
-            data['u_projection_matrix'] = this._globeProjMatrix;
+            data['u_projection_matrix'] = this._globeViewProjMatrix;
         }
 
         data['u_projection_clipping_plane'] = this._cachedClippingPlane as [number, number, number, number];
@@ -468,7 +470,7 @@ export class GlobeTransform extends Transform {
         const elevation = getElevation ? getElevation(x, y) : 0.0;
         const vectorMultiplier = 1.0 + elevation / earthRadius;
         const pos: vec4 = [spherePos[0] * vectorMultiplier, spherePos[1] * vectorMultiplier, spherePos[2] * vectorMultiplier, 1];
-        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrection);
+        vec4.transformMat4(pos, pos, this._globeViewProjMatrixNoCorrection);
 
         // Also check whether the point projects to the backfacing side of the sphere.
         const plane = this._cachedClippingPlane;
@@ -500,6 +502,8 @@ export class GlobeTransform extends Transform {
         const globeMatrix = createMat4();
         const globeMatrixUncorrected = createMat4();
         mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, 0.5, this.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        this._globeProjMatrixInverted = createMat4();
+        mat4.invert(this._globeProjMatrixInverted, globeMatrix);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
         mat4.rotateX(globeMatrix, globeMatrix, -this.pitch * Math.PI / 180);
         mat4.rotateZ(globeMatrix, globeMatrix, -this.angle);
@@ -515,15 +519,15 @@ export class GlobeTransform extends Transform {
         mat4.rotateX(globeMatrixUncorrected, globeMatrix, this.center.lat * Math.PI / 180.0);
         mat4.rotateY(globeMatrixUncorrected, globeMatrixUncorrected, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrixUncorrected, globeMatrixUncorrected, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
-        this._globeProjMatrixNoCorrection = globeMatrixUncorrected;
+        this._globeViewProjMatrixNoCorrection = globeMatrixUncorrected;
 
         mat4.rotateX(globeMatrix, globeMatrix, this.center.lat * Math.PI / 180.0 - this._globeLatitudeErrorCorrectionRadians);
         mat4.rotateY(globeMatrix, globeMatrix, -this.center.lng * Math.PI / 180.0);
         mat4.scale(globeMatrix, globeMatrix, scaleVec); // Scale the unit sphere to a sphere with diameter of 1
-        this._globeProjMatrix = globeMatrix;
+        this._globeViewProjMatrix = globeMatrix;
 
-        this._globeProjMatrixNoCorrectionInverted = createMat4();
-        mat4.invert(this._globeProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
+        this._globeViewProjMatrixNoCorrectionInverted = createMat4();
+        mat4.invert(this._globeViewProjMatrixNoCorrectionInverted, globeMatrixUncorrected);
 
         const zero = createVec3();
         this._cameraPosition = createVec3();
@@ -572,13 +576,13 @@ export class GlobeTransform extends Transform {
         if (!this._globeRendering) {
             return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
         }
-        if (!this._globeProjMatrixNoCorrection) {
+        if (!this._globeViewProjMatrixNoCorrection) {
             return 1.0; // _calcMatrices hasn't run yet
         }
         const vec = angularCoordinatesToSurfaceVector(lngLat);
         vec3.scale(vec, vec, (1.0 + elevation / earthRadius));
         const result = createVec4();
-        vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeProjMatrixNoCorrection);
+        vec4.transformMat4(result, [vec[0], vec[1], vec[2], 1], this._globeViewProjMatrixNoCorrection);
         return result[2] / result[3];
     }
 
@@ -793,7 +797,7 @@ export class GlobeTransform extends Transform {
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
         const projected = createVec4();
-        vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeProjMatrixNoCorrection);
+        vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
         projected[1] /= projected[3];
         return new Point(
@@ -842,7 +846,7 @@ export class GlobeTransform extends Transform {
         pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;
         pos[2] = 1;
         pos[3] = 1;
-        vec4.transformMat4(pos, pos, this._globeProjMatrixNoCorrectionInverted);
+        vec4.transformMat4(pos, pos, this._globeViewProjMatrixNoCorrectionInverted);
         pos[0] /= pos[3];
         pos[1] /= pos[3];
         pos[2] /= pos[3];
