@@ -114,8 +114,8 @@ export type StyleSetterOptions = {
  *      when a desired style is a certain combination of previous and incoming style
  *      when an incoming style requires modification based on external state
  *
- * @param previousStyle - The current style.
- * @param nextStyle - The next style.
+ * @param previous - The current style.
+ * @param next - The next style.
  * @returns resulting style that will to be applied to the map
  *
  * @example
