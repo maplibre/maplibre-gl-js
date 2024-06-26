@@ -141,7 +141,7 @@ export class GlobeProjection implements Projection {
         // Error correction transition
         dirty = dirty || (now - this._errorMeasurementLastChangeTime) / 1000.0 < (globeConstants.errorTransitionTimeSeconds + 0.2);
         // Error correction query in flight
-        dirty = dirty || this._errorMeasurement.awaitingQuery;
+        dirty = dirty || (this._errorMeasurement && this._errorMeasurement.awaitingQuery);
         return dirty;
     }
 

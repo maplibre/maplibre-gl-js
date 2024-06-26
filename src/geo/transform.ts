@@ -392,8 +392,6 @@ export abstract class Transform {
     resize(width: number, height: number) {
         this._width = width;
         this._height = height;
-
-        this._pixelsToGLUnits = [2 / width, -2 / height];
         this._constrain();
         this._calcMatrices();
     }
@@ -577,6 +575,8 @@ export abstract class Transform {
         if (!this._width || !this._height) {
             return;
         }
+
+        this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
 
         let m = mat4.identity(new Float64Array(16) as any);
         mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
