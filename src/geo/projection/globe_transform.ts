@@ -237,10 +237,13 @@ export class GlobeTransform extends Transform {
      * @param animateTransition - Controls whether the transition between globe view and mercator (if triggered by this call) should be animated. True by default.
      */
     public setGlobeViewAllowed(allow: boolean, animateTransition: boolean = true) {
-        if (!animateTransition && allow !== this._globeProjectionEnabled) {
-            this._skipNextAnimation = true;
+        if (allow !== this._globeProjectionEnabled) {
+            if (!animateTransition) {
+                this._skipNextAnimation = true;
+            }
+            this._globeProjectionEnabled = allow;
+            this._lastGlobeChangeTime = browser.now();
         }
-        this._globeProjectionEnabled = allow;
     }
 
     override get useGlobeControls(): boolean { return this._globeRendering; }
