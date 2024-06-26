@@ -6,6 +6,7 @@
 /docs/API
 /docs/examples
 /docs/example
+/site/
 .cache/
 *.es.js
 *.js.map
