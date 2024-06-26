@@ -344,9 +344,7 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
-        const projTransform = createProjectionFromName(this.stylesheet.projection?.type || 'mercator');
-        this.projection = projTransform.projection;
-        this.map.migrateProjection(projTransform.transform);
+        this._setProjectionInternal(this.stylesheet.projection?.type || 'mercator');
 
         this.sky = new Sky(this.stylesheet.sky);
 
@@ -1512,9 +1510,7 @@ export class Style extends Evented {
             delete this.projection;
         }
         this.stylesheet.projection = projection;
-        const projTransform = createProjectionFromName(projection.type);
-        this.projection = projTransform.projection;
-        this.map.migrateProjection(projTransform.transform);
+        this._setProjectionInternal(projection.type);
     }
 
     getSky(): SkySpecification {
@@ -1545,6 +1541,15 @@ export class Style extends Evented {
         this.stylesheet.sky = skyOptions;
         this.sky.setSky(skyOptions, options);
         this.sky.updateTransitions(parameters);
+    }
+
+    _setProjectionInternal(name: ProjectionSpecification['type']) {
+        const projTransform = createProjectionFromName(name);
+        this.projection = projTransform.projection;
+        this.map.migrateProjection(projTransform.transform);
+        for (const key in this.sourceCaches) {
+            this.sourceCaches[key].reload();
+        }
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
