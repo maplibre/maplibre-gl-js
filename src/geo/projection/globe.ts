@@ -59,14 +59,6 @@ export class GlobeProjection implements Projection {
     private _errorMeasurementLastChangeTime: number = -1000.0;
 
     get projectionName(): string {
-    private _globeMatrix: mat4 = mat4.create();
-    private _globeMatrixNoCorrection: mat4 = mat4.create();
-    private _globePosition: vec3 = [0, 0, 0];
-    private _globeRadiusPixels: number = 0.0;
-
-    private _projMatrix: mat4 = mat4.create();
-    private _invProjMatrix: mat4 = mat4.create();
-
         return 'globe';
     }
 
@@ -114,19 +106,7 @@ export class GlobeProjection implements Projection {
         return this._useGlobeRendering;
     }
 
-    get worldCenterPosition(): vec3 {
-        return this._globePosition;
-    }
-
     get errorQueryLatitudeDegrees(): number { return this._errorQueryLatitudeDegrees; }
-
-    get worldSize(): number {
-        return this._globeRadiusPixels;
-    }
-
-    get invProjMatrix(): mat4 {
-        return this._invProjMatrix;
-    }
 
     /**
      * @internal
@@ -187,9 +167,6 @@ export class GlobeProjection implements Projection {
         const newCorrection = -this._errorMeasurementLastValue; // Note the negation
         this._errorCorrectionUsable = lerp(this._errorCorrectionPreviousValue, newCorrection, easeCubicInOut(mix));
     }
-
-
-
 
     private _getMeshKey(granularity: number, border: boolean, north: boolean, south: boolean): string {
         return `${granularity.toString(36)}_${border ? 'b' : ''}${north ? 'n' : ''}${south ? 's' : ''}`;
