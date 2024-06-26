@@ -226,8 +226,6 @@ describe('drawSymbol', () => {
 
 });
 
-}
-
 function createMockTransform() {
     return {
         pitch: 0,
@@ -248,3 +246,4 @@ function createMockTransform() {
             return translatePosition({angle: 0, zoom: 0}, tile, translate, translateAnchor);
         }
     } as any as Transform;
+}

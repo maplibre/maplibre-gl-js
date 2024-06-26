@@ -9,7 +9,6 @@ import {LngLat, LngLatLike} from '../geo/lng_lat';
 import {Event} from '../util/evented';
 import {LngLatBounds} from '../geo/lng_lat_bounds';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {MercatorProjection} from '../geo/projection/mercator';
 
 beforeEach(() => {
     setMatchMedia();
@@ -41,7 +40,7 @@ function createCamera(options?) {
     const transform = new MercatorTransform(0, 20, 0, 60, options.renderWorldCopies);
     transform.resize(512, 512);
 
-    const camera = attachSimulateFrame(new CameraMock(transform, new MercatorProjection(), {} as any))
+    const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
         .jumpTo(options);
 
     camera._update = () => {};
@@ -1103,7 +1102,7 @@ describe('#flyTo', () => {
     test('does not throw when cameras current zoom is above maxzoom and an offset creates infinite zoom out factor', () => {
         const transform = new MercatorTransform(0, 20.9999, 0, 60, true);
         transform.resize(512, 512);
-        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorProjection(), {} as any))
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any))
             .jumpTo({zoom: 21, center: [0, 0]});
         camera._update = () => {};
         expect(() => camera.flyTo({zoom: 7.5, center: [0, 0], offset: [0, 70]})).not.toThrow();
@@ -1660,7 +1659,7 @@ describe('#flyTo', () => {
         const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(512, 512);
 
-        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorProjection(), {} as any));
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
         camera._update = () => {};
 
         camera.on('moveend', () => {
@@ -1685,7 +1684,7 @@ describe('#flyTo', () => {
         const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(512, 512);
 
-        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorProjection(), {} as any));
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
         camera._update = () => {};
 
         camera.on('moveend', () => {
@@ -2044,7 +2043,7 @@ describe('#cameraForBounds', () => {
         const transform = new MercatorTransform(2, 10, 0, 60, false);
         transform.resize(2048, 512);
 
-        const camera = attachSimulateFrame(new CameraMock(transform, new MercatorProjection(), {} as any));
+        const camera = attachSimulateFrame(new CameraMock(transform, {} as any));
         camera._update = () => {};
 
         const bb = new LngLatBounds();
