@@ -13,10 +13,7 @@ export const MercatorShaderDefine = '#define PROJECTION_MERCATOR';
 export const MercatorShaderVariantKey = 'mercator';
 
 export class MercatorProjection implements Projection {
-    private _cachedMesh: Mesh | null = null;
-    private _worldCenterPosition: vec3 = [0, 0, 0];
-    private _worldSize: number = 0;
-    private _invProjMatrix: mat4 = mat4.create();
+    private _cachedMesh: Mesh = null;
 
     get projectionName(): string {
         return 'mercator';
@@ -49,18 +46,6 @@ export class MercatorProjection implements Projection {
 
     get useGlobeControls(): boolean {
         return false;
-    }
-
-    get worldCenterPosition(): vec3 {
-        return this._worldCenterPosition;
-    }
-
-    get worldSize(): number {
-        return this._worldSize;
-    }
-
-    get invProjMatrix(): mat4 {
-        return this._invProjMatrix;
     }
 
     public isRenderingDirty(): boolean {
