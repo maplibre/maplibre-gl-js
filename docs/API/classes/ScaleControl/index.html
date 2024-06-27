@@ -1625,6 +1625,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#getdefaultposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      getDefaultPosition()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#onadd" class="md-nav__link">
     <span class="md-ellipsis">
       onAdd()
@@ -7223,6 +7232,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/sky-with-fog-and-terrain/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sky, Fog, Terrain
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/timeline-animation/" class="md-nav__link">
         
   
@@ -7622,6 +7652,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#getdefaultposition" class="md-nav__link">
+    <span class="md-ellipsis">
+      getDefaultPosition()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#onadd" class="md-nav__link">
     <span class="md-ellipsis">
       onAdd()
@@ -7695,24 +7734,40 @@
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Parameter</th>
-<th style="text-align: left;">Type</th>
-<th style="text-align: left;">Description</th>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>options</code>?</td>
-<td style="text-align: left;"><a href="../../type-aliases/ScaleControlOptions/"><code>ScaleControlOptions</code></a></td>
-<td style="text-align: left;">the control's options</td>
+<td><code>options</code>?</td>
+<td><a href="../../type-aliases/ScaleControlOptions/"><code>ScaleControlOptions</code></a></td>
+<td>the control's options</td>
 </tr>
 </tbody>
 </table>
 <h4 id="returns">Returns</h4>
 <p><a href="./"><code>ScaleControl</code></a></p>
-<h4 id="source">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/control/scale_control.ts#L56">src/ui/control/scale_control.ts:56</a></p>
+<h4 id="defined-in">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/control/scale_control.ts#L56">src/ui/control/scale_control.ts:56</a></p>
 <h2 id="methods">Methods</h2>
+<h3 id="getdefaultposition">getDefaultPosition()</h3>
+<blockquote>
+<p><strong>getDefaultPosition</strong>(): <a href="../../type-aliases/ControlPosition/"><code>ControlPosition</code></a></p>
+</blockquote>
+<p>Optionally provide a default position for this control. If this method
+is implemented and <a href="../Map/#addcontrol">Map#addControl</a> is called without the <code>position</code>
+parameter, the value returned by getDefaultPosition will be used as the
+control's position.</p>
+<h4 id="returns_1">Returns</h4>
+<p><a href="../../type-aliases/ControlPosition/"><code>ControlPosition</code></a></p>
+<p>a control position, one of the values valid in addControl.</p>
+<h4 id="implementation-of">Implementation of</h4>
+<p><a href="../../interfaces/IControl/"><code>IControl</code></a>.<a href="../../interfaces/IControl/#getdefaultposition"><code>getDefaultPosition</code></a></p>
+<h4 id="defined-in_1">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/control/scale_control.ts#L60">src/ui/control/scale_control.ts:60</a></p>
+<hr />
 <h3 id="onadd">onAdd()</h3>
 <blockquote>
 <p><strong>onAdd</strong>(<code>map</code>: <a href="../Map/"><code>Map</code></a>): <code>HTMLElement</code></p>
@@ -7724,29 +7779,29 @@ internally.</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Parameter</th>
-<th style="text-align: left;">Type</th>
-<th style="text-align: left;">Description</th>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>map</code></td>
-<td style="text-align: left;"><a href="../Map/"><code>Map</code></a></td>
-<td style="text-align: left;">the Map this control will be added to</td>
+<td><code>map</code></td>
+<td><a href="../Map/"><code>Map</code></a></td>
+<td>the Map this control will be added to</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_1">Returns</h4>
+<h4 id="returns_2">Returns</h4>
 <p><code>HTMLElement</code></p>
 <p>The control's container element. This should
 be created by the control and returned by onAdd without being attached
 to the DOM: the map will insert the control's element into the DOM
 as necessary.</p>
-<h4 id="implementation-of">Implementation of</h4>
+<h4 id="implementation-of_1">Implementation of</h4>
 <p><a href="../../interfaces/IControl/"><code>IControl</code></a>.<a href="../../interfaces/IControl/#onadd"><code>onAdd</code></a></p>
-<h4 id="source_1">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/control/scale_control.ts#L69">src/ui/control/scale_control.ts:69</a></p>
+<h4 id="defined-in_2">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/control/scale_control.ts#L69">src/ui/control/scale_control.ts:69</a></p>
 <hr />
 <h3 id="onremove">onRemove()</h3>
 <blockquote>
@@ -7755,12 +7810,12 @@ as necessary.</p>
 <p>Unregister a control on the map and give it a chance to detach event listeners
 and resources. This method is called by <a href="../Map/#removecontrol">Map#removeControl</a>
 internally.</p>
-<h4 id="returns_2">Returns</h4>
+<h4 id="returns_3">Returns</h4>
 <p><code>void</code></p>
-<h4 id="implementation-of_1">Implementation of</h4>
+<h4 id="implementation-of_2">Implementation of</h4>
 <p><a href="../../interfaces/IControl/"><code>IControl</code></a>.<a href="../../interfaces/IControl/#onremove"><code>onRemove</code></a></p>
-<h4 id="source_2">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/control/scale_control.ts#L80">src/ui/control/scale_control.ts:80</a></p>
+<h4 id="defined-in_3">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/control/scale_control.ts#L80">src/ui/control/scale_control.ts:80</a></p>
 <hr />
 <h3 id="setunit">setUnit()</h3>
 <blockquote>
@@ -7771,23 +7826,23 @@ internally.</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Parameter</th>
-<th style="text-align: left;">Type</th>
-<th style="text-align: left;">Description</th>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>unit</code></td>
-<td style="text-align: left;"><a href="../../type-aliases/Unit/"><code>Unit</code></a></td>
-<td style="text-align: left;">Unit of the distance (<code>'imperial'</code>, <code>'metric'</code> or <code>'nautical'</code>).</td>
+<td><code>unit</code></td>
+<td><a href="../../type-aliases/Unit/"><code>Unit</code></a></td>
+<td>Unit of the distance (<code>'imperial'</code>, <code>'metric'</code> or <code>'nautical'</code>).</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns</h4>
+<h4 id="returns_4">Returns</h4>
 <p><code>void</code></p>
-<h4 id="source_3">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/control/scale_control.ts#L91">src/ui/control/scale_control.ts:91</a></p>
+<h4 id="defined-in_4">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/control/scale_control.ts#L91">src/ui/control/scale_control.ts:91</a></p>
 
 
 

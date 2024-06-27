@@ -1686,6 +1686,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#isactive" class="md-nav__link">
+    <span class="md-ellipsis">
+      isActive()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      reset()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7148,6 +7181,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/sky-with-fog-and-terrain/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sky, Fog, Terrain
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/timeline-animation/" class="md-nav__link">
         
   
@@ -7503,6 +7557,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#isactive" class="md-nav__link">
+    <span class="md-ellipsis">
+      isActive()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      reset()
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7527,6 +7614,32 @@
 <ul>
 <li><a href="../../interfaces/Handler/"><code>Handler</code></a></li>
 </ul>
+<h2 id="methods">Methods</h2>
+<h3 id="isactive">isActive()</h3>
+<blockquote>
+<p><strong>isActive</strong>(): <code>boolean</code></p>
+</blockquote>
+<p>This is used to indicate if the handler is currently active or not.
+In case a handler is active, it will block other handlers from getting the relevant events.
+There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.</p>
+<h4 id="returns">Returns</h4>
+<p><code>boolean</code></p>
+<h4 id="implementation-of">Implementation of</h4>
+<p><a href="../../interfaces/Handler/"><code>Handler</code></a>.<a href="../../interfaces/Handler/#isactive"><code>isActive</code></a></p>
+<h4 id="defined-in">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/tap_zoom.ts#L95">src/ui/handler/tap_zoom.ts:95</a></p>
+<hr />
+<h3 id="reset">reset()</h3>
+<blockquote>
+<p><strong>reset</strong>(): <code>void</code></p>
+</blockquote>
+<p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
+<h4 id="returns_1">Returns</h4>
+<p><code>void</code></p>
+<h4 id="implementation-of_1">Implementation of</h4>
+<p><a href="../../interfaces/Handler/"><code>Handler</code></a>.<a href="../../interfaces/Handler/#reset"><code>reset</code></a></p>
+<h4 id="defined-in_1">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/tap_zoom.ts#L32">src/ui/handler/tap_zoom.ts:32</a></p>
 
 
 

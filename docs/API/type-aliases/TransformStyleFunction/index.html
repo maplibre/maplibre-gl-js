@@ -5074,15 +5074,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     <span class="md-ellipsis">
       Parameters
@@ -5101,9 +5092,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
+  <a href="#defined-in" class="md-nav__link">
     <span class="md-ellipsis">
-      Source
+      Defined in
     </span>
   </a>
   
@@ -7175,6 +7166,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/sky-with-fog-and-terrain/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sky, Fog, Terrain
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/timeline-animation/" class="md-nav__link">
         
   
@@ -7522,15 +7534,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     <span class="md-ellipsis">
       Parameters
@@ -7549,9 +7552,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
+  <a href="#defined-in" class="md-nav__link">
     <span class="md-ellipsis">
-      Source
+      Defined in
     </span>
   </a>
   
@@ -7579,63 +7582,33 @@
 <blockquote>
 <p><strong>TransformStyleFunction</strong>: (<code>previous</code>: <code>StyleSpecification</code> | <code>undefined</code>, <code>next</code>: <code>StyleSpecification</code>) =&gt; <code>StyleSpecification</code></p>
 </blockquote>
-<p>Part of <a href="../../classes/Map/#setstyle">Map#setStyle</a> options, transformStyle is a convenience function that allows to modify a style after it is fetched but before it is committed to the map state
-this function exposes previous and next styles, it can be commonly used to support a range of functionalities like:
-     when previous style carries certain 'state' that needs to be carried over to a new style gracefully
-     when a desired style is a certain combination of previous and incoming style
-     when an incoming style requires modification based on external state</p>
-<h2 id="example">Example</h2>
-<div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">setStyle</span><span class="p">(</span><span class="s1">&#39;https://demotiles.maplibre.org/style.json&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nx">transformStyle</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">previousStyle</span><span class="p">,</span><span class="w"> </span><span class="nx">nextStyle</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">      </span><span class="p">...</span><span class="nx">nextStyle</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">      </span><span class="nx">sources</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">          </span><span class="p">...</span><span class="nx">nextStyle</span><span class="p">.</span><span class="nx">sources</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">          </span><span class="c1">// copy a source from previous style</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">          </span><span class="s1">&#39;osm&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">previousStyle</span><span class="p">.</span><span class="nx">sources</span><span class="p">.</span><span class="nx">osm</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="p">},</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nx">layers</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">          </span><span class="c1">// background layer</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">          </span><span class="nx">nextStyle</span><span class="p">.</span><span class="nx">layers</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">          </span><span class="c1">// copy a layer from previous style</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">          </span><span class="nx">previousStyle</span><span class="p">.</span><span class="nx">layers</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">          </span><span class="c1">// other layers from the next style</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">          </span><span class="p">...</span><span class="nx">nextStyle</span><span class="p">.</span><span class="nx">layers</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mf">1</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">layer</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">              </span><span class="c1">// hide the layers we don&#39;t need from demotiles style</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">              </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">layer</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;geolines&#39;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">                  </span><span class="nx">layer</span><span class="p">.</span><span class="nx">layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{...</span><span class="nx">layer</span><span class="p">.</span><span class="nx">layout</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">{},</span><span class="w"> </span><span class="nx">visibility</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;none&#39;</span><span class="p">};</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">              </span><span class="c1">// filter out US polygons</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">              </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">layer</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;coastline&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">layer</span><span class="p">.</span><span class="nx">id</span><span class="p">.</span><span class="nx">startsWith</span><span class="p">(</span><span class="s1">&#39;countries&#39;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">                  </span><span class="nx">layer</span><span class="p">.</span><span class="nx">filter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;!=&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ADM0_A3&#39;</span><span class="p">],</span><span class="w"> </span><span class="s1">&#39;USA&#39;</span><span class="p">];</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">              </span><span class="p">}</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">              </span><span class="k">return</span><span class="w"> </span><span class="nx">layer</span><span class="p">;</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">          </span><span class="p">})</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">      </span><span class="p">]</span>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">  </span><span class="p">})</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="p">});</span>
-</span></code></pre></div>
 <h2 id="parameters">Parameters</h2>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Parameter</th>
-<th style="text-align: left;">Type</th>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>previous</code></td>
-<td style="text-align: left;"><code>StyleSpecification</code> | <code>undefined</code></td>
+<td><code>previous</code></td>
+<td><code>StyleSpecification</code> | <code>undefined</code></td>
+<td>The current style.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>next</code></td>
-<td style="text-align: left;"><code>StyleSpecification</code></td>
+<td><code>next</code></td>
+<td><code>StyleSpecification</code></td>
+<td>The next style.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="returns">Returns</h2>
 <p><code>StyleSpecification</code></p>
-<h2 id="source">Source</h2>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/style/style.ts#L152">src/style/style.ts:152</a></p>
+<p>resulting style that will to be applied to the map</p>
+<h2 id="defined-in">Defined in</h2>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/style/style.ts#L154">src/style/style.ts:154</a></p>
 
 
 

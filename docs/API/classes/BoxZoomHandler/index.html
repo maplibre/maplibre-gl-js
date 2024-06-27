@@ -766,6 +766,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      reset()
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -7199,6 +7208,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/sky-with-fog-and-terrain/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sky, Fog, Terrain
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/timeline-animation/" class="md-nav__link">
         
   
@@ -7600,6 +7630,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      reset()
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -7643,8 +7682,8 @@ The bounding box is defined by clicking and holding <code>shift</code> while dra
 <h4 id="example">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">boxZoom</span><span class="p">.</span><span class="nx">disable</span><span class="p">();</span>
 </span></code></pre></div>
-<h4 id="source">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/box_zoom.ts#L78">src/ui/handler/box_zoom.ts:78</a></p>
+<h4 id="defined-in">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/box_zoom.ts#L78">src/ui/handler/box_zoom.ts:78</a></p>
 <hr />
 <h3 id="enable">enable()</h3>
 <blockquote>
@@ -7658,8 +7697,8 @@ The bounding box is defined by clicking and holding <code>shift</code> while dra
 <h4 id="example_1">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">boxZoom</span><span class="p">.</span><span class="nx">enable</span><span class="p">();</span>
 </span></code></pre></div>
-<h4 id="source_1">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/box_zoom.ts#L65">src/ui/handler/box_zoom.ts:65</a></p>
+<h4 id="defined-in_1">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/box_zoom.ts#L65">src/ui/handler/box_zoom.ts:65</a></p>
 <hr />
 <h3 id="isactive">isActive()</h3>
 <blockquote>
@@ -7671,8 +7710,8 @@ The bounding box is defined by clicking and holding <code>shift</code> while dra
 <p><code>true</code> if the "box zoom" interaction is active.</p>
 <h4 id="implementation-of_2">Implementation of</h4>
 <p><a href="../../interfaces/Handler/"><code>Handler</code></a>.<a href="../../interfaces/Handler/#isactive"><code>isActive</code></a></p>
-<h4 id="source_2">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/box_zoom.ts#L53">src/ui/handler/box_zoom.ts:53</a></p>
+<h4 id="defined-in_2">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/box_zoom.ts#L53">src/ui/handler/box_zoom.ts:53</a></p>
 <hr />
 <h3 id="isenabled">isEnabled()</h3>
 <blockquote>
@@ -7684,8 +7723,20 @@ The bounding box is defined by clicking and holding <code>shift</code> while dra
 <p><code>true</code> if the "box zoom" interaction is enabled.</p>
 <h4 id="implementation-of_3">Implementation of</h4>
 <p><code>Handler.isEnabled</code></p>
-<h4 id="source_3">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/box_zoom.ts#L44">src/ui/handler/box_zoom.ts:44</a></p>
+<h4 id="defined-in_3">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/box_zoom.ts#L44">src/ui/handler/box_zoom.ts:44</a></p>
+<hr />
+<h3 id="reset">reset()</h3>
+<blockquote>
+<p><strong>reset</strong>(): <code>void</code></p>
+</blockquote>
+<p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
+<h4 id="returns_4">Returns</h4>
+<p><code>void</code></p>
+<h4 id="implementation-of_4">Implementation of</h4>
+<p><a href="../../interfaces/Handler/"><code>Handler</code></a>.<a href="../../interfaces/Handler/#reset"><code>reset</code></a></p>
+<h4 id="defined-in_4">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/box_zoom.ts#L152">src/ui/handler/box_zoom.ts:152</a></p>
 
 
 

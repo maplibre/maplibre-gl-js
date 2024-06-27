@@ -1631,9 +1631,36 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#isactive" class="md-nav__link">
+    <span class="md-ellipsis">
+      isActive()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#isenabled" class="md-nav__link">
     <span class="md-ellipsis">
       isEnabled()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#renderframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      renderFrame()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      reset()
     </span>
   </a>
   
@@ -7208,6 +7235,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/sky-with-fog-and-terrain/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sky, Fog, Terrain
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/timeline-animation/" class="md-nav__link">
         
   
@@ -7592,9 +7640,36 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#isactive" class="md-nav__link">
+    <span class="md-ellipsis">
+      isActive()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#isenabled" class="md-nav__link">
     <span class="md-ellipsis">
       isEnabled()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#renderframe" class="md-nav__link">
+    <span class="md-ellipsis">
+      renderFrame()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset" class="md-nav__link">
+    <span class="md-ellipsis">
+      reset()
     </span>
   </a>
   
@@ -7660,8 +7735,8 @@
 <h4 id="example">Example</h4>
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">scrollZoom</span><span class="p">.</span><span class="nx">disable</span><span class="p">();</span>
 </span></code></pre></div>
-<h4 id="source">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/scroll_zoom.ts#L147">src/ui/handler/scroll_zoom.ts:147</a></p>
+<h4 id="defined-in">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/scroll_zoom.ts#L147">src/ui/handler/scroll_zoom.ts:147</a></p>
 <hr />
 <h3 id="enable">enable()</h3>
 <blockquote>
@@ -7672,16 +7747,16 @@
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Parameter</th>
-<th style="text-align: left;">Type</th>
-<th style="text-align: left;">Description</th>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>options</code>?</td>
-<td style="text-align: left;"><code>boolean</code> | <a href="../../type-aliases/AroundCenterOptions/"><code>AroundCenterOptions</code></a></td>
-<td style="text-align: left;">Options object.</td>
+<td><code>options</code>?</td>
+<td><code>boolean</code> | <a href="../../type-aliases/AroundCenterOptions/"><code>AroundCenterOptions</code></a></td>
+<td>Options object.</td>
 </tr>
 </tbody>
 </table>
@@ -7693,21 +7768,80 @@
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">scrollZoom</span><span class="p">.</span><span class="nx">enable</span><span class="p">();</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nx">map</span><span class="p">.</span><span class="nx">scrollZoom</span><span class="p">.</span><span class="nx">enable</span><span class="p">({</span><span class="w"> </span><span class="nx">around</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;center&#39;</span><span class="w"> </span><span class="p">})</span>
 </span></code></pre></div>
-<h4 id="source_1">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/scroll_zoom.ts#L133">src/ui/handler/scroll_zoom.ts:133</a></p>
+<h4 id="defined-in_1">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/scroll_zoom.ts#L133">src/ui/handler/scroll_zoom.ts:133</a></p>
+<hr />
+<h3 id="isactive">isActive()</h3>
+<blockquote>
+<p><strong>isActive</strong>(): <code>boolean</code></p>
+</blockquote>
+<p>This is used to indicate if the handler is currently active or not.
+In case a handler is active, it will block other handlers from getting the relevant events.
+There is an allow list of handlers that can be active at the same time, which is configured when adding a handler.</p>
+<h4 id="returns_2">Returns</h4>
+<p><code>boolean</code></p>
+<h4 id="implementation-of_2">Implementation of</h4>
+<p><a href="../../interfaces/Handler/"><code>Handler</code></a>.<a href="../../interfaces/Handler/#isactive"><code>isActive</code></a></p>
+<h4 id="defined-in_2">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/scroll_zoom.ts#L115">src/ui/handler/scroll_zoom.ts:115</a></p>
 <hr />
 <h3 id="isenabled">isEnabled()</h3>
 <blockquote>
 <p><strong>isEnabled</strong>(): <code>boolean</code></p>
 </blockquote>
 <p>Returns a Boolean indicating whether the "scroll to zoom" interaction is enabled.</p>
-<h4 id="returns_2">Returns</h4>
+<h4 id="returns_3">Returns</h4>
 <p><code>boolean</code></p>
 <p><code>true</code> if the "scroll to zoom" interaction is enabled.</p>
-<h4 id="implementation-of_2">Implementation of</h4>
+<h4 id="implementation-of_3">Implementation of</h4>
 <p><code>Handler.isEnabled</code></p>
-<h4 id="source_2">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/scroll_zoom.ts#L106">src/ui/handler/scroll_zoom.ts:106</a></p>
+<h4 id="defined-in_3">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/scroll_zoom.ts#L106">src/ui/handler/scroll_zoom.ts:106</a></p>
+<hr />
+<h3 id="renderframe">renderFrame()</h3>
+<blockquote>
+<p><strong>renderFrame</strong>(): <code>object</code></p>
+</blockquote>
+<p><code>renderFrame</code> is the only non-dom event. It is called during render
+frames and can be used to smooth camera changes (see scroll handler).</p>
+<h4 id="returns_4">Returns</h4>
+<p><code>object</code></p>
+<h5 id="around">around</h5>
+<blockquote>
+<p><strong>around</strong>: <code>Point</code></p>
+</blockquote>
+<h5 id="needsrenderframe">needsRenderFrame</h5>
+<blockquote>
+<p><strong>needsRenderFrame</strong>: <code>boolean</code> = <code>!finished</code></p>
+</blockquote>
+<h5 id="noinertia">noInertia</h5>
+<blockquote>
+<p><strong>noInertia</strong>: <code>boolean</code> = <code>true</code></p>
+</blockquote>
+<h5 id="originalevent">originalEvent</h5>
+<blockquote>
+<p><strong>originalEvent</strong>: <code>any</code></p>
+</blockquote>
+<h5 id="zoomdelta">zoomDelta</h5>
+<blockquote>
+<p><strong>zoomDelta</strong>: <code>number</code></p>
+</blockquote>
+<h4 id="implementation-of_4">Implementation of</h4>
+<p><a href="../../interfaces/Handler/"><code>Handler</code></a>.<a href="../../interfaces/Handler/#renderframe"><code>renderFrame</code></a></p>
+<h4 id="defined-in_4">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/scroll_zoom.ts#L251">src/ui/handler/scroll_zoom.ts:251</a></p>
+<hr />
+<h3 id="reset">reset()</h3>
+<blockquote>
+<p><strong>reset</strong>(): <code>void</code></p>
+</blockquote>
+<p><code>reset</code> can be called by the manager at any time and must reset everything to it's original state</p>
+<h4 id="returns_5">Returns</h4>
+<p><code>void</code></p>
+<h4 id="implementation-of_5">Implementation of</h4>
+<p><a href="../../interfaces/Handler/"><code>Handler</code></a>.<a href="../../interfaces/Handler/#reset"><code>reset</code></a></p>
+<h4 id="defined-in_5">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/scroll_zoom.ts#L353">src/ui/handler/scroll_zoom.ts:353</a></p>
 <hr />
 <h3 id="setwheelzoomrate">setWheelZoomRate()</h3>
 <blockquote>
@@ -7718,27 +7852,27 @@
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Parameter</th>
-<th style="text-align: left;">Type</th>
-<th style="text-align: left;">Description</th>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>wheelZoomRate</code></td>
-<td style="text-align: left;"><code>number</code></td>
-<td style="text-align: left;">1/450 The rate used to scale mouse wheel movement to a zoom value.</td>
+<td><code>wheelZoomRate</code></td>
+<td><code>number</code></td>
+<td>1/450 The rate used to scale mouse wheel movement to a zoom value.</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_3">Returns</h4>
+<h4 id="returns_6">Returns</h4>
 <p><code>void</code></p>
 <h4 id="example_2">Example</h4>
 <p>Slow down zoom of mouse wheel
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">scrollZoom</span><span class="p">.</span><span class="nx">setWheelZoomRate</span><span class="p">(</span><span class="mf">1</span><span class="o">/</span><span class="mf">600</span><span class="p">);</span>
 </span></code></pre></div></p>
-<h4 id="source_3">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/scroll_zoom.ts#L98">src/ui/handler/scroll_zoom.ts:98</a></p>
+<h4 id="defined-in_6">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/scroll_zoom.ts#L98">src/ui/handler/scroll_zoom.ts:98</a></p>
 <hr />
 <h3 id="setzoomrate">setZoomRate()</h3>
 <blockquote>
@@ -7749,27 +7883,27 @@
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Parameter</th>
-<th style="text-align: left;">Type</th>
-<th style="text-align: left;">Description</th>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>zoomRate</code></td>
-<td style="text-align: left;"><code>number</code></td>
-<td style="text-align: left;">1/100 The rate used to scale trackpad movement to a zoom value.</td>
+<td><code>zoomRate</code></td>
+<td><code>number</code></td>
+<td>1/100 The rate used to scale trackpad movement to a zoom value.</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns_4">Returns</h4>
+<h4 id="returns_7">Returns</h4>
 <p><code>void</code></p>
 <h4 id="example_3">Example</h4>
 <p>Speed up trackpad zoom
 <div class="language-ts highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">scrollZoom</span><span class="p">.</span><span class="nx">setZoomRate</span><span class="p">(</span><span class="mf">1</span><span class="o">/</span><span class="mf">25</span><span class="p">);</span>
 </span></code></pre></div></p>
-<h4 id="source_4">Source</h4>
-<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/863541feb5e1bbc189abbb90fdea7a67ad837588/src/ui/handler/scroll_zoom.ts#L85">src/ui/handler/scroll_zoom.ts:85</a></p>
+<h4 id="defined-in_7">Defined in</h4>
+<p><a href="https://github.com/maplibre/maplibre-gl-js/blob/eb2d1507498282fa0309d461f08af731b59fdfc9/src/ui/handler/scroll_zoom.ts#L85">src/ui/handler/scroll_zoom.ts:85</a></p>
 
 
 

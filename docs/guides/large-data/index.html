@@ -7077,6 +7077,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/sky-with-fog-and-terrain/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sky, Fog, Terrain
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/timeline-animation/" class="md-nav__link">
         
   
@@ -7761,7 +7782,7 @@
 <p>Once the data is loaded, to ensure a smooth user experience, it's essential to optimise how you visualise the data on the map.</p>
 <h3 id="cluster">Cluster</h3>
 <p>One simple approach is to visualise fewer points. If we are using a GeoJSON source (i.e. not vector tiles), we can use 'clustering' to group nearby points together. This approach reduces the number of features displayed on the map, improving rendering performance and maintaining map readability.</p>
-<p>To do this, when we add the data, we can adjust the <a href="https://maplibre.org/maplibre-gl-js/docs/API/types/maplibregl.SetClusterOptions/#type-declaration">cluster options</a>. For example:</p>
+<p>To do this, when we add the data, we can adjust the <a href="../../API/type-aliases/SetClusterOptions/">cluster options</a>. For example:</p>
 <div class="language-javascript highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nx">map</span><span class="p">.</span><span class="nx">addSource</span><span class="p">(</span><span class="s1">&#39;earthquakes&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">            </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;geojson&#39;</span><span class="p">,</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">            </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson&#39;</span><span class="p">,</span>

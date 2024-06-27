@@ -5,8 +5,8 @@
     <meta property="og:description" content="Go beyond hillshade and show elevation in actual 3D." />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.4.1/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@4.4.1/dist/maplibre-gl.js'></script>
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js'></script>
     <style>
         body { margin: 0; padding: 0; }
         html, body, #map { height: 100%; }
@@ -19,7 +19,7 @@
         container: 'map',
         zoom: 12,
         center: [11.39085, 47.27574],
-        pitch: 52,
+        pitch: 70,
         hash: true,
         style: {
             version: 8,
@@ -60,7 +60,8 @@
             terrain: {
                 source: 'terrainSource',
                 exaggeration: 1
-            }
+            },
+            sky: {}
         },
         maxZoom: 18,
         maxPitch: 85
