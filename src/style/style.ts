@@ -5,6 +5,7 @@ import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
 import {GlyphManager} from '../render/glyph_manager';
 import {Light} from './light';
+import {Sky} from './sky';
 import {LineAtlas} from '../render/line_atlas';
 import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
@@ -48,7 +49,8 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
-    DiffOperations
+    DiffOperations,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
@@ -184,6 +186,7 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    sky: Sky;
 
     _frameRequest: AbortController;
     _loadStyleRequest: AbortController;
@@ -337,6 +340,7 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
+        this.sky = new Sky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
@@ -522,6 +526,10 @@ export class Style extends Evented {
             return true;
         }
 
+        if (this.sky && this.sky.hasTransition()) {
+            return true;
+        }
+
         for (const id in this.sourceCaches) {
             if (this.sourceCaches[id].hasTransition()) {
                 return true;
@@ -580,6 +588,7 @@ export class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
+            this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }
@@ -624,6 +633,7 @@ export class Style extends Evented {
         }
 
         this.light.recalculate(parameters);
+        this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
@@ -761,6 +771,9 @@ export class Style extends Evented {
                     break;
                 case 'setSprite':
                     operations.push(() => this.setSprite.apply(this, op.args));
+                    break;
+                case 'setSky':
+                    operations.push(() => this.setSky.apply(this, op.args));
                     break;
                 case 'setTerrain':
                     operations.push(() => this.map.setTerrain.apply(this, op.args));
@@ -1260,7 +1273,7 @@ export class Style extends Evented {
         return extend({duration: 300, delay: 0}, this.stylesheet && this.stylesheet.transition);
     }
 
-    serialize(): StyleSpecification {
+    serialize(): StyleSpecification | undefined {
         // We return undefined before we're loaded, following the pattern of Map.getStyle() before
         // the Style object is initialized.
         // Internally, Style._validate() calls Style.serialize() but callers are responsible for
@@ -1277,6 +1290,7 @@ export class Style extends Evented {
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
             light: myStyleSheet.light,
+            sky: myStyleSheet.sky,
             center: myStyleSheet.center,
             zoom: myStyleSheet.zoom,
             bearing: myStyleSheet.bearing,
@@ -1472,6 +1486,39 @@ export class Style extends Evented {
 
         this.light.setLight(lightOptions, options);
         this.light.updateTransitions(parameters);
+    }
+
+    getSky(): SkySpecification {
+        return this.stylesheet?.sky;
+    }
+
+    setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
+        const sky = this.sky.getSky();
+        let update = false;
+        if (!skyOptions) {
+            if (sky) {
+                update = true;
+            }
+        }
+        for (const key in skyOptions) {
+            if (!deepEqual(skyOptions[key], sky[key])) {
+                update = true;
+                break;
+            }
+        }
+        if (!update) return;
+
+        const parameters = {
+            now: browser.now(),
+            transition: extend({
+                duration: 300,
+                delay: 0
+            }, this.stylesheet.transition)
+        };
+
+        this.stylesheet.sky = skyOptions;
+        this.sky.setSky(skyOptions, options);
+        this.sky.updateTransitions(parameters);
     }
 
     _validate(validate: Validator, key: string, value: any, props: any, options: {
