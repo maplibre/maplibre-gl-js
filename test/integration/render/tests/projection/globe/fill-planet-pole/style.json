@@ -1,8 +1,7 @@
 {
   "version": 8,
   "metadata": {
-    "test": {
-    }
+    "test": {}
   },
   "sky": {
     "atmosphere-blend": 0.0
@@ -11,8 +10,10 @@
     0.0,
     80.0
   ],
-  "zoom": 1,
-  "projection": { "type": "globe" },
+  "zoom": -0.5,
+  "projection": {
+    "type": "globe"
+  },
   "sources": {
     "vector_tiles": {
       "type": "vector",
