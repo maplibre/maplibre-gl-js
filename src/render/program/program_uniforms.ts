@@ -11,6 +11,7 @@ import {rasterUniforms} from './raster_program';
 import {symbolIconUniforms, symbolSDFUniforms, symbolTextAndIconUniforms} from './symbol_program';
 import {backgroundUniforms, backgroundPatternUniforms} from './background_program';
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms} from './terrain_program';
+import {skyUniforms} from './sky_program';
 
 export const programUniforms = {
     fillExtrusion: fillExtrusionUniforms,
@@ -40,5 +41,6 @@ export const programUniforms = {
     backgroundPattern: backgroundPatternUniforms,
     terrain: terrainUniforms,
     terrainDepth: terrainDepthUniforms,
-    terrainCoords: terrainCoordsUniforms
+    terrainCoords: terrainCoordsUniforms,
+    sky: skyUniforms
 };

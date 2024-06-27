@@ -87,7 +87,7 @@
     "cssnano": "^7.0.3",
     "d3": "^7.9.0",
     "d3-queue": "^3.0.7",
-    "devtools-protocol": "^0.0.1317765",
+    "devtools-protocol": "^0.0.1319565",
     "diff": "^5.2.0",
     "dts-bundle-generator": "^9.5.1",
     "eslint": "^8.57.0",
@@ -135,10 +135,10 @@
     "ts-jest": "^29.1.5",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.3",
-    "typedoc": "^0.25.13",
-    "typedoc-plugin-markdown": "^4.0.3",
-    "typedoc-plugin-missing-exports": "^2.3.0",
-    "typescript": "^5.4.5"
+    "typedoc": "^0.26.2",
+    "typedoc-plugin-markdown": "^4.1.0",
+    "typedoc-plugin-missing-exports": "^3.0.0",
+    "typescript": "^5.5.2"
   },
   "overrides": {
     "postcss-inline-svg": {
