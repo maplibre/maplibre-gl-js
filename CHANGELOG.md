@@ -6,7 +6,7 @@
 
 ### 🐞 Bug fixes
 
-- _...Add new stuff here..._
+- packColor function can now handle null values. Eliminates feature rendering from crashing when using setFeatureState function.
 
 ## 4.5.0
 
