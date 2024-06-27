@@ -64,7 +64,7 @@ describe('render to texture', () => {
     const painter = {
         layersDrawn: 0,
         context: new Context(gl),
-        transform: {zoom: 10, calculatePosMatrix: () => {}},
+        transform: {zoom: 10, calculatePosMatrix: () => {}, getProjectionData(_a) {}},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
         useProgram: () => { return {draw: () => { layersDrawn++; }}; },
         _renderTileClippingMasks: () => {},
