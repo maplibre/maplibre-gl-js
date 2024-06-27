@@ -960,21 +960,21 @@ export abstract class Camera extends Evented {
         // Special zoom & center handling for globe
         if (this.transform.useGlobeControls) {
             // Globe constrain's center isn't dependent on zoom level
+            const startingLat = tr.center.lat;
             const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
+            tr.center = constrainedCenter;
             let targetZoom;
             if (optionsApparentZoom) {
-                targetZoom = +options.apparentZoom + getZoomAdjustment(tr, tr.center.lat, constrainedCenter.lat);
+                targetZoom = +options.apparentZoom + getZoomAdjustment(tr, startingLat, constrainedCenter.lat);
             } else if (optionsZoom) {
                 targetZoom = +options.zoom;
             } else {
-                targetZoom = tr.zoom + getZoomAdjustment(tr, tr.center.lat, constrainedCenter.lat);
+                targetZoom = tr.zoom + getZoomAdjustment(tr, startingLat, constrainedCenter.lat);
             }
             if (tr.zoom !== targetZoom) {
                 zoomChanged = true;
                 tr.zoom = targetZoom;
             }
-            tr.center = constrainedCenter;
-
         } else {
             const zoom = optionsZoom ? +options.zoom : (optionsApparentZoom ? +options.apparentZoom : tr.zoom);
             if (tr.zoom !== zoom) {
