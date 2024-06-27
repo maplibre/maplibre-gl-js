@@ -2,8 +2,41 @@ import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
 import {IActor} from '../actor';
-import type {Evented} from '../evented';
-import {SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {Evented} from '../evented';
+import {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
+import {MercatorTransform} from '../../geo/projection/mercator_transform';
+import {RequestManager} from '../request_manager';
+import {Transform} from '../../geo/transform';
+import {Style} from '../../style/style';
+
+export class StubMap extends Evented {
+    style: Style;
+    transform: Transform;
+    private _requestManager: RequestManager;
+    _terrain: TerrainSpecification;
+
+    constructor() {
+        super();
+        this.transform = new MercatorTransform();
+        this._requestManager = new RequestManager();
+    }
+
+    _getMapId() {
+        return 1;
+    }
+
+    getPixelRatio() {
+        return 1;
+    }
+
+    setTerrain(terrain) { this._terrain = terrain; }
+    getTerrain() { return this._terrain; }
+
+    migrateProjection(newTransform: Transform) {
+        newTransform.apply(this.transform);
+        this.transform = newTransform;
+    }
+}
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
