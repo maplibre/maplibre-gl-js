@@ -19,7 +19,6 @@ function generateWebPImage(inputFileName: string) {
     const outputFilePath = `${folderPath}${outputFileName}`;
 
     convertToWebP(inputFilePath, outputFilePath);
-    console.log(`Convert ${inputFilePath} to ${outputFilePath}`);
 }
 
 function convertToWebP(inputFile: string, outputFile: string) {
@@ -27,9 +26,10 @@ function convertToWebP(inputFile: string, outputFile: string) {
         .webp({quality: 90, lossless: false})
         .toFile(outputFile)
         .then(() => {
-            console.log(`Created ${outputFile}`);
+            console.log(`Converted '${inputFile}' to '${outputFile}'`);
         })
         .catch((err) => {
+            console.log(`Error while converting '${inputFile}' to '${outputFile}'`);
             console.log(err);
         });
 }
@@ -37,8 +37,7 @@ function convertToWebP(inputFile: string, outputFile: string) {
 if (exampleName) {
     generateWebPImage(`${exampleName}.png`);
 } else {
-    const fileNames = listFilesInFolder(folderPath);
-    fileNames.forEach((inputFileName) => {
-        generateWebPImage(inputFileName);
-    });
+    listFilesInFolder(folderPath)
+        .filter((fileName) => fileName.endsWith('.png'))
+        .forEach(generateWebPImage);
 }
