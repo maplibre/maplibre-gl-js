@@ -69,6 +69,11 @@ class StubMap extends Evented {
 
     setTerrain(terrain) { this._terrain = terrain; }
     getTerrain() { return this._terrain; }
+
+    migrateProjection(newTransform: Transform) {
+        newTransform.apply(this.transform);
+        this.transform = newTransform;
+    }
 }
 
 const getStubMap = () => new StubMap() as any;
