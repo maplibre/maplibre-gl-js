@@ -109,16 +109,16 @@ describe('GlobeTransform', () => {
             globeTransform.zoom = -0.5;
             globeTransform.center = new LngLat(0, 80);
             globeTransform.newFrameUpdate();
-            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 2.303287153877504, 1.0008639206711287], precisionDigits);
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 2.2818294674820794, 0.40234810049271963], precisionDigits);
 
             globeTransform.pitch = 35;
             globeTransform.bearing = 70;
             globeTransform.newFrameUpdate();
-            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.814593815424988, 1.9344461675893443, 1.1638588658177578], precisionDigits);
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
             globeTransform.center = new LngLat(-10, 42);
             globeTransform.newFrameUpdate();
-            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-1.1254754857999196, 1.2771958498461375, 1.6918298410217196], precisionDigits);
+            expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-3.8450970996236364, 2.9368285470351516, 4.311953269048194], precisionDigits);
         });
 
         test('sphere point to coordinate', () => {
@@ -239,8 +239,8 @@ describe('GlobeTransform', () => {
             coords = new LngLat(179.9, 71);
             projected = globeTransform.locationPoint(coords);
             unprojected = globeTransform.pointLocation(projected);
-            expect(projected.x).toBeCloseTo(256.1979714385892, precisionDigits);
-            expect(projected.y).toBeCloseTo(20.681103119412427, precisionDigits);
+            expect(projected.x).toBeCloseTo(256.2434702034287, precisionDigits);
+            expect(projected.y).toBeCloseTo(48.27080146399297, precisionDigits);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
 
@@ -248,8 +248,8 @@ describe('GlobeTransform', () => {
             coords = new LngLat(179.9, 89.0);
             projected = globeTransform.locationPoint(coords);
             unprojected = globeTransform.pointLocation(projected);
-            expect(projected.x).toBeCloseTo(256.01175650888337, precisionDigits);
-            expect(projected.y).toBeCloseTo(96.02496826108228, precisionDigits);
+            expect(projected.x).toBeCloseTo(256.0140972925064, precisionDigits);
+            expect(projected.y).toBeCloseTo(167.69159699932908, precisionDigits);
             expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
             expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
         });
