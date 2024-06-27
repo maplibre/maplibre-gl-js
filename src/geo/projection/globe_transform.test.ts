@@ -106,7 +106,7 @@ describe('GlobeTransform', () => {
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 0, 8.110445867263898], precisionDigits);
 
             globeTransform.resize(512, 512);
-            globeTransform.zoom = 1;
+            globeTransform.zoom = -0.5;
             globeTransform.center = new LngLat(0, 80);
             globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 2.303287153877504, 1.0008639206711287], precisionDigits);
@@ -228,7 +228,7 @@ describe('GlobeTransform', () => {
             // Transform settings from the render test projection/globe/fill-planet-pole
             // See the expected result for how the globe should look with this transform.
             globeTransform.resize(512, 512);
-            globeTransform.zoom = 1;
+            globeTransform.zoom = -0.5;
             globeTransform.center = new LngLat(0, 80);
             globeTransform.newFrameUpdate();
 
