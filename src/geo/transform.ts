@@ -96,6 +96,7 @@ export abstract class Transform {
     public apply(that: Transform, constrain: boolean = false): void {
         this._tileSize = that._tileSize;
         this._latRange = that._latRange;
+        this._lngRange = that._lngRange;
         this._width = that._width;
         this._height = that._height;
         this._center = that._center;
@@ -107,6 +108,10 @@ export abstract class Transform {
         this._pitch = that._pitch;
         this._unmodified = that._unmodified;
         this._edgeInsets = that._edgeInsets.clone();
+        this._minZoom = that._minZoom;
+        this._maxZoom = that._maxZoom;
+        this._minPitch = that._minPitch;
+        this._maxPitch = that._maxPitch;
         if (constrain) {
             this._constrain();
         }

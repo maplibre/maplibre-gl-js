@@ -962,7 +962,7 @@ export abstract class Camera extends Evented {
             // Globe constrain's center isn't dependent on zoom level
             const startingLat = tr.center.lat;
             const constrainedCenter = tr.getConstrained(options.center ? LngLat.convert(options.center) : tr.center, tr.zoom).center;
-            tr.center = constrainedCenter;
+            tr.center = constrainedCenter.wrap();
             let targetZoom;
             if (optionsApparentZoom) {
                 targetZoom = +options.apparentZoom + getZoomAdjustment(tr, startingLat, constrainedCenter.lat);
@@ -1203,7 +1203,7 @@ export abstract class Camera extends Evented {
                     // Instead we interpolate LngLat almost directly, but taking into account that
                     // one degree of longitude gets progressively smaller relative to latitude towards the poles.
                     const newCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, factor);
-                    tr.center = newCenter;
+                    tr.center = newCenter.wrap();
                 }
 
                 if (this._zooming) {
@@ -1674,7 +1674,7 @@ export abstract class Camera extends Evented {
                 const interpolatedCenter = interpolateLngLatForGlobe(startCenter, deltaLng, deltaLat, centerFactor);
 
                 const newCenter = k === 1 ? targetCenter : interpolatedCenter;
-                tr.center = newCenter;
+                tr.center = newCenter.wrap();
 
                 const interpolatedZoom = normalizedStartZoom + tr.scaleZoom(scale);
                 tr.zoom = k === 1 ? targetZoom : (interpolatedZoom + getZoomAdjustment(tr, 0, newCenter.lat));

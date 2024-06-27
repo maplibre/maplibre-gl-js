@@ -591,7 +591,7 @@ export class HandlerManager {
                 tr.center = new LngLat(
                     exactCenter.lng + lngExactToHeuristic * heuristicFactor,
                     exactCenter.lat + latExactToHeuristic * heuristicFactor
-                );
+                ).wrap();
                 tr.zoom += getZoomAdjustment(tr, oldCenterLat, tr.center.lat);
             }
 
@@ -604,7 +604,7 @@ export class HandlerManager {
 
                 const oldLat = tr.center.lat;
                 const oldZoom = tr.zoom;
-                tr.center = computeGlobePanCenter(panDelta, tr);
+                tr.center = computeGlobePanCenter(panDelta, tr).wrap();
                 // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
                 tr.zoom = oldZoom + getZoomAdjustment(tr, oldLat, tr.center.lat);
             }
