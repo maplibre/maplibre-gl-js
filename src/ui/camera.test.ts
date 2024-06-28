@@ -1202,17 +1202,19 @@ describe('#easeTo globe projection', () => {
     });
 
     test('rotates with specified offset', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 70.3125, lat: 0.000002552471840999715}));
+        // This behaviour differs from mercator because mercator doesn't follow the spec
+        // that offset should be relative to the *target* map state, not *starting* map state.
+        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
     });
 
     test('rotates with specified offset relative to viewport on a rotated camera', () => {
         const camera = createCameraGlobe({bearing: 180});
         camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -70.3125, lat: 0.000002552471840999715}));
+        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
     });
 
     ////////////////////////////////////////////////

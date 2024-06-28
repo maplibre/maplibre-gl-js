@@ -1158,6 +1158,7 @@ export abstract class Camera extends Evented {
                 clonedTr.padding = padding as PaddingOptions;
             }
             clonedTr.zoom = targetMercatorZoom;
+            clonedTr.bearing = bearing;
             const clampedPoint = new Point(
                 clamp(tr.centerPoint.x + offsetAsPoint.x, 0, tr.width),
                 clamp(tr.centerPoint.y + offsetAsPoint.y, 0, tr.height)
@@ -1514,6 +1515,7 @@ export abstract class Camera extends Evented {
                 clonedTr.padding = padding as PaddingOptions;
             }
             clonedTr.zoom = targetZoom;
+            clonedTr.bearing = bearing;
             const clampedPoint = new Point(
                 clamp(tr.centerPoint.x + offsetAsPoint.x, 0, tr.width),
                 clamp(tr.centerPoint.y + offsetAsPoint.y, 0, tr.height)
