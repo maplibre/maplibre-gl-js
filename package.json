@@ -127,7 +127,7 @@
     "ts-jest": "^29.1.5",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.3",
-    "typedoc": "^0.26.2",
+    "typedoc": "^0.26.3",
     "typedoc-plugin-markdown": "^4.1.0",
     "typedoc-plugin-missing-exports": "^3.0.0",
     "typescript": "^5.5.2"
