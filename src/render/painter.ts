@@ -34,7 +34,7 @@ import {drawDepth, drawCoords} from './draw_terrain';
 import {OverscaledTileID} from '../source/tile_id';
 import {drawSky} from './draw_sky';
 import {Mesh} from './mesh';
-import {translatePosMatrix as mercatorTranslatePosMatrix, MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
+import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 
 import type {Transform} from '../geo/transform';
 import type {Style} from '../style/style';
@@ -47,9 +47,7 @@ import type {VertexBuffer} from '../gl/vertex_buffer';
 import type {IndexBuffer} from '../gl/index_buffer';
 import type {DepthRangeType, DepthMaskType, DepthFuncType} from '../gl/types';
 import type {ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import type {Tile} from '../source/tile';
 import type {ProjectionData} from './program/projection_program';
-import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 import type {RenderToTexture} from './render_to_texture';
 
 export type RenderPass = 'offscreen' | 'opaque' | 'translucent';

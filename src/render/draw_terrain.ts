@@ -86,14 +86,12 @@ function drawTerrain(painter: Painter, terrain: Terrain, tiles: Array<Tile>) {
         const terrainData = terrain.getTerrainData(tile.tileID);
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
-        const uniformValues = terrainUniformValues(terrain.getMeshFrameDelta(tr.zoom));
+        const eleDelta = terrain.getMeshFrameDelta(tr.zoom);
+        const fogMatrix = tr.calculateFogMatrix(tile.tileID.toUnwrapped());
+        const uniformValues = terrainUniformValues(eleDelta, fogMatrix, painter.style.sky, tr.pitch);
         const projectionData = tr.getProjectionData(tile.tileID, false, true);
         program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, colorMode, CullFaceMode.backCCW, uniformValues, terrainData, projectionData, 'terrain', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
-        const eleDelta = terrain.getMeshFrameDelta(painter.transform.zoom);
-        const fogMatrix = painter.transform.calculateFogMatrix(tile.tileID.toUnwrapped());
-        const uniformValues = terrainUniformValues(posMatrix, eleDelta, fogMatrix, painter.style.sky, painter.transform.pitch);
     }
-
 }
 
 export {

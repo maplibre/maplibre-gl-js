@@ -3,6 +3,7 @@ import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
 import {Transform} from '../../geo/transform';
 import {Sky} from '../../style/sky';
+import {getMercatorHorizon} from '../../geo/projection/mercator_transform';
 
 export type SkyUniformsType = {
     'u_sky_color': UniformColor;
@@ -21,7 +22,7 @@ const skyUniforms = (context: Context, locations: UniformLocations): SkyUniforms
 const skyUniformValues = (sky: Sky, transform: Transform, pixelRatio: number): UniformValues<SkyUniformsType> => ({
     'u_sky_color': sky.properties.get('sky-color'),
     'u_horizon_color': sky.properties.get('horizon-color'),
-    'u_horizon': (transform.height / 2 + transform.getHorizon()) * pixelRatio,
+    'u_horizon': (transform.height / 2 + getMercatorHorizon(transform)) * pixelRatio,
     'u_sky_horizon_blend': (sky.properties.get('sky-horizon-blend') * transform.height / 2) * pixelRatio,
 });
 

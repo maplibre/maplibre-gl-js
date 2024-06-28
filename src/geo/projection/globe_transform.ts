@@ -4,7 +4,7 @@ import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
-import {clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, mod, wrap} from '../../util/util';
+import {clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, mod, warnOnce, wrap} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -562,6 +562,13 @@ export class GlobeTransform extends Transform {
         vec3.rotateY(this._cameraPosition, this._cameraPosition, zero, this.center.lng * Math.PI / 180.0);
 
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
+    }
+
+    override calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
+        warnOnce('calculateFogMatrix is not supported on globe projection.');
+        const m = createMat4();
+        mat4.identity(m);
+        return m;
     }
 
     override getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {

@@ -4,7 +4,7 @@ import {LngLat} from '../lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
 import type {Terrain} from '../../render/terrain';
-import {MercatorTransform, getBasicProjectionData, projectToWorldCoordinates} from './mercator_transform';
+import {MercatorTransform, getBasicProjectionData, getMercatorHorizon, projectToWorldCoordinates} from './mercator_transform';
 import {mat4} from 'gl-matrix';
 import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
@@ -455,7 +455,7 @@ describe('transform', () => {
         const transform = new MercatorTransform(0, 22, 0, 85, true);
         transform.resize(500, 500);
         transform.pitch = 75;
-        const horizon = transform.getHorizon();
+        const horizon = getMercatorHorizon(transform);
 
         expect(horizon).toBeCloseTo(170.8176101748407, 10);
     });
@@ -468,7 +468,7 @@ describe('transform', () => {
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, 0)).toArray());
 
         transform.pitch = 75;
-        const top = Math.max(0, transform.height / 2 - transform.getHorizon());
+        const top = Math.max(0, transform.height / 2 - getMercatorHorizon(transform));
         expect(top).toBeCloseTo(79.1823898251593, 10);
         expect(transform.getBounds().getNorthWest().toArray()).toStrictEqual(transform.pointLocation(new Point(0, top)).toArray());
     });

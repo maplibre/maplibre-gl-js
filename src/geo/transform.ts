@@ -53,6 +53,9 @@ export abstract class Transform {
      */
     protected _fov: number;
 
+    /**
+     * Pitch in radians.
+     */
     protected _pitch: number;
     protected _zoom: number;
     protected _unmodified: boolean;
@@ -597,6 +600,8 @@ export abstract class Transform {
         mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
         this._pixelsToClipSpaceMatrix = m;
     }
+
+    abstract calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
 
     /**
      * @internal

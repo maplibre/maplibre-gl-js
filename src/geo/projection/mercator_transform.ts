@@ -37,6 +37,16 @@ export function unprojectFromWorldCoordinates(transform: {worldSize}, point: Poi
     return new MercatorCoordinate(point.x / transform.worldSize, point.y / transform.worldSize).toLngLat();
 }
 
+/**
+ * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
+ * multiplied by a static factor to simulate the earth-radius.
+ * The calculated value is the horizontal line from the camera-height to sea-level.
+ * @returns Horizon above center in pixels.
+ */
+export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDistance: number}): number {
+    return Math.tan(Math.PI / 2 - transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance * 0.85;
+}
+
 export class MercatorTransform extends Transform {
     private _cameraToCenterDistance: number;
     private _cameraPosition: vec3;
@@ -49,8 +59,10 @@ export class MercatorTransform extends Transform {
     private _pixelMatrix: mat4;
     private _pixelMatrix3D: mat4;
     private _pixelMatrixInverse: mat4;
+    private _fogMatrix: mat4;
 
     private _posMatrixCache: {[_: string]: mat4};
+    private _fogMatrixCache: {[_: string]: mat4};
     private _alignedPosMatrixCache: {[_: string]: mat4};
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
@@ -382,7 +394,7 @@ export class MercatorTransform extends Transform {
     }
 
     override getBounds(): LngLatBounds {
-        const top = Math.max(0, this._height / 2 - this.getHorizon());
+        const top = Math.max(0, this._height / 2 - getMercatorHorizon(this));
         return new LngLatBounds()
             .extend(this.pointLocation(new Point(0, top)))
             .extend(this.pointLocation(new Point(this._width, top)))
@@ -390,22 +402,12 @@ export class MercatorTransform extends Transform {
             .extend(this.pointLocation(new Point(0, this._height)));
     }
 
-    /**
-     * Calculate pixel height of the visible horizon in relation to map-center (e.g. height/2),
-     * multiplied by a static factor to simulate the earth-radius.
-     * The calculated value is the horizontal line from the camera-height to sea-level.
-     * @returns Horizon above center in pixels.
-     */
-    getHorizon(): number {
-        return Math.tan(Math.PI / 2 - this._pitch) * this._cameraToCenterDistance * 0.85;
-    }
-
     override isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
         if (terrain) {
             const coordinate = terrain.pointCoordinate(p);
             return coordinate != null;
         }
-        return (p.y > this.height / 2 - this.getHorizon());
+        return (p.y > this.height / 2 - getMercatorHorizon(this));
     }
 
     /**
@@ -430,6 +432,36 @@ export class MercatorTransform extends Transform {
         mat4.multiply(posMatrix, aligned ? this._alignedProjMatrix : this._viewProjMatrix, posMatrix);
 
         cache[posMatrixKey] = new Float32Array(posMatrix);
+        return cache[posMatrixKey];
+    }
+
+    private _calculateTileMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
+        const canonical = unwrappedTileID.canonical;
+        const scale = this.worldSize / this.zoomScale(canonical.z);
+        const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
+
+        const worldMatrix = mat4.identity(new Float64Array(16) as any);
+        mat4.translate(worldMatrix, worldMatrix, [unwrappedX * scale, canonical.y * scale, 0]);
+        mat4.scale(worldMatrix, worldMatrix, [scale / EXTENT, scale / EXTENT, 1]);
+        return worldMatrix;
+    }
+
+    /**
+     * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
+     * @param unwrappedTileID - the tile ID
+     * @private
+     */
+    override calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
+        const posMatrixKey = unwrappedTileID.key;
+        const cache = this._fogMatrixCache;
+        if (cache[posMatrixKey]) {
+            return cache[posMatrixKey];
+        }
+
+        const fogMatrix = this._calculateTileMatrix(unwrappedTileID);
+        mat4.multiply(fogMatrix, this._fogMatrix, fogMatrix);
+
+        cache[posMatrixKey] = new Float32Array(fogMatrix);
         return cache[posMatrixKey];
     }
 
@@ -562,7 +594,7 @@ export class MercatorTransform extends Transform {
         const topHalfSurfaceDistance = Math.sin(fovAboveCenter) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovAboveCenter, 0.01, Math.PI - 0.01));
 
         // Find the distance from the center point to the horizon
-        const horizon = this.getHorizon();
+        const horizon = getMercatorHorizon(this);
         const horizonAngle = Math.atan(horizon / this._cameraToCenterDistance);
         const fovCenterToHorizon = 2 * horizonAngle * (0.5 + offset.y / (horizon * 2));
         const topHalfSurfaceDistanceHorizon = Math.sin(fovCenterToHorizon) * lowestPlane / Math.sin(clamp(Math.PI - groundAngle - fovCenterToHorizon, 0.01, Math.PI - 0.01));
@@ -621,6 +653,20 @@ export class MercatorTransform extends Transform {
             cameraPos[2] / cameraPos[3]
         ];
 
+        // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
+        // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
+        this._fogMatrix = new Float64Array(16) as any;
+        mat4.perspective(this._fogMatrix, this._fov, this.width / this.height, cameraToSeaLevelDistance, farZ);
+        this._fogMatrix[8] = -offset.x * 2 / this.width;
+        this._fogMatrix[9] = offset.y * 2 / this.height;
+        mat4.scale(this._fogMatrix, this._fogMatrix, [1, -1, 1]);
+        mat4.translate(this._fogMatrix, this._fogMatrix, [0, 0, -this.cameraToCenterDistance]);
+        mat4.rotateX(this._fogMatrix, this._fogMatrix, this._pitch);
+        mat4.rotateZ(this._fogMatrix, this._fogMatrix, this.angle);
+        mat4.translate(this._fogMatrix, this._fogMatrix, [-x, -y, 0]);
+        mat4.scale(this._fogMatrix, this._fogMatrix, [1, 1, this._pixelPerMeter]);
+        mat4.translate(this._fogMatrix, this._fogMatrix, [0, 0, -this.elevation]); // elevate camera over terrain
+
         // matrix for conversion from world space to screen coordinates in 3D
         this._pixelMatrix3D = mat4.multiply(new Float64Array(16) as any, this.clipSpaceToPixelsMatrix, m);
 
@@ -644,6 +690,7 @@ export class MercatorTransform extends Transform {
         this._pixelMatrixInverse = m;
 
         this._posMatrixCache = {};
+        this._fogMatrixCache = {};
         this._alignedPosMatrixCache = {};
     }
 
