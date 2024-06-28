@@ -1569,7 +1569,7 @@ export abstract class Camera extends Evented {
                 if (optionsApparentMinZoom) {
                     normalizedOptionsMinZoom = +options.apparentMinZoom + startZoom + getZoomAdjustment(tr, startCenter.lat, 0);
                 } else {
-                    normalizedOptionsMinZoom = +options.zoom + getZoomAdjustment(tr, targetCenter.lat, 0);
+                    normalizedOptionsMinZoom = +options.minZoom + getZoomAdjustment(tr, targetCenter.lat, 0);
                 }
                 const normalizedMinZoomPreConstrain = Math.min(normalizedOptionsMinZoom, normalizedStartZoom, normalizedTargetZoom);
                 const minZoomPreConstrain = normalizedMinZoomPreConstrain + getZoomAdjustment(tr, 0, targetCenter.lat);
@@ -1626,7 +1626,7 @@ export abstract class Camera extends Evented {
         let S = (zoomOutFactor(true) - r0) / rho;
 
         // When u₀ = u₁, the optimal path doesn’t require both ascent and descent.
-        if (Math.abs(u1) < 0.000001 || !isFinite(S)) {
+        if (Math.abs(u1) < 0.000002 || !isFinite(S)) {
             // Perform a more or less instantaneous transition if the path is too short.
             if (Math.abs(w0 - w1) < 0.000001) return this.easeTo(options, eventData);
 
