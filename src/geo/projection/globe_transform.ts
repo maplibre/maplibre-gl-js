@@ -4,7 +4,7 @@ import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
 import {EXTENT} from '../../data/extent';
-import {clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, mod} from '../../util/util';
+import {clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, mod, wrap} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -93,7 +93,7 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
         const acosZ = Math.acos(projZ);
         const lngRadians = (projX > 0) ? acosZ : -acosZ;
         const lngDegrees = lngRadians / Math.PI * 180.0;
-        return new LngLat(mod(lngDegrees, 360), latDegrees);
+        return new LngLat(wrap(lngDegrees, -180, 180), latDegrees);
     } else {
         return new LngLat(0.0, latDegrees);
     }
