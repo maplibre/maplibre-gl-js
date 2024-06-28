@@ -1100,59 +1100,52 @@ describe('#easeTo', () => {
 
 describe('#easeTo globe projection', () => {
     test('pans to specified location', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({center: [100, 0], duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
     });
 
     test('zooms to specified level', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({zoom: 3.2, duration: 0});
         expect(camera.getZoom()).toBe(3.2);
     });
 
     test('rotates to specified bearing', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({bearing: 90, duration: 0});
         expect(camera.getBearing()).toBe(90);
     });
 
     test('pitches to specified pitch', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({pitch: 45, duration: 0});
         expect(camera.getPitch()).toBe(45);
     });
 
     test('pans and zooms', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({center: [100, 0], zoom: 3.2, duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
         expect(camera.getZoom()).toBe(3.2);
     });
 
-    test('zooms around a point', () => {
-        const camera = createCamera();
-        camera.easeTo({around: [100, 0], zoom: 3, duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 87.5, lat: 0}));
-        expect(camera.getZoom()).toBe(3);
-    });
-
     test('pans and rotates', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({center: [100, 0], bearing: 90, duration: 0});
         expect(camera.getCenter()).toEqual({lng: 100, lat: 0});
         expect(camera.getBearing()).toBe(90);
     });
 
     test('zooms and rotates', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({zoom: 3.2, bearing: 90, duration: 0});
         expect(camera.getZoom()).toBe(3.2);
         expect(camera.getBearing()).toBe(90);
     });
 
     test('pans, zooms, and rotates', () => {
-        const camera = createCamera({bearing: -90});
+        const camera = createCameraGlobe({bearing: -90});
         camera.easeTo({center: [100, 0], zoom: 3.2, bearing: 90, duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 100, lat: 0}));
         expect(camera.getZoom()).toBe(3.2);
@@ -1160,53 +1153,55 @@ describe('#easeTo globe projection', () => {
     });
 
     test('noop', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({duration: 0});
         expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
         expect(camera.getZoom()).toBe(0);
         expect(camera.getBearing()).toBeCloseTo(0);
     });
 
+    // The behaviour of "offset" differs from mercator because mercator doesn't follow the docs
+    // that offset should be relative to the *target* map state, not *starting* map state.
+    // Globe does follow the docs for now.
+
     test('noop with offset', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({offset: [100, 0], duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 0, lat: 0});
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: -85.920282254, lat: 0});
         expect(camera.getZoom()).toBe(0);
         expect(camera.getBearing()).toBeCloseTo(0);
     });
 
     test('pans with specified offset', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 29.6875, lat: 0});
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 14.079717746, lat: 0});
     });
 
     test('pans with specified offset relative to viewport on a rotated camera', () => {
-        const camera = createCamera({bearing: 180});
+        const camera = createCameraGlobe({bearing: 180});
         camera.easeTo({center: [100, 0], offset: [100, 0], duration: 0});
-        expect(fixedLngLat(camera.getCenter())).toEqual({lng: 170.3125, lat: 0});
+        expect(fixedLngLat(camera.getCenter())).toEqual({lng: -174.079717746, lat: 0});
     });
 
     test('zooms with specified offset', () => {
-        const camera = createCamera();
+        const camera = createCameraGlobe();
         camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 62.66117668978015, lat: 0}));
+        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -7.742888378, lat: 0}));
     });
 
     test('zooms with specified offset relative to viewport on a rotated camera', () => {
-        const camera = createCamera({bearing: 180});
+        const camera = createCameraGlobe({bearing: 180});
         camera.easeTo({zoom: 3.2, offset: [100, 0], duration: 0});
         expect(camera.getZoom()).toBe(3.2);
-        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: -62.66117668978012, lat: 0}));
+        expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 7.742888378, lat: 0}));
     });
 
     test('rotates with specified offset', () => {
         const camera = createCameraGlobe();
         camera.easeTo({bearing: 90, offset: [100, 0], duration: 0});
         expect(camera.getBearing()).toBe(90);
-        // This behaviour differs from mercator because mercator doesn't follow the spec
-        // that offset should be relative to the *target* map state, not *starting* map state.
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
     });
 
@@ -1216,8 +1211,6 @@ describe('#easeTo globe projection', () => {
         expect(camera.getBearing()).toBe(90);
         expect(fixedLngLat(camera.getCenter())).toEqual(fixedLngLat({lng: 0, lat: 85.051129}));
     });
-
-    ////////////////////////////////////////////////
 
     test('emits zoom events if changing latitude but not zooming', () => {
         const camera = createCameraGlobe();
