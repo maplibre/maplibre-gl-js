@@ -1519,7 +1519,7 @@ export class Style extends Evented {
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
         this._checkLoaded();
-        
+
         const sky = this.sky.getSky();
         let update = false;
         if (!skyOptions) {
