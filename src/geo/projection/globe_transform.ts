@@ -426,6 +426,9 @@ export class GlobeTransform extends Transform {
     }
 
     public isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean {
+        if (!this._globeRendering) {
+            return this._mercatorTransform.isOccluded(x, y, unwrappedTileID);
+        }
         const spherePos = this._projectTileCoordinatesToSphere(x, y, unwrappedTileID);
         return !this.isSurfacePointVisible(spherePos);
     }
@@ -886,6 +889,9 @@ export class GlobeTransform extends Transform {
      * camera's position (not taking into account camera rotation at all).
      */
     private isSurfacePointVisible(p: vec3): boolean {
+        if (!this._globeRendering) {
+            return true;
+        }
         const plane = this._cachedClippingPlane;
         // dot(position on sphere, occlusion plane equation)
         const dotResult = plane[0] * p[0] + plane[1] * p[1] + plane[2] * p[2] + plane[3];
