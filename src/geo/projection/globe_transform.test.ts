@@ -267,7 +267,7 @@ describe('GlobeTransform', () => {
         });
 
         test('setLocationAtPoint', () => {
-            const precisionDigits = 2; // JP: TODO: increase precision
+            const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.zoom = 1;
             globeTransform.newFrameUpdate();
