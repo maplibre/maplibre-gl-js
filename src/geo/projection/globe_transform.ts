@@ -701,6 +701,10 @@ export class GlobeTransform extends Transform {
         };
     }
 
+    /**
+     * Note: automatically adjusts zoom to keep planet size consistent
+     * (same size before and after a {@link setLocationAtPoint} call).
+     */
     override setLocationAtPoint(lnglat: LngLat, point: Point): void {
         if (!this._globeRendering) {
             this._mercatorTransform.setLocationAtPoint(lnglat, point);
@@ -798,7 +802,9 @@ export class GlobeTransform extends Transform {
 
         const newLng = validLng / Math.PI * 180;
         const newLat = validLat / Math.PI * 180;
+        const oldLat = this.center.lat;
         this.center = new LngLat(newLng, clamp(newLat, -90, 90));
+        this.zoom += getZoomAdjustment(this, oldLat, this.center.lat);
     }
 
     override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {

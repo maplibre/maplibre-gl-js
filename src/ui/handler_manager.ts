@@ -571,6 +571,7 @@ export class HandlerManager {
                 const factor = (1.0 - tr.zoomScale(-actualZoomDelta)) * Math.min(distanceFactor, radiusFactor);
 
                 const oldCenterLat = tr.center.lat;
+                const oldZoom = tr.zoom;
                 const heuristicCenter = new LngLat(
                     tr.center.lng + dLng * factor,
                     clamp(tr.center.lat + dLat * factor, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
@@ -592,7 +593,7 @@ export class HandlerManager {
                     exactCenter.lng + lngExactToHeuristic * heuristicFactor,
                     exactCenter.lat + latExactToHeuristic * heuristicFactor
                 ).wrap();
-                tr.zoom += getZoomAdjustment(tr, oldCenterLat, tr.center.lat);
+                tr.zoom = oldZoom + getZoomAdjustment(tr, oldCenterLat, tr.center.lat);
             }
 
             // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
