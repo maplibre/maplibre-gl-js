@@ -12,6 +12,7 @@ import {backgroundUniforms, backgroundPatternUniforms} from './background_progra
 import {terrainUniforms, terrainDepthUniforms, terrainCoordsUniforms} from './terrain_program';
 import {projectionErrorMeasurementUniforms} from './projection_error_measurement_program';
 import {atmosphereUniforms} from './atmosphere_program';
+import {skyUniforms} from './sky_program';
 
 const emptyUniforms = (_: any, __: any): any => {};
 
@@ -46,4 +47,5 @@ export const programUniforms = {
     terrainCoords: terrainCoordsUniforms,
     projectionErrorMeasurement: projectionErrorMeasurementUniforms,
     atmosphere: atmosphereUniforms,
+    sky: skyUniforms
 };

@@ -1,4 +1,4 @@
-import Sky from './sky';
+import {Sky} from './sky';
 import {latest as styleSpec, SkySpecification} from '@maplibre/maplibre-gl-style-spec';
 import {EvaluationParameters} from './evaluation_parameters';
 import {TransitionParameters} from './properties';

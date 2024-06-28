@@ -30,7 +30,11 @@ jobs:
       - run: npm run typecheck
         if: '!cancelled()'
       - run: npm run generate-docs
-      - run: docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
+      - name: Build docs using docker and mkdocs-material
+        run: |
+          rm docs/README.md
+          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
+
 
   unit-tests:
     name: Unit tests and Coverage
