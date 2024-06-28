@@ -85,7 +85,7 @@ jobs:
 
       - name: Tag commit and push
         id: tag_version
-        uses: mathieudutour/github-tag-action@v6.1
+        uses: mathieudutour/github-tag-action@v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: ${{ steps.package-version.outputs.current-version }}
@@ -148,7 +148,7 @@ jobs:
           cp test/bench/versions/benchmarks_generated.js.map tmp
 
       - name: Upload Benchmarks to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp
@@ -162,7 +162,7 @@ jobs:
 
       - name: Publish the docs
         if: ${{ steps.prepare_release.outputs.release_type == 'regular' }}
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: site

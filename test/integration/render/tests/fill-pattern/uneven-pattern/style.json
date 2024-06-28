@@ -5,7 +5,7 @@
   },
   "zoom": 2,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -25,7 +25,7 @@
     {
       "id": "land",
       "type": "fill",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "water",
       "paint": {
         "fill-pattern": "interstate_1"

@@ -22,15 +22,19 @@ jobs:
           node-version-file: '.nvmrc'
       - run: npm ci
       - run: npm run lint
-        if: success() || failure()
+        if: '!cancelled()'
       - run: npm run lint-css
-        if: success() || failure()
+        if: '!cancelled()'
       - run: npm run generate-typings
-        if: success() || failure()
+        if: '!cancelled()'
       - run: npm run typecheck
-        if: success() || failure()
+        if: '!cancelled()'
       - run: npm run generate-docs
-      - run: docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build
+      - name: Build docs using docker and mkdocs-material
+        run: |
+          rm docs/README.md
+          docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build --strict
+
 
   unit-tests:
     name: Unit tests and Coverage
@@ -47,10 +51,17 @@ jobs:
       - run: npm ci
       - run: npm run test-unit-ci
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
-          files: ${{ github.workspace }}/coverage/unit/codecov.json
+          files: ${{ github.workspace }}/coverage/jest/codecov.json
           verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+      - name: Upload test results to Codecov
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
 
   integration-tests:
     name: Integration tests
@@ -67,12 +78,19 @@ jobs:
       - run: npm ci
       - run: npm run build-dist
       - uses: actions/upload-artifact@v4
-        if: success()
+        if: '!cancelled()'
         with:
           name: build-dist-${{ matrix.os }}
           path: dist/maplibre-gl.js
       - run: npm run test-integration-ci
-        if: success() || failure()
+      - name: Upload coverage reports to Codecov
+        if: '!cancelled()'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ${{ github.workspace }}/coverage/jest/codecov.json
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
 
   render-tests:
     name: Render tests
@@ -99,15 +117,23 @@ jobs:
         run: nohup Xvfb &
           echo "DISPLAY=:0" >> $GITHUB_ENV
       - run: npm run build-dist
-      - run: npm run test-render
+      - name: Run Render tests
+        run: npm run test-render
         env:
           CURRENT_SPLIT_INDEX: ${{ matrix.split }}
-        if: success() || failure()
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        if: '!cancelled()'
+        uses: codecov/codecov-action@v4
         with:
           files: ${{ github.workspace }}/coverage/render/codecov.json
           verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+      - name: Upload test results to Codecov
+        if: '!cancelled()'
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload render test failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -129,4 +155,3 @@ jobs:
       - run: npm ci
       - run: npm run build-dist
       - run: npm run test-build-ci
-        if: success() || failure()

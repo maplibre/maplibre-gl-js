@@ -58,7 +58,7 @@
 <div class="map-overlay top">
     <div class="map-overlay-inner">
         <h2>Significant earthquakes in 2015</h2>
-        <label id="month"></label>
+        <label id="month" for="slider"></label>
         <input id="slider" type="range" min="0" max="11" step="1" value="0" />
     </div>
     <div class="map-overlay-inner">
@@ -104,9 +104,9 @@
     }
 
     map.on('load', () => {
-        // Data courtesy of http://earthquake.usgs.gov/
+        // Data courtesy of https://www.usgs.gov/programs/earthquake-hazards
         // Query for significant earthquakes in 2015 URL request looked like this:
-        // http://earthquake.usgs.gov/fdsnws/event/1/query
+        // https://earthquake.usgs.gov/fdsnws/event/1/query
         //    ?format=geojson
         //    &starttime=2015-01-01
         //    &endtime=2015-12-31

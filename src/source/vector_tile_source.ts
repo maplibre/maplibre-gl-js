@@ -12,6 +12,7 @@ import type {Dispatcher} from '../util/dispatcher';
 import type {Tile} from './tile';
 import type {VectorSourceSpecification, PromoteIdSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from './worker_source';
+import {MessageType} from '../util/actor_messages';
 
 export type VectorTileSourceOptions = VectorSourceSpecification & {
     collectResourceTiming?: boolean;
@@ -153,7 +154,6 @@ export class VectorTileSource extends Evented implements Source {
      * Sets the source `tiles` property and re-renders the map.
      *
      * @param tiles - An array of one or more tile source URLs, as in the TileJSON spec.
-     * @returns `this`
      */
     setTiles(tiles: Array<string>): this {
         this.setSourceProperty(() => {
@@ -167,7 +167,6 @@ export class VectorTileSource extends Evented implements Source {
      * Sets the source `url` property and re-renders the map.
      *
      * @param url - A URL to a TileJSON resource. Supported protocols are `http:` and `https:`.
-     * @returns `this`
      */
     setUrl(url: string): this {
         this.setSourceProperty(() => {
@@ -204,10 +203,10 @@ export class VectorTileSource extends Evented implements Source {
             promoteId: this.promoteId
         };
         params.request.collectResourceTiming = this._collectResourceTiming;
-        let messageType: 'loadTile' | 'reloadTile' = 'reloadTile';
+        let messageType: MessageType.loadTile | MessageType.reloadTile = MessageType.reloadTile;
         if (!tile.actor || tile.state === 'expired') {
             tile.actor = this.dispatcher.getActor();
-            messageType = 'loadTile';
+            messageType = MessageType.loadTile;
         } else if (tile.state === 'loading') {
             return new Promise<void>((resolve, reject) => {
                 tile.reloadPromise = {resolve, reject};
@@ -258,14 +257,23 @@ export class VectorTileSource extends Evented implements Source {
             delete tile.abortController;
         }
         if (tile.actor) {
-            await tile.actor.sendAsync({type: 'abortTile', data: {uid: tile.uid, type: this.type, source: this.id}});
+            await tile.actor.sendAsync({
+                type: MessageType.abortTile,
+                data: {uid: tile.uid, type: this.type, source: this.id}
+            });
         }
     }
 
     async unloadTile(tile: Tile): Promise<void> {
         tile.unloadVectorData();
         if (tile.actor) {
-            await tile.actor.sendAsync({type: 'removeTile', data: {uid: tile.uid, type: this.type, source: this.id}});
+            await tile.actor.sendAsync({
+                type: MessageType.removeTile,
+                data: {
+                    uid: tile.uid,
+                    type: this.type,
+                    source: this.id}
+            });
         }
     }
 

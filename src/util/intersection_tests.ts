@@ -120,7 +120,7 @@ function pointIntersectsBufferedLine(p: Point, line: Line, radius: number) {
     return false;
 }
 
-// Code from http://stackoverflow.com/a/1501725/331379.
+// Code from https://stackoverflow.com/a/1501725/331379.
 function distToSegmentSquared(p: Point, v: Point, w: Point) {
     const l2 = v.distSqr(w);
     if (l2 === 0) return p.distSqr(v);

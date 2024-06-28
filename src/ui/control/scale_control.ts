@@ -1,5 +1,4 @@
 import {DOM} from '../../util/dom';
-import {extend} from '../../util/util';
 
 import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
@@ -51,8 +50,11 @@ export class ScaleControl implements IControl {
     _container: HTMLElement;
     options: ScaleControlOptions;
 
-    constructor(options: ScaleControlOptions) {
-        this.options = extend({}, defaultOptions, options);
+    /**
+     * @param options - the control's options
+     */
+    constructor(options?: ScaleControlOptions) {
+        this.options = {...defaultOptions, ...options};
     }
 
     getDefaultPosition(): ControlPosition {

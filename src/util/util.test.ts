@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isClosedPolygon, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -73,14 +73,13 @@ describe('util', () => {
     });
 
     test('mapObject', () => {
-        expect.assertions(6);
+        expect.assertions(5);
         expect(mapObject({}, () => { expect(false).toBeTruthy(); })).toEqual({});
         const that = {};
-        expect(mapObject({map: 'box'}, function(value, key, object) {
+        expect(mapObject({map: 'box'}, (value, key, object) => {
             expect(value).toBe('box');
             expect(key).toBe('map');
             expect(object).toEqual({map: 'box'});
-            expect(this).toBe(that);
             return 'BOX';
         }, that)).toEqual({map: 'BOX'});
     });
@@ -195,30 +194,6 @@ describe('util isCounterClockwise', () => {
         expect(isCounterClockwise(c, b, a)).toBe(false);
         done();
     });
-});
-
-describe('util isClosedPolygon', () => {
-    test('not enough points', done => {
-        const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1)];
-
-        expect(isClosedPolygon(polygon)).toBe(false);
-        done();
-    });
-
-    test('not equal first + last point', done => {
-        const polygon = [new Point(0, 0), new Point(1, 0), new Point(0, 1), new Point(1, 1)];
-
-        expect(isClosedPolygon(polygon)).toBe(false);
-        done();
-    });
-
-    test('closed polygon', done => {
-        const polygon = [new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 0)];
-
-        expect(isClosedPolygon(polygon)).toBe(true);
-        done();
-    });
-
 });
 
 describe('util parseCacheControl', () => {

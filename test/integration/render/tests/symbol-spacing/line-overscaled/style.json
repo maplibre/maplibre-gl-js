@@ -11,7 +11,7 @@
   ],
   "zoom": 17,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -31,7 +31,7 @@
     {
       "id": "point-close",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "poi_label",
       "filter": [
         "==",
@@ -52,7 +52,7 @@
     {
       "id": "point-far",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "poi_label",
       "filter": [
         "==",
@@ -73,7 +73,7 @@
     {
       "id": "line-close",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road",
       "layout": {
         "icon-image": "triangle-stroked-12",
@@ -89,7 +89,7 @@
     {
       "id": "line-far",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road",
       "layout": {
         "icon-image": "triangle-stroked-12",

@@ -9,7 +9,7 @@ export async function checkGeolocationSupport(forceRecalculation = false): Promi
         return supportsGeolocation;
     }
     // navigator.permissions has incomplete browser support
-    // http://caniuse.com/#feat=permissions-api
+    // https://caniuse.com/#feat=permissions-api
     // Test for the case where a browser disables Geolocation because of an
     // insecure origin
     try {

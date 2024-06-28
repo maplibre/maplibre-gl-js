@@ -12,12 +12,12 @@ function createMap() {
                     minzoom: 5,
                     maxzoom: 12,
                     attribution: 'MapLibre',
-                    tiles: ['http://example.com/{z}/{x}/{y}.pngraw'],
+                    tiles: ['https://example.com/{z}/{x}/{y}.pngraw'],
                     bounds: [-47, -7, -45, -5]
                 },
             },
             layers: [],
-            owner: 'mapblibre',
+            owner: 'maplibre',
             id: 'demotiles',
         },
         hash: true
