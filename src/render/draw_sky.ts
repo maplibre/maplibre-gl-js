@@ -39,6 +39,6 @@ export function drawSky(painter: Painter, sky: Sky) {
     }
 
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
-        CullFaceMode.disabled, skyUniforms, undefined, 'sky', sky.mesh.vertexBuffer,
+        CullFaceMode.disabled, skyUniforms, null, undefined, 'sky', sky.mesh.vertexBuffer,
         sky.mesh.indexBuffer, sky.mesh.segments);
 }
