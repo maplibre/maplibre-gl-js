@@ -5,7 +5,7 @@ import {atmosphereUniformValues} from './program/atmosphere_program';
 
 import type {Painter} from './painter';
 import {ColorMode} from '../gl/color_mode';
-import Sky from '../style/sky';
+import {Sky} from '../style/sky';
 import {Light} from '../style/light';
 import {AtmosphereBoundsArray, TriangleIndexArray} from '../data/array_types.g';
 import {atmosphereAttributes} from '../data/atmosphere_attributes';
@@ -43,6 +43,7 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
     const sunPos = getSunPos(light, painter.transform);
 
     const projectionData = transform.getProjectionData(null);
+    const atmosphereBlend = sky.properties.get('atmosphere-blend');
 
     const atmosphereBlend = sky.getAtmosphereBlend() * projectionData.u_projection_transition;
     if (atmosphereBlend === 0) {

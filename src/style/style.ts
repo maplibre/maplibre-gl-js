@@ -5,6 +5,7 @@ import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
 import {GlyphManager} from '../render/glyph_manager';
 import {Light} from './light';
+import {Sky} from './sky';
 import {LineAtlas} from '../render/line_atlas';
 import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
@@ -63,7 +64,6 @@ import {
 } from '../util/actor_messages';
 import {Projection} from '../geo/projection/projection';
 import {createProjectionFromName} from '../geo/projection/projection_factory';
-import Sky from './sky';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -119,8 +119,8 @@ export type StyleSetterOptions = {
  *      when a desired style is a certain combination of previous and incoming style
  *      when an incoming style requires modification based on external state
  *
- * @param previousStyle - The current style.
- * @param nextStyle - The next style.
+ * @param previous - The current style.
+ * @param next - The next style.
  * @returns resulting style that will to be applied to the map
  *
  * @example
@@ -1282,7 +1282,7 @@ export class Style extends Evented {
         return extend({duration: 300, delay: 0}, this.stylesheet && this.stylesheet.transition);
     }
 
-    serialize(): StyleSpecification {
+    serialize(): StyleSpecification | undefined {
         // We return undefined before we're loaded, following the pattern of Map.getStyle() before
         // the Style object is initialized.
         // Internally, Style._validate() calls Style.serialize() but callers are responsible for
@@ -1514,21 +1514,26 @@ export class Style extends Evented {
     }
 
     getSky(): SkySpecification {
-        return this.sky?.getSky();
+        return this.stylesheet?.sky;
     }
 
     setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
         this._checkLoaded();
 
         const sky = this.sky.getSky();
-        let _update = false;
+        let update = false;
+        if (!skyOptions) {
+            if (sky) {
+                update = true;
+            }
+        }
         for (const key in skyOptions) {
             if (!deepEqual(skyOptions[key], sky[key])) {
-                _update = true;
+                update = true;
                 break;
             }
         }
-        if (!_update) return;
+        if (!update) return;
 
         const parameters = {
             now: browser.now(),
