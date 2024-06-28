@@ -21,6 +21,9 @@ import type {SubdivisionGranularitySetting} from '../../render/subdivision_granu
  * - must be explicitly disposed of after usage using the `destroy` function - this allows the implementing class to free any allocated resources
  */
 
+/**
+ * @internal
+ */
 export type ProjectionGPUContext = {
     context: Context;
     useProgram: (name: string) => Program<any>;
