@@ -5,21 +5,18 @@ import {PosArray, TriangleIndexArray} from '../data/array_types.g';
 import posAttributes from '../data/pos_attributes';
 import {SegmentVector} from '../data/segment';
 import {skyUniformValues} from './program/sky_program';
+import {atmosphereUniformValues} from './program/atmosphere_program';
 import {Sky} from '../style/sky';
+import {Light} from '../style/light';
 import {Mesh} from './mesh';
+import {mat4, vec3} from 'gl-matrix';
+import {Transform} from '../geo/transform';
+import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
+import {Context} from '../gl/context';
 
-export function drawSky(painter: Painter, sky: Sky) {
-    const context = painter.context;
-    const gl = context.gl;
-
-    const skyUniforms = skyUniformValues(sky, painter.style.map.transform, painter.pixelRatio);
-
-    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
-    const stencilMode = StencilMode.disabled;
-    const colorMode = painter.colorModeForRenderPass();
-    const program = painter.useProgram('sky');
-
+function getMesh(context: Context, sky: Sky): Mesh {
+    // Create the Sky mesh the first time we need it
     if (!sky.mesh) {
         const vertexArray = new PosArray();
         vertexArray.emplaceBack(-1, -1);
@@ -38,7 +35,71 @@ export function drawSky(painter: Painter, sky: Sky) {
         );
     }
 
+    return sky.mesh;
+}
+
+export function drawSky(painter: Painter, sky: Sky) {
+    const context = painter.context;
+    const gl = context.gl;
+
+    const skyUniforms = skyUniformValues(sky, painter.style.map.transform, painter.pixelRatio);
+
+    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadWrite, [0, 1]);
+    const stencilMode = StencilMode.disabled;
+    const colorMode = painter.colorModeForRenderPass();
+    const program = painter.useProgram('sky');
+
+    const mesh = getMesh(context, sky);
+
     program.draw(context, gl.TRIANGLES, depthMode, stencilMode, colorMode,
-        CullFaceMode.disabled, skyUniforms, null, undefined, 'sky', sky.mesh.vertexBuffer,
-        sky.mesh.indexBuffer, sky.mesh.segments);
+        CullFaceMode.disabled, skyUniforms, null, undefined, 'sky', mesh.vertexBuffer,
+        mesh.indexBuffer, mesh.segments);
+}
+
+function getSunPos(light: Light, transform: Transform): vec3 {
+    const _lp = light.properties.get('position');
+    const lightPos = [-_lp.x, -_lp.y, -_lp.z] as vec3;
+
+    const lightMat = mat4.identity(new Float64Array(16) as any);
+
+    if (light.properties.get('anchor') === 'map') {
+        mat4.rotateX(lightMat, lightMat, -transform.pitch * Math.PI / 180);
+        mat4.rotateZ(lightMat, lightMat, -transform.angle);
+        mat4.rotateX(lightMat, lightMat, transform.center.lat * Math.PI / 180.0);
+        mat4.rotateY(lightMat, lightMat, -transform.center.lng * Math.PI / 180.0);
+    }
+
+    vec3.transformMat4(lightPos, lightPos, lightMat);
+
+    return lightPos;
+}
+
+export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
+    const context = painter.context;
+    const gl = context.gl;
+    const program = painter.useProgram('atmosphere');
+    const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
+
+    const projection = painter.style.projection;
+    const projectionData = projection.getProjectionData(null, null);
+
+    const sunPos = getSunPos(light, painter.transform);
+
+    const atmosphereBlend = sky.properties.get('atmosphere-blend');
+    if (atmosphereBlend === 0) {
+        // Don't draw anythink if atmosphere is fully transparent
+        return;
+    }
+
+    const globePosition = projection.worldCenterPosition;
+    const globeRadius = projection.worldSize;
+    const invProjMatrix = projection.invProjMatrix;
+
+    const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, invProjMatrix);
+
+    const mesh = getMesh(context, sky);
+
+    program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended,
+        CullFaceMode.disabled, uniformValues, null, projectionData, 'atmosphere', mesh.vertexBuffer,
+        mesh.indexBuffer, mesh.segments);
 }

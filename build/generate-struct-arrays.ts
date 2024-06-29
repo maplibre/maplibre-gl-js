@@ -22,7 +22,6 @@ import fillExtrusionAttributes from '../src/data/bucket/fill_extrusion_attribute
 import {lineLayoutAttributes} from '../src/data/bucket/line_attributes';
 import {lineLayoutAttributesExt} from '../src/data/bucket/line_attributes_ext';
 import {patternAttributes} from '../src/data/bucket/pattern_attributes';
-import {atmosphereAttributes} from '../src/data/atmosphere_attributes';
 // symbol layer specific arrays
 import {
     symbolLayoutAttributes,
@@ -191,9 +190,6 @@ createStructArrayType('line_index', createLayout([
 createStructArrayType('line_strip_index', createLayout([
     {type: 'Uint16', name: 'vertices', components: 1}
 ]));
-
-// atmosphere bounds array
-createStructArrayType('atmosphere_bounds', atmosphereAttributes);
 
 // paint vertex arrays
 
