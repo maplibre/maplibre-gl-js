@@ -1,16 +1,19 @@
 import {TransferableGridIndex} from './transferable_grid_index';
 import {Color, CompoundExpression, expressions, ResolvedImage, StylePropertyFunction,
     StyleExpression, ZoomDependentExpression, ZoomConstantExpression} from '@maplibre/maplibre-gl-style-spec';
-
 import {AJAXError} from './ajax';
-
-import type {Transferable} from '../types/transferable';
 import {isImageBitmap} from './util';
 
+/**
+ * A class that is serialized to and json, that can be constructed back to the original class in the worker or in the main thread
+ */
 type SerializedObject<S extends Serialized = any> = {
     [_: string]: S;
 };
 
+/**
+ * All the possible values that can be serialized and sent to and from the worker
+ */
 export type Serialized = null | void | boolean | number | string | Boolean | Number | String | Date | RegExp | ArrayBuffer | ArrayBufferView | ImageData | ImageBitmap | Blob | Array<Serialized> | SerializedObject;
 
 type Registry = {
@@ -18,6 +21,7 @@ type Registry = {
         klass: {
             new (...args: any): any;
             deserialize?: (input: Serialized) => unknown;
+            serialize?: (input: any, transferables: Transferable[]) => SerializedObject;
         };
         omit: ReadonlyArray<string>;
         shallow: ReadonlyArray<string>;
@@ -88,6 +92,43 @@ function isArrayBuffer(value: any): value is ArrayBuffer {
            (value instanceof ArrayBuffer || (value.constructor && value.constructor.name === 'ArrayBuffer'));
 }
 
+function getClassRegistryKey(input: Object|SerializedObject): string {
+    const klass = (input.constructor as any);
+    return (input as SerializedObject).$name || klass._classRegistryKey;
+}
+
+function isRegistered(input: unknown): boolean {
+    if (input === null || typeof input !== 'object') {
+        return false;
+    }
+    const classRegistryKey = getClassRegistryKey(input);
+    if (classRegistryKey && classRegistryKey !== 'Object') {
+        return true;
+    }
+    return false;
+}
+
+function isSerializeHandledByBuiltin(input: unknown) {
+    return (!isRegistered(input) && (
+        input === null ||
+        input === undefined ||
+        typeof input === 'boolean' ||
+        typeof input === 'number' ||
+        typeof input === 'string' ||
+        input instanceof Boolean ||
+        input instanceof Number ||
+        input instanceof String ||
+        input instanceof Date ||
+        input instanceof RegExp ||
+        input instanceof Blob ||
+        input instanceof Error ||
+        isArrayBuffer(input) ||
+        isImageBitmap(input) ||
+        ArrayBuffer.isView(input) ||
+        input instanceof ImageData)
+    );
+}
+
 /**
  * Serialize the given object for transfer to or from a web worker.
  *
@@ -101,45 +142,22 @@ function isArrayBuffer(value: any): value is ArrayBuffer {
  * this should happen in the client code, before using serialize().)
  */
 export function serialize(input: unknown, transferables?: Array<Transferable> | null): Serialized {
-    if (input === null ||
-        input === undefined ||
-        typeof input === 'boolean' ||
-        typeof input === 'number' ||
-        typeof input === 'string' ||
-        input instanceof Boolean ||
-        input instanceof Number ||
-        input instanceof String ||
-        input instanceof Date ||
-        input instanceof RegExp ||
-        input instanceof Blob) {
-        return input;
-    }
-
-    if (isArrayBuffer(input)) {
-        if (transferables) {
-            transferables.push(input);
+    if (isSerializeHandledByBuiltin(input)) {
+        if (isArrayBuffer(input) || isImageBitmap(input)) {
+            if (transferables) {
+                transferables.push(input);
+            }
         }
-        return input;
-    }
-
-    if (isImageBitmap(input)) {
-        if (transferables) {
-            transferables.push(input);
+        if (ArrayBuffer.isView(input)) {
+            const view = input;
+            if (transferables) {
+                transferables.push(view.buffer);
+            }
         }
-        return input;
-    }
-
-    if (ArrayBuffer.isView(input)) {
-        const view = input;
-        if (transferables) {
-            transferables.push(view.buffer);
-        }
-        return view;
-    }
-
-    if (input instanceof ImageData) {
-        if (transferables) {
-            transferables.push(input.data.buffer);
+        if (input instanceof ImageData) {
+            if (transferables) {
+                transferables.push(input.data.buffer);
+            }
         }
         return input;
     }
@@ -152,72 +170,55 @@ export function serialize(input: unknown, transferables?: Array<Transferable> | 
         return serialized;
     }
 
-    if (typeof input === 'object') {
-        const klass = (input.constructor as any);
-        const name = klass._classRegistryKey;
-        if (!name) {
-            throw new Error('can\'t serialize object of unregistered class');
-        }
-        if (!registry[name]) throw new Error(`${name} is not registered.`);
+    if (typeof input !== 'object') {
+        throw new Error(`can't serialize object of type ${typeof input}`);
+    }
+    const classRegistryKey = getClassRegistryKey(input);
+    if (!classRegistryKey) {
+        throw new Error(`can't serialize object of unregistered class ${input.constructor.name}`);
+    }
+    if (!registry[classRegistryKey]) throw new Error(`${classRegistryKey} is not registered.`);
+    const {klass} = registry[classRegistryKey];
+    const properties: SerializedObject = klass.serialize ?
+        // (Temporary workaround) allow a class to provide static
+        // `serialize()` and `deserialize()` methods to bypass the generic
+        // approach.
+        // This temporary workaround lets us use the generic serialization
+        // approach for objects whose members include instances of dynamic
+        // StructArray types. Once we refactor StructArray to be static,
+        // we can remove this complexity.
+        (klass.serialize(input, transferables) as SerializedObject) : {};
 
-        const properties: SerializedObject = klass.serialize ?
-            // (Temporary workaround) allow a class to provide static
-            // `serialize()` and `deserialize()` methods to bypass the generic
-            // approach.
-            // This temporary workaround lets us use the generic serialization
-            // approach for objects whose members include instances of dynamic
-            // StructArray types. Once we refactor StructArray to be static,
-            // we can remove this complexity.
-            (klass.serialize(input, transferables) as SerializedObject) : {};
-
-        if (!klass.serialize) {
-            for (const key in input) {
-                // any cast due to https://github.com/facebook/flow/issues/5393
-                if (!(input as any).hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
-                if (registry[name].omit.indexOf(key) >= 0) continue;
-                const property = (input as any)[key];
-                properties[key] = registry[name].shallow.indexOf(key) >= 0 ?
-                    property :
-                    serialize(property, transferables);
-            }
-            if (input instanceof Error) {
-                properties.message = input.message;
-            }
-        } else {
-            if (transferables && properties as any === transferables[transferables.length - 1]) {
-                throw new Error('statically serialized object won\'t survive transfer of $name property');
-            }
+    if (!klass.serialize) {
+        for (const key in input) {
+            if (!input.hasOwnProperty(key)) continue; // eslint-disable-line no-prototype-builtins
+            if (registry[classRegistryKey].omit.indexOf(key) >= 0) continue;
+            const property = input[key];
+            properties[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ?
+                property :
+                serialize(property, transferables);
         }
-
-        if (properties.$name) {
-            throw new Error('$name property is reserved for worker serialization logic.');
+        if (input instanceof Error) {
+            properties.message = input.message;
         }
-        if (name !== 'Object') {
-            properties.$name = name;
+    } else {
+        if (transferables && properties === transferables[transferables.length - 1]) {
+            throw new Error('statically serialized object won\'t survive transfer of $name property');
         }
-
-        return properties;
     }
 
-    throw new Error(`can't serialize object of type ${typeof input}`);
+    if (properties.$name) {
+        throw new Error('$name property is reserved for worker serialization logic.');
+    }
+    if (classRegistryKey !== 'Object') {
+        properties.$name = classRegistryKey;
+    }
+
+    return properties;
 }
 
 export function deserialize(input: Serialized): unknown {
-    if (input === null ||
-        input === undefined ||
-        typeof input === 'boolean' ||
-        typeof input === 'number' ||
-        typeof input === 'string' ||
-        input instanceof Boolean ||
-        input instanceof Number ||
-        input instanceof String ||
-        input instanceof Date ||
-        input instanceof RegExp ||
-        input instanceof Blob ||
-        isArrayBuffer(input) ||
-        isImageBitmap(input) ||
-        ArrayBuffer.isView(input) ||
-        input instanceof ImageData) {
+    if (isSerializeHandledByBuiltin(input)) {
         return input;
     }
 
@@ -225,30 +226,29 @@ export function deserialize(input: Serialized): unknown {
         return input.map(deserialize);
     }
 
-    if (typeof input === 'object') {
-        const name = (input as any).$name || 'Object';
-        if (!registry[name]) {
-            throw new Error(`can't deserialize unregistered class ${name}`);
-        }
-        const {klass} = registry[name];
-        if (!klass) {
-            throw new Error(`can't deserialize unregistered class ${name}`);
-        }
-
-        if (klass.deserialize) {
-            return klass.deserialize(input);
-        }
-
-        const result = Object.create(klass.prototype);
-
-        for (const key of Object.keys(input)) {
-            if (key === '$name') continue;
-            const value = (input as SerializedObject)[key];
-            result[key] = registry[name].shallow.indexOf(key) >= 0 ? value : deserialize(value);
-        }
-
-        return result;
+    if (typeof input !== 'object') {
+        throw new Error(`can't deserialize object of type ${typeof input}`);
+    }
+    const classRegistryKey = getClassRegistryKey(input) || 'Object';
+    if (!registry[classRegistryKey]) {
+        throw new Error(`can't deserialize unregistered class ${classRegistryKey}`);
+    }
+    const {klass} = registry[classRegistryKey];
+    if (!klass) {
+        throw new Error(`can't deserialize unregistered class ${classRegistryKey}`);
     }
 
-    throw new Error(`can't deserialize object of type ${typeof input}`);
+    if (klass.deserialize) {
+        return klass.deserialize(input);
+    }
+
+    const result = Object.create(klass.prototype);
+
+    for (const key of Object.keys(input)) {
+        if (key === '$name') continue;
+        const value = (input as SerializedObject)[key];
+        result[key] = registry[classRegistryKey].shallow.indexOf(key) >= 0 ? value : deserialize(value);
+    }
+
+    return result;
 }

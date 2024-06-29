@@ -16,7 +16,7 @@ export const nodeResolve = resolve({
     preferBuiltins: false
 });
 
-export const plugins = (production: boolean): Plugin[] => [
+export const plugins = (production: boolean, minified: boolean): Plugin[] => [
     json(),
     // https://github.com/zaach/jison/issues/351
     replace({
@@ -29,9 +29,9 @@ export const plugins = (production: boolean): Plugin[] => [
     }),
     production && strip({
         sourceMap: true,
-        functions: ['PerformanceUtils.*', 'Debug.*']
+        functions: ['PerformanceUtils.*']
     }),
-    production && terser({
+    minified && terser({
         compress: {
             // eslint-disable-next-line camelcase
             pure_getters: true,
@@ -46,4 +46,13 @@ export const plugins = (production: boolean): Plugin[] => [
         // https://github.com/mapbox/mapbox-gl-js/pull/6956
         ignoreGlobal: true
     })
-].filter(Boolean);
+].filter(Boolean) as Plugin[];
+
+export const watchStagingPlugin: Plugin = {
+    name: 'watch-external',
+    buildStart() {
+        this.addWatchFile('staging/maplibregl/index.js');
+        this.addWatchFile('staging/maplibregl/shared.js');
+        this.addWatchFile('staging/maplibregl/worker.js');
+    }
+};

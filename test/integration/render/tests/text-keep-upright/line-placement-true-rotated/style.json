@@ -15,7 +15,7 @@
   ],
   "zoom": 14,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -35,7 +35,7 @@
     {
       "id": "line-placement-true",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road",
       "layout": {
         "symbol-placement": "line",

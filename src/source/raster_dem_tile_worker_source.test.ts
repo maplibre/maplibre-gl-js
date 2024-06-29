@@ -3,20 +3,17 @@ import {DEMData} from '../data/dem_data';
 import {WorkerDEMTileParameters} from './worker_source';
 
 describe('loadTile', () => {
-    test('loads DEM tile', done => {
+    test('loads DEM tile', async () => {
         const source = new RasterDEMTileWorkerSource();
 
-        source.loadTile({
+        const data = await source.loadTile({
             source: 'source',
             uid: '0',
             rawImageData: {data: new Uint8ClampedArray(256), height: 8, width: 8},
             dim: 256
-        } as any as WorkerDEMTileParameters, (err, data) => {
-            if (err) done(err);
-            expect(Object.keys(source.loaded)).toEqual(['0']);
-            expect(data instanceof DEMData).toBeTruthy();
-            done();
-        });
+        } as any as WorkerDEMTileParameters);
+        expect(Object.keys(source.loaded)).toEqual(['0']);
+        expect(data instanceof DEMData).toBeTruthy();
     });
 });
 
@@ -30,7 +27,8 @@ describe('removeTile', () => {
 
         source.removeTile({
             source: 'source',
-            uid: '0'
+            uid: '0',
+            type: 'raster-dem',
         });
 
         expect(source.loaded).toEqual({});

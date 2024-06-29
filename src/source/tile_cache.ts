@@ -3,7 +3,7 @@ import type {Tile} from './tile';
 
 /**
  * @internal
- * A [least-recently-used cache](http://en.wikipedia.org/wiki/Cache_algorithms)
+ * A [least-recently-used cache](https://en.wikipedia.org/wiki/Cache_algorithms)
  * with hash lookup made possible by keeping a list of keys in parallel to
  * an array of dictionary of values
  */

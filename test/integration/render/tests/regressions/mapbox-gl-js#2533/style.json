@@ -9,7 +9,7 @@
     }
   },
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -32,7 +32,7 @@
     {
       "id": "land",
       "type": "fill",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "water",
       "paint": {
         "fill-color": "#3bb2d0",

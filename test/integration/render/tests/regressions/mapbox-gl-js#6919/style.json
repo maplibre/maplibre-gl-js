@@ -14,7 +14,7 @@
   ],
   "zoom": 4.5,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -34,7 +34,7 @@
     {
       "id": "line-center",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "marine_label",
       "layout": {
         "text-field": "{name_en}",
@@ -51,7 +51,7 @@
     {
       "id": "line",
       "type": "line",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "marine_label",
       "paint": {
         "line-width": 1

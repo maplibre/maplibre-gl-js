@@ -6,7 +6,7 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 /**
  * @param gl - The map's gl context.
  * @param matrix - The map's camera matrix. It projects spherical mercator
- * coordinates to gl coordinates. The spherical mercator coordinate `[0, 0]` represents the
+ * coordinates to gl clip space coordinates. The spherical mercator coordinate `[0, 0]` represents the
  * top left corner of the mercator world and `[1, 1]` represents the bottom right corner. When
  * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
  * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
@@ -27,6 +27,7 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, mat
  * and they should appropriately handle {@link MapContextEvent} with `webglcontextlost` and `webglcontextrestored`.
  *
  * The `renderingMode` property controls whether the layer is treated as a `"2d"` or `"3d"` map layer. Use:
+ *
  * - `"renderingMode": "3d"` to use the depth buffer and share it with other layers
  * - `"renderingMode": "2d"` to add a layer with no depth. If you need to use the depth buffer for a `"2d"` layer you must use an offscreen
  *   framebuffer and {@link CustomLayerInterface#prerender}
@@ -74,7 +75,7 @@ type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, mat
  *     }
  * }
  *
- * map.on('load', function() {
+ * map.on('load', () => {
  *     map.addLayer(new NullIslandLayer());
  * });
  * ```

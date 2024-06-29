@@ -12,7 +12,7 @@
   "zoom": 14,
   "bearing": 90,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -31,7 +31,7 @@
     {
       "id": "line-none",
       "type": "line",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "road",
       "layout": {
         "visibility": "none"

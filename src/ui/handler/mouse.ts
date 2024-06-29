@@ -4,8 +4,17 @@ import {DOM} from '../../util/dom';
 import {DragMoveHandler, DragPanResult, DragRotateResult, DragPitchResult, DragHandler} from './drag_handler';
 import {MouseMoveStateManager} from './drag_move_state_manager';
 
+/**
+ * `MousePanHandler` allows the user to pan the map by clicking and dragging
+ */
 export interface MousePanHandler extends DragMoveHandler<DragPanResult, MouseEvent> {}
+/**
+ * `MouseRotateHandler` allows the user to rotate the map by clicking and dragging
+ */
 export interface MouseRotateHandler extends DragMoveHandler<DragRotateResult, MouseEvent> {}
+/**
+ * `MousePitchHandler` allows the user to zoom the map by pitching
+ */
 export interface MousePitchHandler extends DragMoveHandler<DragPitchResult, MouseEvent> {}
 
 const LEFT_BUTTON = 0;
@@ -15,7 +24,7 @@ const assignEvents = (handler: DragHandler<DragPanResult, MouseEvent>) => {
     handler.mousedown = handler.dragStart;
     handler.mousemoveWindow = handler.dragMove;
     handler.mouseup = handler.dragEnd;
-    handler.contextmenu = function(e: MouseEvent) {
+    handler.contextmenu = (e: MouseEvent) => {
         e.preventDefault();
     };
 };

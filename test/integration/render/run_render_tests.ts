@@ -7,14 +7,15 @@ import pixelmatch from 'pixelmatch';
 import {fileURLToPath} from 'url';
 import {globSync} from 'glob';
 import http from 'http';
+import puppeteer, {Page, Browser} from 'puppeteer';
+import {CoverageReport} from 'monocart-coverage-reports';
 import {localizeURLs} from '../lib/localize-urls';
-import maplibregl from '../../../src/index';
-import type {CanvasSource} from '../../../src/source/canvas_source';
-import type {Map} from '../../../src/ui/map';
-import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {PointLike} from '../../../src/ui/camera';
-import puppeteer, {Page} from 'puppeteer';
+import type {Map, CanvasSource, PointLike, StyleSpecification} from '../../../dist/maplibre-gl';
+import jnuitReportBuilder, {type TestSuite} from 'junit-report-builder';
+import * as maplibreglModule from '../../../dist/maplibre-gl';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
+let maplibregl: typeof maplibreglModule;
 
 type TestData = {
     id: string;
@@ -35,8 +36,6 @@ type TestData = {
         id: string;
         image: string;
     };
-    axonometric: boolean;
-    skew: [number, number];
     fadeDuration: number;
     debug: boolean;
     showOverdrawInspector: boolean;
@@ -47,7 +46,7 @@ type TestData = {
     operations: any[];
     queryGeometry: PointLike;
     queryOptions: any;
-    error: Error;
+    error?: Error;
     maxPitch: number;
     continuesRepaint: boolean;
     // Crop PNG results if they're too large
@@ -66,6 +65,7 @@ type RenderOptions = {
     skipreport: boolean;
     seed: string;
     debug: boolean;
+    openBrowser: boolean;
 }
 
 type StyleWithTestData = StyleSpecification & {
@@ -122,13 +122,8 @@ function checkValueParameter(options: RenderOptions, defaultValue: any, param: s
  * @returns nothing as it updates the testData object
  */
 function compareRenderResults(directory: string, testData: TestData, data: Uint8Array) {
-    let stats;
     const dir = path.join(directory, testData.id);
-    try {
-        // @ts-ignore
-        stats = fs.statSync(dir, fs.R_OK | fs.W_OK);
-        if (!stats.isDirectory()) throw new Error();
-    } catch (e) {
+    if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
 
@@ -248,9 +243,6 @@ function getTestStyles(options: RenderOptions, directory: string, port: number):
         });
     return sequence;
 }
-
-const browser = await puppeteer.launch({headless: 'new', args: ['--enable-webgl', '--no-sandbox',
-    '--disable-web-security']});
 
 /**
  * It creates the map and applies the operations to create an image
@@ -466,86 +458,90 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
          * @param operations - The operations
          * @param callback - The callback to use when all the operations are executed
          */
-        async function applyOperations(testData: TestData, map: Map & { _render: () => void}, operations: any[], callback: Function) {
-            const operation = operations && operations[0];
-            if (!operations || operations.length === 0) {
-                callback();
-
-            } else if (operation[0] === 'wait') {
-                if (operation.length > 1) {
-                    if (typeof operation[1] === 'number'
-                    ) {
-                        await new Promise((resolve) => {
+        async function applyOperations(testData: TestData, map: Map & { _render: () => void}, idle: boolean) {
+            if (!testData.operations || testData.operations.length === 0) {
+                return;
+            }
+            for (const operation of testData.operations) {
+                console.log(`Running operation: ${JSON.stringify(operation)}`);
+                switch (operation[0]) {
+                    case 'wait':
+                        if (operation.length <= 1) {
+                            while (!map.loaded()) {
+                                await map.once('render');
+                            }
+                        } else {
+                            if (typeof operation[1] === 'string') {
+                                // Wait for the event to fire
+                                await map.once(operation[1]);
+                            } else {
+                                await new Promise<void>((resolve) => {
+                                    setTimeout(() => {
+                                        resolve();
+                                    }, operation[1]);
+                                });
+                                map._render();
+                            }
+                        }
+                        console.log('done waiting');
+                        break;
+                    case 'idle':
+                        map.repaint = false;
+                        if (idle) {
+                            console.log('idle is true');
+                            break;
+                        }
+                        await map.once('idle');
+                        console.log('done waiting for idle');
+                        break;
+                    case 'sleep':
+                        await new Promise<void>((resolve) => {
                             setTimeout(() => {
-                                resolve(true); // Has to return something
+                                resolve();
                             }, operation[1]);
                         });
+                        break;
+                    case 'addImage': {
+                        const getImage = async (url) => {
+                            const img = new Image();
+                            img.src = url;
+                            img.crossOrigin = 'anonymous';
+                            await img.decode();
+                            return img;
+                        };
+                        const image = await getImage(`http://localhost:2900/${operation[2]}`);
 
-                        map._render();
-                        applyOperations(testData, map, operations.slice(1), callback);
-                    } else {
-                        // Wait for the event to fire
-                        map.once(operation[1], () => {
-                            applyOperations(testData, map, operations.slice(1), callback);
-                        });
+                        map.addImage(operation[1], image, operation[3] || {});
+                        break;
                     }
-                } else {
-                    const wait = function() {
-                        if (map.loaded()) {
-                            applyOperations(testData, map, operations.slice(1), callback);
-                        } else {
-                            map.once('render', wait);
+                    case 'addCustomLayer':
+                        map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
+                        map._render();
+                        break;
+                    case 'updateFakeCanvas': {
+                        const canvasSource = map.getSource(operation[1]) as CanvasSource;
+                        canvasSource.play();
+                        // update before pause should be rendered
+                        await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
+                        canvasSource.pause();
+                        // update after pause should not be rendered
+                        await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
+                        map._render();
+                        break;
+                    }
+                    case 'setStyle':
+                        map.setStyle(operation[1], {localIdeographFontFamily: false as any});
+                        break;
+                    case 'pauseSource':
+                        map.style.sourceCaches[operation[1]].pause();
+                        break;
+                    default:
+                        if (typeof map[operation[0]] === 'function') {
+                            map[operation[0]](...operation.slice(1));
                         }
-                    };
-                    wait();
                 }
-            } else if (operation[0] === 'sleep') {
-                // Prefer "wait", which renders until the map is loaded
-                // Use "sleep" when you need to test something that sidesteps the "loaded" logic
-                setTimeout(() => {
-                    applyOperations(testData, map, operations.slice(1), callback);
-                }, operation[1]);
-            } else if (operation[0] === 'addImage') {
-
-                const getImage = async (url) => {
-                    const img = new Image();
-                    img.src = url;
-                    img.crossOrigin = 'anonymous';
-                    await img.decode();
-                    return img;
-                };
-                const image = await getImage(`http://localhost:2900/${operation[2]}`);
-
-                map.addImage(operation[1], image, operation[3] || {});
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else if (operation[0] === 'addCustomLayer') {
-                map.addLayer(new customLayerImplementations[operation[1]](), operation[2]);
-                map._render();
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else if (operation[0] === 'updateFakeCanvas') {
-                const canvasSource = map.getSource(operation[1]) as CanvasSource;
-                canvasSource.play();
-                // update before pause should be rendered
-                await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[2]);
-                canvasSource.pause();
-                // update after pause should not be rendered
-                await updateFakeCanvas(window.document, testData.addFakeCanvas.id, operation[3]);
-                map._render();
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else if (operation[0] === 'setStyle') {
-                // Disable local ideograph generation (enabled by default) for
-                // consistent local ideograph rendering using fixtures in all runs of the test suite.
-                map.setStyle(operation[1], {localIdeographFontFamily: false as any});
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else if (operation[0] === 'pauseSource') {
-                map.style.sourceCaches[operation[1]].pause();
-                applyOperations(testData, map, operations.slice(1), callback);
-            } else {
-                if (typeof map[operation[0]] === 'function') {
-                    map[operation[0]](...operation.slice(1));
-                }
-                applyOperations(testData, map, operations.slice(1), callback);
             }
+
         }
 
         async function createFakeCanvas(document: Document, id: string, imagePath: string): Promise<HTMLCanvasElement> {
@@ -585,7 +581,6 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
                 maplibregl.setRTLTextPlugin(
                     'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
-                    null,
                     false // Don't lazy load the plugin
                 );
             }
@@ -593,22 +588,19 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
             const map = new maplibregl.Map({
                 container: 'map',
                 style,
-
-                // @ts-ignore
-                classes: options.classes,
                 interactive: false,
                 attributionControl: false,
                 maxPitch: options.maxPitch,
                 pixelRatio: options.pixelRatio,
                 preserveDrawingBuffer: true,
-                axonometric: options.axonometric || false,
-                skew: options.skew || [0, 0],
                 fadeDuration: options.fadeDuration || 0,
                 localIdeographFontFamily: options.localIdeographFontFamily || false as any,
                 crossSourceCollisions: typeof options.crossSourceCollisions === 'undefined' ? true : options.crossSourceCollisions,
                 maxCanvasSize: [8192, 8192]
             });
 
+            let idle = false;
+            map.on('idle', () => { console.log('idle'); idle = true; });
             // Configure the map to never stop the render loop
             map.repaint = typeof options.continuesRepaint === 'undefined' ? true : options.continuesRepaint;
 
@@ -618,46 +610,44 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
 
             const gl = map.painter.context.gl;
 
-            map.once('load', () => {
-                if (options.collisionDebug) {
-                    map.showCollisionBoxes = true;
-                    if (options.operations) {
-                        options.operations.push(['wait']);
-                    } else {
-                        options.operations = [['wait']];
-                    }
+            await map.once('load');
+            if (options.collisionDebug) {
+                map.showCollisionBoxes = true;
+                if (options.operations) {
+                    options.operations.push(['wait']);
+                } else {
+                    options.operations = [['wait']];
                 }
+            }
 
-                applyOperations(options, map as any, options.operations, () => {
-                    const viewport = gl.getParameter(gl.VIEWPORT);
-                    const w = options.reportWidth ?? viewport[2];
-                    const h = options.reportHeight ?? viewport[3];
+            await applyOperations(options, map as any, idle);
+            const viewport = gl.getParameter(gl.VIEWPORT);
+            const w = options.reportWidth ?? viewport[2];
+            const h = options.reportHeight ?? viewport[3];
 
-                    const data = new Uint8Array(w * h * 4);
-                    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
+            const data = new Uint8Array(w * h * 4);
+            gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
-                    // Flip the scanlines.
-                    const stride = w * 4;
-                    const tmp = new Uint8Array(stride);
-                    for (let i = 0, j = h - 1; i < j; i++, j--) {
-                        const start = i * stride;
-                        const end = j * stride;
-                        tmp.set(data.slice(start, start + stride), 0);
-                        data.set(data.slice(end, end + stride), start);
-                        data.set(tmp, end);
-                    }
+            // Flip the scanlines.
+            const stride = w * 4;
+            const tmp = new Uint8Array(stride);
+            for (let i = 0, j = h - 1; i < j; i++, j--) {
+                const start = i * stride;
+                const end = j * stride;
+                tmp.set(data.slice(start, start + stride), 0);
+                data.set(data.slice(end, end + stride), start);
+                data.set(tmp, end);
+            }
 
-                    map.remove();
-                    delete map.painter.context.gl;
+            map.remove();
+            delete map.painter.context.gl;
 
-                    if (options.addFakeCanvas) {
-                        const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
-                        fakeCanvas.parentNode.removeChild(fakeCanvas);
-                    }
+            if (options.addFakeCanvas) {
+                const fakeCanvas = window.document.getElementById(options.addFakeCanvas.id);
+                fakeCanvas.parentNode.removeChild(fakeCanvas);
+            }
 
-                    resolve(data);
-                });
-            });
+            resolve(data);
         });
     }, styleForTest as any);
 
@@ -673,7 +663,7 @@ async function getImageFromStyle(styleForTest: StyleWithTestData, page: Page): P
  */
 function printProgress(test: TestData, total: number, index: number) {
     if (test.error) {
-        console.log('\x1b[31m', `${index}/${total}: errored ${test.id} ${test.error.message}`, '\x1b[0m');
+        console.log('\x1b[91m', `${index}/${total}: errored ${test.id} ${test.error.message}`, '\x1b[0m');
     } else if (!test.ok) {
         console.log('\x1b[31m', `${index}/${total}: failed ${test.id} ${test.difference}`, '\x1b[0m');
     } else {
@@ -681,30 +671,41 @@ function printProgress(test: TestData, total: number, index: number) {
     }
 }
 
+function printSpecificStatistics(status: 'passed' | 'failed' | 'errored', subsetStats: TestData[], total: number, suite: TestSuite) {
+    const statusCount = subsetStats.length;
+    if (statusCount === 0) {
+        return;
+    }
+    console.log(`${statusCount} ${status} (${(100 * statusCount / total).toFixed(1)}%)`);
+    for (const testData of subsetStats) {
+        const testCase = suite.testCase().className(testData.id).name(testData.id);
+        if (status === 'failed') {
+            testCase.failure();
+        } else if (status === 'errored') {
+            testCase.error();
+        }
+    }
+    if (status === 'passed') {
+        return;
+    }
+    for (let i = 0; i < subsetStats.length; i++) {
+        printProgress(subsetStats[i], statusCount, i + 1);
+    }
+}
+
 /**
  * Prints the summary at the end of the run
  *
- * @param tests - all the tests with their resutls
+ * @param tests - all the tests with their results
  * @returns `true` if all the tests passed
  */
 function printStatistics(stats: TestStats): boolean {
+    const suite = jnuitReportBuilder.testSuite().name('render-tests');
+    printSpecificStatistics('passed', stats.passed, stats.total, suite);
+    printSpecificStatistics('failed', stats.failed, stats.total, suite);
+    printSpecificStatistics('errored', stats.errored, stats.total, suite);
 
-    function printStat(status: string, subsetStats: TestData[]) {
-        const statusCount = subsetStats.length;
-        if (statusCount > 0) {
-            console.log(`${statusCount} ${status} (${(100 * statusCount / stats.total).toFixed(1)}%)`);
-            if (status !== 'passed') {
-                for (let i = 0; i < subsetStats.length; i++) {
-                    printProgress(subsetStats[i], statusCount, i + 1);
-                }
-            }
-        }
-    }
-
-    printStat('passed', stats.passed);
-    printStat('failed', stats.failed);
-    printStat('errored', stats.errored);
-
+    jnuitReportBuilder.writeTo('junit.xml');
     return (stats.failed.length + stats.errored.length) === 0;
 }
 
@@ -735,8 +736,14 @@ function getReportItem(test: TestData) {
 
 function applyDebugParameter(options: RenderOptions, page: Page) {
     if (options.debug) {
-        page.on('console', message =>
-            console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`));
+        page.on('console', async (message) => {
+            if (message.text() !== 'JSHandle@error') {
+                console.log(`${message.type().substring(0, 3).toUpperCase()} ${message.text()}`);
+                return;
+            }
+            const messages = await Promise.all(message.args().map((arg) => arg.getProperty('message')));
+            console.log(`${message.type().substring(0, 3).toUpperCase()} ${messages.filter(Boolean)}`);
+        });
 
         page.on('pageerror', ({message}) => console.error(message));
 
@@ -757,7 +764,7 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
     let index = 0;
     for (const style of testStyles) {
         try {
-            //@ts-ignore
+            style.metadata.test.error = undefined;
             const data = await getImageFromStyle(style, page);
             compareRenderResults(directory, style.metadata.test, data);
         } catch (ex) {
@@ -765,6 +772,46 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
         }
         printProgress(style.metadata.test, testStyles.length, ++index);
     }
+}
+
+async function createPageAndStart(browser: Browser, testStyles: StyleWithTestData[], directory: string, options: RenderOptions) {
+    const page = await browser.newPage();
+    await page.coverage.startJSCoverage({includeRawScriptCoverage: true});
+    applyDebugParameter(options, page);
+    await page.addScriptTag({path: 'dist/maplibre-gl-dev.js'});
+    await runTests(page, testStyles, directory);
+    return page;
+}
+
+async function closePageAndFinish(page: Page, reportCoverage: boolean) {
+    const coverage = await page.coverage.stopJSCoverage();
+    await page.close();
+    if (!reportCoverage) {
+        return;
+    }
+
+    const rawV8CoverageData = coverage.map((it) => {
+        // Convert to raw v8 coverage format
+        const entry: any =  {
+            source: it.text,
+            ...it.rawScriptCoverage
+        };
+        if (entry.url.endsWith('maplibre-gl-dev.js')) {
+            entry.sourceMap = JSON.parse(fs.readFileSync('dist/maplibre-gl-dev.js.map').toString('utf-8'));
+        }
+        return entry;
+    });
+
+    const coverageReport = new CoverageReport({
+        name: 'MapLibre Coverage Report',
+        outputDir: './coverage/render',
+        reports: [['v8'], ['codecov']]
+    });
+    coverageReport.cleanCache();
+
+    await coverageReport.add(rawV8CoverageData);
+
+    await coverageReport.generate();
 }
 
 /**
@@ -777,13 +824,13 @@ async function runTests(page: Page, testStyles: StyleWithTestData[], directory: 
  * it exits with 1.
  */
 async function executeRenderTests() {
-
     const options: RenderOptions = {
         tests: [],
         recycleMap: false,
         skipreport: false,
         seed: makeHash(),
-        debug: false
+        debug: false,
+        openBrowser: false
     };
 
     if (process.argv.length > 2) {
@@ -792,7 +839,11 @@ async function executeRenderTests() {
         options.skipreport = checkParameter(options, '--skip-report');
         options.seed = checkValueParameter(options, options.seed, '--seed');
         options.debug = checkParameter(options, '--debug');
+        options.openBrowser = checkParameter(options, '--open-browser');
     }
+
+    const browser = await puppeteer.launch({headless: !options.openBrowser, args: ['--enable-webgl', '--no-sandbox',
+        '--disable-web-security']});
 
     const server = http.createServer(
         st({
@@ -819,23 +870,15 @@ async function executeRenderTests() {
         testStyles = testStyles.splice(+process.env.CURRENT_SPLIT_INDEX * numberOfTestsForThisPart, numberOfTestsForThisPart);
     }
 
-    let page = await browser.newPage();
-    applyDebugParameter(options, page);
-    await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-
-    await runTests(page, testStyles, directory);
-
+    let page = await createPageAndStart(browser, testStyles, directory, options);
     const failedTests = testStyles.filter(t => t.metadata.test.error || !t.metadata.test.ok);
+    await closePageAndFinish(page, failedTests.length === 0);
     if (failedTests.length > 0 && failedTests.length < testStyles.length) {
         console.log(`Re-running failed tests: ${failedTests.length}`);
-        page.close();
-        page = await browser.newPage();
-        applyDebugParameter(options, page);
-        await page.addScriptTag({path: 'dist/maplibre-gl.js'});
-        await runTests(page, failedTests, directory);
+        options.debug = true;
+        page = await createPageAndStart(browser, failedTests, directory, options);
+        await closePageAndFinish(page, true);
     }
-
-    page.close();
 
     const tests = testStyles.map(s => s.metadata.test).filter(t => !!t);
     const testStats: TestStats = {
@@ -846,7 +889,11 @@ async function executeRenderTests() {
     };
 
     if (process.env.UPDATE) {
-        console.log(`Updated ${testStyles.length} tests.`);
+        if (testStats.errored.length > 0) {
+            console.log(`Updated ${testStats.failed.length}/${testStats.total} tests, ${testStats.errored.length} errored.`);
+        } else {
+            console.log(`Updated ${testStats.total} tests.`);
+        }
         process.exit(0);
     }
 
@@ -899,4 +946,3 @@ async function executeRenderTests() {
 
 // start testing here
 executeRenderTests();
-

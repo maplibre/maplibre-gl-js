@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>PMTiles source and protocol</title>
+    <meta property="og:description" content="Uses the PMTiles plugin and protocol to present a map." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    
+    // add the PMTiles plugin to the maplibregl global.
+    const protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol('pmtiles', protocol.tile);
+
+    const PMTILES_URL = 'https://pmtiles.io/protomaps(vector)ODbL_firenze.pmtiles';
+
+    const p = new pmtiles.PMTiles(PMTILES_URL);
+
+    // this is so we share one instance across the JS code and the map renderer
+    protocol.add(p);
+
+    // we first fetch the header so we can get the center lon, lat of the map.
+    p.getHeader().then(h => {
+        const map = new maplibregl.Map({
+            container: 'map',
+            zoom: h.maxZoom - 2,
+            center: [h.centerLon, h.centerLat],
+            style: {
+                version: 8,
+                sources: {
+                    'example_source': {
+                        type: 'vector',
+                        url: `pmtiles://${PMTILES_URL}`,
+                        attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>'
+                    }
+                },
+                layers: [
+                    {
+                        'id': 'buildings',
+                        'source': 'example_source',
+                        'source-layer': 'landuse',
+                        'type': 'fill',
+                        'paint': {
+                            'fill-color': 'steelblue'
+                        }
+                    },
+                    {
+                        'id': 'roads',
+                        'source': 'example_source',
+                        'source-layer': 'roads',
+                        'type': 'line',
+                        'paint': {
+                            'line-color': 'black'
+                        }
+                    },
+                    {
+                        'id': 'mask',
+                        'source': 'example_source',
+                        'source-layer': 'mask',
+                        'type': 'fill',
+                        'paint': {
+                            'fill-color': 'white'
+                        }
+                    }
+                ]
+            }
+        });
+    });
+</script>
+</body>
+</html>

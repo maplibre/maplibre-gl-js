@@ -1,10 +1,9 @@
 import puppeteer, {Page, Browser} from 'puppeteer';
 import st from 'st';
-import http from 'http';
-import type {Server} from 'http';
+import http, {type Server} from 'http';
 import type {AddressInfo} from 'net';
-import type {Map} from '../../../src/ui/map';
-import type {default as MapLibreGL} from '../../../src/index';
+import type {default as MapLibreGL, Map} from '../../../dist/maplibre-gl';
+import {sleep} from '../../../src/util/test/util';
 
 const testWidth = 800;
 const testHeight = 600;
@@ -27,7 +26,7 @@ describe('Browser tests', () => {
         );
         await new Promise<void>((resolve) => server.listen(resolve));
 
-        browser = await puppeteer.launch({headless: 'new'});
+        browser = await puppeteer.launch({headless: true});
 
     }, 40000);
 
@@ -109,7 +108,7 @@ describe('Browser tests', () => {
                 steps: 10
             });
             await page.mouse.up();
-            await new Promise(r => setTimeout(r, 200));
+            await sleep(200);
 
             return page.evaluate(() => {
                 return map.getCenter();
@@ -135,7 +134,7 @@ describe('Browser tests', () => {
 
         await page.setViewport({width: 400, height: 400, deviceScaleFactor: 2});
 
-        await new Promise(r => setTimeout(r, 200));
+        await sleep(200);
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
@@ -149,7 +148,7 @@ describe('Browser tests', () => {
             document.getElementById('map')!.style.width = '200px';
             document.getElementById('map')!.style.height = '200px';
         });
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await sleep(1000);
 
         const canvas = await page.$('.maplibregl-canvas');
         const canvasBB = await canvas?.boundingBox();
@@ -172,6 +171,36 @@ describe('Browser tests', () => {
 
         expect(zoom).toBe(2);
     }, 20000);
+
+    test('Marker scaled: correct drag', async () => {
+        await page.evaluate(() => {
+            document.getElementById('map')!.style.transform = 'scale(0.5)';
+            const markerMapPosition = map.getCenter();
+            (window as any).marker = new maplibregl.Marker({draggable: true})
+                .setLngLat(markerMapPosition)
+                .addTo(map);
+            return map.getCenter();
+        });
+        const canvas = await page.$('.maplibregl-canvas');
+        const canvasBB = await canvas?.boundingBox()!;
+        const dragToLeft = async () => {
+            await page.mouse.move(canvasBB!.x + canvasBB!.width / 2, canvasBB!.y + canvasBB!.height / 2);
+            await page.mouse.down();
+            await page.mouse.move(canvasBB!.x, canvasBB!.y, {
+                steps: 100
+            });
+            await page.mouse.up();
+            await sleep(200);
+
+            return page.evaluate(() => {
+                const afterMove = (window as any).marker.getLngLat();
+                return map.project(afterMove);
+            });
+        };
+        const newPosition = await dragToLeft();
+        expect(newPosition.x).toBeCloseTo(0);
+        expect(newPosition.y).toBeCloseTo(0);
+    });
 
     test('Marker: correct position', async () => {
         const markerScreenPosition = await page.evaluate(() => {
@@ -233,7 +262,6 @@ describe('Browser tests', () => {
 
             return new Promise<any>((resolve) => {
                 map.once('idle', () => {
-                    map.setTerrain({source: 'terrainSource'});
                     map.once('idle', () => {
                         const markerBounding = marker.getElement().getBoundingClientRect();
                         resolve({
@@ -241,6 +269,7 @@ describe('Browser tests', () => {
                             y: markerBounding.y
                         });
                     });
+                    map.setTerrain({source: 'terrainSource'});
                 });
             });
         });
@@ -248,4 +277,127 @@ describe('Browser tests', () => {
         expect(markerScreenPosition.x).toBeCloseTo(386.5);
         expect(markerScreenPosition.y).toBeCloseTo(378.1);
     }, 20000);
+
+    test('Fullscreen control should work in shadowdom as well', async () => {
+        const fullscreenButtonTitle = await page.evaluate(async () => {
+            function sleepInBrowser(milliseconds: number) {
+                return new Promise(resolve => setTimeout(resolve, milliseconds));
+            }
+
+            let map: Map;
+            class MapLibre extends HTMLElement {
+                async connectedCallback() {
+                    const maplibreCSS = await (await fetch('/../../../../dist/maplibre-gl.css')).text();
+                    const styleSheet = new CSSStyleSheet();
+                    await styleSheet.replace(`${maplibreCSS}
+                      :host, .maplibregl-map {
+                      height: 100%;
+                      width: 100%;
+                    }`);
+                    const shadow = this.attachShadow({
+                        mode: 'open'
+                    });
+                    shadow.adoptedStyleSheets.push(styleSheet);
+                    const container = document.createElement('div');
+                    shadow.appendChild(container);
+                    map = new maplibregl.Map({
+                        container,
+                        style: {
+                            version: 8,
+                            sources: {
+                                osm: {
+                                    attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
+                                    type: 'raster',
+                                    tileSize: 256,
+                                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png']
+                                }
+                            },
+                            layers: [{
+                                type: 'raster',
+                                id: 'OpenStreetMap',
+                                source: 'osm'
+                            }]
+                        }
+                    });
+                    map.addControl(new maplibregl.FullscreenControl());
+                }
+            }
+            customElements.define('map-libre', MapLibre);
+            document.body.innerHTML = '<map-libre></map-libre>';
+            await sleepInBrowser(100);
+
+            await map.once('idle');
+            const fullscreenButton = document.getElementsByTagName('map-libre')[0].shadowRoot.querySelector('.maplibregl-ctrl-fullscreen') as HTMLButtonElement;
+            fullscreenButton.click();
+            await sleepInBrowser(1000);
+
+            return fullscreenButton.title;
+        });
+
+        expect(fullscreenButtonTitle).toBe('Exit fullscreen');
+    }, 20000);
+
+    test('Marker: correct opacity after resize with 3d terrain', async () => {
+        const markerOpacity = await page.evaluate(() => {
+            const marker = new maplibregl.Marker()
+                .setLngLat(map.getCenter())
+                .addTo(map);
+
+            map.setStyle({
+                version: 8,
+                sources: {
+                    osm: {
+                        type: 'raster',
+                        tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                        tileSize: 256,
+                        attribution: '&copy; OpenStreetMap Contributors',
+                        maxzoom: 19
+                    },
+                    terrainSource: {
+                        type: 'raster-dem',
+                        url: 'https://demotiles.maplibre.org/terrain-tiles/tiles.json',
+                        tileSize: 256
+                    }
+                },
+                layers: [{
+                    id: 'osm',
+                    type: 'raster',
+                    source: 'osm'
+                }],
+                terrain: {
+                    source: 'terrainSource',
+                    exaggeration: 1
+                }
+            });
+
+            return new Promise<any>((resolve) => {
+                map.once('idle', () => {
+                    map.once('idle', () => {
+                        document.getElementById('map')!.style.width = '250px';
+                        setTimeout(() => {
+                            resolve(marker.getElement().style.opacity);
+                        }, 100);
+                    });
+                    map.setTerrain({source: 'terrainSource'});
+                });
+            });
+        });
+
+        expect(markerOpacity).toBe('1');
+    }, 20000);
+
+    test('Load map with RTL plugin should throw exception for invalid URL', async () => {
+
+        const rtlPromise = page.evaluate(() => {
+            // console.log('Testing start');
+            return maplibregl.setRTLTextPlugin('badURL', false);
+        });
+
+        // exact message looks like
+        // Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:52015/test/integration/browser/fixtures/badURL' failed to load.
+        const regex = new RegExp('Failed to execute \'importScripts\'.*');
+
+        await expect(rtlPromise).rejects.toThrow(regex);
+
+    }, 2000);
 });

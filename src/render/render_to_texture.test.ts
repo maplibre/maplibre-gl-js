@@ -3,7 +3,6 @@ import type {Painter} from './painter';
 import type {LineStyleLayer} from '../style/style_layer/line_style_layer';
 import type {SymbolStyleLayer} from '../style/style_layer/symbol_style_layer';
 import {Context} from '../gl/context';
-import gl from 'gl';
 import {ColorMode} from '../gl/color_mode';
 import {Terrain} from './terrain';
 import {Style} from '../style/style';
@@ -18,6 +17,8 @@ import {HillshadeStyleLayer} from '../style/style_layer/hillshade_style_layer';
 import {BackgroundStyleLayer} from '../style/style_layer/background_style_layer';
 
 describe('render to texture', () => {
+    const gl = document.createElement('canvas').getContext('webgl');
+    jest.spyOn(gl, 'checkFramebufferStatus').mockReturnValue(gl.FRAMEBUFFER_COMPLETE);
     const backgroundLayer = {
         id: 'maine-background',
         type: 'background',
@@ -62,8 +63,8 @@ describe('render to texture', () => {
     let layersDrawn = 0;
     const painter = {
         layersDrawn: 0,
-        context: new Context(gl(1, 1) as any),
-        transform: {zoom: 10, calculatePosMatrix: () => {}},
+        context: new Context(gl),
+        transform: {zoom: 10, calculatePosMatrix: () => {}, calculateFogMatrix: () => {}},
         colorModeForRenderPass: () => ColorMode.alphaBlended,
         useProgram: () => { return {draw: () => { layersDrawn++; }}; },
         _renderTileClippingMasks: () => {},
@@ -119,7 +120,7 @@ describe('render to texture', () => {
         expect(layersDrawn).toBe(1);
     });
 
-    test('render symbol inbetween of rtt layers', () => {
+    test('render symbol between rtt layers', () => {
         style._order = ['maine-background', 'maine-fill', 'maine-raster', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;
@@ -134,7 +135,7 @@ describe('render to texture', () => {
         expect(layersDrawn).toBe(2);
     });
 
-    test('render more symbols inbetween of rtt layers', () => {
+    test('render more symbols between rtt layers', () => {
         style._order = ['maine-background', 'maine-symbol', 'maine-hillshade', 'maine-symbol', 'maine-line', 'maine-symbol'];
         rtt.prepareForRender(style, 0);
         layersDrawn = 0;

@@ -1,5 +1,4 @@
 import {DOM} from '../../util/dom';
-import {extend} from '../../util/util';
 
 import type {Map} from '../map';
 import type {ControlPosition, IControl} from './control';
@@ -12,7 +11,7 @@ export type Unit = 'imperial' | 'metric' | 'nautical';
 /**
  * The {@link ScaleControl} options object
  */
-type ScaleOptions = {
+type ScaleControlOptions = {
     /**
      * The maximum length of the scale control in pixels.
      * @defaultValue 100
@@ -25,7 +24,7 @@ type ScaleOptions = {
     unit?: Unit;
 };
 
-const defaultOptions: ScaleOptions = {
+const defaultOptions: ScaleControlOptions = {
     maxWidth: 100,
     unit: 'metric'
 };
@@ -37,7 +36,7 @@ const defaultOptions: ScaleOptions = {
  *
  * @example
  * ```ts
- * let scale = new maplibregl.ScaleControl({
+ * let scale = new ScaleControl({
  *     maxWidth: 80,
  *     unit: 'imperial'
  * });
@@ -49,10 +48,13 @@ const defaultOptions: ScaleOptions = {
 export class ScaleControl implements IControl {
     _map: Map;
     _container: HTMLElement;
-    options: ScaleOptions;
+    options: ScaleControlOptions;
 
-    constructor(options: ScaleOptions) {
-        this.options = extend({}, defaultOptions, options);
+    /**
+     * @param options - the control's options
+     */
+    constructor(options?: ScaleControlOptions) {
+        this.options = {...defaultOptions, ...options};
     }
 
     getDefaultPosition(): ControlPosition {

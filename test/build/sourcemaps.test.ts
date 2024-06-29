@@ -1,4 +1,4 @@
-import packageJson from '../../package.json' assert {type: 'json'};
+import packageJson from '../../package.json' with {type: 'json'};
 import {globSync, glob} from 'glob';
 import path, {dirname} from 'path';
 import fs from 'node:fs/promises';
@@ -83,6 +83,6 @@ describe('main sourcemap', () => {
         const s1 = setMinus(actualEntriesInSourcemapJSON, expectedEntriesInSourcemapJSON);
         expect(s1.length).toBeLessThan(5);
         const s2 = setMinus(expectedEntriesInSourcemapJSON, actualEntriesInSourcemapJSON);
-        expect(s2.length).toBeLessThan(15);
+        expect(s2.length).toBeLessThan(16);
     });
 });

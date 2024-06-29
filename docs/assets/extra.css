@@ -1,0 +1,18 @@
+/* see https://github.com/squidfunk/mkdocs-material/issues/4278 */
+/* stylelint-disable-next-line selector-class-pattern */
+.md-search-result .md-typeset {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    max-height: 200px;
+}
+
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: #295DAA;
+    --md-accent-fg-color: #568ad6;
+}
+  
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #295DAA;
+    --md-accent-fg-color: #568ad6;
+}

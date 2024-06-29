@@ -21,8 +21,12 @@ export type SymbolIconUniformsType = {
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
     'u_pitch_with_map': Uniform1i;
+    'u_is_along_line': Uniform1i;
+    'u_is_variable_anchor': Uniform1i;
     'u_texsize': Uniform2f;
     'u_texture': Uniform1i;
+    'u_translation': Uniform2f;
+    'u_pitched_scale': Uniform1f;
 };
 
 export type SymbolSDFUniformsType = {
@@ -40,11 +44,15 @@ export type SymbolSDFUniformsType = {
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
     'u_pitch_with_map': Uniform1i;
+    'u_is_along_line': Uniform1i;
+    'u_is_variable_anchor': Uniform1i;
     'u_texsize': Uniform2f;
     'u_texture': Uniform1i;
     'u_gamma_scale': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_is_halo': Uniform1i;
+    'u_translation': Uniform2f;
+    'u_pitched_scale': Uniform1f;
 };
 
 export type symbolTextAndIconUniformsType = {
@@ -62,6 +70,8 @@ export type symbolTextAndIconUniformsType = {
     'u_coord_matrix': UniformMatrix4f;
     'u_is_text': Uniform1i;
     'u_pitch_with_map': Uniform1i;
+    'u_is_along_line': Uniform1i;
+    'u_is_variable_anchor': Uniform1i;
     'u_texsize': Uniform2f;
     'u_texsize_icon': Uniform2f;
     'u_texture': Uniform1i;
@@ -69,6 +79,8 @@ export type symbolTextAndIconUniformsType = {
     'u_gamma_scale': Uniform1f;
     'u_device_pixel_ratio': Uniform1f;
     'u_is_halo': Uniform1i;
+    'u_translation': Uniform2f;
+    'u_pitched_scale': Uniform1f;
 };
 
 const symbolIconUniforms = (context: Context, locations: UniformLocations): SymbolIconUniformsType => ({
@@ -86,8 +98,12 @@ const symbolIconUniforms = (context: Context, locations: UniformLocations): Symb
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
+    'u_is_along_line': new Uniform1i(context, locations.u_is_along_line),
+    'u_is_variable_anchor': new Uniform1i(context, locations.u_is_variable_anchor),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
-    'u_texture': new Uniform1i(context, locations.u_texture)
+    'u_texture': new Uniform1i(context, locations.u_texture),
+    'u_translation': new Uniform2f(context, locations.u_translation),
+    'u_pitched_scale': new Uniform1f(context, locations.u_pitched_scale),
 });
 
 const symbolSDFUniforms = (context: Context, locations: UniformLocations): SymbolSDFUniformsType => ({
@@ -105,11 +121,15 @@ const symbolSDFUniforms = (context: Context, locations: UniformLocations): Symbo
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
+    'u_is_along_line': new Uniform1i(context, locations.u_is_along_line),
+    'u_is_variable_anchor': new Uniform1i(context, locations.u_is_variable_anchor),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_texture': new Uniform1i(context, locations.u_texture),
     'u_gamma_scale': new Uniform1f(context, locations.u_gamma_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_is_halo': new Uniform1i(context, locations.u_is_halo)
+    'u_is_halo': new Uniform1i(context, locations.u_is_halo),
+    'u_translation': new Uniform2f(context, locations.u_translation),
+    'u_pitched_scale': new Uniform1f(context, locations.u_pitched_scale),
 });
 
 const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations): symbolTextAndIconUniformsType => ({
@@ -127,13 +147,17 @@ const symbolTextAndIconUniforms = (context: Context, locations: UniformLocations
     'u_coord_matrix': new UniformMatrix4f(context, locations.u_coord_matrix),
     'u_is_text': new Uniform1i(context, locations.u_is_text),
     'u_pitch_with_map': new Uniform1i(context, locations.u_pitch_with_map),
+    'u_is_along_line': new Uniform1i(context, locations.u_is_along_line),
+    'u_is_variable_anchor': new Uniform1i(context, locations.u_is_variable_anchor),
     'u_texsize': new Uniform2f(context, locations.u_texsize),
     'u_texsize_icon': new Uniform2f(context, locations.u_texsize_icon),
     'u_texture': new Uniform1i(context, locations.u_texture),
     'u_texture_icon': new Uniform1i(context, locations.u_texture_icon),
     'u_gamma_scale': new Uniform1f(context, locations.u_gamma_scale),
     'u_device_pixel_ratio': new Uniform1f(context, locations.u_device_pixel_ratio),
-    'u_is_halo': new Uniform1i(context, locations.u_is_halo)
+    'u_is_halo': new Uniform1i(context, locations.u_is_halo),
+    'u_translation': new Uniform2f(context, locations.u_translation),
+    'u_pitched_scale': new Uniform1f(context, locations.u_pitched_scale),
 });
 
 const symbolIconUniformValues = (
@@ -144,12 +168,16 @@ const symbolIconUniformValues = (
     },
     rotateInShader: boolean,
     pitchWithMap: boolean,
+    isAlongLine: boolean,
+    isVariableAnchor: boolean,
     painter: Painter,
     matrix: mat4,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
+    translation: [number, number],
     isText: boolean,
-    texSize: [number, number]
+    texSize: [number, number],
+    pitchedScale: number
 ): UniformValues<SymbolIconUniformsType> => {
     const transform = painter.transform;
 
@@ -168,8 +196,12 @@ const symbolIconUniformValues = (
         'u_coord_matrix': glCoordMatrix,
         'u_is_text': +isText,
         'u_pitch_with_map': +pitchWithMap,
+        'u_is_along_line': isAlongLine,
+        'u_is_variable_anchor': isVariableAnchor,
         'u_texsize': texSize,
-        'u_texture': 0
+        'u_texture': 0,
+        'u_translation': translation,
+        'u_pitched_scale': pitchedScale
     };
 };
 
@@ -181,19 +213,23 @@ const symbolSDFUniformValues = (
     },
     rotateInShader: boolean,
     pitchWithMap: boolean,
+    isAlongLine: boolean,
+    isVariableAnchor: boolean,
     painter: Painter,
     matrix: mat4,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
+    translation: [number, number],
     isText: boolean,
     texSize: [number, number],
-    isHalo: boolean
+    isHalo: boolean,
+    pitchedScale: number
 ): UniformValues<SymbolSDFUniformsType> => {
     const transform = painter.transform;
 
     return extend(symbolIconUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, painter, matrix, labelPlaneMatrix,
-        glCoordMatrix, isText, texSize), {
+        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, matrix, labelPlaneMatrix,
+        glCoordMatrix, translation, isText, texSize, pitchedScale), {
         'u_gamma_scale': (pitchWithMap ? Math.cos(transform._pitch) * transform.cameraToCenterDistance : 1),
         'u_device_pixel_ratio': painter.pixelRatio,
         'u_is_halo': +isHalo
@@ -208,16 +244,20 @@ const symbolTextAndIconUniformValues = (
     },
     rotateInShader: boolean,
     pitchWithMap: boolean,
+    isAlongLine: boolean,
+    isVariableAnchor: boolean,
     painter: Painter,
     matrix: mat4,
     labelPlaneMatrix: mat4,
     glCoordMatrix: mat4,
+    translation: [number, number],
     texSizeSDF: [number, number],
-    texSizeIcon: [number, number]
+    texSizeIcon: [number, number],
+    pitchedScale: number
 ): UniformValues<SymbolIconUniformsType> => {
     return extend(symbolSDFUniformValues(functionType, size,
-        rotateInShader, pitchWithMap, painter, matrix, labelPlaneMatrix,
-        glCoordMatrix, true, texSizeSDF, true), {
+        rotateInShader, pitchWithMap, isAlongLine, isVariableAnchor, painter, matrix, labelPlaneMatrix,
+        glCoordMatrix, translation, true, texSizeSDF, true, pitchedScale), {
         'u_texsize_icon': texSizeIcon,
         'u_texture_icon': 1
     });

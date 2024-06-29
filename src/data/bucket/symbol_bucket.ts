@@ -36,7 +36,7 @@ import {getSizeData, MAX_PACKED_SIZE} from '../../symbol/symbol_size';
 import {register} from '../../util/web_worker_transfer';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
-import {plugin as globalRTLTextPlugin, getRTLTextPluginStatus} from '../../source/rtl_text_plugin';
+import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
 import {mat4} from 'gl-matrix';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode';
 import type {CanonicalTileID} from '../../source/tile_id';
@@ -86,7 +86,7 @@ export type SymbolFeature = {
     sourceLayerIndex: number;
     geometry: Array<Array<Point>>;
     properties: any;
-    type: 'Point' | 'LineString' | 'Polygon';
+    type: 'Unknown' | 'Point' | 'LineString' | 'Polygon';
     id?: any;
 };
 
@@ -302,7 +302,7 @@ register('CollisionBuffers', CollisionBuffers);
  *      `this.textCollisionBox`: Debug SymbolBuffers for text collision boxes
  *    The results are sent to the foreground for rendering
  *
- * 4. performSymbolPlacement(bucket, collisionIndex) is run on the foreground,
+ * 4. placement.ts is run on the foreground,
  *    and uses the CollisionIndex along with current camera settings to determine
  *    which symbols can actually show on the map. Collided symbols are hidden
  *    using a dynamic "OpacityVertexArray".
@@ -417,7 +417,13 @@ export class SymbolBucket implements Bucket {
         this.textAnchorOffsets = new TextAnchorOffsetArray();
     }
 
-    calculateGlyphDependencies(text: string, stack: {[_: number]: boolean}, textAlongLine: boolean, allowVerticalPlacement: boolean, doesAllowVerticalWritingMode: boolean) {
+    private calculateGlyphDependencies(
+        text: string,
+        stack: {[_: number]: boolean},
+        textAlongLine: boolean,
+        allowVerticalPlacement: boolean,
+        doesAllowVerticalWritingMode: boolean) {
+
         for (let i = 0; i < text.length; i++) {
             stack[text.charCodeAt(i)] = true;
             if ((textAlongLine || allowVerticalPlacement) && doesAllowVerticalWritingMode) {
@@ -476,13 +482,13 @@ export class SymbolBucket implements Bucket {
                 // conversion here.
                 const resolvedTokens = layer.getValueAndResolveTokens('text-field', evaluationFeature, canonical, availableImages);
                 const formattedText = Formatted.factory(resolvedTokens);
-                if (containsRTLText(formattedText)) {
-                    this.hasRTLText = true;
-                }
+
+                // on this instance: if hasRTLText is already true, all future calls to containsRTLText can be skipped.
+                const bucketHasRTLText = this.hasRTLText = (this.hasRTLText || containsRTLText(formattedText));
                 if (
-                    !this.hasRTLText || // non-rtl text so can proceed safely
-                    getRTLTextPluginStatus() === 'unavailable' || // We don't intend to lazy-load the rtl text plugin, so proceed with incorrect shaping
-                    this.hasRTLText && globalRTLTextPlugin.isParsed() // Use the rtlText plugin to shape text
+                    !bucketHasRTLText || // non-rtl text so can proceed safely
+                    rtlWorkerPlugin.getRTLTextPluginStatus() === 'unavailable' || // We don't intend to lazy-load the rtl text plugin, so proceed with incorrect shaping
+                    bucketHasRTLText && rtlWorkerPlugin.isParsed() // Use the rtlText plugin to shape text
                 ) {
                     text = transformText(formattedText, layer, evaluationFeature);
                 }
@@ -564,7 +570,7 @@ export class SymbolBucket implements Bucket {
     }
 
     isEmpty() {
-        // When the bucket encounters only rtl-text but the plugin isnt loaded, no symbol instances will be created.
+        // When the bucket encounters only rtl-text but the plugin isn't loaded, no symbol instances will be created.
         // In order for the bucket to be serialized, and not discarded as an empty bucket both checks are necessary.
         return this.symbolInstances.length === 0 && !this.hasRTLText;
     }

@@ -11,17 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 18 x64
-        uses: actions/setup-node@v3.6.0
+      - name: Use Node.js from nvmrc
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
-          architecture: x64
+          node-version-file: '.nvmrc'
 
       - name: Install
         run: npm ci
 
       - name: Build benchmarks
-        run: npm run build-benchmarks
+        run: |
+          npm run generate-typings
+          npm run build-benchmarks
 
       - name: Copy benchmarks_generated.js
         run: |
@@ -31,7 +32,7 @@ jobs:
 
       - name: Upload to GitHub Pages (main)
         if: startsWith(github.ref, 'refs/heads/main')
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: tmp

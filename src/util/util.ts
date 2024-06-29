@@ -1,6 +1,28 @@
 import Point from '@mapbox/point-geometry';
 import UnitBezier from '@mapbox/unitbezier';
-import type {Callback} from '../types/callback';
+import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
+import type {Size} from './image';
+import type {WorkerGlobalScopeInterface} from './web_worker';
+
+/**
+ * For a given collection of 2D points, returns their axis-aligned bounding box,
+ * in the format [minX, minY, maxX, maxY].
+ */
+export function getAABB(points: Array<Point>): [number, number, number, number] {
+    let tlX = Infinity;
+    let tlY = Infinity;
+    let brX = -Infinity;
+    let brY = -Infinity;
+
+    for (const p of points) {
+        tlX = Math.min(tlX, p.x);
+        tlY = Math.min(tlY, p.y);
+        brX = Math.max(brX, p.x);
+        brY = Math.max(brY, p.y);
+    }
+
+    return [tlX, tlY, brX, brY];
+}
 
 /**
  * Given a value `t` that varies between 0 and 1, return
@@ -26,7 +48,7 @@ export function easeCubicInOut(t: number): number {
  */
 export function bezier(p1x: number, p1y: number, p2x: number, p2y: number): (t: number) => number {
     const bezier = new UnitBezier(p1x, p1y, p2x, p2y);
-    return function(t: number) {
+    return (t: number) => {
         return bezier.solve(t);
     };
 }
@@ -64,33 +86,6 @@ export function wrap(n: number, min: number, max: number): number {
 }
 
 /**
- * Call an asynchronous function on an array of arguments,
- * calling `callback` with the completed results of all calls.
- *
- * @param array - input to each call of the async function.
- * @param fn - an async function with signature (data, callback)
- * @param callback - a callback run after all async work is done.
- * called with an array, containing the results of each async call.
- */
-export function asyncAll<Item, Result>(
-    array: Array<Item>,
-    fn: (item: Item, fnCallback: Callback<Result>) => void,
-    callback: Callback<Array<Result>>
-) {
-    if (!array.length) { return callback(null, []); }
-    let remaining = array.length;
-    const results = new Array(array.length);
-    let error = null;
-    array.forEach((item, i) => {
-        fn(item, (err, result) => {
-            if (err) error = err;
-            results[i] = (result as any as Result); // https://github.com/facebook/flow/issues/2123
-            if (--remaining === 0) callback(error, results);
-        });
-    });
-}
-
-/**
  * Compute the difference between the keys in one object and the keys
  * in another object.
  *
@@ -118,7 +113,11 @@ export function keysDifference<S, T>(
  * @param dest - destination object
  * @param sources - sources from which properties are pulled
  */
-export function extend(dest: any, ...sources: Array<any>): any {
+export function extend<T extends {}, U>(dest: T, source: U): T & U;
+export function extend<T extends {}, U, V>(dest: T, source1: U, source2: V): T & U & V;
+export function extend<T extends {}, U, V, W>(dest: T, source1: U, source2: V, source3: W): T & U & V & W;
+export function extend(dest: object, ...sources: Array<any>): any;
+export function extend(dest: object, ...sources: Array<any>): any {
     for (const src of sources) {
         for (const k in src) {
             dest[k] = src[k];
@@ -126,6 +125,9 @@ export function extend(dest: any, ...sources: Array<any>): any {
     }
     return dest;
 }
+
+// See https://stackoverflow.com/questions/49401866/all-possible-keys-of-an-union-type
+type KeysOfUnion<T> = T extends T ? keyof T: never;
 
 /**
  * Given an object and a number of properties as strings, return version
@@ -141,8 +143,8 @@ export function extend(dest: any, ...sources: Array<any>): any {
  * let justName = pick(foo, ['name']); // justName = { name: 'Charlie' }
  * ```
  */
-export function pick(src: any, properties: Array<string>): any {
-    const result = {};
+export function pick<T extends object>(src: T, properties: Array<KeysOfUnion<T>>): Partial<T> {
+    const result: Partial<T> = {};
     for (let i = 0; i < properties.length; i++) {
         const k = properties[i];
         if (k in src) {
@@ -272,7 +274,7 @@ export function warnOnce(message: string): void {
  *
  * @returns true for a counter clockwise set of points
  */
-// http://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
+// https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
 export function isCounterClockwise(a: Point, b: Point, c: Point): boolean {
     return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
 }
@@ -310,47 +312,6 @@ export function findLineIntersection(a1: Point, a2: Point, b1: Point, b2: Point)
 }
 
 /**
- * Returns the signed area for the polygon ring.  Positive areas are exterior rings and
- * have a clockwise winding.  Negative areas are interior rings and have a counter clockwise
- * ordering.
- *
- * @param ring - Exterior or interior ring
- */
-export function calculateSignedArea(ring: Array<Point>): number {
-    let sum = 0;
-    for (let i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
-        p1 = ring[i];
-        p2 = ring[j];
-        sum += (p2.x - p1.x) * (p1.y + p2.y);
-    }
-    return sum;
-}
-
-/**
- * Detects closed polygons, first + last point are equal
- *
- * @param points - array of points
- * @returns `true` if the points are a closed polygon
- */
-export function isClosedPolygon(points: Array<Point>): boolean {
-    // If it is 2 points that are the same then it is a point
-    // If it is 3 points with start and end the same then it is a line
-    if (points.length < 4)
-        return false;
-
-    const p1 = points[0];
-    const p2 = points[points.length - 1];
-
-    if (Math.abs(p1.x - p2.x) > 0 ||
-        Math.abs(p1.y - p2.y) > 0) {
-        return false;
-    }
-
-    // polygon simplification can produce polygons with zero area and more than 3 points
-    return Math.abs(calculateSignedArea(points)) > 0.01;
-}
-
-/**
  * Converts spherical coordinates to cartesian coordinates.
  *
  * @param spherical - Spherical coordinates, in [radial, azimuthal, polar]
@@ -382,7 +343,7 @@ export function sphericalToCartesian([r, azimuthal, polar]: [number, number, num
  *
  * @returns `true` if the when run in the web-worker context.
  */
-export function isWorker(): boolean {
+export function isWorker(self: any): self is WorkerGlobalScopeInterface {
     // @ts-ignore
     return typeof WorkerGlobalScope !== 'undefined' && typeof self !== 'undefined' && self instanceof WorkerGlobalScope;
 }
@@ -479,16 +440,19 @@ export function isImageBitmap(image: any): image is ImageBitmap {
  * ArrayBuffers.
  *
  * @param data - Data to convert
- * @param callback - A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image bitmap (when no error) as the second
+ * @returns - A  promise resolved when the conversion is finished
  */
-export function arrayBufferToImageBitmap(data: ArrayBuffer, callback: (err?: Error | null, image?: ImageBitmap | null) => void) {
+export const arrayBufferToImageBitmap = async (data: ArrayBuffer): Promise<ImageBitmap> => {
+    if (data.byteLength === 0) {
+        return createImageBitmap(new ImageData(1, 1));
+    }
     const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-    createImageBitmap(blob).then((imgBitmap) => {
-        callback(null, imgBitmap);
-    }).catch((e) => {
-        callback(new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`));
-    });
-}
+    try {
+        return createImageBitmap(blob);
+    } catch (e) {
+        throw new Error(`Could not load image because of ${e.message}. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.`);
+    }
+};
 
 const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
 
@@ -500,20 +464,249 @@ const transparentPngUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA
  * ArrayBuffers.
  *
  * @param data - Data to convert
- * @param callback - A callback executed after the conversion is finished. Invoked with error (if any) as the first argument and resulting image element (when no error) as the second
+ * @returns - A promise resolved when the conversion is finished
  */
-export function arrayBufferToImage(data: ArrayBuffer, callback: (err?: Error | null, image?: HTMLImageElement | null) => void) {
-    const img: HTMLImageElement = new Image();
-    img.onload = () => {
-        callback(null, img);
-        URL.revokeObjectURL(img.src);
-        // prevent image dataURI memory leak in Safari;
-        // but don't free the image immediately because it might be uploaded in the next frame
-        // https://github.com/mapbox/mapbox-gl-js/issues/10226
-        img.onload = null;
-        window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
+export const arrayBufferToImage = (data: ArrayBuffer): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+        const img: HTMLImageElement = new Image();
+        img.onload = () => {
+            resolve(img);
+            URL.revokeObjectURL(img.src);
+            // prevent image dataURI memory leak in Safari;
+            // but don't free the image immediately because it might be uploaded in the next frame
+            // https://github.com/mapbox/mapbox-gl-js/issues/10226
+            img.onload = null;
+            window.requestAnimationFrame(() => { img.src = transparentPngUrl; });
+        };
+        img.onerror = () => reject(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
+        const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
+        img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
+    });
+};
+
+/**
+ * Computes the webcodecs VideoFrame API options to select a rectangle out of
+ * an image and write it into the destination rectangle.
+ *
+ * Rect (x/y/width/height) select the overlapping rectangle from the source image
+ * and layout (offset/stride) write that overlapping rectangle to the correct place
+ * in the destination image.
+ *
+ * Offset is the byte offset in the dest image that the first pixel appears at
+ * and stride is the number of bytes to the start of the next row:
+ * ┌───────────┐
+ * │  dest     │
+ * │       ┌───┼───────┐
+ * │offset→│▓▓▓│ source│
+ * │       │▓▓▓│       │
+ * │       └───┼───────┘
+ * │stride ⇠╌╌╌│
+ * │╌╌╌╌╌╌→    │
+ * └───────────┘
+ *
+ * @param image - source image containing a width and height attribute
+ * @param x - top-left x coordinate to read from the image
+ * @param y - top-left y coordinate to read from the image
+ * @param width - width of the rectangle to read from the image
+ * @param height - height of the rectangle to read from the image
+ * @returns the layout and rect options to pass into VideoFrame API
+ */
+function computeVideoFrameParameters(image: Size, x: number, y: number, width: number, height: number): VideoFrameCopyToOptions {
+    const destRowOffset = Math.max(-x, 0) * 4;
+    const firstSourceRow = Math.max(0, y);
+    const firstDestRow = firstSourceRow - y;
+    const offset = firstDestRow * width * 4 + destRowOffset;
+    const stride = width * 4;
+
+    const sourceLeft = Math.max(0, x);
+    const sourceTop = Math.max(0, y);
+    const sourceRight = Math.min(image.width, x + width);
+    const sourceBottom = Math.min(image.height, y + height);
+    return {
+        rect: {
+            x: sourceLeft,
+            y: sourceTop,
+            width: sourceRight - sourceLeft,
+            height: sourceBottom - sourceTop
+        },
+        layout: [{offset, stride}]
     };
-    img.onerror = () => callback(new Error('Could not load image. Please make sure to use a supported image type such as PNG or JPEG. Note that SVGs are not supported.'));
-    const blob: Blob = new Blob([new Uint8Array(data)], {type: 'image/png'});
-    img.src = data.byteLength ? URL.createObjectURL(blob) : transparentPngUrl;
 }
+
+/**
+ * Reads pixels from an ImageBitmap/Image/canvas using webcodec VideoFrame API.
+ *
+ * @param data - image, imagebitmap, or canvas to parse
+ * @param x - top-left x coordinate to read from the image
+ * @param y - top-left y coordinate to read from the image
+ * @param width - width of the rectangle to read from the image
+ * @param height - height of the rectangle to read from the image
+ * @returns a promise containing the parsed RGBA pixel values of the image, or the error if an error occurred
+ */
+export async function readImageUsingVideoFrame(
+    image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
+    x: number, y: number, width: number, height: number
+): Promise<Uint8ClampedArray> {
+    if (typeof VideoFrame === 'undefined') {
+        throw new Error('VideoFrame not supported');
+    }
+    const frame = new VideoFrame(image, {timestamp: 0});
+    try {
+        const format = frame?.format;
+        if (!format || !(format.startsWith('BGR') || format.startsWith('RGB'))) {
+            throw new Error(`Unrecognized format ${format}`);
+        }
+        const swapBR = format.startsWith('BGR');
+        const result = new Uint8ClampedArray(width * height * 4);
+        await frame.copyTo(result, computeVideoFrameParameters(image, x, y, width, height));
+        if (swapBR) {
+            for (let i = 0; i < result.length; i += 4) {
+                const tmp = result[i];
+                result[i] = result[i + 2];
+                result[i + 2] = tmp;
+            }
+        }
+        return result;
+    } finally {
+        frame.close();
+    }
+}
+
+let offscreenCanvas: OffscreenCanvas;
+let offscreenCanvasContext: OffscreenCanvasRenderingContext2D;
+
+/**
+ * Reads pixels from an ImageBitmap/Image/canvas using OffscreenCanvas
+ *
+ * @param data - image, imagebitmap, or canvas to parse
+ * @param x - top-left x coordinate to read from the image
+ * @param y - top-left y coordinate to read from the image
+ * @param width - width of the rectangle to read from the image
+ * @param height - height of the rectangle to read from the image
+ * @returns a promise containing the parsed RGBA pixel values of the image, or the error if an error occurred
+ */
+export function readImageDataUsingOffscreenCanvas(
+    imgBitmap: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
+    x: number, y: number, width: number, height: number
+): Uint8ClampedArray {
+    const origWidth = imgBitmap.width;
+    const origHeight = imgBitmap.height;
+    // Lazily initialize OffscreenCanvas
+    if (!offscreenCanvas || !offscreenCanvasContext) {
+        // Dem tiles are typically 256x256
+        offscreenCanvas = new OffscreenCanvas(origWidth, origHeight);
+        offscreenCanvasContext = offscreenCanvas.getContext('2d', {willReadFrequently: true});
+    }
+
+    offscreenCanvas.width = origWidth;
+    offscreenCanvas.height = origHeight;
+
+    offscreenCanvasContext.drawImage(imgBitmap, 0, 0, origWidth, origHeight);
+    const imgData = offscreenCanvasContext.getImageData(x, y, width, height);
+    offscreenCanvasContext.clearRect(0, 0, origWidth, origHeight);
+    return imgData.data;
+}
+
+/**
+ * Reads RGBA pixels from an preferring OffscreenCanvas, but falling back to VideoFrame if supported and
+ * the browser is mangling OffscreenCanvas getImageData results.
+ *
+ * @param data - image, imagebitmap, or canvas to parse
+ * @param x - top-left x coordinate to read from the image
+ * @param y - top-left y coordinate to read from the image
+ * @param width - width of the rectangle to read from the image
+ * @param height - height of the rectangle to read from the image
+ * @returns a promise containing the parsed RGBA pixel values of the image
+ */
+export async function getImageData(
+    image: HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas,
+    x: number, y: number, width: number, height: number
+): Promise<Uint8ClampedArray> {
+    if (isOffscreenCanvasDistorted()) {
+        try {
+            return await readImageUsingVideoFrame(image, x, y, width, height);
+        } catch (e) {
+            // fall back to OffscreenCanvas
+        }
+    }
+    return readImageDataUsingOffscreenCanvas(image, x, y, width, height);
+}
+
+export interface Subscription {
+    unsubscribe(): void;
+}
+
+export interface Subscriber {
+    addEventListener: typeof window.addEventListener;
+    removeEventListener: typeof window.removeEventListener;
+}
+
+/**
+ * This method is used in order to register an event listener using a lambda function.
+ * The return value will allow unsubscribing from the event, without the need to store the method reference.
+ * @param target - The target
+ * @param message - The message
+ * @param listener - The listener
+ * @param options - The options
+ * @returns a subscription object that can be used to unsubscribe from the event
+ */
+export function subscribe(target: Subscriber, message: keyof WindowEventMap, listener: (...args: any) => void, options: boolean | AddEventListenerOptions): Subscription {
+    target.addEventListener(message, listener, options);
+    return {
+        unsubscribe: () => {
+            target.removeEventListener(message, listener, options);
+        }
+    };
+}
+
+/**
+ * This method converts degrees to radians.
+ * The return value is the radian value.
+ * @param degrees - The number of degrees
+ * @returns radians
+ */
+export function degreesToRadians(degrees: number): number {
+    return degrees * Math.PI / 180;
+}
+
+/**
+ * Makes optional keys required and add the the undefined type.
+ *
+ * ```
+ * interface Test {
+ *  foo: number;
+ *  bar?: number;
+ *  baz: number | undefined;
+ * }
+ *
+ * Complete<Test> {
+ *  foo: number;
+ *  bar: number | undefined;
+ *  baz: number | undefined;
+ * }
+ *
+ * ```
+ *
+ * See https://medium.com/terria/typescript-transforming-optional-properties-to-required-properties-that-may-be-undefined-7482cb4e1585
+ */
+
+export type Complete<T> = {
+    [P in keyof Required<T>]: Pick<T, P> extends Required<Pick<T, P>> ? T[P] : (T[P] | undefined);
+}
+
+export type TileJSON = {
+    tilejson: '2.2.0' | '2.1.0' | '2.0.1' | '2.0.0' | '1.0.0';
+    name?: string;
+    description?: string;
+    version?: string;
+    attribution?: string;
+    template?: string;
+    tiles: Array<string>;
+    grids?: Array<string>;
+    data?: Array<string>;
+    minzoom?: number;
+    maxzoom?: number;
+    bounds?: [number, number, number, number];
+    center?: [number, number, number];
+    vector_layers: [{id: string}]; // this is partial but enough for what we need
+};

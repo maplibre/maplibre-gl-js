@@ -5,26 +5,23 @@ import {loadSprite} from './load_sprite';
 import {ImageManager} from '../render/image_manager';
 import {GlyphManager} from '../render/glyph_manager';
 import {Light} from './light';
+import {Sky} from './sky';
 import {LineAtlas} from '../render/line_atlas';
-import {pick, clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
+import {clone, extend, deepEqual, filterObject, mapObject} from '../util/util';
 import {coerceSpriteToArray} from '../util/style';
-import {getJSON, getReferrer, makeRequest} from '../util/ajax';
+import {getJSON, getReferrer} from '../util/ajax';
 import {ResourceType} from '../util/request_manager';
 import {browser} from '../util/browser';
 import {Dispatcher} from '../util/dispatcher';
 import {validateStyle, emitValidationErrors as _emitValidationErrors} from './validate_style';
-import {getSourceType, setSourceType, Source} from '../source/source';
-import type {SourceClass} from '../source/source';
+import {Source} from '../source/source';
 import {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions, queryRenderedFeatures, queryRenderedSymbols, querySourceFeatures} from '../source/query_features';
 import {SourceCache} from '../source/source_cache';
 import {GeoJSONSource} from '../source/geojson_source';
-import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, operations as diffOperations} from '@maplibre/maplibre-gl-style-spec';
+import {latest as styleSpec, derefLayers as deref, emptyStyle, diff as diffStyles, DiffCommand} from '@maplibre/maplibre-gl-style-spec';
 import {getGlobalWorkerPool} from '../util/global_worker_pool';
-import {
-    registerForPluginStateChange,
-    evented as rtlTextPluginEvented,
-    triggerPluginCompletionEvent
-} from '../source/rtl_text_plugin';
+import {rtlMainThreadPluginFactory} from '../source/rtl_text_plugin_main_thread';
+import {RTLPluginLoadedEventName} from '../source/rtl_text_plugin_status';
 import {PauseablePlacement} from './pauseable_placement';
 import {ZoomHistory} from './zoom_history';
 import {CrossTileSymbolIndex} from '../symbol/cross_tile_symbol_index';
@@ -43,12 +40,8 @@ const emitValidationErrors = (evented: Evented, errors?: ReadonlyArray<{
 import type {Map} from '../ui/map';
 import type {Transform} from '../geo/transform';
 import type {StyleImage} from './style_image';
-import type {StyleGlyph} from './style_glyph';
-import type {Callback} from '../types/callback';
 import type {EvaluationParameters} from './evaluation_parameters';
 import type {Placement} from '../symbol/placement';
-import type {Cancelable} from '../types/cancelable';
-import type {RequestParameters, ResponseCallback} from '../util/ajax';
 import type {
     LayerSpecification,
     FilterSpecification,
@@ -56,33 +49,18 @@ import type {
     LightSpecification,
     SourceSpecification,
     SpriteSpecification,
+    DiffOperations,
+    SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Validator} from './validate_style';
-import type {OverscaledTileID} from '../source/tile_id';
-
-const supportedDiffOperations = pick(diffOperations, [
-    'addLayer',
-    'removeLayer',
-    'setPaintProperty',
-    'setLayoutProperty',
-    'setFilter',
-    'addSource',
-    'removeSource',
-    'setLayerZoomRange',
-    'setLight',
-    'setTransition',
-    'setGeoJSONSourceData',
-    'setGlyphs',
-    'setSprite',
-]);
-
-const ignoredDiffOperations = pick(diffOperations, [
-    'setCenter',
-    'setZoom',
-    'setBearing',
-    'setPitch'
-]);
+import {
+    MessageType,
+    type GetGlyphsParamerters,
+    type GetGlyphsResponse,
+    type GetImagesParamerters,
+    type GetImagesResponse
+} from '../util/actor_messages';
 
 const empty = emptyStyle() as StyleSpecification;
 /**
@@ -118,7 +96,7 @@ export type StyleOptions = {
      * Set to `false`, to enable font settings from the map's style for these glyph ranges.
      * Forces a full update.
      */
-    localIdeographFontFamily?: string;
+    localIdeographFontFamily?: string | false;
 };
 
 /**
@@ -138,8 +116,8 @@ export type StyleSetterOptions = {
  *      when a desired style is a certain combination of previous and incoming style
  *      when an incoming style requires modification based on external state
  *
- * @param previousStyle - The current style.
- * @param nextStyle - The next style.
+ * @param previous - The current style.
+ * @param next - The next style.
  * @returns resulting style that will to be applied to the map
  *
  * @example
@@ -208,16 +186,17 @@ export class Style extends Evented {
     glyphManager: GlyphManager;
     lineAtlas: LineAtlas;
     light: Light;
+    sky: Sky;
 
-    _request: Cancelable;
-    _spriteRequest: Cancelable;
+    _frameRequest: AbortController;
+    _loadStyleRequest: AbortController;
+    _spriteRequest: AbortController;
     _layers: {[_: string]: StyleLayer};
     _serializedLayers: {[_: string]: LayerSpecification};
     _order: Array<string>;
     sourceCaches: {[_: string]: SourceCache};
     zoomHistory: ZoomHistory;
     _loaded: boolean;
-    _rtlTextPluginCallback: (a: any) => any;
     _changed: boolean;
     _updatedSources: {[_: string]: 'clear' | 'reload'};
     _updatedLayers: {[_: string]: true};
@@ -236,13 +215,17 @@ export class Style extends Evented {
     placement: Placement;
     z: number;
 
-    static registerForPluginStateChange: typeof registerForPluginStateChange;
-
     constructor(map: Map, options: StyleOptions = {}) {
         super();
 
         this.map = map;
-        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), this, map._getMapId());
+        this.dispatcher = new Dispatcher(getGlobalWorkerPool(), map._getMapId());
+        this.dispatcher.registerMessageHandler(MessageType.getGlyphs, (mapId, params) => {
+            return this.getGlyphs(mapId, params);
+        });
+        this.dispatcher.registerMessageHandler(MessageType.getImages, (mapId, params) => {
+            return this.getImages(mapId, params);
+        });
         this.imageManager = new ImageManager();
         this.imageManager.setEventedParent(this);
         this.glyphManager = new GlyphManager(map._requestManager, options.localIdeographFontFamily);
@@ -260,33 +243,8 @@ export class Style extends Evented {
 
         this._resetUpdates();
 
-        this.dispatcher.broadcast('setReferrer', getReferrer());
-
-        const self = this;
-        this._rtlTextPluginCallback = Style.registerForPluginStateChange((event) => {
-            const state = {
-                pluginStatus: event.pluginStatus,
-                pluginURL: event.pluginURL
-            };
-            self.dispatcher.broadcast('syncRTLPluginState', state, (err, results) => {
-                triggerPluginCompletionEvent(err);
-                if (results) {
-                    const allComplete = results.every((elem) => elem);
-                    if (allComplete) {
-                        for (const id in self.sourceCaches) {
-                            const sourceType = self.sourceCaches[id].getSource().type;
-                            if (sourceType === 'vector' || sourceType === 'geojson') {
-                                // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
-                                // They also load more quickly, so they're more likely to have already displaying tiles
-                                // that would be unnecessarily booted by the plugin load event
-                                self.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
-                            }
-                        }
-                    }
-                }
-
-            });
-        });
+        this.dispatcher.broadcast(MessageType.setReferrer, getReferrer());
+        rtlMainThreadPluginFactory().on(RTLPluginLoadedEventName, this._rtlPluginLoaded);
 
         this.on('data', (event) => {
             if (event.dataType !== 'source' || event.sourceDataType !== 'metadata') {
@@ -312,6 +270,18 @@ export class Style extends Evented {
         });
     }
 
+    _rtlPluginLoaded = () => {
+        for (const id in this.sourceCaches) {
+            const sourceType = this.sourceCaches[id].getSource().type;
+            if (sourceType === 'vector' || sourceType === 'geojson') {
+                // Non-vector sources don't have any symbols buckets to reload when the RTL text plugin loads
+                // They also load more quickly, so they're more likely to have already displaying tiles
+                // that would be unnecessarily booted by the plugin load event
+                this.sourceCaches[id].reload(); // Should be a no-op if the plugin loads before any tiles load
+            }
+        }
+    };
+
     loadURL(url: string, options: StyleSwapOptions & StyleSetterOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
@@ -319,12 +289,14 @@ export class Style extends Evented {
             options.validate : true;
 
         const request = this.map._requestManager.transformRequest(url, ResourceType.Style);
-        this._request = getJSON(request, (error?: Error | null, json?: any | null) => {
-            this._request = null;
+        this._loadStyleRequest = new AbortController();
+        getJSON<StyleSpecification>(request, this._loadStyleRequest).then((response) => {
+            this._loadStyleRequest = null;
+            this._load(response.data, options, previousStyle);
+        }).catch((error) => {
+            this._loadStyleRequest = null;
             if (error) {
                 this.fire(new ErrorEvent(error));
-            } else if (json) {
-                this._load(json, options, previousStyle);
             }
         });
     }
@@ -332,11 +304,12 @@ export class Style extends Evented {
     loadJSON(json: StyleSpecification, options: StyleSetterOptions & StyleSwapOptions = {}, previousStyle?: StyleSpecification) {
         this.fire(new Event('dataloading', {dataType: 'style'}));
 
-        this._request = browser.frame(() => {
-            this._request = null;
+        this._frameRequest = new AbortController();
+        browser.frameAsync(this._frameRequest).then(() => {
+            this._frameRequest = null;
             options.validate = options.validate !== false;
             this._load(json, options, previousStyle);
-        });
+        }).catch(() => {}); // ignore abort
     }
 
     loadEmpty() {
@@ -367,6 +340,7 @@ export class Style extends Evented {
         this._createLayers();
 
         this.light = new Light(this.stylesheet.light);
+        this.sky = new Sky(this.stylesheet.sky);
 
         this.map.setTerrain(this.stylesheet.terrain ?? null);
 
@@ -379,7 +353,7 @@ export class Style extends Evented {
 
         // Broadcast layers to workers first, so that expensive style processing (createStyleLayer)
         // can happen in parallel on both main and worker threads.
-        this.dispatcher.broadcast('setLayers', dereferencedLayers);
+        this.dispatcher.broadcast(MessageType.setLayers, dereferencedLayers);
 
         this._order = dereferencedLayers.map((layer) => layer.id);
         this._layers = {};
@@ -396,11 +370,11 @@ export class Style extends Evented {
     _loadSprite(sprite: SpriteSpecification, isUpdate: boolean = false, completion: (err: Error) => void = undefined) {
         this.imageManager.setLoaded(false);
 
-        this._spriteRequest = loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), (err, images) => {
+        this._spriteRequest = new AbortController();
+        let err: Error;
+        loadSprite(sprite, this.map._requestManager, this.map.getPixelRatio(), this._spriteRequest).then((images) => {
             this._spriteRequest = null;
-            if (err) {
-                this.fire(new ErrorEvent(err));
-            } else if (images) {
+            if (images) {
                 for (const spriteId in images) {
                     this._spritesImagesIds[spriteId] = [];
 
@@ -428,7 +402,11 @@ export class Style extends Evented {
                     }
                 }
             }
-
+        }).catch((error) => {
+            this._spriteRequest = null;
+            err = error;
+            this.fire(new ErrorEvent(err));
+        }).finally(() => {
             this.imageManager.setLoaded(true);
             this._availableImages = this.imageManager.listImages();
 
@@ -436,7 +414,7 @@ export class Style extends Evented {
                 this._changed = true;
             }
 
-            this.dispatcher.broadcast('setImages', this._availableImages);
+            this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
             this.fire(new Event('data', {dataType: 'style'}));
 
             if (completion) {
@@ -454,7 +432,7 @@ export class Style extends Evented {
         this._spritesImagesIds = {};
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
-        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -497,6 +475,7 @@ export class Style extends Evented {
     }
 
     /**
+     * @hidden
      * take an array of string IDs, and based on this._layers, generate an array of LayerSpecification
      * @param ids - an array of string IDs, for which serialized layers will be generated. If omitted, all serialized layers will be returned
      * @returns generated result
@@ -520,6 +499,7 @@ export class Style extends Evented {
     }
 
     /**
+     * @hidden
      * Lazy initialization of this._serializedLayers dictionary and return it
      * @returns this._serializedLayers dictionary
      */
@@ -543,6 +523,10 @@ export class Style extends Evented {
 
     hasTransitions() {
         if (this.light && this.light.hasTransition()) {
+            return true;
+        }
+
+        if (this.sky && this.sky.hasTransition()) {
             return true;
         }
 
@@ -577,7 +561,7 @@ export class Style extends Evented {
         }
 
         const changed = this._changed;
-        if (this._changed) {
+        if (changed) {
             const updatedIds = Object.keys(this._updatedLayers);
             const removedIds = Object.keys(this._removedLayers);
 
@@ -604,18 +588,24 @@ export class Style extends Evented {
             }
 
             this.light.updateTransitions(parameters);
+            this.sky.updateTransitions(parameters);
 
             this._resetUpdates();
         }
 
         const sourcesUsedBefore = {};
 
-        for (const sourceId in this.sourceCaches) {
-            const sourceCache = this.sourceCaches[sourceId];
-            sourcesUsedBefore[sourceId] = sourceCache.used;
+        // save 'used' status to sourcesUsedBefore object and reset all sourceCaches 'used' field to false
+        for (const sourceCacheId in this.sourceCaches) {
+            const sourceCache = this.sourceCaches[sourceCacheId];
+
+            // sourceCache.used could be undefined, and sourcesUsedBefore[sourceCacheId] is also 'undefined'
+            sourcesUsedBefore[sourceCacheId] = sourceCache.used;
             sourceCache.used = false;
         }
 
+        // loop all layers and find layers that are not hidden at parameters.zoom
+        // and set used to true in sourceCaches dictionary for the sources of these layers
         for (const layerId of this._order) {
             const layer = this._layers[layerId];
 
@@ -625,20 +615,30 @@ export class Style extends Evented {
             }
         }
 
-        for (const sourceId in sourcesUsedBefore) {
-            const sourceCache = this.sourceCaches[sourceId];
-            if (sourcesUsedBefore[sourceId] !== sourceCache.used) {
-                sourceCache.fire(new Event('data', {sourceDataType: 'visibility', dataType: 'source', sourceId}));
+        // cross check sourcesUsedBefore against updated this.sourceCaches dictionary
+        // if "used" field is different fire visibility event
+        for (const sourcesUsedBeforeId in sourcesUsedBefore) {
+            const sourceCache = this.sourceCaches[sourcesUsedBeforeId];
+
+            // (undefine !== false) will evaluate to true and fire an useless visibility event
+            // need force "falsy" values to boolean to avoid the case above
+            if (!!sourcesUsedBefore[sourcesUsedBeforeId] !== !!sourceCache.used) {
+                sourceCache.fire(new Event('data',
+                    {
+                        sourceDataType: 'visibility',
+                        dataType: 'source',
+                        sourceId: sourcesUsedBeforeId
+                    }));
             }
         }
 
         this.light.recalculate(parameters);
+        this.sky.recalculate(parameters);
         this.z = parameters.zoom;
 
         if (changed) {
             this.fire(new Event('data', {dataType: 'style'}));
         }
-
     }
 
     /*
@@ -664,7 +664,7 @@ export class Style extends Evented {
     }
 
     _updateWorkerLayers(updatedIds: Array<string>, removedIds: Array<string>) {
-        this.dispatcher.broadcast('updateLayers', {
+        this.dispatcher.broadcast(MessageType.updateLayers, {
             layers: this._serializeByIds(updatedIds),
             removedIds
         });
@@ -692,40 +692,104 @@ export class Style extends Evented {
      *
      * @returns true if any changes were made; false otherwise
      */
-    setState(nextState: StyleSpecification, options: StyleSwapOptions = {}) {
+    setState(nextState: StyleSpecification, options: StyleSwapOptions & StyleSetterOptions = {}) {
         this._checkLoaded();
 
         const serializedStyle =  this.serialize();
         nextState = options.transformStyle ? options.transformStyle(serializedStyle, nextState) : nextState;
-        if (emitValidationErrors(this, validateStyle(nextState))) return false;
+        const validate = options.validate ?? true;
+        if (validate && emitValidationErrors(this, validateStyle(nextState))) return false;
 
         nextState = clone(nextState);
         nextState.layers = deref(nextState.layers);
 
-        const changes = diffStyles(serializedStyle, nextState)
-            .filter(op => !(op.command in ignoredDiffOperations));
+        const changes = diffStyles(serializedStyle, nextState);
+        const operations = this._getOperationsToPerform(changes);
 
-        if (changes.length === 0) {
+        if (operations.unimplemented.length > 0) {
+            throw new Error(`Unimplemented: ${operations.unimplemented.join(', ')}.`);
+        }
+
+        if (operations.operations.length === 0) {
             return false;
         }
 
-        const unimplementedOps = changes.filter(op => !(op.command in supportedDiffOperations));
-        if (unimplementedOps.length > 0) {
-            throw new Error(`Unimplemented: ${unimplementedOps.map(op => op.command).join(', ')}.`);
-        }
-
-        for (const op of changes) {
-            if (op.command === 'setTransition') {
-                // `transition` is always read directly off of
-                // `this.stylesheet`, which we update below
-                continue;
-            }
-            (this as any)[op.command].apply(this, op.args);
+        for (const styleChangeOperation of operations.operations) {
+            styleChangeOperation();
         }
 
         this.stylesheet = nextState;
 
+        // reset serialization field, to be populated only when needed
+        this._serializedLayers = null;
+
         return true;
+    }
+
+    _getOperationsToPerform(diff: DiffCommand<DiffOperations>[]) {
+        const operations: Function[] = [];
+        const unimplemented: string[] = [];
+        for (const op of diff) {
+            switch (op.command) {
+                case 'setCenter':
+                case 'setZoom':
+                case 'setBearing':
+                case 'setPitch':
+                    continue;
+                case 'addLayer':
+                    operations.push(() => this.addLayer.apply(this, op.args));
+                    break;
+                case 'removeLayer':
+                    operations.push(() => this.removeLayer.apply(this, op.args));
+                    break;
+                case 'setPaintProperty':
+                    operations.push(() => this.setPaintProperty.apply(this, op.args));
+                    break;
+                case 'setLayoutProperty':
+                    operations.push(() => this.setLayoutProperty.apply(this, op.args));
+                    break;
+                case 'setFilter':
+                    operations.push(() => this.setFilter.apply(this, op.args));
+                    break;
+                case 'addSource':
+                    operations.push(() => this.addSource.apply(this, op.args));
+                    break;
+                case 'removeSource':
+                    operations.push(() => this.removeSource.apply(this, op.args));
+                    break;
+                case 'setLayerZoomRange':
+                    operations.push(() => this.setLayerZoomRange.apply(this, op.args));
+                    break;
+                case 'setLight':
+                    operations.push(() => this.setLight.apply(this, op.args));
+                    break;
+                case 'setGeoJSONSourceData':
+                    operations.push(() => this.setGeoJSONSourceData.apply(this, op.args));
+                    break;
+                case 'setGlyphs':
+                    operations.push(() => this.setGlyphs.apply(this, op.args));
+                    break;
+                case 'setSprite':
+                    operations.push(() => this.setSprite.apply(this, op.args));
+                    break;
+                case 'setSky':
+                    operations.push(() => this.setSky.apply(this, op.args));
+                    break;
+                case 'setTerrain':
+                    operations.push(() => this.map.setTerrain.apply(this, op.args));
+                    break;
+                case 'setTransition':
+                    operations.push(() => {});
+                    break;
+                default:
+                    unimplemented.push(op.command);
+                    break;
+            }
+        }
+        return {
+            operations,
+            unimplemented
+        };
     }
 
     addImage(id: string, image: StyleImage) {
@@ -756,7 +820,7 @@ export class Style extends Evented {
         this._availableImages = this.imageManager.listImages();
         this._changedImages[id] = true;
         this._changed = true;
-        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -780,7 +844,6 @@ export class Style extends Evented {
         const builtIns = ['vector', 'raster', 'geojson', 'video', 'image'];
         const shouldValidate = builtIns.indexOf(source.type) >= 0;
         if (shouldValidate && this._validate(validateStyle.source, `sources.${id}`, source, null, options)) return;
-
         if (this.map && this.map._collectResourceTiming) (source as any).collectResourceTiming = true;
         const sourceCache = this.sourceCaches[id] = new SourceCache(id, source, this.dispatcher);
         sourceCache.style = this;
@@ -798,7 +861,6 @@ export class Style extends Evented {
      * Remove a source from this stylesheet, given its id.
      * @param id - id of the source to remove
      * @throws if no source is found with the given ID
-     * @returns `this`.
      */
     removeSource(id: string): this {
         this._checkLoaded();
@@ -852,7 +914,6 @@ export class Style extends Evented {
      * @param layerObject - The style layer to add.
      * @param before - ID of an existing layer to insert before
      * @param options - Style setter options.
-     * @returns `this`.
      */
     addLayer(layerObject: AddLayerObject, before?: string, options: StyleSetterOptions = {}): this {
         this._checkLoaded();
@@ -958,11 +1019,9 @@ export class Style extends Evented {
 
     /**
      * Remove the layer with the given id from the style.
-     *
-     * If no such layer exists, an `error` event is fired.
+     * A {@link ErrorEvent} event will be fired if no such layer exists.
      *
      * @param id - id of the layer to remove
-     * @event `error` - Fired if the layer does not exist
      */
     removeLayer(id: string) {
         this._checkLoaded();
@@ -1005,7 +1064,16 @@ export class Style extends Evented {
     }
 
     /**
-     * checks if a specific layer is present within the style.
+     * Return the ids of all layers currently in the style, including custom layers, in order.
+     *
+     * @returns ids of layers, in order
+     */
+    getLayersOrder(): string[] {
+        return [...this._order];
+    }
+
+    /**
+     * Checks if a specific layer is present within the style.
      *
      * @param id - the id of the desired layer
      * @returns a boolean specifying if the given layer is present
@@ -1119,6 +1187,8 @@ export class Style extends Evented {
 
         this._changed = true;
         this._updatedPaintProps[layerId] = true;
+        // reset serialization field, to be populated only when needed
+        this._serializedLayers = null;
     }
 
     getPaintProperty(layer: string, name: string) {
@@ -1203,7 +1273,7 @@ export class Style extends Evented {
         return extend({duration: 300, delay: 0}, this.stylesheet && this.stylesheet.transition);
     }
 
-    serialize(): StyleSpecification {
+    serialize(): StyleSpecification | undefined {
         // We return undefined before we're loaded, following the pattern of Map.getStyle() before
         // the Style object is initialized.
         // Internally, Style._validate() calls Style.serialize() but callers are responsible for
@@ -1212,6 +1282,7 @@ export class Style extends Evented {
 
         const sources = mapObject(this.sourceCaches, (source) => source.serialize());
         const layers = this._serializeByIds(this._order);
+        const terrain = this.map.getTerrain() || undefined;
         const myStyleSheet = this.stylesheet;
 
         return filterObject({
@@ -1219,6 +1290,7 @@ export class Style extends Evented {
             name: myStyleSheet.name,
             metadata: myStyleSheet.metadata,
             light: myStyleSheet.light,
+            sky: myStyleSheet.sky,
             center: myStyleSheet.center,
             zoom: myStyleSheet.zoom,
             bearing: myStyleSheet.bearing,
@@ -1227,7 +1299,8 @@ export class Style extends Evented {
             glyphs: myStyleSheet.glyphs,
             transition: myStyleSheet.transition,
             sources,
-            layers
+            layers,
+            terrain
         },
         (value) => { return value !== undefined; });
     }
@@ -1241,7 +1314,7 @@ export class Style extends Evented {
             this.sourceCaches[layer.source].pause();
         }
 
-        // upon updating, serilized layer dictionary should be reset.
+        // upon updating, serialized layer dictionary should be reset.
         // When needed, it will be populated with the correct copy again.
         this._serializedLayers = null;
         this._changed = true;
@@ -1386,23 +1459,6 @@ export class Style extends Evented {
         return sourceCache ? querySourceFeatures(sourceCache, params) : [];
     }
 
-    addSourceType(name: string, SourceType: SourceClass, callback: Callback<void>) {
-        if (getSourceType(name)) {
-            return callback(new Error(`A source type called "${name}" already exists.`));
-        }
-
-        setSourceType(name, SourceType);
-
-        if (!SourceType.workerSourceURL) {
-            return callback(null, null);
-        }
-
-        this.dispatcher.broadcast('loadWorkerSource', {
-            name,
-            url: SourceType.workerSourceURL
-        }, callback);
-    }
-
     getLight() {
         return this.light.getLight();
     }
@@ -1432,6 +1488,39 @@ export class Style extends Evented {
         this.light.updateTransitions(parameters);
     }
 
+    getSky(): SkySpecification {
+        return this.stylesheet?.sky;
+    }
+
+    setSky(skyOptions?: SkySpecification, options: StyleSetterOptions = {}) {
+        const sky = this.sky.getSky();
+        let update = false;
+        if (!skyOptions) {
+            if (sky) {
+                update = true;
+            }
+        }
+        for (const key in skyOptions) {
+            if (!deepEqual(skyOptions[key], sky[key])) {
+                update = true;
+                break;
+            }
+        }
+        if (!update) return;
+
+        const parameters = {
+            now: browser.now(),
+            transition: extend({
+                duration: 300,
+                delay: 0
+            }, this.stylesheet.transition)
+        };
+
+        this.stylesheet.sky = skyOptions;
+        this.sky.setSky(skyOptions, options);
+        this.sky.updateTransitions(parameters);
+    }
+
     _validate(validate: Validator, key: string, value: any, props: any, options: {
         validate?: boolean;
     } = {}) {
@@ -1447,15 +1536,19 @@ export class Style extends Evented {
     }
 
     _remove(mapRemoved: boolean = true) {
-        if (this._request) {
-            this._request.cancel();
-            this._request = null;
+        if (this._frameRequest) {
+            this._frameRequest.abort();
+            this._frameRequest = null;
+        }
+        if (this._loadStyleRequest) {
+            this._loadStyleRequest.abort();
+            this._loadStyleRequest = null;
         }
         if (this._spriteRequest) {
-            this._spriteRequest.cancel();
+            this._spriteRequest.abort();
             this._spriteRequest = null;
         }
-        rtlTextPluginEvented.off('pluginStateChange', this._rtlTextPluginCallback);
+        rtlMainThreadPluginFactory().off(RTLPluginLoadedEventName, this._rtlPluginLoaded);
         for (const layerId in this._layers) {
             const layer: StyleLayer = this._layers[layerId];
             layer.setEventedParent(null);
@@ -1467,6 +1560,9 @@ export class Style extends Evented {
         }
         this.imageManager.setEventedParent(null);
         this.setEventedParent(null);
+        if (mapRemoved) {
+            this.dispatcher.broadcast(MessageType.removeMap, undefined);
+        }
         this.dispatcher.remove(mapRemoved);
     }
 
@@ -1569,17 +1665,8 @@ export class Style extends Evented {
 
     // Callbacks from web workers
 
-    getImages(
-        mapId: string,
-        params: {
-            icons: Array<string>;
-            source: string;
-            tileID: OverscaledTileID;
-            type: string;
-        },
-        callback: Callback<{[_: string]: StyleImage}>
-    ) {
-        this.imageManager.getImages(params.icons, callback);
+    async getImages(mapId: string | number, params: GetImagesParamerters): Promise<GetImagesResponse> {
+        const images = await this.imageManager.getImages(params.icons);
 
         // Apply queued image changes before setting the tile's dependencies so that the tile
         // is not reloaded unnecessarily. Without this forced update the reload could happen in cases
@@ -1595,29 +1682,18 @@ export class Style extends Evented {
         if (sourceCache) {
             sourceCache.setDependencies(params.tileID.key, params.type, params.icons);
         }
+        return images;
     }
 
-    getGlyphs(
-        mapId: string,
-        params: {
-            stacks: {[_: string]: Array<number>};
-            source: string;
-            tileID: OverscaledTileID;
-            type: string;
-        },
-        callback: Callback<{[_: string]: {[_: number]: StyleGlyph}}>
-    ) {
-        this.glyphManager.getGlyphs(params.stacks, callback);
+    async getGlyphs(mapId: string | number, params: GetGlyphsParamerters): Promise<GetGlyphsResponse> {
+        const glypgs = await this.glyphManager.getGlyphs(params.stacks);
         const sourceCache = this.sourceCaches[params.source];
         if (sourceCache) {
             // we are not setting stacks as dependencies since for now
             // we just need to know which tiles have glyph dependencies
             sourceCache.setDependencies(params.tileID.key, params.type, ['']);
         }
-    }
-
-    getResource(mapId: string, params: RequestParameters, callback: ResponseCallback<any>): Cancelable {
-        return makeRequest(params, callback);
+        return glypgs;
     }
 
     getGlyphsUrl() {
@@ -1688,7 +1764,7 @@ export class Style extends Evented {
         delete this._spritesImagesIds[id];
         this._availableImages = this.imageManager.listImages();
         this._changed = true;
-        this.dispatcher.broadcast('setImages', this._availableImages);
+        this.dispatcher.broadcast(MessageType.setImages, this._availableImages);
         this.fire(new Event('data', {dataType: 'style'}));
     }
 
@@ -1727,5 +1803,3 @@ export class Style extends Evented {
         }
     }
 }
-
-Style.registerForPluginStateChange = registerForPluginStateChange;

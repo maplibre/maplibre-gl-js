@@ -9,11 +9,11 @@ import type {LngLatLike} from './lng_lat';
  *
  * @example
  * ```ts
- * let v1 = new maplibregl.LngLatBounds(
- *   new maplibregl.LngLat(-73.9876, 40.7661),
- *   new maplibregl.LngLat(-73.9397, 40.8002)
+ * let v1 = new LngLatBounds(
+ *   new LngLat(-73.9876, 40.7661),
+ *   new LngLat(-73.9397, 40.8002)
  * );
- * let v2 = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002])
+ * let v2 = new LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002])
  * let v3 = [[-73.9876, 40.7661], [-73.9397, 40.8002]];
  * ```
  */
@@ -33,9 +33,9 @@ export type LngLatBoundsLike = LngLatBounds | [LngLatLike, LngLatLike] | [number
  *
  * @example
  * ```ts
- * let sw = new maplibregl.LngLat(-73.9876, 40.7661);
- * let ne = new maplibregl.LngLat(-73.9397, 40.8002);
- * let llb = new maplibregl.LngLatBounds(sw, ne);
+ * let sw = new LngLat(-73.9876, 40.7661);
+ * let ne = new LngLat(-73.9397, 40.8002);
+ * let llb = new LngLatBounds(sw, ne);
  * ```
  */
 export class LngLatBounds {
@@ -49,17 +49,17 @@ export class LngLatBounds {
      * @param ne - The northeast corner of the bounding box.
      * @example
      * ```ts
-     * let sw = new maplibregl.LngLat(-73.9876, 40.7661);
-     * let ne = new maplibregl.LngLat(-73.9397, 40.8002);
-     * let llb = new maplibregl.LngLatBounds(sw, ne);
+     * let sw = new LngLat(-73.9876, 40.7661);
+     * let ne = new LngLat(-73.9397, 40.8002);
+     * let llb = new LngLatBounds(sw, ne);
      * ```
      * OR
      * ```ts
-     * let llb = new maplibregl.LngLatBounds([-73.9876, 40.7661, -73.9397, 40.8002]);
+     * let llb = new LngLatBounds([-73.9876, 40.7661, -73.9397, 40.8002]);
      * ```
      * OR
      * ```ts
-     * let llb = new maplibregl.LngLatBounds([sw, ne]);
+     * let llb = new LngLatBounds([sw, ne]);
      * ```
      */
     constructor(sw?: LngLatLike | [number, number, number, number] | [LngLatLike, LngLatLike], ne?: LngLatLike) {
@@ -81,7 +81,6 @@ export class LngLatBounds {
      * Set the northeast corner of the bounding box
      *
      * @param ne - a {@link LngLatLike} object describing the northeast corner of the bounding box.
-     * @returns `this`
      */
     setNorthEast(ne: LngLatLike): this {
         this._ne = ne instanceof LngLat ? new LngLat(ne.lng, ne.lat) : LngLat.convert(ne);
@@ -92,7 +91,6 @@ export class LngLatBounds {
      * Set the southwest corner of the bounding box
      *
      * @param sw - a {@link LngLatLike} object describing the southwest corner of the bounding box.
-     * @returns `this`
      */
     setSouthWest(sw: LngLatLike): this {
         this._sw = sw instanceof LngLat ? new LngLat(sw.lng, sw.lat) : LngLat.convert(sw);
@@ -103,7 +101,6 @@ export class LngLatBounds {
      * Extend the bounds to include a given LngLatLike or LngLatBoundsLike.
      *
      * @param obj - object to extend to
-     * @returns `this`
      */
     extend(obj: LngLatLike | LngLatBoundsLike): this {
         const sw = this._sw,
@@ -157,7 +154,7 @@ export class LngLatBounds {
      * @returns The bounding box's center.
      * @example
      * ```ts
-     * let llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
+     * let llb = new LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
      * llb.getCenter(); // = LngLat {lng: -73.96365, lat: 40.78315}
      * ```
      */
@@ -228,7 +225,7 @@ export class LngLatBounds {
      * southwest and northeast coordinates of the bounding represented as arrays of numbers.
      * @example
      * ```ts
-     * let llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
+     * let llb = new LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
      * llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
      * ```
      */
@@ -243,7 +240,7 @@ export class LngLatBounds {
      * `'LngLatBounds(LngLat(lng, lat), LngLat(lng, lat))'`.
      * @example
      * ```ts
-     * let llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
+     * let llb = new LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
      * llb.toString(); // = "LngLatBounds(LngLat(-73.9876, 40.7661), LngLat(-73.9397, 40.8002))"
      * ```
      */
@@ -267,12 +264,12 @@ export class LngLatBounds {
      * @returns `true` if the point is within the bounding box.
      * @example
      * ```ts
-     * let llb = new maplibregl.LngLatBounds(
-     *   new maplibregl.LngLat(-73.9876, 40.7661),
-     *   new maplibregl.LngLat(-73.9397, 40.8002)
+     * let llb = new LngLatBounds(
+     *   new LngLat(-73.9876, 40.7661),
+     *   new LngLat(-73.9397, 40.8002)
      * );
      *
-     * let ll = new maplibregl.LngLat(-73.9567, 40.7789);
+     * let ll = new LngLat(-73.9567, 40.7789);
      *
      * console.log(llb.contains(ll)); // = true
      * ```
@@ -301,7 +298,7 @@ export class LngLatBounds {
      * @example
      * ```ts
      * let arr = [[-73.9876, 40.7661], [-73.9397, 40.8002]];
-     * let llb = maplibregl.LngLatBounds.convert(arr); // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
+     * let llb = LngLatBounds.convert(arr); // = LngLatBounds {_sw: LngLat {lng: -73.9876, lat: 40.7661}, _ne: LngLat {lng: -73.9397, lat: 40.8002}}
      * ```
      */
     static convert(input: LngLatBoundsLike | null): LngLatBounds {
@@ -318,8 +315,8 @@ export class LngLatBounds {
      * @returns A new `LngLatBounds` object representing the coordinates extended by the `radius`.
      * @example
      * ```ts
-     * let center = new maplibregl.LngLat(-73.9749, 40.7736);
-     * maplibregl.LngLatBounds.fromLngLat(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
+     * let center = new LngLat(-73.9749, 40.7736);
+     * LngLatBounds.fromLngLat(100).toArray(); // = [[-73.97501862141328, 40.77351016847229], [-73.97478137858673, 40.77368983152771]]
      * ```
      */
     static fromLngLat(center: LngLat, radius:number = 0): LngLatBounds {

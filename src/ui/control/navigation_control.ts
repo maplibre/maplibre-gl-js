@@ -11,7 +11,7 @@ import type {IControl} from './control';
 /**
  * The {@link NavigationControl} options object
  */
-type NavigationOptions = {
+type NavigationControlOptions = {
     /**
      * If `true` the compass button is included.
      */
@@ -26,7 +26,7 @@ type NavigationOptions = {
     visualizePitch?: boolean;
 };
 
-const defaultOptions: NavigationOptions = {
+const defaultOptions: NavigationControlOptions = {
     showCompass: true,
     showZoom: true,
     visualizePitch: false
@@ -39,14 +39,14 @@ const defaultOptions: NavigationOptions = {
  *
  * @example
  * ```ts
- * let nav = new maplibregl.NavigationControl();
+ * let nav = new NavigationControl();
  * map.addControl(nav, 'top-left');
  * ```
  * @see [Display map navigation controls](https://maplibre.org/maplibre-gl-js/docs/examples/navigation/)
  */
 export class NavigationControl implements IControl {
     _map: Map;
-    options: NavigationOptions;
+    options: NavigationControlOptions;
     _container: HTMLElement;
     _zoomInButton: HTMLButtonElement;
     _zoomOutButton: HTMLButtonElement;
@@ -57,7 +57,7 @@ export class NavigationControl implements IControl {
     /**
      * @param options - the control's options
      */
-    constructor(options?: NavigationOptions) {
+    constructor(options?: NavigationControlOptions) {
         this.options = extend({}, defaultOptions, options);
 
         this._container = DOM.create('div', 'maplibregl-ctrl maplibregl-ctrl-group');
@@ -100,6 +100,7 @@ export class NavigationControl implements IControl {
         this._compassIcon.style.transform = rotate;
     };
 
+    /** {@inheritDoc IControl.onAdd} */
     onAdd(map: Map) {
         this._map = map;
         if (this.options.showZoom) {
@@ -120,6 +121,7 @@ export class NavigationControl implements IControl {
         return this._container;
     }
 
+    /** {@inheritDoc IControl.onRemove} */
     onRemove() {
         DOM.remove(this._container);
         if (this.options.showZoom) {
@@ -144,7 +146,7 @@ export class NavigationControl implements IControl {
         return a;
     }
 
-    _setButtonTitle = (button: HTMLButtonElement, title: string) => {
+    _setButtonTitle = (button: HTMLButtonElement, title: 'ZoomIn' | 'ZoomOut' | 'ResetBearing') => {
         const str = this._map._getUIString(`NavigationControl.${title}`);
         button.title = str;
         button.setAttribute('aria-label', str);

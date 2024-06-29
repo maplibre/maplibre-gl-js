@@ -39,7 +39,7 @@ if (argv.compare !== true && argv.compare !== undefined) { // handle --compare w
 
 console.log(`Starting headless chrome at: ${url.toString()}`);
 
-const browser = await puppeteer.launch({headless: 'new'});
+const browser = await puppeteer.launch({headless: true});
 
 try {
 
@@ -47,23 +47,21 @@ try {
     await webPage.setDefaultTimeout(0);
     await webPage.setViewport({width: 1280, height: 1024});
 
-    url.hash = 'NONE';
+    url.hash = 'NONE'; // this will simply load the page without running any benchmarks
     await webPage.goto(url.toString());
 
-    // @ts-ignore
-    await webPage.waitForFunction(() => window.maplibreglBenchmarkFinished);
-    // @ts-ignore
-    const allNames = await webPage.evaluate(() => Object.keys(window.maplibreglBenchmarks));
-    // @ts-ignore
-    const versions = await webPage.evaluate((name) => Object.keys(window.maplibreglBenchmarks[name]), allNames[0]);
+    await webPage.waitForFunction(() => (window as any).maplibreglBenchmarkFinished);
+    const allNames = await webPage.evaluate(() => Object.keys((window as any).maplibreglBenchmarks));
+    const versions = await webPage.evaluate((name) => Object.keys((window as any).maplibreglBenchmarks[name]), allNames[0]);
+    const versionsDisplayName = await webPage.evaluate(() => (window as any).versionsDisplayName);
 
+    // The following will run all the tests if no arguments are passed, will run only the tests passed as arguments otherwise
     const toRun = argv._.length > 0 ? argv._ : allNames;
-    toRun.sort();
 
     const nameWidth = Math.max(...toRun.map(v => v.length)) + 1;
     const timeWidth = Math.max(...versions.map(v => v.length), 16);
 
-    console.log(''.padStart(nameWidth), ...versions.map(v =>  `${v.padStart(timeWidth)} `));
+    console.log(''.padStart(nameWidth), ...versions.map((v, i) =>  `${(versionsDisplayName[i]).padStart(timeWidth)} `));
 
     const merger = new PDFMerger();
     for (const name of toRun) {
@@ -74,15 +72,13 @@ try {
         await webPage.reload();
 
         await webPage.waitForFunction(
-            // @ts-ignore
-            () => window.maplibreglBenchmarkFinished,
+            () => (window as any).maplibreglBenchmarkFinished,
             {
                 polling: 200,
                 timeout: 0
             }
         );
-        // @ts-ignore
-        const results = await webPage.evaluate((name) => window.maplibreglBenchmarkResults[name], name);
+        const results = await webPage.evaluate((name) => (window as any).maplibreglBenchmarkResults[name], name);
         const output = versions.map((v) => {
             if (v && results[v]) {
                 const trimmedMean = results[v].summary?.trimmedMean;
@@ -115,9 +111,10 @@ try {
 
     await merger.save(`${dir}/all.pdf`);
 } catch (error) {
-    console.log(error);
     if (error.message.startsWith('net::ERR_CONNECTION_REFUSED')) {
         console.log('Could not connect to server. Please run \'npm run start-bench\'.');
+    } else {
+        console.log(error);
     }
 } finally {
     await browser.close();

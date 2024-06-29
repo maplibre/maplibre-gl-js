@@ -1,7 +1,9 @@
-import {AttributionControl} from './attribution_control';
-import {createMap as globalCreateMap, beforeMapTest} from '../../util/test/util';
+import {AttributionControl, defaultAttributionControlOptions} from './attribution_control';
+import {createMap as globalCreateMap, beforeMapTest, sleep} from '../../util/test/util';
 import simulate from '../../../test/unit/lib/simulate_interaction';
 import {fakeServer} from 'nise';
+import {Map} from '../../ui/map';
+import {MapSourceDataEvent} from '../events';
 
 function createMap() {
 
@@ -11,14 +13,14 @@ function createMap() {
             version: 8,
             sources: {},
             layers: [],
-            owner: 'mapblibre',
+            owner: 'maplibre',
             id: 'demotiles',
         },
         hash: true
     }, undefined);
 }
 
-let map;
+let map: Map;
 
 beforeEach(() => {
     beforeMapTest();
@@ -100,7 +102,7 @@ describe('AttributionControl', () => {
 
     test('does not appear in compact mode if container is less then 640 pixel wide and attributions are empty', () => {
         Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 700, configurable: true});
-        map.addControl(new AttributionControl());
+        map.addControl(new AttributionControl({}));
 
         const container = map.getContainer();
 
@@ -140,73 +142,70 @@ describe('AttributionControl', () => {
         expect(container.querySelectorAll('.maplibregl-compact-show')).toHaveLength(1);
     });
 
-    test('dedupes attributions that are substrings of others', done => {
+    test('dedupes attributions that are substrings of others', async () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
-        map.on('load', () => {
-            map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'World'});
-            map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
-            map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Another Source'});
-            map.addSource('4', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello'});
-            map.addSource('5', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
-            map.addSource('6', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
-            map.addSource('7', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'GeoJSON Source'});
-            map.addLayer({id: '1', type: 'fill', source: '1'});
-            map.addLayer({id: '2', type: 'fill', source: '2'});
-            map.addLayer({id: '3', type: 'fill', source: '3'});
-            map.addLayer({id: '4', type: 'fill', source: '4'});
-            map.addLayer({id: '5', type: 'fill', source: '5'});
-            map.addLayer({id: '6', type: 'fill', source: '6'});
-            map.addLayer({id: '7', type: 'fill', source: '7'});
-        });
+        const spy = jest.fn();
+        map.on('data', spy);
+        await map.once('load');
+        map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'World'});
+        map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
+        map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Another Source'});
+        map.addSource('4', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello'});
+        map.addSource('5', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
+        map.addSource('6', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
+        map.addSource('7', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'GeoJSON Source'});
+        map.addLayer({id: '1', type: 'fill', source: '1'});
+        map.addLayer({id: '2', type: 'fill', source: '2'});
+        map.addLayer({id: '3', type: 'fill', source: '3'});
+        map.addLayer({id: '4', type: 'fill', source: '4'});
+        map.addLayer({id: '5', type: 'fill', source: '5'});
+        map.addLayer({id: '6', type: 'fill', source: '6'});
+        map.addLayer({id: '7', type: 'fill', source: '7'});
 
-        let times = 0;
-        map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
-                if (++times === 7) {
-                    expect(attribution._innerContainer.innerHTML).toBe('Hello World | Another Source | GeoJSON Source');
-                    done();
-                }
-            }
-        });
+        await sleep(100);
+
+        expect(attribution._innerContainer.innerHTML).toBe(`Hello World | Another Source | GeoJSON Source | ${defaultAttributionControlOptions.customAttribution}`);
+        expect(spy.mock.calls.filter((call) => call[0].dataType === 'source' && call[0].sourceDataType === 'visibility')).toHaveLength(7);
+
     });
 
-    test('is hidden if empty', done => {
-        const attribution = new AttributionControl();
+    test('is hidden if empty', async () => {
+        const attribution = new AttributionControl({});
         map.addControl(attribution);
-        map.on('load', () => {
-            map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
-            map.addLayer({id: '1', type: 'fill', source: '1'});
-        });
-
+        await map.once('load');
+        map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
+        map.addLayer({id: '1', type: 'fill', source: '1'});
         const container = map.getContainer();
+        const spy = jest.fn();
+        map.on('data', spy);
 
-        const checkEmptyFirst = () => {
-            expect(attribution._innerContainer.innerHTML).toBe('');
-            expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(1);
+        await sleep(100);
+        expect(spy.mock.calls.filter((call) => call[0].dataType === 'source' && call[0].sourceDataType === 'visibility')).toHaveLength(1);
+        expect(attribution._innerContainer.innerHTML).toBe('');
+        expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(1);
+    });
 
-            map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
-            map.addLayer({id: '2', type: 'fill', source: '2'});
-        };
+    test('is not hidden if adding a source with attribution', async () => {
+        const attribution = new AttributionControl({});
+        map.addControl(attribution);
+        await map.once('load');
+        map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
+        map.addLayer({id: '1', type: 'fill', source: '1'});
+        const container = map.getContainer();
+        const spy = jest.fn();
+        map.on('data', spy);
 
-        const checkNotEmptyLater = () => {
-            expect(attribution._innerContainer.innerHTML).toBe('Hello World');
-            expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
-            done();
-        };
+        await sleep(100);
+        map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Hello World'});
+        map.addLayer({id: '2', type: 'fill', source: '2'});
 
-        let times = 0;
-        map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
-                times++;
-                if (times === 1) {
-                    checkEmptyFirst();
-                } else if (times === 2) {
-                    checkNotEmptyLater();
-                }
-            }
-        });
+        await sleep(100);
+
+        expect(spy.mock.calls.filter((call) => call[0].dataType === 'source' && call[0].sourceDataType === 'visibility')).toHaveLength(2);
+        expect(attribution._innerContainer.innerHTML).toBe('Hello World');
+        expect(container.querySelectorAll('.maplibregl-attrib-empty')).toHaveLength(0);
     });
 
     test('shows custom attribution if customAttribution option is provided', () => {
@@ -248,30 +247,35 @@ describe('AttributionControl', () => {
         expect(attributionControl._innerContainer.innerHTML).toBe('Custom string | Another custom string | Some very long custom string');
     });
 
-    test('hides attributions for sources that are not currently visible', done => {
+    test('hides attributions for sources that are not currently visible', async () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
-        map.on('load', () => {
-            map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
-            map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Not used'});
-            map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Vibility none'});
-            map.addLayer({id: '1', type: 'fill', source: '1'});
-            map.addLayer({id: '3', type: 'fill', source: '3', layout: {visibility: 'none'}});
-        });
+        const spy = jest.fn();
+        map.on('data', spy);
+        await map.once('load');
+        map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
+        map.addSource('2', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Not used'});
+        map.addSource('3', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Visibility none'});
+        map.addLayer({id: 'layer1', type: 'fill', source: '1'});
+        map.addLayer({id: 'layer3', type: 'fill', source: '3', layout: {visibility: 'none'}});
 
-        let times = 0;
-        map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
-                if (++times === 3) {
-                    expect(attribution._innerContainer.innerHTML).toBe('Used');
-                    done();
-                }
-            }
-        });
+        await sleep(100);
+
+        expect(spy.mock.calls.filter((call) => {
+            const mapDataEvent: MapSourceDataEvent = call[0];
+
+            // the only one visible should be '1'.
+            // source 2 does not have layer and source 3 is not visible
+            return mapDataEvent.dataType === 'source' &&
+                   mapDataEvent.sourceDataType === 'visibility' &&
+                   mapDataEvent.sourceId === '1';
+        })).toHaveLength(1);
+
+        expect(attribution._innerContainer.innerHTML).toBe(`Used | ${defaultAttributionControlOptions.customAttribution}`);
     });
 
-    test('does not show attributions for sources that are used for terrain when they are not in use', done => {
+    test('does not show attributions for sources that are used for terrain when they are not in use', async () => {
         global.fetch = null;
         const server = fakeServer.create();
         server.respondWith('/source.json', JSON.stringify({
@@ -285,23 +289,25 @@ describe('AttributionControl', () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
-        map.on('load', () => {
-            map.addSource('1', {type: 'raster-dem', url: '/source.json'});
-            server.respond();
-        });
+        const spy = jest.fn();
+        map.on('data', spy);
+        await map.once('load');
+        map.addSource('1', {type: 'raster-dem', url: '/source.json'});
+        server.respond();
 
-        let times = 0;
-        map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
-                if (++times === 1) {
-                    expect(attribution._innerContainer.innerHTML).toBe('');
-                    done();
-                }
-            }
-        });
+        await sleep(100);
+
+        // there should not be a visibility event since there is no layer
+        expect(spy.mock.calls.filter((call) => {
+            const mapDataEvent: MapSourceDataEvent = call[0];
+            return mapDataEvent.dataType === 'source' &&
+                   mapDataEvent.sourceDataType === 'visibility';
+        })).toHaveLength(0);
+
+        expect(attribution._innerContainer.innerHTML).toBe(defaultAttributionControlOptions.customAttribution);
     });
 
-    test('shows attributions for sources that are used for terrain', done => {
+    test('shows attributions for sources that are used for terrain', async () => {
         global.fetch = null;
         const server = fakeServer.create();
         server.respondWith('/source.json', JSON.stringify({
@@ -315,44 +321,41 @@ describe('AttributionControl', () => {
         const attribution = new AttributionControl();
         map.addControl(attribution);
 
-        map.on('load', () => {
-            map.addSource('1', {type: 'raster-dem', url: '/source.json'});
-            server.respond();
-            map.setTerrain({source: '1'});
-        });
+        const spy = jest.fn();
+        map.on('data', spy);
+        await map.once('load');
+        map.addSource('1', {type: 'raster-dem', url: '/source.json'});
+        server.respond();
+        map.setTerrain({source: '1'});
+        await sleep(100);
 
-        let times = 0;
-        map.on('data', (e) => {
-            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
-                if (++times === 1) {
-                    expect(attribution._innerContainer.innerHTML).toBe('Terrain');
-                    done();
-                }
-            }
-        });
+        // there should not be a visibility event since there is no layer
+        expect(spy.mock.calls.filter((call) => {
+            const mapDataEvent: MapSourceDataEvent = call[0];
+            return mapDataEvent.dataType === 'source' &&
+                   mapDataEvent.sourceDataType === 'visibility';
+        })).toHaveLength(0);
+
+        expect(attribution._innerContainer.innerHTML).toBe(`Terrain | ${defaultAttributionControlOptions.customAttribution}`);
     });
 
-    test('toggles attributions for sources whose visibility changes when zooming', done => {
-        const attribution = new AttributionControl();
+    test('toggles attributions for sources whose visibility changes when zooming', async () => {
+        const attribution = new AttributionControl({});
         map.addControl(attribution);
-
-        map.on('load', () => {
-            map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
-            map.addLayer({id: '1', type: 'fill', source: '1', minzoom: 12});
-        });
 
         map.on('data', (e) => {
             if (e.dataType === 'source' && e.sourceDataType === 'metadata') {
-                expect(attribution._innerContainer.innerHTML).toBe('');
                 map.setZoom(13);
             }
-            if (e.dataType === 'source' && e.sourceDataType === 'visibility') {
-                if (map.getZoom() === 13) {
-                    expect(attribution._innerContainer.innerHTML).toBe('Used');
-                    done();
-                }
-            }
         });
+
+        await map.once('load');
+        map.addSource('1', {type: 'geojson', data: {type: 'FeatureCollection', features: []}, attribution: 'Used'});
+        map.addLayer({id: '1', type: 'fill', source: '1', minzoom: 12});
+
+        await sleep(100);
+        expect(map.getZoom()).toBe(13);
+        expect(attribution._innerContainer.innerHTML).toBe('Used');
     });
 
 });
@@ -361,7 +364,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
     describe('Details is set correct for compact view', () => {
         test('It should NOT contain the attribute open="" on first load.', () => {
             const attributionControl = new AttributionControl({
-                compact: true
+                compact: true,
             });
             map.addControl(attributionControl);
 
@@ -370,7 +373,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('It SHOULD contain the attribute open="" after click on summary.', () => {
             const attributionControl = new AttributionControl({
-                compact: true
+                compact: true,
             });
             map.addControl(attributionControl);
             const container = map.getContainer();
@@ -383,7 +386,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('It should NOT contain the attribute open="" after two clicks on summary.', () => {
             const attributionControl = new AttributionControl({
-                compact: true
+                compact: true,
             });
             map.addControl(attributionControl);
             const container = map.getContainer();
@@ -401,6 +404,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
         test('It should NOT contain the attribute open="" if offsetWidth <= 640.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
             const attributionControl = new AttributionControl({
+                customAttribution: undefined
             });
             map.addControl(attributionControl);
 
@@ -409,8 +413,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('It SHOULD contain the attribute open="" if offsetWidth > 640.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
-            const attributionControl = new AttributionControl({
-            });
+            const attributionControl = new AttributionControl({});
             map.addControl(attributionControl);
 
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
@@ -441,8 +444,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('The attribute open="" should NOT change on resize from > 640 to another > 640.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 641, configurable: true});
-            const attributionControl = new AttributionControl({
-            });
+            const attributionControl = new AttributionControl({});
             map.addControl(attributionControl);
 
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBe('');
@@ -460,8 +462,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('The attribute open="" should NOT change on resize from <= 640 to another <= 640 if it is closed.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
-            const attributionControl = new AttributionControl({
-            });
+            const attributionControl = new AttributionControl({});
             map.addControl(attributionControl);
 
             expect(map.getContainer().querySelectorAll('.maplibregl-ctrl-attrib')[0].getAttribute('open')).toBeNull();
@@ -479,8 +480,7 @@ describe('AttributionControl test regarding the HTML elements details and summar
 
         test('The attribute open="" should NOT change on resize from <= 640 to another <= 640 if it is open.', () => {
             Object.defineProperty(map.getCanvasContainer(), 'offsetWidth', {value: 640, configurable: true});
-            const attributionControl = new AttributionControl({
-            });
+            const attributionControl = new AttributionControl({});
             map.addControl(attributionControl);
             const toggle = map.getContainer().querySelector('.maplibregl-ctrl-attrib-button');
             simulate.click(toggle);

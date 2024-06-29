@@ -1,4 +1,4 @@
-import type {Cancelable} from '../types/cancelable';
+import {createAbortError} from './abort_error';
 
 const now = typeof performance !== 'undefined' && performance && performance.now ?
     performance.now.bind(performance) :
@@ -16,9 +16,14 @@ export const browser = {
      */
     now,
 
-    frame(fn: (paintStartTimestamp: number) => void): Cancelable {
-        const frame = requestAnimationFrame(fn);
-        return {cancel: () => cancelAnimationFrame(frame)};
+    frameAsync(abortController: AbortController): Promise<number> {
+        return new Promise((resolve, reject) => {
+            const frame = requestAnimationFrame(resolve);
+            abortController.signal.addEventListener('abort', () => {
+                cancelAnimationFrame(frame);
+                reject(createAbortError());
+            });
+        });
     },
 
     getImageData(img:  HTMLImageElement | ImageBitmap, padding: number = 0): ImageData {

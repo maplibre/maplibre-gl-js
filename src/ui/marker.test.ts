@@ -1,15 +1,22 @@
-import {createMap as globalCreateMap, beforeMapTest} from '../util/test/util';
+import {createMap as globalCreateMap, beforeMapTest, sleep} from '../util/test/util';
 import {Marker} from './marker';
 import {Popup} from './popup';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import simulate from '../../test/unit/lib/simulate_interaction';
 import type {Terrain} from '../render/terrain';
+import type {defaultLocale} from './default_locale';
 
-function createMap(options = {}) {
+type MapOptions = {
+    locale?: Partial<typeof defaultLocale>;
+    width?: number;
+    renderWorldCopies?: boolean;
+}
+
+function createMap(options: MapOptions = {}) {
     const container = window.document.createElement('div');
     window.document.body.appendChild(container);
-    Object.defineProperty(container, 'clientWidth', {value: 512});
+    Object.defineProperty(container, 'clientWidth', {value: options.width || 512});
     Object.defineProperty(container, 'clientHeight', {value: 512});
     return globalCreateMap({container, ...options});
 }
@@ -152,13 +159,15 @@ describe('marker', () => {
         expect(!marker.getPopup()).toBeTruthy();
     });
 
-    test('Marker#togglePopup opens a popup that was closed', () => {
+    test('Marker#togglePopup opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map)
-            .setPopup(new Popup())
-            .togglePopup();
+            .setPopup(new Popup());
+
+        await sleep(100);
+        marker.togglePopup();
 
         expect(marker.getPopup().isOpen()).toBeTruthy();
 
@@ -179,12 +188,14 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Enter key on Marker opens a popup that was closed', () => {
+    test('Enter key on Marker opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map)
             .setPopup(new Popup());
+
+        await sleep(100);
 
         // popup not initially open
         expect(marker.getPopup().isOpen()).toBeFalsy();
@@ -197,12 +208,14 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Space key on Marker opens a popup that was closed', () => {
+    test('Space key on Marker opens a popup that was closed', async () => {
         const map = createMap();
         const marker = new Marker()
             .setLngLat([0, 0])
             .addTo(map)
             .setPopup(new Popup());
+
+        await sleep(100);
 
         // popup not initially open
         expect(marker.getPopup().isOpen()).toBeFalsy();
@@ -237,6 +250,13 @@ describe('marker', () => {
         const marker = new Marker({element})
             .setPopup(popup);
         expect(marker.getElement().getAttribute('tabindex')).toBe('5');
+    });
+
+    test('Marker aria-label is set accordingly to its label value', () => {
+        const map = createMap({locale: {'Marker.Title': 'alt title'}});
+        const marker = new Marker().setLngLat([0, 0]).addTo(map);
+
+        expect(marker.getElement().getAttribute('aria-label')).toBe('alt title');
     });
 
     test('Marker anchor defaults to center', () => {
@@ -284,15 +304,18 @@ describe('marker', () => {
         expect(marker.getPopup().options.offset['top-left']).toEqual([0, 0]);
         expect(marker.getPopup().options.offset['top-right']).toEqual([0, 0]);
 
+        map.remove();
     });
 
-    test('Popup anchors around default Marker', () => {
+    test('Popup anchors around default Marker', async () => {
         const map = createMap();
 
         const marker = new Marker()
             .setLngLat([0, 0])
             .setPopup(new Popup().setText('Test'))
             .addTo(map);
+
+        await sleep(100);
 
         // open the popup
         marker.togglePopup();
@@ -352,6 +375,44 @@ describe('marker', () => {
             marker.getPopup()._container.classList.contains('maplibregl-popup-anchor-bottom-right')
         ).toBeTruthy();
 
+        map.remove();
+    });
+
+    test('Popup is opened at its marker position after marker is moved to another globe', async () => {
+        const map = createMap({width: 3000});
+
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map);
+
+        await sleep(100);
+
+        marker._pos = new Point(2999, 242);
+        marker._lngLat = map.unproject(marker._pos);
+        marker.togglePopup();
+
+        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
+    });
+
+    test('Popup is re-opened at its marker position after marker is moved to another globe', async () => {
+        const map = createMap({width: 3000});
+
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .setPopup(new Popup().setText('Test'))
+            .addTo(map)
+            .togglePopup()
+            .togglePopup();
+
+        await sleep(100);
+        marker._pos = new Point(2999, 242);
+        marker._lngLat = map.unproject(marker._pos);
+        marker.togglePopup();
+
+        expect(marker.getPopup()._pos.x).toBeCloseTo(marker._pos.x, 0);
+        map.remove();
     });
 
     test('Marker drag functionality can be added with drag option', () => {
@@ -792,7 +853,7 @@ describe('marker', () => {
         map.remove();
     });
 
-    test('Marker removed after update when terrain is on should clear timeout', () => {
+    test('Marker removed after update when terrain is on should clear timeout', async () => {
         jest.spyOn(global, 'setTimeout');
         jest.spyOn(global, 'clearTimeout');
         const map = createMap();
@@ -800,10 +861,13 @@ describe('marker', () => {
             .setLngLat([0, 0])
             .addTo(map);
         map.terrain = {
-            getElevationForLngLatZoom: () => 0
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .9
         } as any as Terrain;
+        map.transform.lngLatToCameraDepth = () => .95;
 
         marker.setOffset([10, 10]);
+        await sleep(100);
 
         expect(setTimeout).toHaveBeenCalled();
         marker.remove();
@@ -835,5 +899,214 @@ describe('marker', () => {
         map.fire('render');
         expect(map._oneTimeListeners.render).toHaveLength(0);
         map.remove();
+    });
+
+    test('Sets default opacity if it\'s not provided as option', async () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toMatch('1');
+        map.remove();
+    });
+
+    test('Sets opacity according to options.opacity', async () => {
+        const map = createMap();
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Changes opacity to a new value provided by setOpacity', () => {
+        const map = createMap();
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        marker.setOpacity('0.6');
+        expect(marker.getElement().style.opacity).toMatch('.6');
+        map.remove();
+    });
+
+    test('Resets opacity to default when setOpacity is called without arguments', () => {
+        const map = createMap();
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+        marker.setOpacity();
+        expect(marker.getElement().style.opacity).toBe('1');
+        map.remove();
+    });
+
+    test('Marker changes opacity behind terrain and when terrain is removed', async () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        expect(marker.getElement().style.opacity).toMatch('');
+
+        // Add terrain, not blocking marker
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .95 // Mocking distance to terrain
+        } as any as Terrain;
+        map.fire('terrain');
+        await sleep(100);
+
+        expect(marker.getElement().style.opacity).toMatch('1');
+
+        // Terrain blocks marker
+        map.terrain.depthAtPoint = () => .92; // Mocking terrain blocking marker
+        map.fire('moveend');
+        await sleep(100);
+
+        expect(marker.getElement().style.opacity).toMatch('.2');
+
+        // Remove terrain
+        map.terrain = null;
+        map.fire('terrain');
+        await sleep(100);
+        expect(marker.getElement().style.opacity).toMatch('1');
+
+        map.remove();
+    });
+
+    test('Applies options.opacity when 3d terrain is enabled and marker is in clear view', async () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .95
+        } as any as Terrain;
+        await sleep(100);
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Applies options.opacity when marker\'s base is hidden by 3d terrain but its center is visible', async () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: '0.7'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: (p) => p.y === 256 ? .95 : .92 // return "far" given the marker's center coord; return "near" otherwise
+        } as any as Terrain;
+        await sleep(100);
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('.7');
+        map.remove();
+    });
+
+    test('Applies options.opacityWhenCovered when marker is hidden by 3d terrain', async () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacity: '0.7', opacityWhenCovered: '0.3'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        await sleep(100);
+        map.fire('terrain');
+
+        expect(marker.getElement().style.opacity).toMatch('0.3');
+        map.remove();
+    });
+
+    test('Applies new "opacityWhenCovered" provided by setOpacity when marker is hidden by 3d terrain', () => {
+        const map = createMap();
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+        const marker = new Marker({opacityWhenCovered: '0.15'})
+            .setLngLat([0, 0])
+            .addTo(map);
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        map.fire('terrain');
+
+        marker.setOpacity(undefined, '0.35');
+
+        expect(marker.getElement().style.opacity).toMatch('0.35');
+        map.remove();
+    });
+
+    test('Removes an open popup when going behind 3d terrain', async () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map)
+            .setPopup(new Popup());
+
+        await sleep(100);
+        marker.togglePopup();
+
+        expect(marker._popup.isOpen()).toBeTruthy();
+
+        map.transform.lngLatToCameraDepth = () => .95; // Mocking distance to marker
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        map.fire('terrain');
+
+        await sleep(100);
+
+        expect(marker._popup?.isOpen()).toBeFalsy();
+        map.remove();
+    });
+
+    test('Does not open a popup when behind 3d terrain', async () => {
+        const map = createMap();
+        const marker = new Marker()
+            .setLngLat([0, 0])
+            .addTo(map)
+            .setPopup(new Popup());
+
+        map.transform.lngLatToCameraDepth = () => .95;
+
+        map.terrain = {
+            getElevationForLngLatZoom: () => 0,
+            depthAtPoint: () => .92
+        } as any as Terrain;
+        map.fire('terrain');
+
+        await sleep(100);
+
+        marker.togglePopup();
+
+        expect(marker._popup.isOpen()).toBeFalsy();
+
+        map.remove();
+    });
+
+    test('Marker\'s lng is wrapped when slightly crossing 180 with {renderWorldCopies: false}', () => {
+        const map = createMap({width: 1024, renderWorldCopies: false});
+        const marker = new Marker()
+            .setLngLat([179, 0])
+            .addTo(map);
+
+        marker.setLngLat([181, 0]);
+
+        expect(marker._lngLat.lng).toBe(-179);
     });
 });

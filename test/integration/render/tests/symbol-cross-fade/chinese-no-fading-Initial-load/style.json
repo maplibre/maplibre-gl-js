@@ -2,20 +2,19 @@
   "version": 8,
   "metadata": {
     "test": {
-        "continuesRepaint" : false,
         "fadeDuration": 100,
         "width": 512,
         "height": 512,
         "description": "Chinese character rendering on initial map loading.",
         "operations": [
-          ["wait", "idle"]
+          ["idle"]
         ]
     }
   },
   "zoom": 3,
   "center": [-14.41400, 39.09187],
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "geojson",
       "data": {
         "type": "FeatureCollection",
@@ -188,7 +187,7 @@
     {
       "id": "lines-symbol",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "layout": {
         "text-field": "{name}",
         "symbol-placement": "line",
@@ -199,7 +198,7 @@
     }, {
       "id": "lines",
       "type": "line",
-      "source": "mapbox",
+      "source": "maplibre",
       "paint": {
           "line-opacity": 0.25
       }

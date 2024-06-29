@@ -18,7 +18,6 @@ import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
 import type {Transform} from '../geo/transform';
 import type {TileState} from './tile';
-import type {Callback} from '../types/callback';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
 import {Terrain} from '../render/terrain';
@@ -41,7 +40,15 @@ export class SourceCache extends Evented {
     style: Style;
 
     _source: Source;
+
+    /**
+     * @internal
+     * signifies that the TileJSON is loaded if applicable.
+     * if the source type does not come with a TileJSON, the flag signifies the
+     * source data has loaded (i.e geojson has been tiled on the worker and is ready)
+     */
     _sourceLoaded: boolean;
+
     _sourceErrored: boolean;
     _tiles: {[_: string]: Tile};
     _prevLng: number;
@@ -64,6 +71,7 @@ export class SourceCache extends Evented {
     tileSize: number;
     _state: SourceFeatureState;
     _loadedParentTiles: {[_: string]: Tile};
+    _loadedSiblingTiles: {[_: string]: Tile};
     _didEmitContent: boolean;
     _updated: boolean;
 
@@ -75,23 +83,7 @@ export class SourceCache extends Evented {
         this.id = id;
         this.dispatcher = dispatcher;
 
-        this.on('data', (e: MapSourceDataEvent) => {
-            // this._sourceLoaded signifies that the TileJSON is loaded if applicable.
-            // if the source type does not come with a TileJSON, the flag signifies the
-            // source data has loaded (i.e geojson has been tiled on the worker and is ready)
-            if (e.dataType === 'source' && e.sourceDataType === 'metadata') this._sourceLoaded = true;
-
-            // for sources with mutable data, this event fires when the underlying data
-            // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
-            if (this._sourceLoaded && !this._paused && e.dataType === 'source' && e.sourceDataType === 'content') {
-                this.reload();
-                if (this.transform) {
-                    this.update(this.transform, this.terrain);
-                }
-
-                this._didEmitContent = true;
-            }
-        });
+        this.on('data', (e: MapSourceDataEvent) => this._dataHandler(e));
 
         this.on('dataloading', () => {
             this._sourceErrored = false;
@@ -105,7 +97,7 @@ export class SourceCache extends Evented {
         this._source = createSource(id, options, dispatcher, this);
 
         this._tiles = {};
-        this._cache = new TileCache(0, this._unloadTile.bind(this));
+        this._cache = new TileCache(0, (tile) => this._unloadTile(tile));
         this._timers = {};
         this._cacheTimers = {};
         this._maxTileCacheSize = null;
@@ -171,18 +163,29 @@ export class SourceCache extends Evented {
         if (this.transform) this.update(this.transform, this.terrain);
     }
 
-    _loadTile(tile: Tile, callback: Callback<void>) {
-        return this._source.loadTile(tile, callback);
+    async _loadTile(tile: Tile, id: string, state: TileState): Promise<void> {
+        try {
+            await this._source.loadTile(tile);
+            this._tileLoaded(tile, id, state);
+        } catch (err) {
+            tile.state = 'errored';
+            if ((err as any).status !== 404) {
+                this._source.fire(new ErrorEvent(err, {tile}));
+            } else {
+                // continue to try loading parent/children tiles if a tile doesn't exist (404)
+                this.update(this.transform, this.terrain);
+            }
+        }
     }
 
     _unloadTile(tile: Tile) {
         if (this._source.unloadTile)
-            return this._source.unloadTile(tile, () => {});
+            this._source.unloadTile(tile);
     }
 
     _abortTile(tile: Tile) {
         if (this._source.abortTile)
-            this._source.abortTile(tile, () => {});
+            this._source.abortTile(tile);
 
         this._source.fire(new Event('dataabort', {tile, coord: tile.tileID, dataType: 'source'}));
     }
@@ -254,7 +257,7 @@ export class SourceCache extends Evented {
         }
     }
 
-    _reloadTile(id: string, state: TileState) {
+    async _reloadTile(id: string, state: TileState) {
         const tile = this._tiles[id];
 
         // this potentially does not address all underlying
@@ -269,19 +272,10 @@ export class SourceCache extends Evented {
         if (tile.state !== 'loading') {
             tile.state = state;
         }
-
-        this._loadTile(tile, this._tileLoaded.bind(this, tile, id, state));
+        await this._loadTile(tile, id, state);
     }
 
-    _tileLoaded(tile: Tile, id: string, previousState: TileState, err?: Error | null) {
-        if (err) {
-            tile.state = 'errored';
-            if ((err as any).status !== 404) this._source.fire(new ErrorEvent(err, {tile}));
-            // continue to try loading parent/children tiles if a tile doesn't exist (404)
-            else this.update(this.transform, this.terrain);
-            return;
-        }
-
+    _tileLoaded(tile: Tile, id: string, previousState: TileState) {
         tile.timeAdded = browser.now();
         if (previousState === 'expired') tile.refreshedUponExpiration = true;
         this._setTileReloadTimer(id, tile);
@@ -294,8 +288,8 @@ export class SourceCache extends Evented {
     }
 
     /**
-    * For raster terrain source, backfill DEM to eliminate visible tile boundaries
-    */
+     * For raster terrain source, backfill DEM to eliminate visible tile boundaries
+     */
     _backfillDEM(tile: Tile) {
         const renderables = this.getRenderableIds();
         for (let i = 0; i < renderables.length; i++) {
@@ -418,6 +412,14 @@ export class SourceCache extends Evented {
         }
     }
 
+    /**
+     * Find a loaded sibling of the given tile
+     */
+    findLoadedSibling(tileID: OverscaledTileID): Tile {
+        // If a tile with this ID already exists, return it
+        return this._getLoadedTile(tileID);
+    }
+
     _getLoadedTile(tileID: OverscaledTileID): Tile {
         const tile = this._tiles[tileID.key];
         if (tile && tile.hasData()) {
@@ -492,14 +494,105 @@ export class SourceCache extends Evented {
         }
     }
 
+    _updateCoveredAndRetainedTiles(
+        retain: { [_: string]: OverscaledTileID },
+        minCoveringZoom: number,
+        maxCoveringZoom: number,
+        zoom: number,
+        idealTileIDs: OverscaledTileID[],
+        terrain?: Terrain
+    ) {
+        const tilesForFading: { [_: string]: OverscaledTileID } = {};
+        const fadingTiles = {};
+        const ids = Object.keys(retain);
+        const now = browser.now();
+        for (const id of ids) {
+            const tileID = retain[id];
+
+            const tile = this._tiles[id];
+
+            // when fadeEndTime is 0, the tile is created but registerFadeDuration
+            // has not been called, therefore must be kept in fadingTiles dictionary
+            // for next round of rendering
+            if (!tile || (tile.fadeEndTime !== 0 && tile.fadeEndTime <= now)) {
+                continue;
+            }
+
+            // if the tile is loaded but still fading in, find parents to cross-fade with it
+            const parentTile = this.findLoadedParent(tileID, minCoveringZoom);
+            const siblingTile = this.findLoadedSibling(tileID);
+            const fadeTileRef = parentTile || siblingTile || null;
+            if (fadeTileRef) {
+                this._addTile(fadeTileRef.tileID);
+                tilesForFading[fadeTileRef.tileID.key] = fadeTileRef.tileID;
+            }
+
+            fadingTiles[id] = tileID;
+        }
+
+        // for tiles that are still fading in, also find children to cross-fade with
+        this._retainLoadedChildren(fadingTiles, zoom, maxCoveringZoom, retain);
+
+        for (const id in tilesForFading) {
+            if (!retain[id]) {
+                // If a tile is only needed for fading, mark it as covered so that it isn't rendered on it's own.
+                this._coveredTiles[id] = true;
+                retain[id] = tilesForFading[id];
+            }
+        }
+
+        // disable fading logic in terrain3D mode to avoid rendering two tiles on the same place
+        if (terrain) {
+            const idealRasterTileIDs: { [_: string]: OverscaledTileID } = {};
+            const missingTileIDs: { [_: string]: OverscaledTileID } = {};
+            for (const tileID of idealTileIDs) {
+                if (this._tiles[tileID.key].hasData())
+                    idealRasterTileIDs[tileID.key] = tileID;
+                else
+                    missingTileIDs[tileID.key] = tileID;
+            }
+            // search for a complete set of children for each missing tile
+            for (const key in missingTileIDs) {
+                const children = missingTileIDs[key].children(this._source.maxzoom);
+                if (this._tiles[children[0].key] && this._tiles[children[1].key] && this._tiles[children[2].key] && this._tiles[children[3].key]) {
+                    idealRasterTileIDs[children[0].key] = retain[children[0].key] = children[0];
+                    idealRasterTileIDs[children[1].key] = retain[children[1].key] = children[1];
+                    idealRasterTileIDs[children[2].key] = retain[children[2].key] = children[2];
+                    idealRasterTileIDs[children[3].key] = retain[children[3].key] = children[3];
+                    delete missingTileIDs[key];
+                }
+            }
+            // search for parent or sibling for each missing tile
+            for (const key in missingTileIDs) {
+                const tileID = missingTileIDs[key];
+                const parentTile = this.findLoadedParent(tileID, this._source.minzoom);
+                const siblingTile = this.findLoadedSibling(tileID);
+                const fadeTileRef = parentTile || siblingTile || null;
+                if (fadeTileRef) {
+                    idealRasterTileIDs[fadeTileRef.tileID.key] = retain[fadeTileRef.tileID.key] = fadeTileRef.tileID;
+                    // remove idealTiles which would be rendered twice
+                    for (const key in idealRasterTileIDs) {
+                        if (idealRasterTileIDs[key].isChildOf(fadeTileRef.tileID)) delete idealRasterTileIDs[key];
+                    }
+                }
+            }
+            // cover all tiles which are not needed
+            for (const key in this._tiles) {
+                if (!idealRasterTileIDs[key]) this._coveredTiles[key] = true;
+            }
+        }
+    }
+
     /**
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
     update(transform: Transform, terrain?: Terrain) {
+        if (!this._sourceLoaded || this._paused) {
+            return;
+        }
         this.transform = transform;
         this.terrain = terrain;
-        if (!this._sourceLoaded || this._paused) { return; }
 
         this.updateCacheSize(transform);
         this.handleWrapJump(this.transform.center.lng);
@@ -508,7 +601,8 @@ export class SourceCache extends Evented {
         // better, retained tiles. They are not drawn separately.
         this._coveredTiles = {};
 
-        let idealTileIDs;
+        let idealTileIDs: OverscaledTileID[];
+
         if (!this.used && !this.usedForTerrain) {
             idealTileIDs = [];
         } else if (this._source.tileID) {
@@ -563,80 +657,7 @@ export class SourceCache extends Evented {
         const retain = this._updateRetainedTiles(idealTileIDs, zoom);
 
         if (isRasterType(this._source.type)) {
-            const parentsForFading: {[_: string]: OverscaledTileID} = {};
-            const fadingTiles = {};
-            const ids = Object.keys(retain);
-            const now = browser.now();
-            for (const id of ids) {
-                const tileID = retain[id];
-
-                const tile = this._tiles[id];
-
-                // when fadeEndTime is 0, the tile is created but registerFadeDuration
-                // has not been called, therefore must be kept in fadingTiles dictionary
-                // for next round of rendering
-                if (!tile || (tile.fadeEndTime !== 0 && tile.fadeEndTime <= now)) {
-                    continue;
-                }
-
-                // if the tile is loaded but still fading in, find parents to cross-fade with it
-                const parentTile = this.findLoadedParent(tileID, minCoveringZoom);
-                if (parentTile) {
-                    this._addTile(parentTile.tileID);
-                    parentsForFading[parentTile.tileID.key] = parentTile.tileID;
-                }
-
-                fadingTiles[id] = tileID;
-            }
-
-            // for tiles that are still fading in, also find children to cross-fade with
-            this._retainLoadedChildren(fadingTiles, zoom, maxCoveringZoom, retain);
-
-            for (const id in parentsForFading) {
-                if (!retain[id]) {
-                    // If a tile is only needed for fading, mark it as covered so that it isn't rendered on it's own.
-                    this._coveredTiles[id] = true;
-                    retain[id] = parentsForFading[id];
-                }
-            }
-
-            // disable fading logic in terrain3D mode to avoid rendering two tiles on the same place
-            if (terrain) {
-                const idealRasterTileIDs: {[_: string]: OverscaledTileID} = {};
-                const missingTileIDs: {[_: string]: OverscaledTileID} = {};
-                for (const tileID of idealTileIDs) {
-                    if (this._tiles[tileID.key].hasData())
-                        idealRasterTileIDs[tileID.key] = tileID;
-                    else
-                        missingTileIDs[tileID.key] = tileID;
-                }
-                // search for a complete set of children for each missing tile
-                for (const key in missingTileIDs) {
-                    const children = missingTileIDs[key].children(this._source.maxzoom);
-                    if (this._tiles[children[0].key] && this._tiles[children[1].key] && this._tiles[children[2].key] && this._tiles[children[3].key]) {
-                        idealRasterTileIDs[children[0].key] = retain[children[0].key] = children[0];
-                        idealRasterTileIDs[children[1].key] = retain[children[1].key] = children[1];
-                        idealRasterTileIDs[children[2].key] = retain[children[2].key] = children[2];
-                        idealRasterTileIDs[children[3].key] = retain[children[3].key] = children[3];
-                        delete missingTileIDs[key];
-                    }
-                }
-                // search for parent for each missing tile
-                for (const key in missingTileIDs) {
-                    const parent = this.findLoadedParent(missingTileIDs[key], this._source.minzoom);
-                    if (parent) {
-                        idealRasterTileIDs[parent.tileID.key] = retain[parent.tileID.key] = parent.tileID;
-                        // remove idealTiles which would be rendered twice
-                        for (const key in idealRasterTileIDs) {
-                            if (idealRasterTileIDs[key].isChildOf(parent.tileID)) delete idealRasterTileIDs[key];
-                        }
-                    }
-                }
-                // cover all tiles which are not needed
-                for (const key in this._tiles) {
-                    if (!idealRasterTileIDs[key]) this._coveredTiles[key] = true;
-                }
-            }
+            this._updateCoveredAndRetainedTiles(retain, minCoveringZoom, maxCoveringZoom, zoom, idealTileIDs, terrain);
         }
 
         for (const retainedId in retain) {
@@ -656,8 +677,9 @@ export class SourceCache extends Evented {
             }
         }
 
-        // Construct a cache of loaded parents
+        // Construct caches of loaded parents & siblings
         this._updateLoadedParentTileCache();
+        this._updateLoadedSiblingTileCache();
     }
 
     releaseSymbolFadeTiles() {
@@ -738,7 +760,7 @@ export class SourceCache extends Evented {
                 }
                 if (tile) {
                     const hasData = tile.hasData();
-                    if (parentWasRequested || hasData) {
+                    if (hasData || !this.map?.cancelPendingTileRequestsWhileZooming || parentWasRequested) {
                         retain[parentId.key] = parentId;
                     }
                     // Save the current values, since they're the parent of the next iteration
@@ -790,6 +812,24 @@ export class SourceCache extends Evented {
     }
 
     /**
+     * Update the cache of loaded sibling tiles
+     *
+     * Sibling tiles are tiles that share the same zoom level and
+     * x/y position but have different wrap values
+     * Maintaining sibling tile cache allows fading from old to new tiles
+     * of the same position and zoom level
+     */
+    _updateLoadedSiblingTileCache() {
+        this._loadedSiblingTiles = {};
+
+        for (const tileKey in this._tiles) {
+            const currentId = this._tiles[tileKey].tileID;
+            const siblingTile: Tile = this._getLoadedTile(currentId);
+            this._loadedSiblingTiles[currentId.key] = siblingTile;
+        }
+    }
+
+    /**
      * Add a tile, given its coordinate, to the pyramid.
      */
     _addTile(tileID: OverscaledTileID): Tile {
@@ -814,7 +854,7 @@ export class SourceCache extends Evented {
 
         if (!tile) {
             tile = new Tile(tileID, this._source.tileSize * tileID.overscaleFactor());
-            this._loadTile(tile, this._tileLoaded.bind(this, tile, tileID.key, tile.state));
+            this._loadTile(tile, tileID.key, tile.state);
         }
 
         tile.uses++;
@@ -865,6 +905,26 @@ export class SourceCache extends Evented {
             tile.aborted = true;
             this._abortTile(tile);
             this._unloadTile(tile);
+        }
+    }
+
+    /** @internal */
+    private _dataHandler(e: MapSourceDataEvent) {
+
+        const eventSourceDataType = e.sourceDataType;
+        if (e.dataType === 'source' && eventSourceDataType === 'metadata') {
+            this._sourceLoaded = true;
+        }
+
+        // for sources with mutable data, this event fires when the underlying data
+        // to a source is changed. (i.e. GeoJSONSource#setData and ImageSource#serCoordinates)
+        if (this._sourceLoaded && !this._paused && e.dataType === 'source' && eventSourceDataType === 'content') {
+            this.reload();
+            if (this.transform) {
+                this.update(this.transform, this.terrain);
+            }
+
+            this._didEmitContent = true;
         }
     }
 

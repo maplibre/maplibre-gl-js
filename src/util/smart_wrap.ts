@@ -17,6 +17,7 @@ import type {Transform} from '../geo/transform';
  * should wrap just enough to avoid doing so.
  */
 export function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform): LngLat {
+    const originalLngLat = new LngLat(lngLat.lng, lngLat.lat);
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
 
     // First, try shifting one world in either direction, and see if either is closer to the
@@ -47,5 +48,11 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform)
         }
     }
 
-    return lngLat;
+    // Apply the change only if new coord is below horizon
+    if (lngLat.lng !== originalLngLat.lng &&
+        transform.locationPoint(lngLat).y > (transform.height / 2 - transform.getHorizon())) {
+        return lngLat;
+    }
+
+    return originalLngLat;
 }

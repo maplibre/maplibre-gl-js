@@ -1,7 +1,5 @@
 // Note: all "sizes" are measured in bytes
 
-import type {Transferable} from '../types/transferable';
-
 /**
  * @internal
  * A view type size
@@ -51,7 +49,7 @@ const RESIZE_MULTIPLIER = 5;
 
 /**
  * @internal
- * A struct array memeber
+ * A struct array member
  */
 export type StructArrayMember = {
     name: string;
@@ -90,7 +88,7 @@ export type SerializedStructArray = {
  * we implement a more specific subclass that inherits from one of the
  * StructArrayLayouts and adds a `get(i): T` accessor that returns a structured
  * object whose properties are proxies into the underlying memory space for the
- * i-th element.  This affords the convience of working with (seemingly) plain
+ * i-th element.  This affords the convenience of working with (seemingly) plain
  * Javascript objects without the overhead of serializing/deserializing them
  * into ArrayBuffers for efficient web worker transfer.
  */
@@ -154,7 +152,7 @@ abstract class StructArray {
     }
 
     /**
-     * Resets the length of the array to 0 without de-allocating capcacity.
+     * Resets the length of the array to 0 without de-allocating capacity.
      */
     clear() {
         this.length = 0;

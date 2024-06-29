@@ -107,7 +107,7 @@ export class CanvasSource extends ImageSource {
         this.animate = options.animate !== undefined ? options.animate : true;
     }
 
-    load = () => {
+    async load() {
         this._loaded = true;
         if (!this.canvas) {
             this.canvas = (this.options.canvas instanceof HTMLCanvasElement) ?
@@ -137,7 +137,7 @@ export class CanvasSource extends ImageSource {
         };
 
         this._finishLoading();
-    };
+    }
 
     /**
      * Returns the HTML `canvas` element.
@@ -160,7 +160,7 @@ export class CanvasSource extends ImageSource {
         this.pause();
     }
 
-    prepare = () => {
+    prepare() {
         let resize = false;
         if (this.canvas.width !== this.width) {
             this.width = this.canvas.width;
@@ -205,14 +205,14 @@ export class CanvasSource extends ImageSource {
         if (newTilesLoaded) {
             this.fire(new Event('data', {dataType: 'source', sourceDataType: 'idle', sourceId: this.id}));
         }
-    };
+    }
 
-    serialize = (): CanvasSourceSpecification => {
+    serialize(): CanvasSourceSpecification {
         return {
             type: 'canvas',
             coordinates: this.coordinates
         };
-    };
+    }
 
     hasTransition() {
         return this._playing;

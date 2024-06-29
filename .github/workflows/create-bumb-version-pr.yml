@@ -1,0 +1,40 @@
+name: Create bump version PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to change to.
+        required: true
+        type: string
+
+jobs:
+  bump-version-pr:
+    name: Bump version PR
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Use Node.js from nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Bump version
+        run: |
+          npm version --commit-hooks false --git-tag-version false ${{ inputs.version }}
+          ./build/bump-version-changelog.js ${{ inputs.version }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Bump version to ${{ inputs.version }}
+          branch: bump-version-to-${{ inputs.version }}
+          title: Bump version to ${{ inputs.version }}

@@ -1,7 +1,8 @@
 import {config} from './util/config';
-import maplibre from './index';
+import {addProtocol, getWorkerCount, removeProtocol, getVersion} from './index';
 import {getJSON, getArrayBuffer} from './util/ajax';
 import {ImageRequest} from './util/image_request';
+import {isAbortError} from './util/abort_error';
 
 describe('maplibre', () => {
     beforeEach(() => {
@@ -12,14 +13,14 @@ describe('maplibre', () => {
     });
 
     test('workerCount', () => {
-        expect(typeof maplibre.workerCount === 'number').toBeTruthy();
+        expect(typeof getWorkerCount() === 'number').toBeTruthy();
     });
 
     test('addProtocol', () => {
         const protocolName = 'custom';
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
 
-        maplibre.addProtocol(protocolName, () => { return {cancel: () => { }}; });
+        addProtocol(protocolName, async () => Promise.resolve({} as any));
         expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
     });
 
@@ -27,103 +28,94 @@ describe('maplibre', () => {
         const protocolName = 'custom';
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
 
-        maplibre.addProtocol(protocolName, () => { return {cancel: () => { }}; });
+        addProtocol(protocolName, () => Promise.resolve({} as any));
         expect(Object.keys(config.REGISTERED_PROTOCOLS)[0]).toBe(protocolName);
 
-        maplibre.removeProtocol(protocolName);
+        removeProtocol(protocolName);
         expect(Object.keys(config.REGISTERED_PROTOCOLS)).toHaveLength(0);
     });
 
-    test('#addProtocol - getJSON', done => {
+    test('#addProtocol - getJSON', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', (reqParam, callback) => {
+        addProtocol('custom', () => {
             protocolCallbackCalled = true;
-            callback(null, {'foo': 'bar'});
-            return {cancel: () => {}};
+            return Promise.resolve({data: {'foo': 'bar'}});
         });
-        getJSON({url: 'custom://test/url/json'}, (error, data) => {
-            expect(error).toBeFalsy();
-            expect(data).toEqual({foo: 'bar'});
-            expect(protocolCallbackCalled).toBeTruthy();
-            done();
-        });
+        const response = await getJSON({url: 'custom://test/url/json'}, new AbortController());
+        expect(response.data).toEqual({foo: 'bar'});
+        expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - getArrayBuffer', done => {
+    test('#addProtocol - getArrayBuffer', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', (reqParam, callback) => {
+        addProtocol('custom', () => {
             protocolCallbackCalled = true;
-            callback(null, new ArrayBuffer(1));
-            return {cancel: () => {}};
+            return Promise.resolve({data: new ArrayBuffer(1), cacheControl: 'cache-control', expires: 'expires'});
         });
-        getArrayBuffer({url: 'custom://test/url/getArrayBuffer'}, async (error, data) => {
-            expect(error).toBeFalsy();
-            expect(data).toBeInstanceOf(ArrayBuffer);
-            expect(protocolCallbackCalled).toBeTruthy();
-            done();
-        });
+        const response = await getArrayBuffer({url: 'custom://test/url/getArrayBuffer'}, new AbortController());
+        expect(response.data).toBeInstanceOf(ArrayBuffer);
+        expect(response.cacheControl).toBe('cache-control');
+        expect(response.expires).toBe('expires');
+        expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - returning ImageBitmap for getImage', done => {
+    test('#addProtocol - returning ImageBitmap for getImage', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', (reqParam, callback) => {
+        addProtocol('custom', () => {
             protocolCallbackCalled = true;
-            callback(null, new ImageBitmap());
-            return {cancel: () => {}};
+            return Promise.resolve({data: new ImageBitmap()});
         });
 
-        ImageRequest.getImage({url: 'custom://test/url/getImage'}, async (error, img) => {
-            expect(error).toBeFalsy();
-            expect(img).toBeInstanceOf(ImageBitmap);
-            expect(protocolCallbackCalled).toBeTruthy();
-            done();
-        });
+        const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
+        expect(img.data).toBeInstanceOf(ImageBitmap);
+        expect(protocolCallbackCalled).toBeTruthy();
     });
 
-    test('#addProtocol - returning HTMLImageElement for getImage', done => {
+    test('#addProtocol - returning HTMLImageElement for getImage', async () => {
         let protocolCallbackCalled = false;
-        maplibre.addProtocol('custom', (reqParam, callback) => {
+        addProtocol('custom', () => {
             protocolCallbackCalled = true;
-            callback(null, new Image());
-            return {cancel: () => {}};
+            return Promise.resolve({data: new Image()});
         });
-        ImageRequest.getImage({url: 'custom://test/url/getImage'}, async (error, img) => {
-            expect(error).toBeFalsy();
-            expect(img).toBeInstanceOf(HTMLImageElement);
-            expect(protocolCallbackCalled).toBeTruthy();
-            done();
-        });
+        const img = await ImageRequest.getImage({url: 'custom://test/url/getImage'}, new AbortController());
+        expect(img.data).toBeInstanceOf(HTMLImageElement);
+        expect(protocolCallbackCalled).toBeTruthy();
     });
 
     test('#addProtocol - error', () => {
-        maplibre.addProtocol('custom', (reqParam, callback) => {
-            callback(new Error('error'));
-            return {cancel: () => { }};
-        });
+        addProtocol('custom', () => Promise.reject(new Error('test error')));
 
-        getJSON({url: 'custom://test/url/json'}, (error) => {
+        getJSON({url: 'custom://test/url/json'}, new AbortController()).catch((error) => {
             expect(error).toBeTruthy();
         });
     });
 
-    test('#addProtocol - Cancel request', () => {
+    test('#addProtocol - Cancel request', async () => {
         let cancelCalled = false;
-        maplibre.addProtocol('custom', () => {
-            return {cancel: () => {
+        addProtocol('custom', (_req, abortController) => {
+            abortController.signal.addEventListener('abort', () => {
                 cancelCalled = true;
-            }};
+            });
+            return Promise.resolve({} as any);
         });
-        const request = getJSON({url: 'custom://test/url/json'}, () => { });
-        request.cancel();
+        const abortController = new AbortController();
+        const promise = getJSON({url: 'custom://test/url/json'}, abortController);
+        abortController.abort();
+        try {
+            await promise;
+        } catch (err) {
+            expect(isAbortError(err)).toBeTruthy();
+        }
+
         expect(cancelCalled).toBeTruthy();
     });
 
     test('version', () => {
-        expect(typeof maplibre.version === 'string').toBeTruthy();
+        expect(typeof getVersion() === 'string').toBeTruthy();
 
         // Semver regex: https://gist.github.com/jhorsman/62eeea161a13b80e39f5249281e17c39
         // Backslashes are doubled to escape them
         const regexp = new RegExp('^([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+)?$');
-        expect(regexp.test(maplibre.version)).toBeTruthy();
+        expect(regexp.test(getVersion())).toBeTruthy();
     });
 });

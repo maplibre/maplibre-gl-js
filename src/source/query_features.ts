@@ -32,7 +32,7 @@ export type QueryRenderedFeaturesOptions = {
 };
 
 /**
- * The options object related to the {@link Map#queryRenderedFeatures} method
+ * The options object related to the {@link Map#querySourceFeatures} method
  */
 export type QuerySourceFeatureOptions = {
     /**

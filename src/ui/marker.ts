@@ -1,4 +1,5 @@
 import {DOM} from '../util/dom';
+import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
 import Point from '@mapbox/point-geometry';
 import {smartWrap} from '../util/smart_wrap';
@@ -73,6 +74,16 @@ type MarkerOptions = {
      * @defaultValue 'auto'
      */
     pitchAlignment?: Alignment;
+    /**
+     * Marker's opacity when it's in clear view (not behind 3d terrain)
+     * @defaultValue 1
+     */
+    opacity?: string;
+    /**
+     * Marker's opacity when it's behind 3d terrain
+     * @defaultValue 0.2
+     */
+    opacityWhenCovered?: string;
 };
 
 /**
@@ -82,7 +93,7 @@ type MarkerOptions = {
  *
  * @example
  * ```ts
- * let marker = new maplibregl.Marker()
+ * let marker = new Marker()
  *   .setLngLat([30.5, 50.5])
  *   .addTo(map);
  * ```
@@ -90,7 +101,7 @@ type MarkerOptions = {
  * @example
  * Set options
  * ```ts
- * let marker = new maplibregl.Marker({
+ * let marker = new Marker({
  *     color: "#FFFFFF",
  *     draggable: true
  *   }).setLngLat([30.5, 50.5])
@@ -99,13 +110,13 @@ type MarkerOptions = {
  * @see [Add custom icons with Markers](https://maplibre.org/maplibre-gl-js/docs/examples/custom-marker-icons/)
  * @see [Create a draggable Marker](https://maplibre.org/maplibre-gl-js/docs/examples/drag-a-marker/)
  *
- * ### Events
+ * ## Events
  *
- * @event `dragstart` Fired when dragging starts, `marker` object that is being dragged
+ * **Event** `dragstart` of type {@link Event} will be fired when dragging starts.
  *
- * @event `drag` Fired while dragging. `marker` object that is being dragged
+ * **Event** `drag` of type {@link Event} will be fired while dragging.
  *
- * @event `dragend` Fired when the marker is finished being dragged, `marker` object that was dragged
+ * **Event** `dragend` of type {@link Event} will be fired when the marker is finished being dragged.
  */
 export class Marker extends Evented {
     _map: Map;
@@ -115,6 +126,7 @@ export class Marker extends Evented {
     _popup: Popup;
     _lngLat: LngLat;
     _pos: Point;
+    _flatPos: Point;
     _color: string;
     _scale: number;
     _defaultMarker: boolean;
@@ -128,6 +140,8 @@ export class Marker extends Evented {
     _pitchAlignment: Alignment;
     _rotationAlignment: Alignment;
     _originalTabIndex: string; // original tabindex of _element
+    _opacity: string;
+    _opacityWhenCovered: string;
     _opacityTimeout: ReturnType<typeof setTimeout>;
 
     /**
@@ -146,11 +160,12 @@ export class Marker extends Evented {
         this._rotation = options && options.rotation || 0;
         this._rotationAlignment = options && options.rotationAlignment || 'auto';
         this._pitchAlignment = options && options.pitchAlignment && options.pitchAlignment !== 'auto' ?  options.pitchAlignment : this._rotationAlignment;
+        this.setOpacity(); // set default opacity
+        this.setOpacity(options?.opacity, options?.opacityWhenCovered);
 
         if (!options || !options.element) {
             this._defaultMarker = true;
             this._element = DOM.create('div');
-            this._element.setAttribute('aria-label', 'Map marker');
 
             // create default map marker SVG
             const svg = DOM.createNS('http://www.w3.org/2000/svg', 'svg');
@@ -283,10 +298,9 @@ export class Marker extends Evented {
     /**
      * Attaches the `Marker` to a `Map` object.
      * @param map - The MapLibre GL JS map to add the marker to.
-     * @returns `this`
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      *   .setLngLat([30.5, 50.5])
      *   .addTo(map); // add the marker to the map
      * ```
@@ -294,6 +308,8 @@ export class Marker extends Evented {
     addTo(map: Map): this {
         this.remove();
         this._map = map;
+        this._element.setAttribute('aria-label', map._getUIString('Marker.Title'));
+
         map.getCanvasContainer().appendChild(this._element);
         map.on('move', this._update);
         map.on('moveend', this._update);
@@ -314,10 +330,9 @@ export class Marker extends Evented {
      * Removes the marker from a map
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker().addTo(map);
+     * let marker = new Marker().addTo(map);
      * marker.remove();
      * ```
-     * @returns `this`
      */
     remove(): this {
         if (this._opacityTimeout) {
@@ -328,6 +343,7 @@ export class Marker extends Evented {
             this._map.off('click', this._onMapClick);
             this._map.off('move', this._update);
             this._map.off('moveend', this._update);
+            this._map.off('terrain', this._update);
             this._map.off('mousedown', this._addDragHandler);
             this._map.off('touchstart', this._addDragHandler);
             this._map.off('mouseup', this._onUp);
@@ -365,11 +381,10 @@ export class Marker extends Evented {
     /**
      * Set the marker's geographical position and move it.
      * @param lnglat - A {@link LngLat} describing where the marker should be located.
-     * @returns `this`
      * @example
      * Create a new marker, set the longitude and latitude, and add it to the map
      * ```ts
-     * new maplibregl.Marker()
+     * new Marker()
      *   .setLngLat([-65.017, -16.457])
      *   .addTo(map);
      * ```
@@ -396,12 +411,11 @@ export class Marker extends Evented {
      * Binds a {@link Popup} to the {@link Marker}.
      * @param popup - An instance of the {@link Popup} class. If undefined or null, any popup
      * set on this {@link Marker} instance is unset.
-     * @returns `this`
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>")) // add popup
+     *  .setPopup(new Popup().setHTML("<h1>Hello World!</h1>")) // add popup
      *  .addTo(map);
      * ```
      * @see [Attach a popup to a marker instance](https://maplibre.org/maplibre-gl-js/docs/examples/set-popup/)
@@ -434,7 +448,6 @@ export class Marker extends Evented {
                 } as Offset : this._offset;
             }
             this._popup = popup;
-            if (this._lngLat) this._popup.setLngLat(this._lngLat);
 
             this._originalTabIndex = this._element.getAttribute('tabindex');
             if (!this._originalTabIndex) {
@@ -472,9 +485,9 @@ export class Marker extends Evented {
      * @returns popup
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>"))
+     *  .setPopup(new Popup().setHTML("<h1>Hello World!</h1>"))
      *  .addTo(map);
      *
      * console.log(marker.getPopup()); // return the popup instance
@@ -486,12 +499,11 @@ export class Marker extends Evented {
 
     /**
      * Opens or closes the {@link Popup} instance that is bound to the {@link Marker}, depending on the current state of the {@link Popup}.
-     * @returns `this`
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      *  .setLngLat([0, 0])
-     *  .setPopup(new maplibregl.Popup().setHTML("<h1>Hello World!</h1>"))
+     *  .setPopup(new Popup().setHTML("<h1>Hello World!</h1>"))
      *  .addTo(map);
      *
      * marker.togglePopup(); // toggle popup open or closed
@@ -500,10 +512,55 @@ export class Marker extends Evented {
     togglePopup(): this {
         const popup = this._popup;
 
+        if (this._element.style.opacity === this._opacityWhenCovered) return this;
+
         if (!popup) return this;
         else if (popup.isOpen()) popup.remove();
-        else popup.addTo(this._map);
+        else {
+            popup.setLngLat(this._lngLat);
+            popup.addTo(this._map);
+        }
         return this;
+    }
+
+    _updateOpacity(force: boolean = false) {
+        const terrain = this._map?.terrain;
+        if (!terrain) {
+            if (this._element.style.opacity !== this._opacity) { this._element.style.opacity = this._opacity; }
+            return;
+        }
+        if (force) {
+            this._opacityTimeout = null;
+        } else {
+            if (this._opacityTimeout) { return; }
+            this._opacityTimeout = setTimeout(() => {
+                this._opacityTimeout = null;
+            }, 100);
+        }
+
+        const map = this._map;
+
+        // Read depth framebuffer, getting position of terrain in line of sight to marker
+        const terrainDistance = map.terrain.depthAtPoint(this._pos);
+        // Transform marker position to clip space
+        const elevation = map.terrain.getElevationForLngLatZoom(this._lngLat, map.transform.tileZoom);
+        const markerDistance = map.transform.lngLatToCameraDepth(this._lngLat, elevation);
+
+        const forgiveness = .006;
+        if (markerDistance - terrainDistance < forgiveness) {
+            this._element.style.opacity = this._opacity;
+            return;
+        }
+        // If the base is obscured, use the offset to check if the marker's center is obscured.
+        const metersToCenter = -this._offset.y / map.transform._pixelPerMeter;
+        const elevationToCenter = Math.sin(map.getPitch() * Math.PI / 180) * metersToCenter;
+        const terrainDistanceCenter = map.terrain.depthAtPoint(new Point(this._pos.x, this._pos.y - this._offset.y));
+        const markerDistanceCenter = map.transform.lngLatToCameraDepth(this._lngLat, elevation + elevationToCenter);
+        // Display at full opacity if center is visible.
+        const centerIsInvisible = markerDistanceCenter - terrainDistanceCenter > forgiveness;
+
+        if (this._popup?.isOpen() && centerIsInvisible) this._popup.remove();
+        this._element.style.opacity = centerIsInvisible ? this._opacityWhenCovered : this._opacity;
     }
 
     _update = (e?: { type: 'move' | 'moveend' | 'terrain' | 'render' }) => {
@@ -515,10 +572,16 @@ export class Marker extends Evented {
         }
 
         if (this._map.transform.renderWorldCopies) {
-            this._lngLat = smartWrap(this._lngLat, this._pos, this._map.transform);
+            this._lngLat = smartWrap(this._lngLat, this._flatPos, this._map.transform);
+        } else {
+            this._lngLat = this._lngLat?.wrap();
         }
 
-        this._pos = this._map.project(this._lngLat)._add(this._offset);
+        this._flatPos = this._pos = this._map.project(this._lngLat)._add(this._offset);
+        if (this._map.terrain) {
+            // flat position is saved because smartWrap needs non-elevated points
+            this._flatPos = this._map.transform.locationPoint(this._lngLat)._add(this._offset);
+        }
 
         let rotation = '';
         if (this._rotationAlignment === 'viewport' || this._rotationAlignment === 'auto') {
@@ -543,14 +606,9 @@ export class Marker extends Evented {
 
         DOM.setTransform(this._element, `${anchorTranslate[this._anchor]} translate(${this._pos.x}px, ${this._pos.y}px) ${pitch} ${rotation}`);
 
-        // in case of 3D, ask the terrain coords-framebuffer for this pos and check if the marker is visible
-        // call this logic in setTimeout with a timeout of 100ms to save performance in map-movement
-        if (this._map.terrain && !this._opacityTimeout) this._opacityTimeout = setTimeout(() => {
-            const lnglat = this._map.unproject(this._pos);
-            const metresPerPixel = 40075016.686 * Math.abs(Math.cos(this._lngLat.lat * Math.PI / 180)) / Math.pow(2, this._map.transform.tileZoom + 8);
-            this._element.style.opacity = lnglat.distanceTo(this._lngLat) > metresPerPixel * 20 ? '0.2' : '1.0';
-            this._opacityTimeout = null;
-        }, 100);
+        browser.frameAsync(new AbortController()).then(() => { // Run _updateOpacity only after painter.render and drawDepth
+            this._updateOpacity(e && e.type === 'moveend');
+        }).catch(() => {});
     };
 
     /**
@@ -564,7 +622,6 @@ export class Marker extends Evented {
     /**
      * Sets the offset of the marker
      * @param offset - The offset in pixels as a {@link PointLike} object to apply relative to the element's center. Negatives indicate left and up.
-     * @returns `this`
      */
     setOffset(offset: PointLike): this {
         this._offset = Point.convert(offset);
@@ -579,7 +636,7 @@ export class Marker extends Evented {
      *
      * @example
      * ```
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      * marker.addClassName('some-class')
      * ```
      */
@@ -594,7 +651,7 @@ export class Marker extends Evented {
      *
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      * marker.removeClassName('some-class')
      * ```
      */
@@ -611,7 +668,7 @@ export class Marker extends Evented {
      *
      * @example
      * ```ts
-     * let marker = new maplibregl.Marker()
+     * let marker = new Marker()
      * marker.toggleClassName('toggleClass')
      * ```
      */
@@ -684,7 +741,6 @@ export class Marker extends Evented {
     /**
      * Sets the `draggable` property and functionality of the marker
      * @param shouldBeDraggable - Turns drag functionality on/off
-     * @returns `this`
      */
     setDraggable(shouldBeDraggable?: boolean): this {
         this._draggable = !!shouldBeDraggable; // convert possible undefined value to false
@@ -715,7 +771,6 @@ export class Marker extends Evented {
     /**
      * Sets the `rotation` property of the marker.
      * @param rotation - The rotation angle of the marker (clockwise, in degrees), relative to its respective {@link Marker#setRotationAlignment} setting.
-     * @returns `this`
      */
     setRotation(rotation?: number): this {
         this._rotation = rotation || 0;
@@ -734,7 +789,6 @@ export class Marker extends Evented {
     /**
      * Sets the `rotationAlignment` property of the marker.
      * @param alignment - Sets the `rotationAlignment` property of the marker. defaults to 'auto'
-     * @returns `this`
      */
     setRotationAlignment(alignment?: Alignment): this {
         this._rotationAlignment = alignment || 'auto';
@@ -753,7 +807,6 @@ export class Marker extends Evented {
     /**
      * Sets the `pitchAlignment` property of the marker.
      * @param alignment - Sets the `pitchAlignment` property of the marker. If alignment is 'auto', it will automatically match `rotationAlignment`.
-     * @returns `this`
      */
     setPitchAlignment(alignment?: Alignment): this {
         this._pitchAlignment = alignment && alignment !== 'auto' ? alignment : this._rotationAlignment;
@@ -767,5 +820,28 @@ export class Marker extends Evented {
      */
     getPitchAlignment(): Alignment {
         return this._pitchAlignment;
+    }
+
+    /**
+     * Sets the `opacity` and `opacityWhenCovered` properties of the marker.
+     * When called without arguments, resets opacity and opacityWhenCovered to defaults
+     * @param opacity - Sets the `opacity` property of the marker.
+     * @param opacityWhenCovered - Sets the `opacityWhenCovered` property of the marker.
+     */
+    setOpacity(opacity?: string, opacityWhenCovered?: string): this {
+        if (opacity === undefined && opacityWhenCovered === undefined) {
+            this._opacity = '1';
+            this._opacityWhenCovered = '0.2';
+        }
+        if (opacity !== undefined) {
+            this._opacity = opacity;
+        }
+        if (opacityWhenCovered !== undefined) {
+            this._opacityWhenCovered = opacityWhenCovered;
+        }
+        if (this._map) {
+            this._updateOpacity(true);
+        }
+        return this;
     }
 }

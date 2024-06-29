@@ -1,8 +1,12 @@
-import {asyncAll} from './util';
-import {Actor} from './actor';
+import {Actor, MessageHandler} from './actor';
+import {getGlobalWorkerPool} from './global_worker_pool';
+import {GLOBAL_DISPATCHER_ID, makeRequest} from './ajax';
 
 import type {WorkerPool} from './worker_pool';
 import type {WorkerSource} from '../source/worker_source'; /* eslint-disable-line */ // this is used for the docs' import
+import type {RequestResponseMessageMap} from './actor_messages';
+import {MessageType} from './actor_messages';
+
 /**
  * Responsible for sending messages from a {@link Source} to an associated
  * {@link WorkerSource}.
@@ -11,14 +15,9 @@ export class Dispatcher {
     workerPool: WorkerPool;
     actors: Array<Actor>;
     currentActor: number;
-    id: number;
+    id: string | number;
 
-    // exposed to allow stubbing in unit tests
-    static Actor: {
-        new (...args: any): Actor;
-    };
-
-    constructor(workerPool: WorkerPool, parent: any, mapId: number) {
+    constructor(workerPool: WorkerPool, mapId: string | number) {
         this.workerPool = workerPool;
         this.actors = [];
         this.currentActor = 0;
@@ -26,7 +25,7 @@ export class Dispatcher {
         const workers = this.workerPool.acquire(mapId);
         for (let i = 0; i < workers.length; i++) {
             const worker = workers[i];
-            const actor = new Dispatcher.Actor(worker, parent, mapId);
+            const actor = new Actor(worker, mapId);
             actor.name = `Worker ${i}`;
             this.actors.push(actor);
         }
@@ -36,11 +35,12 @@ export class Dispatcher {
     /**
      * Broadcast a message to all Workers.
      */
-    broadcast(type: string, data: unknown, cb?: (...args: any[]) => any) {
-        cb = cb || function () {};
-        asyncAll(this.actors, (actor, done) => {
-            actor.send(type, data, done);
-        }, cb);
+    broadcast<T extends MessageType>(type: T, data: RequestResponseMessageMap[T][0]): Promise<RequestResponseMessageMap[T][1][]> {
+        const promises: Promise<RequestResponseMessageMap[T][1]>[] = [];
+        for (const actor of this.actors) {
+            promises.push(actor.sendAsync({type, data}));
+        }
+        return Promise.all(promises);
     }
 
     /**
@@ -57,6 +57,22 @@ export class Dispatcher {
         this.actors = [];
         if (mapRemoved) this.workerPool.release(this.id);
     }
+
+    public registerMessageHandler<T extends MessageType>(type: T, handler: MessageHandler<T>) {
+        for (const actor of this.actors) {
+            actor.registerMessageHandler(type, handler);
+        }
+    }
 }
 
-Dispatcher.Actor = Actor;
+let globalDispatcher: Dispatcher;
+
+export function getGlobalDispatcher(): Dispatcher {
+    if (!globalDispatcher) {
+        globalDispatcher = new Dispatcher(getGlobalWorkerPool(), GLOBAL_DISPATCHER_ID);
+        globalDispatcher.registerMessageHandler(MessageType.getResource, (_mapId, params, abortController) => {
+            return makeRequest(params, abortController);
+        });
+    }
+    return globalDispatcher;
+}

@@ -1,5 +1,5 @@
 /**
- * A way to indentify a feature, either by string or by number
+ * A way to identify a feature, either by string or by number
  */
 export type GeoJSONFeatureId = number | string;
 

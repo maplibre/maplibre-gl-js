@@ -2,6 +2,13 @@ import {RGBAImage} from '../util/image';
 
 import type {Map} from '../ui/map';
 
+export type SpriteJSON = {[id: string]: StyleImageMetadata & {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+};}
+
 /**
  * The sprite data
  */
@@ -23,6 +30,27 @@ export type StyleImageData = {
     userImage?: StyleImageInterface;
     spriteData?: SpriteOnDemandStyleImage;
 };
+
+/**
+ * Enumeration of possible values for StyleImageMetadata.textFitWidth and textFitHeight.
+ */
+export const enum TextFit {
+    /**
+     * The image will be resized on the specified axis to tightly fit the content rectangle to target text.
+     * This is the same as not being defined.
+     */
+    stretchOrShrink = 'stretchOrShrink',
+    /**
+     * The image will be resized on the specified axis to fit the content rectangle to the target text, but will not
+     * fall below the aspect ratio of the original content rectangle if the other axis is set to proportional.
+     */
+    stretchOnly = 'stretchOnly',
+    /**
+     * The image will be resized on the specified axis to fit the content rectangle to the target text and
+     * will resize the other axis to maintain the aspect ratio of the content rectangle.
+     */
+    proportional = 'proportional'
+}
 
 /**
  * The style's image metadata
@@ -48,6 +76,14 @@ export type StyleImageMetadata = {
      * If `icon-text-fit` is used in a layer with this image, this option defines the part of the image that can be covered by the content in `text-field`.
      */
     content?: [number, number, number, number];
+    /**
+     * If `icon-text-fit` is used in a layer with this image, this option defines constraints on the horizontal scaling of the image.
+     */
+    textFitWidth?: TextFit;
+    /**
+     * If `icon-text-fit` is used in a layer with this image, this option defines constraints on the vertical scaling of the image.
+     */
+    textFitHeight?: TextFit;
 };
 
 /**

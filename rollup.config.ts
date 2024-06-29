@@ -1,12 +1,14 @@
 import fs from 'fs';
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import {plugins} from './build/rollup_plugins';
+import {plugins, watchStagingPlugin} from './build/rollup_plugins';
 import banner from './build/banner';
 import {RollupOptions} from 'rollup';
 
-const {BUILD} = process.env;
+const {BUILD, MINIFY} = process.env;
+const minified = MINIFY === 'true';
+
 const production = BUILD === 'production';
-const outputFile = production ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-dev.js';
+const outputFile = production ? (minified ? 'dist/maplibre-gl.js' : 'dist/maplibre-gl-unminified.js') : 'dist/maplibre-gl-dev.js';
 
 const config: RollupOptions[] = [{
     // Before rollup you should run build-tsc to transpile from typescript to javascript (except when running rollup in watch mode)
@@ -22,14 +24,18 @@ const config: RollupOptions[] = [{
         format: 'amd',
         sourcemap: 'inline',
         indent: false,
-        chunkFileNames: 'shared.js'
+        chunkFileNames: 'shared.js',
+        amd: {
+            autoId: true,
+        },
+        minifyInternalExports: production
     },
     onwarn: (message) => {
         console.error(message);
         throw message;
     },
     treeshake: production,
-    plugins: plugins(production)
+    plugins: plugins(production, minified)
 }, {
     // Next, bundle together the three "chunks" produced in the previous pass
     // into a single, final bundle. See rollup/bundle_prelude.js and
@@ -44,11 +50,19 @@ const config: RollupOptions[] = [{
         intro: fs.readFileSync('build/rollup/bundle_prelude.js', 'utf8'),
         banner
     },
+    watch: {
+        // give the staging chunks a chance to finish before rebuilding the dev build
+        buildDelay: 1000
+    },
     treeshake: false,
     plugins: [
         // Ingest the sourcemaps produced in the first step of the build.
         // This is the only reason we use Rollup for this second pass
-        sourcemaps()
+        sourcemaps(),
+        // When running in development watch mode, tell rollup explicitly to watch
+        // for changes to the staging chunks built by the previous step. Otherwise
+        // only they get built, but not the merged dev build js
+        ...production ? [] : [watchStagingPlugin]
     ],
 }];
 

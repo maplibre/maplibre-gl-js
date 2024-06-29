@@ -2,7 +2,8 @@
   "version": 8,
   "metadata": {
     "test": {
-      "height": 256
+      "height": 256,
+      "operations": [["idle"], ["wait", 100]]
     }
   },
   "center": [
@@ -12,7 +13,7 @@
   "zoom": 14,
   "pitch": 60,
   "sources": {
-    "mapbox": {
+    "maplibre": {
       "type": "vector",
       "maxzoom": 14,
       "tiles": [
@@ -33,7 +34,7 @@
     {
       "id": "top",
       "type": "symbol",
-      "source": "mapbox",
+      "source": "maplibre",
       "source-layer": "poi_label",
       "filter": [
         "==",

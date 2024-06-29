@@ -2,7 +2,7 @@ import {browser} from '../../util/browser';
 import {Map} from '../map';
 import {DOM} from '../../util/dom';
 import simulate from '../../../test/unit/lib/simulate_interaction';
-import {beforeMapTest} from '../../util/test/util';
+import {beforeMapTest, sleep} from '../../util/test/util';
 
 function createMap(cooperativeGestures) {
     return new Map({
@@ -22,7 +22,7 @@ beforeEach(() => {
 
 describe('CoopGesturesHandler', () => {
 
-    test('Does not zoom on wheel if no key is down', () => {
+    test('Does not zoom on wheel if no key is down', async () => {
         const browserNow = jest.spyOn(browser, 'now');
         let now = 1555555555555;
         browserNow.mockReturnValue(now);
@@ -34,6 +34,7 @@ describe('CoopGesturesHandler', () => {
         // simulate a single 'wheel' event
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
         map._renderTaskQueue.run();
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeInstanceOf(HTMLDivElement);
 
         now += 400;
         browserNow.mockReturnValue(now);
@@ -42,6 +43,9 @@ describe('CoopGesturesHandler', () => {
         const endZoom = map.getZoom();
         expect(endZoom).toBeCloseTo(startZoom);
 
+        await sleep(200);
+
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
         map.remove();
     });
 
@@ -51,7 +55,7 @@ describe('CoopGesturesHandler', () => {
         browserNow.mockReturnValue(now);
 
         const map = createMap(true);
-        map.setCooperativeGestures(false);
+        map.cooperativeGestures.disable();
         map._renderTaskQueue.run();
 
         const startZoom = map.getZoom();
@@ -93,6 +97,24 @@ describe('CoopGesturesHandler', () => {
         map.remove();
     });
 
+    test('Does not show message if scrollZoom is disabled', () => {
+        // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
+        const browserNow = jest.spyOn(browser, 'now');
+        const now = 1555555555555;
+        browserNow.mockReturnValue(now);
+
+        const map = createMap(true);
+        map.scrollZoom.disable();
+        map._renderTaskQueue.run();
+
+        // simulate a single 'wheel' event
+        simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});
+        map._renderTaskQueue.run();
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
+
+        map.remove();
+    });
+
     test('Does not pan on touchmove with a single touch', () => {
         const map = createMap(true);
         const target = map.getCanvas();
@@ -113,6 +135,8 @@ describe('CoopGesturesHandler', () => {
         simulate.touchmove(target, {touches: [{target, clientX: 10, clientY: 10}]});
         map._renderTaskQueue.run();
 
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeInstanceOf(HTMLDivElement);
+
         simulate.touchend(target);
         map._renderTaskQueue.run();
 
@@ -125,24 +149,18 @@ describe('CoopGesturesHandler', () => {
 
     test('Pans on touchmove with a single touch after disabling cooperative gestures', () => {
         const map = createMap(true);
-        map.setCooperativeGestures(false);
-        const target = map.getCanvas();
+        map.cooperativeGestures.disable();
+        const target = map.getCanvasContainer();
         const startCenter = map.getCenter();
         map._renderTaskQueue.run();
-
-        const dragstart = jest.fn();
-        const drag      = jest.fn();
-        const dragend   = jest.fn();
-
-        map.on('dragstart', dragstart);
-        map.on('drag',      drag);
-        map.on('dragend',   dragend);
 
         simulate.touchstart(target, {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 1, clientY: 1}]});
         map._renderTaskQueue.run();
 
         simulate.touchmove(target, {touches: [{target, clientX: 10, clientY: 10}, {target, clientX: 11, clientY: 11}]});
         map._renderTaskQueue.run();
+
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
 
         simulate.touchend(target);
         map._renderTaskQueue.run();
@@ -154,20 +172,12 @@ describe('CoopGesturesHandler', () => {
         map.remove();
     });
 
-    test('Does pan on touchmove with a double touch', () => {
-        // NOTE: This should pass regardless of whether cooperativeGestures is enabled or not
+    test('Does pan on touchmove with a double touch but does not change pitch', () => {
         const map = createMap(true);
         const target = map.getCanvas();
         const startCenter = map.getCenter();
+        const startPitch = map.getPitch();
         map._renderTaskQueue.run();
-
-        const dragstart = jest.fn();
-        const drag      = jest.fn();
-        const dragend   = jest.fn();
-
-        map.on('dragstart', dragstart);
-        map.on('drag',      drag);
-        map.on('dragend',   dragend);
 
         simulate.touchstart(target, {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 1, clientY: 1}]});
         map._renderTaskQueue.run();
@@ -175,12 +185,15 @@ describe('CoopGesturesHandler', () => {
         simulate.touchmove(target, {touches: [{target, clientX: 10, clientY: 10}, {target, clientX: 11, clientY: 11}]});
         map._renderTaskQueue.run();
 
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
+
         simulate.touchend(target);
         map._renderTaskQueue.run();
 
         const endCenter = map.getCenter();
         expect(endCenter.lng).toBeGreaterThan(startCenter.lng);
         expect(endCenter.lat).toBeGreaterThan(startCenter.lat);
+        expect(startPitch).toBe(map.getPitch());
 
         map.remove();
     });
@@ -192,19 +205,13 @@ describe('CoopGesturesHandler', () => {
         const startPitch = map.getPitch();
         map._renderTaskQueue.run();
 
-        const dragstart = jest.fn();
-        const drag      = jest.fn();
-        const dragend   = jest.fn();
-
-        map.on('dragstart', dragstart);
-        map.on('drag',      drag);
-        map.on('dragend',   dragend);
-
         simulate.touchstart(target, {touches: [{target, clientX: 0, clientY: 0}, {target, clientX: 1, clientY: 1}, {target, clientX: 2, clientY: 2}]});
         map._renderTaskQueue.run();
 
         simulate.touchmove(target, {touches: [{target, clientX: 0, clientY: -10}, {target, clientX: 1, clientY: -11}, {target, clientX: 2, clientY: -12}]});
         map._renderTaskQueue.run();
+
+        expect(map.getContainer().querySelector('.maplibregl-cooperative-gesture-screen.maplibregl-show')).toBeNull();
 
         simulate.touchend(target);
         map._renderTaskQueue.run();
@@ -236,7 +243,7 @@ describe('CoopGesturesHandler', () => {
         expect(midZoom - startZoom).toBeCloseTo(0.0285, 3);
 
         // Enable cooperative gestures
-        map.setCooperativeGestures(true);
+        map.cooperativeGestures.enable();
 
         // This 'wheel' event should not zoom
         simulate.wheel(map.getCanvas(), {type: 'wheel', deltaY: -simulate.magicWheelZoomDelta});

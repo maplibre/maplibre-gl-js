@@ -1,4 +1,4 @@
-### MapLibre GL JS Documentation
+# MapLibre GL JS Documentation
 
 This directory contains the source for the [MapLibre GL JS docs](https://maplibre.org/maplibre-gl-js/docs/) hosted on the MapLibre site.
 
@@ -13,7 +13,6 @@ npm run build-prod
 npm run build-css
 ```
 
-
 Then generate the docs files:
 
 ```bash
@@ -26,7 +25,7 @@ Finally, run:
 npm run start-docs
 ```
 
-Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them.
+Navigate to [http://0.0.0.0:8000/](http://0.0.0.0:8000/) to view the docs. After making changes, run `npm run generate-docs` again to apply them. Some tile service providers of the docs example pages such as MapTiler or Stadia Maps might only send you tiles if the host is localhost. In that case, try http://localhost:8000.
 
 The examples section of the locally run documentation will use the GL JS version released that has the same version as the in the package.json.
 
@@ -48,18 +47,22 @@ API documentation is written as [TSDoc comments](https://tsdoc.org/) and process
 * Functions that do not return a value (return `void`), should not have a `@returns` annotation.
 * Member descriptions should document what a member represents or gets and sets. They should also indicate whether the member is read-only.
 * Event descriptions should begin with "Fired when..." and so should describe when the event fires. Event entries should clearly document any data passed to the handler, with a link to MDN documentation of native Event objects when applicable.
+* Lists need an empty line above to be formatted as HTML list.
 
 ## Writing Examples
 
 Examples are written as regular html files in `test/examples`. Each example should have a title and a og:description.
+
 * `title`: A short title for the example in **sentence case** as a **verb phrase**.
 * `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
 
 When you create a new example, you **must** make an accompanying image.
 
-1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`. Commit the image.
+1. Run `npm run generate-images <example-file-name>`. The script will take a screenshot of the map in the example and save it to `docs/assets/examples/`.
+2. Optimize the image with [compresspng](https://compresspng.com/) to reduce the file size. (Optional)
+3. Commit the image.
 
-For some examples, `npm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assests/examples/` folder.
+For some examples, `npm run generate-images` does not generate an ideal image. In these cases, you can interact with the map after running the command before the screenshot is taken, or take a screenshot yourself by running the site locally with `npm start`, take a screenshot and save it in the `docs/assets/examples/` folder.
 
 To regenerate all images, run `npm run generate-images`. Note that this doesn't support interaction and examples that require manual interaction (e.g. popups) will need to be manually redone afterward. This feature is experimental and may crash before successfully generating all examples.
 
@@ -72,6 +75,7 @@ To update or add a new example, PR the relevant changes to this repo. The exampl
 ## How does all this work?
 
 It uses 3 tools:
+
 1. [TypeDoc](https://typedoc.org/) cli
 2. [MkDocs material](https://squidfunk.github.io/mkdocs-material/)
 3. `generate-docs.ts` script

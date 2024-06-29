@@ -1,7 +1,9 @@
 import {Map} from '../../ui/map';
 import {extend} from '../../util/util';
 import {Dispatcher} from '../../util/dispatcher';
-import {setWebGlContext} from './mock_webgl';
+import {IActor} from '../actor';
+import type {Evented} from '../evented';
+import {SourceSpecification, StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 export function createMap(options?, callback?) {
     const container = window.document.createElement('div');
@@ -21,7 +23,7 @@ export function createMap(options?, callback?) {
     Object.defineProperty(container, 'clientWidth', {value: 200, configurable: true});
     Object.defineProperty(container, 'clientHeight', {value: 200, configurable: true});
 
-    if (options && options.deleteStyle) delete defaultOptions.style;
+    if (options?.deleteStyle) delete defaultOptions.style;
 
     const map = new Map(extend(defaultOptions, options));
     if (callback) map.on('load', () => {
@@ -37,24 +39,6 @@ export function equalWithPrecision(test, expected, actual, multiplier, message, 
     const actualRounded = Math.round(actual / multiplier) * multiplier;
 
     return test.equal(expectedRounded, actualRounded, message, extra);
-}
-
-// mock failed webgl context by dispatching "webglcontextcreationerror" event
-// and returning null
-export function setErrorWebGlContext() {
-    const originalGetContext = global.HTMLCanvasElement.prototype.getContext;
-
-    function imitateErrorWebGlGetContext(type, attributes) {
-        if (type === 'webgl2' || type === 'webgl') {
-            const errorEvent = new Event('webglcontextcreationerror');
-            (errorEvent as any).statusMessage = 'mocked webglcontextcreationerror message';
-            this.dispatchEvent(errorEvent);
-            return null;
-        }
-        // Fallback to existing HTMLCanvasElement getContext behaviour
-        return originalGetContext.call(this, type, attributes);
-    }
-    global.HTMLCanvasElement.prototype.getContext = imitateErrorWebGlGetContext;
 }
 
 export function setPerformance() {
@@ -90,16 +74,28 @@ function setResizeObserver() {
 
 export function beforeMapTest() {
     setPerformance();
-    setWebGlContext();
     setMatchMedia();
     setResizeObserver();
+    // remove the following when the following is merged and released: https://github.com/Adamfsk/jest-webgl-canvas-mock/pull/5
+    (WebGLRenderingContext.prototype as any).bindVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').bindVertexArrayOES;
+    (WebGLRenderingContext.prototype as any).createVertexArray = WebGLRenderingContext.prototype.getExtension('OES_vertex_array_object').createVertexArrayOES;
+    if (!WebGLRenderingContext.prototype.drawingBufferHeight && !WebGLRenderingContext.prototype.drawingBufferWidth) {
+        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferWidth', {
+            get: jest.fn(),
+            configurable: true,
+        });
+        Object.defineProperty(WebGLRenderingContext.prototype, 'drawingBufferHeight', {
+            get: jest.fn(),
+            configurable: true,
+        });
+    }
 }
 
 export function getWrapDispatcher() {
-    const wrapDispatcher = (dispatcher) => {
+    const wrapDispatcher = (actor: IActor) => {
         return {
             getActor() {
-                return dispatcher;
+                return actor;
             }
         } as any as Dispatcher;
     };
@@ -111,7 +107,7 @@ export function getMockDispatcher() {
     const wrapDispatcher = getWrapDispatcher();
 
     const mockDispatcher = wrapDispatcher({
-        send() {}
+        sendAsync() { return Promise.resolve({}); },
     });
 
     return mockDispatcher;
@@ -128,7 +124,9 @@ export function stubAjaxGetImage(createImageBitmap) {
         set(url: string) {
             if (url === 'error') {
                 this.onerror();
-            } else this.onload();
+            } else if (this.onload) {
+                this.onload();
+            }
         }
     });
 }
@@ -143,4 +141,45 @@ export function bufferToArrayBuffer(data: Buffer): ArrayBuffer {
     const view = new Uint8Array(newBuffer);
     data.copy(view);
     return view.buffer;
+}
+
+/**
+ * This allows test to wait for a certain amount of time before continuing.
+ * @param milliseconds - the amount of time to wait in milliseconds
+ * @returns - a promise that resolves after the specified amount of time
+ */
+export const sleep = (milliseconds: number = 0) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+};
+
+export function waitForMetadataEvent(source: Evented): Promise<void> {
+    return new Promise((resolve) => {
+        source.on('data', (e) => {
+            if (e.sourceDataType === 'metadata') {
+                resolve();
+            }
+        });
+    });
+}
+
+export function createStyleSource() {
+    return {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: []
+        }
+    } as SourceSpecification;
+}
+
+export function createStyle() {
+    return {
+        version: 8,
+        center: [-73.9749, 40.7736],
+        zoom: 12.5,
+        bearing: 29,
+        pitch: 50,
+        sources: {},
+        layers: []
+    } as StyleSpecification;
 }

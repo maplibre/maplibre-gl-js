@@ -1,4 +1,4 @@
-import {extend, warnOnce, clamp, wrap, defaultEasing, pick} from '../util/util';
+import {extend, warnOnce, clamp, wrap, defaultEasing, pick, degreesToRadians} from '../util/util';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {browser} from '../util/browser';
 import {LngLat} from '../geo/lng_lat';
@@ -6,14 +6,14 @@ import {LngLatBounds} from '../geo/lng_lat_bounds';
 import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Terrain} from '../render/terrain';
+import {MercatorCoordinate} from '../geo/mercator_coordinate';
 
 import type {Transform} from '../geo/transform';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
-import {MercatorCoordinate} from '../geo/mercator_coordinate';
-
+import type {HandlerManager} from './handler_manager';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *
@@ -28,7 +28,7 @@ import {MercatorCoordinate} from '../geo/mercator_coordinate';
 export type PointLike = Point | [number, number];
 
 /**
- * A helper to allow require of at least one propery
+ * A helper to allow require of at least one property
  */
 export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>; }[keyof T];
 
@@ -40,7 +40,7 @@ export type RequireAtLeastOne<T> = { [K in keyof T]-?: Required<Pick<T, K>> & Pa
  * @example
  * Set the map's initial perspective with CameraOptions
  * ```ts
- * let map = new maplibregl.Map({
+ * let map = new Map({
  *   container: 'map',
  *   style: 'https://demotiles.maplibre.org/style.json',
  *   center: [-73.5804, 45.53483],
@@ -243,6 +243,7 @@ export type CameraUpdateTransformFunction =  (next: {
 export abstract class Camera extends Evented {
     transform: Transform;
     terrain: Terrain;
+    handlers: HandlerManager;
 
     _moving: boolean;
     _zooming: boolean;
@@ -334,7 +335,6 @@ export abstract class Camera extends Evented {
      *
      * @param center - The centerpoint to set.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * map.setCenter([-74, 38]);
@@ -352,7 +352,6 @@ export abstract class Camera extends Evented {
      * @param offset - `x` and `y` coordinates by which to pan the map.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
     panBy(offset: PointLike, options?: AnimationOptions, eventData?: any): this {
@@ -368,7 +367,6 @@ export abstract class Camera extends Evented {
      * @param lnglat - The location to pan the map to.
      * @param options - Options describing the destination and animation of the transition.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * map.panTo([-74, 38]);
@@ -401,7 +399,6 @@ export abstract class Camera extends Evented {
      *
      * @param zoom - The zoom level to set (0-20).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Zoom to the zoom level 5 without an animated transition
      * ```ts
@@ -421,7 +418,6 @@ export abstract class Camera extends Evented {
      * @param zoom - The zoom level to transition to.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * // Zoom to the zoom level 5 without an animated transition
@@ -446,7 +442,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Zoom the map in one level with a custom animation duration
      * ```ts
@@ -465,7 +460,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Zoom the map out one level with a custom animation offset
      * ```ts
@@ -496,7 +490,6 @@ export abstract class Camera extends Evented {
      *
      * @param bearing - The desired bearing.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Rotate the map to 90 degrees
      * ```ts
@@ -524,7 +517,6 @@ export abstract class Camera extends Evented {
      *
      * @param padding - The desired padding.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * Sets a left padding of 300px, and a top padding of 50px
      * ```ts
@@ -545,7 +537,6 @@ export abstract class Camera extends Evented {
      * @param bearing - The desired bearing.
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     rotateTo(bearing: number, options?: AnimationOptions, eventData?: any): this {
         return this.easeTo(extend({
@@ -560,7 +551,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     resetNorth(options?: AnimationOptions, eventData?: any): this {
         this.rotateTo(0, extend({duration: 1000}, options), eventData);
@@ -574,7 +564,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     resetNorthPitch(options?: AnimationOptions, eventData?: any): this {
         this.easeTo(extend({
@@ -593,7 +582,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     snapToNorth(options?: AnimationOptions, eventData?: any): this {
         if (Math.abs(this.getBearing()) < this._bearingSnap) {
@@ -616,7 +604,6 @@ export abstract class Camera extends Evented {
      *
      * @param pitch - The pitch to set, measured in degrees away from the plane of the screen (0-60).
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      */
     setPitch(pitch: number, eventData?: any): this {
         this.jumpTo({pitch}, eventData);
@@ -638,7 +625,7 @@ export abstract class Camera extends Evented {
      * });
      * ```
      */
-    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing {
+    cameraForBounds(bounds: LngLatBoundsLike, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
         bounds = LngLatBounds.convert(bounds);
         const bearing = options && options.bearing || 0;
         return this._cameraForBoxAndBearing(bounds.getNorthWest(), bounds.getSouthEast(), bearing, options);
@@ -665,7 +652,7 @@ export abstract class Camera extends Evented {
      * });
      * ```
      */
-    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing {
+    _cameraForBoxAndBearing(p0: LngLatLike, p1: LngLatLike, bearing: number, options?: CameraForBoundsOptions): CenterZoomBearing | undefined {
         const defaultPadding = {
             top: 0,
             bottom: 0,
@@ -692,15 +679,30 @@ export abstract class Camera extends Evented {
         const tr = this.transform;
         const edgePadding = tr.padding;
 
-        // We want to calculate the upper right and lower left of the box defined by p0 and p1
-        // in a coordinate system rotate to match the destination bearing.
-        const p0world = tr.project(LngLat.convert(p0));
-        const p1world = tr.project(LngLat.convert(p1));
-        const p0rotated = p0world.rotate(-bearing * Math.PI / 180);
-        const p1rotated = p1world.rotate(-bearing * Math.PI / 180);
+        // Consider all corners of the rotated bounding box derived from the given points
+        // when find the camera position that fits the given points.
+        const bounds = new LngLatBounds(p0, p1);
+        const nwWorld = tr.project(bounds.getNorthWest());
+        const neWorld = tr.project(bounds.getNorthEast());
+        const seWorld = tr.project(bounds.getSouthEast());
+        const swWorld = tr.project(bounds.getSouthWest());
 
-        const upperRight = new Point(Math.max(p0rotated.x, p1rotated.x), Math.max(p0rotated.y, p1rotated.y));
-        const lowerLeft = new Point(Math.min(p0rotated.x, p1rotated.x), Math.min(p0rotated.y, p1rotated.y));
+        const bearingRadians = degreesToRadians(-bearing);
+
+        const nwRotatedWorld = nwWorld.rotate(bearingRadians);
+        const neRotatedWorld = neWorld.rotate(bearingRadians);
+        const seRotatedWorld = seWorld.rotate(bearingRadians);
+        const swRotatedWorld = swWorld.rotate(bearingRadians);
+
+        const upperRight = new Point(
+            Math.max(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
+            Math.max(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
+        );
+
+        const lowerLeft = new Point(
+            Math.min(nwRotatedWorld.x, neRotatedWorld.x, swRotatedWorld.x, seRotatedWorld.x),
+            Math.min(nwRotatedWorld.y, neRotatedWorld.y, swRotatedWorld.y, seRotatedWorld.y)
+        );
 
         // Calculate zoom: consider the original bbox and padding.
         const size = upperRight.sub(lowerLeft);
@@ -721,11 +723,14 @@ export abstract class Camera extends Evented {
         const paddingOffsetX = (options.padding.left - options.padding.right) / 2;
         const paddingOffsetY = (options.padding.top - options.padding.bottom) / 2;
         const paddingOffset = new Point(paddingOffsetX, paddingOffsetY);
-        const rotatedPaddingOffset = paddingOffset.rotate(bearing * Math.PI / 180);
+        const rotatedPaddingOffset = paddingOffset.rotate(degreesToRadians(bearing));
         const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
         const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
 
-        const center =  tr.unproject(p0world.add(p1world).div(2).sub(offsetAtFinalZoom));
+        const center = tr.unproject(
+            // either world diagonal can be used (NW-SE or NE-SW)
+            nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
+        );
 
         return {
             center,
@@ -742,9 +747,8 @@ export abstract class Camera extends Evented {
      *
      * @param bounds - Center these bounds in the viewport and use the highest
      * zoom level up to and including `Map#getMaxZoom()` that fits them in the viewport.
-     * @param options- Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
+     * @param options - Options supports all properties from {@link AnimationOptions} and {@link CameraOptions} in addition to the fields below.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * let bbox = [[-79, 43], [-73, 45]];
@@ -773,7 +777,6 @@ export abstract class Camera extends Evented {
      * @param bearing - Desired map bearing at end of animation, in degrees
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * let p0 = [220, 400];
@@ -818,7 +821,6 @@ export abstract class Camera extends Evented {
      *
      * @param options - Options object
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * // jump to coordinates at current zoom
@@ -939,7 +941,6 @@ export abstract class Camera extends Evented {
      * @param options - Options describing the destination and animation of the transition.
      * Accepts {@link CameraOptions} and {@link AnimationOptions}.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @see [Navigate the map with game-like controls](https://maplibre.org/maplibre-gl-js/docs/examples/game-controls/)
      */
     easeTo(options: EaseToOptions & {
@@ -962,7 +963,6 @@ export abstract class Camera extends Evented {
             startPitch = this.getPitch(),
             startPadding = this.getPadding(),
 
-            zoom = 'zoom' in options ? +options.zoom : startZoom,
             bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
             pitch = 'pitch' in options ? +options.pitch : startPitch,
             padding = 'padding' in options ? options.padding : tr.padding;
@@ -970,7 +970,11 @@ export abstract class Camera extends Evented {
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        const center = LngLat.convert(options.center || locationAtOffset);
+
+        const {center, zoom} = tr.getConstrained(
+            LngLat.convert(options.center || locationAtOffset),
+            options.zoom ?? startZoom
+        );
         this._normalizeCenter(center);
 
         const from = tr.project(locationAtOffset);
@@ -1036,7 +1040,7 @@ export abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, (interruptingEaseId?: string) => {
-            if (this.terrain) this._finalizeElevation();
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData, interruptingEaseId);
         }, options as any);
 
@@ -1067,7 +1071,7 @@ export abstract class Camera extends Evented {
     }
 
     _updateElevation(k: number) {
-        this.transform._minEleveationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
+        this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         const elevation = this.terrain.getElevationForLngLatZoom(this._elevationCenter, this.transform.tileZoom);
         // target terrain updated during flight, slowly move camera to new height
         if (k < 1 && elevation !== this._elevationTarget) {
@@ -1184,7 +1188,6 @@ export abstract class Camera extends Evented {
      * Accepts {@link CameraOptions}, {@link AnimationOptions},
      * and the following additional options.
      * @param eventData - Additional properties to be added to event objects of events triggered by this method.
-     * @returns `this`
      * @example
      * ```ts
      * // fly with default options to null island
@@ -1234,17 +1237,20 @@ export abstract class Camera extends Evented {
             startPitch = this.getPitch(),
             startPadding = this.getPadding();
 
-        const zoom = 'zoom' in options ? clamp(+options.zoom, tr.minZoom, tr.maxZoom) : startZoom;
         const bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing;
         const pitch = 'pitch' in options ? +options.pitch : startPitch;
         const padding = 'padding' in options ? options.padding : tr.padding;
 
-        const scale = tr.zoomScale(zoom - startZoom);
         const offsetAsPoint = Point.convert(options.offset);
         let pointAtOffset = tr.centerPoint.add(offsetAsPoint);
         const locationAtOffset = tr.pointLocation(pointAtOffset);
-        const center = LngLat.convert(options.center || locationAtOffset);
+
+        const {center, zoom} = tr.getConstrained(
+            LngLat.convert(options.center || locationAtOffset),
+            options.zoom ?? startZoom
+        );
         this._normalizeCenter(center);
+        const scale = tr.zoomScale(zoom - startZoom);
 
         const from = tr.project(locationAtOffset);
         const delta = tr.project(center).sub(from);
@@ -1310,8 +1316,8 @@ export abstract class Camera extends Evented {
             const k = w1 < w0 ? -1 : 1;
             S = Math.abs(Math.log(w1 / w0)) / rho;
 
-            u = function() { return 0; };
-            w = function(s) { return Math.exp(k * rho * s); };
+            u = () => 0;
+            w = (s) => Math.exp(k * rho * s);
         }
 
         if ('duration' in options) {
@@ -1362,7 +1368,7 @@ export abstract class Camera extends Evented {
             this._fireMoveEvents(eventData);
 
         }, () => {
-            if (this.terrain) this._finalizeElevation();
+            if (this.terrain && options.freezeElevation) this._finalizeElevation();
             this._afterEase(eventData);
         }, options);
 
@@ -1375,8 +1381,6 @@ export abstract class Camera extends Evented {
 
     /**
      * Stops any animated transition underway.
-     *
-     * @returns `this`
      */
     stop(): this {
         return this._stop();
@@ -1398,8 +1402,7 @@ export abstract class Camera extends Evented {
             onEaseEnd.call(this, easeId);
         }
         if (!allowGestures) {
-            const handlers = (this as any).handlers;
-            if (handlers) handlers.stop(false);
+            this.handlers?.stop(false);
         }
         return this;
     }
@@ -1427,7 +1430,9 @@ export abstract class Camera extends Evented {
     _renderFrameCallback = () => {
         const t = Math.min((browser.now() - this._easeStart) / this._easeOptions.duration, 1);
         this._onEaseFrame(this._easeOptions.easing(t));
-        if (t < 1) {
+
+        // if _stop is called during _onEaseFrame from _fireMoveEvents we should avoid a new _requestRenderFrame, checking it by ensuring _easeFrameId was not deleted
+        if (t < 1 && this._easeFrameId) {
             this._easeFrameId = this._requestRenderFrame(this._renderFrameCallback);
         } else {
             this.stop();
@@ -1456,21 +1461,19 @@ export abstract class Camera extends Evented {
     }
 
     /**
-     * Query the current elevation of location. It return null if terrain is not enabled. the elevation is in meters relative to mean sea-level
+     * Get the elevation difference between a given point
+     * and a point that is currently in the middle of the screen.
+     * This method should be used for proper positioning of custom 3d objects, as explained [here](https://maplibre.org/maplibre-gl-js/docs/examples/add-3d-model-with-terrain/)
+     * Returns null if terrain is not enabled.
+     * This method is subject to change in Maplibre GL JS v5.
      * @param lngLatLike - [x,y] or LngLat coordinates of the location
-     * @returns elevation in meters
+     * @returns elevation offset in meters
      */
     queryTerrainElevation(lngLatLike: LngLatLike): number | null {
         if (!this.terrain) {
             return null;
         }
         const elevation = this.terrain.getElevationForLngLatZoom(LngLat.convert(lngLatLike), this.transform.tileZoom);
-        /**
-         * Different zoomlevels with different terrain-tiles the elevation-values are not the same.
-         * map.transform.elevation variable with the center-altitude.
-         * In maplibre the proj-matrix is translated by this value in negative z-direction.
-         * So we need to add this value to the elevation to get the correct value.
-         */
         return elevation - this.transform.elevation;
     }
 }

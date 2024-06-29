@@ -12,8 +12,10 @@ import {StyleLayerIndex} from '../../../src/style/style_layer_index';
 import type {StyleSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {WorkerTileResult} from '../../../src/source/worker_source';
 import type {OverscaledTileID} from '../../../src/source/tile_id';
-import type {TileJSON} from '../../../src/types/tilejson';
+import type {TileJSON} from '../../../src/util/util';
 import type {Map} from '../../../src/ui/map';
+import type {IActor} from '../../../src/util/actor';
+import {MessageType} from '../../../src/util/actor_messages';
 
 class StubMap extends Evented {
     style: Style;
@@ -57,9 +59,7 @@ export default class TileParser {
     icons: any;
     glyphs: any;
     style: Style;
-    actor: {
-        send: Function;
-    };
+    actor: IActor;
 
     constructor(styleJSON: StyleSpecification, sourceID: string) {
         this.styleJSON = styleJSON;
@@ -69,41 +69,33 @@ export default class TileParser {
         this.icons = {};
     }
 
-    loadImages(params: any, callback: Function) {
+    async loadImages(params: any) {
         const key = JSON.stringify(params);
-        if (this.icons[key]) {
-            callback(null, this.icons[key]);
-        } else {
-            this.style.getImages('', params, (err, icons) => {
-                this.icons[key] = icons;
-                callback(err, icons);
-            });
+        if (!this.icons[key]) {
+            this.icons[key] = await this.style.getImages('', params);
         }
+        return this.icons[key];
     }
 
-    loadGlyphs(params: any, callback: Function) {
+    async loadGlyphs(params: any) {
         const key = JSON.stringify(params);
-        if (this.glyphs[key]) {
-            callback(null, this.glyphs[key]);
-        } else {
-            this.style.getGlyphs('', params, (err, glyphs) => {
-                this.glyphs[key] = glyphs;
-                callback(err, glyphs);
-            });
+        if (!this.glyphs[key]) {
+            this.glyphs[key] = await this.style.getGlyphs('', params);
         }
+        return this.glyphs[key];
     }
 
     setup(): Promise<void> {
         const parser = this;
         this.actor = {
-            send(action, params, callback) {
-                setTimeout(() => {
-                    if (action === 'getImages') {
-                        parser.loadImages(params, callback);
-                    } else if (action === 'getGlyphs') {
-                        parser.loadGlyphs(params, callback);
-                    } else throw new Error(`Invalid action ${action}`);
-                }, 0);
+            sendAsync(message) {
+                if (message.type === MessageType.getImages) {
+                    return parser.loadImages(message.data);
+                }
+                if (message.type === MessageType.getGlyphs) {
+                    return parser.loadGlyphs(message.data);
+                }
+                throw new Error(`Invalid action ${message.type}`);
             }
         };
 
@@ -130,6 +122,7 @@ export default class TileParser {
         returnDependencies?: boolean
     ): Promise<WorkerTileResult> {
         const workerTile = new WorkerTile({
+            type: 'benchmark',
             tileID: tile.tileID,
             zoom: tile.tileID.overscaledZ,
             tileSize: 512,
@@ -145,14 +138,6 @@ export default class TileParser {
 
         const vectorTile = new VT.VectorTile(new Protobuf(tile.buffer));
 
-        return new Promise((resolve, reject) => {
-            workerTile.parse(vectorTile, this.layerIndex, [], ((this.actor as any)), (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        return workerTile.parse(vectorTile, this.layerIndex, [], this.actor);
     }
 }

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Filter within a Layer</title>
+    <meta property="og:description" content="Filter a layer based on user input using setFilter()." />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='../../dist/maplibre-gl.css' />
+    <script src='../../dist/maplibre-gl-dev.js'></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+    </style>
+</head>
+<body>
+<style>
+    html, body, #map {
+        height: 100%;
+    }
+
+    .map-overlay {
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        position: absolute;
+        width: 31.8%;
+        top: 0;
+        left: 0;
+        padding: 10px;
+    }
+
+    .map-overlay .map-overlay-inner {
+        background-color: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .map-overlay input {
+        margin: 2px;
+    }
+
+    input[type=number] {
+        width: 25%
+    }
+
+    #filter-result {
+        font-size: 8px;
+        font-family: "Courier New";
+    }
+</style>
+<div id="map"></div>
+
+<div class="map-overlay top">
+    <div class="map-overlay-inner">
+        <nav id="nav-filter">
+            <fieldset>
+                <legend>🫨 Earthquake <code>felt</code>?</legend>
+                <div>
+                    <input id="felt" type="checkbox" />
+                    <label for="felt">Apply <code>felt</code> Filter</label>
+                    <div>
+                        <div>
+                            <label for="operator-felt">Operator:</label>
+                            <select name="operator" id="operator-felt">
+                                <option value=">">></option>
+                                <option value="==" selected>==</option>
+                                <option value="<"><</option>
+                            </select>
+                            <br>
+                            <label for="range-felt">Felt:</label>
+                            <input type="number" id="range-felt" name="range" value="4" min="1.0" max="10000" />
+                        </div>
+                    </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>📈 Magnitude</legend>
+                <div>
+                    <input id="mag" type="checkbox" />
+                    <label for="mag">Apply <code>magnitude</code> Filter</label>
+                    <div>
+                        <div>
+                            <label for="operator-mag">Operator:</label>
+                            <select name="operator" id="operator-mag">
+                                <option value=">">></option>
+                                <option value="==" selected>==</option>
+                                <option value="<"><</option>
+                            </select>
+                            <br>
+                            <label for="range-mag">Magnitude:</label>
+                            <input type="number" id="range-mag" name="range" value="2.71" min="0.0" max="100" />
+                        </div>
+                    </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>🌊 Tsunami (0 or 1)</legend>
+                <input id="tsunami" type="checkbox" />
+                <label for="tsunami">Apply <code>tsunami</code> filter</label>
+                <div id="radio-tsunamis">
+                    <input type="radio" id="t0" name="tsunami" value="0" /><label for="t0">0</label>
+                    <input type="radio" id="t1" name="tsunami" value="1" /><label for="t1">1</label>
+                </div>
+            </fieldset>
+        </nav>
+        <hr />
+        <div id='filter-result'>["all"]</div>
+    </div>
+</div>
+
+<script>
+    const data = {};
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        center: [-117, 32],
+        zoom: 0,
+    });
+
+    map.on('load', () => {
+        // add a clustered GeoJSON source for a sample set of earthquakes
+        map.addSource('earthquakes', {
+            'type': 'geojson',
+            'data':
+                'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson'
+        });
+        // Basic circle and symbol layers earthquakes
+        map.addLayer({
+            'id': 'earthquakes',
+            'type': 'circle',
+            'source': 'earthquakes',
+            'paint': {
+                'circle-color': '#ff0000'
+            }
+        });
+    });
+
+    document.getElementById('nav-filter').addEventListener('change', (e) => {
+        let filterOnValue = ['all'];
+        let operator = '==';
+
+        switch (e.target.id) {
+            /// example: `map.setFilter("earthquakes", ["any", [">", "felt", 16.0]])`
+            case 'felt':
+                operatorFelt = document.getElementById('operator-felt');
+                felt = document.getElementById('range-felt');
+                operator = operatorFelt.value;
+
+                // eslint-disable-next-line no-unused-expressions
+                e.target.checked ? data.felt = Number(felt.value) : delete data['felt'];
+
+                break;
+
+            /// example: `map.setFilter("earthquakes", ["any", [">", "mag", 5.0]])`
+            case 'mag':
+                operatorMag = document.getElementById('operator-mag');
+                mag = document.getElementById('range-mag');
+                operator = operatorMag.value;
+
+                // eslint-disable-next-line no-unused-expressions
+                e.target.checked ? data.mag = Number(mag.value) : delete data['mag'];
+
+                break;
+
+            /// example: `map.setFilter("earthquakes", ["any", [">", "tsunami", 0]])`
+            case 'tsunami':
+                // eslint-disable-next-line @typescript-eslint/quotes
+                tsunami = document.querySelector("input[type='radio'][name=tsunami]:checked");
+                operator = '==';
+
+                // eslint-disable-next-line no-unused-expressions
+                e.target.checked ? data.tsunami = Number(tsunami.value) : delete data['tsunami'];
+
+                break;
+            default:
+                console.log('default');
+        }
+
+        filterOnValue = Object.keys(data);
+
+        mapLibreFilterSpread = ['all', ...filterOnValue.map(id => [operator, id, data[id]])];
+        mapLibreFilter = mapLibreFilterSpread;
+
+        document.getElementById('filter-result').textContent = JSON.stringify(mapLibreFilter);
+
+        map.setFilter('earthquakes', mapLibreFilter);
+    });
+
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@ about: Suggest a feature or enhancement
 ## User Story
 
 <!--
-This section should have a one-sentence sentence user story, such as:
+This section should have a one-sentence user story, such as:
 
  As a <role> I can <capability>, so that <receive benefit>
 

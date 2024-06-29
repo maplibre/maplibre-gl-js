@@ -10,13 +10,14 @@ export type BenchmarkRowProps = {
     name: string;
     location: LocationsWithTileID;
     versions: Version[];
+    finishedAll: boolean;
 }
 
 export const BenchmarkRow = (props: BenchmarkRowProps) => {
     const endedCount = props.versions.filter(version => version.status === 'ended').length;
 
-    let main;
-    let current;
+    let main: Version;
+    let current: Version;
     if (/main/.test(props.versions[0].name)) {
         [main, current] = props.versions;
     } else {
@@ -74,7 +75,7 @@ export const BenchmarkRow = (props: BenchmarkRowProps) => {
             <table className="fixed space-bottom">
                 <tbody>
                     <tr><th><h2 className="col4"><a href={`#${props.name}`} onClick={reload}>{props.name}</a></h2></th>
-                        {props.versions.map(version => <th style={{color: versionColor(version.name)}} key={version.name}>{version.name}</th>)}</tr>
+                        {props.versions.map(version => <th style={{color: versionColor(version.name)}} key={version.name}>{version.displayName}</th>)}</tr>
                     {props.location && <tr>
                         <th><p style={{color: '#1287A8'}}>{props.location.description}</p></th>
                         <th><p style={{color: '#1287A8'}}>Zoom Level: {props.location.zoom}</p></th>
@@ -96,8 +97,8 @@ export const BenchmarkRow = (props: BenchmarkRowProps) => {
                     {pInferiority && <tr><td colSpan={3}>{pInferiority}</td></tr>}
                 </tbody>
             </table>
-            {endedCount > 0 && <StatisticsPlot versions={props.versions}/>}
-            {endedCount > 0 && <RegressionPlot versions={props.versions}/>}
+            {props.finishedAll && <StatisticsPlot versions={props.versions}/>}
+            {props.finishedAll && <RegressionPlot versions={props.versions}/>}
         </div>
     );
 

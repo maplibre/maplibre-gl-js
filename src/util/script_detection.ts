@@ -62,9 +62,9 @@ export function charAllowsIdeographicBreaking(char: number) {
 }
 
 // The following logic comes from
-// <http://www.unicode.org/Public/12.0.0/ucd/VerticalOrientation.txt>.
+// <https://www.unicode.org/Public/12.0.0/ucd/VerticalOrientation.txt>.
 // Keep it synchronized with
-// <http://www.unicode.org/Public/UCD/latest/ucd/VerticalOrientation.txt>.
+// <https://www.unicode.org/Public/UCD/latest/ucd/VerticalOrientation.txt>.
 // The data file denotes with “U” or “Tu” any codepoint that may be drawn
 // upright in vertical text but does not distinguish between upright and
 // “neutral” characters.
@@ -164,7 +164,7 @@ export function charHasUprightVerticalOrientation(char: number) {
  *
  * A character has neutral orientation if it may be drawn rotated or unrotated
  * when the line is oriented vertically, depending on the orientation of the
- * adjacent characters. For example, along a verticlly oriented line, the vulgar
+ * adjacent characters. For example, along a vertically oriented line, the vulgar
  * fraction ½ is drawn upright among Chinese characters but rotated among Latin
  * letters. A neutrally oriented character does not influence whether an
  * adjacent character is drawn upright or rotated.
@@ -297,7 +297,7 @@ export function charInSupportedScript(char: number, canRenderRTL: boolean) {
         isChar['Khmer'](char)) {
         // These blocks cover common scripts that require
         // complex text shaping, based on unicode script metadata:
-        // http://www.unicode.org/repos/cldr/trunk/common/properties/scriptMetadata.txt
+        // https://www.unicode.org/repos/cldr/trunk/common/properties/scriptMetadata.txt
         // where "Web Rank <= 32" "Shaping Required = YES"
         return false;
     }
