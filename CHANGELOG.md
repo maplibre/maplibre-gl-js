@@ -1,7 +1,7 @@
 ## main
 
 ### ✨ Features and improvements
-
+- Merge atmosphere an sky implementation ([#3888](https://github.com/maplibre/maplibre-gl-js/issues/3888))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
