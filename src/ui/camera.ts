@@ -7,6 +7,7 @@ import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Terrain} from '../render/terrain';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
+import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_transform';
 
 import type {Transform} from '../geo/transform';
 import type {LngLatLike} from '../geo/lng_lat';
@@ -312,6 +313,17 @@ export abstract class Camera extends Evented {
         this.on('moveend', () => {
             delete this._requestedCameraState;
         });
+    }
+
+    /**
+     * @internal
+     * Creates a new specialized transform instance from a projection instance and migrates
+     * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
+     * When the style's projection is changed (or first set), this function should be called.
+     */
+    migrateProjection(newTransform: Transform) {
+        newTransform.apply(this.transform);
+        this.transform = newTransform;
     }
 
     /**
@@ -682,10 +694,10 @@ export abstract class Camera extends Evented {
         // Consider all corners of the rotated bounding box derived from the given points
         // when find the camera position that fits the given points.
         const bounds = new LngLatBounds(p0, p1);
-        const nwWorld = tr.project(bounds.getNorthWest());
-        const neWorld = tr.project(bounds.getNorthEast());
-        const seWorld = tr.project(bounds.getSouthEast());
-        const swWorld = tr.project(bounds.getSouthWest());
+        const nwWorld = projectToWorldCoordinates(tr, bounds.getNorthWest());
+        const neWorld = projectToWorldCoordinates(tr, bounds.getNorthEast());
+        const seWorld = projectToWorldCoordinates(tr, bounds.getSouthEast());
+        const swWorld = projectToWorldCoordinates(tr, bounds.getSouthWest());
 
         const bearingRadians = degreesToRadians(-bearing);
 
@@ -727,7 +739,7 @@ export abstract class Camera extends Evented {
         const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
         const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
 
-        const center = tr.unproject(
+        const center = unprojectFromWorldCoordinates(tr,
             // either world diagonal can be used (NW-SE or NE-SW)
             nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
         );
@@ -977,8 +989,8 @@ export abstract class Camera extends Evented {
         );
         this._normalizeCenter(center);
 
-        const from = tr.project(locationAtOffset);
-        const delta = tr.project(center).sub(from);
+        const from = projectToWorldCoordinates(tr, locationAtOffset);
+        const delta = projectToWorldCoordinates(tr, center).sub(from);
         const finalScale = tr.zoomScale(zoom - startZoom);
 
         let around, aroundPoint;
@@ -1031,7 +1043,7 @@ export abstract class Camera extends Evented {
                     Math.min(2, finalScale) :
                     Math.max(0.5, finalScale);
                 const speedup = Math.pow(base, 1 - k);
-                const newCenter = tr.unproject(from.add(delta.mult(k * speedup)).mult(scale));
+                const newCenter = unprojectFromWorldCoordinates(tr, from.add(delta.mult(k * speedup)).mult(scale));
                 tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
             }
 
@@ -1252,8 +1264,8 @@ export abstract class Camera extends Evented {
         this._normalizeCenter(center);
         const scale = tr.zoomScale(zoom - startZoom);
 
-        const from = tr.project(locationAtOffset);
-        const delta = tr.project(center).sub(from);
+        const from = projectToWorldCoordinates(tr, locationAtOffset);
+        const delta = projectToWorldCoordinates(tr, center).sub(from);
 
         let rho = options.curve;
 
@@ -1360,7 +1372,7 @@ export abstract class Camera extends Evented {
 
             if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
-            const newCenter = k === 1 ? center : tr.unproject(from.add(delta.mult(u(s))).mult(scale));
+            const newCenter = k === 1 ? center : unprojectFromWorldCoordinates(tr, from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
 
             this._applyUpdatedTransform(tr);

@@ -233,7 +233,7 @@ export class ScrollZoomHandler implements Handler {
         const pos = DOM.mousePos(this._map.getCanvas(), e);
         const tr = this._tr;
 
-        if (pos.y > tr.transform.height / 2 - tr.transform.getHorizon()) {
+        if (tr.transform.isPointOnMapSurface(pos)) {
             this._around = LngLat.convert(this._aroundCenter ? tr.center : tr.unproject(pos));
         } else {
             // Do not use current cursor position if above the horizon to avoid 'unproject' this point
