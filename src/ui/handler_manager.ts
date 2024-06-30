@@ -17,14 +17,9 @@ import {DragPanHandler} from './handler/shim/drag_pan';
 import {DragRotateHandler} from './handler/shim/drag_rotate';
 import {TwoFingersTouchZoomRotateHandler} from './handler/shim/two_fingers_touch';
 import {CooperativeGesturesHandler} from './handler/cooperative_gestures';
-import {clamp, differenceOfAnglesDegrees, extend, remapSaturate} from '../util/util';
+import {extend} from '../util/util';
 import {browser} from '../util/browser';
 import Point from '@mapbox/point-geometry';
-import {LngLat} from '../geo/lng_lat';
-import {getGlobeRadiusPixels, getZoomAdjustment} from '../geo/projection/globe_transform';
-import {MAX_VALID_LATITUDE} from '../geo/transform';
-import {vec3} from 'gl-matrix';
-import {computeGlobePanCenter} from './globe_control_utils';
 
 const isMoving = (p: EventsInProgress) => p.zoom || p.drag || p.pitch || p.rotate;
 
@@ -32,8 +27,6 @@ class RenderFrameEvent extends Event {
     type: 'renderFrame';
     timeStamp: number;
 }
-
-function createVec3(): vec3 { return new Float64Array(3) as any; }
 
 /**
  * Handlers interpret dom events and return camera changes that should be
@@ -497,149 +490,40 @@ export class HandlerManager {
             return this._fireEvents(combinedEventsInProgress, deactivatedHandlers, true);
         }
 
-        // stop any ongoing camera animations (easeTo, flyTo)
-        map._stop(true);
-
         let {panDelta, zoomDelta, bearingDelta, pitchDelta, around, pinchAround} = combinedResult;
 
         if (pinchAround !== undefined) {
             around = pinchAround;
         }
 
+        // stop any ongoing camera animations (easeTo, flyTo)
+        map._stop(true);
+
         around = around || map.transform.centerPoint;
+        const loc = tr.pointLocation(panDelta ? around.sub(panDelta) : around);
+        if (bearingDelta) tr.bearing += bearingDelta;
+        if (pitchDelta) tr.pitch += pitchDelta;
+        if (zoomDelta) tr.zoom += zoomDelta;
 
-        if (terrain && !tr.isPointOnMapSurface(around)) {
-            around = tr.centerPoint;
-        }
-
-        if (this._map.transform.useGlobeControls) {
-            // Globe map controls
-            const zoomPixel = around;
-            const zoomLoc = tr.pointLocation(zoomPixel);
-
-            if (bearingDelta) tr.bearing += bearingDelta;
-            if (pitchDelta) tr.pitch += pitchDelta;
-            const oldZoom = tr.zoom;
-            if (zoomDelta) tr.zoom += zoomDelta;
-            const actualZoomDelta = tr.zoom - oldZoom;
-
-            if (actualZoomDelta !== 0) {
-                // Problem: `setLocationAtPoint` for globe works when it is called a single time, but is a little glitchy in practice when used repeatedly for zooming.
-                // - `setLocationAtPoint` repeatedly called at a location behind a pole will eventually glitch out
-                // - `setLocationAtPoint` at location the longitude of which is more than 90° different from current center will eventually glitch out
-                // But otherwise works fine at higher zooms, or when the target is somewhat near the current map center.
-                // Solution: use a heuristic zooming in the problematic cases and interpolate to `setLocationAtPoint` when possible.
-
-                // Magic numbers that control:
-                // - when zoom movement slowing starts for cursor not on globe (avoid unnatural map movements)
-                // - when we interpolate from exact zooming to heuristic zooming based on longitude difference of target location to current center
-                // - when we interpolate from exact zooming to heuristic zooming based on globe being too small on screen
-                // - when zoom movement slowing starts for globe being too small on viewport (avoids unnatural/unwanted map movements when map is zoomed out a lot)
-                const raySurfaceDistanceForSlowingStart = 0.3; // Zoom movement slowing will start when the planet surface to ray distance is greater than this number (globe radius is 1, so 0.3 is ~2000km form the surface).
-                const slowingMultiplier = 0.5; // The lower this value, the slower will the "zoom movement slowing" occur.
-                const interpolateToHeuristicStartLng = 45; // When zoom location longitude is this many degrees away from map center, we start interpolating from exact zooming to heuristic zooming.
-                const interpolateToHeuristicEndLng = 85; // Longitude difference at which interpolation to heuristic zooming ends.
-                const interpolateToHeuristicExponent = 0.25; // Makes interpolation smoother.
-                const interpolateToHeuristicStartRadius = 0.75; // When globe is this many times larger than the smaller viewport dimension, we start interpolating from exact zooming to heuristic zooming.
-                const interpolateToHeuristicEndRadius = 0.35; // Globe size at which interpolation to heuristic zooming ends.
-                const slowingRadiusStart = 0.9; // If globe is this many times larger than the smaller viewport dimension, start inhibiting map movement while zooming
-                const slowingRadiusStop = 0.5;
-                const slowingRadiusSlowFactor = 0.25; // How much is movement slowed when globe is too small
-
-                const dLngRaw = differenceOfAnglesDegrees(tr.center.lng, zoomLoc.lng);
-                const dLng = dLngRaw / (Math.abs(dLngRaw / 180) + 1.0); // This gradually reduces the amount of longitude change if the zoom location is very far, eg. on the other side of the pole (possible when looking at a pole).
-                const dLat = differenceOfAnglesDegrees(tr.center.lat, zoomLoc.lat);
-
-                // Slow zoom movement down if the mouse ray is far from the planet.
-                const rayDirection = tr.getRayDirectionFromPixel(zoomPixel);
-                const rayOrigin = tr.cameraPosition;
-                const distanceToClosestPoint = vec3.dot(rayOrigin, rayDirection) * -1; // Globe center relative to ray origin is equal to -rayOrigin and rayDirection is normalized, thus we want to compute dot(-rayOrigin, rayDirection).
-                const closestPoint = createVec3();
-                vec3.add(closestPoint, rayOrigin, [
-                    rayDirection[0] * distanceToClosestPoint,
-                    rayDirection[1] * distanceToClosestPoint,
-                    rayDirection[2] * distanceToClosestPoint
-                ]);
-                const distanceFromSurface = vec3.length(closestPoint) - 1;
-                const distanceFactor = Math.exp(-Math.max(distanceFromSurface - raySurfaceDistanceForSlowingStart, 0) * slowingMultiplier);
-
-                // Slow zoom movement down if the globe is too small on viewport
-                const radius = getGlobeRadiusPixels(tr.worldSize, tr.center.lat) / Math.min(tr.width, tr.height); // Radius relative to larger viewport dimension
-                const radiusFactor = remapSaturate(radius, slowingRadiusStart, slowingRadiusStop, 1.0, slowingRadiusSlowFactor);
-
-                // Compute how much to move towards the zoom location
-                const factor = (1.0 - tr.zoomScale(-actualZoomDelta)) * Math.min(distanceFactor, radiusFactor);
-
-                const oldCenterLat = tr.center.lat;
-                const oldZoom = tr.zoom;
-                const heuristicCenter = new LngLat(
-                    tr.center.lng + dLng * factor,
-                    clamp(tr.center.lat + dLat * factor, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE)
-                );
-
-                // Now compute the map center exact zoom
-                tr.setLocationAtPoint(zoomLoc, zoomPixel);
-                const exactCenter = tr.center;
-
-                // Interpolate between exact zooming and heuristic zooming depending on the longitude difference between current center and zoom location.
-                const interpolationFactorLongitude = remapSaturate(Math.abs(dLngRaw), interpolateToHeuristicStartLng, interpolateToHeuristicEndLng, 0, 1);
-                const interpolationFactorRadius = remapSaturate(radius, interpolateToHeuristicStartRadius, interpolateToHeuristicEndRadius, 0, 1);
-                const heuristicFactor = Math.pow(Math.max(interpolationFactorLongitude, interpolationFactorRadius), interpolateToHeuristicExponent);
-
-                const lngExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lng, heuristicCenter.lng);
-                const latExactToHeuristic = differenceOfAnglesDegrees(exactCenter.lat, heuristicCenter.lat);
-
-                tr.center = new LngLat(
-                    exactCenter.lng + lngExactToHeuristic * heuristicFactor,
-                    exactCenter.lat + latExactToHeuristic * heuristicFactor
-                ).wrap();
-                tr.zoom = oldZoom + getZoomAdjustment(tr, oldCenterLat, tr.center.lat);
-            }
-
-            // Terrain needs no special handling in this case, since the drag-pixel-at-horizon problem described below
-            // is avoided here - dragging speed is the same no matter what screen pixel you grab.
-            if (panDelta) {
-                // These are actually very similar to mercator controls, and should converge to them at high zooms.
-                // We avoid using the "grab a place and move it around" approach from mercator here,
-                // since it is not a very pleasant way to pan a globe.
-
-                const oldLat = tr.center.lat;
-                const oldZoom = tr.zoom;
-                tr.center = computeGlobePanCenter(panDelta, tr).wrap();
-                // Setting the center might adjust zoom to keep globe size constant, we need to avoid adding this adjustment a second time
-                tr.zoom = oldZoom + getZoomAdjustment(tr, oldLat, tr.center.lat);
-            }
+        if (!terrain) {
+            tr.setLocationAtPoint(loc, around);
         } else {
-            // Flat map controls
-            if (!tr.isPointOnMapSurface(around)) {
-                around = tr.centerPoint;
-            }
-
-            const loc = tr.pointLocation(panDelta ? around.sub(panDelta) : around);
-            if (bearingDelta) tr.bearing += bearingDelta;
-            if (pitchDelta) tr.pitch += pitchDelta;
-            if (zoomDelta) tr.zoom += zoomDelta;
-
-            if (!terrain) {
+            // when 3d-terrain is enabled act a little different:
+            //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
+            //      With this approach it is no longer possible to pick a point from somewhere near
+            //      the horizon to the center in one move.
+            //      So this logic avoids the problem, that in such cases you easily loose orientation.
+            if (!this._terrainMovement &&
+                (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
+                // When starting to drag or move, flag it and register moveend to clear flagging
+                this._terrainMovement = true;
+                this._map._elevationFreeze = true;
                 tr.setLocationAtPoint(loc, around);
+            } else if (combinedEventsInProgress.drag && this._terrainMovement) {
+                // drag map
+                tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
             } else {
-                // when 3d-terrain is enabled act a little different:
-                //    - dragging do not drag the picked point itself, instead it drags the map by pixel-delta.
-                //      With this approach it is no longer possible to pick a point from somewhere near
-                //      the horizon to the center in one move.
-                //      So this logic avoids the problem, that in such cases you easily loose orientation.
-                if (!this._terrainMovement &&
-                    (combinedEventsInProgress.drag || combinedEventsInProgress.zoom)) {
-                    // When starting to drag or move, flag it and register moveend to clear flagging
-                    this._terrainMovement = true;
-                    this._map._elevationFreeze = true;
-                    tr.setLocationAtPoint(loc, around);
-                } else if (combinedEventsInProgress.drag && this._terrainMovement) {
-                    // drag map
-                    tr.center = tr.pointLocation(tr.centerPoint.sub(panDelta));
-                } else {
-                    tr.setLocationAtPoint(loc, around);
-                }
+                tr.setLocationAtPoint(loc, around);
             }
         }
 
