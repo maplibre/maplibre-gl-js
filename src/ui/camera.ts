@@ -308,10 +308,6 @@ export abstract class Camera extends Evented {
         this._zooming = false;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
-
-        this.on('moveend', () => {
-            delete this._requestedCameraState;
-        });
     }
 
     /**
@@ -1098,10 +1094,7 @@ export abstract class Camera extends Evented {
      */
     _getTransformForUpdate(): Transform {
         if (!this.transformCameraUpdate) return this.transform;
-
-        if (!this._requestedCameraState) {
-            this._requestedCameraState = this.transform.clone();
-        }
+        this._requestedCameraState = this.transform.clone();
         return this._requestedCameraState;
     }
 
@@ -1128,6 +1121,7 @@ export abstract class Camera extends Evented {
         if (bearing !== undefined) nextTransform.bearing = bearing;
         if (elevation !== undefined) nextTransform.elevation = elevation;
         this.transform.apply(nextTransform);
+        delete this._requestedCameraState;
     }
 
     _fireMoveEvents(eventData?: any) {
