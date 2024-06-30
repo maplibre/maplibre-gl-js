@@ -4,8 +4,7 @@ import {smartWrap} from './smart_wrap';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 const transform = new MercatorTransform();
-transform['_width'] = 100;
-transform['_height'] = 100;
+transform.resize(100, 100);
 transform.isPointOnMapSurface = (p) => p.y > transform.height / 2; // any point below map center is considered to be on the map's surface
 
 describe('smartWrap', () => {
