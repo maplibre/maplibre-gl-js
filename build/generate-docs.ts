@@ -51,7 +51,7 @@ function generateMarkdownIndexFileOfAllExamples(indexArray: HtmlDoc[]): string {
         indexMarkdown += `
 ## [${indexArrayItem.title}](./${indexArrayItem.mdFileName})
 
-![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.png')}){ loading=lazy }
+![${indexArrayItem.description}](../assets/examples/${indexArrayItem.mdFileName!.replace('.md', '.webp')}){ loading=lazy }
 
 ${indexArrayItem.description}
 `;
