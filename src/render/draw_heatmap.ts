@@ -25,7 +25,6 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
     if (painter.renderPass === 'offscreen') {
         const context = painter.context;
         const gl = context.gl;
-        const projection = painter.style.projection;
         const transform = painter.transform;
 
         // Allow kernels to be drawn across boundaries, so that
@@ -53,9 +52,9 @@ export function drawHeatmap(painter: Painter, sourceCache: SourceCache, layer: H
             const programConfiguration = bucket.programConfigurations.get(layer.id);
             const program = painter.useProgram('heatmap', programConfiguration);
 
-            const projectionData = projection.getProjectionData(coord.canonical, coord.posMatrix);
+            const projectionData = transform.getProjectionData(coord);
 
-            const radiusCorrectionFactor = projection.getCircleRadiusCorrection(transform);
+            const radiusCorrectionFactor = transform.getCircleRadiusCorrection();
 
             program.draw(context, gl.TRIANGLES, DepthMode.disabled, stencilMode, colorMode, CullFaceMode.backCCW,
                 heatmapUniformValues(tile, transform.zoom, layer.paint.get('heatmap-intensity'), radiusCorrectionFactor),

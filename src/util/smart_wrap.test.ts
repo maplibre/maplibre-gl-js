@@ -1,12 +1,11 @@
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../geo/lng_lat';
-import {Transform} from '../geo/transform';
 import {smartWrap} from './smart_wrap';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
 
-const transform = new Transform();
-transform.width = 100;
-transform.height = 100;
-transform.getHorizon = () => 0; // map center
+const transform = new MercatorTransform();
+transform.resize(100, 100);
+transform.isPointOnMapSurface = (p) => p.y > transform.height / 2; // any point below map center is considered to be on the map's surface
 
 describe('smartWrap', () => {
     test('Shifts lng to -360 deg when such point is closer to the priorPos', () => {

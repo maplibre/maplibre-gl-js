@@ -317,9 +317,9 @@ export class Terrain {
     }
 
     /**
-     * Reads a pixel from the coords-framebuffer and translate this to mercator.
+     * Reads a pixel from the coords-framebuffer and translate this to mercator, or null, if the pixel doesn't lie on the terrain's surface (but the sky instead).
      * @param p - Screen-Coordinate
-     * @returns mercator coordinate for a screen pixel
+     * @returns Mercator coordinate for a screen pixel, or null, if the pixel is not covered by terrain (is in the sky).
      */
     pointCoordinate(p: Point): MercatorCoordinate {
         // First, ensure the coords framebuffer is up to date.
@@ -339,7 +339,11 @@ export class Terrain {
         const y = rgba[1] + ((rgba[2] & 15) << 8);
         const tileID = this.coordsIndex[255 - rgba[3]];
         const tile = tileID && this.sourceCache.getTileByID(tileID);
-        if (!tile) return null;
+
+        if (!tile) {
+            return null;
+        }
+
         const coordsSize = this._coordsTextureSize;
         const worldSize = (1 << tile.tileID.canonical.z) * coordsSize;
         return new MercatorCoordinate(

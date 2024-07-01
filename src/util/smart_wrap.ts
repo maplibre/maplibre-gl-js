@@ -49,8 +49,7 @@ export function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform)
     }
 
     // Apply the change only if new coord is below horizon
-    if (lngLat.lng !== originalLngLat.lng &&
-        transform.locationPoint(lngLat).y > (transform.height / 2 - transform.getHorizon())) {
+    if (lngLat.lng !== originalLngLat.lng && transform.isPointOnMapSurface(transform.locationPoint(lngLat))) {
         return lngLat;
     }
 

@@ -8,7 +8,6 @@ import {RequestManager, ResourceType} from '../util/request_manager';
 import {Style, StyleSwapOptions} from '../style/style';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {Painter} from '../render/painter';
-import {Transform} from '../geo/transform';
 import {Hash} from './hash';
 import {HandlerManager} from './handler_manager';
 import {Camera, CameraOptions, CameraUpdateTransformFunction, FitBoundsOptions} from './camera';
@@ -60,6 +59,8 @@ import type {
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
+import {MercatorTransform} from '../geo/projection/mercator_transform';
+import {Transform} from '../geo/transform';
 
 const version = packageJSON.version;
 
@@ -573,7 +574,26 @@ export class Map extends Camera {
             throw new Error(`maxPitch must be less than or equal to ${maxPitchThreshold}`);
         }
 
-        const transform = new Transform(resolvedOptions.minZoom, resolvedOptions.maxZoom, resolvedOptions.minPitch, resolvedOptions.maxPitch, resolvedOptions.renderWorldCopies);
+        // For now we will use a temporary MercatorTransform instance.
+        // Transform specialization will later be set by style when it creates its projection instance.
+        // When this happens, the new transform will inherit all properties of this temporary transform.
+        const transform = new MercatorTransform();
+        if (resolvedOptions.minZoom !== undefined) {
+            transform.minZoom = resolvedOptions.minZoom;
+        }
+        if (resolvedOptions.maxZoom !== undefined) {
+            transform.maxZoom = resolvedOptions.maxZoom;
+        }
+        if (resolvedOptions.minPitch !== undefined) {
+            transform.minPitch = resolvedOptions.minPitch;
+        }
+        if (resolvedOptions.maxPitch !== undefined) {
+            transform.maxPitch = resolvedOptions.maxPitch;
+        }
+        if (resolvedOptions.renderWorldCopies !== undefined) {
+            transform.renderWorldCopies = resolvedOptions.renderWorldCopies;
+        }
+
         super(transform, {bearingSnap: resolvedOptions.bearingSnap});
 
         this._interactive = resolvedOptions.interactive;
@@ -2940,6 +2960,11 @@ export class Map extends Camera {
         webpSupported.testSupport(gl);
     }
 
+    override migrateProjection(newTransform: Transform) {
+        super.migrateProjection(newTransform);
+        this.painter.transform = newTransform;
+    }
+
     _contextLost = (event: any) => {
         event.preventDefault();
         if (this._frameRequest) {
@@ -3081,7 +3106,8 @@ export class Map extends Camera {
             this.transform.elevation = 0;
         }
 
-        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions);
+        const transformUpdateResult = this.transform.newFrameUpdate();
+        this._placementDirty = this.style && this.style._updatePlacement(this.painter.transform, this.showCollisionBoxes, fadeDuration, this._crossSourceCollisions, transformUpdateResult.forcePlacementUpdate);
 
         // Actually draw
         this.painter.render(this.style, {
@@ -3118,7 +3144,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.style.projection.isRenderingDirty();
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.style.projection.isRenderingDirty() || this.transform.isRenderingDirty();
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {

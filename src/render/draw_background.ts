@@ -42,8 +42,7 @@ export function drawBackground(painter: Painter, sourceCache: SourceCache, layer
     const crossfade = layer.getCrossfadeParameters();
 
     for (const tileID of tileIDs) {
-        const matrix = coords ? tileID.posMatrix : painter.transform.calculatePosMatrix(tileID.toUnwrapped());
-        const projectionData = projection.getProjectionData(tileID.canonical, matrix);
+        const projectionData = transform.getProjectionData(tileID);
 
         const uniformValues = image ?
             backgroundPatternUniformValues(opacity, painter, image, {tileID, tileSize}, crossfade) :

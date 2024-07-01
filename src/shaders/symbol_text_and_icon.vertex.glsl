@@ -14,7 +14,6 @@ uniform bool u_is_size_zoom_constant;
 uniform bool u_is_size_feature_constant;
 uniform highp float u_size_t; // used to interpolate between zoom stops when size is a composite function
 uniform highp float u_size; // used when size is both zoom and feature constant
-uniform mat4 u_matrix;
 uniform mat4 u_label_plane_matrix;
 uniform mat4 u_coord_matrix;
 uniform bool u_is_text;

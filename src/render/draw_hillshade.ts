@@ -55,6 +55,7 @@ function renderHillshade(
 ) {
     const projection = painter.style.projection;
     const context = painter.context;
+    const transform = painter.transform;
     const gl = context.gl;
     const program = painter.useProgram('hillshade');
     const align = !painter.options.moving;
@@ -72,8 +73,7 @@ function renderHillshade(
         context.activeTexture.set(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, fbo.colorAttachment.get());
 
-        const posMatrix = terrainData ? coord.posMatrix : painter.transform.calculatePosMatrix(tile.tileID.toUnwrapped(), align);
-        const projectionData = painter.style.projection.getProjectionData(coord.canonical, posMatrix);
+        const projectionData = transform.getProjectionData(coord, align);
 
         program.draw(context, gl.TRIANGLES, depthMode, stencilModes[coord.overscaledZ], colorMode, CullFaceMode.backCCW,
             hillshadeUniformValues(painter, tile, layer), terrainData, projectionData, layer.id, mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);

@@ -37,7 +37,6 @@ import {register} from '../../util/web_worker_transfer';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {Formatted, ResolvedImage} from '@maplibre/maplibre-gl-style-spec';
 import {rtlWorkerPlugin} from '../../source/rtl_text_plugin_worker';
-import {mat4} from 'gl-matrix';
 import {getOverlapMode} from '../../style/style_layer/overlap_mode';
 import type {CanonicalTileID} from '../../source/tile_id';
 import type {
@@ -348,8 +347,6 @@ export class SymbolBucket implements Bucket {
     featureSortOrder: Array<number>;
 
     collisionCircleArray: Array<number>;
-    placementInvProjMatrix: mat4;
-    placementViewportMatrix: mat4;
 
     text: SymbolBuffers;
     icon: SymbolBuffers;
@@ -377,8 +374,6 @@ export class SymbolBucket implements Bucket {
         this.sortKeyRanges = [];
 
         this.collisionCircleArray = [];
-        this.placementInvProjMatrix = mat4.identity([] as any);
-        this.placementViewportMatrix = mat4.identity([] as any);
 
         const layer = this.layers[0];
         const unevaluatedLayoutValues = layer._unevaluatedLayout._values;

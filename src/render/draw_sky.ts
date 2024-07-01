@@ -9,11 +9,12 @@ import {atmosphereUniformValues} from './program/atmosphere_program';
 import {Sky} from '../style/sky';
 import {Light} from '../style/light';
 import {Mesh} from './mesh';
-import {mat4, vec3} from 'gl-matrix';
+import {mat4, vec3, vec4} from 'gl-matrix';
 import {Transform} from '../geo/transform';
 import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
 import {Context} from '../gl/context';
+import {getGlobeRadiusPixels} from '../geo/projection/globe_transform';
 
 function getMesh(context: Context, sky: Sky): Mesh {
     // Create the Sky mesh the first time we need it
@@ -79,27 +80,37 @@ export function drawAtmosphere(painter: Painter, sky: Sky, light: Light) {
     const gl = context.gl;
     const program = painter.useProgram('atmosphere');
     const depthMode = new DepthMode(gl.LEQUAL, DepthMode.ReadOnly, [0, 1]);
-
-    const projection = painter.style.projection;
-    const projectionData = projection.getProjectionData(null, null);
+    const transform = painter.transform;
 
     const sunPos = getSunPos(light, painter.transform);
 
-    const atmosphereBlend = sky.properties.get('atmosphere-blend');
+    const projectionData = transform.getProjectionData(null);
+    const atmosphereBlend = sky.properties.get('atmosphere-blend') * projectionData.u_projection_transition;
+
     if (atmosphereBlend === 0) {
-        // Don't draw anythink if atmosphere is fully transparent
+        // Don't draw anything if atmosphere is fully transparent
         return;
     }
 
-    const globePosition = projection.worldCenterPosition;
-    const globeRadius = projection.worldSize;
-    const invProjMatrix = projection.invProjMatrix;
+    const globeRadius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
+    const invProjMatrix = transform.inverseProjectionMatrix;
+    const vec = new Float64Array(4) as any as vec4;
+    vec[3] = 1;
+    vec4.transformMat4(vec, vec, transform.modelViewProjectionMatrix);
+    vec[0] /= vec[3];
+    vec[1] /= vec[3];
+    vec[2] /= vec[3];
+    vec[3] = 1;
+    vec4.transformMat4(vec, vec, invProjMatrix);
+    vec[0] /= vec[3];
+    vec[1] /= vec[3];
+    vec[2] /= vec[3];
+    vec[3] = 1;
+    const globePosition = [vec[0], vec[1], vec[2]] as vec3;
 
     const uniformValues = atmosphereUniformValues(sunPos, atmosphereBlend, globePosition, globeRadius, invProjMatrix);
 
     const mesh = getMesh(context, sky);
 
-    program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended,
-        CullFaceMode.disabled, uniformValues, null, projectionData, 'atmosphere', mesh.vertexBuffer,
-        mesh.indexBuffer, mesh.segments);
+    program.draw(context, gl.TRIANGLES, depthMode, StencilMode.disabled, ColorMode.alphaBlended, CullFaceMode.disabled, uniformValues, null, null, 'atmosphere', mesh.vertexBuffer, mesh.indexBuffer, mesh.segments);
 }

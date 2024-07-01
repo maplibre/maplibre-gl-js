@@ -5,11 +5,100 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * Solves a quadratic equation in the form ax^2 + bx + c = 0 and returns its roots in no particular order.
+ * Returns null if the equation has no roots.
+ */
+export function solveQuadratic(a: number, b: number, c: number): {
+    t0: number;
+    t1: number;
+} {
+    // Uses a more precise solution from the book Ray Tracing Gems, chapter 7.
+    // https://www.realtimerendering.com/raytracinggems/rtg/index.html
+    const d = b * b - 4 * a * c;
+    if (d < 0) {
+        return null;
+    }
+    const q = -0.5 * (b + Math.sign(b) * Math.sqrt(d));
+    return {
+        t0: c / q,
+        t1: q / a
+    };
+}
+
+/**
+ * For two angles in degrees, returns how many degrees to add to the first angle in order to obtain the second angle.
+ * The returned difference value is always the shorted of the two - its absolute value is never greater than 180°.
+ */
+export function differenceOfAnglesDegrees(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, 360);
+    const b = mod(degreesB, 360);
+    const diff1 = b - a;
+    const diff2 = (b > a) ? (diff1 - 360) : (diff1 + 360);
+    if (Math.abs(diff1) < Math.abs(diff2)) {
+        return diff1;
+    } else {
+        return diff2;
+    }
+}
+
+/**
+ * For two angles in radians, returns how many radians to add to the first angle in order to obtain the second angle.
+ * The returned difference value is always the shorted of the two - its absolute value is never greater than PI.
+ */
+export function differenceOfAnglesRadians(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, Math.PI * 2);
+    const b = mod(degreesB, Math.PI * 2);
+    const diff1 = b - a;
+    const diff2 = (b > a) ? (diff1 - Math.PI * 2) : (diff1 + Math.PI * 2);
+    if (Math.abs(diff1) < Math.abs(diff2)) {
+        return diff1;
+    } else {
+        return diff2;
+    }
+}
+
+/**
+ * When given two angles in degrees, returns the angular distance between them - the shorter one of the two possible arcs.
+ */
+export function distanceOfAnglesDegrees(degreesA: number, degreesB: number): number {
+    const a = mod(degreesA, 360);
+    const b = mod(degreesB, 360);
+    return Math.min(
+        Math.abs(a - b),
+        Math.abs(a - b + 360),
+        Math.abs(a - b - 360)
+    );
+}
+
+/**
+ * When given two angles in radians, returns the angular distance between them - the shorter one of the two possible arcs.
+ */
+export function distanceOfAnglesRadians(radiansA: number, radiansB: number): number {
+    const a = mod(radiansA, Math.PI * 2);
+    const b = mod(radiansB, Math.PI * 2);
+    return Math.min(
+        Math.abs(a - b),
+        Math.abs(a - b + Math.PI * 2),
+        Math.abs(a - b - Math.PI * 2)
+    );
+}
+
+/**
  * Modulo function, as opposed to javascript's `%`, which is a remainder.
  * This functions will return positive values, even if the first operand is negative.
  */
 export function mod(n, m) {
     return ((n % m) + m) % m;
+}
+
+/**
+ * Takes a value in *old range*, linearly maps that range to *new range*, and returns the value in that new range.
+ * Additionally, if the value is outside *old range*, it is clamped inside it.
+ * Also works if one of the ranges is flipped (its `min` being larger than `max`).
+ */
+export function remapSaturate(value: number, oldRangeMin: number, oldRangeMax: number, newRangeMin: number, newRangeMax: number): number {
+    const inOldRange = clamp((value - oldRangeMin) / (oldRangeMax - oldRangeMin), 0.0, 1.0);
+    return lerp(newRangeMin, newRangeMax, inOldRange);
 }
 
 /**

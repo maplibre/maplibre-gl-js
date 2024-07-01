@@ -1011,8 +1011,8 @@ export class SourceCache extends Evented {
 
     getVisibleCoordinates(symbolLayer?: boolean): Array<OverscaledTileID> {
         const coords = this.getRenderableIds(symbolLayer).map((id) => this._tiles[id].tileID);
-        for (const coord of coords) {
-            coord.posMatrix = this.transform.calculatePosMatrix(coord.toUnwrapped());
+        if (this.transform) {
+            this.transform.precacheTiles(coords);
         }
         return coords;
     }

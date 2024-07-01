@@ -1,34 +1,33 @@
-import type {mat4, vec3} from 'gl-matrix';
-import type {Tile} from '../../source/tile';
-import type {CanonicalTileID, UnwrappedTileID} from '../../source/tile_id';
-import type {ProjectionData} from '../../render/program/projection_program';
+import type {CanonicalTileID} from '../../source/tile_id';
 import type {PreparedShader} from '../../shaders/shaders';
 import type {Context} from '../../gl/context';
 import type {Mesh} from '../../render/mesh';
 import type {Program} from '../../render/program';
 import type {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
-import type Point from '@mapbox/point-geometry';
-import type {LngLat} from '../lng_lat';
-import type {PointProjection} from '../../symbol/projection';
 
+/**
+ * Custom projections are handled both by a class which implements this `Projection` interface,
+ * and a class that is derived from the `Transform` base class. What is the difference?
+ *
+ * The transform-derived class:
+ * - should do all the heavy lifting for the projection - implement all the `project*` and `unproject*` functions, etc.
+ * - must store the map's state - center, pitch, etc. - this is handled in the `Transform` base class
+ * - must be cloneable - it should not create any heavy resources
+ *
+ * The projection-implementing class:
+ * - must provide basic information and data about the projection, which is *independent of the map's state* - name, shader functions, subdivision settings, etc.
+ * - must be a "singleton" - no matter how many copies of the matching Transform class exist, the Projection should always exist as a single instance (per Map)
+ * - may create heavy resources that should not exist in multiple copies (projection is never cloned) - for example, see the GPU inaccuracy mitigation for globe projection
+ * - must be explicitly disposed of after usage using the `destroy` function - this allows the implementing class to free any allocated resources
+ */
+
+/**
+ * @internal
+ */
 export type ProjectionGPUContext = {
     context: Context;
     useProgram: (name: string) => Program<any>;
 };
-
-// Thin type with only the relevant fields from the Transform class
-export type TransformLike = {
-    center: LngLat;
-    angle: number; // same as bearing, but negated and in radians
-    pitch: number; // in degrees
-    zoom: number;
-    worldSize: number;
-    fov: number; // in degrees
-    width: number;
-    height: number;
-    cameraToCenterDistance: number;
-    invModelViewProjectionMatrix: mat4;
-}
 
 /**
  * An interface the implementations of which are used internally by MapLibre to handle different projections.
@@ -39,25 +38,6 @@ export interface Projection {
      * A short, descriptive name of this projection, such as 'mercator' or 'globe'.
      */
     get name(): string;
-
-    /**
-     * @internal
-     * True if symbols should use the `project` method of the current ProjectionBase class
-     * instead of the default (and fast) mercator projection path.
-     */
-    get useSpecialProjectionForSymbols(): boolean;
-
-    /**
-     * @internal
-     * Returns the camera's position transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
-     */
-    get cameraPosition(): vec3;
-
-    /**
-     * @internal
-     * True if this projection requires wrapped copies of the world to be drawn.
-     */
-    get drawWrappedTiles(): boolean;
 
     /**
      * @internal
@@ -93,27 +73,18 @@ export interface Projection {
     get vertexShaderPreludeCode(): string;
 
     /**
-     * World center in camera frame.
-     */
-    get worldCenterPosition(): vec3;
-
-    /**
-     * World size in pixel.
-     */
-    get worldSize(): number;
-
-    /**
-     * Inverse projection matrix from camera to clip plane.
-     */
-    get invProjMatrix(): mat4;
-
-    /**
      * @internal
      * An object describing how much subdivision should be applied to rendered geometry.
      * The subdivision settings should be a constant for a given projection.
      * Projections that do not require subdivision should return {@link SubdivisionGranularitySetting.noSubdivision}.
      */
     get subdivisionGranularity(): SubdivisionGranularitySetting;
+
+    /**
+     * @internal
+     * Cleans up any resources the projection created, especially GPU buffers.
+     */
+    destroy(): void;
 
     /**
      * @internal
@@ -124,66 +95,9 @@ export interface Projection {
 
     /**
      * @internal
-     * Cleans up any resources the projection created, especially GPU buffers.
-     */
-    destroy(): void;
-
-    /**
-     * @internal
      * Runs any GPU-side tasks this projection required. Called at the beginning of every frame.
      */
     updateGPUdependent(renderContext: ProjectionGPUContext): void;
-
-    /**
-     * @internal
-     * Updates the projection for current transform, such as recomputing internal matrices.
-     * May change the value of `isRenderingDirty`.
-     */
-    updateProjection(transform: TransformLike): void;
-
-    /**
-     * @internal
-     * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
-     */
-    getProjectionData(canonicalTileCoords: {x: number; y: number; z: number}, tilePosMatrix: mat4): ProjectionData;
-
-    /**
-     * @internal
-     * Returns whether the supplied location is occluded in this projection.
-     * For example during globe rendering a location on the backfacing side of the globe is occluded.
-     * @param x - Tile space coordinate in range 0..EXTENT.
-     * @param y - Tile space coordinate in range 0..EXTENT.
-     * @param unwrappedTileID - TileID of the tile the supplied coordinates belong to.
-     */
-    isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
-
-    /**
-     * @internal
-     */
-    getPixelScale(transform: { center: LngLat }): number;
-
-    /**
-     * @internal
-     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
-     * Circle radius and heatmap kernel radius is multiplied by this value.
-     */
-    getCircleRadiusCorrection(transform: { center: LngLat }): number;
-
-    /**
-     * @internal
-     * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
-     * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
-     * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
-     * @param textAnchor - Text anchor position inside the tile.
-     * @param tileID - The tile coordinates.
-     */
-    getPitchedTextCorrection(transform: { center: LngLat }, textAnchor: Point, tileID: UnwrappedTileID): number;
-
-    /**
-     * @internal
-     * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
-     */
-    translatePosition(transform: { angle: number; zoom: number }, tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
 
     /**
      * @internal
@@ -194,18 +108,4 @@ export interface Projection {
      * @param allowPoles - When true, the mesh will also include geometry to cover the north (south) pole, if the given tileID borders the mercator range's top (bottom) edge.
      */
     getMeshFromTileID(context: Context, tileID: CanonicalTileID, hasBorder: boolean, allowPoles: boolean): Mesh;
-
-    /**
-     * @internal
-     * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
-     * @param transform - Current map transform.
-     * @param dir - The light direction.
-     * @returns A new vector with the transformed light direction.
-     */
-    transformLightDirection(transform: { center: LngLat }, dir: vec3): vec3;
-    /**
-     * @internal
-     * Projects a point in tile coordinates. Used in symbol rendering.
-     */
-    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
 }

@@ -10,15 +10,12 @@ import {collisionUniformValues, collisionCircleUniformValues} from './program/co
 import {QuadTriangleArray, CollisionCircleLayoutArray} from '../data/array_types.g';
 import {collisionCircleLayout} from '../data/bucket/symbol_attributes';
 import {SegmentVector} from '../data/segment';
-import {mat4} from 'gl-matrix';
 import {VertexBuffer} from '../gl/vertex_buffer';
 import {IndexBuffer} from '../gl/index_buffer';
 
 type TileBatch = {
     circleArray: Array<number>;
     circleOffset: number;
-    transform: mat4;
-    invTransform: mat4;
     coord: OverscaledTileID;
 };
 
@@ -26,8 +23,8 @@ let quadTriangles: QuadTriangleArray;
 
 export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, layer: StyleLayer, coords: Array<OverscaledTileID>, isText: boolean) {
     const context = painter.context;
+    const transform = painter.transform;
     const gl = context.gl;
-    const projection = painter.style.projection;
     const program = painter.useProgram('collisionBox');
     const tileBatches: Array<TileBatch> = [];
     let circleCount = 0;
@@ -37,25 +34,16 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
         const coord = coords[i];
         const tile = sourceCache.getTile(coord);
         const bucket: SymbolBucket = (tile.getBucket(layer) as any);
-        if (!bucket) continue;
-        const posMatrix = coord.posMatrix; // This intentionally ignores "*-translate" and "*-translate-anchor" properties - collision boxes already incorporate them implicitly.
+        if (!bucket) {
+            continue;
+        }
         const buffers = isText ? bucket.textCollisionBox : bucket.iconCollisionBox;
         // Get collision circle data of this bucket
         const circleArray: Array<number> = bucket.collisionCircleArray;
         if (circleArray.length > 0) {
-            // We need to know the projection matrix that was used for projecting collision circles to the screen.
-            // This might vary between buckets as the symbol placement is a continuous process. This matrix is
-            // required for transforming points from previous screen space to the current one
-            const invTransform = mat4.create();
-
-            mat4.mul(invTransform, bucket.placementInvProjMatrix, painter.transform.glCoordMatrix);
-            mat4.mul(invTransform, invTransform, bucket.placementViewportMatrix);
-
             tileBatches.push({
                 circleArray,
                 circleOffset,
-                transform: posMatrix,
-                invTransform,
                 coord
             });
 
@@ -74,7 +62,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
             CullFaceMode.disabled,
             collisionUniformValues(painter.transform),
             painter.style.map.terrain && painter.style.map.terrain.getTerrainData(coord),
-            projection.getProjectionData(coord.canonical, posMatrix),
+            transform.getProjectionData(coord),
             layer.id, buffers.layoutVertexBuffer, buffers.indexBuffer,
             buffers.segments, null, painter.transform.zoom, null, null,
             buffers.collisionVertexBuffer);
@@ -118,11 +106,7 @@ export function drawCollisionDebug(painter: Painter, sourceCache: SourceCache, l
 
     // Render batches
     for (const batch of tileBatches) {
-        const uniforms = collisionCircleUniformValues(
-            batch.transform,
-            batch.invTransform,
-            painter.transform
-        );
+        const uniforms = collisionCircleUniformValues(painter.transform);
 
         circleProgram.draw(
             context,
