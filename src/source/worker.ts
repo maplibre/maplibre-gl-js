@@ -6,7 +6,9 @@ import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
+import {getFeaturePropertiesTransform, setFeaturePropertiesTransform} from './feature_properties_transform';
 import {PluginState} from './rtl_text_plugin_status';
+
 import type {
     WorkerSource,
     WorkerSourceConstructor,
@@ -80,6 +82,9 @@ export default class Worker {
 
         this.self.addProtocol = addProtocol;
         this.self.removeProtocol = removeProtocol;
+
+        this.self.getFeaturePropertiesTransform = getFeaturePropertiesTransform;
+        this.self.setFeaturePropertiesTransform = setFeaturePropertiesTransform;
 
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {

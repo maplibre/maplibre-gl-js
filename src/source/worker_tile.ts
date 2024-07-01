@@ -11,6 +11,8 @@ import {ImageAtlas} from '../render/image_atlas';
 import {GlyphAtlas} from '../render/glyph_atlas';
 import {EvaluationParameters} from '../style/evaluation_parameters';
 import {OverscaledTileID} from './tile_id';
+import {getFeaturePropertiesTransform} from './feature_properties_transform';
+import {VectorTileFeature} from '@mapbox/vector-tile';
 
 import type {Bucket} from '../data/bucket';
 import type {IActor} from '../util/actor';
@@ -81,6 +83,7 @@ export class WorkerTile {
         };
 
         const layerFamilies = layerIndex.familiesBySource[this.source];
+        const featurePropertiesTransform = getFeaturePropertiesTransform();
         for (const sourceLayerId in layerFamilies) {
             const sourceLayer = data.layers[sourceLayerId];
             if (!sourceLayer) {
@@ -96,6 +99,16 @@ export class WorkerTile {
             const features = [];
             for (let index = 0; index < sourceLayer.length; index++) {
                 const feature = sourceLayer.feature(index);
+                if (featurePropertiesTransform) {
+                    await featurePropertiesTransform({
+                        source: this.source,
+                        sourceLayer: sourceLayerId,
+                        tileID: this.tileID.toString(),
+                        geometryType: VectorTileFeature.types[feature.type],
+                        featureID: feature.id,
+                        properties: feature.properties
+                    });
+                }
                 const id = featureIndex.getId(feature, sourceLayerId);
                 features.push({feature, id, index, sourceLayerIndex});
             }
