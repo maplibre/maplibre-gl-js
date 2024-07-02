@@ -192,7 +192,7 @@ describe('GeoJSONSource#update', () => {
     transform.resize(200, 200);
     const lngLat = LngLat.convert([-122.486052, 37.830348]);
     const point = transform.locationPoint(lngLat);
-    transform.zoom = 15;
+    transform.setZoom(15);
     transform.setLocationAtPoint(lngLat, point);
 
     test('sends initial loadData request to dispatcher', done => {

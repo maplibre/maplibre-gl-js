@@ -106,17 +106,17 @@ describe('GlobeTransform', () => {
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 0, 8.110445867263898], precisionDigits);
 
             globeTransform.resize(512, 512);
-            globeTransform.zoom = -0.5;
-            globeTransform.center = new LngLat(0, 80);
+            globeTransform.setZoom(-0.5);
+            globeTransform.setCenter(new LngLat(0, 80));
             globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [0, 2.2818294674820794, 0.40234810049271963], precisionDigits);
 
-            globeTransform.pitch = 35;
-            globeTransform.bearing = 70;
+            globeTransform.setPitch(35);
+            globeTransform.setBearing(70);
             globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-0.7098603286961542, 2.002400604307631, 0.6154310261827212], precisionDigits);
 
-            globeTransform.center = new LngLat(-10, 42);
+            globeTransform.setCenter(new LngLat(-10, 42));
             globeTransform.newFrameUpdate();
             expectToBeCloseToArray(globeTransform.cameraPosition as Array<number>, [-3.8450970996236364, 2.9368285470351516, 4.311953269048194], precisionDigits);
         });
@@ -143,23 +143,23 @@ describe('GlobeTransform', () => {
             globeTransform.newFrameUpdate();
             let projected: Point;
 
-            globeTransform.center = new LngLat(0, 0);
+            globeTransform.setCenter(new LngLat(0, 0));
             projected = globeTransform.locationPoint(globeTransform.center);
             expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
             expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
 
-            globeTransform.center = new LngLat(70, 50);
+            globeTransform.setCenter(new LngLat(70, 50));
             projected = globeTransform.locationPoint(globeTransform.center);
             expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
             expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
 
-            globeTransform.center = new LngLat(0, 84);
+            globeTransform.setCenter(new LngLat(0, 84));
             projected = globeTransform.locationPoint(globeTransform.center);
             expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
             expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
 
             // Try projecting a location that is slightly above and below map's center point
-            globeTransform.center = new LngLat(0, 0);
+            globeTransform.setCenter(new LngLat(0, 0));
             projected = globeTransform.locationPoint(new LngLat(0, 1));
             expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
             expect(projected.y).toBeLessThan(screenCenter.y);
@@ -228,8 +228,8 @@ describe('GlobeTransform', () => {
             // Transform settings from the render test projection/globe/fill-planet-pole
             // See the expected result for how the globe should look with this transform.
             globeTransform.resize(512, 512);
-            globeTransform.zoom = -0.5;
-            globeTransform.center = new LngLat(0, 80);
+            globeTransform.setZoom(-0.5);
+            globeTransform.setCenter(new LngLat(0, 80));
             globeTransform.newFrameUpdate();
 
             let coords: LngLat;
@@ -258,8 +258,8 @@ describe('GlobeTransform', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
             // Try unprojection a point somewhere above the western horizon
-            globeTransform.pitch = 60;
-            globeTransform.bearing = -90;
+            globeTransform.setPitch(60);
+            globeTransform.setBearing(-90);
             globeTransform.newFrameUpdate();
             const unprojected = globeTransform.pointLocation(screenTopEdgeCenter);
             expect(unprojected.lng).toBeCloseTo(-34.699626794124015, precisionDigits);
@@ -269,7 +269,7 @@ describe('GlobeTransform', () => {
         test('setLocationAtPoint', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.zoom = 1;
+            globeTransform.setZoom(1);
             globeTransform.newFrameUpdate();
             let coords: LngLat;
             let point: Point;
@@ -321,8 +321,8 @@ describe('GlobeTransform', () => {
         test('setLocationAtPoint rotated', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.zoom = 1;
-            globeTransform.bearing = 90;
+            globeTransform.setZoom(1);
+            globeTransform.setBearing(90);
             globeTransform.newFrameUpdate();
             let coords: LngLat;
             let point: Point;
@@ -383,6 +383,6 @@ function planeDistance(point: Array<number>, plane: Array<number>) {
 function createGlobeTransform(globeProjection: GlobeProjection) {
     const globeTransform = new GlobeTransform(globeProjection);
     globeTransform.resize(640, 480);
-    globeTransform.fov = 45;
+    globeTransform.setFov(45);
     return globeTransform;
 }

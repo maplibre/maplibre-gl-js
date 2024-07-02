@@ -59,11 +59,11 @@ describe('getCameraTargetElevation', () => {
         map.terrain = terrainStub;
 
         const transform = new MercatorTransform(0, 22, 0, 60, true);
-        transform.elevation = 200;
-        transform.center = new LngLat(10.0, 50.0);
-        transform.zoom = 14;
+        transform.setElevation(200);
+        transform.setCenter(new LngLat(10.0, 50.0));
+        transform.setZoom(14);
         transform.resize(512, 512);
-        transform.elevation = 2000;
+        transform.setElevation(2000);
         map.transform = transform;
 
         expect(map.getCameraTargetElevation()).toBe(2000);

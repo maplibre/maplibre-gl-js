@@ -2154,7 +2154,7 @@ describe('queryTerrainElevation', () => {
     test('should return the correct elevation', () => {
         // Set up mock transform and terrain objects
         const transform = new MercatorTransform(0, 22, 0, 60, true);
-        transform.elevation = 50;
+        transform.setElevation(50);
         const terrain = {
             getElevationForLngLatZoom: jest.fn().mockReturnValue(200)
         } as any as Terrain;
