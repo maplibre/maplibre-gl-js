@@ -146,7 +146,7 @@ export abstract class Transform {
     get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
 
     get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
-    set minElevationForCurrentTile(ele: number) {
+    setMinElevationForCurrentTile(ele: number) {
         this._minElevationForCurrentTile = ele;
     }
 
