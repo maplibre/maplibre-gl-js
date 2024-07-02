@@ -1784,7 +1784,9 @@ describe('#flyTo', () => {
         };
         camera.transform = {
             elevation: 0,
-            recalculateZoom: () => true
+            recalculateZoom: () => true,
+            setMinElevationForCurrentTile: (_a) => true,
+            setElevation: (e) => { camera.transform.elevation = e; }
         };
 
         camera._prepareElevation([10, 0]);
