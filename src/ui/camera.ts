@@ -226,13 +226,7 @@ export type AnimationOptions = {
 /**
  * A callback hook that allows manipulating the camera and being notified about camera updates before they happen
  */
-export type CameraUpdateTransformFunction =  (next: {
-    center: LngLat;
-    zoom: number;
-    pitch: number;
-    bearing: number;
-    elevation: number;
-}) => {
+export type CameraUpdateTransformFunction =  (next: Transform) => {
     center?: LngLat;
     zoom?: number;
     pitch?: number;
@@ -308,10 +302,6 @@ export abstract class Camera extends Evented {
         this._zooming = false;
         this.transform = transform;
         this._bearingSnap = options.bearingSnap;
-
-        this.on('moveend', () => {
-            delete this._requestedCameraState;
-        });
     }
 
     /**
@@ -1098,10 +1088,7 @@ export abstract class Camera extends Evented {
      */
     _getTransformForUpdate(): Transform {
         if (!this.transformCameraUpdate) return this.transform;
-
-        if (!this._requestedCameraState) {
-            this._requestedCameraState = this.transform.clone();
-        }
+        this._requestedCameraState = this.transform.clone();
         return this._requestedCameraState;
     }
 
@@ -1128,6 +1115,7 @@ export abstract class Camera extends Evented {
         if (bearing !== undefined) nextTransform.bearing = bearing;
         if (elevation !== undefined) nextTransform.elevation = elevation;
         this.transform.apply(nextTransform);
+        delete this._requestedCameraState;
     }
 
     _fireMoveEvents(eventData?: any) {
