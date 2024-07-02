@@ -6,8 +6,8 @@ import {rtlWorkerPlugin, RTLTextPlugin} from './rtl_text_plugin_worker';
 import {GeoJSONWorkerSource, LoadGeoJSONParameters} from './geojson_worker_source';
 import {isWorker} from '../util/util';
 import {addProtocol, removeProtocol} from './protocol_crud';
-import {getFeaturePropertiesTransform, setFeaturePropertiesTransform} from './feature_properties_transform';
 import {PluginState} from './rtl_text_plugin_status';
+import {WorkerTile} from './worker_tile';
 
 import type {
     WorkerSource,
@@ -26,6 +26,7 @@ import {
     type RemoveSourceParams,
     type UpdateLayersParamaeters
 } from '../util/actor_messages';
+import type {FeaturePropertiesTransform} from './feature_properties_transform';
 
 /**
  * The Worker class responsible for background thread related execution
@@ -83,15 +84,16 @@ export default class Worker {
         this.self.addProtocol = addProtocol;
         this.self.removeProtocol = removeProtocol;
 
-        this.self.getFeaturePropertiesTransform = getFeaturePropertiesTransform;
-        this.self.setFeaturePropertiesTransform = setFeaturePropertiesTransform;
-
         // This is invoked by the RTL text plugin when the download via the `importScripts` call has finished, and the code has been parsed.
         this.self.registerRTLTextPlugin = (rtlTextPlugin: RTLTextPlugin) => {
             if (rtlWorkerPlugin.isParsed()) {
                 throw new Error('RTL text plugin already registered.');
             }
             rtlWorkerPlugin.setMethods(rtlTextPlugin);
+        };
+
+        this.self.setFeaturePropertiesTransform = (featurePropertiesTransform: FeaturePropertiesTransform) => {
+            WorkerTile.featurePropertiesTransform = featurePropertiesTransform;
         };
 
         this.actor.registerMessageHandler(MessageType.loadDEMTile, (mapId: string, params: WorkerDEMTileParameters) => {

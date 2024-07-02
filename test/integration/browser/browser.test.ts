@@ -400,4 +400,29 @@ describe('Browser tests', () => {
         await expect(rtlPromise).rejects.toThrow(regex);
 
     }, 2000);
+
+    test('Set Feature Properties Transform should update feature properties', async () => {
+
+        const name = page.evaluate(() => {
+            const transform = `
+                const featurePropertiesTransform = ({_,__,___,____,_____,properties}) => {
+                    if (properties === null) return;
+                    if ('NAME' in properties) {
+                        properties['NAME'] = properties['NAME'].split('').reverse().join('');
+                    }
+                };
+                self.setFeaturePropertiesTransform(featurePropertiesTransform);
+            `;
+            const decodedString = decodeURIComponent(transform);
+            const blob = new Blob([decodedString], {type: 'application/javascript'});
+            const workerUrl = URL.createObjectURL(blob);
+            maplibregl.importScriptInWorkers(workerUrl);
+            map.redraw();
+            const features = map.querySourceFeatures('land');
+            return features[0].properties.NAME;
+        });
+
+        expect(name).toBe('eman');
+
+    }, 20000);
 });
