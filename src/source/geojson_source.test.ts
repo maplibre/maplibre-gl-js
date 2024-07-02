@@ -1,7 +1,7 @@
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
-import {Transform} from '../geo/transform';
+import {ITransform} from '../geo/transform';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
 import {Dispatcher} from '../util/dispatcher';
@@ -390,7 +390,7 @@ describe('GeoJSONSource#update', () => {
 
         const source = new GeoJSONSource('id', {data: {}} as GeoJSONSourceOptions, mockDispatcher, undefined);
         source.map = {
-            transform: {} as Transform,
+            transform: {} as ITransform,
             getPixelRatio() { return 1; },
             style: {
                 projection: {

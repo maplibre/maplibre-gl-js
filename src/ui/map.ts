@@ -60,7 +60,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {Transform} from '../geo/transform';
+import {ITransform} from '../geo/transform';
 
 const version = packageJSON.version;
 
@@ -2960,7 +2960,7 @@ export class Map extends Camera {
         webpSupported.testSupport(gl);
     }
 
-    override migrateProjection(newTransform: Transform) {
+    override migrateProjection(newTransform: ITransform) {
         super.migrateProjection(newTransform);
         this.painter.transform = newTransform;
     }

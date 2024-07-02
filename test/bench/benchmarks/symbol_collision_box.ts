@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {Transform} from '../../../src/geo/transform';
+import {ITransform} from '../../../src/geo/transform';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
 import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
@@ -35,7 +35,7 @@ function splitmix32(a) {
 }
 
 export default class SymbolCollisionBox extends Benchmark {
-    private _transform: Transform;
+    private _transform: ITransform;
     private _symbols: Array<TestSymbol>;
 
     async setup(): Promise<void> {

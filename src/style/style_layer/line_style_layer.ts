@@ -13,7 +13,7 @@ import {isZoomExpression, Step} from '@maplibre/maplibre-gl-style-spec';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {LineLayoutProps, LinePaintProps} from './line_style_layer_properties.g';
-import type {Transform} from '../../geo/transform';
+import type {ITransform} from '../../geo/transform';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class LineFloorwidthProperty extends DataDrivenProperty<number> {
@@ -99,7 +99,7 @@ export class LineStyleLayer extends StyleLayer {
         featureState: FeatureState,
         geometry: Array<Array<Point>>,
         zoom: number,
-        transform: Transform,
+        transform: ITransform,
         pixelsToTileUnits: number
     ): boolean {
         const translatedPolygon = translate(queryGeometry,

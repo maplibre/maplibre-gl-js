@@ -35,7 +35,7 @@ import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform';
 import type {Style} from '../style/style';
 import type {StyleLayer} from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';
@@ -67,7 +67,7 @@ type PainterOptions = {
  */
 export class Painter {
     context: Context;
-    transform: Transform;
+    transform: ITransform;
     renderToTexture: RenderToTexture;
     _tileTextures: {
         [_: number]: Array<Texture>;
@@ -117,7 +117,7 @@ export class Painter {
     // every time the camera-matrix changes the terrain-facilitators will be redrawn.
     terrainFacilitator: {dirty: boolean; matrix: mat4; renderTime: number};
 
-    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: Transform) {
+    constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, transform: ITransform) {
         this.context = new Context(gl);
         this.transform = transform;
         this._tileTextures = {};

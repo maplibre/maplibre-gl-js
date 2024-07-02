@@ -5,7 +5,7 @@ import * as symbolSize from './symbol_size';
 import {addDynamicAttributes} from '../data/bucket/symbol_bucket';
 
 import type {Painter} from '../render/painter';
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform';
 import type {SymbolBucket} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
@@ -94,7 +94,7 @@ export type PointProjection = {
 
 export function getPitchedLabelPlaneMatrix(
     rotateWithMap: boolean,
-    transform: Transform,
+    transform: ITransform,
     pixelsToTileUnits: number) {
     const m = mat4.create();
     mat4.scale(m, m, [1 / pixelsToTileUnits, 1 / pixelsToTileUnits, 1]);
@@ -111,7 +111,7 @@ export function getPitchedLabelPlaneMatrix(
 export function getGlCoordMatrix(
     pitchWithMap: boolean,
     rotateWithMap: boolean,
-    transform: Transform,
+    transform: ITransform,
     pixelsToTileUnits: number) {
     if (pitchWithMap) {
         const m = mat4.create();
@@ -494,7 +494,7 @@ export type SymbolProjectionContext = {
      * True when line glyphs are projected onto the map, instead of onto the viewport.
      */
     pitchWithMap: boolean;
-    transform: Transform;
+    transform: ITransform;
     unwrappedTileID: UnwrappedTileID;
     /**
      * Viewport width.

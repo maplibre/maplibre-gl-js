@@ -10,7 +10,7 @@ import {drawSymbols} from './draw_symbol';
 import * as symbolProjection from '../symbol/projection';
 import type {ZoomHistory} from '../style/zoom_history';
 import type {Map} from '../ui/map';
-import {Transform} from '../geo/transform';
+import {ITransform} from '../geo/transform';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
@@ -245,5 +245,5 @@ function createMockTransform() {
         translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
             return translatePosition({angle: 0, zoom: 0}, tile, translate, translateAnchor);
         }
-    } as any as Transform;
+    } as any as ITransform;
 }

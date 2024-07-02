@@ -1,7 +1,7 @@
 import {Uniform2f} from '../uniform_binding';
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Transform} from '../../geo/transform';
+import type {ITransform} from '../../geo/transform';
 
 export type CollisionUniformsType = {
     'u_pixel_extrude_scale': Uniform2f;
@@ -25,7 +25,7 @@ const collisionUniformValues = (transform: {width: number; height: number}): Uni
     };
 };
 
-const collisionCircleUniformValues = (transform: Transform): UniformValues<CollisionCircleUniformsType> => {
+const collisionCircleUniformValues = (transform: ITransform): UniformValues<CollisionCircleUniformsType> => {
     return {
         'u_viewport_size': [transform.width, transform.height]
     };

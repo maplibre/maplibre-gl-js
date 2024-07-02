@@ -9,7 +9,7 @@ import {Terrain} from '../render/terrain';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
 import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_transform';
 
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform';
 import type {LngLatLike} from '../geo/lng_lat';
 import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
@@ -242,7 +242,7 @@ export type CameraUpdateTransformFunction =  (next: {
 };
 
 export abstract class Camera extends Evented {
-    transform: Transform;
+    transform: ITransform;
     terrain: Terrain;
     handlers: HandlerManager;
 
@@ -291,7 +291,7 @@ export abstract class Camera extends Evented {
      * @internal
      * Used to track accumulated changes during continuous interaction
      */
-    _requestedCameraState?: Transform;
+    _requestedCameraState?: ITransform;
     /**
      * A callback used to defer camera updates or apply arbitrary constraints.
      * If specified, this Camera instance can be used as a stateless component in React etc.
@@ -301,7 +301,7 @@ export abstract class Camera extends Evented {
     abstract _requestRenderFrame(a: () => void): TaskID;
     abstract _cancelRenderFrame(_: TaskID): void;
 
-    constructor(transform: Transform, options: {
+    constructor(transform: ITransform, options: {
         bearingSnap: number;
     }) {
         super();
@@ -321,7 +321,7 @@ export abstract class Camera extends Evented {
      * to this new transform, carrying over all the properties of the old transform (center, pitch, etc.).
      * When the style's projection is changed (or first set), this function should be called.
      */
-    migrateProjection(newTransform: Transform) {
+    migrateProjection(newTransform: ITransform) {
         newTransform.apply(this.transform);
         this.transform = newTransform;
     }
@@ -1108,7 +1108,7 @@ export abstract class Camera extends Evented {
      * It may differ from the state used for rendering (`this.transform`).
      * @returns Transform to apply changes to
      */
-    _getTransformForUpdate(): Transform {
+    _getTransformForUpdate(): ITransform {
         if (!this.transformCameraUpdate) return this.transform;
 
         if (!this._requestedCameraState) {
@@ -1123,7 +1123,7 @@ export abstract class Camera extends Evented {
      * @param tr - the requested camera end state
      * Call `transformCameraUpdate` if present, and then apply the "approved" changes.
      */
-    _applyUpdatedTransform(tr: Transform) {
+    _applyUpdatedTransform(tr: ITransform) {
         if (!this.transformCameraUpdate) return;
 
         const nextTransform = tr.clone();

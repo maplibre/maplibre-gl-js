@@ -10,7 +10,7 @@ import {Sky} from '../style/sky';
 import {Light} from '../style/light';
 import {Mesh} from './mesh';
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {Transform} from '../geo/transform';
+import {ITransform} from '../geo/transform';
 import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
 import {Context} from '../gl/context';
@@ -57,7 +57,7 @@ export function drawSky(painter: Painter, sky: Sky) {
         mesh.indexBuffer, mesh.segments);
 }
 
-function getSunPos(light: Light, transform: Transform): vec3 {
+function getSunPos(light: Light, transform: ITransform): vec3 {
     const _lp = light.properties.get('position');
     const lightPos = [-_lp.x, -_lp.y, -_lp.z] as vec3;
 

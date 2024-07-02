@@ -4,7 +4,7 @@ import {extend} from '../../util/util';
 
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {Transform} from '../../geo/transform';
+import type {ITransform} from '../../geo/transform';
 import type {Tile} from '../../source/tile';
 import type {CrossFaded} from '../../style/properties';
 import type {LineStyleLayer} from '../../style/style_layer/line_style_layer';
@@ -181,7 +181,7 @@ const lineSDFUniformValues = (
     });
 };
 
-function calculateTileRatio(tile: Tile, transform: Transform) {
+function calculateTileRatio(tile: Tile, transform: ITransform) {
     return 1 / pixelsToTileUnits(tile, 1, transform.tileZoom);
 }
 

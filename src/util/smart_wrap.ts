@@ -1,7 +1,7 @@
 import {LngLat} from '../geo/lng_lat';
 
 import type Point from '@mapbox/point-geometry';
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform';
 
 /**
  * Given a LngLat, prior projected position, and a transform, return a new LngLat shifted
@@ -16,7 +16,7 @@ import type {Transform} from '../geo/transform';
  * map center changes by ±360° due to automatic wrapping, and when about to go off screen,
  * should wrap just enough to avoid doing so.
  */
-export function smartWrap(lngLat: LngLat, priorPos: Point, transform: Transform): LngLat {
+export function smartWrap(lngLat: LngLat, priorPos: Point, transform: ITransform): LngLat {
     const originalLngLat = new LngLat(lngLat.lng, lngLat.lat);
     lngLat = new LngLat(lngLat.lng, lngLat.lat);
 

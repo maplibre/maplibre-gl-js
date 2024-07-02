@@ -8,7 +8,7 @@ import {getAnchorAlignment, WritingMode} from './shaping';
 import {mat4} from 'gl-matrix';
 import {pixelsToTileUnits} from '../source/pixels_to_tile_units';
 import Point from '@mapbox/point-geometry';
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform';
 import type {StyleLayer} from '../style/style_layer';
 import {PossiblyEvaluated} from '../style/properties';
 import type {SymbolLayoutProps, SymbolLayoutPropsPossiblyEvaluated} from '../style/style_layer/symbol_style_layer_properties.g';
@@ -177,7 +177,7 @@ export type BucketPart = {
 export type CrossTileID = string | number;
 
 export class Placement {
-    transform: Transform;
+    transform: ITransform;
     terrain: Terrain;
     collisionIndex: CollisionIndex;
     placements: {
@@ -211,7 +211,7 @@ export class Placement {
         icon: number[];
     }>>;
 
-    constructor(transform: Transform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
+    constructor(transform: ITransform, terrain: Terrain, fadeDuration: number, crossSourceCollisions: boolean, prevPlacement?: Placement) {
         this.transform = transform.clone();
         this.terrain = terrain;
         this.collisionIndex = new CollisionIndex(this.transform);

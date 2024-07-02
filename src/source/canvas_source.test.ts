@@ -1,5 +1,5 @@
 import {CanvasSource} from '../source/canvas_source';
-import {Transform} from '../geo/transform';
+import {ITransform} from '../geo/transform';
 import {Event, Evented} from '../util/evented';
 import {extend} from '../util/util';
 
@@ -26,7 +26,7 @@ function createSource(options?) {
 }
 
 class StubMap extends Evented {
-    transform: Transform;
+    transform: ITransform;
     style: any;
     painter: any;
 

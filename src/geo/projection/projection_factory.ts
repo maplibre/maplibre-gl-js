@@ -3,13 +3,13 @@ import {warnOnce} from '../../util/util';
 import {Projection} from './projection';
 import {GlobeProjection} from './globe';
 import {MercatorProjection} from './mercator';
-import {Transform} from '../transform';
+import {ITransform} from '../transform';
 import {MercatorTransform} from './mercator_transform';
 import {GlobeTransform} from './globe_transform';
 
 export function createProjectionFromName(name: ProjectionSpecification['type']): {
     projection: Projection;
-    transform: Transform;
+    transform: ITransform;
 } {
     switch (name) {
         case 'mercator':

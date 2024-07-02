@@ -16,7 +16,7 @@ import type {Source} from './source';
 import type {Map} from '../ui/map';
 import type {Style} from '../style/style';
 import type {Dispatcher} from '../util/dispatcher';
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform';
 import type {TileState} from './tile';
 import type {SourceSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapSourceDataEvent} from '../ui/events';
@@ -64,7 +64,7 @@ export class SourceCache extends Evented {
     _paused: boolean;
     _shouldReloadOnResume: boolean;
     _coveredTiles: {[_: string]: boolean};
-    transform: Transform;
+    transform: ITransform;
     terrain: Terrain;
     used: boolean;
     usedForTerrain: boolean;
@@ -438,7 +438,7 @@ export class SourceCache extends Evented {
      * are more likely to be found on devices with more memory and on pages where
      * the map is more important.
      */
-    updateCacheSize(transform: Transform) {
+    updateCacheSize(transform: ITransform) {
         const widthInTiles = Math.ceil(transform.width / this._source.tileSize) + 1;
         const heightInTiles = Math.ceil(transform.height / this._source.tileSize) + 1;
         const approxTilesInView = widthInTiles * heightInTiles;
@@ -587,7 +587,7 @@ export class SourceCache extends Evented {
      * Removes tiles that are outside the viewport and adds new tiles that
      * are inside the viewport.
      */
-    update(transform: Transform, terrain?: Terrain) {
+    update(transform: ITransform, terrain?: Terrain) {
         if (!this._sourceLoaded || this._paused) {
             return;
         }

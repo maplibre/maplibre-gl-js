@@ -1,6 +1,6 @@
 import {browser} from '../util/browser';
 import {Placement} from '../symbol/placement';
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform';
 import type {StyleLayer} from './style_layer';
 import type {SymbolStyleLayer} from './style_layer/symbol_style_layer';
 import type {Tile} from '../source/tile';
@@ -67,7 +67,7 @@ export class PauseablePlacement {
     _inProgressLayer: LayerPlacement;
 
     constructor(
-        transform: Transform,
+        transform: ITransform,
         terrain: Terrain,
         order: Array<string>,
         forceFullPlacement: boolean,

@@ -6,11 +6,11 @@ import type {Coordinates} from './image_source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
-import {Transform} from '../geo/transform';
+import {ITransform} from '../geo/transform';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class StubMap extends Evented {
-    transform: Transform;
+    transform: ITransform;
     style: any;
     painter: any;
 

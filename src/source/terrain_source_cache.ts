@@ -3,7 +3,7 @@ import {Tile} from './tile';
 import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
-import type {Transform} from '../geo/transform';
+import type {ITransform} from '../geo/transform';
 import type {SourceCache} from '../source/source_cache';
 import {Terrain} from '../render/terrain';
 import {browser} from '../util/browser';
@@ -80,7 +80,7 @@ export class TerrainSourceCache extends Evented {
      * @param transform - the operation to do
      * @param terrain - the terrain
      */
-    update(transform: Transform, terrain: Terrain): void {
+    update(transform: ITransform, terrain: Terrain): void {
         // load raster-dem tiles for the current scene.
         this.sourceCache.update(transform, terrain);
         // create internal render-to-texture tiles for the current scene.

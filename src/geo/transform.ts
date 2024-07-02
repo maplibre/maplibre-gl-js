@@ -24,10 +24,10 @@ export type TransformUpdateResult = {forcePlacementUpdate: boolean};
  * This data should be transferable to a transform implementation for any different projection,
  * hence the implementation of `Transform.apply`, which works on any Transform and accepts any Transform.
  */
-export interface Transform {
-    clone(): Transform;
+export interface ITransform {
+    clone(): ITransform;
 
-    apply(that: Transform): void;
+    apply(that: ITransform): void;
 
     /**
      * @internal
