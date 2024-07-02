@@ -275,7 +275,7 @@ export class MercatorTransform extends Transform {
         // update matrices
         this._elevation = elevation;
         this._center = center;
-        this.zoom = zoom;
+        this.setZoom(zoom);
     }
 
     /**
@@ -290,9 +290,9 @@ export class MercatorTransform extends Transform {
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
             loc.y - (a.y - b.y));
-        this.center = this.coordinateLocation(newCenter);
+        this.setCenter(this.coordinateLocation(newCenter));
         if (this._renderWorldCopies) {
-            this.center = this.center.wrap();
+            this.setCenter(this.center.wrap());
         }
     }
 

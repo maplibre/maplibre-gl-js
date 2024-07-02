@@ -858,25 +858,25 @@ export abstract class Camera extends Evented {
 
         if ('zoom' in options && tr.zoom !== +options.zoom) {
             zoomChanged = true;
-            tr.zoom = +options.zoom;
+            tr.setZoom(+options.zoom);
         }
 
         if (options.center !== undefined) {
-            tr.center = LngLat.convert(options.center);
+            tr.setCenter(LngLat.convert(options.center));
         }
 
         if ('bearing' in options && tr.bearing !== +options.bearing) {
             bearingChanged = true;
-            tr.bearing = +options.bearing;
+            tr.setBearing(+options.bearing);
         }
 
         if ('pitch' in options && tr.pitch !== +options.pitch) {
             pitchChanged = true;
-            tr.pitch = +options.pitch;
+            tr.setPitch(+options.pitch);
         }
 
         if (options.padding != null && !tr.isPaddingEqual(options.padding)) {
-            tr.padding = options.padding;
+            tr.setPadding(options.padding);
         }
         this._applyUpdatedTransform(tr);
 
@@ -1018,13 +1018,13 @@ export abstract class Camera extends Evented {
 
         this._ease((k) => {
             if (this._zooming) {
-                tr.zoom = interpolates.number(startZoom, zoom, k);
+                tr.setZoom(interpolates.number(startZoom, zoom, k));
             }
             if (this._rotating) {
-                tr.bearing = interpolates.number(startBearing, bearing, k);
+                tr.setBearing(interpolates.number(startBearing, bearing, k));
             }
             if (this._pitching) {
-                tr.pitch = interpolates.number(startPitch, pitch, k);
+                tr.setPitch(interpolates.number(startPitch, pitch, k));
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding as PaddingOptions, k);
@@ -1092,7 +1092,7 @@ export abstract class Camera extends Evented {
             this._elevationStart += k * (pitch1 - pitch2);
             this._elevationTarget = elevation;
         }
-        this.transform.elevation = interpolates.number(this._elevationStart, this._elevationTarget, k);
+        this.transform.setElevation(interpolates.number(this._elevationStart, this._elevationTarget, k));
     }
 
     _finalizeElevation() {
@@ -1134,11 +1134,11 @@ export abstract class Camera extends Evented {
             bearing,
             elevation
         } = this.transformCameraUpdate(nextTransform);
-        if (center) nextTransform.center = center;
-        if (zoom !== undefined) nextTransform.zoom = zoom;
-        if (pitch !== undefined) nextTransform.pitch = pitch;
-        if (bearing !== undefined) nextTransform.bearing = bearing;
-        if (elevation !== undefined) nextTransform.elevation = elevation;
+        if (center) nextTransform.setCenter(center);
+        if (zoom !== undefined) nextTransform.setZoom(zoom);
+        if (pitch !== undefined) nextTransform.setPitch(pitch);
+        if (bearing !== undefined) nextTransform.setBearing(bearing);
+        if (elevation !== undefined) nextTransform.setElevation(elevation);
         this.transform.apply(nextTransform);
     }
 
@@ -1355,13 +1355,13 @@ export abstract class Camera extends Evented {
             // s: The distance traveled along the flight path, measured in ρ-screenfuls.
             const s = k * S;
             const scale = 1 / w(s);
-            tr.zoom = k === 1 ? zoom : startZoom + tr.scaleZoom(scale);
+            tr.setZoom(k === 1 ? zoom : startZoom + tr.scaleZoom(scale));
 
             if (this._rotating) {
-                tr.bearing = interpolates.number(startBearing, bearing, k);
+                tr.setBearing(interpolates.number(startBearing, bearing, k));
             }
             if (this._pitching) {
-                tr.pitch = interpolates.number(startPitch, pitch, k);
+                tr.setPitch(interpolates.number(startPitch, pitch, k));
             }
             if (this._padding) {
                 tr.interpolatePadding(startPadding, padding as PaddingOptions, k);

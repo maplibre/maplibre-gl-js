@@ -323,11 +323,11 @@ export class GlobeTransform extends Transform {
         this._globeness = easeCubicInOut(this._globeness); // Smooth animation
 
         if (oldGlobeness !== this._globeness) {
-            this.center = new LngLat(
+            this.setCenter(new LngLat(
                 this._mercatorTransform.center.lng + differenceOfAnglesDegrees(this._mercatorTransform.center.lng, this.center.lng) * this._globeness,
                 lerp(this._mercatorTransform.center.lat, this.center.lat, this._globeness)
-            );
-            this.zoom = lerp(this._mercatorTransform.zoom, this.zoom, this._globeness);
+            ));
+            this.setZoom(lerp(this._mercatorTransform.zoom, this.zoom, this._globeness));
         }
     }
 
@@ -813,8 +813,8 @@ export class GlobeTransform extends Transform {
         const newLng = validLng / Math.PI * 180;
         const newLat = validLat / Math.PI * 180;
         const oldLat = this.center.lat;
-        this.center = new LngLat(newLng, clamp(newLat, -90, 90));
-        this.zoom += getZoomAdjustment(this, oldLat, this.center.lat);
+        this.setCenter(new LngLat(newLng, clamp(newLat, -90, 90)));
+        this.setZoom(this.zoom + getZoomAdjustment(this, oldLat, this.center.lat));
     }
 
     override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {

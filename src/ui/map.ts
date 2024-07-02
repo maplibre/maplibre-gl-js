@@ -579,19 +579,19 @@ export class Map extends Camera {
         // When this happens, the new transform will inherit all properties of this temporary transform.
         const transform = new MercatorTransform();
         if (resolvedOptions.minZoom !== undefined) {
-            transform.minZoom = resolvedOptions.minZoom;
+            transform.setMinZoom(resolvedOptions.minZoom);
         }
         if (resolvedOptions.maxZoom !== undefined) {
-            transform.maxZoom = resolvedOptions.maxZoom;
+            transform.setMaxZoom(resolvedOptions.maxZoom);
         }
         if (resolvedOptions.minPitch !== undefined) {
-            transform.minPitch = resolvedOptions.minPitch;
+            transform.setMinPitch(resolvedOptions.minPitch);
         }
         if (resolvedOptions.maxPitch !== undefined) {
-            transform.maxPitch = resolvedOptions.maxPitch;
+            transform.setMaxPitch(resolvedOptions.maxPitch);
         }
         if (resolvedOptions.renderWorldCopies !== undefined) {
-            transform.renderWorldCopies = resolvedOptions.renderWorldCopies;
+            transform.setRenderWorldCopies(resolvedOptions.renderWorldCopies);
         }
 
         super(transform, {bearingSnap: resolvedOptions.bearingSnap});
@@ -986,7 +986,7 @@ export class Map extends Camera {
         minZoom = minZoom === null || minZoom === undefined ? defaultMinZoom : minZoom;
 
         if (minZoom >= defaultMinZoom && minZoom <= this.transform.maxZoom) {
-            this.transform.minZoom = minZoom;
+            this.transform.setMinZoom(minZoom);
             this._update();
 
             if (this.getZoom() < minZoom) this.setZoom(minZoom);
@@ -1026,7 +1026,7 @@ export class Map extends Camera {
         maxZoom = maxZoom === null || maxZoom === undefined ? defaultMaxZoom : maxZoom;
 
         if (maxZoom >= this.transform.minZoom) {
-            this.transform.maxZoom = maxZoom;
+            this.transform.setMaxZoom(maxZoom);
             this._update();
 
             if (this.getZoom() > maxZoom) this.setZoom(maxZoom);
@@ -1066,7 +1066,7 @@ export class Map extends Camera {
         }
 
         if (minPitch >= defaultMinPitch && minPitch <= this.transform.maxPitch) {
-            this.transform.minPitch = minPitch;
+            this.transform.setMinPitch(minPitch);
             this._update();
 
             if (this.getPitch() < minPitch) this.setPitch(minPitch);
@@ -1102,7 +1102,7 @@ export class Map extends Camera {
         }
 
         if (maxPitch >= this.transform.minPitch) {
-            this.transform.maxPitch = maxPitch;
+            this.transform.setMaxPitch(maxPitch);
             this._update();
 
             if (this.getPitch() > maxPitch) this.setPitch(maxPitch);
@@ -1153,7 +1153,7 @@ export class Map extends Camera {
      * @see [Render world copies](https://maplibre.org/maplibre-gl-js/docs/examples/render-world-copies/)
      */
     setRenderWorldCopies(renderWorldCopies?: boolean | null): Map {
-        this.transform.renderWorldCopies = renderWorldCopies;
+        this.transform.setRenderWorldCopies(renderWorldCopies);
         return this._update();
     }
 
@@ -1937,7 +1937,7 @@ export class Map extends Camera {
             if (this.painter.renderToTexture) this.painter.renderToTexture.destruct();
             this.painter.renderToTexture = null;
             this.transform.minElevationForCurrentTile = 0;
-            this.transform.elevation = 0;
+            this.transform.setElevation(0);
         } else {
             // add terrain
             const sourceCache = this.style.sourceCaches[options.source];
@@ -1954,14 +1954,14 @@ export class Map extends Camera {
             this.terrain = new Terrain(this.painter, sourceCache, options);
             this.painter.renderToTexture = new RenderToTexture(this.painter, this.terrain);
             this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
-            this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+            this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             this._terrainDataCallback = e => {
                 if (e.dataType === 'style') {
                     this.terrain.sourceCache.freeRtt();
                 } else if (e.dataType === 'source' && e.tile) {
                     if (e.sourceId === options.source && !this._elevationFreeze) {
                         this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
-                        this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+                        this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
                     }
                     this.terrain.sourceCache.freeRtt(e.tile.tileID);
                 }
@@ -3099,11 +3099,11 @@ export class Map extends Camera {
             this.terrain.sourceCache.update(this.transform, this.terrain);
             this.transform.minElevationForCurrentTile = this.terrain.getMinTileElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
             if (!this._elevationFreeze) {
-                this.transform.elevation = this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom);
+                this.transform.setElevation(this.terrain.getElevationForLngLatZoom(this.transform.center, this.transform.tileZoom));
             }
         } else {
             this.transform.minElevationForCurrentTile = 0;
-            this.transform.elevation = 0;
+            this.transform.setElevation(0);
         }
 
         const transformUpdateResult = this.transform.newFrameUpdate();
