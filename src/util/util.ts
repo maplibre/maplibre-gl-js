@@ -5,6 +5,24 @@ import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
+ * Modulo function, as opposed to javascript's `%`, which is a remainder.
+ * This functions will return positive values, even if the first operand is negative.
+ */
+export function mod(n, m) {
+    return ((n % m) + m) % m;
+}
+
+/**
+ * Linearly interpolate between two values, similar to `mix` function from GLSL. No clamping is done.
+ * @param a - The first value to interpolate. This value is returned when mix=0.
+ * @param b - The second value to interpolate. This value is returned when mix=1.
+ * @param mix - The interpolation factor. Range 0..1 interpolates between `a` and `b`, but values outside this range are also accepted.
+ */
+export function lerp(a: number, b: number, mix: number): number {
+    return a * (1.0 - mix) + b * mix;
+}
+
+/**
  * For a given collection of 2D points, returns their axis-aligned bounding box,
  * in the format [minX, minY, maxX, maxY].
  */

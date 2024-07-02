@@ -47,6 +47,7 @@ export class Sky extends Evented {
      * This is used to cache the gl mesh for the sky, it should be initialized only once.
      */
     mesh: Mesh | undefined;
+    atmosphereMesh: Mesh | undefined;
     _transitionable: Transitionable<SkyProps>;
     _transitioning: Transitioning<SkyProps>;
 

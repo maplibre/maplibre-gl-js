@@ -1,0 +1,140 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "height": 256,
+      "width": 256
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "zoom": 1,
+  "pitch": 30,
+  "bearing": 45,
+  "glyphs": "local://glyphs/{fontstack}/{range}.pbf",
+  "projection": { "type": "globe" },
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "data": {
+        "type": "Feature",
+        "geometry": {
+          "type": "MultiPoint",
+          "coordinates": [
+            [
+              0,
+              -80
+            ],
+            [
+              0,
+              -60
+            ],
+            [
+              0,
+              -40
+            ],
+            [
+              0,
+              -20
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              20
+            ],
+            [
+              0,
+              40
+            ],
+            [
+              0,
+              60
+            ],
+            [
+              0,
+              80
+            ],
+            [
+              80,
+              0
+            ],
+            [
+              60,
+              0
+            ],
+            [
+              40,
+              0
+            ],
+            [
+              20,
+              0
+            ],
+            [
+              -20,
+              0
+            ],
+            [
+              -40,
+              0
+            ],
+            [
+              -60,
+              0
+            ],
+            [
+              -80,
+              0
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "circle",
+      "type": "circle",
+      "source": "geojson",
+      "paint": {
+        "circle-radius": 3,
+        "circle-color": "blue"
+      }
+    },
+    {
+      "id": "text",
+      "type": "symbol",
+      "source": "geojson",
+      "layout": {
+        "text-field": "TEST",
+        "text-font": [
+          "Open Sans Semibold",
+          "Arial Unicode MS Bold"
+        ],
+        "text-offset": [
+          0,
+          0.6
+        ],
+        "text-anchor": "left"
+      },
+      "paint": {
+        "text-translate": [
+          10,
+          0
+        ],
+        "text-translate-anchor": "map"
+      }
+    }
+  ]
+}

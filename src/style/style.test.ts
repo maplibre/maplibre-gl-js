@@ -557,6 +557,20 @@ describe('Style#_load', () => {
         style._load(styleSpec, {validate: false});
         expect(style._serializedLayers).toBeNull();
     });
+
+    test('projection is mercator if not specified', () => {
+        const style = new Style(getStubMap());
+        const styleSpec = createStyleJSON({
+            layers: [{
+                id: 'background',
+                type: 'background'
+            }]
+        });
+
+        style._load(styleSpec, {validate: false});
+        expect(style.projection.name).toBe('mercator');
+        expect(style.serialize().projection).toBeUndefined();
+    });
 });
 
 describe('Style#_remove', () => {
@@ -649,6 +663,7 @@ describe('Style#setState', () => {
         spys.push(jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setLayerZoomRange').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setLight').mockImplementation((() => {}) as any));
+        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
         await style.once('style.load');
         const didChange = style.setState(createStyleJSON());
         expect(didChange).toBeFalsy();
@@ -677,6 +692,9 @@ describe('Style#setState', () => {
             },
             light: {
                 anchor: 'viewport'
+            },
+            sky: {
+                'atmosphere-blend': 0
             }
         });
         style.loadJSON(styleJson);
@@ -695,8 +713,9 @@ describe('Style#setState', () => {
         spys.push(jest.spyOn(style, 'setGeoJSONSourceData').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
-        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
+        spys.push(jest.spyOn(style, 'setProjection').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
+        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
 
         const newStyle = JSON.parse(JSON.stringify(styleJson)) as StyleSpecification;
         newStyle.layers[0].paint = {'text-color': '#7F7F7F',};
@@ -724,10 +743,13 @@ describe('Style#setState', () => {
             exaggeration: 0.5
         };
         newStyle.zoom = 2;
+        newStyle.projection = {type: 'globe'};
+
         newStyle.sky = {
             'fog-color': '#000001',
             'sky-color': '#000002',
             'horizon-fog-blend': 0.5,
+            'atmosphere-blend': 1
         };
         const didChange = style.setState(newStyle);
         expect(didChange).toBeTruthy();
@@ -756,6 +778,7 @@ describe('Style#setState', () => {
         spys.push(jest.spyOn(style, 'setGlyphs').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style, 'setSprite').mockImplementation((() => {}) as any));
         spys.push(jest.spyOn(style.map, 'setTerrain').mockImplementation((() => {}) as any));
+        spys.push(jest.spyOn(style, 'setSky').mockImplementation((() => {}) as any));
 
         const newStyleJson = createStyleJSON();
         newStyleJson.transition = {duration: 5};
@@ -2537,6 +2560,30 @@ describe('Style#serialize', () => {
         expect(style.serialize().terrain).toBeUndefined();
     });
 
+    test('include projection property when projection is defined in the style', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON({
+            projection: {
+                type: 'globe'
+            }
+        }));
+
+        await style.once('style.load');
+        expect(style.serialize().projection).toBeDefined();
+        expect(style.serialize().projection.type).toBe('globe');
+    });
+
+    test('include projection property when projection is set', async () => {
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setProjection({type: 'globe'});
+
+        expect(style.serialize().projection).toBeDefined();
+        expect(style.serialize().projection.type).toBe('globe');
+    });
+
     test('include sky property when map has sky', async () => {
         const sky: SkySpecification = {
             'horizon-fog-blend': 0.5,
@@ -2547,6 +2594,21 @@ describe('Style#serialize', () => {
         style.loadJSON(styleJson);
 
         await style.once('style.load');
+        expect(style.serialize().sky).toBe(sky);
+    });
+
+    test('include sky property when sky is set', async () => {
+        const sky = {
+            'atmosphere-blend': 0.5,
+        };
+        const style = new Style(getStubMap());
+        style.loadJSON(createStyleJSON());
+
+        await style.once('style.load');
+        style.setSky(sky);
+
+        expect(style.serialize().sky).toBeDefined();
+        expect(style.serialize().sky).toBe(sky);
         expect(style.serialize().sky).toStrictEqual(sky);
     });
 

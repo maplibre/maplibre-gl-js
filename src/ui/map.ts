@@ -54,6 +54,7 @@ import type {
     LightSpecification,
     SourceSpecification,
     TerrainSpecification,
+    ProjectionSpecification,
     SkySpecification
 } from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -432,6 +433,7 @@ const defaultOptions: Readonly<Partial<MapOptions>> = {
 export class Map extends Camera {
     style: Style;
     painter: Painter;
+    handlers: HandlerManager;
 
     _container: HTMLElement;
     _canvasContainer: HTMLElement;
@@ -704,7 +706,7 @@ export class Map extends Camera {
     /**
      * Adds an {@link IControl} to the map, calling `control.onAdd(this)`.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param control - The {@link IControl} to add.
      * @param position - position on the map to which the control will be added.
@@ -743,7 +745,7 @@ export class Map extends Camera {
     /**
      * Removes the control from the map.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param control - The {@link IControl} to remove.
      * @example
@@ -1739,6 +1741,7 @@ export class Map extends Camera {
         }
 
         if (!style) {
+            this.style?.projection?.destroy();
             delete this.style;
             return this;
         } else {
@@ -2117,7 +2120,7 @@ export class Map extends Camera {
      * [`fill-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-fill-fill-pattern),
      * or [`line-pattern`](https://maplibre.org/maplibre-style-spec/layers/#paint-line-line-pattern).
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the image.
      * @param image - The image as an `HTMLImageElement`, `ImageData`, `ImageBitmap` or object with `width`, `height`, and `data`
@@ -2186,7 +2189,7 @@ export class Map extends Camera {
      * in the style's original sprite and any images
      * that have been added at runtime using {@link Map#addImage}.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the image.
      *
@@ -2365,7 +2368,7 @@ export class Map extends Camera {
     /**
      * Removes the layer with the given ID from the map's style.
      *
-     * An {@link ErrorEvent} will be fired if the image parameter is invald.
+     * An {@link ErrorEvent} will be fired if the image parameter is invalid.
      *
      * @param id - The ID of the layer to remove
      *
@@ -2663,27 +2666,28 @@ export class Map extends Camera {
     }
 
     /**
-     * Loads sky and fog defined by {@link SkySpecification} onto the map.
-     * Note: The fog only shows when using the terrain 3D feature.
-     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-gl-js-docs/style-spec/#sky).
-     * @returns `this`
+     * Sets the value of style's sky properties.
+     *
+     * @param sky - Sky properties to set. Must conform to the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/sky).
+     * @param options - Options object.
+     *
      * @example
      * ```ts
-     * map.setSky({ 'sky-color': '#00f' });
+     * map.setSky({'atmosphere-blend': 1.0});
      * ```
      */
-    setSky(sky: SkySpecification) {
+    setSky(sky: SkySpecification, options: StyleSetterOptions = {}) {
         this._lazyInitEmptyStyle();
-        this.style.setSky(sky);
+        this.style.setSky(sky, options);
         return this._update(true);
     }
 
     /**
-     * Returns the value of the sky object.
+     * Returns the value of the style's sky.
      *
-     * @returns sky Sky properties of the style.
+     * @returns sky properties of the style.
      */
-    getSky() {
+    getSky(): SkySpecification {
         return this.style.getSky();
     }
 
@@ -3114,7 +3118,7 @@ export class Map extends Camera {
         // Even though `_styleDirty` and `_sourcesDirty` are reset in this
         // method, synchronous events fired during Style#update or
         // Style#_updateSources could have caused them to be set again.
-        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty;
+        const somethingDirty = this._sourcesDirty || this._styleDirty || this._placementDirty || this.style.projection.isRenderingDirty();
         if (somethingDirty || this._repaint) {
             this.triggerRepaint();
         } else if (!this.isMoving() && this.loaded()) {
@@ -3315,5 +3319,26 @@ export class Map extends Camera {
      */
     getCameraTargetElevation(): number {
         return this.transform.elevation;
+    }
+
+    /**
+     * Gets the {@link ProjectionSpecification}.
+     * @returns the projection specification.
+     * @example
+     * ```ts
+     * let projection = map.getProjection();
+     * ```
+     */
+    getProjection(): ProjectionSpecification { return this.style.getProjection(); }
+
+    /**
+     * Sets the {@link ProjectionSpecification}.
+     * @param projection - the projection specification to set
+     * @returns
+     */
+    setProjection(projection: ProjectionSpecification) {
+        this._lazyInitEmptyStyle();
+        this.style.setProjection(projection);
+        return this._update(true);
     }
 }

@@ -10,6 +10,7 @@ import {TileParameters, WorkerTileParameters, WorkerTileResult} from './worker_s
 import {WorkerTile} from './worker_tile';
 import {setPerformance, sleep} from '../util/test/util';
 import {ABORT_ERROR} from '../util/abort_error';
+import {SubdivisionGranularitySetting} from '../render/subdivision_granularity_settings';
 
 describe('vector tile worker source', () => {
     const actor = {sendAsync: () => Promise.resolve({})} as IActor;
@@ -140,7 +141,8 @@ describe('vector tile worker source', () => {
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
-            request: {url: 'http://localhost:2900/faketile.pbf'}
+            request: {url: 'http://localhost:2900/faketile.pbf'},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
         } as any as WorkerTileParameters).then(() => expect(false).toBeTruthy());
 
         // allow promise to run
@@ -150,6 +152,7 @@ describe('vector tile worker source', () => {
             source: 'source',
             uid: 0,
             tileID: {overscaledZ: 0, wrap: 0, canonical: {x: 0, y: 0, z: 0, w: 0}},
+            subdivisionGranularity: SubdivisionGranularitySetting.noSubdivision,
         } as any as WorkerTileParameters);
         expect(res).toBeDefined();
         expect(res.rawTileData).toBeDefined();

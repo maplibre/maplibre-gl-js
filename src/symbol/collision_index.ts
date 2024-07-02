@@ -7,8 +7,6 @@ import {GridIndex} from './grid_index';
 import {mat4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
-import * as projection from '../symbol/projection';
-
 import type {Transform} from '../geo/transform';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
@@ -17,7 +15,7 @@ import type {
 } from '../data/array_types.g';
 import type {OverlapMode} from '../style/style_layer/overlap_mode';
 import {UnwrappedTileID} from '../source/tile_id';
-import {SymbolProjectionContext} from '../symbol/projection';
+import {type PointProjection, SymbolProjectionContext, pathSlicedToLongestUnoccluded, placeFirstAndLastGlyph, project, projectPathSpecialProjection} from '../symbol/projection';
 import {Projection} from '../geo/projection/projection';
 import {clamp, getAABB} from '../util/util';
 
@@ -194,7 +192,7 @@ export class CollisionIndex {
             translation
         };
 
-        const firstAndLastGlyph = projection.placeFirstAndLastGlyph(
+        const firstAndLastGlyph = placeFirstAndLastGlyph(
             labelPlaneFontScale,
             glyphOffsetArray,
             lineOffsetX,
@@ -322,8 +320,17 @@ export class CollisionIndex {
         };
     }
 
-    projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext, labelToScreenMatrix: mat4) {
-        return projectedPath.map(p => projection.project(p, labelToScreenMatrix, projectionContext.getElevation));
+    projectPathToScreenSpace(projectedPath: Array<Point>, projectionContext: SymbolProjectionContext, labelToScreenMatrix: mat4): Array<PointProjection> {
+        if (projectionContext.projection.useSpecialProjectionForSymbols) {
+            // Globe (or other special projection) is enabled in this branch.
+            const screenSpacePath = projectPathSpecialProjection(projectedPath, projectionContext);
+            // We don't want to generate screenspace collision circles for parts of the line that
+            // are occluded by the planet itself. Find the longest segment of the path that is
+            // not occluded, and remove everything else.
+            return pathSlicedToLongestUnoccluded(screenSpacePath);
+        } else {
+            return projectedPath.map(p => project(p, labelToScreenMatrix, projectionContext.getElevation));
+        }
     }
 
     /**
@@ -410,7 +417,7 @@ export class CollisionIndex {
     projectAndGetPerspectiveRatio(posMatrix: mat4, x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation?: (x: number, y: number) => number) {
         const projected = this.mapProjection.useSpecialProjectionForSymbols ?
             this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
-            projection.project(new Point(x, y), posMatrix, getElevation);
+            project(new Point(x, y), posMatrix, getElevation);
         return {
             point: new Point(
                 (((projected.point.x + 1) / 2) * this.transform.width) + viewportPadding,
@@ -429,7 +436,7 @@ export class CollisionIndex {
         // We don't care about the actual projected point, just its W component.
         const projected = this.mapProjection.useSpecialProjectionForSymbols ?
             this.mapProjection.projectTileCoordinates(x, y, unwrappedTileID, getElevation) :
-            projection.project(new Point(x, y), posMatrix, getElevation);
+            project(new Point(x, y), posMatrix, getElevation);
         return 0.5 + 0.5 * (this.transform.cameraToCenterDistance / projected.signedDistanceFromCamera);
     }
 

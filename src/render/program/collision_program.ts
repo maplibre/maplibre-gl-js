@@ -5,7 +5,6 @@ import type {Transform} from '../../geo/transform';
 import {mat4} from 'gl-matrix';
 
 export type CollisionUniformsType = {
-    'u_matrix': UniformMatrix4f;
     'u_pixel_extrude_scale': Uniform2f;
 };
 
@@ -17,7 +16,6 @@ export type CollisionCircleUniformsType = {
 };
 
 const collisionUniforms = (context: Context, locations: UniformLocations): CollisionUniformsType => ({
-    'u_matrix': new UniformMatrix4f(context, locations.u_matrix),
     'u_pixel_extrude_scale': new Uniform2f(context, locations.u_pixel_extrude_scale)
 });
 
@@ -28,9 +26,8 @@ const collisionCircleUniforms = (context: Context, locations: UniformLocations):
     'u_viewport_size': new Uniform2f(context, locations.u_viewport_size)
 });
 
-const collisionUniformValues = (transform: {width: number; height: number}, matrix: mat4): UniformValues<CollisionUniformsType> => {
+const collisionUniformValues = (transform: {width: number; height: number}): UniformValues<CollisionUniformsType> => {
     return {
-        'u_matrix': matrix,
         'u_pixel_extrude_scale': [1.0 / transform.width, 1.0 / transform.height],
     };
 };

@@ -1,0 +1,45 @@
+{
+  "version": 8,
+  "metadata": {
+    "test": {
+      "description": "Tests that globe projection works with the raster layer type."
+    }
+  },
+  "sky": {
+    "atmosphere-blend": 0.0
+  },
+  "center": [
+    15.0,
+    0.0
+  ],
+  "zoom": 1,
+  "projection": { "type": "globe" },
+  "sources": {
+    "source": {
+      "type": "raster",
+      "tiles": [
+        "local://tiles/{z}-{x}-{y}.satellite.png"
+      ],
+      "minzoom": 1,
+      "maxzoom": 1,
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "white"
+      }
+    },
+    {
+      "id": "raster",
+      "type": "raster",
+      "source": "source",
+      "paint": {
+        "raster-fade-duration": 0
+      }
+    }
+  ]
+}

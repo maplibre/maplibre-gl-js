@@ -28,9 +28,19 @@ export class Transform {
     scale: number;
     width: number;
     height: number;
+
+    /**
+     * This transform's bearing in radians.
+     */
     angle: number;
     rotationMatrix: mat2;
     pixelsToGLUnits: [number, number];
+
+    /**
+     * Distance from camera origin to view plane, in pixels.
+     * Calculated using vertical fov and viewport height.
+     * Center is considered to be in the middle of the viewport.
+     */
     cameraToCenterDistance: number;
     mercatorMatrix: mat4;
     modelViewProjectionMatrix: mat4;
@@ -43,7 +53,12 @@ export class Transform {
     glCoordMatrix: mat4;
     labelPlaneMatrix: mat4;
     minElevationForCurrentTile: number;
+
+    /**
+     * Vertical field of view in radians.
+     */
     _fov: number;
+
     _pitch: number;
     _zoom: number;
     _unmodified: boolean;

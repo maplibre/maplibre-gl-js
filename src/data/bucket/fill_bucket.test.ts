@@ -11,10 +11,14 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {EvaluationParameters} from '../../style/evaluation_parameters';
 import {ZoomHistory} from '../../style/zoom_history';
 import {BucketFeature, BucketParameters} from '../bucket';
+import {SubdivisionGranularitySetting} from '../../render/subdivision_granularity_settings';
+import {CanonicalTileID} from '../../source/tile_id';
 
 // Load a fill feature from fixture tile.
 const vt = new VectorTile(new Protobuf(fs.readFileSync(path.resolve(__dirname, '../../../test/unit/assets/mbsv5-6-18-23.vector.pbf'))));
 const feature = vt.layers.water.feature(0);
+
+const canonicalTileID = new CanonicalTileID(20, 1, 1);
 
 function createPolygon(numPoints) {
     const points = [];
@@ -34,15 +38,15 @@ test('FillBucket', () => {
         bucket.addFeature({} as BucketFeature, [[
             new Point(0, 0),
             new Point(10, 10)
-        ]], undefined, undefined, undefined);
+        ]], undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
 
         bucket.addFeature({} as BucketFeature, [[
             new Point(0, 0),
             new Point(10, 10),
             new Point(10, 20)
-        ]], undefined, undefined, undefined);
+        ]], undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
 
-        bucket.addFeature(feature as any, feature.loadGeometry(), undefined, undefined, undefined);
+        bucket.addFeature(feature as any, feature.loadGeometry(), undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
     }).not.toThrow();
 });
 
@@ -66,13 +70,13 @@ test('FillBucket segmentation', () => {
 
     // first add an initial, small feature to make sure the next one starts at
     // a non-zero offset
-    bucket.addFeature({} as BucketFeature, [createPolygon(10)], undefined, undefined, undefined);
+    bucket.addFeature({} as BucketFeature, [createPolygon(10)], undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
 
     // add a feature that will break across the group boundary
     bucket.addFeature({} as BucketFeature, [
         createPolygon(128),
         createPolygon(128)
-    ], undefined, undefined, undefined);
+    ], undefined, canonicalTileID, undefined, SubdivisionGranularitySetting.noSubdivision);
 
     // Each polygon must fit entirely within a segment, so we expect the
     // first segment to include the first feature and the first polygon
@@ -82,12 +86,14 @@ test('FillBucket segmentation', () => {
     expect(bucket.segments.get()[0]).toEqual({
         vertexOffset: 0,
         vertexLength: 138,
+        vaos: {},
         primitiveOffset: 0,
         primitiveLength: 134
     });
     expect(bucket.segments.get()[1]).toEqual({
         vertexOffset: 138,
         vertexLength: 128,
+        vaos: {},
         primitiveOffset: 134,
         primitiveLength: 126
     });

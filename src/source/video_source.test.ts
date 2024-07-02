@@ -7,8 +7,6 @@ import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
 import {Transform} from '../geo/transform';
-import {VertexBuffer} from '../gl/vertex_buffer';
-import {SegmentVector} from '../data/segment';
 
 class StubMap extends Evented {
     transform: Transform;
@@ -113,8 +111,6 @@ describe('VideoSource', () => {
 
         source.tiles[String(tile.tileID.wrap)] = tile;
         // assign dummies directly so we don't need to stub the gl things
-        source.boundsBuffer = {} as VertexBuffer;
-        source.boundsSegments = {} as SegmentVector;
         source.texture = {
             update: () => {},
             bind: () => {}

@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {Projection, createProjection} from '../../../src/geo/projection/projection';
+import {Projection} from '../../../src/geo/projection/projection';
 import {Transform} from '../../../src/geo/transform';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
@@ -8,6 +8,7 @@ import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';
 import {CanonicalTileID, UnwrappedTileID} from '../../../src/source/tile_id';
 import {SingleCollisionBox} from '../../../src/data/bucket/symbol_bucket';
 import {EXTENT} from '../../../src/data/extent';
+import {MercatorProjection} from '../../../src/geo/projection/mercator';
 
 type TestSymbol = {
     collisionBox: SingleCollisionBox;
@@ -44,7 +45,8 @@ export default class SymbolCollisionBox extends Benchmark {
     async setup(): Promise<void> {
         this._transform = new Transform(0, 22, 0, 60, true);
         this._transform.resize(1024, 1024);
-        this._projection = createProjection();
+        // HM TODO: fix this!
+        this._projection = new MercatorProjection();
         const unwrappedTileID = new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0));
         const posMatrix = this._transform.calculatePosMatrix(unwrappedTileID);
 
