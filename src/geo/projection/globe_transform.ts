@@ -14,6 +14,7 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
+import {ITransform} from '../transform';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
     const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
@@ -147,7 +148,7 @@ function createIdentityMat4(): mat4 {
     return m;
 }
 
-export class GlobeTransform extends AbstractTransform {
+export class GlobeTransform extends AbstractTransform implements ITransform {
     private _cachedClippingPlane: vec4 = createVec4();
 
     // Transition handling
@@ -194,14 +195,14 @@ export class GlobeTransform extends AbstractTransform {
         this._initialized = true;
     }
 
-    override clone(): AbstractTransform {
+    override clone(): ITransform {
         const clone = new GlobeTransform(null, this._globeProjectionEnabled);
         clone.apply(this);
         this.newFrameUpdate();
         return clone;
     }
 
-    public override apply(that: AbstractTransform): void {
+    public override apply(that: ITransform): void {
         super.apply(that);
         this._mercatorTransform.apply(this);
     }
@@ -212,7 +213,7 @@ export class GlobeTransform extends AbstractTransform {
 
     public override get useGlobeControls(): boolean { return this._globeRendering; }
 
-    public override get cameraPosition(): vec3 {
+    public get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
         const copy = createVec3(); // Ensure the resulting vector is float64s
         copy[0] = this._cameraPosition[0];
@@ -254,7 +255,7 @@ export class GlobeTransform extends AbstractTransform {
         }
     }
 
-    override translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         // In the future, some better translation for globe and other weird projections should be implemented here,
         // especially for the translateAnchor==='viewport' case.
         return translatePosition(this, tile, translate, translateAnchor);
@@ -264,7 +265,7 @@ export class GlobeTransform extends AbstractTransform {
      * Should be called at the beginning of every frame to synchronize the transform with the underlying projection.
      * May change the transform's state - do not call on cloned transforms that should behave immutably!
      */
-    override newFrameUpdate(): TransformUpdateResult {
+    newFrameUpdate(): TransformUpdateResult {
         if (this._projectionInstance) {
             // Note: the _globeRendering field is only updated inside this function.
             // This function should never be called on a cloned transform, thus ensuring that
@@ -331,13 +332,13 @@ export class GlobeTransform extends AbstractTransform {
         }
     }
 
-    override isRenderingDirty(): boolean {
+    isRenderingDirty(): boolean {
         const now = browser.now();
         // Globe transition
         return (now - this._lastGlobeChangeTime) / 1000.0 < (Math.max(globeConstants.globeTransitionTimeSeconds, globeConstants.zoomTransitionTimeSeconds) + 0.2);
     }
 
-    override getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
+    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
         const data = this._mercatorTransform.getProjectionData(overscaledTileID, aligned, ignoreTerrainMatrix);
 
         // Set 'u_projection_matrix' to actual globe transform
@@ -564,19 +565,19 @@ export class GlobeTransform extends AbstractTransform {
         this._cachedClippingPlane = this._computeClippingPlane(globeRadiusPixels);
     }
 
-    override calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
+    calculateFogMatrix(_unwrappedTileID: UnwrappedTileID): mat4 {
         warnOnce('calculateFogMatrix is not supported on globe projection.');
         const m = createMat4();
         mat4.identity(m);
         return m;
     }
 
-    override getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): UnwrappedTileID[] {
         // Globe: TODO: implement for globe #3887
         return this._mercatorTransform.getVisibleUnwrappedCoordinates(tileID);
     }
 
-    override coveringTiles(options: {
+    coveringTiles(options: {
         tileSize: number; minzoom?: number;
         maxzoom?: number; roundZoom?: boolean; reparseOverscaled?: boolean; renderWorldCopies?: boolean; terrain?: Terrain;
     }): OverscaledTileID[] {
@@ -584,17 +585,17 @@ export class GlobeTransform extends AbstractTransform {
         return this._mercatorTransform.coveringTiles(options);
     }
 
-    override recalculateZoom(terrain: Terrain): void {
+    recalculateZoom(terrain: Terrain): void {
         this._mercatorTransform.recalculateZoom(terrain);
         this.apply(this._mercatorTransform);
     }
 
-    override customLayerMatrix(): mat4 {
+    customLayerMatrix(): mat4 {
         // Globe: TODO
         return this._mercatorTransform.customLayerMatrix();
     }
 
-    override maxPitchScaleFactor(): number {
+    maxPitchScaleFactor(): number {
         // Using mercator version of this should be good enough approximation for globe.
         return this._mercatorTransform.maxPitchScaleFactor();
     }
@@ -603,7 +604,7 @@ export class GlobeTransform extends AbstractTransform {
         return this._mercatorTransform.getCameraPoint();
     }
 
-    override lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
+    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number {
         if (!this._globeRendering) {
             return this._mercatorTransform.lngLatToCameraDepth(lngLat, elevation);
         }
@@ -617,11 +618,11 @@ export class GlobeTransform extends AbstractTransform {
         return result[2] / result[3];
     }
 
-    override precacheTiles(coords: OverscaledTileID[]): void {
+    precacheTiles(coords: OverscaledTileID[]): void {
         this._mercatorTransform.precacheTiles(coords);
     }
 
-    override getBounds(): LngLatBounds {
+    getBounds(): LngLatBounds {
         if (!this._globeRendering) {
             return this._mercatorTransform.getBounds();
         }
@@ -715,7 +716,7 @@ export class GlobeTransform extends AbstractTransform {
      * Note: automatically adjusts zoom to keep planet size consistent
      * (same size before and after a {@link setLocationAtPoint} call).
      */
-    override setLocationAtPoint(lnglat: LngLat, point: Point): void {
+    setLocationAtPoint(lnglat: LngLat, point: Point): void {
         if (!this._globeRendering) {
             this._mercatorTransform.setLocationAtPoint(lnglat, point);
             this.apply(this._mercatorTransform);
@@ -817,7 +818,7 @@ export class GlobeTransform extends AbstractTransform {
         this.setZoom(this.zoom + getZoomAdjustment(this, oldLat, this.center.lat));
     }
 
-    override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
+    locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         if (!this._globeRendering) {
             return this._mercatorTransform.locationPoint(lnglat, terrain);
         }
@@ -838,7 +839,7 @@ export class GlobeTransform extends AbstractTransform {
         );
     }
 
-    override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+    pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         if (!this._globeRendering || terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
@@ -847,7 +848,7 @@ export class GlobeTransform extends AbstractTransform {
         return MercatorCoordinate.fromLngLat(this.unprojectScreenPoint(p));
     }
 
-    override pointLocation(p: Point, terrain?: Terrain): LngLat {
+    pointLocation(p: Point, terrain?: Terrain): LngLat {
         if (!this._globeRendering || terrain) {
             // Mercator has terrain handling implemented properly and since terrain
             // simply draws tile coordinates into a special framebuffer, this works well even for globe.
@@ -856,7 +857,7 @@ export class GlobeTransform extends AbstractTransform {
         return this.unprojectScreenPoint(p);
     }
 
-    override isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
+    isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
         if (!this._globeRendering) {
             return this._mercatorTransform.isPointOnMapSurface(p, terrain);
         }
@@ -872,7 +873,7 @@ export class GlobeTransform extends AbstractTransform {
     /**
      * Computes normalized direction of a ray from the camera to the given screen pixel.
      */
-    override getRayDirectionFromPixel(p: Point): vec3 {
+    getRayDirectionFromPixel(p: Point): vec3 {
         const pos = createVec4();
         pos[0] = (p.x / this.width) * 2.0 - 1.0;
         pos[1] = ((p.y / this.height) * 2.0 - 1.0) * -1.0;

@@ -1,15 +1,11 @@
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
-import {MercatorCoordinate} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../util/util';
-import {mat4, mat2, vec3} from 'gl-matrix';
+import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
-import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
-import {Terrain} from '../render/terrain';
-import {ProjectionData} from '../render/program/projection_program';
-import {PointProjection} from '../symbol/projection';
+import {ITransform} from './transform';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 
@@ -31,34 +27,22 @@ export abstract class AbstractTransform {
     protected _tileZoom: number; // integer zoom level for tiles
     protected _lngRange: [number, number];
     protected _latRange: [number, number];
-    protected _scale: number;
+    protected _scale: number; // computed based on zoom
     protected _width: number;
     protected _height: number;
-
-    /**
-     * This transform's bearing in radians.
-     */
-    protected _angle: number;
-    private _rotationMatrix: mat2;
-    private _pixelsToGLUnits: [number, number];
-
-    private _minElevationForCurrentTile: number;
-    private _constraining: boolean;
-
-    private _pixelsToClipSpaceMatrix: mat4;
-    private _clipSpaceToPixelsMatrix: mat4;
-
     /**
      * Vertical field of view in radians.
      */
     protected _fov: number;
-
+    /**
+     * This transform's bearing in radians.
+     */
+    protected _angle: number;
     /**
      * Pitch in radians.
      */
     protected _pitch: number;
     protected _zoom: number;
-    protected _unmodified: boolean;
     protected _renderWorldCopies: boolean;
     protected _minZoom: number;
     protected _maxZoom: number;
@@ -66,8 +50,16 @@ export abstract class AbstractTransform {
     protected _maxPitch: number;
     protected _center: LngLat;
     protected _elevation: number;
+    private _minElevationForCurrentTile: number;
     protected _pixelPerMeter: number;
     protected _edgeInsets: EdgeInsets;
+    protected _unmodified: boolean;
+
+    private _constraining: boolean;
+    private _rotationMatrix: mat2;
+    private _pixelsToGLUnits: [number, number];
+    private _pixelsToClipSpaceMatrix: mat4;
+    private _clipSpaceToPixelsMatrix: mat4;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._tileSize = 512; // constant
@@ -94,9 +86,10 @@ export abstract class AbstractTransform {
         this._minElevationForCurrentTile = 0;
     }
 
-    abstract clone(): AbstractTransform;
+    abstract clone(): ITransform;
 
-    public apply(that: AbstractTransform, constrain: boolean = false): void {
+    public apply(thatI: ITransform, constrain: boolean = false): void {
+        const that = thatI as any as AbstractTransform; // JP: TODO: fixme
         this._tileSize = that._tileSize;
         this._latRange = that._latRange;
         this._lngRange = that._lngRange;
@@ -324,12 +317,6 @@ export abstract class AbstractTransform {
     get unmodified(): boolean { return this._unmodified; }
 
     /**
-     * @internal
-     * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
-     */
-    abstract get cameraPosition(): vec3;
-
-    /**
      * Returns if the padding params match
      *
      * @param padding - the padding to check against
@@ -375,30 +362,6 @@ export abstract class AbstractTransform {
         return Math.max(0, z);
     }
 
-    /**
-     * Return any "wrapped" copies of a given tile coordinate that are visible
-     * in the current view.
-     */
-    abstract getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
-
-    /**
-     * Return all coordinates that could cover this transform for a covering
-     * zoom level.
-     * @param options - the options
-     * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
-     */
-    abstract coveringTiles(
-        options: {
-            tileSize: number;
-            minzoom?: number;
-            maxzoom?: number;
-            roundZoom?: boolean;
-            reparseOverscaled?: boolean;
-            renderWorldCopies?: boolean;
-            terrain?: Terrain;
-        }
-    ): Array<OverscaledTileID>;
-
     resize(width: number, height: number) {
         this._width = width;
         this._height = height;
@@ -410,52 +373,6 @@ export abstract class AbstractTransform {
     scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
     /**
-     * This method works in combination with freezeElevation activated.
-     * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
-     * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
-     * @param terrain - the terrain
-     */
-    abstract recalculateZoom(terrain: Terrain): void;
-
-    /**
-     * Set's the transform's center so that the given point on screen is at the given world coordinates.
-     * @param lnglat - Desired world coordinates of the point.
-     * @param point - The screen point that should lie at the given coordinates.
-     */
-    abstract setLocationAtPoint(lnglat: LngLat, point: Point): void;
-
-    /**
-     * Given a LngLat location, return the screen point that corresponds to it.
-     * @param lnglat - location
-     * @param terrain - optional terrain
-     * @returns screen point
-     */
-    abstract locationPoint(lnglat: LngLat, terrain?: Terrain): Point;
-
-    /**
-     * Given a point on screen, return its lnglat.
-     * @param p - screen point
-     * @param terrain - optional terrain
-     * @returns lnglat location
-     */
-    abstract pointLocation(p: Point, terrain?: Terrain): LngLat;
-
-    /**
-     * Given a Point, return its mercator coordinate.
-     * @param p - the point
-     * @param terrain - optional terrain
-     * @returns lnglat
-     */
-    abstract pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
-
-    /**
-     * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
-     * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
-     * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
-     */
-    abstract getBounds(): LngLatBounds;
-
-    /**
      * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
      * @returns max bounds
      */
@@ -465,14 +382,6 @@ export abstract class AbstractTransform {
 
         return new LngLatBounds([this._lngRange[0], this._latRange[0]], [this._lngRange[1], this._latRange[1]]);
     }
-
-    /**
-     * Returns whether the specified screen pixel lies on the map.
-     * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled.
-     * @param p - The pixel's coordinates.
-     * @param terrain - Optional terrain.
-     */
-    abstract isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 
     /**
      * Sets or clears the map's geographical constraints.
@@ -489,8 +398,6 @@ export abstract class AbstractTransform {
         }
     }
 
-    abstract customLayerMatrix(): mat4;
-
     /**
      * Get center lngLat and zoom to ensure that
      * 1) everything beyond the bounds is excluded
@@ -498,8 +405,6 @@ export abstract class AbstractTransform {
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
     abstract getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
-
-    abstract maxPitchScaleFactor(): number;
 
     /**
      * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
@@ -513,9 +418,6 @@ export abstract class AbstractTransform {
      * the camera is right above the center of the map.
      */
     abstract getCameraPoint(): Point;
-
-    abstract getRayDirectionFromPixel(p: Point): vec3;
-
     /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect
      * the query at the surface of the earth. Instead the feature may be closer and only intersect
@@ -551,16 +453,6 @@ export abstract class AbstractTransform {
             ];
         }
     }
-
-    /**
-     * Return the distance to the camera in clip space from a LngLat.
-     * This can be compared to the value from the depth buffer (terrain.depthAtPoint)
-     * to determine whether a point is occluded.
-     * @param lngLat - the point
-     * @param elevation - the point's elevation
-     * @returns depth value in clip space (between 0 and 1)
-     */
-    abstract lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
 
     /**
      * @internal
@@ -600,91 +492,4 @@ export abstract class AbstractTransform {
         mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
         this._pixelsToClipSpaceMatrix = m;
     }
-
-    abstract calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
-
-    /**
-     * @internal
-     * True when an animation handled by the transform is in progress,
-     * requiring MapLibre to keep rendering new frames.
-     */
-    abstract isRenderingDirty(): boolean;
-
-    /**
-     * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
-     * @param overscaledTileID - The ID of the current tile.
-     * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
-     */
-    abstract getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData;
-
-    /**
-     * @internal
-     * Returns whether the supplied location is occluded in this projection.
-     * For example during globe rendering a location on the backfacing side of the globe is occluded.
-     * @param x - Tile space coordinate in range 0..EXTENT.
-     * @param y - Tile space coordinate in range 0..EXTENT.
-     * @param unwrappedTileID - TileID of the tile the supplied coordinates belong to.
-     */
-    abstract isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
-
-    /**
-     * @internal
-     */
-    abstract getPixelScale(): number;
-
-    /**
-     * @internal
-     * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
-     * Circle radius and heatmap kernel radius is multiplied by this value.
-     */
-    abstract getCircleRadiusCorrection(): number;
-
-    /**
-     * @internal
-     * Allows the projection to adjust the scale of `text-pitch-alignment: 'map'` symbols's collision boxes based on the map's center and the text anchor.
-     * Only affects the collision boxes (and click areas), scaling of the rendered text is mostly handled in shaders.
-     * @param transform - The map's transform, with only the `center` property, describing the map's longitude and latitude.
-     * @param textAnchor - Text anchor position inside the tile.
-     * @param tileID - The tile coordinates.
-     */
-    abstract getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number;
-
-    /**
-     * @internal
-     * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
-     */
-    abstract translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
-
-    /**
-     * Signals to the transform that a new frame is starting.
-     * The transform might update some of its internal variables and animations based on this.
-     */
-    abstract newFrameUpdate(): TransformUpdateResult;
-
-    /**
-     * @internal
-     * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
-     * @param transform - Current map transform.
-     * @param dir - The light direction.
-     * @returns A new vector with the transformed light direction.
-     */
-    abstract transformLightDirection(dir: vec3): vec3;
-
-    //
-    // Projection and unprojection of points, LatLng coordinates, tile coordinates, etc.
-    //
-
-    /**
-     * @internal
-     * Projects a point in tile coordinates. Used in symbol rendering.
-     */
-    abstract projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
-
-    /**
-     * Called before rendering to allow the transform implementation
-     * to precompute data needed to render the given tiles.
-     * Used in mercator transform to precompute tile matrices (posMatrix).
-     * @param coords - Array of tile IDs that will be rendered.
-     */
-    abstract precacheTiles(coords: Array<OverscaledTileID>): void;
 }

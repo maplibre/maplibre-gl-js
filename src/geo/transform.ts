@@ -15,14 +15,9 @@ export type TransformUpdateResult = {forcePlacementUpdate: boolean};
 
 /**
  * @internal
- * The transform class stores everything needed to project or otherwise transform points on a map,
+ * The transform stores everything needed to project or otherwise transform points on a map,
  * including most of the map's view state - center, zoom, pitch, etc.
  * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
- *
- * This base class stores all data about a transform that is common across all projections.
- * This data is what actually defines the map's position, angles, etc.
- * This data should be transferable to a transform implementation for any different projection,
- * hence the implementation of `Transform.apply`, which works on any Transform and accepts any Transform.
  */
 export interface ITransform {
     clone(): ITransform;
@@ -395,10 +390,6 @@ export interface ITransform {
      * @returns A new vector with the transformed light direction.
      */
     transformLightDirection(dir: vec3): vec3;
-
-    //
-    // Projection and unprojection of points, LatLng coordinates, tile coordinates, etc.
-    //
 
     /**
      * @internal

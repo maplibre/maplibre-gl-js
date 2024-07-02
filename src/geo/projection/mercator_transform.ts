@@ -13,6 +13,7 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
+import {ITransform} from '../transform';
 
 /**
  * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512).
@@ -47,7 +48,7 @@ export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDist
     return Math.tan(Math.PI / 2 - transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance * 0.85;
 }
 
-export class MercatorTransform extends AbstractTransform {
+export class MercatorTransform extends AbstractTransform implements ITransform {
     private _cameraToCenterDistance: number;
     private _cameraPosition: vec3;
 
@@ -71,14 +72,14 @@ export class MercatorTransform extends AbstractTransform {
         this._alignedPosMatrixCache = {};
     }
 
-    public override clone(): AbstractTransform {
+    public override clone(): ITransform {
         const clone = new MercatorTransform(this._minZoom, this._maxZoom, this._minPitch, this.maxPitch, this._renderWorldCopies);
         clone.apply(this);
         return clone;
     }
 
     public override get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
-    public override get cameraPosition(): vec3 { return this._cameraPosition; }
+    public get cameraPosition(): vec3 { return this._cameraPosition; }
     public override get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
     public override get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
     public override get useGlobeControls(): boolean { return false; }
@@ -87,7 +88,7 @@ export class MercatorTransform extends AbstractTransform {
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
      */
-    override getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
         const result = [new UnwrappedTileID(0, tileID)];
         if (this._renderWorldCopies) {
             const utl = this.pointCoordinate(new Point(0, 0));
@@ -116,7 +117,7 @@ export class MercatorTransform extends AbstractTransform {
      * @param options - the options
      * @returns OverscaledTileIDs
      */
-    override coveringTiles(
+    coveringTiles(
         options: {
             tileSize: number;
             minzoom?: number;
@@ -251,7 +252,7 @@ export class MercatorTransform extends AbstractTransform {
         return {lngLat, altitude: altitude + this.elevation};
     }
 
-    override recalculateZoom(terrain: Terrain): void {
+    recalculateZoom(terrain: Terrain): void {
         const origElevation = this.elevation;
         const origAltitude = Math.cos(this._pitch) * this._cameraToCenterDistance / this._pixelPerMeter;
 
@@ -283,7 +284,7 @@ export class MercatorTransform extends AbstractTransform {
      * @param lnglat - Desired world coordinates of the point.
      * @param point - The screen point that should lie at the given coordinates.
      */
-    override setLocationAtPoint(lnglat: LngLat, point: Point) {
+    setLocationAtPoint(lnglat: LngLat, point: Point) {
         const a = this.pointCoordinate(point);
         const b = this.pointCoordinate(this.centerPoint);
         const loc = this.locationCoordinate(lnglat);
@@ -302,7 +303,7 @@ export class MercatorTransform extends AbstractTransform {
      * @param terrain - optional terrain
      * @returns screen point
      */
-    override locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
+    locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return terrain ?
             this.coordinatePoint(this.locationCoordinate(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._tileZoom), this._pixelMatrix3D) :
             this.coordinatePoint(this.locationCoordinate(lnglat));
@@ -314,7 +315,7 @@ export class MercatorTransform extends AbstractTransform {
      * @param terrain - optional terrain
      * @returns lnglat location
      */
-    override pointLocation(p: Point, terrain?: Terrain): LngLat {
+    pointLocation(p: Point, terrain?: Terrain): LngLat {
         return this.coordinateLocation(this.pointCoordinate(p, terrain));
     }
 
@@ -343,7 +344,7 @@ export class MercatorTransform extends AbstractTransform {
      * @param terrain - optional terrain
      * @returns lnglat
      */
-    override pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
+    pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
             const coordinate = terrain.pointCoordinate(p);
@@ -393,7 +394,7 @@ export class MercatorTransform extends AbstractTransform {
         return new Point(p[0] / p[3], p[1] / p[3]);
     }
 
-    override getBounds(): LngLatBounds {
+    getBounds(): LngLatBounds {
         const top = Math.max(0, this._height / 2 - getMercatorHorizon(this));
         return new LngLatBounds()
             .extend(this.pointLocation(new Point(0, top)))
@@ -402,7 +403,7 @@ export class MercatorTransform extends AbstractTransform {
             .extend(this.pointLocation(new Point(0, this._height)));
     }
 
-    override isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
+    isPointOnMapSurface(p: Point, terrain?: Terrain): boolean {
         if (terrain) {
             const coordinate = terrain.pointCoordinate(p);
             return coordinate != null;
@@ -451,7 +452,7 @@ export class MercatorTransform extends AbstractTransform {
      * @param unwrappedTileID - the tile ID
      * @private
      */
-    override calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
+    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
         const posMatrixKey = unwrappedTileID.key;
         const cache = this._fogMatrixCache;
         if (cache[posMatrixKey]) {
@@ -465,7 +466,7 @@ export class MercatorTransform extends AbstractTransform {
         return cache[posMatrixKey];
     }
 
-    override customLayerMatrix(): mat4 {
+    customLayerMatrix(): mat4 {
         return this._mercatorMatrix.slice() as any;
     }
 
@@ -694,7 +695,7 @@ export class MercatorTransform extends AbstractTransform {
         this._alignedPosMatrixCache = {};
     }
 
-    override maxPitchScaleFactor(): number {
+    maxPitchScaleFactor(): number {
         // calcMatrices hasn't run yet
         if (!this._pixelMatrixInverse) return 1;
 
@@ -729,57 +730,57 @@ export class MercatorTransform extends AbstractTransform {
      * @param elevation - the point's elevation
      * @returns depth value in clip space (between 0 and 1)
      */
-    override lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
+    lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
         const coord = this.locationCoordinate(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, this._viewProjMatrix);
         return (p[2] / p[3]);
     }
 
-    override isRenderingDirty(): boolean {
+    isRenderingDirty(): boolean {
         return false;
     }
 
-    override getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
+    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
         const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned) : null;
         return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
 
-    override isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
+    isOccluded(_: number, __: number, ___: UnwrappedTileID): boolean {
         return false;
     }
 
-    override getPixelScale(): number {
+    getPixelScale(): number {
         return 1.0;
     }
 
-    override getCircleRadiusCorrection(): number {
+    getCircleRadiusCorrection(): number {
         return 1.0;
     }
 
-    override getPitchedTextCorrection(_textAnchor: Point, _tileID: UnwrappedTileID): number {
+    getPitchedTextCorrection(_textAnchor: Point, _tileID: UnwrappedTileID): number {
         return 1.0;
     }
 
-    override newFrameUpdate(): TransformUpdateResult {
+    newFrameUpdate(): TransformUpdateResult {
         return {
             forcePlacementUpdate: false
         };
     }
 
-    override translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+    translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
         return translatePosition(this, tile, translate, translateAnchor);
     }
 
-    override transformLightDirection(dir: vec3): vec3 {
+    transformLightDirection(dir: vec3): vec3 {
         return vec3.clone(dir);
     }
 
-    override getRayDirectionFromPixel(_p: Point): vec3 {
+    getRayDirectionFromPixel(_p: Point): vec3 {
         throw new Error('Not implemented.'); // No need for this in mercator transform
     }
 
-    override projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
         const matrix = this.calculatePosMatrix(unwrappedTileID);
         let pos;
         if (getElevation) { // slow because of handle z-index
@@ -797,7 +798,7 @@ export class MercatorTransform extends AbstractTransform {
         };
     }
 
-    override precacheTiles(coords: Array<OverscaledTileID>): void {
+    precacheTiles(coords: Array<OverscaledTileID>): void {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
             // place the pos matrix into the transform's internal cache.
