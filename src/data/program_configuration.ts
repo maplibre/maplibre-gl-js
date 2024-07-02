@@ -35,7 +35,7 @@ export type BinderUniform = {
     binding: Uniform<any>;
 };
 
-function packColor(color: Color): [number, number] {
+export function packColor(color: Color): [number, number] {
     return [
         packUint8ToFloat(255 * color.r, 255 * color.g),
         packUint8ToFloat(255 * color.b, 255 * color.a)
