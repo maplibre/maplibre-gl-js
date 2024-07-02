@@ -2,9 +2,7 @@ import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
 import {MercatorCoordinate} from './mercator_coordinate';
 import Point from '@mapbox/point-geometry';
-import {wrap, clamp} from '../util/util';
 import {mat4, mat2, vec3} from 'gl-matrix';
-import {EdgeInsets} from './edge_insets';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../source/tile_id';
 import type {PaddingOptions} from './edge_insets';
 import {Terrain} from '../render/terrain';
@@ -26,308 +24,131 @@ export type TransformUpdateResult = {forcePlacementUpdate: boolean};
  * This data should be transferable to a transform implementation for any different projection,
  * hence the implementation of `Transform.apply`, which works on any Transform and accepts any Transform.
  */
-export abstract class Transform {
-    private _tileSize: number; // constant
-    protected _tileZoom: number; // integer zoom level for tiles
-    protected _lngRange: [number, number];
-    protected _latRange: [number, number];
-    protected _scale: number;
-    protected _width: number;
-    protected _height: number;
+export interface Transform {
+    clone(): Transform;
 
-    /**
-     * This transform's bearing in radians.
-     */
-    protected _angle: number;
-    private _rotationMatrix: mat2;
-    private _pixelsToGLUnits: [number, number];
-
-    private _minElevationForCurrentTile: number;
-    private _constraining: boolean;
-
-    private _pixelsToClipSpaceMatrix: mat4;
-    private _clipSpaceToPixelsMatrix: mat4;
-
-    /**
-     * Vertical field of view in radians.
-     */
-    protected _fov: number;
-
-    /**
-     * Pitch in radians.
-     */
-    protected _pitch: number;
-    protected _zoom: number;
-    protected _unmodified: boolean;
-    protected _renderWorldCopies: boolean;
-    protected _minZoom: number;
-    protected _maxZoom: number;
-    protected _minPitch: number;
-    protected _maxPitch: number;
-    protected _center: LngLat;
-    protected _elevation: number;
-    protected _pixelPerMeter: number;
-    protected _edgeInsets: EdgeInsets;
-
-    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
-        this._tileSize = 512; // constant
-
-        this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
-        this._minZoom = minZoom || 0;
-        this._maxZoom = maxZoom || 22;
-
-        this._minPitch = (minPitch === undefined || minPitch === null) ? 0 : minPitch;
-        this._maxPitch = (maxPitch === undefined || maxPitch === null) ? 60 : maxPitch;
-
-        this.setMaxBounds();
-
-        this._width = 0;
-        this._height = 0;
-        this._center = new LngLat(0, 0);
-        this._elevation = 0;
-        this.setZoom(0);
-        this._angle = 0;
-        this._fov = 0.6435011087932844;
-        this._pitch = 0;
-        this._unmodified = true;
-        this._edgeInsets = new EdgeInsets();
-        this._minElevationForCurrentTile = 0;
-    }
-
-    abstract clone(): Transform;
-
-    public apply(that: Transform, constrain: boolean = false): void {
-        this._tileSize = that._tileSize;
-        this._latRange = that._latRange;
-        this._lngRange = that._lngRange;
-        this._width = that._width;
-        this._height = that._height;
-        this._center = that._center;
-        this._elevation = that._elevation;
-        this._minElevationForCurrentTile = that._minElevationForCurrentTile;
-        this.setZoom(that.zoom);
-        this._angle = that._angle;
-        this._fov = that._fov;
-        this._pitch = that._pitch;
-        this._unmodified = that._unmodified;
-        this._edgeInsets = that._edgeInsets.clone();
-        this._minZoom = that._minZoom;
-        this._maxZoom = that._maxZoom;
-        this._minPitch = that._minPitch;
-        this._maxPitch = that._maxPitch;
-        if (constrain) {
-            this._constrain();
-        }
-        this._calcMatrices();
-    }
+    apply(that: Transform): void;
 
     /**
      * @internal
      * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
      * will assume the underlying map is a spherical surface, as opposed to a plane.
      */
-    abstract get useGlobeControls(): boolean;
+    get useGlobeControls(): boolean;
 
     /**
      * Distance from camera origin to view plane, in pixels.
      * Calculated using vertical fov and viewport height.
      * Center is considered to be in the middle of the viewport.
      */
-    abstract get cameraToCenterDistance(): number;
+    get cameraToCenterDistance(): number;
 
-    abstract get modelViewProjectionMatrix(): mat4;
+    get modelViewProjectionMatrix(): mat4;
 
     /**
      * Inverse of matrix from camera space to clip space.
      */
-    abstract get inverseProjectionMatrix(): mat4;
+    get inverseProjectionMatrix(): mat4;
 
-    get pixelsToClipSpaceMatrix(): mat4 { return this._pixelsToClipSpaceMatrix; }
-    get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
+    get pixelsToClipSpaceMatrix(): mat4;
+    get clipSpaceToPixelsMatrix(): mat4;
 
-    get minElevationForCurrentTile(): number { return this._minElevationForCurrentTile; }
-    setMinElevationForCurrentTile(ele: number) {
-        this._minElevationForCurrentTile = ele;
-    }
+    get minElevationForCurrentTile(): number;
+    setMinElevationForCurrentTile(ele: number);
 
-    get tileSize(): number { return this._tileSize; }
-    get tileZoom(): number { return this._tileZoom; }
-    get scale(): number { return this._scale; }
+    get tileSize(): number;
+    get tileZoom(): number;
+    get scale(): number;
 
     /**
      * Gets the transform's width in pixels. Use {@link resize} to set the transform's size.
      */
-    get width(): number { return this._width; }
+    get width(): number;
 
     /**
      * Gets the transform's height in pixels. Use {@link resize} to set the transform's size.
      */
-    get height(): number { return this._height; }
+    get height(): number;
 
     /**
      * Gets the transform's bearing in radians.
      */
-    get angle(): number { return this._angle; }
+    get angle(): number;
 
-    get lngRange(): [number, number] { return this._lngRange; }
-    get latRange(): [number, number] { return this._latRange; }
+    get lngRange(): [number, number];
+    get latRange(): [number, number];
 
-    get pixelsToGLUnits(): [number, number] { return this._pixelsToGLUnits; }
+    get pixelsToGLUnits(): [number, number];
 
-    get minZoom(): number { return this._minZoom; }
-    setMinZoom(zoom: number) {
-        if (this._minZoom === zoom) return;
-        this._minZoom = zoom;
-        this.setZoom(this.getConstrained(this._center, this.zoom).zoom);
-    }
+    get minZoom(): number;
+    setMinZoom(zoom: number);
 
-    get maxZoom(): number { return this._maxZoom; }
-    setMaxZoom(zoom: number) {
-        if (this._maxZoom === zoom) return;
-        this._maxZoom = zoom;
-        this.setZoom(this.getConstrained(this._center, this.zoom).zoom);
-    }
+    get maxZoom(): number;
+    setMaxZoom(zoom: number);
 
-    get minPitch(): number { return this._minPitch; }
-    setMinPitch(pitch: number) {
-        if (this._minPitch === pitch) return;
-        this._minPitch = pitch;
-        this.setPitch(Math.max(this.pitch, pitch));
-    }
+    get minPitch(): number;
+    setMinPitch(pitch: number);
 
-    get maxPitch(): number { return this._maxPitch; }
-    setMaxPitch(pitch: number) {
-        if (this._maxPitch === pitch) return;
-        this._maxPitch = pitch;
-        this.setPitch(Math.min(this.pitch, pitch));
-    }
+    get maxPitch(): number;
+    setMaxPitch(pitch: number);
 
-    get renderWorldCopies(): boolean { return this._renderWorldCopies; }
-    setRenderWorldCopies(renderWorldCopies: boolean) {
-        if (renderWorldCopies === undefined) {
-            renderWorldCopies = true;
-        } else if (renderWorldCopies === null) {
-            renderWorldCopies = false;
-        }
+    get renderWorldCopies(): boolean;
+    setRenderWorldCopies(renderWorldCopies: boolean);
 
-        this._renderWorldCopies = renderWorldCopies;
-    }
+    get worldSize(): number;
 
-    get worldSize(): number {
-        return this._tileSize * this._scale;
-    }
-
-    get centerOffset(): Point {
-        return this.centerPoint._sub(this.size._div(2));
-    }
+    get centerOffset(): Point;
 
     /**
      * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
      */
-    get size(): Point {
-        return new Point(this._width, this._height);
-    }
+    get size(): Point;
 
-    get bearing(): number {
-        return -this._angle / Math.PI * 180;
-    }
-    setBearing(bearing: number) {
-        const b = -wrap(bearing, -180, 180) * Math.PI / 180;
-        if (this._angle === b) return;
-        this._unmodified = false;
-        this._angle = b;
-        this._calcMatrices();
+    get bearing(): number;
 
-        // 2x2 matrix for rotating points
-        this._rotationMatrix = mat2.create();
-        mat2.rotate(this._rotationMatrix, this._rotationMatrix, this._angle);
-    }
+    setBearing(bearing: number);
 
-    get rotationMatrix(): mat2 { return this._rotationMatrix; }
+    get rotationMatrix(): mat2;
 
-    get pitch(): number {
-        return this._pitch / Math.PI * 180;
-    }
-    setPitch(pitch: number) {
-        const p = clamp(pitch, this.minPitch, this.maxPitch) / 180 * Math.PI;
-        if (this._pitch === p) return;
-        this._unmodified = false;
-        this._pitch = p;
-        this._calcMatrices();
-    }
+    get pitch(): number;
+    setPitch(pitch: number);
 
-    get fov(): number {
-        return this._fov / Math.PI * 180;
-    }
-    setFov(fov: number) {
-        fov = Math.max(0.01, Math.min(60, fov));
-        if (this._fov === fov) return;
-        this._unmodified = false;
-        this._fov = fov / 180 * Math.PI;
-        this._calcMatrices();
-    }
+    get fov(): number;
+    setFov(fov: number);
 
-    get zoom(): number { return this._zoom; }
-    setZoom(zoom: number) {
-        const constrainedZoom = this.getConstrained(this._center, zoom).zoom;
-        if (this._zoom === constrainedZoom) return;
-        this._unmodified = false;
-        this._zoom = constrainedZoom;
-        this._tileZoom = Math.max(0, Math.floor(constrainedZoom));
-        this._scale = this.zoomScale(constrainedZoom);
-        this._constrain();
-        this._calcMatrices();
-    }
+    get zoom(): number;
+    setZoom(zoom: number);
 
-    get center(): LngLat { return this._center; }
-    setCenter(center: LngLat) {
-        if (center.lat === this._center.lat && center.lng === this._center.lng) return;
-        this._unmodified = false;
-        this._center = center;
-        this._constrain();
-        this._calcMatrices();
-    }
+    get center(): LngLat;
+    setCenter(center: LngLat);
 
     /**
      * Elevation at current center point, meters above sea level
      */
-    get elevation(): number { return this._elevation; }
-    setElevation(elevation: number) {
-        if (elevation === this._elevation) return;
-        this._elevation = elevation;
-        this._constrain();
-        this._calcMatrices();
-    }
+    get elevation(): number;
+    setElevation(elevation: number);
 
-    get padding(): PaddingOptions { return this._edgeInsets.toJSON(); }
-    setPadding(padding: PaddingOptions) {
-        if (this._edgeInsets.equals(padding)) return;
-        this._unmodified = false;
-        // Update edge-insets in-place
-        this._edgeInsets.interpolate(this._edgeInsets, padding, 1);
-        this._calcMatrices();
-    }
+    get padding(): PaddingOptions;
+    setPadding(padding: PaddingOptions);
 
     /**
      * The center of the screen in pixels with the top-left corner being (0,0)
      * and +y axis pointing downwards. This accounts for padding.
      */
-    get centerPoint(): Point {
-        return this._edgeInsets.getCenter(this._width, this._height);
-    }
+    get centerPoint(): Point;
 
     /**
      * @internal
      */
-    get pixelsPerMeter(): number { return this._pixelPerMeter; }
+    get pixelsPerMeter(): number;
 
-    get unmodified(): boolean { return this._unmodified; }
+    get unmodified(): boolean;
 
     /**
      * @internal
      * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
      */
-    abstract get cameraPosition(): vec3;
+    get cameraPosition(): vec3;
 
     /**
      * Returns if the padding params match
@@ -335,9 +156,7 @@ export abstract class Transform {
      * @param padding - the padding to check against
      * @returns true if they are equal, false otherwise
      */
-    isPaddingEqual(padding: PaddingOptions): boolean {
-        return this._edgeInsets.equals(padding);
-    }
+    isPaddingEqual(padding: PaddingOptions): boolean;
 
     /**
      * Helper method to update edge-insets in place
@@ -346,12 +165,7 @@ export abstract class Transform {
      * @param target - the target padding
      * @param t - the step/weight
      */
-    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
-        this._unmodified = false;
-        this._edgeInsets.interpolate(start, target, t);
-        this._constrain();
-        this._calcMatrices();
-    }
+    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void;
 
     /**
      * Return a zoom level that will cover all tiles the transform
@@ -367,19 +181,13 @@ export abstract class Transform {
          * Tile size, expressed in screen pixels.
          */
         tileSize: number;
-    }): number {
-        const z = (options.roundZoom ? Math.round : Math.floor)(
-            this.zoom + this.scaleZoom(this._tileSize / options.tileSize)
-        );
-        // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
-        return Math.max(0, z);
-    }
+    }): number;
 
     /**
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
      */
-    abstract getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
+    getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID>;
 
     /**
      * Return all coordinates that could cover this transform for a covering
@@ -387,7 +195,7 @@ export abstract class Transform {
      * @param options - the options
      * @returns Array of OverscaledTileID. All OverscaledTileID instances are newly created.
      */
-    abstract coveringTiles(
+    coveringTiles(
         options: {
             tileSize: number;
             minzoom?: number;
@@ -399,15 +207,10 @@ export abstract class Transform {
         }
     ): Array<OverscaledTileID>;
 
-    resize(width: number, height: number) {
-        this._width = width;
-        this._height = height;
-        this._constrain();
-        this._calcMatrices();
-    }
+    resize(width: number, height: number);
 
-    zoomScale(zoom: number) { return Math.pow(2, zoom); }
-    scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
+    zoomScale(zoom: number);
+    scaleZoom(scale: number);
 
     /**
      * This method works in combination with freezeElevation activated.
@@ -415,14 +218,14 @@ export abstract class Transform {
      * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
      * @param terrain - the terrain
      */
-    abstract recalculateZoom(terrain: Terrain): void;
+    recalculateZoom(terrain: Terrain): void;
 
     /**
      * Set's the transform's center so that the given point on screen is at the given world coordinates.
      * @param lnglat - Desired world coordinates of the point.
      * @param point - The screen point that should lie at the given coordinates.
      */
-    abstract setLocationAtPoint(lnglat: LngLat, point: Point): void;
+    setLocationAtPoint(lnglat: LngLat, point: Point): void;
 
     /**
      * Given a LngLat location, return the screen point that corresponds to it.
@@ -430,7 +233,7 @@ export abstract class Transform {
      * @param terrain - optional terrain
      * @returns screen point
      */
-    abstract locationPoint(lnglat: LngLat, terrain?: Terrain): Point;
+    locationPoint(lnglat: LngLat, terrain?: Terrain): Point;
 
     /**
      * Given a point on screen, return its lnglat.
@@ -438,7 +241,7 @@ export abstract class Transform {
      * @param terrain - optional terrain
      * @returns lnglat location
      */
-    abstract pointLocation(p: Point, terrain?: Terrain): LngLat;
+    pointLocation(p: Point, terrain?: Terrain): LngLat;
 
     /**
      * Given a Point, return its mercator coordinate.
@@ -446,25 +249,20 @@ export abstract class Transform {
      * @param terrain - optional terrain
      * @returns lnglat
      */
-    abstract pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
+    pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
 
     /**
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
      * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
      * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
      */
-    abstract getBounds(): LngLatBounds;
+    getBounds(): LngLatBounds;
 
     /**
      * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.
      * @returns max bounds
      */
-    getMaxBounds(): LngLatBounds | null {
-        if (!this._latRange || this._latRange.length !== 2 ||
-            !this._lngRange || this._lngRange.length !== 2) return null;
-
-        return new LngLatBounds([this._lngRange[0], this._latRange[0]], [this._lngRange[1], this._latRange[1]]);
-    }
+    getMaxBounds(): LngLatBounds | null;
 
     /**
      * Returns whether the specified screen pixel lies on the map.
@@ -472,24 +270,15 @@ export abstract class Transform {
      * @param p - The pixel's coordinates.
      * @param terrain - Optional terrain.
      */
-    abstract isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
+    isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
 
     /**
      * Sets or clears the map's geographical constraints.
      * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
      */
-    setMaxBounds(bounds?: LngLatBounds | null): void {
-        if (bounds) {
-            this._lngRange = [bounds.getWest(), bounds.getEast()];
-            this._latRange = [bounds.getSouth(), bounds.getNorth()];
-            this._constrain();
-        } else {
-            this._lngRange = null;
-            this._latRange = [-MAX_VALID_LATITUDE, MAX_VALID_LATITUDE];
-        }
-    }
+    setMaxBounds(bounds?: LngLatBounds | null): void;
 
-    abstract customLayerMatrix(): mat4;
+    customLayerMatrix(): mat4;
 
     /**
      * Get center lngLat and zoom to ensure that
@@ -497,9 +286,9 @@ export abstract class Transform {
      * 2) a given lngLat is as near the center as possible
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
-    abstract getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
+    getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
 
-    abstract maxPitchScaleFactor(): number;
+    maxPitchScaleFactor(): number;
 
     /**
      * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
@@ -512,9 +301,9 @@ export abstract class Transform {
      * When the map is not pitched the `cameraPoint` is equivalent to the center of the map because
      * the camera is right above the center of the map.
      */
-    abstract getCameraPoint(): Point;
+    getCameraPoint(): Point;
 
-    abstract getRayDirectionFromPixel(p: Point): vec3;
+    getRayDirectionFromPixel(p: Point): vec3;
 
     /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect
@@ -526,31 +315,7 @@ export abstract class Transform {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(queryGeometry: Array<Point>): Array<Point> {
-        const c = this.getCameraPoint();
-
-        if (queryGeometry.length === 1) {
-            return [queryGeometry[0], c];
-        } else {
-            let minX = c.x;
-            let minY = c.y;
-            let maxX = c.x;
-            let maxY = c.y;
-            for (const p of queryGeometry) {
-                minX = Math.min(minX, p.x);
-                minY = Math.min(minY, p.y);
-                maxX = Math.max(maxX, p.x);
-                maxY = Math.max(maxY, p.y);
-            }
-            return [
-                new Point(minX, minY),
-                new Point(maxX, minY),
-                new Point(maxX, maxY),
-                new Point(minX, maxY),
-                new Point(minX, minY)
-            ];
-        }
-    }
+    getCameraQueryGeometry(queryGeometry: Array<Point>): Array<Point>;
 
     /**
      * Return the distance to the camera in clip space from a LngLat.
@@ -560,62 +325,23 @@ export abstract class Transform {
      * @param elevation - the point's elevation
      * @returns depth value in clip space (between 0 and 1)
      */
-    abstract lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
+    lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
 
-    /**
-     * @internal
-     * Snaps the transform's center, zoom, etc. into the valid range.
-     */
-    private _constrain(): void {
-        if (!this.center || !this._width || !this._height || this._constraining) return;
-        this._constraining = true;
-        const unmodified = this._unmodified;
-        const {center, zoom} = this.getConstrained(this.center, this.zoom);
-        this.setCenter(center);
-        this.setZoom(zoom);
-        this._unmodified = unmodified;
-        this._constraining = false;
-    }
-
-    /**
-     * This function is called every time one of the transform's defining properties (center, pitch, etc.) changes.
-     * This function should update the transform's internal data, such as matrices.
-     * Any derived `_calcMatrices` function should also call the base function first. The base function only depends on the `_width` and `_height` fields.
-     */
-    protected _calcMatrices(): void {
-        if (!this._width || !this._height) {
-            return;
-        }
-
-        this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
-
-        let m = mat4.identity(new Float64Array(16) as any);
-        mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
-        mat4.translate(m, m, [1, -1, 0]);
-        this._clipSpaceToPixelsMatrix = m;
-
-        m = mat4.identity(new Float64Array(16) as any);
-        mat4.scale(m, m, [1, -1, 1]);
-        mat4.translate(m, m, [-1, -1, 0]);
-        mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
-        this._pixelsToClipSpaceMatrix = m;
-    }
-
-    abstract calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
+    calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
 
     /**
      * @internal
      * True when an animation handled by the transform is in progress,
      * requiring MapLibre to keep rendering new frames.
      */
-    abstract isRenderingDirty(): boolean;
+    isRenderingDirty(): boolean;
 
     /**
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      * @param overscaledTileID - The ID of the current tile.
      * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
      */
-    abstract getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData;
+    getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData;
 
     /**
      * @internal
@@ -625,19 +351,19 @@ export abstract class Transform {
      * @param y - Tile space coordinate in range 0..EXTENT.
      * @param unwrappedTileID - TileID of the tile the supplied coordinates belong to.
      */
-    abstract isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
+    isOccluded(x: number, y: number, unwrappedTileID: UnwrappedTileID): boolean;
 
     /**
      * @internal
      */
-    abstract getPixelScale(): number;
+    getPixelScale(): number;
 
     /**
      * @internal
      * Allows the projection to adjust the radius of `circle-pitch-alignment: 'map'` circles and heatmap kernels based on the map's latitude.
      * Circle radius and heatmap kernel radius is multiplied by this value.
      */
-    abstract getCircleRadiusCorrection(): number;
+    getCircleRadiusCorrection(): number;
 
     /**
      * @internal
@@ -647,19 +373,19 @@ export abstract class Transform {
      * @param textAnchor - Text anchor position inside the tile.
      * @param tileID - The tile coordinates.
      */
-    abstract getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number;
+    getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number;
 
     /**
      * @internal
      * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
      */
-    abstract translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
+    translatePosition(tile: { tileID: OverscaledTileID; tileSize: number }, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number];
 
     /**
      * Signals to the transform that a new frame is starting.
      * The transform might update some of its internal variables and animations based on this.
      */
-    abstract newFrameUpdate(): TransformUpdateResult;
+    newFrameUpdate(): TransformUpdateResult;
 
     /**
      * @internal
@@ -668,7 +394,7 @@ export abstract class Transform {
      * @param dir - The light direction.
      * @returns A new vector with the transformed light direction.
      */
-    abstract transformLightDirection(dir: vec3): vec3;
+    transformLightDirection(dir: vec3): vec3;
 
     //
     // Projection and unprojection of points, LatLng coordinates, tile coordinates, etc.
@@ -678,7 +404,7 @@ export abstract class Transform {
      * @internal
      * Projects a point in tile coordinates. Used in symbol rendering.
      */
-    abstract projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
+    projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
 
     /**
      * Called before rendering to allow the transform implementation
@@ -686,5 +412,5 @@ export abstract class Transform {
      * Used in mercator transform to precompute tile matrices (posMatrix).
      * @param coords - Array of tile IDs that will be rendered.
      */
-    abstract precacheTiles(coords: Array<OverscaledTileID>): void;
+    precacheTiles(coords: Array<OverscaledTileID>): void;
 }

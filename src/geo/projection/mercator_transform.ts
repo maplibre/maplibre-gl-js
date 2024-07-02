@@ -8,7 +8,7 @@ import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent';
-import {MAX_VALID_LATITUDE, Transform, TransformUpdateResult} from '../transform';
+import {AbstractTransform, MAX_VALID_LATITUDE, TransformUpdateResult} from '../transform_abstract';
 import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
@@ -47,7 +47,7 @@ export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDist
     return Math.tan(Math.PI / 2 - transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance * 0.85;
 }
 
-export class MercatorTransform extends Transform {
+export class MercatorTransform extends AbstractTransform {
     private _cameraToCenterDistance: number;
     private _cameraPosition: vec3;
 
@@ -71,7 +71,7 @@ export class MercatorTransform extends Transform {
         this._alignedPosMatrixCache = {};
     }
 
-    public override clone(): Transform {
+    public override clone(): AbstractTransform {
         const clone = new MercatorTransform(this._minZoom, this._maxZoom, this._minPitch, this.maxPitch, this._renderWorldCopies);
         clone.apply(this);
         return clone;

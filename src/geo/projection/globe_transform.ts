@@ -1,5 +1,5 @@
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, Transform, TransformUpdateResult} from '../transform';
+import {MAX_VALID_LATITUDE, AbstractTransform, TransformUpdateResult} from '../transform_abstract';
 import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
@@ -147,7 +147,7 @@ function createIdentityMat4(): mat4 {
     return m;
 }
 
-export class GlobeTransform extends Transform {
+export class GlobeTransform extends AbstractTransform {
     private _cachedClippingPlane: vec4 = createVec4();
 
     // Transition handling
@@ -194,14 +194,14 @@ export class GlobeTransform extends Transform {
         this._initialized = true;
     }
 
-    override clone(): Transform {
+    override clone(): AbstractTransform {
         const clone = new GlobeTransform(null, this._globeProjectionEnabled);
         clone.apply(this);
         this.newFrameUpdate();
         return clone;
     }
 
-    public override apply(that: Transform): void {
+    public override apply(that: AbstractTransform): void {
         super.apply(that);
         this._mercatorTransform.apply(this);
     }
