@@ -43,9 +43,9 @@ type CustomRenderMethodInput = {
  * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
  * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
  * can be used to project a `LngLat` to a mercator coordinate.
- * @param args - Argument object with additional render inputs like camera properties.
+ * @param options - Argument object with additional render inputs like camera properties.
  */
-type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4, args: CustomRenderMethodInput) => void;
+type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4, options: CustomRenderMethodInput) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
