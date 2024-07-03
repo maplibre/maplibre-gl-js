@@ -8,7 +8,7 @@ import {MercatorTransform, getBasicProjectionData, getMercatorHorizon, projectTo
 import {mat4} from 'gl-matrix';
 import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
-import { LngLatBounds } from '../lng_lat_bounds';
+import {LngLatBounds} from '../lng_lat_bounds';
 
 describe('transform', () => {
     test('creates a transform', () => {

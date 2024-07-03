@@ -242,12 +242,7 @@ export class MercatorTransform implements ITransform {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
             getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
-        });
-        this._helper._minZoom = minZoom;
-        this._helper._maxZoom = maxZoom;
-        this._helper._minPitch = minPitch;
-        this._helper._maxPitch = maxPitch;
-        this._helper._renderWorldCopies = renderWorldCopies;
+        }, minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
     }
