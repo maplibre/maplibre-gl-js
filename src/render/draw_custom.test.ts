@@ -64,8 +64,8 @@ describe('drawCustom', () => {
         expect(result.gl).toBeDefined();
         expect(result.matrix).toEqual([...mockPainter.transform.mercatorMatrix.values()]);
         expect(result.args.farZ).toBe(804.8028169246645);
-        expect(result.args.farZ).toBe(mockPainter.transform._farZ);
-        expect(result.args.nearZ).toBe(mockPainter.transform._nearZ);
+        expect(result.args.farZ).toBe(mockPainter.transform.farZ);
+        expect(result.args.nearZ).toBe(mockPainter.transform.nearZ);
         expect(result.args.fov).toBe(mockPainter.transform._fov);
         expect(result.args.modelViewProjectionMatrix).toEqual(mockPainter.transform.modelViewProjectionMatrix);
         expect(result.args.projectionMatrix).toEqual(mockPainter.transform.projectionMatrix);
