@@ -313,6 +313,9 @@ export class GlobeTransform implements ITransform {
     get unmodified(): boolean {
         return this._helper.unmodified;
     }
+    get renderWorldCopies(): boolean {
+        return this._helper.renderWorldCopies;
+    }
 
     //
     // Implementation of globe transform
@@ -356,9 +359,9 @@ export class GlobeTransform implements ITransform {
     private _initialized: boolean = false;
 
     public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
-        this._helper = new TransformHelper({ // JP: TODO: will this break because of "this" reference?
-            calcMatrices: this._calcMatrices,
-            getConstrained: this.getConstrained
+        this._helper = new TransformHelper({
+            calcMatrices: () => { this._calcMatrices(); },
+            getConstrained: (center, zoom) => { return this.getConstrained(center, zoom); }
         });
         this._globeProjectionEnabled = globeProjectionEnabled;
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
@@ -607,8 +610,8 @@ export class GlobeTransform implements ITransform {
     }
 
     public transformLightDirection(dir: vec3): vec3 {
-        const sphereX = this._center.lng * Math.PI / 180.0;
-        const sphereY = this._center.lat * Math.PI / 180.0;
+        const sphereX = this._helper._center.lng * Math.PI / 180.0;
+        const sphereY = this._helper._center.lat * Math.PI / 180.0;
 
         const len = Math.cos(sphereY);
         const spherePos: vec3 = [
@@ -635,7 +638,7 @@ export class GlobeTransform implements ITransform {
     }
 
     private getAnimatedLatitude() {
-        return lerp(this._mercatorTransform.center.lat, this._center.lat, this._globeness);
+        return lerp(this._mercatorTransform.center.lat, this._helper._center.lat, this._globeness);
     }
 
     public getPixelScale(): number {
@@ -679,8 +682,10 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    protected override _calcMatrices(): void {
-        super._calcMatrices();
+    private _calcMatrices(): void {
+        if (!this._helper._width || !this._helper._height) {
+            return;
+        }
 
         if (!this._initialized) {
             return;
@@ -772,7 +777,7 @@ export class GlobeTransform implements ITransform {
         return this._mercatorTransform.maxPitchScaleFactor();
     }
 
-    override getCameraPoint(): Point {
+    getCameraPoint(): Point {
         return this._mercatorTransform.getCameraPoint();
     }
 
@@ -870,7 +875,7 @@ export class GlobeTransform implements ITransform {
         return new LngLatBounds(boundsArray);
     }
 
-    override getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
+    getConstrained(lngLat: LngLat, zoom: number): { center: LngLat; zoom: number } {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
@@ -998,7 +1003,7 @@ export class GlobeTransform implements ITransform {
         const pos = angularCoordinatesToSurfaceVector(lnglat);
 
         if (terrain) {
-            const elevation = terrain.getElevationForLngLatZoom(lnglat, this._tileZoom);
+            const elevation = terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
         const projected = createVec4();

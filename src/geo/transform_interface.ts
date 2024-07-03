@@ -53,6 +53,8 @@ export interface ITransformGetters {
 
     get padding(): PaddingOptions;
     get unmodified(): boolean;
+
+    get renderWorldCopies(): boolean;
 }
 
 /**

@@ -26,6 +26,10 @@ export type TransformHelperCallbacks = {
     calcMatrices: () => void;
 };
 
+function getTileZoom(zoom: number): number {
+    return Math.max(0, Math.floor(zoom));
+}
+
 /**
  * @internal
  * TODO
@@ -33,43 +37,43 @@ export type TransformHelperCallbacks = {
 export class TransformHelper implements ITransformGetters {
     private _callbacks: TransformHelperCallbacks;
 
-    private _tileSize: number; // constant
-    private _tileZoom: number; // integer zoom level for tiles
-    private _lngRange: [number, number];
-    private _latRange: [number, number];
-    private _scale: number; // computed based on zoom
-    private _width: number;
-    private _height: number;
+    _tileSize: number; // constant
+    _tileZoom: number; // integer zoom level for tiles
+    _lngRange: [number, number];
+    _latRange: [number, number];
+    _scale: number; // computed based on zoom
+    _width: number;
+    _height: number;
     /**
      * Vertical field of view in radians.
      */
-    private _fov: number;
+    _fov: number;
     /**
      * This transform's bearing in radians.
      */
-    private _angle: number;
+    _angle: number;
     /**
      * Pitch in radians.
      */
-    private _pitch: number;
-    private _zoom: number;
-    private _renderWorldCopies: boolean;
-    private _minZoom: number;
-    private _maxZoom: number;
-    private _minPitch: number;
-    private _maxPitch: number;
-    private _center: LngLat;
-    private _elevation: number;
-    private _minElevationForCurrentTile: number;
-    private _pixelPerMeter: number;
-    private _edgeInsets: EdgeInsets;
-    private _unmodified: boolean;
+    _pitch: number;
+    _zoom: number;
+    _renderWorldCopies: boolean;
+    _minZoom: number;
+    _maxZoom: number;
+    _minPitch: number;
+    _maxPitch: number;
+    _center: LngLat;
+    _elevation: number;
+    _minElevationForCurrentTile: number;
+    _pixelPerMeter: number;
+    _edgeInsets: EdgeInsets;
+    _unmodified: boolean;
 
-    private _constraining: boolean;
-    private _rotationMatrix: mat2;
-    private _pixelsToGLUnits: [number, number];
-    private _pixelsToClipSpaceMatrix: mat4;
-    private _clipSpaceToPixelsMatrix: mat4;
+    _constraining: boolean;
+    _rotationMatrix: mat2;
+    _pixelsToGLUnits: [number, number];
+    _pixelsToClipSpaceMatrix: mat4;
+    _clipSpaceToPixelsMatrix: mat4;
 
     constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._callbacks = callbacks;
@@ -88,7 +92,9 @@ export class TransformHelper implements ITransformGetters {
         this._height = 0;
         this._center = new LngLat(0, 0);
         this._elevation = 0;
-        this.setZoom(0);
+        this._zoom = 0;
+        this._tileZoom = getTileZoom(this._zoom);
+        this._scale = this.zoomScale(this._zoom);
         this._angle = 0;
         this._fov = 0.6435011087932844;
         this._pitch = 0;
@@ -97,7 +103,7 @@ export class TransformHelper implements ITransformGetters {
         this._minElevationForCurrentTile = 0;
     }
 
-    public apply(thatI: ITransformGetters): void {
+    public apply(thatI: ITransformGetters, constrain?: boolean): void {
         this._latRange = thatI.latRange;
         this._lngRange = thatI.lngRange;
         this._width = thatI.width;
@@ -105,7 +111,9 @@ export class TransformHelper implements ITransformGetters {
         this._center = thatI.center;
         this._elevation = thatI.elevation;
         this._minElevationForCurrentTile = thatI.minElevationForCurrentTile;
-        this.setZoom(thatI.zoom);
+        this._zoom = 0;
+        this._tileZoom = getTileZoom(this._zoom);
+        this._scale = this.zoomScale(this._zoom);
         this._angle = thatI.bearing * Math.PI / 180;
         this._fov = thatI.fov * Math.PI / 180;
         this._pitch = thatI.pitch * Math.PI / 180;
@@ -115,6 +123,9 @@ export class TransformHelper implements ITransformGetters {
         this._maxZoom = thatI.maxZoom;
         this._minPitch = thatI.minPitch;
         this._maxPitch = thatI.maxPitch;
+        if (constrain) {
+            this._constrain();
+        }
         this._calcMatrices();
     }
 
