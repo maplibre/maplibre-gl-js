@@ -7,9 +7,17 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 * Input arguments exposed by custom render function.
 */
 type CustomRenderMethodInput = {
-    /** farthest z distance of camera **/
+    /**
+     * This value represents the distance from the camera to the far clipping plane.
+     * It is used in the calculation of the projection matrix to determine which objects are visible.
+     * farz should be larger than nearZ.
+     */
     farZ: number;
-    /** closest z distance of camera **/
+    /**
+     * This value represents the distance from the camera to the near clipping plane.
+     * It is used in the calculation of the projection matrix to determine which objects are visible.
+     * nearZ should be smaller than farZ.
+     */
     nearZ: number;
     /** field of view of camera **/
     fov: number;
