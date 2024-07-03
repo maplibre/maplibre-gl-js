@@ -8,6 +8,7 @@ import {MercatorTransform, getBasicProjectionData, getMercatorHorizon, projectTo
 import {mat4} from 'gl-matrix';
 import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
+import { LngLatBounds } from '../lng_lat_bounds';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -109,8 +110,7 @@ describe('transform', () => {
         transform.setZoom(10);
         transform.resize(500, 500);
 
-        transform['_lngRange'] = [-5, 5];
-        transform['_latRange'] = [-5, 5];
+        transform.setMaxBounds(new LngLatBounds([-5, -5, 5, 5]));
 
         transform.setZoom(0);
         expect(transform.zoom).toBe(5.1357092861044045);
@@ -135,8 +135,7 @@ describe('transform', () => {
         ];
 
         for (const lngRange of lngRanges) {
-            transform['_lngRange'] = lngRange;
-            transform['_latRange'] = [-5, 5];
+            transform.setMaxBounds(new LngLatBounds([lngRange[0], -5, lngRange[1], 5]));
 
             transform.setZoom(0);
             expect(transform.zoom).toBe(5.1357092861044045);
@@ -388,7 +387,7 @@ describe('transform', () => {
         expect(unwrappedCoords).toHaveLength(4);
 
         //getVisibleUnwrappedCoordinates should honor _renderWorldCopies
-        transform['_renderWorldCopies'] = false;
+        transform.setRenderWorldCopies(false);
         unwrappedCoords = transform.getVisibleUnwrappedCoordinates(new CanonicalTileID(0, 0, 0));
         expect(unwrappedCoords).toHaveLength(1);
     });
