@@ -13,53 +13,17 @@ export const MAX_VALID_LATITUDE = 85.051129;
 
 export type TransformUpdateResult = {forcePlacementUpdate: boolean};
 
-/**
- * @internal
- * The transform stores everything needed to project or otherwise transform points on a map,
- * including most of the map's view state - center, zoom, pitch, etc.
- * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
- */
-export interface ITransform {
-    clone(): ITransform;
-
-    apply(that: ITransform): void;
-
-    /**
-     * @internal
-     * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
-     * will assume the underlying map is a spherical surface, as opposed to a plane.
-     */
-    get useGlobeControls(): boolean;
-
-    /**
-     * Distance from camera origin to view plane, in pixels.
-     * Calculated using vertical fov and viewport height.
-     * Center is considered to be in the middle of the viewport.
-     */
-    get cameraToCenterDistance(): number;
-
-    get modelViewProjectionMatrix(): mat4;
-
-    /**
-     * Inverse of matrix from camera space to clip space.
-     */
-    get inverseProjectionMatrix(): mat4;
-
-    get pixelsToClipSpaceMatrix(): mat4;
-    get clipSpaceToPixelsMatrix(): mat4;
-
-    get minElevationForCurrentTile(): number;
-    setMinElevationForCurrentTile(ele: number);
-
+export interface ITransformGetters {
     get tileSize(): number;
+
     get tileZoom(): number;
     get scale(): number;
+    get worldSize(): number;
 
     /**
      * Gets the transform's width in pixels. Use {@link resize} to set the transform's size.
      */
     get width(): number;
-
     /**
      * Gets the transform's height in pixels. Use {@link resize} to set the transform's size.
      */
@@ -73,77 +37,94 @@ export interface ITransform {
     get lngRange(): [number, number];
     get latRange(): [number, number];
 
-    get pixelsToGLUnits(): [number, number];
-
     get minZoom(): number;
-    setMinZoom(zoom: number);
-
     get maxZoom(): number;
-    setMaxZoom(zoom: number);
+    get zoom(): number;
+    get center(): LngLat;
 
     get minPitch(): number;
-    setMinPitch(pitch: number);
-
     get maxPitch(): number;
-    setMaxPitch(pitch: number);
+    get pitch(): number;
+    get bearing(): number;
+    get fov(): number;
 
-    get renderWorldCopies(): boolean;
-    setRenderWorldCopies(renderWorldCopies: boolean);
+    get elevation(): number;
+    get minElevationForCurrentTile(): number;
 
-    get worldSize(): number;
+    get padding(): PaddingOptions;
+    get unmodified(): boolean;
+}
 
+/**
+ * @internal
+ * The transform stores everything needed to project or otherwise transform points on a map,
+ * including most of the map's view state - center, zoom, pitch, etc.
+ * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
+ */
+export interface ITransform extends ITransformGetters {
+    clone(): ITransform;
+
+    apply(that: ITransform): void;
+
+    /**
+     * @internal
+     * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
+     * will assume the underlying map is a spherical surface, as opposed to a plane.
+     */
+    get useGlobeControls(): boolean;
+    /**
+     * Distance from camera origin to view plane, in pixels.
+     * Calculated using vertical fov and viewport height.
+     * Center is considered to be in the middle of the viewport.
+     */
+    get cameraToCenterDistance(): number;
+    get modelViewProjectionMatrix(): mat4;
+    /**
+     * Inverse of matrix from camera space to clip space.
+     */
+    get inverseProjectionMatrix(): mat4;
+    get pixelsToClipSpaceMatrix(): mat4;
+    get clipSpaceToPixelsMatrix(): mat4;
+    get pixelsToGLUnits(): [number, number];
     get centerOffset(): Point;
-
     /**
      * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
      */
     get size(): Point;
-
-    get bearing(): number;
-
-    setBearing(bearing: number);
-
     get rotationMatrix(): mat2;
-
-    get pitch(): number;
-    setPitch(pitch: number);
-
-    get fov(): number;
-    setFov(fov: number);
-
-    get zoom(): number;
-    setZoom(zoom: number);
-
-    get center(): LngLat;
-    setCenter(center: LngLat);
-
-    /**
-     * Elevation at current center point, meters above sea level
-     */
-    get elevation(): number;
-    setElevation(elevation: number);
-
-    get padding(): PaddingOptions;
-    setPadding(padding: PaddingOptions);
-
     /**
      * The center of the screen in pixels with the top-left corner being (0,0)
      * and +y axis pointing downwards. This accounts for padding.
      */
     get centerPoint(): Point;
-
     /**
      * @internal
      */
     get pixelsPerMeter(): number;
-
-    get unmodified(): boolean;
-
     /**
      * @internal
      * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
      */
     get cameraPosition(): vec3;
+
+    setMinZoom(zoom: number): void;
+    setMaxZoom(zoom: number): void;
+    setMinPitch(pitch: number): void;
+    setMaxPitch(pitch: number): void;
+    setRenderWorldCopies(renderWorldCopies: boolean): void;
+    setBearing(bearing: number): void;
+    setPitch(pitch: number): void;
+    setFov(fov: number): void;
+    setZoom(zoom: number): void;
+    setCenter(center: LngLat): void;
+    setElevation(elevation: number): void;
+    setMinElevationForCurrentTile(elevation: number): void;
+    setPadding(padding: PaddingOptions): void;
+
+    resize(width: number, height: number): void;
+
+    zoomScale(zoom: number): number;
+    scaleZoom(scale: number): number;
 
     /**
      * Returns if the padding params match
@@ -201,11 +182,6 @@ export interface ITransform {
             terrain?: Terrain;
         }
     ): Array<OverscaledTileID>;
-
-    resize(width: number, height: number);
-
-    zoomScale(zoom: number);
-    scaleZoom(scale: number);
 
     /**
      * This method works in combination with freezeElevation activated.

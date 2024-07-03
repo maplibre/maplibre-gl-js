@@ -2,18 +2,19 @@ import {LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat, mercatorZfromAltitude} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {wrap, clamp} from '../../util/util';
-import {mat4, vec2, vec3, vec4} from 'gl-matrix';
+import {mat2, mat4, vec2, vec3, vec4} from 'gl-matrix';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent';
-import {AbstractTransform, MAX_VALID_LATITUDE, TransformUpdateResult} from '../transform_abstract';
+import {AbstractTransform, MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_abstract';
 import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {ITransform} from '../transform';
+import {PaddingOptions} from '../edge_insets';
 
 /**
  * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512).
@@ -48,7 +49,175 @@ export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDist
     return Math.tan(Math.PI / 2 - transform.pitch * Math.PI / 180.0) * transform.cameraToCenterDistance * 0.85;
 }
 
-export class MercatorTransform extends AbstractTransform implements ITransform {
+export class MercatorTransform implements ITransform {
+    private _helper: TransformHelper;
+
+    //
+    // Implementation of transform getters and setters
+    //
+
+    get pixelsToClipSpaceMatrix(): mat4 {
+        return this._helper.pixelsToClipSpaceMatrix;
+    }
+    get clipSpaceToPixelsMatrix(): mat4 {
+        return this._helper.clipSpaceToPixelsMatrix;
+    }
+    get pixelsToGLUnits(): [number, number] {
+        return this._helper.pixelsToGLUnits;
+    }
+    get centerOffset(): Point {
+        return this._helper.centerOffset;
+    }
+    get size(): Point {
+        return this._helper.size;
+    }
+    get rotationMatrix(): mat2 {
+        return this._helper.rotationMatrix;
+    }
+    get centerPoint(): Point {
+        return this._helper.centerPoint;
+    }
+    get pixelsPerMeter(): number {
+        return this._helper.pixelsPerMeter;
+    }
+    setMinZoom(zoom: number): void {
+        this._helper.setMinZoom(zoom);
+    }
+    setMaxZoom(zoom: number): void {
+        this._helper.setMaxZoom(zoom);
+    }
+    setMinPitch(pitch: number): void {
+        this._helper.setMinPitch(pitch);
+    }
+    setMaxPitch(pitch: number): void {
+        this._helper.setMaxPitch(pitch);
+    }
+    setRenderWorldCopies(renderWorldCopies: boolean): void {
+        this._helper.setRenderWorldCopies(renderWorldCopies);
+    }
+    setBearing(bearing: number): void {
+        this._helper.setBearing(bearing);
+    }
+    setPitch(pitch: number): void {
+        this._helper.setPitch(pitch);
+    }
+    setFov(fov: number): void {
+        this._helper.setFov(fov);
+    }
+    setZoom(zoom: number): void {
+        this._helper.setZoom(zoom);
+    }
+    setCenter(center: LngLat): void {
+        this._helper.setCenter(center);
+    }
+    setElevation(elevation: number): void {
+        this._helper.setElevation(elevation);
+    }
+    setMinElevationForCurrentTile(elevation: number): void {
+        this._helper.setMinElevationForCurrentTile(elevation);
+    }
+    setPadding(padding: PaddingOptions): void {
+        this._helper.setPadding(padding);
+    }
+    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
+        return this._helper.interpolatePadding(start, target, t);
+    }
+    isPaddingEqual(padding: PaddingOptions): boolean {
+        return this._helper.isPaddingEqual(padding);
+    }
+    coveringZoomLevel(options: { roundZoom?: boolean; tileSize: number }): number {
+        return this._helper.coveringZoomLevel(options);
+    }
+    resize(width: number, height: number): void {
+        this._helper.resize(width, height);
+    }
+    zoomScale(zoom: number): number {
+        return this._helper.zoomScale(zoom);
+    }
+    scaleZoom(scale: number): number {
+        return this._helper.scaleZoom(scale);
+    }
+    getMaxBounds(): LngLatBounds {
+        return this._helper.getMaxBounds();
+    }
+    setMaxBounds(bounds?: LngLatBounds): void {
+        this._helper.setMaxBounds(bounds);
+    }
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
+        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
+    }
+
+    get tileSize(): number {
+        return this._helper.tileSize;
+    }
+    get tileZoom(): number {
+        return this._helper.tileZoom;
+    }
+    get scale(): number {
+        return this._helper.scale;
+    }
+    get worldSize(): number {
+        return this._helper.worldSize;
+    }
+    get width(): number {
+        return this._helper.width;
+    }
+    get height(): number {
+        return this._helper.height;
+    }
+    get angle(): number {
+        return this._helper.angle;
+    }
+    get lngRange(): [number, number] {
+        return this._helper.lngRange;
+    }
+    get latRange(): [number, number] {
+        return this._helper.latRange;
+    }
+    get minZoom(): number {
+        return this._helper.minZoom;
+    }
+    get maxZoom(): number {
+        return this._helper.maxZoom;
+    }
+    get zoom(): number {
+        return this._helper.zoom;
+    }
+    get center(): LngLat {
+        return this._helper.center;
+    }
+    get minPitch(): number {
+        return this._helper.minPitch;
+    }
+    get maxPitch(): number {
+        return this._helper.maxPitch;
+    }
+    get pitch(): number {
+        return this._helper.pitch;
+    }
+    get bearing(): number {
+        return this._helper.bearing;
+    }
+    get fov(): number {
+        return this._helper.fov;
+    }
+    get elevation(): number {
+        return this._helper.elevation;
+    }
+    get minElevationForCurrentTile(): number {
+        return this._helper.minElevationForCurrentTile;
+    }
+    get padding(): PaddingOptions {
+        return this._helper.padding;
+    }
+    get unmodified(): boolean {
+        return this._helper.unmodified;
+    }
+
+    //
+    // Implementation of mercator transform
+    //
+
     private _cameraToCenterDistance: number;
     private _cameraPosition: vec3;
 
@@ -66,23 +235,30 @@ export class MercatorTransform extends AbstractTransform implements ITransform {
     private _fogMatrixCache: {[_: string]: mat4};
     private _alignedPosMatrixCache: {[_: string]: mat4};
 
-    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
-        super(minZoom, maxZoom, minPitch, maxPitch, renderWorldCopies);
+    constructor() {
+        this._helper = new TransformHelper({
+            calcMatrices: this._calcMatrices,
+            getConstrained: this.getConstrained
+        });
         this._posMatrixCache = {};
         this._alignedPosMatrixCache = {};
     }
 
-    public override clone(): ITransform {
-        const clone = new MercatorTransform(this._minZoom, this._maxZoom, this._minPitch, this.maxPitch, this._renderWorldCopies);
+    public clone(): ITransform {
+        const clone = new MercatorTransform();
         clone.apply(this);
         return clone;
     }
 
-    public override get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
+    public apply(that: ITransform): void {
+        this._helper.apply(that);
+    }
+
+    public get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
     public get cameraPosition(): vec3 { return this._cameraPosition; }
-    public override get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
-    public override get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
-    public override get useGlobeControls(): boolean { return false; }
+    public get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
+    public get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
+    public get useGlobeControls(): boolean { return false; }
 
     /**
      * Return any "wrapped" copies of a given tile coordinate that are visible

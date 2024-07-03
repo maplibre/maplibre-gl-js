@@ -1,5 +1,5 @@
-import {mat4, vec3, vec4} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, AbstractTransform, TransformUpdateResult} from '../transform_abstract';
+import {mat2, mat4, vec3, vec4} from 'gl-matrix';
+import {MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_abstract';
 import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
@@ -15,6 +15,7 @@ import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {ITransform} from '../transform';
+import {PaddingOptions} from '../edge_insets';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {
     const radius = getGlobeRadiusPixels(transform.worldSize, transform.center.lat);
@@ -148,7 +149,175 @@ function createIdentityMat4(): mat4 {
     return m;
 }
 
-export class GlobeTransform extends AbstractTransform implements ITransform {
+export class GlobeTransform implements ITransform {
+    private _helper: TransformHelper;
+
+    //
+    // Implementation of transform getters and setters
+    //
+
+    get pixelsToClipSpaceMatrix(): mat4 {
+        return this._helper.pixelsToClipSpaceMatrix;
+    }
+    get clipSpaceToPixelsMatrix(): mat4 {
+        return this._helper.clipSpaceToPixelsMatrix;
+    }
+    get pixelsToGLUnits(): [number, number] {
+        return this._helper.pixelsToGLUnits;
+    }
+    get centerOffset(): Point {
+        return this._helper.centerOffset;
+    }
+    get size(): Point {
+        return this._helper.size;
+    }
+    get rotationMatrix(): mat2 {
+        return this._helper.rotationMatrix;
+    }
+    get centerPoint(): Point {
+        return this._helper.centerPoint;
+    }
+    get pixelsPerMeter(): number {
+        return this._helper.pixelsPerMeter;
+    }
+    setMinZoom(zoom: number): void {
+        this._helper.setMinZoom(zoom);
+    }
+    setMaxZoom(zoom: number): void {
+        this._helper.setMaxZoom(zoom);
+    }
+    setMinPitch(pitch: number): void {
+        this._helper.setMinPitch(pitch);
+    }
+    setMaxPitch(pitch: number): void {
+        this._helper.setMaxPitch(pitch);
+    }
+    setRenderWorldCopies(renderWorldCopies: boolean): void {
+        this._helper.setRenderWorldCopies(renderWorldCopies);
+    }
+    setBearing(bearing: number): void {
+        this._helper.setBearing(bearing);
+    }
+    setPitch(pitch: number): void {
+        this._helper.setPitch(pitch);
+    }
+    setFov(fov: number): void {
+        this._helper.setFov(fov);
+    }
+    setZoom(zoom: number): void {
+        this._helper.setZoom(zoom);
+    }
+    setCenter(center: LngLat): void {
+        this._helper.setCenter(center);
+    }
+    setElevation(elevation: number): void {
+        this._helper.setElevation(elevation);
+    }
+    setMinElevationForCurrentTile(elevation: number): void {
+        this._helper.setMinElevationForCurrentTile(elevation);
+    }
+    setPadding(padding: PaddingOptions): void {
+        this._helper.setPadding(padding);
+    }
+    interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void {
+        return this._helper.interpolatePadding(start, target, t);
+    }
+    isPaddingEqual(padding: PaddingOptions): boolean {
+        return this._helper.isPaddingEqual(padding);
+    }
+    coveringZoomLevel(options: { roundZoom?: boolean; tileSize: number }): number {
+        return this._helper.coveringZoomLevel(options);
+    }
+    resize(width: number, height: number): void {
+        this._helper.resize(width, height);
+    }
+    zoomScale(zoom: number): number {
+        return this._helper.zoomScale(zoom);
+    }
+    scaleZoom(scale: number): number {
+        return this._helper.scaleZoom(scale);
+    }
+    getMaxBounds(): LngLatBounds {
+        return this._helper.getMaxBounds();
+    }
+    setMaxBounds(bounds?: LngLatBounds): void {
+        this._helper.setMaxBounds(bounds);
+    }
+    getCameraQueryGeometry(queryGeometry: Point[]): Point[] {
+        return this._helper.getCameraQueryGeometry(this.getCameraPoint(), queryGeometry);
+    }
+
+    get tileSize(): number {
+        return this._helper.tileSize;
+    }
+    get tileZoom(): number {
+        return this._helper.tileZoom;
+    }
+    get scale(): number {
+        return this._helper.scale;
+    }
+    get worldSize(): number {
+        return this._helper.worldSize;
+    }
+    get width(): number {
+        return this._helper.width;
+    }
+    get height(): number {
+        return this._helper.height;
+    }
+    get angle(): number {
+        return this._helper.angle;
+    }
+    get lngRange(): [number, number] {
+        return this._helper.lngRange;
+    }
+    get latRange(): [number, number] {
+        return this._helper.latRange;
+    }
+    get minZoom(): number {
+        return this._helper.minZoom;
+    }
+    get maxZoom(): number {
+        return this._helper.maxZoom;
+    }
+    get zoom(): number {
+        return this._helper.zoom;
+    }
+    get center(): LngLat {
+        return this._helper.center;
+    }
+    get minPitch(): number {
+        return this._helper.minPitch;
+    }
+    get maxPitch(): number {
+        return this._helper.maxPitch;
+    }
+    get pitch(): number {
+        return this._helper.pitch;
+    }
+    get bearing(): number {
+        return this._helper.bearing;
+    }
+    get fov(): number {
+        return this._helper.fov;
+    }
+    get elevation(): number {
+        return this._helper.elevation;
+    }
+    get minElevationForCurrentTile(): number {
+        return this._helper.minElevationForCurrentTile;
+    }
+    get padding(): PaddingOptions {
+        return this._helper.padding;
+    }
+    get unmodified(): boolean {
+        return this._helper.unmodified;
+    }
+
+    //
+    // Implementation of globe transform
+    //
+
     private _cachedClippingPlane: vec4 = createVec4();
 
     // Transition handling
@@ -187,7 +356,10 @@ export class GlobeTransform extends AbstractTransform implements ITransform {
     private _initialized: boolean = false;
 
     public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
-        super();
+        this._helper = new TransformHelper({ // JP: TODO: will this break because of "this" reference?
+            calcMatrices: this._calcMatrices,
+            getConstrained: this.getConstrained
+        });
         this._globeProjectionEnabled = globeProjectionEnabled;
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
@@ -195,23 +367,23 @@ export class GlobeTransform extends AbstractTransform implements ITransform {
         this._initialized = true;
     }
 
-    override clone(): ITransform {
+    clone(): ITransform {
         const clone = new GlobeTransform(null, this._globeProjectionEnabled);
         clone.apply(this);
         this.newFrameUpdate();
         return clone;
     }
 
-    public override apply(that: ITransform): void {
-        super.apply(that);
+    public apply(that: ITransform): void {
+        this._helper.apply(that);
         this._mercatorTransform.apply(this);
     }
 
-    public override get modelViewProjectionMatrix(): mat4 { return this._globeRendering ? this._globeViewProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
+    public get modelViewProjectionMatrix(): mat4 { return this._globeRendering ? this._globeViewProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
 
-    public override get inverseProjectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixInverted : this._mercatorTransform.inverseProjectionMatrix; }
+    public get inverseProjectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixInverted : this._mercatorTransform.inverseProjectionMatrix; }
 
-    public override get useGlobeControls(): boolean { return this._globeRendering; }
+    public get useGlobeControls(): boolean { return this._globeRendering; }
 
     public get cameraPosition(): vec3 {
         // Return a copy - don't let outside code mutate our precomputed camera position.
@@ -222,7 +394,7 @@ export class GlobeTransform extends AbstractTransform implements ITransform {
         return copy;
     }
 
-    override get cameraToCenterDistance(): number {
+    get cameraToCenterDistance(): number {
         // Globe uses the same cameraToCenterDistance as mercator.
         return this._mercatorTransform.cameraToCenterDistance;
     }

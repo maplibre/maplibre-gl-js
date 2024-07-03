@@ -5,55 +5,65 @@ import {wrap, clamp} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import type {PaddingOptions} from './edge_insets';
-import {ITransform} from './transform';
+import {ITransformGetters} from './transform';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 
 export type TransformUpdateResult = {forcePlacementUpdate: boolean};
 
+export type TransformHelperCallbacks = {
+    /**
+     * Get center lngLat and zoom to ensure that
+     * 1) everything beyond the bounds is excluded
+     * 2) a given lngLat is as near the center as possible
+     * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+     */
+    getConstrained: (center: LngLat, zoom: number) => { center: LngLat; zoom: number };
+
+    /**
+     * Updates the underlying transform's internal matrices.
+     */
+    calcMatrices: () => void;
+};
+
 /**
  * @internal
- * The transform class stores everything needed to project or otherwise transform points on a map,
- * including most of the map's view state - center, zoom, pitch, etc.
- * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
- *
- * This base class stores all data about a transform that is common across all projections.
- * This data is what actually defines the map's position, angles, etc.
- * This data should be transferable to a transform implementation for any different projection,
- * hence the implementation of `Transform.apply`, which works on any Transform and accepts any Transform.
+ * TODO
  */
-export abstract class AbstractTransform {
+export class TransformHelper implements ITransformGetters {
+    private _callbacks: TransformHelperCallbacks;
+
     private _tileSize: number; // constant
-    protected _tileZoom: number; // integer zoom level for tiles
-    protected _lngRange: [number, number];
-    protected _latRange: [number, number];
-    protected _scale: number; // computed based on zoom
-    protected _width: number;
-    protected _height: number;
+    private _tileZoom: number; // integer zoom level for tiles
+    private _lngRange: [number, number];
+    private _latRange: [number, number];
+    private _scale: number; // computed based on zoom
+    private _width: number;
+    private _height: number;
     /**
      * Vertical field of view in radians.
      */
-    protected _fov: number;
+    private _fov: number;
     /**
      * This transform's bearing in radians.
      */
-    protected _angle: number;
+    private _angle: number;
     /**
      * Pitch in radians.
      */
-    protected _pitch: number;
-    protected _zoom: number;
-    protected _renderWorldCopies: boolean;
-    protected _minZoom: number;
-    protected _maxZoom: number;
-    protected _minPitch: number;
-    protected _maxPitch: number;
-    protected _center: LngLat;
-    protected _elevation: number;
+    private _pitch: number;
+    private _zoom: number;
+    private _renderWorldCopies: boolean;
+    private _minZoom: number;
+    private _maxZoom: number;
+    private _minPitch: number;
+    private _maxPitch: number;
+    private _center: LngLat;
+    private _elevation: number;
     private _minElevationForCurrentTile: number;
-    protected _pixelPerMeter: number;
-    protected _edgeInsets: EdgeInsets;
-    protected _unmodified: boolean;
+    private _pixelPerMeter: number;
+    private _edgeInsets: EdgeInsets;
+    private _unmodified: boolean;
 
     private _constraining: boolean;
     private _rotationMatrix: mat2;
@@ -61,7 +71,8 @@ export abstract class AbstractTransform {
     private _pixelsToClipSpaceMatrix: mat4;
     private _clipSpaceToPixelsMatrix: mat4;
 
-    constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+    constructor(callbacks: TransformHelperCallbacks, minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
+        this._callbacks = callbacks;
         this._tileSize = 512; // constant
 
         this._renderWorldCopies = renderWorldCopies === undefined ? true : !!renderWorldCopies;
@@ -86,54 +97,26 @@ export abstract class AbstractTransform {
         this._minElevationForCurrentTile = 0;
     }
 
-    abstract clone(): ITransform;
-
-    public apply(thatI: ITransform, constrain: boolean = false): void {
-        const that = thatI as any as AbstractTransform; // JP: TODO: fixme
-        this._tileSize = that._tileSize;
-        this._latRange = that._latRange;
-        this._lngRange = that._lngRange;
-        this._width = that._width;
-        this._height = that._height;
-        this._center = that._center;
-        this._elevation = that._elevation;
-        this._minElevationForCurrentTile = that._minElevationForCurrentTile;
-        this.setZoom(that.zoom);
-        this._angle = that._angle;
-        this._fov = that._fov;
-        this._pitch = that._pitch;
-        this._unmodified = that._unmodified;
-        this._edgeInsets = that._edgeInsets.clone();
-        this._minZoom = that._minZoom;
-        this._maxZoom = that._maxZoom;
-        this._minPitch = that._minPitch;
-        this._maxPitch = that._maxPitch;
-        if (constrain) {
-            this._constrain();
-        }
+    public apply(thatI: ITransformGetters): void {
+        this._latRange = thatI.latRange;
+        this._lngRange = thatI.lngRange;
+        this._width = thatI.width;
+        this._height = thatI.height;
+        this._center = thatI.center;
+        this._elevation = thatI.elevation;
+        this._minElevationForCurrentTile = thatI.minElevationForCurrentTile;
+        this.setZoom(thatI.zoom);
+        this._angle = thatI.bearing * Math.PI / 180;
+        this._fov = thatI.fov * Math.PI / 180;
+        this._pitch = thatI.pitch * Math.PI / 180;
+        this._unmodified = thatI.unmodified;
+        this._edgeInsets = new EdgeInsets(thatI.padding.top, thatI.padding.bottom, thatI.padding.left, thatI.padding.right);
+        this._minZoom = thatI.minZoom;
+        this._maxZoom = thatI.maxZoom;
+        this._minPitch = thatI.minPitch;
+        this._maxPitch = thatI.maxPitch;
         this._calcMatrices();
     }
-
-    /**
-     * @internal
-     * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
-     * will assume the underlying map is a spherical surface, as opposed to a plane.
-     */
-    abstract get useGlobeControls(): boolean;
-
-    /**
-     * Distance from camera origin to view plane, in pixels.
-     * Calculated using vertical fov and viewport height.
-     * Center is considered to be in the middle of the viewport.
-     */
-    abstract get cameraToCenterDistance(): number;
-
-    abstract get modelViewProjectionMatrix(): mat4;
-
-    /**
-     * Inverse of matrix from camera space to clip space.
-     */
-    abstract get inverseProjectionMatrix(): mat4;
 
     get pixelsToClipSpaceMatrix(): mat4 { return this._pixelsToClipSpaceMatrix; }
     get clipSpaceToPixelsMatrix(): mat4 { return this._clipSpaceToPixelsMatrix; }
@@ -398,13 +381,9 @@ export abstract class AbstractTransform {
         }
     }
 
-    /**
-     * Get center lngLat and zoom to ensure that
-     * 1) everything beyond the bounds is excluded
-     * 2) a given lngLat is as near the center as possible
-     * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
-     */
-    abstract getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
+    private getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
+        return this._callbacks.getConstrained(lngLat, zoom);
+    }
 
     /**
      * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
@@ -417,7 +396,8 @@ export abstract class AbstractTransform {
      * When the map is not pitched the `cameraPoint` is equivalent to the center of the map because
      * the camera is right above the center of the map.
      */
-    abstract getCameraPoint(): Point;
+    //abstract getCameraPoint(): Point;
+
     /**
      * When the map is pitched, some of the 3D features that intersect a query will not intersect
      * the query at the surface of the earth. Instead the feature may be closer and only intersect
@@ -428,16 +408,14 @@ export abstract class AbstractTransform {
      * screen where the *base* of a visible extrusion could be.
      *
      */
-    getCameraQueryGeometry(queryGeometry: Array<Point>): Array<Point> {
-        const c = this.getCameraPoint();
-
+    getCameraQueryGeometry(cameraPoint: Point, queryGeometry: Array<Point>): Array<Point> {
         if (queryGeometry.length === 1) {
-            return [queryGeometry[0], c];
+            return [queryGeometry[0], cameraPoint];
         } else {
-            let minX = c.x;
-            let minY = c.y;
-            let maxX = c.x;
-            let maxY = c.y;
+            let minX = cameraPoint.x;
+            let minY = cameraPoint.y;
+            let maxX = cameraPoint.x;
+            let maxY = cameraPoint.y;
             for (const p of queryGeometry) {
                 minX = Math.min(minX, p.x);
                 minY = Math.min(minY, p.y);
@@ -475,21 +453,20 @@ export abstract class AbstractTransform {
      * Any derived `_calcMatrices` function should also call the base function first. The base function only depends on the `_width` and `_height` fields.
      */
     protected _calcMatrices(): void {
-        if (!this._width || !this._height) {
-            return;
+        if (this._width && this._height) {
+            this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
+
+            let m = mat4.identity(new Float64Array(16) as any);
+            mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
+            mat4.translate(m, m, [1, -1, 0]);
+            this._clipSpaceToPixelsMatrix = m;
+
+            m = mat4.identity(new Float64Array(16) as any);
+            mat4.scale(m, m, [1, -1, 1]);
+            mat4.translate(m, m, [-1, -1, 0]);
+            mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
+            this._pixelsToClipSpaceMatrix = m;
         }
-
-        this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
-
-        let m = mat4.identity(new Float64Array(16) as any);
-        mat4.scale(m, m, [this._width / 2, -this._height / 2, 1]);
-        mat4.translate(m, m, [1, -1, 0]);
-        this._clipSpaceToPixelsMatrix = m;
-
-        m = mat4.identity(new Float64Array(16) as any);
-        mat4.scale(m, m, [1, -1, 1]);
-        mat4.translate(m, m, [-1, -1, 0]);
-        mat4.scale(m, m, [2 / this._width, 2 / this._height, 1]);
-        this._pixelsToClipSpaceMatrix = m;
+        this._callbacks.calcMatrices();
     }
 }
