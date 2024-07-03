@@ -1,5 +1,5 @@
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_abstract';
+import {MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_helper';
 import {Tile} from '../../source/tile';
 import {MercatorTransform, translatePosition} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
@@ -14,7 +14,7 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {ITransform} from '../transform';
+import {ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 
 export function getGlobeCircumferencePixels(transform: {worldSize: number; center: {lat: number}}): number {

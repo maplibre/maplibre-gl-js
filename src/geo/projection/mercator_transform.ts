@@ -8,12 +8,12 @@ import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent';
-import {AbstractTransform, MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_abstract';
+import {AbstractTransform, MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_helper';
 import {ProjectionData} from '../../render/program/projection_program';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {ITransform} from '../transform';
+import {ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 
 /**

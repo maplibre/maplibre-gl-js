@@ -7,7 +7,7 @@ import {GridIndex} from './grid_index';
 import {mat4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
-import type {ITransform} from '../geo/transform';
+import type {ITransform} from '../geo/transform_interface';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,

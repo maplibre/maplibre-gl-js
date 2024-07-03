@@ -1,7 +1,7 @@
 import {Uniform2f} from '../uniform_binding';
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import type {ITransform} from '../../geo/transform';
+import type {ITransform} from '../../geo/transform_interface';
 
 export type CollisionUniformsType = {
     'u_pixel_extrude_scale': Uniform2f;

@@ -10,7 +10,7 @@ import Point from '@mapbox/point-geometry';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {BucketParameters} from '../../data/bucket';
 import type {FillExtrusionPaintProps} from './fill_extrusion_style_layer_properties.g';
-import type {ITransform} from '../../geo/transform';
+import type {ITransform} from '../../geo/transform_interface';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class Point3D extends Point {

@@ -32,7 +32,7 @@ import type {CrossTileID, VariableOffset} from '../symbol/placement';
 import type {SymbolBucket, SymbolBuffers} from '../data/bucket/symbol_bucket';
 import type {TerrainData} from '../render/terrain';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ITransform} from '../geo/transform';
+import type {ITransform} from '../geo/transform_interface';
 import type {ColorMode} from '../gl/color_mode';
 import type {Program} from './program';
 import type {TextAnchor} from '../style/style_layer/variable_text_anchor';

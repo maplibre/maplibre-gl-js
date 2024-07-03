@@ -1,7 +1,7 @@
 import {UniformColor, Uniform1f} from '../uniform_binding';
 import type {Context} from '../../gl/context';
 import type {UniformValues, UniformLocations} from '../uniform_binding';
-import {ITransform} from '../../geo/transform';
+import {ITransform} from '../../geo/transform_interface';
 import {Sky} from '../../style/sky';
 import {getMercatorHorizon} from '../../geo/projection/mercator_transform';
 

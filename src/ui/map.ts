@@ -60,7 +60,7 @@ import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
 import type {ControlPosition, IControl} from './control/control';
 import type {QueryRenderedFeaturesOptions, QuerySourceFeatureOptions} from '../source/query_features';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
-import {ITransform} from '../geo/transform';
+import {ITransform} from '../geo/transform_interface';
 
 const version = packageJSON.version;
 

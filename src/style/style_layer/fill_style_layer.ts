@@ -11,7 +11,7 @@ import type {BucketParameters} from '../../data/bucket';
 import type Point from '@mapbox/point-geometry';
 import type {FillLayoutProps, FillPaintProps} from './fill_style_layer_properties.g';
 import type {EvaluationParameters} from '../evaluation_parameters';
-import type {ITransform} from '../../geo/transform';
+import type {ITransform} from '../../geo/transform_interface';
 import type {VectorTileFeature} from '@mapbox/vector-tile';
 
 export class FillStyleLayer extends StyleLayer {

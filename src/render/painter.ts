@@ -35,7 +35,7 @@ import {drawSky, drawAtmosphere} from './draw_sky';
 import {Mesh} from './mesh';
 import {MercatorShaderDefine, MercatorShaderVariantKey} from '../geo/projection/mercator';
 
-import type {ITransform} from '../geo/transform';
+import type {ITransform} from '../geo/transform_interface';
 import type {Style} from '../style/style';
 import type {StyleLayer} from '../style/style_layer';
 import type {CrossFaded} from '../style/properties';

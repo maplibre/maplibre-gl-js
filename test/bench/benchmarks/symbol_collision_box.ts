@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {ITransform} from '../../../src/geo/transform';
+import {ITransform} from '../../../src/geo/transform_interface';
 import {CollisionIndex} from '../../../src/symbol/collision_index';
 import Benchmark from '../lib/benchmark';
 import {OverlapMode} from '../../../src/style/style_layer/overlap_mode';

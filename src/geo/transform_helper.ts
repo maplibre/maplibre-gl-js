@@ -5,7 +5,7 @@ import {wrap, clamp} from '../util/util';
 import {mat4, mat2} from 'gl-matrix';
 import {EdgeInsets} from './edge_insets';
 import type {PaddingOptions} from './edge_insets';
-import {ITransformGetters} from './transform';
+import {ITransformGetters} from './transform_interface';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 

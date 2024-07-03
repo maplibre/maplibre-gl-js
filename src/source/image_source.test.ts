@@ -1,6 +1,6 @@
 import {ImageSource} from './image_source';
 import {Evented} from '../util/evented';
-import {ITransform} from '../geo/transform';
+import {ITransform} from '../geo/transform_interface';
 import {extend} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {RequestManager} from '../util/request_manager';

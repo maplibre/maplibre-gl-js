@@ -1,7 +1,7 @@
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {GeoJSONSource, GeoJSONSourceOptions} from './geojson_source';
-import {ITransform} from '../geo/transform';
+import {ITransform} from '../geo/transform_interface';
 import {LngLat} from '../geo/lng_lat';
 import {extend} from '../util/util';
 import {Dispatcher} from '../util/dispatcher';

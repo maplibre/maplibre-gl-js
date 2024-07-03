@@ -3,7 +3,7 @@ import {Tile} from './tile';
 import {EXTENT} from '../data/extent';
 import {mat4} from 'gl-matrix';
 import {Evented} from '../util/evented';
-import type {ITransform} from '../geo/transform';
+import type {ITransform} from '../geo/transform_interface';
 import type {SourceCache} from '../source/source_cache';
 import {Terrain} from '../render/terrain';
 import {browser} from '../util/browser';

@@ -19,7 +19,7 @@ import type {TransitionParameters, PropertyValue} from './properties';
 import {EvaluationParameters} from './evaluation_parameters';
 import type {CrossfadeParameters} from './evaluation_parameters';
 
-import type {ITransform} from '../geo/transform';
+import type {ITransform} from '../geo/transform_interface';
 import type {CustomLayerInterface} from './style_layer/custom_style_layer';
 import type {Map} from '../ui/map';
 import type {StyleSetterOptions} from './style';

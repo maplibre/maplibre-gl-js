@@ -8,7 +8,7 @@ import {Transitionable, Transitioning, Layout, PossiblyEvaluated} from '../prope
 import {mat4, vec4} from 'gl-matrix';
 import Point from '@mapbox/point-geometry';
 import type {FeatureState, LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
-import type {ITransform} from '../../geo/transform';
+import type {ITransform} from '../../geo/transform_interface';
 import type {Bucket, BucketParameters} from '../../data/bucket';
 import type {CircleLayoutProps, CirclePaintProps} from './circle_style_layer_properties.g';
 import type {VectorTileFeature} from '@mapbox/vector-tile';

@@ -3,7 +3,7 @@ import {warnOnce} from '../../util/util';
 import {Projection} from './projection';
 import {GlobeProjection} from './globe';
 import {MercatorProjection} from './mercator';
-import {ITransform} from '../transform';
+import {ITransform} from '../transform_interface';
 import {MercatorTransform} from './mercator_transform';
 import {GlobeTransform} from './globe_transform';
 

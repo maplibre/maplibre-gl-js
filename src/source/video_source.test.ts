@@ -6,7 +6,7 @@ import type {Coordinates} from './image_source';
 import {Tile} from './tile';
 import {OverscaledTileID} from './tile_id';
 import {Evented} from '../util/evented';
-import {ITransform} from '../geo/transform';
+import {ITransform} from '../geo/transform_interface';
 import {MercatorTransform} from '../geo/projection/mercator_transform';
 
 class StubMap extends Evented {

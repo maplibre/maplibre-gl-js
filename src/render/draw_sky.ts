@@ -10,7 +10,7 @@ import {Sky} from '../style/sky';
 import {Light} from '../style/light';
 import {Mesh} from './mesh';
 import {mat4, vec3, vec4} from 'gl-matrix';
-import {ITransform} from '../geo/transform';
+import {ITransform} from '../geo/transform_interface';
 import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
 import {Context} from '../gl/context';
