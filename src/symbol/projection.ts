@@ -239,15 +239,35 @@ export function updateLineLabels(bucket: SymbolBucket,
         const fontSize = symbolSize.evaluateSizeForFeature(sizeData, partiallyEvaluatedSize, symbol);
         const pitchScaledFontSize = pitchWithMap ? fontSize / perspectiveRatio : fontSize * perspectiveRatio;
 
-        const placeUnflipped = placeGlyphsAlongLine(projectionContext, pitchedLabelPlaneMatrixInverse, symbol, pitchScaledFontSize, false /*unflipped*/, keepUpright,
-            bucket.glyphOffsetArray, dynamicLayoutVertexArray, aspectRatio, rotateToLine);
+        const placeUnflipped = placeGlyphsAlongLine({
+            projectionContext,
+            pitchedLabelPlaneMatrixInverse,
+            symbol,
+            fontSize: pitchScaledFontSize,
+            flip: false,
+            keepUpright,
+            glyphOffsetArray: bucket.glyphOffsetArray,
+            dynamicLayoutVertexArray,
+            aspectRatio,
+            rotateToLine,
+        });
 
         useVertical = placeUnflipped.useVertical;
 
         if (placeUnflipped.notEnoughRoom || useVertical ||
             (placeUnflipped.needsFlipping &&
-             (placeGlyphsAlongLine(projectionContext, pitchedLabelPlaneMatrixInverse, symbol, pitchScaledFontSize, true /*flipped*/, keepUpright,
-                 bucket.glyphOffsetArray, dynamicLayoutVertexArray, aspectRatio, rotateToLine) as any).notEnoughRoom)) {
+                (placeGlyphsAlongLine({
+                    projectionContext,
+                    pitchedLabelPlaneMatrixInverse,
+                    symbol,
+                    fontSize: pitchScaledFontSize,
+                    flip: false,
+                    keepUpright,
+                    glyphOffsetArray: bucket.glyphOffsetArray,
+                    dynamicLayoutVertexArray,
+                    aspectRatio,
+                    rotateToLine,
+                })).notEnoughRoom)) {
             hideGlyphs(symbol.numGlyphs, dynamicLayoutVertexArray);
         }
     }
@@ -339,6 +359,19 @@ type GlyphLinePlacementResult = OrientationChangeType & {
     notEnoughRoom?: boolean;
 }
 
+type GlyphLinePlacementArgs = {
+    projectionContext: SymbolProjectionContext;
+    pitchedLabelPlaneMatrixInverse: mat4;
+    symbol: any; // PlacedSymbolStruct
+    fontSize: number;
+    flip: boolean;
+    keepUpright: boolean;
+    glyphOffsetArray: GlyphOffsetArray;
+    dynamicLayoutVertexArray: StructArray;
+    aspectRatio: number;
+    rotateToLine: boolean;
+}
+
 /*
 * Place first and last glyph along the line projected to label plane, and if they fit
 * iterate through all the intermediate glyphs, calculating their label plane positions
@@ -347,18 +380,20 @@ type GlyphLinePlacementResult = OrientationChangeType & {
 * Finally, add resulting glyph position calculations to dynamicLayoutVertexArray for
 * upload to the GPU
 */
-function placeGlyphsAlongLine(
-    projectionContext: SymbolProjectionContext,
-    pitchedLabelPlaneMatrixInverse: mat4,
-    symbol,
-    fontSize: number,
-    flip: boolean,
-    keepUpright: boolean,
-    glyphOffsetArray: GlyphOffsetArray,
-    dynamicLayoutVertexArray: StructArray,
-    aspectRatio: number,
-    rotateToLine: boolean
-): GlyphLinePlacementResult {
+function placeGlyphsAlongLine(args: GlyphLinePlacementArgs): GlyphLinePlacementResult {
+    const {
+        projectionContext,
+        pitchedLabelPlaneMatrixInverse,
+        symbol,
+        fontSize,
+        flip,
+        keepUpright,
+        glyphOffsetArray,
+        dynamicLayoutVertexArray,
+        aspectRatio,
+        rotateToLine
+    } = args;
+
     const fontScale = fontSize / 24;
     const lineOffsetX = symbol.lineOffsetX * fontScale;
     const lineOffsetY = symbol.lineOffsetY * fontScale;
