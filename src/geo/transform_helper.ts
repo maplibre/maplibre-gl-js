@@ -32,7 +32,9 @@ function getTileZoom(zoom: number): number {
 
 /**
  * @internal
- * TODO
+ * This class stores all values that define a transform's state,
+ * such as center, zoom, minZoom, etc.
+ * This can be used as a helper for implementing the ITransform interface.
  */
 export class TransformHelper implements ITransformGetters {
     private _callbacks: TransformHelperCallbacks;
@@ -209,7 +211,7 @@ export class TransformHelper implements ITransformGetters {
     }
 
     /**
-     * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
+     * Gets the transform's dimensions packed into a Point object.
      */
     get size(): Point {
         return new Point(this._width, this._height);

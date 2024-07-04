@@ -9,23 +9,31 @@ import {Terrain} from '../render/terrain';
 import {ProjectionData} from '../render/program/projection_program';
 import {PointProjection} from '../symbol/projection';
 
-export const MAX_VALID_LATITUDE = 85.051129;
-
 export type TransformUpdateResult = {forcePlacementUpdate: boolean};
 
 export interface ITransformGetters {
     get tileSize(): number;
 
     get tileZoom(): number;
+
+    /**
+     * How many times "larger" the world is compared to zoom 0. Usually computed as `pow(2, zoom)`.
+     * Relevant mostly for mercator projection.
+     */
     get scale(): number;
+
+    /**
+     * How many units the current world has. Computed by multiplying {@link worldSize} by {@link tileSize}.
+     * Relevant mostly for mercator projection.
+     */
     get worldSize(): number;
 
     /**
-     * Gets the transform's width in pixels. Use {@link resize} to set the transform's size.
+     * Gets the transform's width in pixels. Use {@link ITransform.resize} to set the transform's size.
      */
     get width(): number;
     /**
-     * Gets the transform's height in pixels. Use {@link resize} to set the transform's size.
+     * Gets the transform's height in pixels. Use {@link ITransform.resize} to set the transform's size.
      */
     get height(): number;
 
@@ -44,8 +52,17 @@ export interface ITransformGetters {
 
     get minPitch(): number;
     get maxPitch(): number;
+    /**
+     * Pitch in degrees.
+     */
     get pitch(): number;
+    /**
+     * Bearing in degrees.
+     */
     get bearing(): number;
+    /**
+     * Field of view in degrees.
+     */
     get fov(): number;
 
     get elevation(): number;
