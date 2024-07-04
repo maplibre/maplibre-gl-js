@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {MAX_VALID_LATITUDE} from '../transform_interface';
+import {MAX_VALID_LATITUDE} from '../transform_helper';
 import {LngLat} from '../lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
