@@ -111,7 +111,7 @@ export class TransformHelper implements ITransformGetters {
         this._center = thatI.center;
         this._elevation = thatI.elevation;
         this._minElevationForCurrentTile = thatI.minElevationForCurrentTile;
-        this._zoom = 0;
+        this._zoom = thatI.zoom;
         this._tileZoom = getTileZoom(this._zoom);
         this._scale = this.zoomScale(this._zoom);
         this._angle = thatI.bearing * Math.PI / 180;
