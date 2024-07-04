@@ -25,6 +25,28 @@ jest.mock('../data/bucket/symbol_bucket');
 jest.mock('../symbol/projection');
 (symbolProjection.getPitchedLabelPlaneMatrix as jest.Mock).mockReturnValue(mat4.create());
 
+function createMockTransform() {
+    return {
+        pitch: 0,
+        labelPlaneMatrix: mat4.create(),
+        getCircleRadiusCorrection: () => 1,
+        angle: 0,
+        zoom: 0,
+        getProjectionData(_canonical, fallback) {
+            return {
+                'u_projection_matrix': fallback,
+                'u_projection_tile_mercator_coords': [0, 0, 1, 1],
+                'u_projection_clipping_plane': [0, 0, 0, 0],
+                'u_projection_transition': 0.0,
+                'u_projection_fallback_matrix': fallback,
+            };
+        },
+        translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
+            return translatePosition({angle: 0, zoom: 0}, tile, translate, translateAnchor);
+        }
+    } as any as ITransform;
+}
+
 describe('drawSymbol', () => {
     test('should not do anything', () => {
         const mockPainter = new Painter(null, null);
@@ -225,25 +247,3 @@ describe('drawSymbol', () => {
     });
 
 });
-
-function createMockTransform() {
-    return {
-        pitch: 0,
-        labelPlaneMatrix: mat4.create(),
-        getCircleRadiusCorrection: () => 1,
-        angle: 0,
-        zoom: 0,
-        getProjectionData(_canonical, fallback) {
-            return {
-                'u_projection_matrix': fallback,
-                'u_projection_tile_mercator_coords': [0, 0, 1, 1],
-                'u_projection_clipping_plane': [0, 0, 0, 0],
-                'u_projection_transition': 0.0,
-                'u_projection_fallback_matrix': fallback,
-            };
-        },
-        translatePosition(tile: Tile, translate: [number, number], translateAnchor: 'map' | 'viewport'): [number, number] {
-            return translatePosition({angle: 0, zoom: 0}, tile, translate, translateAnchor);
-        }
-    } as any as ITransform;
-}

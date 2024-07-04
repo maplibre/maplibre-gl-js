@@ -6,6 +6,29 @@ import {expectToBeCloseToArray} from './mercator_transform.test';
 import {GlobeTransform, angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_transform';
 import {OverscaledTileID} from '../../source/tile_id';
 
+function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
+    const lat = latDegrees / 180.0 * Math.PI;
+    const lng = lngDegrees / 180.0 * Math.PI;
+    const len = Math.cos(lat);
+    const pointOnSphere = [
+        Math.sin(lng) * len,
+        Math.sin(lat),
+        Math.cos(lng) * len
+    ];
+    return planeDistance(pointOnSphere, plane);
+}
+
+function planeDistance(point: Array<number>, plane: Array<number>) {
+    return point[0] * plane[0] + point[1] * plane[1] + point[2] * plane[2] + plane[3];
+}
+
+function createGlobeTransform(globeProjection: GlobeProjection) {
+    const globeTransform = new GlobeTransform(globeProjection);
+    globeTransform.resize(640, 480);
+    globeTransform.setFov(45);
+    return globeTransform;
+}
+
 describe('GlobeTransform', () => {
     const globeProjectionMock = {
         get useGlobeControls(): boolean {
@@ -363,26 +386,3 @@ describe('GlobeTransform', () => {
         });
     });
 });
-
-function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
-    const lat = latDegrees / 180.0 * Math.PI;
-    const lng = lngDegrees / 180.0 * Math.PI;
-    const len = Math.cos(lat);
-    const pointOnSphere = [
-        Math.sin(lng) * len,
-        Math.sin(lat),
-        Math.cos(lng) * len
-    ];
-    return planeDistance(pointOnSphere, plane);
-}
-
-function planeDistance(point: Array<number>, plane: Array<number>) {
-    return point[0] * plane[0] + point[1] * plane[1] + point[2] * plane[2] + plane[3];
-}
-
-function createGlobeTransform(globeProjection: GlobeProjection) {
-    const globeTransform = new GlobeTransform(globeProjection);
-    globeTransform.resize(640, 480);
-    globeTransform.setFov(45);
-    return globeTransform;
-}
