@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -120,6 +120,50 @@ describe('util', () => {
         expect(deepEqual(null, null)).toBeTruthy();
 
         done();
+    });
+
+    test('mod', () => {
+        expect(mod(2, 3)).toBe(2);
+        expect(mod(4, 3)).toBe(1);
+        expect(mod(-1, 3)).toBe(2);
+        expect(mod(-1, 3)).toBe(2);
+    });
+
+    test('distanceOfAnglesRadians', () => {
+        const digits = 10;
+        expect(distanceOfAnglesRadians(0, 1)).toBeCloseTo(1, digits);
+        expect(distanceOfAnglesRadians(0.1, 2 * Math.PI - 0.1)).toBeCloseTo(0.2, digits);
+        expect(distanceOfAnglesRadians(0.5, -0.5)).toBeCloseTo(1, digits);
+        expect(distanceOfAnglesRadians(-0.5, 0.5)).toBeCloseTo(1, digits);
+    });
+
+    test('distanceOfAnglesDegrees', () => {
+        const digits = 10;
+        expect(distanceOfAnglesDegrees(0, 1)).toBeCloseTo(1, digits);
+        expect(distanceOfAnglesDegrees(10, 350)).toBeCloseTo(20, digits);
+        expect(distanceOfAnglesDegrees(0.5, -0.5)).toBeCloseTo(1, digits);
+        expect(distanceOfAnglesDegrees(-0.5, 0.5)).toBeCloseTo(1, digits);
+    });
+
+    test('differenceOfAnglesRadians', () => {
+        const digits = 10;
+        expect(differenceOfAnglesRadians(0, 1)).toBeCloseTo(1, digits);
+        expect(differenceOfAnglesRadians(0, -1)).toBeCloseTo(-1, digits);
+        expect(differenceOfAnglesRadians(0.1, 2 * Math.PI - 0.1)).toBeCloseTo(-0.2, digits);
+    });
+
+    test('differenceOfAnglesDegrees', () => {
+        const digits = 10;
+        expect(differenceOfAnglesDegrees(0, 1)).toBeCloseTo(1, digits);
+        expect(differenceOfAnglesDegrees(0, -1)).toBeCloseTo(-1, digits);
+        expect(differenceOfAnglesDegrees(10, 350)).toBeCloseTo(-20, digits);
+    });
+
+    test('solveQuadratic', () => {
+        expect(solveQuadratic(0, 0, 0)).toBeNull();
+        expect(solveQuadratic(1, 0, 1)).toBeNull();
+        expect(solveQuadratic(1, 0, -1)).toEqual({t0: 1, t1: 1});
+        expect(solveQuadratic(1, -8, 12)).toEqual({t0: 2, t1: 6});
     });
 });
 

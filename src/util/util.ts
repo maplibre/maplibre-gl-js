@@ -6,23 +6,32 @@ import type {WorkerGlobalScopeInterface} from './web_worker';
 
 /**
  * Solves a quadratic equation in the form ax^2 + bx + c = 0 and returns its roots in no particular order.
- * Returns null if the equation has no roots.
+ * Returns null if the equation has no roots or if it has infinitely many roots.
  */
 export function solveQuadratic(a: number, b: number, c: number): {
     t0: number;
     t1: number;
 } {
-    // Uses a more precise solution from the book Ray Tracing Gems, chapter 7.
-    // https://www.realtimerendering.com/raytracinggems/rtg/index.html
     const d = b * b - 4 * a * c;
-    if (d < 0) {
+    if (d < 0 || (a === 0 && b === 0)) {
         return null;
     }
+
+    // Uses a more precise solution from the book Ray Tracing Gems, chapter 7.
+    // https://www.realtimerendering.com/raytracinggems/rtg/index.html
     const q = -0.5 * (b + Math.sign(b) * Math.sqrt(d));
-    return {
-        t0: c / q,
-        t1: q / a
-    };
+    if (Math.abs(q) > 1e-12) {
+        return {
+            t0: c / q,
+            t1: q / a
+        };
+    } else {
+        // Use the schoolbook way if q is too small
+        return {
+            t0: (-b + Math.sqrt(d)) * 0.5 / a,
+            t1: (-b + Math.sqrt(d)) * 0.5 / a
+        };
+    }
 }
 
 /**
