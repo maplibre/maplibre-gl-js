@@ -95,7 +95,7 @@ Draw routes and areas snapped to roads.
 A set of maplibre plugins to integrate with svelte/sveltekit. The repository consists of various useful plugins such as export plugin, legend plugin, measure plugin, attribute table plugin, tour plugin, etc.
 <br/><small>[View on GitHub](https://github.com/watergis/svelte-maplibre-components)</small>
 
-##  Map Rendering Plugins
+## Map Rendering Plugins
 
 #### mapbox-gl-language
 Automatically localizes the map into the user’s language.

@@ -5,7 +5,7 @@ import type {WorkerSourceConstructor} from '../source/worker_source';
 
 export interface WorkerGlobalScopeInterface {
     importScripts(...urls: Array<string>): void;
-    registerWorkerSource: (sourceName: string, sourceConstrucor: WorkerSourceConstructor) => void;
+    registerWorkerSource: (sourceName: string, sourceConstructor: WorkerSourceConstructor) => void;
     registerRTLTextPlugin: (_: any) => void;
     addProtocol: (customProtocol: string, loadFn: AddProtocolAction) => void;
     removeProtocol: (customProtocol: string) => void;

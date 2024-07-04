@@ -31,7 +31,7 @@ The examples section of the locally run documentation will use the GL JS version
 
 ## Writing API Documentation
 
-API documentation is written as [TSDoc comments](https://tsdoc.org/) and processed with [typedoc](https://typedoc.org/)
+API documentation is written as [TSDoc comments](https://tsdoc.org/) and processed with [TypeDoc](https://typedoc.org/)
 
 * Classes, methods, events, and anything else in the public interface must be documented with TSDoc comments, and the typescript `public` can be used to indicate that it's public API.
 * The `@internal` tag can be used to indicate that a class, method, or event is not part of the public interface and should not be documented.
@@ -51,7 +51,7 @@ API documentation is written as [TSDoc comments](https://tsdoc.org/) and process
 
 ## Writing Examples
 
-Examples are written as regular html files in `test/examples`. Each example should have a title and a og:description.
+Examples are written as regular HTML files in `test/examples`. Each example should have a title and a og:description.
 
 * `title`: A short title for the example in **sentence case** as a **verb phrase**.
 * `description`: A one sentence description of the example in plain text. This description will appear alongside a thumbnail and title on the examples page.
