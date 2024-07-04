@@ -4,6 +4,38 @@ import {mat4} from 'gl-matrix';
 import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 
 /**
+* Input arguments exposed by custom render function.
+*/
+type CustomRenderMethodInput = {
+    /**
+     * This value represents the distance from the camera to the far clipping plane.
+     * It is used in the calculation of the projection matrix to determine which objects are visible.
+     * farz should be larger than nearZ.
+     */
+    farZ: number;
+    /**
+     * This value represents the distance from the camera to the near clipping plane.
+     * It is used in the calculation of the projection matrix to determine which objects are visible.
+     * nearZ should be smaller than farZ.
+     */
+    nearZ: number;
+    /** field of view of camera **/
+    fov: number;
+    /**
+    * model view projection matrix
+    * represents the matrix converting from world space to clip space
+    * https://learnopengl.com/Getting-started/Coordinate-Systems
+    * **/
+    modelViewProjectionMatrix: mat4;
+    /**
+    * projection matrix
+    * represents the matrix converting from view space to clip space
+    * https://learnopengl.com/Getting-started/Coordinate-Systems
+    */
+    projectionMatrix: mat4;
+}
+
+/**
  * @param gl - The map's gl context.
  * @param matrix - The map's camera matrix. It projects spherical mercator
  * coordinates to gl clip space coordinates. The spherical mercator coordinate `[0, 0]` represents the
@@ -11,8 +43,9 @@ import {LayerSpecification} from '@maplibre/maplibre-gl-style-spec';
  * the `renderingMode` is `"3d"`, the z coordinate is conformal. A box with identical x, y, and z
  * lengths in mercator units would be rendered as a cube. {@link MercatorCoordinate.fromLngLat}
  * can be used to project a `LngLat` to a mercator coordinate.
+ * @param options - Argument object with additional render inputs like camera properties.
  */
-type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4) => void;
+type CustomRenderMethod = (gl: WebGLRenderingContext|WebGL2RenderingContext, matrix: mat4, options: CustomRenderMethodInput) => void;
 
 /**
  * Interface for custom style layers. This is a specification for
