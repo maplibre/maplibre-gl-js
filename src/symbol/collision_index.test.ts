@@ -9,7 +9,7 @@ describe('CollisionIndex', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
         transform.resize(200, 200);
         const tile = new UnwrappedTileID(0, new CanonicalTileID(0, 0, 0));
-        transform['_posMatrixCache'][tile.key] = mat4.create();
+        jest.spyOn(transform, 'calculatePosMatrix').mockImplementation(() => mat4.create());
 
         const ci = new CollisionIndex(transform);
         expect(ci.projectAndGetPerspectiveRatio(x, y, tile, null).point.x).toBeCloseTo(10000212.3456, 10);
