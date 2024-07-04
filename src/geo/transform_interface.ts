@@ -61,7 +61,7 @@ export interface ITransformGetters {
      */
     get bearing(): number;
     /**
-     * Field of view in degrees.
+     * Vertical field of view in degrees.
      */
     get fov(): number;
 
@@ -126,15 +126,51 @@ export interface ITransform extends ITransformGetters {
      */
     get cameraPosition(): vec3;
 
+    /**
+     * Sets the transform's minimal allowed zoom level.
+     * Automatically constrains the transform's zoom to the new range and recomputes internal matrices if needed.
+     */
     setMinZoom(zoom: number): void;
+    /**
+     * Sets the transform's maximal allowed zoom level.
+     * Automatically constrains the transform's zoom to the new range and recomputes internal matrices if needed.
+     */
     setMaxZoom(zoom: number): void;
+    /**
+     * Sets the transform's minimal allowed pitch, in degrees.
+     * Automatically constrains the transform's pitch to the new range and recomputes internal matrices if needed.
+     */
     setMinPitch(pitch: number): void;
+    /**
+     * Sets the transform's maximal allowed pitch, in degrees.
+     * Automatically constrains the transform's pitch to the new range and recomputes internal matrices if needed.
+     */
     setMaxPitch(pitch: number): void;
     setRenderWorldCopies(renderWorldCopies: boolean): void;
+    /**
+     * Sets the transform's bearing, in degrees.
+     * Recomputes internal matrices if needed.
+     */
     setBearing(bearing: number): void;
+    /**
+     * Sets the transform's pitch, in degrees.
+     * Recomputes internal matrices if needed.
+     */
     setPitch(pitch: number): void;
+    /**
+     * Sets the transform's vertical field of view, in degrees.
+     * Recomputes internal matrices if needed.
+     */
     setFov(fov: number): void;
+    /**
+     * Sets the transform's zoom.
+     * Automatically constrains the transform's center and zoom and recomputes internal matrices if needed.
+     */
     setZoom(zoom: number): void;
+    /**
+     * Sets the transform's center.
+     * Automatically constrains the transform's center and zoom and recomputes internal matrices if needed.
+     */
     setCenter(center: LngLat): void;
     setElevation(elevation: number): void;
     setMinElevationForCurrentTile(elevation: number): void;
