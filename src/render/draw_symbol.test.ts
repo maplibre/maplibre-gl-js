@@ -245,5 +245,4 @@ describe('drawSymbol', () => {
 
         expect(programMock.draw).toHaveBeenCalledTimes(0);
     });
-
 });
