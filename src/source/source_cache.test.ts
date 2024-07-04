@@ -1938,8 +1938,7 @@ describe('SourceCache sets max cache size correctly', () => {
         });
 
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 3 * 3 * 5
@@ -1952,8 +1951,7 @@ describe('SourceCache sets max cache size correctly', () => {
         });
 
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         // Expect max size to be ((512 / tileSize + 1) ^ 2) * 5 => 2 * 2 * 5
