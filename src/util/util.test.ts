@@ -1,5 +1,5 @@
 import Point from '@mapbox/point-geometry';
-import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic} from './util';
+import {arraysIntersect, bezier, clamp, clone, deepEqual, easeCubicInOut, extend, filterObject, findLineIntersection, isCounterClockwise, isPowerOfTwo, keysDifference, mapObject, nextPowerOfTwo, parseCacheControl, pick, readImageDataUsingOffscreenCanvas, readImageUsingVideoFrame, uniqueId, wrap, mod, distanceOfAnglesRadians, distanceOfAnglesDegrees, differenceOfAnglesRadians, differenceOfAnglesDegrees, solveQuadratic, remapSaturate} from './util';
 import {Canvas} from 'canvas';
 
 describe('util', () => {
@@ -164,6 +164,15 @@ describe('util', () => {
         expect(solveQuadratic(1, 0, 1)).toBeNull();
         expect(solveQuadratic(1, 0, -1)).toEqual({t0: 1, t1: 1});
         expect(solveQuadratic(1, -8, 12)).toEqual({t0: 2, t1: 6});
+    });
+
+    test('remapSaturate', () => {
+        expect(remapSaturate(0, 0, 1, 2, 3)).toBe(2);
+        expect(remapSaturate(1, 0, 2, 2, 3)).toBe(2.5);
+        expect(remapSaturate(999, 0, 2, 2, 3)).toBe(3);
+        expect(remapSaturate(1, 1, 0, 2, 3)).toBe(2);
+        expect(remapSaturate(1, 0, 1, 3, 2)).toBe(2);
+        expect(remapSaturate(1, 1, 0, 3, 2)).toBe(3);
     });
 });
 
