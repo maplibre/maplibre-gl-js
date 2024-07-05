@@ -289,8 +289,14 @@ export class ScrollZoomHandler implements Handler {
         let finished = false;
         let zoom;
         if (this._type === 'wheel' && startZoom && easing) {
+            let t = Math.min((browser.now() - this._lastWheelEventTime) / 200, 1);
 
-            const t = Math.min((browser.now() - this._lastWheelEventTime) / 200, 1);
+            // when zooming with a free rolling mouse wheel the time difference could be 0
+            // so we are augmenting the resulting time difference to ensure smooth transition
+            if (startZoom !== targetZoom && t === 0) {
+                t = 0.1;
+            }
+
             const k = easing(t);
             zoom = interpolates.number(startZoom, targetZoom, k);
             if (t < 1) {
