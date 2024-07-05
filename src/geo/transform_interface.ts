@@ -98,6 +98,7 @@ export interface ITransform extends ITransformGetters {
      */
     get cameraToCenterDistance(): number;
     get modelViewProjectionMatrix(): mat4;
+    get projectionMatrix(): mat4;
     /**
      * Inverse of matrix from camera space to clip space.
      */
@@ -125,6 +126,9 @@ export interface ITransform extends ITransformGetters {
      * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
      */
     get cameraPosition(): vec3;
+
+    get nearZ(): number;
+    get farZ(): number;
 
     /**
      * Sets the transform's minimal allowed zoom level.

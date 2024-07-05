@@ -225,6 +225,7 @@ export class MercatorTransform implements ITransform {
     private _cameraPosition: vec3;
 
     private _mercatorMatrix: mat4;
+    private _projectionMatrix: mat4;
     private _viewProjMatrix: mat4;
     private _invViewProjMatrix: mat4;
     private _invProjMatrix: mat4;
@@ -237,6 +238,9 @@ export class MercatorTransform implements ITransform {
     private _posMatrixCache: {[_: string]: mat4};
     private _fogMatrixCache: {[_: string]: mat4};
     private _alignedPosMatrixCache: {[_: string]: mat4};
+
+    private _nearZ;
+    private _farZ;
 
     constructor(minZoom?: number, maxZoom?: number, minPitch?: number, maxPitch?: number, renderWorldCopies?: boolean) {
         this._helper = new TransformHelper({
@@ -259,9 +263,14 @@ export class MercatorTransform implements ITransform {
 
     public get cameraToCenterDistance(): number { return this._cameraToCenterDistance; }
     public get cameraPosition(): vec3 { return this._cameraPosition; }
+    public get projectionMatrix(): mat4 { return this._projectionMatrix; }
     public get modelViewProjectionMatrix(): mat4 { return this._viewProjMatrix; }
     public get inverseProjectionMatrix(): mat4 { return this._invProjMatrix; }
     public get useGlobeControls(): boolean { return false; }
+    public get nearZ(): number { return this._nearZ; }
+    public get farZ(): number { return this._farZ; }
+
+    public get mercatorMatrix(): mat4 { return this._mercatorMatrix; } // Not part of ITransform interface
 
     /**
      * Return any "wrapped" copies of a given tile coordinate that are visible
@@ -780,7 +789,7 @@ export class MercatorTransform implements ITransform {
         // Calculate z distance of the farthest fragment that should be rendered.
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const topHalfMinDistance = Math.min(topHalfSurfaceDistance, topHalfSurfaceDistanceHorizon);
-        const farZ = (Math.cos(Math.PI / 2 - this._helper._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
+        this._farZ = (Math.cos(Math.PI / 2 - this._helper._pitch) * topHalfMinDistance + lowestPlane) * 1.01;
 
         // The larger the value of nearZ is
         // - the more depth precision is available for features (good)
@@ -789,18 +798,19 @@ export class MercatorTransform implements ITransform {
         // Other values work for mapbox-gl-js but deckgl was encountering precision issues
         // when rendering custom layers. This value was experimentally chosen and
         // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
-        const nearZ = this._helper._height / 50;
+        this._nearZ = this._helper._height / 50;
 
         // matrix for conversion from location to clip space(-1 .. 1)
         let m: mat4;
         m = new Float64Array(16) as any;
-        mat4.perspective(m, this._helper._fov, this._helper._width / this._helper._height, nearZ, farZ);
+        mat4.perspective(m, this._helper._fov, this._helper._width / this._helper._height, this._nearZ, this._farZ);
         this._invProjMatrix = new Float64Array(16) as any as mat4;
         mat4.invert(this._invProjMatrix, m);
 
         // Apply center of perspective offset
         m[8] = -offset.x * 2 / this._helper._width;
         m[9] = offset.y * 2 / this._helper._height;
+        this._projectionMatrix = mat4.clone(m);
 
         mat4.scale(m, m, [1, -1, 1]);
         mat4.translate(m, m, [0, 0, -this._cameraToCenterDistance]);
@@ -834,7 +844,7 @@ export class MercatorTransform implements ITransform {
         // create a fog matrix, same es proj-matrix but with near clipping-plane in mapcenter
         // needed to calculate a correct z-value for fog calculation, because projMatrix z value is not
         this._fogMatrix = new Float64Array(16) as any;
-        mat4.perspective(this._fogMatrix, this._helper._fov, this.width / this.height, cameraToSeaLevelDistance, farZ);
+        mat4.perspective(this._fogMatrix, this._helper._fov, this.width / this.height, cameraToSeaLevelDistance, this._farZ);
         this._fogMatrix[8] = -offset.x * 2 / this.width;
         this._fogMatrix[9] = offset.y * 2 / this.height;
         mat4.scale(this._fogMatrix, this._fogMatrix, [1, -1, 1]);

@@ -331,6 +331,7 @@ export class GlobeTransform implements ITransform {
 
     private _skipNextAnimation: boolean = true;
 
+    private _projectionMatrix: mat4 = createIdentityMat4();
     private _globeViewProjMatrix: mat4 = createIdentityMat4();
     private _globeViewProjMatrixNoCorrection: mat4 = createIdentityMat4();
     private _globeViewProjMatrixNoCorrectionInverted: mat4 = createIdentityMat4();
@@ -358,6 +359,9 @@ export class GlobeTransform implements ITransform {
     private _mercatorTransform: MercatorTransform;
     private _initialized: boolean = false;
 
+    private _nearZ;
+    private _farZ;
+
     public constructor(globeProjection: GlobeProjection, globeProjectionEnabled: boolean = true) {
         this._helper = new TransformHelper({
             calcMatrices: () => { this._calcMatrices(); },
@@ -382,6 +386,8 @@ export class GlobeTransform implements ITransform {
         this._mercatorTransform.apply(this);
     }
 
+    public get projectionMatrix(): mat4 { return this._globeRendering ? this._projectionMatrix : this._mercatorTransform.projectionMatrix; }
+
     public get modelViewProjectionMatrix(): mat4 { return this._globeRendering ? this._globeViewProjMatrixNoCorrection : this._mercatorTransform.modelViewProjectionMatrix; }
 
     public get inverseProjectionMatrix(): mat4 { return this._globeRendering ? this._globeProjMatrixInverted : this._mercatorTransform.inverseProjectionMatrix; }
@@ -401,6 +407,9 @@ export class GlobeTransform implements ITransform {
         // Globe uses the same cameraToCenterDistance as mercator.
         return this._mercatorTransform.cameraToCenterDistance;
     }
+
+    public get nearZ(): number { return this._nearZ; }
+    public get farZ(): number { return this._farZ; }
 
     /**
      * Returns whether globe view is allowed.
@@ -702,7 +711,16 @@ export class GlobeTransform implements ITransform {
         // Construct a completely separate matrix for globe view
         const globeMatrix = createMat4();
         const globeMatrixUncorrected = createMat4();
-        mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, 0.5, this.cameraToCenterDistance + globeRadiusPixels * 2.0); // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        this._nearZ = 0.5;
+        this._farZ = this.cameraToCenterDistance + globeRadiusPixels * 2.0; // just set the far plane far enough - we will calculate our own z in the vertex shader anyway
+        mat4.perspective(globeMatrix, this.fov * Math.PI / 180, this.width / this.height, this._nearZ, this._farZ);
+
+        // Apply center of perspective offset
+        const offset = this.centerOffset;
+        globeMatrix[8] = -offset.x * 2 / this._helper._width;
+        globeMatrix[9] = offset.y * 2 / this._helper._height;
+        this._projectionMatrix = mat4.clone(globeMatrix);
+
         this._globeProjMatrixInverted = createMat4();
         mat4.invert(this._globeProjMatrixInverted, globeMatrix);
         mat4.translate(globeMatrix, globeMatrix, [0, 0, -this.cameraToCenterDistance]);
