@@ -14,7 +14,7 @@ import {ITransform} from '../geo/transform_interface';
 import {ColorMode} from '../gl/color_mode';
 import type {Painter} from './painter';
 import {Context} from '../gl/context';
-import {getGlobeRadiusPixels} from '../geo/projection/globe_transform';
+import {getGlobeRadiusPixels} from '../geo/projection/globe_utils';
 
 function getMesh(context: Context, sky: Sky): Mesh {
     // Create the Sky mesh the first time we need it

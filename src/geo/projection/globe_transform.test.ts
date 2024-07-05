@@ -3,8 +3,9 @@ import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {expectToBeCloseToArray} from './mercator_transform.test';
-import {GlobeTransform, angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_transform';
+import {GlobeTransform} from './globe_transform';
 import {OverscaledTileID} from '../../source/tile_id';
+import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
