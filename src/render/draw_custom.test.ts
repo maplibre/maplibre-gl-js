@@ -66,7 +66,7 @@ describe('drawCustom', () => {
         expect(result.args.farZ).toBe(804.8028169246645);
         expect(result.args.farZ).toBe(mockPainter.transform.farZ);
         expect(result.args.nearZ).toBe(mockPainter.transform.nearZ);
-        expect(result.args.fov).toBe(mockPainter.transform.fov);
+        expect(result.args.fov).toBe(mockPainter.transform.fov * Math.PI / 180);
         expect(result.args.modelViewProjectionMatrix).toEqual(mockPainter.transform.modelViewProjectionMatrix);
         expect(result.args.projectionMatrix).toEqual(mockPainter.transform.projectionMatrix);
     });
