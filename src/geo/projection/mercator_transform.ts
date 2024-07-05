@@ -756,9 +756,9 @@ export class MercatorTransform implements ITransform {
         // - the more depth precision is available for features (good)
         // - clipping starts appearing sooner when the camera is close to 3d features (bad)
         //
-        // Other values work for mapbox-gl-js but deckgl was encountering precision issues
+        // Other values work for mapbox-gl-js but deck.gl was encountering precision issues
         // when rendering custom layers. This value was experimentally chosen and
-        // seems to solve z-fighting issues in deckgl while not clipping buildings too close to the camera.
+        // seems to solve z-fighting issues in deck.gl while not clipping buildings too close to the camera.
         this._nearZ = this._helper._height / 50;
 
         // matrix for conversion from location to clip space(-1 .. 1)
