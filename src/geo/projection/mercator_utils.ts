@@ -28,7 +28,7 @@ export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat): Po
  * @param point - World coordinate.
  * @returns LngLat
  */
-export function unprojectFromWorldCoordinates(worldSize, point: Point): LngLat {
+export function unprojectFromWorldCoordinates(worldSize: number, point: Point): LngLat {
     return new MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
 }
 

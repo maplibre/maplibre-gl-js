@@ -684,7 +684,7 @@ export class MercatorTransform implements ITransform {
             const newPoint = new Point(
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY);
-            result.center = unprojectFromWorldCoordinates({worldSize}, newPoint).wrap();
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
             result.zoom += scaleZoom(scale);
             return result;
         }
@@ -710,7 +710,7 @@ export class MercatorTransform implements ITransform {
         // pan the map if the screen goes off the range
         if (modifiedX !== undefined || modifiedY !== undefined) {
             const newPoint = new Point(modifiedX ?? originalX, modifiedY ?? originalY);
-            result.center = unprojectFromWorldCoordinates({worldSize}, newPoint).wrap();
+            result.center = unprojectFromWorldCoordinates(worldSize, newPoint).wrap();
         }
 
         return result;

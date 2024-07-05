@@ -740,7 +740,7 @@ export abstract class Camera extends Evented {
         const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
         const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / zoomScale(zoom));
 
-        const center = unprojectFromWorldCoordinates(tr,
+        const center = unprojectFromWorldCoordinates(tr.worldSize,
             // either world diagonal can be used (NW-SE or NE-SW)
             nwWorld.add(seWorld).div(2).sub(offsetAtFinalZoom)
         );
@@ -1044,7 +1044,7 @@ export abstract class Camera extends Evented {
                     Math.min(2, finalScale) :
                     Math.max(0.5, finalScale);
                 const speedup = Math.pow(base, 1 - k);
-                const newCenter = unprojectFromWorldCoordinates(tr, from.add(delta.mult(k * speedup)).mult(scale));
+                const newCenter = unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(k * speedup)).mult(scale));
                 tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
             }
 
@@ -1373,7 +1373,7 @@ export abstract class Camera extends Evented {
 
             if (this.terrain && !options.freezeElevation) this._updateElevation(k);
 
-            const newCenter = k === 1 ? center : unprojectFromWorldCoordinates(tr, from.add(delta.mult(u(s))).mult(scale));
+            const newCenter = k === 1 ? center : unprojectFromWorldCoordinates(tr.worldSize, from.add(delta.mult(u(s))).mult(scale));
             tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
 
             this._applyUpdatedTransform(tr);
