@@ -14,7 +14,7 @@ import {FillStyleLayer} from '../style/style_layer/fill_style_layer';
 import {drawFill} from './draw_fill';
 import {FillBucket} from '../data/bucket/fill_bucket';
 import {ProgramConfiguration, ProgramConfigurationSet} from '../data/program_configuration';
-import {translatePosition} from '../geo/projection/mercator_transform';
+import {translatePosition} from '../geo/projection/mercator_utils';
 
 jest.mock('./painter');
 jest.mock('./program');

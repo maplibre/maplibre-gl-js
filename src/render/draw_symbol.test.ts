@@ -15,7 +15,7 @@ import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {SymbolLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
 import {MercatorProjection} from '../geo/projection/mercator';
-import {translatePosition} from '../geo/projection/mercator_transform';
+import {translatePosition} from '../geo/projection/mercator_utils';
 
 jest.mock('./painter');
 jest.mock('./program');

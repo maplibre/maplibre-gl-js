@@ -7,7 +7,7 @@ import Point from '@mapbox/point-geometry';
 import {Event, Evented} from '../util/evented';
 import {Terrain} from '../render/terrain';
 import {MercatorCoordinate} from '../geo/mercator_coordinate';
-import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_transform';
+import {projectToWorldCoordinates, unprojectFromWorldCoordinates} from '../geo/projection/mercator_utils';
 
 import type {ITransform} from '../geo/transform_interface';
 import type {LngLatLike} from '../geo/lng_lat';

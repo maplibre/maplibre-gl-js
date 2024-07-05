@@ -4,11 +4,12 @@ import {LngLat} from '../lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
 import type {Terrain} from '../../render/terrain';
-import {MercatorTransform, getBasicProjectionData, getMercatorHorizon, projectToWorldCoordinates} from './mercator_transform';
+import {MercatorTransform} from './mercator_transform';
 import {mat4} from 'gl-matrix';
 import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
 import {LngLatBounds} from '../lng_lat_bounds';
+import {getBasicProjectionData, getMercatorHorizon, projectToWorldCoordinates} from './mercator_utils';
 
 describe('transform', () => {
     test('creates a transform', () => {
