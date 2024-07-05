@@ -1,6 +1,6 @@
 import {LngLat} from './lng_lat';
 import {LngLatBounds} from './lng_lat_bounds';
-import {TransformHelper} from './transform_helper';
+import {scaleZoom, TransformHelper, zoomScale} from './transform_helper';
 
 describe('TransformHelper', () => {
     test('apply', () => {
@@ -57,5 +57,12 @@ describe('TransformHelper', () => {
         expect(cloned.padding).toEqual(original.padding);
         expect(cloned.unmodified).toEqual(original.unmodified);
         expect(cloned.renderWorldCopies).toEqual(original.renderWorldCopies);
+    });
+
+    test('scaleZoom+zoomScale', () => {
+        expect(scaleZoom(0)).toBe(-Infinity);
+        expect(scaleZoom(10)).toBe(3.3219280948873626);
+        expect(zoomScale(3.3219280948873626)).toBeCloseTo(10, 10);
+        expect(scaleZoom(zoomScale(5))).toBe(5);
     });
 });

@@ -182,9 +182,6 @@ export interface ITransform extends ITransformGetters {
 
     resize(width: number, height: number): void;
 
-    zoomScale(zoom: number): number;
-    scaleZoom(scale: number): number;
-
     /**
      * Returns if the padding params match
      *

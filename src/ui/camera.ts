@@ -15,6 +15,7 @@ import type {LngLatBoundsLike} from '../geo/lng_lat_bounds';
 import type {TaskID} from '../util/task_queue';
 import type {PaddingOptions} from '../geo/edge_insets';
 import type {HandlerManager} from './handler_manager';
+import {scaleZoom, zoomScale} from '../geo/transform_helper';
 /**
  * A [Point](https://github.com/mapbox/point-geometry) or an array of two numbers representing `x` and `y` screen coordinates in pixels.
  *
@@ -728,7 +729,7 @@ export abstract class Camera extends Evented {
             return undefined;
         }
 
-        const zoom = Math.min(tr.scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
+        const zoom = Math.min(scaleZoom(tr.scale * Math.min(scaleX, scaleY)), options.maxZoom);
 
         // Calculate center: apply the zoom, the configured offset, as well as offset that exists as a result of padding.
         const offset = Point.convert(options.offset);
@@ -737,7 +738,7 @@ export abstract class Camera extends Evented {
         const paddingOffset = new Point(paddingOffsetX, paddingOffsetY);
         const rotatedPaddingOffset = paddingOffset.rotate(degreesToRadians(bearing));
         const offsetAtInitialZoom = offset.add(rotatedPaddingOffset);
-        const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / tr.zoomScale(zoom));
+        const offsetAtFinalZoom = offsetAtInitialZoom.mult(tr.scale / zoomScale(zoom));
 
         const center = unprojectFromWorldCoordinates(tr,
             // either world diagonal can be used (NW-SE or NE-SW)
@@ -925,7 +926,7 @@ export abstract class Camera extends Evented {
 
         const groundDistance = Math.hypot(dx, dy);
 
-        const zoom = this.transform.scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
+        const zoom = scaleZoom(this.transform.cameraToCenterDistance / distance3D / this.transform.tileSize);
         const bearing = (Math.atan2(dx, -dy) * 180) / Math.PI;
         let pitch = (Math.acos(groundDistance / distance3D) * 180) / Math.PI;
         pitch = dz < 0 ? 90 - pitch : 90 + pitch;
@@ -991,7 +992,7 @@ export abstract class Camera extends Evented {
 
         const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
         const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
-        const finalScale = tr.zoomScale(zoom - startZoom);
+        const finalScale = zoomScale(zoom - startZoom);
 
         let around, aroundPoint;
 
@@ -1038,7 +1039,7 @@ export abstract class Camera extends Evented {
             if (around) {
                 tr.setLocationAtPoint(around, aroundPoint);
             } else {
-                const scale = tr.zoomScale(tr.zoom - startZoom);
+                const scale = zoomScale(tr.zoom - startZoom);
                 const base = zoom > startZoom ?
                     Math.min(2, finalScale) :
                     Math.max(0.5, finalScale);
@@ -1262,7 +1263,7 @@ export abstract class Camera extends Evented {
             options.zoom ?? startZoom
         );
         this._normalizeCenter(center);
-        const scale = tr.zoomScale(zoom - startZoom);
+        const scale = zoomScale(zoom - startZoom);
 
         const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
         const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
@@ -1281,7 +1282,7 @@ export abstract class Camera extends Evented {
             const minZoom = clamp(Math.min(options.minZoom, startZoom, zoom), tr.minZoom, tr.maxZoom);
             // w<sub>m</sub>: Maximum visible span, measured in pixels with respect to the initial
             // scale.
-            const wMax = w0 / tr.zoomScale(minZoom - startZoom);
+            const wMax = w0 / zoomScale(minZoom - startZoom);
             rho = Math.sqrt(wMax / u1 * 2);
         }
 
@@ -1355,7 +1356,7 @@ export abstract class Camera extends Evented {
             // s: The distance traveled along the flight path, measured in ρ-screenfuls.
             const s = k * S;
             const scale = 1 / w(s);
-            tr.setZoom(k === 1 ? zoom : startZoom + tr.scaleZoom(scale));
+            tr.setZoom(k === 1 ? zoom : startZoom + scaleZoom(scale));
 
             if (this._rotating) {
                 tr.setBearing(interpolates.number(startBearing, bearing, k));

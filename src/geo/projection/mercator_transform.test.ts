@@ -41,8 +41,6 @@ describe('transform', () => {
         expect(transform.maxPitch).toBe(10);
         expect(transform.size.equals(new Point(500, 500))).toBe(true);
         expect(transform.centerPoint.equals(new Point(250, 250))).toBe(true);
-        expect(transform.scaleZoom(0)).toBe(-Infinity);
-        expect(transform.scaleZoom(10)).toBe(3.3219280948873626);
         expect(projectToWorldCoordinates(transform.worldSize, transform.center)).toEqual(new Point(262144, 262144));
         expect(transform.height).toBe(500);
         expect(transform.nearZ).toBe(10);

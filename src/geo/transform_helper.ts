@@ -9,6 +9,16 @@ import {ITransformGetters} from './transform_interface';
 
 export const MAX_VALID_LATITUDE = 85.051129;
 
+/**
+ * Computes scaling from zoom level.
+ */
+export function zoomScale(zoom: number) { return Math.pow(2, zoom); }
+
+/**
+ * Computes zoom level from scaling.
+ */
+export function scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
+
 export type TransformUpdateResult = {forcePlacementUpdate: boolean};
 
 export type TransformHelperCallbacks = {
@@ -97,7 +107,7 @@ export class TransformHelper implements ITransformGetters {
         this._elevation = 0;
         this._zoom = 0;
         this._tileZoom = getTileZoom(this._zoom);
-        this._scale = this.zoomScale(this._zoom);
+        this._scale = zoomScale(this._zoom);
         this._angle = 0;
         this._fov = 0.6435011087932844;
         this._pitch = 0;
@@ -116,7 +126,7 @@ export class TransformHelper implements ITransformGetters {
         this._minElevationForCurrentTile = thatI.minElevationForCurrentTile;
         this._zoom = thatI.zoom;
         this._tileZoom = getTileZoom(this._zoom);
-        this._scale = this.zoomScale(this._zoom);
+        this._scale = zoomScale(this._zoom);
         this._angle = -thatI.bearing * Math.PI / 180;
         this._fov = thatI.fov * Math.PI / 180;
         this._pitch = thatI.pitch * Math.PI / 180;
@@ -265,7 +275,7 @@ export class TransformHelper implements ITransformGetters {
         this._unmodified = false;
         this._zoom = constrainedZoom;
         this._tileZoom = Math.max(0, Math.floor(constrainedZoom));
-        this._scale = this.zoomScale(constrainedZoom);
+        this._scale = zoomScale(constrainedZoom);
         this._constrain();
         this._calcMatrices();
     }
@@ -354,7 +364,7 @@ export class TransformHelper implements ITransformGetters {
         tileSize: number;
     }): number {
         const z = (options.roundZoom ? Math.round : Math.floor)(
-            this.zoom + this.scaleZoom(this._tileSize / options.tileSize)
+            this.zoom + scaleZoom(this._tileSize / options.tileSize)
         );
         // At negative zoom levels load tiles from z0 because negative tile zoom levels don't exist.
         return Math.max(0, z);
@@ -366,9 +376,6 @@ export class TransformHelper implements ITransformGetters {
         this._constrain();
         this._calcMatrices();
     }
-
-    zoomScale(zoom: number) { return Math.pow(2, zoom); }
-    scaleZoom(scale: number) { return Math.log(scale) / Math.LN2; }
 
     /**
      * Returns the maximum geographical bounds the map is constrained to, or `null` if none set.

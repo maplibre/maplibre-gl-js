@@ -1,5 +1,5 @@
 import {mat2, mat4, vec3, vec4} from 'gl-matrix';
-import {MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../transform_helper';
+import {MAX_VALID_LATITUDE, scaleZoom, TransformHelper, TransformUpdateResult} from '../transform_helper';
 import {Tile} from '../../source/tile';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
@@ -109,10 +109,10 @@ export function sphereSurfacePointToCoordinates(surface: vec3): LngLat {
  * @param newLat - Latitude after change.
  * @returns A value to add to zoom level used for old latitude to keep same planet radius at new latitude.
  */
-export function getZoomAdjustment(transform: { scaleZoom(scale: number): number }, oldLat: number, newLat: number): number {
+export function getZoomAdjustment(oldLat: number, newLat: number): number {
     const oldCircumference = Math.cos(oldLat * Math.PI / 180.0);
     const newCircumference = Math.cos(newLat * Math.PI / 180.0);
-    return transform.scaleZoom(newCircumference / oldCircumference);
+    return scaleZoom(newCircumference / oldCircumference);
 }
 
 /**
@@ -231,12 +231,6 @@ export class GlobeTransform implements ITransform {
     }
     resize(width: number, height: number): void {
         this._helper.resize(width, height);
-    }
-    zoomScale(zoom: number): number {
-        return this._helper.zoomScale(zoom);
-    }
-    scaleZoom(scale: number): number {
-        return this._helper.scaleZoom(scale);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
@@ -898,7 +892,7 @@ export class GlobeTransform implements ITransform {
         // Globe: TODO: respect _lngRange, _latRange
         // It is possible to implement exact constrain for globe, but I don't think it is worth the effort.
         const constrainedLat = clamp(lngLat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
-        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(this, 0, constrainedLat), this.maxZoom);
+        const constrainedZoom = clamp(+zoom, this.minZoom + getZoomAdjustment(0, constrainedLat), this.maxZoom);
         return {
             center: new LngLat(
                 lngLat.lng,
@@ -1011,7 +1005,7 @@ export class GlobeTransform implements ITransform {
         const newLat = validLat / Math.PI * 180;
         const oldLat = this.center.lat;
         this.setCenter(new LngLat(newLng, clamp(newLat, -90, 90)));
-        this.setZoom(this.zoom + getZoomAdjustment(this, oldLat, this.center.lat));
+        this.setZoom(this.zoom + getZoomAdjustment(oldLat, this.center.lat));
     }
 
     locationPoint(lnglat: LngLat, terrain?: Terrain): Point {

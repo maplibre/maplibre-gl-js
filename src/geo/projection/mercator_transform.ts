@@ -8,7 +8,7 @@ import {Terrain} from '../../render/terrain';
 import {Aabb, Frustum} from '../../util/primitives';
 import {interpolates} from '@maplibre/maplibre-gl-style-spec';
 import {EXTENT} from '../../data/extent';
-import {TransformHelper, TransformUpdateResult} from '../transform_helper';
+import {scaleZoom, TransformHelper, TransformUpdateResult, zoomScale} from '../transform_helper';
 import {ProjectionData} from '../../render/program/projection_program';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
@@ -97,12 +97,6 @@ export class MercatorTransform implements ITransform {
     }
     resize(width: number, height: number): void {
         this._helper.resize(width, height);
-    }
-    zoomScale(zoom: number): number {
-        return this._helper.zoomScale(zoom);
-    }
-    scaleZoom(scale: number): number {
-        return this._helper.scaleZoom(scale);
     }
     getMaxBounds(): LngLatBounds {
         return this._helper.getMaxBounds();
@@ -426,7 +420,7 @@ export class MercatorTransform implements ITransform {
         const requiredWorldSize = requiredPixelPerMeter / mercatorZfromAltitude(1, center.lat);
         // Since worldSize = this.tileSize * scale:
         const requiredScale = requiredWorldSize / this.tileSize;
-        const zoom = this.scaleZoom(requiredScale);
+        const zoom = scaleZoom(requiredScale);
 
         // update matrices
         this._helper._elevation = elevation;
@@ -579,7 +573,7 @@ export class MercatorTransform implements ITransform {
         }
 
         const canonical = unwrappedTileID.canonical;
-        const scale = this.worldSize / this.zoomScale(canonical.z);
+        const scale = this.worldSize / zoomScale(canonical.z);
         const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
 
         const posMatrix = mat4.identity(new Float64Array(16) as any);
@@ -593,7 +587,7 @@ export class MercatorTransform implements ITransform {
 
     private _calculateTileMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
         const canonical = unwrappedTileID.canonical;
-        const scale = this.worldSize / this.zoomScale(canonical.z);
+        const scale = this.worldSize / zoomScale(canonical.z);
         const unwrappedX = canonical.x + Math.pow(2, canonical.z) * unwrappedTileID.wrap;
 
         const worldMatrix = mat4.identity(new Float64Array(16) as any);
@@ -645,7 +639,7 @@ export class MercatorTransform implements ITransform {
             lngRange = [-almost180, almost180];
         }
 
-        const worldSize = this.tileSize * this.zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
+        const worldSize = this.tileSize * zoomScale(result.zoom); // A world size for the requested zoom level, not the current world size
         let minY = 0;
         let maxY = worldSize;
         let minX = 0;
@@ -691,7 +685,7 @@ export class MercatorTransform implements ITransform {
                 scaleX ? (maxX + minX) / 2 : originalX,
                 scaleY ? (maxY + minY) / 2 : originalY);
             result.center = unprojectFromWorldCoordinates({worldSize}, newPoint).wrap();
-            result.zoom += this.scaleZoom(scale);
+            result.zoom += scaleZoom(scale);
             return result;
         }
 
