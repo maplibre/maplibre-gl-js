@@ -256,18 +256,18 @@ export function updateLineLabels(bucket: SymbolBucket,
 
         if (placeUnflipped.notEnoughRoom || useVertical ||
             (placeUnflipped.needsFlipping &&
-                (placeGlyphsAlongLine({
+                placeGlyphsAlongLine({
                     projectionContext,
                     pitchedLabelPlaneMatrixInverse,
                     symbol,
                     fontSize: pitchScaledFontSize,
-                    flip: false,
+                    flip: true, // flipped
                     keepUpright,
                     glyphOffsetArray: bucket.glyphOffsetArray,
                     dynamicLayoutVertexArray,
                     aspectRatio,
                     rotateToLine,
-                })).notEnoughRoom)) {
+                }).notEnoughRoom)) {
             hideGlyphs(symbol.numGlyphs, dynamicLayoutVertexArray);
         }
     }
