@@ -58,7 +58,11 @@ function getPixelPosMatrix(transform, tileID) {
     const t = mat4.create();
     mat4.translate(t, t, [1, 1, 0]);
     mat4.scale(t, t, [transform.width * 0.5, transform.height * 0.5, 1]);
-    return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
+    if (transform.calculatePosMatrix) { // Globe: TODO: remove this hack once queryRendererFeatures supports globe properly
+        return mat4.multiply(t, t, transform.calculatePosMatrix(tileID.toUnwrapped()));
+    } else {
+        return t;
+    }
 }
 
 function queryIncludes3DLayer(layers: Array<string>, styleLayers: {[_: string]: StyleLayer}, sourceID: string) {
