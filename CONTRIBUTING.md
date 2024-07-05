@@ -145,7 +145,6 @@ Clone the repository
 git clone git@github.com:maplibre/maplibre-gl-js.git
 ```
 
-
 Install node module dependencies
 ```bash
 cd maplibre-gl-js
