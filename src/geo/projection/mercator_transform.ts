@@ -680,7 +680,7 @@ export class MercatorTransform implements ITransform {
             if (shouldZoomIn) scaleX = screenWidth / (maxX - minX);
         }
 
-        const {x: originalX, y: originalY} = projectToWorldCoordinates({worldSize}, lngLat);
+        const {x: originalX, y: originalY} = projectToWorldCoordinates(worldSize, lngLat);
         let modifiedX, modifiedY;
 
         const scale = Math.max(scaleX || 0, scaleY || 0);
@@ -727,7 +727,7 @@ export class MercatorTransform implements ITransform {
 
         const halfFov = this._helper._fov / 2;
         const offset = this.centerOffset;
-        const point = projectToWorldCoordinates(this, this.center);
+        const point = projectToWorldCoordinates(this.worldSize, this.center);
         const x = point.x, y = point.y;
         this._cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this._helper._height;
         this._helper._pixelPerMeter = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;

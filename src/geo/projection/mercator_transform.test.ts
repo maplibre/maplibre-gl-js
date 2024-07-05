@@ -43,7 +43,7 @@ describe('transform', () => {
         expect(transform.centerPoint.equals(new Point(250, 250))).toBe(true);
         expect(transform.scaleZoom(0)).toBe(-Infinity);
         expect(transform.scaleZoom(10)).toBe(3.3219280948873626);
-        expect(projectToWorldCoordinates(transform, transform.center)).toEqual(new Point(262144, 262144));
+        expect(projectToWorldCoordinates(transform.worldSize, transform.center)).toEqual(new Point(262144, 262144));
         expect(transform.height).toBe(500);
         expect(transform.nearZ).toBe(10);
         expect(transform.farZ).toBe(804.8028169246645);
@@ -365,8 +365,8 @@ describe('transform', () => {
     test('clamps latitude', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
 
-        expect(projectToWorldCoordinates(transform, new LngLat(0, -90))).toEqual(projectToWorldCoordinates(transform, new LngLat(0, -MAX_VALID_LATITUDE)));
-        expect(projectToWorldCoordinates(transform, new LngLat(0, 90))).toEqual(projectToWorldCoordinates(transform, new LngLat(0, MAX_VALID_LATITUDE)));
+        expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -MAX_VALID_LATITUDE)));
+        expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, 90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, MAX_VALID_LATITUDE)));
     });
 
     test('clamps pitch', () => {

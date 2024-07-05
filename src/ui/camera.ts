@@ -694,10 +694,10 @@ export abstract class Camera extends Evented {
         // Consider all corners of the rotated bounding box derived from the given points
         // when find the camera position that fits the given points.
         const bounds = new LngLatBounds(p0, p1);
-        const nwWorld = projectToWorldCoordinates(tr, bounds.getNorthWest());
-        const neWorld = projectToWorldCoordinates(tr, bounds.getNorthEast());
-        const seWorld = projectToWorldCoordinates(tr, bounds.getSouthEast());
-        const swWorld = projectToWorldCoordinates(tr, bounds.getSouthWest());
+        const nwWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthWest());
+        const neWorld = projectToWorldCoordinates(tr.worldSize, bounds.getNorthEast());
+        const seWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthEast());
+        const swWorld = projectToWorldCoordinates(tr.worldSize, bounds.getSouthWest());
 
         const bearingRadians = degreesToRadians(-bearing);
 
@@ -989,8 +989,8 @@ export abstract class Camera extends Evented {
         );
         this._normalizeCenter(center);
 
-        const from = projectToWorldCoordinates(tr, locationAtOffset);
-        const delta = projectToWorldCoordinates(tr, center).sub(from);
+        const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
+        const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
         const finalScale = tr.zoomScale(zoom - startZoom);
 
         let around, aroundPoint;
@@ -1264,8 +1264,8 @@ export abstract class Camera extends Evented {
         this._normalizeCenter(center);
         const scale = tr.zoomScale(zoom - startZoom);
 
-        const from = projectToWorldCoordinates(tr, locationAtOffset);
-        const delta = projectToWorldCoordinates(tr, center).sub(from);
+        const from = projectToWorldCoordinates(tr.worldSize, locationAtOffset);
+        const delta = projectToWorldCoordinates(tr.worldSize, center).sub(from);
 
         let rho = options.curve;
 

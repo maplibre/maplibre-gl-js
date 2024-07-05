@@ -11,25 +11,25 @@ import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 
 /**
  * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512).
- * @param transform - The reference transform instance - only the `worldSize` property is used, which itself depends on zoom.
+ * @param worldSize - Mercator world size computed from zoom level and tile size.
  * @param lnglat - The location to convert.
  * @returns Point
  */
-export function projectToWorldCoordinates(transform: {worldSize}, lnglat: LngLat): Point {
+export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat): Point {
     const lat = clamp(lnglat.lat, -MAX_VALID_LATITUDE, MAX_VALID_LATITUDE);
     return new Point(
-        mercatorXfromLng(lnglat.lng) * transform.worldSize,
-        mercatorYfromLat(lat) * transform.worldSize);
+        mercatorXfromLng(lnglat.lng) * worldSize,
+        mercatorYfromLat(lat) * worldSize);
 }
 
 /**
  * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90]).
- * @param transform - The reference transform instance - only the `worldSize` property is used, which itself depends on zoom.
+ * @param worldSize - Mercator world size computed from zoom level and tile size.
  * @param point - World coordinate.
  * @returns LngLat
  */
-export function unprojectFromWorldCoordinates(transform: {worldSize}, point: Point): LngLat {
-    return new MercatorCoordinate(point.x / transform.worldSize, point.y / transform.worldSize).toLngLat();
+export function unprojectFromWorldCoordinates(worldSize, point: Point): LngLat {
+    return new MercatorCoordinate(point.x / worldSize, point.y / worldSize).toLngLat();
 }
 
 /**
