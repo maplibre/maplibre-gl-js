@@ -155,8 +155,7 @@ describe('SourceCache#addTile', () => {
         sourceCache.on('dataloading', () => { add++; });
 
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
         sourceCache._addTile(tileID);
         sourceCache._removeTile(tileID.key);
@@ -176,8 +175,7 @@ describe('SourceCache#addTile', () => {
         };
 
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = sourceCache._addTile(tileID);
@@ -206,8 +204,7 @@ describe('SourceCache#addTile', () => {
         };
 
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const id = tileID.key;
@@ -298,8 +295,7 @@ describe('SourceCache#removeTile', () => {
         sourceCache._source.unloadTile = jest.fn();
 
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         sourceCache._addTile(tileID);
@@ -1715,8 +1711,7 @@ describe('SourceCache#findLoadedParent', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = {
@@ -1734,8 +1729,7 @@ describe('SourceCache#findLoadedParent', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
@@ -1751,8 +1745,7 @@ describe('SourceCache#findLoadedParent', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const mockTile = id => {
@@ -1818,8 +1811,7 @@ describe('SourceCache#findLoadedSibling', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = {
@@ -1837,8 +1829,7 @@ describe('SourceCache#findLoadedSibling', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const tile = new Tile(new OverscaledTileID(1, 0, 1, 0, 0), 512);
@@ -1853,8 +1844,7 @@ describe('SourceCache#findLoadedSibling', () => {
         const sourceCache = createSourceCache({});
         sourceCache.onAdd(undefined);
         const tr = new MercatorTransform();
-        tr['_width'] = 512;
-        tr['_height'] = 512;
+        tr.resize(512, 512);
         sourceCache.updateCacheSize(tr);
 
         const mockTile = id => {
