@@ -52,6 +52,7 @@ export class TransformHelper implements ITransformGetters {
     _fov: number;
     /**
      * This transform's bearing in radians.
+     * Note that the sign of this variable is *opposite* to the sign of {@link bearing}
      */
     _angle: number;
     /**
@@ -116,7 +117,7 @@ export class TransformHelper implements ITransformGetters {
         this._zoom = thatI.zoom;
         this._tileZoom = getTileZoom(this._zoom);
         this._scale = this.zoomScale(this._zoom);
-        this._angle = thatI.bearing * Math.PI / 180;
+        this._angle = -thatI.bearing * Math.PI / 180;
         this._fov = thatI.fov * Math.PI / 180;
         this._pitch = thatI.pitch * Math.PI / 180;
         this._unmodified = thatI.unmodified;
