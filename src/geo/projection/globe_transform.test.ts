@@ -6,6 +6,7 @@ import {GlobeTransform} from './globe_transform';
 import {OverscaledTileID} from '../../source/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {expectToBeCloseToArray} from '../../util/test/util';
+import {MercatorCoordinate} from '../mercator_coordinate';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
     const lat = latDegrees / 180.0 * Math.PI;
@@ -387,5 +388,54 @@ describe('GlobeTransform', () => {
             expect(projected.y).toBeCloseTo(point.y, precisionDigits);
             expect(globeTransform.center.lat).toBeCloseTo(20.659450722109348, precisionDigits);
         });
+    });
+
+    test('isPointOnMapSurface', () => {
+        const globeTransform = new GlobeTransform(globeProjectionMock);
+        globeTransform.resize(640, 480);
+        globeTransform.setZoom(1);
+        // Top screen edge
+        expect(globeTransform.isPointOnMapSurface(new Point(320, 0))).toBe(false);
+        // Screen center
+        expect(globeTransform.isPointOnMapSurface(new Point(320, 240))).toBe(true);
+        // Top
+        expect(globeTransform.isPointOnMapSurface(new Point(320, 104))).toBe(false);
+        expect(globeTransform.isPointOnMapSurface(new Point(320, 105))).toBe(true);
+        // Bottom
+        expect(globeTransform.isPointOnMapSurface(new Point(320, 480 - 105))).toBe(true);
+        expect(globeTransform.isPointOnMapSurface(new Point(320, 480 - 104))).toBe(false);
+        // Left
+        expect(globeTransform.isPointOnMapSurface(new Point(184, 240))).toBe(false);
+        expect(globeTransform.isPointOnMapSurface(new Point(185, 240))).toBe(true);
+        // Right
+        expect(globeTransform.isPointOnMapSurface(new Point(640 - 185, 240))).toBe(true);
+        expect(globeTransform.isPointOnMapSurface(new Point(640 - 184, 240))).toBe(false);
+        // Diagonal
+        expect(globeTransform.isPointOnMapSurface(new Point(223, 147))).toBe(true);
+        expect(globeTransform.isPointOnMapSurface(new Point(221, 144))).toBe(false);
+    });
+
+    test('pointCoordinate', () => {
+        const precisionDigits = 10;
+        const globeTransform = createGlobeTransform(globeProjectionMock);
+        globeTransform.newFrameUpdate();
+        let coords: LngLat;
+        let coordsMercator: MercatorCoordinate;
+        let projected: Point;
+        let unprojectedCoordinates: MercatorCoordinate;
+
+        coords = new LngLat(0, 0);
+        coordsMercator = MercatorCoordinate.fromLngLat(coords);
+        projected = globeTransform.locationPoint(coords);
+        unprojectedCoordinates = globeTransform.pointCoordinate(projected);
+        expect(unprojectedCoordinates.x).toBeCloseTo(coordsMercator.x, precisionDigits);
+        expect(unprojectedCoordinates.y).toBeCloseTo(coordsMercator.y, precisionDigits);
+
+        coords = new LngLat(10, 20);
+        coordsMercator = MercatorCoordinate.fromLngLat(coords);
+        projected = globeTransform.locationPoint(coords);
+        unprojectedCoordinates = globeTransform.pointCoordinate(projected);
+        expect(unprojectedCoordinates.x).toBeCloseTo(coordsMercator.x, precisionDigits);
+        expect(unprojectedCoordinates.y).toBeCloseTo(coordsMercator.y, precisionDigits);
     });
 });
