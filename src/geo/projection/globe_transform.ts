@@ -42,10 +42,13 @@ function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, 
 
 /**
  * Returns the angle in radians between two 2D vectors.
- * The angle is how much must the first vector be rotated clockwise
- * (assuming X is right and Y is down) so that it points in the same
- * direction as the second vector.
- * Returns an angle in range -PI..PI.
+ * The angle is signed and describes how much the first vector would need to be be rotated clockwise
+ * (assuming X is right and Y is down) so that it points in the same direction as the second vector.
+ * @param vec1x - The X component of the first vector.
+ * @param vec1y - The Y component of the first vector.
+ * @param vec2x - The X component of the second vector.
+ * @param vec2y - The Y component of the second vector.
+ * @returns The signed angle between the two vectors, in range -PI..PI.
  */
 function angleToRotateBetweenVectors2D(vec1x: number, vec1y: number, vec2x: number, vec2y: number): number {
     // Normalize both vectors
