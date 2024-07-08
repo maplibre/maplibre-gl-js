@@ -10,6 +10,25 @@ import Point from '@mapbox/point-geometry';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
 
 /**
+ * Given a geographical lnglat, return an unrounded
+ * coordinate that represents it at low zoom level.
+ * @param lnglat - the location
+ * @returns The mercator coordinate
+ */
+export function locationCoordinate(lnglat: LngLat): MercatorCoordinate {
+    return MercatorCoordinate.fromLngLat(lnglat);
+}
+
+/**
+ * Given a Coordinate, return its geographical position.
+ * @param coord - mercator coordinates
+ * @returns lng and lat
+ */
+export function coordinateLocation(coord: MercatorCoordinate): LngLat {
+    return coord && coord.toLngLat();
+}
+
+/**
  * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512).
  * @param worldSize - Mercator world size computed from zoom level and tile size.
  * @param lnglat - The location to convert.

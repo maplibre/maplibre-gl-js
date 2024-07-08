@@ -180,6 +180,9 @@ export interface ITransform extends ITransformGetters {
     setMinElevationForCurrentTile(elevation: number): void;
     setPadding(padding: PaddingOptions): void;
 
+    /**
+     * Sets the transform's width and height and recomputes internal matrices.
+     */
     resize(width: number, height: number): void;
 
     /**
@@ -308,10 +311,7 @@ export interface ITransform extends ITransformGetters {
     customLayerMatrix(): mat4;
 
     /**
-     * Get center lngLat and zoom to ensure that
-     * 1) everything beyond the bounds is excluded
-     * 2) a given lngLat is as near the center as possible
-     * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
+     * Get center lngLat and zoom to ensure that longitude and latitude bounds are respected and regions beyond the map bounds are not displayed.
      */
     getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number};
 
@@ -354,6 +354,11 @@ export interface ITransform extends ITransformGetters {
      */
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
 
+    /**
+     * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
+     * Currently only supported in mercator projection.
+     * @param unwrappedTileID - the tile ID
+     */
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4;
 
     /**

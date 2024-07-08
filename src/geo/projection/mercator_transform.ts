@@ -14,7 +14,7 @@ import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
-import {getBasicProjectionData, getMercatorHorizon, projectToWorldCoordinates, translatePosition, unprojectFromWorldCoordinates} from './mercator_utils';
+import {coordinateLocation, getBasicProjectionData, getMercatorHorizon, locationCoordinate, projectToWorldCoordinates, translatePosition, unprojectFromWorldCoordinates} from './mercator_utils';
 
 export class MercatorTransform implements ITransform {
     private _helper: TransformHelper;
@@ -233,10 +233,6 @@ export class MercatorTransform implements ITransform {
 
     public get mercatorMatrix(): mat4 { return this._mercatorMatrix; } // Not part of ITransform interface
 
-    /**
-     * Return any "wrapped" copies of a given tile coordinate that are visible
-     * in the current view.
-     */
     getVisibleUnwrappedCoordinates(tileID: CanonicalTileID): Array<UnwrappedTileID> {
         const result = [new UnwrappedTileID(0, tileID)];
         if (this._helper._renderWorldCopies) {
@@ -260,12 +256,6 @@ export class MercatorTransform implements ITransform {
         return result;
     }
 
-    /**
-     * Return all coordinates that could cover this transform for a covering
-     * zoom level.
-     * @param options - the options
-     * @returns OverscaledTileIDs
-     */
     coveringTiles(
         options: {
             tileSize: number;
@@ -389,7 +379,7 @@ export class MercatorTransform implements ITransform {
     }
 
     /**
-     * get the camera position in LngLat and altitudes in meter
+     * Get the camera position in LngLat and altitudes in meters.
      * @returns An object with lngLat & altitude.
      */
     getCameraPosition(): {
@@ -428,71 +418,29 @@ export class MercatorTransform implements ITransform {
         this.setZoom(zoom);
     }
 
-    /**
-     * Set's the transform's center so that the given point on screen is at the given world coordinates.
-     * @param lnglat - Desired world coordinates of the point.
-     * @param point - The screen point that should lie at the given coordinates.
-     */
     setLocationAtPoint(lnglat: LngLat, point: Point) {
         const a = this.pointCoordinate(point);
         const b = this.pointCoordinate(this.centerPoint);
-        const loc = this.locationCoordinate(lnglat);
+        const loc = locationCoordinate(lnglat);
         const newCenter = new MercatorCoordinate(
             loc.x - (a.x - b.x),
             loc.y - (a.y - b.y));
-        this.setCenter(this.coordinateLocation(newCenter));
+        this.setCenter(coordinateLocation(newCenter));
         if (this._helper._renderWorldCopies) {
             this.setCenter(this.center.wrap());
         }
     }
 
-    /**
-     * Given a LngLat location, return the screen point that corresponds to it
-     * @param lnglat - location
-     * @param terrain - optional terrain
-     * @returns screen point
-     */
     locationPoint(lnglat: LngLat, terrain?: Terrain): Point {
         return terrain ?
-            this.coordinatePoint(this.locationCoordinate(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
-            this.coordinatePoint(this.locationCoordinate(lnglat));
+            this.coordinatePoint(locationCoordinate(lnglat), terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom), this._pixelMatrix3D) :
+            this.coordinatePoint(locationCoordinate(lnglat));
     }
 
-    /**
-     * Given a point on screen, return its lnglat
-     * @param p - screen point
-     * @param terrain - optional terrain
-     * @returns lnglat location
-     */
     pointLocation(p: Point, terrain?: Terrain): LngLat {
-        return this.coordinateLocation(this.pointCoordinate(p, terrain));
+        return coordinateLocation(this.pointCoordinate(p, terrain));
     }
 
-    /**
-     * Given a geographical lnglat, return an unrounded
-     * coordinate that represents it at low zoom level.
-     * @param lnglat - the location
-     * @returns The mercator coordinate
-     */
-    locationCoordinate(lnglat: LngLat): MercatorCoordinate {
-        return MercatorCoordinate.fromLngLat(lnglat);
-    }
-
-    /**
-     * Given a Coordinate, return its geographical position.
-     * @param coord - mercator coordinates
-     * @returns lng and lat
-     */
-    coordinateLocation(coord: MercatorCoordinate): LngLat {
-        return coord && coord.toLngLat();
-    }
-
-    /**
-     * Given a Point, return its mercator coordinate.
-     * @param p - the point
-     * @param terrain - optional terrain
-     * @returns lnglat
-     */
     pointCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate {
         // get point-coordinate from terrain coordinates framebuffer
         if (terrain) {
@@ -537,7 +485,7 @@ export class MercatorTransform implements ITransform {
      * @param pixelMatrix - the pixel matrix
      * @returns screen point
      */
-    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix = this._pixelMatrix): Point {
+    coordinatePoint(coord: MercatorCoordinate, elevation: number = 0, pixelMatrix: mat4 = this._pixelMatrix): Point {
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, pixelMatrix);
         return new Point(p[0] / p[3], p[1] / p[3]);
@@ -565,7 +513,7 @@ export class MercatorTransform implements ITransform {
      * This function is specific to the mercator projection.
      * @param unwrappedTileID - the tile ID
      */
-    public calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 {
+    private _calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 {
         const posMatrixKey = unwrappedTileID.key;
         const cache = aligned ? this._alignedPosMatrixCache : this._posMatrixCache;
         if (cache[posMatrixKey]) {
@@ -596,11 +544,6 @@ export class MercatorTransform implements ITransform {
         return worldMatrix;
     }
 
-    /**
-     * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
-     * @param unwrappedTileID - the tile ID
-     * @private
-     */
     calculateFogMatrix(unwrappedTileID: UnwrappedTileID): mat4 {
         const posMatrixKey = unwrappedTileID.key;
         const cache = this._fogMatrixCache;
@@ -620,9 +563,11 @@ export class MercatorTransform implements ITransform {
     }
 
     /**
-     * Get center lngLat and zoom to ensure that
+     * This mercator implementation returns center lngLat and zoom to ensure that:
+     *
      * 1) everything beyond the bounds is excluded
      * 2) a given lngLat is as near the center as possible
+     *
      * Bounds are those set by maxBounds or North & South "Poles" and, if only 1 globe is displayed, antimeridian.
      */
     getConstrained(lngLat: LngLat, zoom: number): {center: LngLat; zoom: number} {
@@ -853,33 +798,14 @@ export class MercatorTransform implements ITransform {
         return topPoint[3] / this._cameraToCenterDistance;
     }
 
-    /**
-     * The camera looks at the map from a 3D (lng, lat, altitude) location. Let's use `cameraLocation`
-     * as the name for the location under the camera and on the surface of the earth (lng, lat, 0).
-     * `cameraPoint` is the projected position of the `cameraLocation`.
-     *
-     * This point is useful to us because only fill-extrusions that are between `cameraPoint` and
-     * the query point on the surface of the earth can extend and intersect the query.
-     *
-     * When the map is not pitched the `cameraPoint` is equivalent to the center of the map because
-     * the camera is right above the center of the map.
-     */
     getCameraPoint(): Point {
         const pitch = this._helper._pitch;
         const yOffset = Math.tan(pitch) * (this._cameraToCenterDistance || 1);
         return this.centerPoint.add(new Point(0, yOffset));
     }
 
-    /**
-     * Return the distance to the camera in clip space from a LngLat.
-     * This can be compared to the value from the depth buffer (terrain.depthAtPoint)
-     * to determine whether a point is occluded.
-     * @param lngLat - the point
-     * @param elevation - the point's elevation
-     * @returns depth value in clip space (between 0 and 1)
-     */
     lngLatToCameraDepth(lngLat: LngLat, elevation: number) {
-        const coord = this.locationCoordinate(lngLat);
+        const coord = locationCoordinate(lngLat);
         const p = [coord.x * this.worldSize, coord.y * this.worldSize, elevation, 1] as vec4;
         vec4.transformMat4(p, p, this._viewProjMatrix);
         return (p[2] / p[3]);
@@ -890,7 +816,7 @@ export class MercatorTransform implements ITransform {
     }
 
     getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
-        const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned) : null;
+        const matrix = overscaledTileID ? this._calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned) : null;
         return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
 
@@ -929,7 +855,7 @@ export class MercatorTransform implements ITransform {
     }
 
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
-        const matrix = this.calculatePosMatrix(unwrappedTileID);
+        const matrix = this._calculatePosMatrix(unwrappedTileID);
         let pos;
         if (getElevation) { // slow because of handle z-index
             pos = [x, y, getElevation(x, y), 1] as vec4;
@@ -950,7 +876,7 @@ export class MercatorTransform implements ITransform {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
             // place the pos matrix into the transform's internal cache.
-            this.calculatePosMatrix(coord.toUnwrapped());
+            this._calculatePosMatrix(coord.toUnwrapped());
         }
     }
 }
