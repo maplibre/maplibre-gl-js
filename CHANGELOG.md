@@ -2,6 +2,7 @@
 
 ### ✨ Features and improvements
 
+- Expose projection matrix parameters ([#3136](https://github.com/maplibre/maplibre-gl-js/pull/3136))
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
@@ -11,14 +12,17 @@
 ## 4.5.0
 
 ### ✨ Features and improvements
+
 - Add sky implementation according to spec ([#3645](https://github.com/maplibre/maplibre-gl-js/pull/3645))
 
 ### 🐞 Bug fixes
+
 - Fix (de)serialization of extends of built-ins (currently only AjaxError) not working correctly in web_worker_transfer. Also refactored related web_worker_transfer code and added more tests ([#4024](https://github.com/maplibre/maplibre-gl-js/pull/4211))
 
 ## 4.4.1
 
 ### 🐞 Bug fixes
+
 - Fix `terrain` listener memory leak when adding and removing Marker ([#4284](https://github.com/maplibre/maplibre-gl-js/pull/4284))
 
 ## 4.4.0
@@ -175,7 +179,7 @@
 - ⚠️ Changed the `GeoJSONSource`'s `getClusterExpansionZoom`, `getClusterChildren`, `getClusterLeaves` methods to return a `Promise` instead of a callback usage ([#3421](https://github.com/maplibre/maplibre-gl-js/pull/3421))
 - ⚠️ Changed the `setRTLTextPlugin` function to return a promise instead of using callback ([#3418](https://github.com/maplibre/maplibre-gl-js/pull/3418)) this also changed how the RTL plugin code is handled internally by splitting the main thread and worker thread code.
 - ⚠️ Remove `setCooperativeGestures` and `getCooperativeGestures` functions in favor of `cooperativeGestures` handler which now has an `enabled()` or `disabled()` methods ([#3430](https://github.com/maplibre/maplibre-gl-js/pull/3430))
-- ⚠️ Changed the undeling worker communication from callbacks to promises. This has a breaking effect on the implementation of custom `WorkerSource` and how it behaves ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
+- ⚠️ Changed the underlying worker communication from callbacks to promises. This has a breaking effect on the implementation of custom `WorkerSource` and how it behaves ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - ⚠️ Changed the `Source` interface to return promises instead of callbacks ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - ⚠️ Changed all the sources to be promises based. ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - ⚠️ Changed the `map.loadImage` method to return a `Promise` instead of a callback usage ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
@@ -271,7 +275,7 @@
 ### ✨ Features and improvements
 
 - Changed `ImageRequest` to be `Promise` based ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
-- ⚠️ Changed the undeling worker communication from callbacks to promises. This has a breaking effect on the implementation of custom `WorkerSource` and how it behaves ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
+- ⚠️ Changed the underlying worker communication from callbacks to promises. This has a breaking effect on the implementation of custom `WorkerSource` and how it behaves ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - ⚠️ Changed the `Source` interface to return promises instead of callbacks ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - ⚠️ Changed all the sources to be promises based. ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
 - ⚠️ Changed the `map.loadImage` method to return a `Promise` instead of a callback usage ([#3233](https://github.com/maplibre/maplibre-gl-js/pull/3233))
