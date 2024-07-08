@@ -1,15 +1,11 @@
 import Point from '@mapbox/point-geometry';
-import {MAX_VALID_LATITUDE} from '../transform_helper';
 import {LngLat} from '../lng_lat';
 import {OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import {fixedLngLat, fixedCoord} from '../../../test/unit/lib/fixed';
 import type {Terrain} from '../../render/terrain';
 import {MercatorTransform} from './mercator_transform';
-import {mat4} from 'gl-matrix';
-import {ProjectionData} from '../../render/program/projection_program';
-import {EXTENT} from '../../data/extent';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {getBasicProjectionData, getMercatorHorizon, projectToWorldCoordinates} from './mercator_utils';
+import {getMercatorHorizon} from './mercator_utils';
 
 describe('transform', () => {
     test('creates a transform', () => {
@@ -41,7 +37,6 @@ describe('transform', () => {
         expect(transform.maxPitch).toBe(10);
         expect(transform.size.equals(new Point(500, 500))).toBe(true);
         expect(transform.centerPoint.equals(new Point(250, 250))).toBe(true);
-        expect(projectToWorldCoordinates(transform.worldSize, transform.center)).toEqual(new Point(262144, 262144));
         expect(transform.height).toBe(500);
         expect(transform.nearZ).toBe(10);
         expect(transform.farZ).toBe(804.8028169246645);
@@ -50,7 +45,6 @@ describe('transform', () => {
         expect(fixedLngLat(transform.pointLocation(new Point(250, 250)))).toEqual({lng: 0, lat: 0});
         expect(fixedCoord(transform.pointCoordinate(new Point(250, 250)))).toEqual({x: 0.5, y: 0.5, z: 0});
         expect(transform.locationPoint(new LngLat(0, 0))).toEqual({x: 250, y: 250});
-        expect(transform.locationCoordinate(new LngLat(0, 0))).toEqual({x: 0.5, y: 0.5, z: 0});
     });
 
     test('does not throw on bad center', () => {
@@ -360,13 +354,6 @@ describe('transform', () => {
         expect(transform.coveringZoomLevel(options)).toBe(13);
     });
 
-    test('clamps latitude', () => {
-        const transform = new MercatorTransform(0, 22, 0, 60, true);
-
-        expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, -MAX_VALID_LATITUDE)));
-        expect(projectToWorldCoordinates(transform.worldSize, new LngLat(0, 90))).toEqual(projectToWorldCoordinates(transform.worldSize, new LngLat(0, MAX_VALID_LATITUDE)));
-    });
-
     test('clamps pitch', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
 
@@ -458,15 +445,6 @@ describe('transform', () => {
         expect(coordinate).toBeDefined();
     });
 
-    test('horizon', () => {
-        const transform = new MercatorTransform(0, 22, 0, 85, true);
-        transform.resize(500, 500);
-        transform.setPitch(75);
-        const horizon = getMercatorHorizon(transform);
-
-        expect(horizon).toBeCloseTo(170.8176101748407, 10);
-    });
-
     test('getBounds with horizon', () => {
         const transform = new MercatorTransform(0, 22, 0, 85, true);
         transform.resize(500, 500);
@@ -490,32 +468,3 @@ describe('transform', () => {
         expect(transform.lngLatToCameraDepth(new LngLat(10, 50), 4)).toBeCloseTo(0.9865782165762236);
     });
 });
-
-describe('getBasicProjectionData', () => {
-    test('posMatrix is set', () => {
-        const mat = mat4.create();
-        mat[0] = 1234;
-        const projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0), mat);
-        expect(projectionData.u_projection_fallback_matrix).toEqual(mat);
-    });
-
-    test('mercator tile extents are set', () => {
-        let projectionData: ProjectionData;
-
-        projectionData = getBasicProjectionData(new OverscaledTileID(0, 0, 0, 0, 0));
-        expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 1 / EXTENT, 1 / EXTENT]);
-
-        projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 0, 0));
-        expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-
-        projectionData = getBasicProjectionData(new OverscaledTileID(1, 0, 1, 1, 0));
-        expectToBeCloseToArray(projectionData.u_projection_tile_mercator_coords, [0.5, 0, 0.5 / EXTENT, 0.5 / EXTENT]);
-    });
-});
-
-export function expectToBeCloseToArray(actual: Array<number>, expected: Array<number>, precision?: number) {
-    expect(actual).toHaveLength(expected.length);
-    for (let i = 0; i < expected.length; i++) {
-        expect(actual[i]).toBeCloseTo(expected[i], precision);
-    }
-}
