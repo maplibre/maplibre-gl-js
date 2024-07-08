@@ -62,27 +62,6 @@ export function getMercatorHorizon(transform: {pitch: number; cameraToCenterDist
 }
 
 /**
- * Transform a matrix to incorporate the *-translate and *-translate-anchor properties into it.
- * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
- * @returns matrix
- */
-export function translatePosMatrix(
-    transform: { angle: number; zoom: number },
-    tile: { tileID: OverscaledTileID; tileSize: number },
-    matrix: mat4,
-    translate: [number, number],
-    translateAnchor: 'map' | 'viewport',
-    inViewportPixelUnitsUnits: boolean = false
-): mat4 {
-    if (!translate[0] && !translate[1]) return matrix;
-
-    const translation = translatePosition(transform, tile, translate, translateAnchor, inViewportPixelUnitsUnits);
-    const translatedMatrix = new Float32Array(16);
-    mat4.translate(translatedMatrix, matrix, [translation[0], translation[1], 0]);
-    return translatedMatrix;
-}
-
-/**
  * Returns a translation in tile units that correctly incorporates the view angle and the *-translate and *-translate-anchor properties.
  * @param inViewportPixelUnitsUnits - True when the units accepted by the matrix are in viewport pixels instead of tile units.
  */
