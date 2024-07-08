@@ -513,7 +513,7 @@ export class MercatorTransform implements ITransform {
      * This function is specific to the mercator projection.
      * @param unwrappedTileID - the tile ID
      */
-    private _calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 {
+    calculatePosMatrix(unwrappedTileID: UnwrappedTileID, aligned: boolean = false): mat4 {
         const posMatrixKey = unwrappedTileID.key;
         const cache = aligned ? this._alignedPosMatrixCache : this._posMatrixCache;
         if (cache[posMatrixKey]) {
@@ -816,7 +816,7 @@ export class MercatorTransform implements ITransform {
     }
 
     getProjectionData(overscaledTileID: OverscaledTileID, aligned?: boolean, ignoreTerrainMatrix?: boolean): ProjectionData {
-        const matrix = overscaledTileID ? this._calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned) : null;
+        const matrix = overscaledTileID ? this.calculatePosMatrix(overscaledTileID.toUnwrapped(), aligned) : null;
         return getBasicProjectionData(overscaledTileID, matrix, ignoreTerrainMatrix);
     }
 
@@ -855,7 +855,7 @@ export class MercatorTransform implements ITransform {
     }
 
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection {
-        const matrix = this._calculatePosMatrix(unwrappedTileID);
+        const matrix = this.calculatePosMatrix(unwrappedTileID);
         let pos;
         if (getElevation) { // slow because of handle z-index
             pos = [x, y, getElevation(x, y), 1] as vec4;
@@ -876,7 +876,7 @@ export class MercatorTransform implements ITransform {
         for (const coord of coords) {
             // Return value is thrown away, but this function will still
             // place the pos matrix into the transform's internal cache.
-            this._calculatePosMatrix(coord.toUnwrapped());
+            this.calculatePosMatrix(coord.toUnwrapped());
         }
     }
 }

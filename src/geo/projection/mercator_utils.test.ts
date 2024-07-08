@@ -12,6 +12,7 @@ import {expectToBeCloseToArray} from '../../util/test/util';
 describe('mercator utils', () => {
     test('projectToWorldCoordinates basic', () => {
         const transform = new MercatorTransform(0, 22, 0, 60, true);
+        transform.setZoom(10);
         expect(projectToWorldCoordinates(transform.worldSize, transform.center)).toEqual(new Point(262144, 262144));
     });
 

@@ -29,7 +29,7 @@ export function coordinateLocation(coord: MercatorCoordinate): LngLat {
 }
 
 /**
- * Convert from LngLat to world coordinates (Mercator coordinates scaled by 512).
+ * Convert from LngLat to world coordinates (Mercator coordinates scaled by world size).
  * @param worldSize - Mercator world size computed from zoom level and tile size.
  * @param lnglat - The location to convert.
  * @returns Point
@@ -42,7 +42,7 @@ export function projectToWorldCoordinates(worldSize: number, lnglat: LngLat): Po
 }
 
 /**
- * Convert from world coordinates ([0, 512],[0, 512]) to LngLat ([-180, 180], [-90, 90]).
+ * Convert from world coordinates (mercator coordinates scaled by world size) to LngLat.
  * @param worldSize - Mercator world size computed from zoom level and tile size.
  * @param point - World coordinate.
  * @returns LngLat

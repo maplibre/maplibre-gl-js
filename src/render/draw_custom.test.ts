@@ -1,4 +1,3 @@
-import {mat4} from 'gl-matrix';
 import {OverscaledTileID} from '../source/tile_id';
 import {SourceCache} from '../source/source_cache';
 import {Tile} from '../source/tile';
@@ -42,8 +41,6 @@ describe('drawCustom', () => {
         tile.imageAtlasTexture = {
             bind: () => { }
         } as any;
-        const identity = mat4.create();
-        jest.spyOn(transform, 'calculatePosMatrix').mockImplementation(() => identity);
         const sourceCacheMock = new SourceCache(null, null, null);
         (sourceCacheMock.getTile as jest.Mock).mockReturnValue(tile);
         sourceCacheMock.map = {showCollisionBoxes: false} as any as Map;
