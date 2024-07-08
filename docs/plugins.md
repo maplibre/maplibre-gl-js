@@ -153,7 +153,6 @@ A library for integrating Google Maps as raster layers into MapLibre GL JS. It u
 <br/><small>[View on GitHub](https://github.com/traccar/maplibre-google-maps)</small>
 
 #### allmaps-maplibre
-
 A package for displaying georeferenced [IIIF](https://iiif.io/) images by loading [Georeference Annotations](https://preview.iiif.io/api/georef/extension/georef/) and using WebGL to transform and overlay the images on their correct geographical position.
 <br/><small>[View on GitHub](https://github.com/allmaps/allmaps/tree/main/packages/maplibre)</small>
 
