@@ -196,104 +196,106 @@ describe('GlobeTransform', () => {
             });
         });
 
-        test('unproject screen center', () => {
-            const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.newFrameUpdate();
-            let unprojected = globeTransform.pointLocation(screenCenter);
-            expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
+        describe('unproject', () => {
+            test('unproject screen center', () => {
+                const precisionDigits = 10;
+                const globeTransform = createGlobeTransform(globeProjectionMock);
+                globeTransform.newFrameUpdate();
+                let unprojected = globeTransform.pointLocation(screenCenter);
+                expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
-            globeTransform.center.lng = 90.0;
-            globeTransform.newFrameUpdate();
-            unprojected = globeTransform.pointLocation(screenCenter);
-            expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
+                globeTransform.center.lng = 90.0;
+                globeTransform.newFrameUpdate();
+                unprojected = globeTransform.pointLocation(screenCenter);
+                expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
 
-            globeTransform.center.lng = 0.0;
-            globeTransform.center.lat = 60.0;
-            globeTransform.newFrameUpdate();
-            unprojected = globeTransform.pointLocation(screenCenter);
-            expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
+                globeTransform.center.lng = 0.0;
+                globeTransform.center.lat = 60.0;
+                globeTransform.newFrameUpdate();
+                unprojected = globeTransform.pointLocation(screenCenter);
+                expect(unprojected.lng).toBeCloseTo(globeTransform.center.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(globeTransform.center.lat, precisionDigits);
+            });
+
+            test('unproject point to the side', () => {
+                const precisionDigits = 10;
+                const globeTransform = createGlobeTransform(globeProjectionMock);
+                globeTransform.newFrameUpdate();
+                let coords: LngLat;
+                let projected: Point;
+                let unprojected: LngLat;
+
+                coords = new LngLat(0, 0);
+                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.pointLocation(projected);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+
+                coords = new LngLat(10, 20);
+                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.pointLocation(projected);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+
+                coords = new LngLat(15, -2);
+                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.pointLocation(projected);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            });
+
+            test('unproject behind the pole', () => {
+                // This test tries to unproject a point that is beyond the north pole
+                // from the camera's point of view.
+                // This particular case turned out to be problematic, hence this test.
+
+                const precisionDigits = 10;
+                const globeTransform = createGlobeTransform(globeProjectionMock);
+                // Transform settings from the render test projection/globe/fill-planet-pole
+                // See the expected result for how the globe should look with this transform.
+                globeTransform.resize(512, 512);
+                globeTransform.setZoom(-0.5);
+                globeTransform.setCenter(new LngLat(0, 80));
+                globeTransform.newFrameUpdate();
+
+                let coords: LngLat;
+                let projected: Point;
+                let unprojected: LngLat;
+
+                coords = new LngLat(179.9, 71);
+                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.pointLocation(projected);
+                expect(projected.x).toBeCloseTo(256.2434702034287, precisionDigits);
+                expect(projected.y).toBeCloseTo(48.27080146399297, precisionDigits);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+
+                // Near the pole
+                coords = new LngLat(179.9, 89.0);
+                projected = globeTransform.locationPoint(coords);
+                unprojected = globeTransform.pointLocation(projected);
+                expect(projected.x).toBeCloseTo(256.0140972925064, precisionDigits);
+                expect(projected.y).toBeCloseTo(167.69159699932908, precisionDigits);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+            });
+
+            test('unproject outside of sphere', () => {
+                const precisionDigits = 10;
+                const globeTransform = createGlobeTransform(globeProjectionMock);
+                // Try unprojection a point somewhere above the western horizon
+                globeTransform.setPitch(60);
+                globeTransform.setBearing(-90);
+                globeTransform.newFrameUpdate();
+                const unprojected = globeTransform.pointLocation(screenTopEdgeCenter);
+                expect(unprojected.lng).toBeCloseTo(-34.699626794124015, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
+            });
         });
 
-        test('unproject point to the side', () => {
-            const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.newFrameUpdate();
-            let coords: LngLat;
-            let projected: Point;
-            let unprojected: LngLat;
-
-            coords = new LngLat(0, 0);
-            projected = globeTransform.locationPoint(coords);
-            unprojected = globeTransform.pointLocation(projected);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-
-            coords = new LngLat(10, 20);
-            projected = globeTransform.locationPoint(coords);
-            unprojected = globeTransform.pointLocation(projected);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-
-            coords = new LngLat(15, -2);
-            projected = globeTransform.locationPoint(coords);
-            unprojected = globeTransform.pointLocation(projected);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-        });
-
-        test('unproject behind the pole', () => {
-            // This test tries to unproject a point that is beyond the north pole
-            // from the camera's point of view.
-            // This particular case turned out to be problematic, hence this test.
-
-            const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            // Transform settings from the render test projection/globe/fill-planet-pole
-            // See the expected result for how the globe should look with this transform.
-            globeTransform.resize(512, 512);
-            globeTransform.setZoom(-0.5);
-            globeTransform.setCenter(new LngLat(0, 80));
-            globeTransform.newFrameUpdate();
-
-            let coords: LngLat;
-            let projected: Point;
-            let unprojected: LngLat;
-
-            coords = new LngLat(179.9, 71);
-            projected = globeTransform.locationPoint(coords);
-            unprojected = globeTransform.pointLocation(projected);
-            expect(projected.x).toBeCloseTo(256.2434702034287, precisionDigits);
-            expect(projected.y).toBeCloseTo(48.27080146399297, precisionDigits);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-
-            // Near the pole
-            coords = new LngLat(179.9, 89.0);
-            projected = globeTransform.locationPoint(coords);
-            unprojected = globeTransform.pointLocation(projected);
-            expect(projected.x).toBeCloseTo(256.0140972925064, precisionDigits);
-            expect(projected.y).toBeCloseTo(167.69159699932908, precisionDigits);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-        });
-
-        test('unproject outside of sphere', () => {
-            const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            // Try unprojection a point somewhere above the western horizon
-            globeTransform.setPitch(60);
-            globeTransform.setBearing(-90);
-            globeTransform.newFrameUpdate();
-            const unprojected = globeTransform.pointLocation(screenTopEdgeCenter);
-            expect(unprojected.lng).toBeCloseTo(-34.699626794124015, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(0.0, precisionDigits);
-        });
-
-        test('setLocationAtPoint', () => {
+        describe('setLocationAtPoint', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.setZoom(1);
@@ -303,116 +305,135 @@ describe('GlobeTransform', () => {
             let projected: Point;
             let unprojected: LngLat;
 
-            // Should do nothing
-            coords = new LngLat(0, 0);
-            point = new Point(320, 240);
-            globeTransform.setLocationAtPoint(coords, point);
-            unprojected = globeTransform.pointLocation(point);
-            projected = globeTransform.locationPoint(coords);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-            expect(projected.x).toBeCloseTo(point.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+            test('identity', () => {
+                // Should do nothing
+                coords = new LngLat(0, 0);
+                point = new Point(320, 240);
+                globeTransform.setLocationAtPoint(coords, point);
+                unprojected = globeTransform.pointLocation(point);
+                projected = globeTransform.locationPoint(coords);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+                expect(projected.x).toBeCloseTo(point.x, precisionDigits);
+                expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+            });
 
-            coords = new LngLat(5, 10);
-            point = new Point(320, 240);
-            globeTransform.setLocationAtPoint(coords, point);
-            unprojected = globeTransform.pointLocation(point);
-            projected = globeTransform.locationPoint(coords);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-            expect(projected.x).toBeCloseTo(point.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+            test('offset lnglat', () => {
+                coords = new LngLat(5, 10);
+                point = new Point(320, 240);
+                globeTransform.setLocationAtPoint(coords, point);
+                unprojected = globeTransform.pointLocation(point);
+                projected = globeTransform.locationPoint(coords);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+                expect(projected.x).toBeCloseTo(point.x, precisionDigits);
+                expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+            });
 
-            coords = new LngLat(5, 10);
-            point = new Point(330, 240); // 10 pixels to the right
-            globeTransform.setLocationAtPoint(coords, point);
-            unprojected = globeTransform.pointLocation(point);
-            projected = globeTransform.locationPoint(coords);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-            expect(projected.x).toBeCloseTo(point.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+            test('offset pixel + lnglat', () => {
+                coords = new LngLat(5, 10);
+                point = new Point(330, 240); // 10 pixels to the right
+                globeTransform.setLocationAtPoint(coords, point);
+                unprojected = globeTransform.pointLocation(point);
+                projected = globeTransform.locationPoint(coords);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+                expect(projected.x).toBeCloseTo(point.x, precisionDigits);
+                expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+            });
 
-            coords = new LngLat(30, -2);
-            point = new Point(250, 180);
-            globeTransform.setLocationAtPoint(coords, point);
-            unprojected = globeTransform.pointLocation(point);
-            projected = globeTransform.locationPoint(coords);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-            expect(projected.x).toBeCloseTo(point.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(point.y, precisionDigits);
-        });
+            test('larger offset', () => {
+                coords = new LngLat(30, -2);
+                point = new Point(250, 180);
+                globeTransform.setLocationAtPoint(coords, point);
+                unprojected = globeTransform.pointLocation(point);
+                projected = globeTransform.locationPoint(coords);
+                expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+                expect(projected.x).toBeCloseTo(point.x, precisionDigits);
+                expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+            });
 
-        test('setLocationAtPoint rotated', () => {
-            const precisionDigits = 10;
-            const globeTransform = createGlobeTransform(globeProjectionMock);
-            globeTransform.setZoom(1);
-            globeTransform.setBearing(90);
-            globeTransform.newFrameUpdate();
-            let coords: LngLat;
-            let point: Point;
-            let projected: Point;
-            let unprojected: LngLat;
+            describe('rotated', () => {
+                globeTransform.setBearing(90);
+                globeTransform.newFrameUpdate();
 
-            // Should do nothing
-            coords = new LngLat(0, 0);
-            point = new Point(320, 240);
-            globeTransform.setLocationAtPoint(coords, point);
-            unprojected = globeTransform.pointLocation(point);
-            projected = globeTransform.locationPoint(coords);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-            expect(projected.x).toBeCloseTo(point.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(point.y, precisionDigits);
-
-            coords = new LngLat(5, 0);
-            point = new Point(320, 240);
-            globeTransform.setLocationAtPoint(coords, point);
-            unprojected = globeTransform.pointLocation(point);
-            projected = globeTransform.locationPoint(coords);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-            expect(projected.x).toBeCloseTo(point.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(point.y, precisionDigits);
-
-            coords = new LngLat(0, 10);
-            point = new Point(350, 240); // 30 pixels to the right
-            globeTransform.setLocationAtPoint(coords, point);
-            unprojected = globeTransform.pointLocation(point);
-            projected = globeTransform.locationPoint(coords);
-            expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
-            expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
-            expect(projected.x).toBeCloseTo(point.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(point.y, precisionDigits);
-            expect(globeTransform.center.lat).toBeCloseTo(20.659450722109348, precisionDigits);
+                test('identity', () => {
+                    // Should do nothing
+                    coords = new LngLat(0, 0);
+                    point = new Point(320, 240);
+                    globeTransform.setLocationAtPoint(coords, point);
+                    unprojected = globeTransform.pointLocation(point);
+                    projected = globeTransform.locationPoint(coords);
+                    expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                    expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+                    expect(projected.x).toBeCloseTo(point.x, precisionDigits);
+                    expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+                });
+                test('offset lnglat', () => {
+                    coords = new LngLat(5, 0);
+                    point = new Point(320, 240);
+                    globeTransform.setLocationAtPoint(coords, point);
+                    unprojected = globeTransform.pointLocation(point);
+                    projected = globeTransform.locationPoint(coords);
+                    expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                    expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+                    expect(projected.x).toBeCloseTo(point.x, precisionDigits);
+                    expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+                });
+                test('offset pixel + lnglat', () => {
+                    coords = new LngLat(0, 10);
+                    point = new Point(350, 240); // 30 pixels to the right
+                    globeTransform.setLocationAtPoint(coords, point);
+                    unprojected = globeTransform.pointLocation(point);
+                    projected = globeTransform.locationPoint(coords);
+                    expect(unprojected.lng).toBeCloseTo(coords.lng, precisionDigits);
+                    expect(unprojected.lat).toBeCloseTo(coords.lat, precisionDigits);
+                    expect(projected.x).toBeCloseTo(point.x, precisionDigits);
+                    expect(projected.y).toBeCloseTo(point.y, precisionDigits);
+                    expect(globeTransform.center.lat).toBeCloseTo(20.659450722109348, precisionDigits);
+                });
+            });
         });
     });
 
-    test('isPointOnMapSurface', () => {
+    describe('isPointOnMapSurface', () => {
         const globeTransform = new GlobeTransform(globeProjectionMock);
         globeTransform.resize(640, 480);
         globeTransform.setZoom(1);
-        // Top screen edge
-        expect(globeTransform.isPointOnMapSurface(new Point(320, 0))).toBe(false);
-        // Screen center
-        expect(globeTransform.isPointOnMapSurface(new Point(320, 240))).toBe(true);
-        // Top
-        expect(globeTransform.isPointOnMapSurface(new Point(320, 104))).toBe(false);
-        expect(globeTransform.isPointOnMapSurface(new Point(320, 105))).toBe(true);
-        // Bottom
-        expect(globeTransform.isPointOnMapSurface(new Point(320, 480 - 105))).toBe(true);
-        expect(globeTransform.isPointOnMapSurface(new Point(320, 480 - 104))).toBe(false);
-        // Left
-        expect(globeTransform.isPointOnMapSurface(new Point(184, 240))).toBe(false);
-        expect(globeTransform.isPointOnMapSurface(new Point(185, 240))).toBe(true);
-        // Right
-        expect(globeTransform.isPointOnMapSurface(new Point(640 - 185, 240))).toBe(true);
-        expect(globeTransform.isPointOnMapSurface(new Point(640 - 184, 240))).toBe(false);
-        // Diagonal
-        expect(globeTransform.isPointOnMapSurface(new Point(223, 147))).toBe(true);
-        expect(globeTransform.isPointOnMapSurface(new Point(221, 144))).toBe(false);
+
+        test('Top screen edge', () => {
+            expect(globeTransform.isPointOnMapSurface(new Point(320, 0))).toBe(false);
+        });
+
+        test('Screen center', () => {
+            expect(globeTransform.isPointOnMapSurface(new Point(320, 240))).toBe(true);
+        });
+
+        test('Top', () => {
+            expect(globeTransform.isPointOnMapSurface(new Point(320, 104))).toBe(false);
+            expect(globeTransform.isPointOnMapSurface(new Point(320, 105))).toBe(true);
+        });
+
+        test('Bottom', () => {
+            expect(globeTransform.isPointOnMapSurface(new Point(320, 480 - 105))).toBe(true);
+            expect(globeTransform.isPointOnMapSurface(new Point(320, 480 - 104))).toBe(false);
+        });
+
+        test('Left', () => {
+            expect(globeTransform.isPointOnMapSurface(new Point(184, 240))).toBe(false);
+            expect(globeTransform.isPointOnMapSurface(new Point(185, 240))).toBe(true);
+        });
+
+        test('Right', () => {
+            expect(globeTransform.isPointOnMapSurface(new Point(640 - 185, 240))).toBe(true);
+            expect(globeTransform.isPointOnMapSurface(new Point(640 - 184, 240))).toBe(false);
+        });
+
+        test('Diagonal', () => {
+            expect(globeTransform.isPointOnMapSurface(new Point(223, 147))).toBe(true);
+            expect(globeTransform.isPointOnMapSurface(new Point(221, 144))).toBe(false);
+        });
     });
 
     test('pointCoordinate', () => {
