@@ -474,7 +474,7 @@ export class TransformHelper implements ITransformGetters {
      * This function should update the transform's internal data, such as matrices.
      * Any derived `_calcMatrices` function should also call the base function first. The base function only depends on the `_width` and `_height` fields.
      */
-    protected _calcMatrices(): void {
+    private _calcMatrices(): void {
         if (this._width && this._height) {
             this._pixelsToGLUnits = [2 / this._width, -2 / this._height];
 
