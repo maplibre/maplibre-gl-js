@@ -790,14 +790,14 @@ export class GlobeTransform implements ITransform {
         // Sometimes the poles might end up not being on the horizon,
         // thus not being detected as the northernmost/southernmost points.
         // We fix that here.
-        if (this.isSurfacePointVisible([0, 1, 0])) {
+        if (this.isSurfacePointOnScreen([0, 1, 0])) {
             // North pole is visible
             // This also means that the entire longitude range must be visible
             boundsArray[3] = 90;
             boundsArray[0] = -180;
             boundsArray[2] = 180;
         }
-        if (this.isSurfacePointVisible([0, -1, 0])) {
+        if (this.isSurfacePointOnScreen([0, -1, 0])) {
             // South pole is visible
             boundsArray[1] = -90;
             boundsArray[0] = -180;
@@ -938,6 +938,15 @@ export class GlobeTransform implements ITransform {
             const elevation = terrain.getElevationForLngLatZoom(lnglat, this._helper._tileZoom);
             vec3.scale(pos, pos, 1.0 + elevation / earthRadius);
         }
+
+        return this._projectSurfacePointToScreen(pos);
+    }
+
+    /**
+     * Projects a given vector on the surface of a unit sphere (or possible above the surface)
+     * and returns its coordinates on screen in pixels.
+     */
+    private _projectSurfacePointToScreen(pos: vec3): Point {
         const projected = createVec4();
         vec4.transformMat4(projected, [...pos, 1] as vec4, this._globeViewProjMatrixNoCorrection);
         projected[0] /= projected[3];
@@ -1013,6 +1022,25 @@ export class GlobeTransform implements ITransform {
         // dot(position on sphere, occlusion plane equation)
         const dotResult = plane[0] * p[0] + plane[1] * p[1] + plane[2] * p[2] + plane[3];
         return dotResult >= 0.0;
+    }
+
+    /**
+     * Returns whether surface point is visible on screen.
+     * It must both project to a pixel in screen bounds and not be occluded by the planet.
+     */
+    private isSurfacePointOnScreen(vec: vec3): boolean {
+        if (!this.isSurfacePointVisible(vec)) {
+            return false;
+        }
+
+        const projected = createVec4();
+        vec4.transformMat4(projected, [...vec, 1] as vec4, this._globeViewProjMatrixNoCorrection);
+        projected[0] /= projected[3];
+        projected[1] /= projected[3];
+        projected[2] /= projected[3];
+        return projected[0] > -1 && projected[0] < 1 &&
+            projected[1] > -1 && projected[1] < 1 &&
+            projected[2] > -1 && projected[2] < 1;
     }
 
     /**

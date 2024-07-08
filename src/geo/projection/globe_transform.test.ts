@@ -5,7 +5,7 @@ import {LngLat} from '../lng_lat';
 import {GlobeTransform} from './globe_transform';
 import {OverscaledTileID} from '../../source/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
-import {expectToBeCloseToArray} from '../../util/test/util';
+import {expectToBeCloseToArray, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
 
 function testPlaneAgainstLngLat(lngDegrees: number, latDegrees: number, plane: Array<number>) {
@@ -437,5 +437,89 @@ describe('GlobeTransform', () => {
         unprojectedCoordinates = globeTransform.pointCoordinate(projected);
         expect(unprojectedCoordinates.x).toBeCloseTo(coordsMercator.x, precisionDigits);
         expect(unprojectedCoordinates.y).toBeCloseTo(coordsMercator.y, precisionDigits);
+    });
+
+    describe('globeViewAllowed', () => {
+        test('starts enabled', async () => {
+            const globeTransform = createGlobeTransform(globeProjectionMock);
+            globeTransform.newFrameUpdate();
+
+            expect(globeTransform.getGlobeViewAllowed()).toBe(true);
+            expect(globeTransform.useGlobeControls).toBe(true);
+        });
+
+        test('animates to false', async () => {
+            const globeTransform = createGlobeTransform(globeProjectionMock);
+            globeTransform.newFrameUpdate();
+            globeTransform.setGlobeViewAllowed(false);
+
+            await sleep(20);
+            globeTransform.newFrameUpdate();
+            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
+            expect(globeTransform.useGlobeControls).toBe(true);
+
+            await sleep(1000);
+            globeTransform.newFrameUpdate();
+            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
+            expect(globeTransform.useGlobeControls).toBe(false);
+        });
+
+        test('can skip animation if requested', async () => {
+            const globeTransform = createGlobeTransform(globeProjectionMock);
+            globeTransform.newFrameUpdate();
+            globeTransform.setGlobeViewAllowed(false, false);
+
+            await sleep(20);
+            globeTransform.newFrameUpdate();
+            expect(globeTransform.getGlobeViewAllowed()).toBe(false);
+            expect(globeTransform.useGlobeControls).toBe(false);
+        });
+    });
+
+    describe('getBounds', () => {
+        const precisionDigits = 10;
+
+        const globeTransform = new GlobeTransform(globeProjectionMock);
+        globeTransform.resize(640, 480);
+
+        test('basic', () => {
+            globeTransform.setCenter(new LngLat(0, 0));
+            globeTransform.setZoom(1);
+            const bounds = globeTransform.getBounds();
+            expect(bounds._ne.lat).toBeCloseTo(83.96012370156063, precisionDigits);
+            expect(bounds._ne.lng).toBeCloseTo(85.46274667048044, precisionDigits);
+            expect(bounds._sw.lat).toBeCloseTo(-83.96012370156063, precisionDigits);
+            expect(bounds._sw.lng).toBeCloseTo(-85.46274667048044, precisionDigits);
+        });
+
+        test('zoomed in', () => {
+            globeTransform.setCenter(new LngLat(0, 0));
+            globeTransform.setZoom(4);
+            const bounds = globeTransform.getBounds();
+            expect(bounds._ne.lat).toBeCloseTo(11.76627084591695, precisionDigits);
+            expect(bounds._ne.lng).toBeCloseTo(16.124697669965144, precisionDigits);
+            expect(bounds._sw.lat).toBeCloseTo(-11.76627084591695, precisionDigits);
+            expect(bounds._sw.lng).toBeCloseTo(-16.124697669965144, precisionDigits);
+        });
+
+        test('looking at south pole', () => {
+            globeTransform.setCenter(new LngLat(0, -84));
+            globeTransform.setZoom(-2);
+            const bounds = globeTransform.getBounds();
+            expect(bounds._ne.lat).toBeCloseTo(-1.2776252401855572, precisionDigits);
+            expect(bounds._ne.lng).toBeCloseTo(180, precisionDigits);
+            expect(bounds._sw.lat).toBeCloseTo(-90, precisionDigits);
+            expect(bounds._sw.lng).toBeCloseTo(-180, precisionDigits);
+        });
+
+        test('looking at south edge of mercator', () => {
+            globeTransform.setCenter(new LngLat(-163, -83));
+            globeTransform.setZoom(3);
+            const bounds = globeTransform.getBounds();
+            expect(bounds._ne.lat).toBeCloseTo(-79.75570418234764, precisionDigits);
+            expect(bounds._ne.lng).toBeCloseTo(-124.19771985801174, precisionDigits);
+            expect(bounds._sw.lat).toBeCloseTo(-85.59109073899032, precisionDigits);
+            expect(bounds._sw.lng).toBeCloseTo(-201.80228014198985, precisionDigits);
+        });
     });
 });
