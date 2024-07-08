@@ -430,7 +430,7 @@ export interface ITransform extends ITransformGetters {
 
     /**
      * @internal
-     * Projects a point in tile coordinates. Used in symbol rendering.
+     * Projects a point in tile coordinates to clip space. Used in symbol rendering.
      */
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
 
