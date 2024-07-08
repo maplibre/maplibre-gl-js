@@ -161,36 +161,38 @@ describe('GlobeTransform', () => {
         const screenCenter = new Point(640 / 2, 480 / 2); // We need the exact screen center
         const screenTopEdgeCenter = new Point(640 / 2, 0);
 
-        test('project location to coordinates', () => {
+        describe('project location to coordinates', () => {
             const precisionDigits = 10;
             const globeTransform = createGlobeTransform(globeProjectionMock);
             globeTransform.newFrameUpdate();
-            let projected: Point;
 
-            globeTransform.setCenter(new LngLat(0, 0));
-            projected = globeTransform.locationPoint(globeTransform.center);
-            expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
+            test('basic test', () => {
+                globeTransform.setCenter(new LngLat(0, 0));
+                let projected = globeTransform.locationPoint(globeTransform.center);
+                expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
+                expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
 
-            globeTransform.setCenter(new LngLat(70, 50));
-            projected = globeTransform.locationPoint(globeTransform.center);
-            expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
+                globeTransform.setCenter(new LngLat(70, 50));
+                projected = globeTransform.locationPoint(globeTransform.center);
+                expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
+                expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
 
-            globeTransform.setCenter(new LngLat(0, 84));
-            projected = globeTransform.locationPoint(globeTransform.center);
-            expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
-            expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
+                globeTransform.setCenter(new LngLat(0, 84));
+                projected = globeTransform.locationPoint(globeTransform.center);
+                expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
+                expect(projected.y).toBeCloseTo(screenCenter.y, precisionDigits);
+            });
 
-            // Try projecting a location that is slightly above and below map's center point
-            globeTransform.setCenter(new LngLat(0, 0));
-            projected = globeTransform.locationPoint(new LngLat(0, 1));
-            expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
-            expect(projected.y).toBeLessThan(screenCenter.y);
+            test('project a location that is slightly above and below map\'s center point', () => {
+                globeTransform.setCenter(new LngLat(0, 0));
+                let projected = globeTransform.locationPoint(new LngLat(0, 1));
+                expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
+                expect(projected.y).toBeLessThan(screenCenter.y);
 
-            projected = globeTransform.locationPoint(new LngLat(0, -1));
-            expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
-            expect(projected.y).toBeGreaterThan(screenCenter.y);
+                projected = globeTransform.locationPoint(new LngLat(0, -1));
+                expect(projected.x).toBeCloseTo(screenCenter.x, precisionDigits);
+                expect(projected.y).toBeGreaterThan(screenCenter.y);
+            });
         });
 
         test('unproject screen center', () => {
