@@ -3,7 +3,7 @@ import {EXTENT} from '../../data/extent';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../lng_lat';
 import {GlobeTransform} from './globe_transform';
-import {OverscaledTileID} from '../../source/tile_id';
+import {CanonicalTileID, OverscaledTileID, UnwrappedTileID} from '../../source/tile_id';
 import {angularCoordinatesRadiansToVector, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {expectToBeCloseToArray, sleep} from '../../util/test/util';
 import {MercatorCoordinate} from '../mercator_coordinate';
@@ -520,6 +520,46 @@ describe('GlobeTransform', () => {
             expect(bounds._ne.lng).toBeCloseTo(-124.19771985801174, precisionDigits);
             expect(bounds._sw.lat).toBeCloseTo(-85.59109073899032, precisionDigits);
             expect(bounds._sw.lng).toBeCloseTo(-201.80228014198985, precisionDigits);
+        });
+    });
+
+    describe('projectTileCoordinates', () => {
+        const precisionDigits = 10;
+        const transform = new GlobeTransform(globeProjectionMock);
+        transform.resize(512, 512);
+        transform.setCenter(new LngLat(10.0, 50.0));
+        transform.setZoom(-1);
+
+        test('basic', () => {
+
+            const projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
+            expect(projection.point.x).toBeCloseTo(0.008635590705360347, precisionDigits);
+            expect(projection.point.y).toBeCloseTo(0.16970500709841846, precisionDigits);
+            expect(projection.signedDistanceFromCamera).toBeCloseTo(781.0549201758624, precisionDigits);
+            expect(projection.isOccluded).toBe(false);
+        });
+
+        test('rotated', () => {
+            transform.setBearing(12);
+            transform.setPitch(10);
+
+            const projection = transform.projectTileCoordinates(1024, 1024, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
+            expect(projection.point.x).toBeCloseTo(-0.026585319983152694, precisionDigits);
+            expect(projection.point.y).toBeCloseTo(0.15506884411121183, precisionDigits);
+            expect(projection.signedDistanceFromCamera).toBeCloseTo(788.4423931260653, precisionDigits);
+            expect(projection.isOccluded).toBe(false);
+        });
+
+        test('occluded by planet', () => {
+            transform.setBearing(-90);
+            transform.setPitch(60);
+
+            const projection = transform.projectTileCoordinates(8192, 8192, new UnwrappedTileID(0, new CanonicalTileID(1, 1, 0)), (_x, _y) => 0);
+            console.log(projection);
+            expect(projection.point.x).toBeCloseTo(0.22428309892086878, precisionDigits);
+            expect(projection.point.y).toBeCloseTo(-0.4462620847133465, precisionDigits);
+            expect(projection.signedDistanceFromCamera).toBeCloseTo(822.280942015371, precisionDigits);
+            expect(projection.isOccluded).toBe(true);
         });
     });
 });
