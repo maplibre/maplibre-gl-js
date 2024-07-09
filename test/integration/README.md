@@ -39,7 +39,7 @@ To run the integration tests (except the render tests):
 npm run test-integration
 ```
 
-This includes the browser tests (see [`browser/README.md`](./browser/README.md))
+This includes the browser tests.
 
 To run the build tests
 
