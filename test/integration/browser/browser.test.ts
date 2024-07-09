@@ -419,7 +419,7 @@ describe('Browser tests', () => {
             maplibregl.importScriptInWorkers(workerUrl);
             await map.once('idle');
             map.style.sourceCaches['land'].reload();
-            const features = map.queryRenderedFeatures({ layers: ['land'] });
+            const features = map.queryRenderedFeatures({layers: ['land']});
             return features[0].properties.NAME_REVERSE;
         });
 
