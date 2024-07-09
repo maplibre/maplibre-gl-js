@@ -30,13 +30,17 @@ function createIdentityMat4(): mat4 {
 }
 
 /**
- * Returns mercator coordinates in range 0..1 for given coordinates inside a tile and the tile's canonical ID.
+ * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
+ * @param inTileX - X coordinate in tile units - range [0..EXTENT].
+ * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+ * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+ * @returns Mercator coordinates of the specified point in range [0..1].
  */
-function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, tileID: UnwrappedTileID): [number, number] {
-    const scale = 1.0 / (1 << tileID.canonical.z);
+function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, canonicalTileID: CanonicalTileID): [number, number] {
+    const scale = 1.0 / (1 << canonicalTileID.z);
     return [
-        inTileX / EXTENT * scale + tileID.canonical.x * scale,
-        inTileY / EXTENT * scale + tileID.canonical.y * scale
+        inTileX / EXTENT * scale + canonicalTileID.x * scale,
+        inTileY / EXTENT * scale + canonicalTileID.y * scale
     ];
 }
 
@@ -518,7 +522,7 @@ export class GlobeTransform implements ITransform {
     }
 
     private _projectTileCoordinatesToSphere(inTileX: number, inTileY: number, tileID: UnwrappedTileID): vec3 {
-        const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID);
+        const mercator = tileCoordinatesToMercatorCoordinates(inTileX, inTileY, tileID.canonical);
         const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator[0], mercator[1]);
         const sphere = angularCoordinatesRadiansToVector(angular[0], angular[1]);
         return sphere;
@@ -576,7 +580,7 @@ export class GlobeTransform implements ITransform {
         if (!this._globeRendering) {
             return 1.0;
         }
-        const mercator = tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID);
+        const mercator = tileCoordinatesToMercatorCoordinates(textAnchor.x, textAnchor.y, tileID.canonical);
         const angular = mercatorCoordinatesToAngularCoordinatesRadians(mercator[0], mercator[1]);
         return this.getCircleRadiusCorrection() / Math.cos(angular[1]);
     }
