@@ -124,7 +124,7 @@
     "st": "^3.0.0",
     "stylelint": "^16.6.1",
     "stylelint-config-standard": "^36.0.1",
-    "ts-jest": "^29.2.0",
+    "ts-jest": "^29.2.1",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.3",
     "typedoc": "^0.26.4",
