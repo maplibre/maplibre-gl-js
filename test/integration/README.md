@@ -39,7 +39,7 @@ To run the integration tests (except the render tests):
 npm run test-integration
 ```
 
-This includes the browser tests (see [`browser/README.md`](./browser/README.md))
+This includes the browser tests.
 
 To run the build tests
 
@@ -50,7 +50,7 @@ npm run test-build
 For running a subset of tests, you may use jest filters e.g.
 
 ```
-npm run test-integration --testPathIgnorePatterns "/test/integration/(query|build)/
+npm run test-integration -- --testPathIgnorePatterns "/test/integration/(query|build)/"
 ```
 
 Additionally, it may be helpful to use a visual jest frontend (e.g. `npx majestic`). Note that since render tests do not use Jest, these will still have to be run from the command line.
