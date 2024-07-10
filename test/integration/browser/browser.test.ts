@@ -408,7 +408,7 @@ describe('Browser tests', () => {
     }, 2000);
 
     test('Movement with transformCameraUpdate and terrain', async () => {
-        await page.evaluate(() => {
+        await page.evaluate(async () => {
             map.setPitch(52)
                 .setZoom(15)
                 .setCenter([11.40, 47.30])
@@ -453,13 +453,8 @@ describe('Browser tests', () => {
                         exaggeration: 1
                     }
                 });
-
-            return new Promise<any>((resolve) => {
-                map.once('idle', () => {
-                    map.transformCameraUpdate = () => ({});
-                    resolve({});
-                });
-            });
+            await map.once('idle');
+            map.transformCameraUpdate = () => ({});
         });
 
         const canvas = await page.$('.maplibregl-canvas');
