@@ -19,6 +19,27 @@ import {translatePosition} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
 import {EXTENT} from '../../data/extent';
 
+/**
+ * Describes the intersection of ray and sphere.
+ * When null, no intersection occured.
+ * When both "t" values are the same, the ray just touched the sphere's surface.
+ * When both value are different, a full intersection occured.
+ */
+type RaySphereIntersection = {
+    /**
+     * The ray parameter for intersection that is "less" along the ray direction.
+     * Note that this value can be negative, meaning that this intersection occured before the ray's origin.
+     * The intersection point can be computed as `origin + direction * tMin`.
+     */
+    tMin: number;
+    /**
+     * The ray parameter for intersection that is "more" along the ray direction.
+     * Note that this value can be negative, meaning that this intersection occured before the ray's origin.
+     * The intersection point can be computed as `origin + direction * tMax`.
+     */
+    tMax: number;
+} | null;
+
 // These functions create **64** bit float vectors and matrices, unlike default gl-matrix functions.
 function createVec4(): vec4 { return new Float64Array(4) as any; }
 function createVec3(): vec3 { return new Float64Array(3) as any; }
@@ -1048,15 +1069,15 @@ export class GlobeTransform implements ITransform {
     }
 
     /**
-     * Returns the two intersection points of the ray and the planet's sphere, or null if no intersection occurs.
-     * The intersections are encoded in the direction along the ray, with `tMin` being the first intersection and `tMax` being the second.
+     * Returns the two intersection points of the ray and the planet's sphere,
+     * or null if no intersection occurs.
+     * The intersections are encoded as the parameter for parametric ray equation,
+     * with `tMin` being the first intersection and `tMax` being the second.
+     * Eg. the nearer intersection point can then be computed as `origin + direction * tMin`.
      * @param origin - The ray origin.
      * @param direction - The normalized ray direction.
      */
-    private rayPlanetIntersection(origin: vec3, direction: vec3): {
-        tMin: number;
-        tMax: number;
-    } {
+    private rayPlanetIntersection(origin: vec3, direction: vec3): RaySphereIntersection {
         const originDotDirection = vec3.dot(origin, direction);
         const planetRadiusSquared = 1.0; // planet is a unit sphere, so its radius squared is 1
 
