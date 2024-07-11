@@ -1142,16 +1142,17 @@ export class GlobeTransform implements ITransform {
         // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
         const originDotPlaneXyz = this._cachedClippingPlane[0] * rayOrigin[0] + this._cachedClippingPlane[1] * rayOrigin[1] + this._cachedClippingPlane[2] * rayOrigin[2];
         const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
-        const tPlane = -(originDotPlaneXyz + this._cachedClippingPlane[3]) / directionDotPlaneXyz;
+        const originToPlaneDistance = (originDotPlaneXyz + this._cachedClippingPlane[3]);
+        const distanceToIntersection = -originToPlaneDistance / directionDotPlaneXyz;
 
         const maxRayLength = 2.0; // One globe diameter
         const planeIntersection = createVec3();
 
-        if (tPlane > 0) {
+        if (distanceToIntersection > 0) {
             vec3.add(planeIntersection, rayOrigin, [
-                rayDirection[0] * tPlane,
-                rayDirection[1] * tPlane,
-                rayDirection[2] * tPlane
+                rayDirection[0] * distanceToIntersection,
+                rayDirection[1] * distanceToIntersection,
+                rayDirection[2] * distanceToIntersection
             ]);
         } else {
             // When the ray takes too long to hit the plane (>maxRayLength), or if the plane intersection is behind the camera, handle things differently.
