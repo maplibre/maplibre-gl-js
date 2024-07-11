@@ -4,6 +4,7 @@ import {VectorTileFeature, type VectorTileLayer, type VectorTile} from '@mapbox/
 import {EXTENT} from '../data/extent';
 import type {TileFeature, AnyProps} from 'supercluster';
 import type {Feature as GeoJSONVTFeature} from 'geojson-vt';
+import type Pbf from 'pbf';
 
 export type Feature = TileFeature<AnyProps, AnyProps> | GeoJSONVTFeature;
 
@@ -14,6 +15,11 @@ class FeatureWrapper implements VectorTileFeature {
     type: Feature['type'];
     id: number;
     properties: {[_: string]: string | number | boolean};
+
+    _pbf: Pbf;
+    _geometry: number;
+    _keys: Array<string>;
+    _values: Array<unknown>;
 
     constructor(feature: Feature) {
         this._feature = feature;
@@ -56,6 +62,10 @@ class FeatureWrapper implements VectorTileFeature {
     toGeoJSON(x: number, y: number, z: number) {
         return VectorTileFeature.prototype.toGeoJSON.call(this, x, y, z);
     }
+
+    bbox(): number[] {
+        return VectorTileFeature.prototype.bbox.call(this);
+    }
 }
 
 export class GeoJSONWrapper implements VectorTile, VectorTileLayer {
@@ -63,7 +73,10 @@ export class GeoJSONWrapper implements VectorTile, VectorTileLayer {
     name: string;
     extent: number;
     length: number;
-    _features: Array<Feature>;
+    _features: any; //Array<Feature>;
+    _pbf: Pbf;
+    _keys: string[];
+    _values: unknown[];
 
     constructor(features: Array<Feature>) {
         this.layers = {'_geojsonTileLayer': this};
