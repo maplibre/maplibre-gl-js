@@ -254,7 +254,6 @@ export class GlobeTransform implements ITransform {
      */
     private _globeness: number = 1.0;
     private _mercatorTransform: MercatorTransform;
-    private _initialized: boolean = false;
 
     private _nearZ;
     private _farZ;
@@ -268,7 +267,6 @@ export class GlobeTransform implements ITransform {
         this._globeness = globeProjectionEnabled ? 1 : 0; // When transform is cloned for use in symbols, `_updateAnimation` function which usually sets this value never gets called.
         this._projectionInstance = globeProjection;
         this._mercatorTransform = new MercatorTransform();
-        this._initialized = true;
     }
 
     clone(): ITransform {
@@ -356,9 +354,7 @@ export class GlobeTransform implements ITransform {
             this._globeLatitudeErrorCorrectionRadians = this._projectionInstance.latitudeErrorCorrectionRadians;
         }
 
-        if (this._initialized) {
-            this._globeness = this._computeGlobenessAnimation();
-        }
+        this._globeness = this._computeGlobenessAnimation();
 
         this._calcMatrices();
 
@@ -595,10 +591,6 @@ export class GlobeTransform implements ITransform {
 
     private _calcMatrices(): void {
         if (!this._helper._width || !this._helper._height) {
-            return;
-        }
-
-        if (!this._initialized) {
             return;
         }
 
