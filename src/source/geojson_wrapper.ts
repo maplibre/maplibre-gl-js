@@ -16,6 +16,7 @@ class FeatureWrapper implements VectorTileFeature {
     id: number;
     properties: {[_: string]: string | number | boolean};
 
+    // to support implementation of VectorTileFeature
     _pbf: Pbf;
     _geometry: number;
     _keys: Array<string>;
@@ -73,7 +74,9 @@ export class GeoJSONWrapper implements VectorTile, VectorTileLayer {
     name: string;
     extent: number;
     length: number;
-    _features: any; //Array<Feature>;
+    _featuresCache: Array<Feature>;
+    // to support implementation of VectorTileLayer
+    _features: number[];
     _pbf: Pbf;
     _keys: string[];
     _values: unknown[];
@@ -83,10 +86,10 @@ export class GeoJSONWrapper implements VectorTile, VectorTileLayer {
         this.name = '_geojsonTileLayer';
         this.extent = EXTENT;
         this.length = features.length;
-        this._features = features;
+        this._featuresCache = features;
     }
 
     feature(i: number): VectorTileFeature {
-        return new FeatureWrapper(this._features[i]);
+        return new FeatureWrapper(this._featuresCache[i]);
     }
 }
