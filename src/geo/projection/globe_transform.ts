@@ -15,9 +15,8 @@ import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
 import {ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
-import {translatePosition} from './mercator_utils';
+import {tileCoordinatesToMercatorCoordinates, translatePosition} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
-import {EXTENT} from '../../data/extent';
 
 /**
  * Describes the intersection of ray and sphere.
@@ -48,21 +47,6 @@ function createIdentityMat4(): mat4 {
     const m = new Float64Array(16) as any;
     mat4.identity(m);
     return m;
-}
-
-/**
- * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
- * @param inTileX - X coordinate in tile units - range [0..EXTENT].
- * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
- * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
- * @returns Mercator coordinates of the specified point in range [0..1].
- */
-function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, canonicalTileID: CanonicalTileID): [number, number] {
-    const scale = 1.0 / (1 << canonicalTileID.z);
-    return [
-        inTileX / EXTENT * scale + canonicalTileID.x * scale,
-        inTileY / EXTENT * scale + canonicalTileID.y * scale
-    ];
 }
 
 /**

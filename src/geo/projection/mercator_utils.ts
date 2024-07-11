@@ -1,13 +1,28 @@
 import {mat4} from 'gl-matrix';
 import {ProjectionData} from '../../render/program/projection_program';
 import {EXTENT} from '../../data/extent';
-import {OverscaledTileID} from '../../source/tile_id';
+import {CanonicalTileID, OverscaledTileID} from '../../source/tile_id';
 import {clamp} from '../../util/util';
 import {MAX_VALID_LATITUDE} from '../transform_helper';
 import {LngLat} from '../lng_lat';
 import {MercatorCoordinate, mercatorXfromLng, mercatorYfromLat} from '../mercator_coordinate';
 import Point from '@mapbox/point-geometry';
 import {pixelsToTileUnits} from '../../source/pixels_to_tile_units';
+
+/**
+ * Returns mercator coordinates in range 0..1 for given coordinates inside a specified tile.
+ * @param inTileX - X coordinate in tile units - range [0..EXTENT].
+ * @param inTileY - Y coordinate in tile units - range [0..EXTENT].
+ * @param canonicalTileID - Tile canonical ID - mercator X, Y and zoom.
+ * @returns Mercator coordinates of the specified point in range [0..1].
+ */
+export function tileCoordinatesToMercatorCoordinates(inTileX: number, inTileY: number, canonicalTileID: CanonicalTileID): [number, number] {
+    const scale = 1.0 / (1 << canonicalTileID.z);
+    return [
+        inTileX / EXTENT * scale + canonicalTileID.x * scale,
+        inTileY / EXTENT * scale + canonicalTileID.y * scale
+    ];
+}
 
 /**
  * Given a geographical lnglat, return an unrounded
