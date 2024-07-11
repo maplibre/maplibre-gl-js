@@ -3,7 +3,7 @@ import {MAX_VALID_LATITUDE, TransformHelper, TransformUpdateResult} from '../tra
 import {Tile} from '../../source/tile';
 import {MercatorTransform} from './mercator_transform';
 import {LngLat, earthRadius} from '../lng_lat';
-import {clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, warnOnce} from '../../util/util';
+import {clamp, differenceOfAnglesDegrees, distanceOfAnglesRadians, easeCubicInOut, lerp, pointPlaneSignedDistance, warnOnce} from '../../util/util';
 import {UnwrappedTileID, OverscaledTileID, CanonicalTileID} from '../../source/tile_id';
 import Point from '@mapbox/point-geometry';
 import {browser} from '../../util/browser';
@@ -1140,9 +1140,8 @@ export class GlobeTransform implements ITransform {
 
         // Ray does not intersect the sphere -> find the closest point on the horizon to the ray.
         // Intersect the ray with the clipping plane, since we know that the intersection of the clipping plane and the sphere is the horizon.
-        const originDotPlaneXyz = this._cachedClippingPlane[0] * rayOrigin[0] + this._cachedClippingPlane[1] * rayOrigin[1] + this._cachedClippingPlane[2] * rayOrigin[2];
         const directionDotPlaneXyz = this._cachedClippingPlane[0] * rayDirection[0] + this._cachedClippingPlane[1] * rayDirection[1] + this._cachedClippingPlane[2] * rayDirection[2];
-        const originToPlaneDistance = (originDotPlaneXyz + this._cachedClippingPlane[3]);
+        const originToPlaneDistance = pointPlaneSignedDistance(this._cachedClippingPlane, rayOrigin);
         const distanceToIntersection = -originToPlaneDistance / directionDotPlaneXyz;
 
         const maxRayLength = 2.0; // One globe diameter
@@ -1163,7 +1162,7 @@ export class GlobeTransform implements ITransform {
                 rayDirection[1] * maxRayLength,
                 rayDirection[2] * maxRayLength
             ]);
-            const distanceFromPlane = distantPoint[0] * this._cachedClippingPlane[0] + distantPoint[1] * this._cachedClippingPlane[1] + distantPoint[2] * this._cachedClippingPlane[2] + this._cachedClippingPlane[3];
+            const distanceFromPlane = pointPlaneSignedDistance(this._cachedClippingPlane, distantPoint);
             vec3.sub(planeIntersection, distantPoint, [
                 this._cachedClippingPlane[0] * distanceFromPlane,
                 this._cachedClippingPlane[1] * distanceFromPlane,

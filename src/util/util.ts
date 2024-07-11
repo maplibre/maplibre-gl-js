@@ -3,6 +3,20 @@ import UnitBezier from '@mapbox/unitbezier';
 import {isOffscreenCanvasDistorted} from './offscreen_canvas_distorted';
 import type {Size} from './image';
 import type {WorkerGlobalScopeInterface} from './web_worker';
+import {vec3, vec4} from 'gl-matrix';
+
+/**
+ * Returns the signed distance between a point and a plane.
+ * @param plane - The plane equation, in the form where the first three components are the normal and the fourth component is the plane's distance from origin along normal.
+ * @param point - The point whose distance from plane is retunred.
+ * @returns Signed distance of the point from the plane. Positive distances are in the half space where the plane normal points to, negative otherwise.
+ */
+export function pointPlaneSignedDistance(
+    plane: vec4 | [number, number, number, number],
+    point: vec3 | [number, number, number]
+): number {
+    return plane[0] * point[0] + plane[1] * point[1] + plane[2] * point[2] + plane[3];
+}
 
 /**
  * Solves a quadratic equation in the form ax^2 + bx + c = 0 and returns its roots in no particular order.
