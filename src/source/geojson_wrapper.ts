@@ -76,6 +76,7 @@ export class GeoJSONWrapper implements VectorTile, VectorTileLayer {
     length: number;
     _featuresCache: Array<Feature>;
     // to support implementation of VectorTileLayer
+    version: number;
     _features: number[];
     _pbf: Pbf;
     _keys: string[];
