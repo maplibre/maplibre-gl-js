@@ -49,6 +49,35 @@ export function solveQuadratic(a: number, b: number, c: number): {
 }
 
 /**
+ * Returns the angle in radians between two 2D vectors.
+ * The angle is signed and describes how much the first vector would need to be be rotated clockwise
+ * (assuming X is right and Y is down) so that it points in the same direction as the second vector.
+ * @param vec1x - The X component of the first vector.
+ * @param vec1y - The Y component of the first vector.
+ * @param vec2x - The X component of the second vector.
+ * @param vec2y - The Y component of the second vector.
+ * @returns The signed angle between the two vectors, in range -PI..PI.
+ */
+export function angleToRotateBetweenVectors2D(vec1x: number, vec1y: number, vec2x: number, vec2y: number): number {
+    // Normalize both vectors
+    const length1 = Math.sqrt(vec1x * vec1x + vec1y * vec1y);
+    const length2 = Math.sqrt(vec2x * vec2x + vec2y * vec2y);
+    vec1x /= length1;
+    vec1y /= length1;
+    vec2x /= length2;
+    vec2y /= length2;
+    const dot = vec1x * vec2x + vec1y * vec2y;
+    const angle = Math.acos(dot);
+    // dot second vector with vector to the right of first (-vec1y, vec1x)
+    const isVec2RightOfVec1 = (-vec1y * vec2x + vec1x * vec2y) > 0;
+    if (isVec2RightOfVec1) {
+        return angle;
+    } else {
+        return -angle;
+    }
+}
+
+/**
  * For two angles in degrees, returns how many degrees to add to the first angle in order to obtain the second angle.
  * The returned difference value is always the shorted of the two - its absolute value is never greater than 180°.
  */
