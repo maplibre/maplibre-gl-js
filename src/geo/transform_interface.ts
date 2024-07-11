@@ -76,59 +76,12 @@ export interface ITransformGetters {
 
 /**
  * @internal
- * The transform stores everything needed to project or otherwise transform points on a map,
- * including most of the map's view state - center, zoom, pitch, etc.
- * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
+ * All the functions that may mutate a transform.
  */
-export interface ITransform extends ITransformGetters {
+interface ITransformMutators {
     clone(): ITransform;
 
-    apply(that: ITransform): void;
-
-    /**
-     * @internal
-     * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
-     * will assume the underlying map is a spherical surface, as opposed to a plane.
-     */
-    get useGlobeControls(): boolean;
-    /**
-     * Distance from camera origin to view plane, in pixels.
-     * Calculated using vertical fov and viewport height.
-     * Center is considered to be in the middle of the viewport.
-     */
-    get cameraToCenterDistance(): number;
-    get modelViewProjectionMatrix(): mat4;
-    get projectionMatrix(): mat4;
-    /**
-     * Inverse of matrix from camera space to clip space.
-     */
-    get inverseProjectionMatrix(): mat4;
-    get pixelsToClipSpaceMatrix(): mat4;
-    get clipSpaceToPixelsMatrix(): mat4;
-    get pixelsToGLUnits(): [number, number];
-    get centerOffset(): Point;
-    /**
-     * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
-     */
-    get size(): Point;
-    get rotationMatrix(): mat2;
-    /**
-     * The center of the screen in pixels with the top-left corner being (0,0)
-     * and +y axis pointing downwards. This accounts for padding.
-     */
-    get centerPoint(): Point;
-    /**
-     * @internal
-     */
-    get pixelsPerMeter(): number;
-    /**
-     * @internal
-     * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
-     */
-    get cameraPosition(): vec3;
-
-    get nearZ(): number;
-    get farZ(): number;
+    apply(that: IReadonlyTransform): void;
 
     /**
      * Sets the transform's minimal allowed zoom level.
@@ -184,15 +137,6 @@ export interface ITransform extends ITransformGetters {
      * Sets the transform's width and height and recomputes internal matrices.
      */
     resize(width: number, height: number): void;
-
-    /**
-     * Returns if the padding params match
-     *
-     * @param padding - the padding to check against
-     * @returns true if they are equal, false otherwise
-     */
-    isPaddingEqual(padding: PaddingOptions): boolean;
-
     /**
      * Helper method to update edge-insets in place
      *
@@ -201,6 +145,104 @@ export interface ITransform extends ITransformGetters {
      * @param t - the step/weight
      */
     interpolatePadding(start: PaddingOptions, target: PaddingOptions, t: number): void;
+
+    /**
+     * This method works in combination with freezeElevation activated.
+     * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
+     * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
+     * @param terrain - the terrain
+     */
+    recalculateZoom(terrain: Terrain): void;
+
+    /**
+     * Set's the transform's center so that the given point on screen is at the given world coordinates.
+     * @param lnglat - Desired world coordinates of the point.
+     * @param point - The screen point that should lie at the given coordinates.
+     */
+    setLocationAtPoint(lnglat: LngLat, point: Point): void;
+
+    /**
+     * Sets or clears the map's geographical constraints.
+     * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
+     */
+    setMaxBounds(bounds?: LngLatBounds | null): void;
+
+    /**
+     * @internal
+     * Signals to the transform that a new frame is starting.
+     * The transform might update some of its internal variables and animations based on this.
+     */
+    newFrameUpdate(): TransformUpdateResult;
+
+    /**
+     * @internal
+     * Called before rendering to allow the transform implementation
+     * to precompute data needed to render the given tiles.
+     * Used in mercator transform to precompute tile matrices (posMatrix).
+     * @param coords - Array of tile IDs that will be rendered.
+     */
+    precacheTiles(coords: Array<OverscaledTileID>): void;
+}
+
+/**
+ * @internal
+ * A variant of {@link ITransform} without any mutating functions.
+ * Note that an instance of {@link IReadonlyTransform} may still be mutated
+ * by code that has a reference to in under the {@link ITransform} type.
+ */
+export interface IReadonlyTransform extends ITransformGetters {
+    /**
+     * @internal
+     * When true, any transform changes resulting from user interactions with the map (panning, zooming, etc.)
+     * will assume the underlying map is a spherical surface, as opposed to a plane.
+     */
+    get useGlobeControls(): boolean;
+    /**
+     * Distance from camera origin to view plane, in pixels.
+     * Calculated using vertical fov and viewport height.
+     * Center is considered to be in the middle of the viewport.
+     */
+    get cameraToCenterDistance(): number;
+    get modelViewProjectionMatrix(): mat4;
+    get projectionMatrix(): mat4;
+    /**
+     * Inverse of matrix from camera space to clip space.
+     */
+    get inverseProjectionMatrix(): mat4;
+    get pixelsToClipSpaceMatrix(): mat4;
+    get clipSpaceToPixelsMatrix(): mat4;
+    get pixelsToGLUnits(): [number, number];
+    get centerOffset(): Point;
+    /**
+     * Gets the transform's width and height in pixels (viewport size). Use {@link resize} to set the transform's size.
+     */
+    get size(): Point;
+    get rotationMatrix(): mat2;
+    /**
+     * The center of the screen in pixels with the top-left corner being (0,0)
+     * and +y axis pointing downwards. This accounts for padding.
+     */
+    get centerPoint(): Point;
+    /**
+     * @internal
+     */
+    get pixelsPerMeter(): number;
+    /**
+     * @internal
+     * Returns the camera's position transformed to be in the same space as 3D features under this transform's projection. Mostly used for globe + fill-extrusion.
+     */
+    get cameraPosition(): vec3;
+
+    get nearZ(): number;
+    get farZ(): number;
+
+    /**
+     * Returns if the padding params match
+     *
+     * @param padding - the padding to check against
+     * @returns true if they are equal, false otherwise
+     */
+    isPaddingEqual(padding: PaddingOptions): boolean;
 
     /**
      * Return a zoom level that will cover all tiles the transform
@@ -219,6 +261,7 @@ export interface ITransform extends ITransformGetters {
     }): number;
 
     /**
+     * @internal
      * Return any "wrapped" copies of a given tile coordinate that are visible
      * in the current view.
      */
@@ -243,21 +286,7 @@ export interface ITransform extends ITransformGetters {
     ): Array<OverscaledTileID>;
 
     /**
-     * This method works in combination with freezeElevation activated.
-     * freezeElevation is enabled during map-panning because during this the camera should sit in constant height.
-     * After panning finished, call this method to recalculate the zoom level for the current camera-height in current terrain.
-     * @param terrain - the terrain
-     */
-    recalculateZoom(terrain: Terrain): void;
-
-    /**
-     * Set's the transform's center so that the given point on screen is at the given world coordinates.
-     * @param lnglat - Desired world coordinates of the point.
-     * @param point - The screen point that should lie at the given coordinates.
-     */
-    setLocationAtPoint(lnglat: LngLat, point: Point): void;
-
-    /**
+     * @internal
      * Given a LngLat location, return the screen point that corresponds to it.
      * @param lnglat - location
      * @param terrain - optional terrain
@@ -266,6 +295,7 @@ export interface ITransform extends ITransformGetters {
     locationToScreenPoint(lnglat: LngLat, terrain?: Terrain): Point;
 
     /**
+     * @internal
      * Given a point on screen, return its LngLat location.
      * @param p - screen point
      * @param terrain - optional terrain
@@ -274,6 +304,7 @@ export interface ITransform extends ITransformGetters {
     screenPointToLocation(p: Point, terrain?: Terrain): LngLat;
 
     /**
+     * @internal
      * Given a point on screen, return its mercator coordinate.
      * @param p - the point
      * @param terrain - optional terrain
@@ -282,6 +313,7 @@ export interface ITransform extends ITransformGetters {
     screenPointToMercatorCoordinate(p: Point, terrain?: Terrain): MercatorCoordinate;
 
     /**
+     * @internal
      * Returns the map's geographical bounds. When the bearing or pitch is non-zero, the visible region is not
      * an axis-aligned rectangle, and the result is the smallest bounds that encompasses the visible region.
      * @returns Returns a {@link LngLatBounds} object describing the map's geographical bounds.
@@ -295,18 +327,13 @@ export interface ITransform extends ITransformGetters {
     getMaxBounds(): LngLatBounds | null;
 
     /**
+     * @internal
      * Returns whether the specified screen point lies on the map.
      * May return false if, for example, the point is above the map's horizon, or if doesn't lie on the planet's surface if globe is enabled.
      * @param p - The point's coordinates.
      * @param terrain - Optional terrain.
      */
     isPointOnMapSurface(p: Point, terrain?: Terrain): boolean;
-
-    /**
-     * Sets or clears the map's geographical constraints.
-     * @param bounds - A {@link LngLatBounds} object describing the new geographic boundaries of the map.
-     */
-    setMaxBounds(bounds?: LngLatBounds | null): void;
 
     customLayerMatrix(): mat4;
 
@@ -355,6 +382,7 @@ export interface ITransform extends ITransformGetters {
     lngLatToCameraDepth(lngLat: LngLat, elevation: number): number;
 
     /**
+     * @internal
      * Calculate the fogMatrix that, given a tile coordinate, would be used to calculate fog on the map.
      * Currently only supported in mercator projection.
      * @param unwrappedTileID - the tile ID
@@ -369,6 +397,7 @@ export interface ITransform extends ITransformGetters {
     isRenderingDirty(): boolean;
 
     /**
+     * @internal
      * Generates a `ProjectionData` instance to be used while rendering the supplied tile.
      * @param overscaledTileID - The ID of the current tile.
      * @param aligned - Set to true if a pixel-aligned matrix should be used, if possible (mostly used for raster tiles under mercator projection).
@@ -408,12 +437,6 @@ export interface ITransform extends ITransformGetters {
     getPitchedTextCorrection(textAnchor: Point, tileID: UnwrappedTileID): number;
 
     /**
-     * Signals to the transform that a new frame is starting.
-     * The transform might update some of its internal variables and animations based on this.
-     */
-    newFrameUpdate(): TransformUpdateResult;
-
-    /**
      * @internal
      * Returns light direction transformed to be in the same space as 3D features under this projection. Mostly used for globe + fill-extrusion.
      * @param transform - Current map transform.
@@ -427,12 +450,12 @@ export interface ITransform extends ITransformGetters {
      * Projects a point in tile coordinates to clip space. Used in symbol rendering.
      */
     projectTileCoordinates(x: number, y: number, unwrappedTileID: UnwrappedTileID, getElevation: (x: number, y: number) => number): PointProjection;
-
-    /**
-     * Called before rendering to allow the transform implementation
-     * to precompute data needed to render the given tiles.
-     * Used in mercator transform to precompute tile matrices (posMatrix).
-     * @param coords - Array of tile IDs that will be rendered.
-     */
-    precacheTiles(coords: Array<OverscaledTileID>): void;
 }
+
+/**
+ * @internal
+ * The transform stores everything needed to project or otherwise transform points on a map,
+ * including most of the map's view state - center, zoom, pitch, etc.
+ * A transform is cloneable, which is used when a given map state must be retained for multiple frames, mostly during symbol placement.
+ */
+export interface ITransform extends IReadonlyTransform, ITransformMutators {}

@@ -6,7 +6,7 @@ import {Painter} from './painter';
 import {Program} from './program';
 import type {ZoomHistory} from '../style/zoom_history';
 import type {Map} from '../ui/map';
-import {ITransform} from '../geo/transform_interface';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import type {EvaluationParameters} from '../style/evaluation_parameters';
 import type {FillLayerSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../style/style';
@@ -96,7 +96,7 @@ describe('drawFill', () => {
                     'u_projection_fallback_matrix': fallback,
                 };
             },
-        } as any as ITransform;
+        } as any as IReadonlyTransform;
         painterMock.options = {} as any;
         painterMock.style = {
             map: {

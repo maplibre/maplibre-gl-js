@@ -7,7 +7,7 @@ import {GridIndex} from './grid_index';
 import {mat4} from 'gl-matrix';
 import ONE_EM from '../symbol/one_em';
 
-import type {ITransform} from '../geo/transform_interface';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {SingleCollisionBox} from '../data/bucket/symbol_bucket';
 import type {
     GlyphOffsetArray,
@@ -59,7 +59,7 @@ export type FeatureKey = {
 export class CollisionIndex {
     grid: GridIndex<FeatureKey>;
     ignoredGrid: GridIndex<FeatureKey>;
-    transform: ITransform;
+    transform: IReadonlyTransform;
     pitchFactor: number;
     screenRightBoundary: number;
     screenBottomBoundary: number;
@@ -71,7 +71,7 @@ export class CollisionIndex {
     perspectiveRatioCutoff: number;
 
     constructor(
-        transform: ITransform,
+        transform: IReadonlyTransform,
         grid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25),
         ignoredGrid = new GridIndex<FeatureKey>(transform.width + 2 * viewportPadding, transform.height + 2 * viewportPadding, 25)
     ) {

@@ -26,7 +26,7 @@ import type {ImageManager} from '../render/image_manager';
 import type {Context} from '../gl/context';
 import type {OverscaledTileID} from './tile_id';
 import type {Framebuffer} from '../gl/framebuffer';
-import type {ITransform} from '../geo/transform_interface';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {LayerFeatureStates} from './source_state';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type Point from '@mapbox/point-geometry';
@@ -290,7 +290,7 @@ export class Tile {
             layers: Array<string>;
             availableImages: Array<string>;
         },
-        transform: ITransform,
+        transform: IReadonlyTransform,
         maxPitchScaleFactor: number,
         pixelPosMatrix: mat4
     ): {[_: string]: Array<{featureIndex: number; feature: GeoJSONFeature}>} {

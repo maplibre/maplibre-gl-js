@@ -12,7 +12,7 @@ import {ProjectionData} from '../../render/program/projection_program';
 import {MercatorCoordinate} from '../mercator_coordinate';
 import {PointProjection} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {ITransform} from '../transform_interface';
+import {IReadonlyTransform, ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {tileCoordinatesToMercatorCoordinates} from './mercator_utils';
 import {angularCoordinatesRadiansToVector, angularCoordinatesToSurfaceVector, getGlobeRadiusPixels, getZoomAdjustment, mercatorCoordinatesToAngularCoordinatesRadians, sphereSurfacePointToCoordinates} from './globe_utils';
@@ -275,7 +275,7 @@ export class GlobeTransform implements ITransform {
         return clone;
     }
 
-    public apply(that: ITransform): void {
+    public apply(that: IReadonlyTransform): void {
         this._helper.apply(that);
         this._mercatorTransform.apply(this);
     }

@@ -1,6 +1,6 @@
 import type {Map} from '../map';
 import type {PointLike} from '../camera';
-import type {ITransform} from '../../geo/transform_interface';
+import type {IReadonlyTransform} from '../../geo/transform_interface';
 import Point from '@mapbox/point-geometry';
 import {LngLat} from '../../geo/lng_lat';
 
@@ -17,7 +17,7 @@ export class TransformProvider {
         this._map = map;
     }
 
-    get transform(): ITransform {
+    get transform(): IReadonlyTransform {
         return this._map._requestedCameraState || this._map.transform;
     }
 

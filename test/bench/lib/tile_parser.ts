@@ -3,7 +3,7 @@ import VT from '@mapbox/vector-tile';
 
 import {derefLayers as deref} from '@maplibre/maplibre-gl-style-spec';
 import {Style} from '../../../src/style/style';
-import {ITransform} from '../../../src/geo/transform_interface';
+import {IReadonlyTransform} from '../../../src/geo/transform_interface';
 import {Evented} from '../../../src/util/evented';
 import {RequestManager} from '../../../src/util/request_manager';
 import {WorkerTile} from '../../../src/source/worker_tile';
@@ -22,7 +22,7 @@ import {MercatorTransform} from '../../../src/geo/projection/mercator_transform'
 class StubMap extends Evented {
     style: Style;
     _requestManager: RequestManager;
-    transform: ITransform;
+    transform: IReadonlyTransform;
 
     constructor() {
         super();

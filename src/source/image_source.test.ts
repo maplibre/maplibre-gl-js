@@ -1,6 +1,6 @@
 import {ImageSource} from './image_source';
 import {Evented} from '../util/evented';
-import {ITransform} from '../geo/transform_interface';
+import {IReadonlyTransform} from '../geo/transform_interface';
 import {extend} from '../util/util';
 import {type FakeServer, fakeServer} from 'nise';
 import {RequestManager} from '../util/request_manager';
@@ -21,7 +21,7 @@ function createSource(options) {
 }
 
 class StubMap extends Evented {
-    transform: ITransform;
+    transform: IReadonlyTransform;
     painter: any;
     _requestManager: RequestManager;
 

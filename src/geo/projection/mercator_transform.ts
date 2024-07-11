@@ -12,7 +12,7 @@ import {scaleZoom, TransformHelper, TransformUpdateResult, zoomScale} from '../t
 import {ProjectionData} from '../../render/program/projection_program';
 import {PointProjection, xyTransformMat4} from '../../symbol/projection';
 import {LngLatBounds} from '../lng_lat_bounds';
-import {ITransform} from '../transform_interface';
+import {IReadonlyTransform, ITransform} from '../transform_interface';
 import {PaddingOptions} from '../edge_insets';
 import {mercatorCoordinateToLocation, getBasicProjectionData, getMercatorHorizon, locationToMercatorCoordinate, projectToWorldCoordinates, unprojectFromWorldCoordinates} from './mercator_utils';
 
@@ -218,7 +218,7 @@ export class MercatorTransform implements ITransform {
         return clone;
     }
 
-    public apply(that: ITransform, constrain?: boolean): void {
+    public apply(that: IReadonlyTransform, constrain?: boolean): void {
         this._helper.apply(that, constrain);
     }
 

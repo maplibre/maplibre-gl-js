@@ -1,7 +1,7 @@
 import type {SourceCache} from './source_cache';
 import type {StyleLayer} from '../style/style_layer';
 import type {CollisionIndex} from '../symbol/collision_index';
-import type {ITransform} from '../geo/transform_interface';
+import type {IReadonlyTransform} from '../geo/transform_interface';
 import type {RetainedQueryData} from '../symbol/placement';
 import type {FilterSpecification} from '@maplibre/maplibre-gl-style-spec';
 import type {MapGeoJSONFeature} from '../util/vectortile_to_geojson';
@@ -90,7 +90,7 @@ export function queryRenderedFeatures(
     serializedLayers: {[_: string]: any},
     queryGeometry: Array<Point>,
     params: QueryRenderedFeaturesOptions,
-    transform: ITransform
+    transform: IReadonlyTransform
 ): { [key: string]: Array<{featureIndex: number; feature: MapGeoJSONFeature}> } {
 
     const has3DLayer = queryIncludes3DLayer(params && params.layers, styleLayers, sourceCache.id);

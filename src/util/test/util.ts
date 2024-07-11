@@ -6,12 +6,12 @@ import {Evented} from '../evented';
 import {SourceSpecification, StyleSpecification, TerrainSpecification} from '@maplibre/maplibre-gl-style-spec';
 import {MercatorTransform} from '../../geo/projection/mercator_transform';
 import {RequestManager} from '../request_manager';
-import {ITransform} from '../../geo/transform_interface';
+import {IReadonlyTransform, ITransform} from '../../geo/transform_interface';
 import {Style} from '../../style/style';
 
 export class StubMap extends Evented {
     style: Style;
-    transform: ITransform;
+    transform: IReadonlyTransform;
     private _requestManager: RequestManager;
     _terrain: TerrainSpecification;
 
