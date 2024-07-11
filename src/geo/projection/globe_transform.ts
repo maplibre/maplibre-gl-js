@@ -241,9 +241,12 @@ export class GlobeTransform implements ITransform {
      * to ensure the transform's state isn't unintentionally changed.
      */
     private _projectionInstance: GlobeProjection;
-    private _globeRendering: boolean = true;
     private _lastGlobeRenderingState: boolean = true;
     private _globeLatitudeErrorCorrectionRadians: number = 0;
+
+    private get _globeRendering(): boolean {
+        return this._globeness > 0;
+    }
 
     /**
      * Globe projection can smoothly interpolate between globe view and mercator. This variable controls this interpolation.
@@ -354,7 +357,7 @@ export class GlobeTransform implements ITransform {
         }
 
         if (this._initialized) {
-            this._updateAnimation();
+            this._globeness = this._computeGlobenessAnimation();
         }
 
         this._calcMatrices();
@@ -369,7 +372,10 @@ export class GlobeTransform implements ITransform {
         };
     }
 
-    private _updateAnimation() {
+    /**
+     * Compute new globeness, if needed.
+     */
+    private _computeGlobenessAnimation(): number {
         // Update globe transition animation
         const globeState = this._globeProjectionEnabled;
         const currentTime = browser.now();
@@ -382,10 +388,10 @@ export class GlobeTransform implements ITransform {
 
         // Transition parameter, where 0 is the start and 1 is end.
         const globeTransition = Math.min(Math.max((currentTime - this._lastGlobeChangeTime) / 1000.0 / globeConstants.globeTransitionTimeSeconds, 0.0), 1.0);
-        this._globeness = globeState ? globeTransition : (1.0 - globeTransition);
+        let newGlobeness = globeState ? globeTransition : (1.0 - globeTransition);
 
         if (this._skipNextAnimation) {
-            this._globeness = globeState ? 1.0 : 0.0;
+            newGlobeness = globeState ? 1.0 : 0.0;
             this._lastGlobeChangeTime = currentTime - globeConstants.globeTransitionTimeSeconds * 1000.0 * 2.0;
             this._skipNextAnimation = false;
         }
@@ -398,16 +404,18 @@ export class GlobeTransform implements ITransform {
         }
         const zoomTransition = Math.min(Math.max((currentTime - this._lastLargeZoomStateChange) / 1000.0 / globeConstants.zoomTransitionTimeSeconds, 0.0), 1.0);
         const zoomGlobenessBound = currentZoomState ? (1.0 - zoomTransition) : zoomTransition;
-        this._globeness = Math.min(this._globeness, zoomGlobenessBound);
-        this._globeness = easeCubicInOut(this._globeness); // Smooth animation
+        newGlobeness = Math.min(newGlobeness, zoomGlobenessBound);
+        newGlobeness = easeCubicInOut(newGlobeness); // Smooth animation
 
-        if (oldGlobeness !== this._globeness) {
+        if (oldGlobeness !== newGlobeness) {
             this.setCenter(new LngLat(
-                this._mercatorTransform.center.lng + differenceOfAnglesDegrees(this._mercatorTransform.center.lng, this.center.lng) * this._globeness,
-                lerp(this._mercatorTransform.center.lat, this.center.lat, this._globeness)
+                this._mercatorTransform.center.lng + differenceOfAnglesDegrees(this._mercatorTransform.center.lng, this.center.lng) * newGlobeness,
+                lerp(this._mercatorTransform.center.lat, this.center.lat, newGlobeness)
             ));
-            this.setZoom(lerp(this._mercatorTransform.zoom, this.zoom, this._globeness));
+            this.setZoom(lerp(this._mercatorTransform.zoom, this.zoom, newGlobeness));
         }
+
+        return newGlobeness;
     }
 
     isRenderingDirty(): boolean {
@@ -593,8 +601,6 @@ export class GlobeTransform implements ITransform {
         if (!this._initialized) {
             return;
         }
-
-        this._globeRendering = this._globeness > 0;
 
         if (this._mercatorTransform) {
             this._mercatorTransform.apply(this, true);
